@@ -1,0 +1,6 @@
+{
+  "name": "La Bouffe",
+  "description": "A high-fidelity unified portal for Customers, Restaurants, and Delivery Executives, optimizing cross-platform flows.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
