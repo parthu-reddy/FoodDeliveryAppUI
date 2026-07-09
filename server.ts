@@ -136,6 +136,18 @@ app.post('/api/v1/outlets/:outletId/menu-overrides/:masterMenuItemId', (req, res
   const { outletId, masterMenuItemId } = req.params;
   const { price, active } = req.body;
   
+  const existingIdx = outletOverrides.findIndex(o => o.outletId === outletId && o.masterMenuItemId === masterMenuItemId);
+  
+  const override = { outletId, masterMenuItemId, price, active };
+  
+  if (existingIdx > -1) {
+    outletOverrides[existingIdx] = override;
+  } else {
+    outletOverrides.push(override);
+  }
+  
+  res.status(200).json(override);
+});
 
 let deliveryRiders: any[] = [];
 
@@ -167,6 +179,15 @@ app.get("/api/delivery/profile", (req, res) => {
 });
 
 app.post("/api/delivery/status", (req, res) => {
+  const { driverId, available } = req.body;
+  const rider = deliveryRiders.find(r => r.id === driverId);
+  if (rider) {
+    rider.isOnline = available;
+    res.json({ success: true, rider });
+  } else {
+    res.status(404).json({ error: "Rider not found" });
+  }
+});
 
 app.post("/api/delivery/drivers/:driverId/orders/:orderId/accept", (req, res) => {
   const { driverId, orderId } = req.params;
@@ -196,29 +217,6 @@ app.post("/api/v1/delivery/telemetry/batch", (req, res) => {
 
 app.get("/api/v1/logistics/route", (req, res) => {
   res.json({ success: true, polyline: "mock_polyline" });
-});
-
-  const { driverId, available } = req.body;
-  const rider = deliveryRiders.find(r => r.id === driverId);
-  if (rider) {
-    rider.isOnline = available;
-    res.json({ success: true, rider });
-  } else {
-    res.status(404).json({ error: "Rider not found" });
-  }
-});
-
-  const existingIdx = outletOverrides.findIndex(o => o.outletId === outletId && o.masterMenuItemId === masterMenuItemId);
-  
-  const override = { outletId, masterMenuItemId, price, active };
-  
-  if (existingIdx > -1) {
-    outletOverrides[existingIdx] = override;
-  } else {
-    outletOverrides.push(override);
-  }
-  
-  res.status(200).json(override);
 });
 
 app.get('/api/v1/restaurants/:restaurantId/catalog/items', (req, res) => {

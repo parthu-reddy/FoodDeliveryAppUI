@@ -76,6 +76,15 @@ export default function DeliveryDashboard({
       setPingJob(null);
     }
   }, [activeOrders, isOnline, activeJobId, rejectedIds, pingJob]);
+  React.useEffect(() => {
+    if (!activeJobId) {
+      const ongoingJob = activeOrders.find(o => (o.riderId === riderPhone || !!o.riderId) && o.status !== "delivered");
+      if (ongoingJob) {
+        setActiveJobId(ongoingJob.id);
+      }
+    }
+  }, [activeOrders, riderPhone, activeJobId]);
+
 
   React.useEffect(() => {
     if (pingJob) {
@@ -229,7 +238,7 @@ export default function DeliveryDashboard({
   const [apiDispatchMode, setApiDispatchMode] = useState<'AUTOMATIC' | 'MANUAL'>('AUTOMATIC');
 
   // Find rider's active assigned job
-  const riderJobs = activeOrders.filter(o => o.riderId === riderPhone || o.id === activeJobId);
+  const riderJobs = activeOrders.filter(o => o.riderId === riderPhone || !!o.riderId || o.id === activeJobId);
   const activePickupOrDispatched = riderJobs.filter(o => o.status !== 'delivered');
   
   const [apiOtpOrderId, setApiOtpOrderId] = useState('');
@@ -485,7 +494,7 @@ export default function DeliveryDashboard({
 
 
   return (
-    <div className="flex-1 flex flex-col overflow-y-auto overscroll-none bg-transparent text-slate-800 dark:text-[#f0ede6] h-full pb-20">
+    <div className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-y-auto overflow-x-hidden min-h-0 bg-transparent text-slate-800 dark:text-[#f0ede6] h-full pb-20">
       
       {/* Header Area */}
       <header className="sticky top-0 bg-white/60 dark:bg-slate-950/60 backdrop-blur-xl px-5 py-3 flex flex-col sm:flex-row sm:items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 z-30 shrink-0 shadow-[0_2px_15px_rgba(0,0,0,0.01)] gap-3">

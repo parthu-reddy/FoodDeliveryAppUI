@@ -158,7 +158,7 @@ export default function App() {
       if (order.id === orderId) {
         const u = { ...order, status };
         if (riderInfo) {
-          u.riderId = 'rider-sam';
+          u.riderId = riderInfo.phone;
           u.riderName = riderInfo.name;
           u.riderPhone = riderInfo.phone;
         }
@@ -174,11 +174,11 @@ export default function App() {
   };
 
   return (
-    <div className={`flex-1 flex flex-col overflow-hidden relative w-full h-full min-h-screen ${m3Theme === 'dark' ? 'dark text-[#f0ede6]' : 'text-slate-900'}`}>
+    <div className={`flex-1 flex flex-col overflow-hidden relative w-full h-[100dvh] ${m3Theme === 'dark' ? 'dark text-[#f0ede6]' : 'text-slate-900'}`}>
       {!role ? (
-        <div className="w-full h-full flex-1 flex flex-col overflow-hidden relative min-h-screen">
+        <div className="w-full h-full flex-1 flex flex-col overflow-hidden relative ">
           <CinematicFoodBackground theme={m3Theme} />
-          <div className="flex-1 flex flex-col w-full h-full z-10 p-0 overflow-hidden relative">
+          <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative">
             <div className="flex-1 flex flex-col w-full h-full justify-center items-center overflow-hidden relative">
               <LoginScreen 
                 onLoginSuccess={handleLoginSuccess} 
@@ -189,11 +189,11 @@ export default function App() {
           </div>
         </div>
       ) : (
-        <div className="flex-1 flex flex-col w-full h-full overflow-hidden min-h-screen relative">
+        <div className="flex-1 flex flex-col w-full h-full overflow-hidden  relative">
           {role === 'customer' && (
-            <div className="w-full h-full flex-1 flex flex-col overflow-hidden relative min-h-screen">
+            <div className="w-full h-full flex-1 flex flex-col overflow-hidden relative ">
               <CinematicFoodBackground theme={m3Theme} />
-              <div className="flex-1 flex flex-col w-full h-full z-10 p-0 overflow-hidden relative">
+              <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative">
                 <CustomerDashboard 
                   userName={userName || 'Alex Mercer'} 
                   userPhone={phone || '9876543210'}
@@ -208,9 +208,9 @@ export default function App() {
             </div>
           )}
           {role === 'restaurant' && (
-            <div className="w-full h-full flex-1 flex flex-col overflow-hidden relative min-h-screen">
+            <div className="w-full h-full flex-1 flex flex-col overflow-hidden relative ">
               <CinematicFoodBackground theme={m3Theme} />
-              <div className="flex-1 flex flex-col w-full h-full z-10 p-0 overflow-hidden relative">
+              <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative">
                 <RestaurantDashboard 
                   restaurantId="rest-2"
                   activeOrders={orders}
@@ -223,9 +223,9 @@ export default function App() {
             </div>
           )}
           {role === 'delivery' && (
-            <div className="w-full h-full flex-1 flex flex-col overflow-hidden relative min-h-screen">
+            <div className="w-full h-full flex-1 flex flex-col overflow-hidden relative ">
               <CinematicFoodBackground theme={m3Theme} />
-              <div className="flex-1 flex flex-col w-full h-full z-10 p-0 overflow-hidden relative">
+              <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative">
                 <DeliveryDashboard 
                   riderPhone={phone || '9988776655'}
                   activeOrders={orders}

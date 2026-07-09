@@ -442,7 +442,7 @@ export default function RestaurantDashboard({
   const myRestaurantName = outlets.find(r => r.id === selectedOutletId)?.name || RESTAURANTS.find(r => r.id === selectedOutletId)?.name || 'Bella Italia Kitchen';
 
   return (
-    <div className="flex-1 flex flex-col overflow-y-auto overscroll-none min-h-0 bg-transparent text-slate-800 dark:text-[#f0ede6] h-full pb-20">
+    <div className="flex-1 flex flex-col w-full overflow-y-auto overflow-x-hidden min-h-0 bg-transparent text-slate-800 dark:text-[#f0ede6] h-full pb-20">
       
       {/* Header Area */}
       <header className="sticky top-0 bg-white/60 dark:bg-slate-950/60 backdrop-blur-xl px-5 py-3 flex flex-col sm:flex-row sm:items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 z-30 shrink-0 shadow-[0_2px_15px_rgba(0,0,0,0.01)] gap-3">
@@ -615,10 +615,10 @@ export default function RestaurantDashboard({
               </div>
 
               {/* Responsive Kanban Columns */}
-              <div className="flex gap-4 pb-6 w-full overflow-x-auto touch-pan-x snap-x snap-mandatory scrollbar-none md:grid md:grid-cols-4 md:overflow-x-visible md:pb-0 md:mx-0 md:px-0">
+              <div className="flex gap-4 pb-6 w-full overflow-x-auto touch-pan-x snap-x snap-mandatory scrollbar-thin scrollbar-thumb-rose-500/30 scrollbar-track-transparent ">
                 
                 {/* COLUMN 1: Placed Orders (Just Got Placed) */}
-                <div className="w-[85%] xs:w-[310px] sm:w-[350px] md:w-full shrink-0 snap-center flex flex-col bg-slate-50/50 dark:bg-slate-950/40 border border-rose-500/20 dark:border-rose-500/30 p-4 rounded-3xl min-h-[480px]">
+                <div className="w-[85%] xs:w-[310px] sm:w-[350px]  shrink-0 snap-center flex flex-col bg-slate-50/50 dark:bg-slate-950/40 border border-rose-500/20 dark:border-rose-500/30 p-4 rounded-3xl min-h-[480px]">
                   <div className="flex items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 pb-3 mb-3">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
@@ -781,7 +781,7 @@ export default function RestaurantDashboard({
                 </div>
 
                 {/* COLUMN 2: Requested Delay (On Hold) */}
-                <div className="w-[85%] xs:w-[310px] sm:w-[350px] md:w-full shrink-0 snap-center flex flex-col bg-slate-50/50 dark:bg-slate-950/40 border border-rose-500/20 dark:border-rose-500/30 p-4 rounded-3xl min-h-[480px]">
+                <div className="w-[85%] xs:w-[310px] sm:w-[350px]  shrink-0 snap-center flex flex-col bg-slate-50/50 dark:bg-slate-950/40 border border-rose-500/20 dark:border-rose-500/30 p-4 rounded-3xl min-h-[480px]">
                   <div className="flex items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 pb-3 mb-3">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
@@ -874,7 +874,7 @@ export default function RestaurantDashboard({
                 </div>
 
                 {/* COLUMN 3: Kitchen Preparing (Accepted or Preparing) */}
-                <div className="w-[85%] xs:w-[310px] sm:w-[350px] md:w-full shrink-0 snap-center flex flex-col bg-slate-50/50 dark:bg-slate-950/40 border border-rose-500/20 dark:border-rose-500/30 p-4 rounded-3xl min-h-[480px]">
+                <div className="w-[85%] xs:w-[310px] sm:w-[350px]  shrink-0 snap-center flex flex-col bg-slate-50/50 dark:bg-slate-950/40 border border-rose-500/20 dark:border-rose-500/30 p-4 rounded-3xl min-h-[480px]">
                   <div className="flex items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 pb-3 mb-3">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
@@ -974,7 +974,7 @@ export default function RestaurantDashboard({
                 </div>
 
                 {/* COLUMN 4: Prepared & Ready (Dispatched, awaiting pickup) */}
-                <div className="w-[85%] xs:w-[310px] sm:w-[350px] md:w-full shrink-0 snap-center flex flex-col bg-slate-50/50 dark:bg-slate-950/40 border border-rose-500/20 dark:border-rose-500/30 p-4 rounded-3xl min-h-[480px]">
+                <div className="w-[85%] xs:w-[310px] sm:w-[350px]  shrink-0 snap-center flex flex-col bg-slate-50/50 dark:bg-slate-950/40 border border-rose-500/20 dark:border-rose-500/30 p-4 rounded-3xl min-h-[480px]">
                   <div className="flex items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 pb-3 mb-3">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />

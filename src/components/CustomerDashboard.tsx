@@ -11,6 +11,12 @@ import LaBouffeLogo from './LaBouffeLogo';
 import { getEffectiveMenu } from '../lib/menuStore';
 import ImageLoader from './ImageLoader';
 
+import CustomerCartDrawer from './CustomerCartDrawer';
+import CustomerAccountModal from './CustomerAccountModal';
+import CustomerAddressModal from './CustomerAddressModal';
+import CustomerPaymentModal from './CustomerPaymentModal';
+
+
 interface CustomerDashboardProps {
   userName: string;
   userPhone: string;
@@ -80,7 +86,7 @@ export default function CustomerDashboard({
   const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
 
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
-  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+  const [view, setView] = useState<'home' | 'settings'>('home');
   const [accountTab, setAccountTab] = useState<"profile" | "orders">("profile");
   const [editName, setEditName] = useState(userName);
   const [editPhone, setEditPhone] = useState(userPhone);
@@ -507,8 +513,35 @@ export default function CustomerDashboard({
     }
   };
 
+  if (view === 'settings') {
+    return (
+      <div className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-y-auto overflow-x-hidden min-h-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md text-slate-800 dark:text-[#f0ede6] h-full">
+        <CustomerAccountModal
+          setIsAddressModalOpen={setIsAddressModalOpen}
+          activeOrders={activeOrders}
+          setTrackingOrder={(order) => {
+             setTrackingOrder(order);
+             setView('home');
+          }}
+          onBack={() => setView('home')}
+          accountTab={accountTab}
+          setAccountTab={setAccountTab}
+          editName={editName}
+          setEditName={setEditName}
+          editPhone={editPhone}
+          setEditPhone={setEditPhone}
+          userName={userName}
+          userPhone={userPhone}
+          onLogout={onLogout}
+          theme={theme}
+          onToggleTheme={onToggleTheme}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-y-auto overflow-x-hidden bg-transparent  text-slate-800 dark:text-[#f0ede6] h-full pb-20 scrollbar-none">
+    <div className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-y-auto overflow-x-hidden min-h-0 bg-transparent text-slate-800 dark:text-[#f0ede6] h-full pb-20">
       
       {/* 1. Header Area */}
       <header className="sticky top-0 bg-white/40 dark:bg-white/5 backdrop-blur-xl px-5 py-3 flex items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 z-30 shrink-0 shadow-[0_2px_15px_rgba(0,0,0,0.01)] gap-3">
@@ -534,7 +567,7 @@ export default function CustomerDashboard({
           <button
             className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6] transition-all cursor-pointer"
             title="Account Info"
-            onClick={() => setIsAccountModalOpen(true)}
+            onClick={() => setView('settings')}
           >
             <User className="w-4 h-4" />
           </button>
@@ -559,95 +592,156 @@ export default function CustomerDashboard({
 
       <AnimatePresence mode="wait">
         {currentTrackingOrder && activeOrders.some(o => o.id === currentTrackingOrder.id) ? (
-          /* ------------------- TRACKING SCREEN ------------------- */
-          <motion.div
-            key="tracking"
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            className="p-5 space-y-5"
-          >
-            <div className="flex items-center gap-2">
-              <button 
-                onClick={() => setTrackingOrder(null)}
-                className="p-1.5 rounded-lg bg-slate-200 dark:bg-slate-900 text-slate-500 dark:text-slate-300 hover:text-slate-800 dark:text-[#f0ede6] cursor-pointer"
-              >
-                <ArrowLeft className="w-4 h-4" />
-              </button>
-              <h3 className="font-bold text-lg flex items-center gap-2">
-                Order Tracking
-                {activeOrders.length > 1 ? (
-                  <select
-                    className="text-xs font-mono bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded text-slate-500 dark:text-slate-300 border-none outline-none cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors font-semibold hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all"
-                    value={currentTrackingOrder.id}
-                    onChange={(e) => {
-                      const order = activeOrders.find((o) => o.id === e.target.value);
-                      if (order) setTrackingOrder(order);
-                    }}
-                  >
-                    {activeOrders.map((o) => (
-                      <option key={o.id} value={o.id}>
-                        #{o.id} - {o.status}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
+          currentTrackingOrder.status === 'delivered' ? (
+            /* ------------------- DELIVERED SUMMARY SCREEN ------------------- */
+            <motion.div
+              key="summary"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              className="p-5 space-y-5"
+            >
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setTrackingOrder(null)}
+                  className="p-1.5 rounded-lg bg-slate-200 dark:bg-slate-900 text-slate-500 dark:text-slate-300 hover:text-slate-800 dark:text-[#f0ede6] cursor-pointer"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+                <h3 className="font-bold text-lg flex items-center gap-2">
+                  Order Summary
                   <span className="text-xs font-mono bg-slate-100 dark:bg-slate-900 px-2 py-0.5 rounded text-slate-500 dark:text-slate-300">#{currentTrackingOrder.id}</span>
+                </h3>
+              </div>
+
+              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-3xl p-6 text-center space-y-2">
+                <div className="w-16 h-16 bg-emerald-500 rounded-full mx-auto flex items-center justify-center shadow-lg shadow-emerald-500/30 mb-4">
+                  <Check className="w-8 h-8 text-white" />
+                </div>
+                <h4 className="font-bold text-2xl text-emerald-600 dark:text-emerald-400">Order Delivered! 🎉</h4>
+                <p className="text-sm text-emerald-700/70 dark:text-emerald-400/70">
+                  Enjoy your food from {currentTrackingOrder.restaurantName}.
+                </p>
+              </div>
+
+              <div className="bg-white/40 dark:bg-slate-950/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 p-5 rounded-3xl">
+                <div className="flex items-center justify-between mb-4 pb-4 border-b border-rose-500/10">
+                  <span className="font-bold text-slate-800 dark:text-[#f0ede6]">Digital Invoice</span>
+                  <span className="text-xs font-mono text-slate-500">#{currentTrackingOrder.id.substring(0, 8).toUpperCase()}</span>
+                </div>
+                <div className="space-y-3 mb-6">
+                  {currentTrackingOrder.items.map(item => (
+                    <div key={item.item.id} className="flex justify-between text-sm text-slate-600 dark:text-slate-300">
+                      <span>{item.quantity}x {item.item.name}</span>
+                      <span>${(item.item.price * item.quantity).toFixed(2)}</span>
+                    </div>
+                  ))}
+                  <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300 pt-3 border-t border-slate-200 dark:border-slate-800">
+                    <span>Delivery Fee</span>
+                    <span>${currentTrackingOrder.deliveryFee.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-lg font-black text-slate-900 dark:text-[#f0ede6] pt-2">
+                    <span>Total Paid</span>
+                    <span>${currentTrackingOrder.total.toFixed(2)}</span>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => alert('Invoice downloaded successfully!')}
+                  className="w-full py-3 bg-slate-800 dark:bg-white text-white dark:text-slate-900 font-bold rounded-xl flex items-center justify-center gap-2 transition-all hover:bg-slate-700 dark:hover:bg-slate-100 shadow-md active:scale-[0.98] cursor-pointer text-sm"
+                >
+                  <Package className="w-5 h-5" /> Download PDF Invoice
+                </button>
+              </div>
+            </motion.div>
+          ) : (
+            /* ------------------- TRACKING SCREEN ------------------- */
+            <motion.div
+              key="tracking"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              className="p-5 space-y-5"
+            >
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setTrackingOrder(null)}
+                  className="p-1.5 rounded-lg bg-slate-200 dark:bg-slate-900 text-slate-500 dark:text-slate-300 hover:text-slate-800 dark:text-[#f0ede6] cursor-pointer"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+                <h3 className="font-bold text-lg flex items-center gap-2">
+                  Order Tracking
+                  {activeOrders.filter(o => o.status !== 'delivered').length > 1 ? (
+                    <select
+                      className="text-xs font-mono bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded text-slate-500 dark:text-slate-300 border-none outline-none cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors font-semibold hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all"
+                      value={currentTrackingOrder.id}
+                      onChange={(e) => {
+                        const order = activeOrders.find((o) => o.id === e.target.value);
+                        if (order) setTrackingOrder(order);
+                      }}
+                    >
+                      {activeOrders.filter(o => o.status !== 'delivered').map((o) => (
+                        <option key={o.id} value={o.id}>
+                          #{o.id} - {o.status}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <span className="text-xs font-mono bg-slate-100 dark:bg-slate-900 px-2 py-0.5 rounded text-slate-500 dark:text-slate-300">#{currentTrackingOrder.id}</span>
+                  )}
+                </h3>
+              </div>
+
+              {/* Immersive Delivery map (Vector path simulation) */}
+              <div className="relative w-full h-44 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-3xl overflow-hidden shadow-inner">
+                {/* Grids and elements resembling maps */}
+                <div className="absolute inset-0 bg-[radial-gradient(#64748b_1px,transparent_1px)] [background-size:16px_16px] opacity-10" />
+                
+                {/* SSE Live Tracking Indicator */}
+                {(currentTrackingOrder.status === 'dispatched' || currentTrackingOrder.status === 'picked_up') && (
+                  <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-2.5 py-1 rounded-full backdrop-blur-md z-10 shadow-sm">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[9px] font-bold font-mono tracking-wider">LIVE GPS (SSE)</span>
+                  </div>
                 )}
-              </h3>
-            </div>
 
-            {/* Immersive Delivery map (Vector path simulation) */}
-            <div className="relative w-full h-44 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-3xl overflow-hidden shadow-inner">
-              {/* Grids and elements resembling maps */}
-              <div className="absolute inset-0 bg-[radial-gradient(#64748b_1px,transparent_1px)] [background-size:16px_16px] opacity-10" />
-              
-              {/* SSE Live Tracking Indicator */}
-              {(currentTrackingOrder.status === 'dispatched' || currentTrackingOrder.status === 'picked_up') && (
-                <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-2.5 py-1 rounded-full backdrop-blur-md z-10 shadow-sm">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-[9px] font-bold font-mono tracking-wider">LIVE GPS (SSE)</span>
+                {/* Animated Map Line/Road */}
+                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                  <path 
+                    d="M 15 50 Q 50 20 85 50" 
+                    fill="none" 
+                    stroke="#334155" 
+                    strokeWidth="2" 
+                    strokeDasharray="4 4"
+                  />
+                  <path 
+                    d="M 15 50 Q 50 20 85 50" 
+                    fill="none" 
+                    stroke="#f59e0b" 
+                    strokeWidth="2" 
+                    strokeDasharray="100"
+                    strokeDashoffset={100 - getDeliveryProgress(currentTrackingOrder.status)}
+                    className="transition-all duration-1000 ease-in-out"
+                  />
+                </svg>
+
+                {/* Restaurant Node */}
+                <div className="absolute left-[15%] top-[50%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
+                  <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-amber-500 flex items-center justify-center shadow-lg">
+                    <Store className="w-4 h-4 text-amber-500" />
+                  </div>
+                  <span className="text-[9px] font-bold mt-1 max-w-[80px] text-center truncate">{currentTrackingOrder.restaurantName}</span>
                 </div>
-              )}
 
-              {/* Animated Map Line/Road */}
-              <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                <path 
-                  d="M 15 50 Q 50 20 85 50" 
-                  fill="none" 
-                  stroke="#334155" 
-                  strokeWidth="2" 
-                  strokeDasharray="4 4"
-                />
-                <path 
-                  d="M 15 50 Q 50 20 85 50" 
-                  fill="none" 
-                  stroke="#f59e0b" 
-                  strokeWidth="2" 
-                  strokeDasharray="100"
-                  strokeDashoffset={100 - getDeliveryProgress(currentTrackingOrder.status)}
-                  className="transition-all duration-1000 ease-in-out"
-                />
-              </svg>
-
-              {/* Restaurant Node */}
-              <div className="absolute left-[15%] top-[50%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
-                <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-amber-500 flex items-center justify-center shadow-lg">
-                  <Store className="w-4 h-4 text-amber-500" />
+                {/* Customer Node */}
+                <div className="absolute right-[15%] top-[50%] translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
+                  <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-emerald-500 flex items-center justify-center shadow-lg">
+                    <MapPin className="w-4 h-4 text-emerald-500" />
+                  </div>
+                  <span className="text-[9px] font-bold mt-1">Your Home</span>
                 </div>
-                <span className="text-[9px] font-bold mt-1 max-w-[80px] text-center truncate">{currentTrackingOrder.restaurantName}</span>
-              </div>
 
-              {/* Customer Node */}
-              <div className="absolute right-[15%] top-[50%] translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
-                <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-emerald-500 flex items-center justify-center shadow-lg">
-                  <MapPin className="w-4 h-4 text-emerald-500" />
-                </div>
-                <span className="text-[9px] font-bold mt-1">Your Home</span>
-              </div>
-
-              {/* Moving Rider on Path */}
-              {currentTrackingOrder.status !== 'delivered' && (
+                {/* Moving Rider on Path */}
                 <div 
                   className="absolute transition-all duration-1000 ease-in-out flex flex-col items-center"
                   style={{
@@ -661,111 +755,109 @@ export default function CustomerDashboard({
                   </div>
                   <span className="text-[8px] bg-slate-950 text-amber-400 font-mono px-1 rounded border border-rose-500/30 mt-1">Rider</span>
                 </div>
-              )}
-            </div>
-
-            {/* Active Status Display Card */}
-            <div className="bg-white/60 dark:bg-slate-900/50 backdrop-blur-xl border border-rose-500/20 dark:border-rose-500/30 rounded-3xl p-5 shadow-[0_8px_32px_rgba(251,146,60,0.05)] space-y-4">
-              <div className="flex justify-between items-start">
-                <div className="space-y-1">
-                  <h4 className="font-bold text-lg">
-                    {currentTrackingOrder.status === 'placed' && 'Waiting for Restaurant...'}
-                    {currentTrackingOrder.status === 'on_hold' && 'Restaurant Requested Delay'}
-                    {currentTrackingOrder.status === 'accepted' && 'Order Confirmed!'}
-                    {currentTrackingOrder.status === 'preparing' && 'Kitchen is Cooking...'}
-                    {currentTrackingOrder.status === 'dispatched' && 'Waiting for Rider Pickup...'}
-                    {currentTrackingOrder.status === 'picked_up' && 'Rider is on the Way!'}
-                    {currentTrackingOrder.status === 'delivered' && 'Order Delivered! 🎉'}
-                  </h4>
-                  <p className="text-xs text-slate-400 dark:text-slate-300">
-                    {currentTrackingOrder.status === 'on_hold' 
-                      ? 'The restaurant is experiencing high volume and needs more time. Do you wish to continue?'
-                      : `Estimated delivery: ${currentTrackingOrder.status === 'delivered' ? 'Completed' : '15-20 mins'}`}
-                  </p>
-                </div>
-                <div className="bg-amber-500/10 text-amber-500 p-2.5 rounded-2xl">
-                  {currentTrackingOrder.status === 'on_hold' ? <Clock className="w-5 h-5 text-red-500" /> : <Timer className="w-5 h-5" />}
-                </div>
               </div>
 
-              {currentTrackingOrder.status === 'on_hold' && (
-                <div className="flex items-center gap-3 pt-2">
-                  <button
-                    onClick={() => {
-                      if (onAddApiLog) {
-                        onAddApiLog({ id: 'order_approve_delay', label: `POST /api/v1/orders/${currentTrackingOrder.id}/delay/approve`, method: 'POST' });
-                      }
-                      if (onUpdateOrder) onUpdateOrder(currentTrackingOrder.id, 'accepted');
-                    }}
-                    className="flex-1 py-3 bg-amber-500 text-white rounded-xl font-bold hover:bg-amber-600 transition-colors"
-                  >
-                    Approve Delay
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (onAddApiLog) {
-                        onAddApiLog({ id: 'order_cancel', label: `POST /api/v1/orders/${currentTrackingOrder.id}/cancel`, method: 'POST' });
-                      }
-                      if (onUpdateOrder) onUpdateOrder(currentTrackingOrder.id, 'cancelled'); setTrackingOrder(null);
-                      // In a real app, you would also remove/update the order from the global state
-                    }}
-                    className="flex-1 py-3 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-[#f0ede6] rounded-xl font-bold hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors border border-rose-500/30 dark:border-rose-500/30"
-                  >
-                    Cancel Order
-                  </button>
-                </div>
-              )}
-
-              {/* OTP Code Card */}
-              {(currentTrackingOrder.status !== 'delivered' && currentTrackingOrder.status !== 'on_hold') && (
-                <div className="bg-white/40 dark:bg-slate-950/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 p-4 rounded-2xl flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] text-slate-500 dark:text-[#f0ede6] font-bold block uppercase font-mono tracking-wider">Secure Delivery Verification</span>
-                    <span className="text-sm font-semibold">Share OTP with Rider at delivery</span>
+              {/* Active Status Display Card */}
+              <div className="bg-white/60 dark:bg-slate-900/50 backdrop-blur-xl border border-rose-500/20 dark:border-rose-500/30 rounded-3xl p-5 shadow-[0_8px_32px_rgba(251,146,60,0.05)] space-y-4">
+                <div className="flex justify-between items-start">
+                  <div className="space-y-1">
+                    <h4 className="font-bold text-lg">
+                      {currentTrackingOrder.status === 'placed' && 'Waiting for Restaurant...'}
+                      {currentTrackingOrder.status === 'on_hold' && 'Restaurant Requested Delay'}
+                      {currentTrackingOrder.status === 'accepted' && 'Order Confirmed!'}
+                      {currentTrackingOrder.status === 'preparing' && 'Kitchen is Cooking...'}
+                      {currentTrackingOrder.status === 'dispatched' && 'Waiting for Rider Pickup...'}
+                      {currentTrackingOrder.status === 'picked_up' && 'Rider is on the Way!'}
+                    </h4>
+                    <p className="text-xs text-slate-400 dark:text-slate-300">
+                      {currentTrackingOrder.status === 'on_hold' 
+                        ? 'The restaurant is experiencing high volume and needs more time. Do you wish to continue?'
+                        : 'Estimated delivery: 15-20 mins'}
+                    </p>
                   </div>
-                  <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white font-mono text-xl font-black px-4 py-2 rounded-xl tracking-wider shadow-md">
-                    {currentTrackingOrder.otp}
+                  <div className="bg-amber-500/10 text-amber-500 p-2.5 rounded-2xl">
+                    {currentTrackingOrder.status === 'on_hold' ? <Clock className="w-5 h-5 text-red-500" /> : <Timer className="w-5 h-5" />}
                   </div>
                 </div>
-              )}
 
-              {/* Step checklist */}
-              <div className="space-y-3 pt-2">
-                {[
-                  { status: 'placed', label: 'Order Received' },
-                  { status: 'accepted', label: 'Accepted by Kitchen' },
-                  { status: 'preparing', label: 'Cooking & Packaging' },
-                  { status: 'picked_up', label: 'Picked up by Delivery Executive' },
-                  { status: 'delivered', label: 'Handed Over & Verified' },
-                ].map((step, idx) => {
-                  const isDone = getStatusIndex(currentTrackingOrder.status) >= getStatusIndex(step.status as OrderStatus);
-                  const isCurrent = currentTrackingOrder.status === step.status;
-                  
-                  return (
-                    <div key={idx} className="flex items-center gap-3">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center border text-xs ${
-                        isDone 
-                          ? 'bg-emerald-500 border-emerald-500 text-slate-950' 
-                          : 'border-rose-500/30 dark:border-rose-500/30 text-slate-400 dark:text-slate-300'
-                      }`}>
-                        {isDone ? <Check className="w-3.5 h-3.5" /> : idx + 1}
-                      </div>
-                      <span className={`text-sm ${isDone ? 'font-semibold text-slate-800 dark:text-[#f0ede6]' : 'text-slate-400 dark:text-slate-300'} ${isCurrent ? 'text-amber-500 font-bold' : ''}`}>
-                        {step.label}
-                      </span>
+                {currentTrackingOrder.status === 'on_hold' && (
+                  <div className="flex items-center gap-3 pt-2">
+                    <button
+                      onClick={() => {
+                        if (onAddApiLog) {
+                          onAddApiLog({ id: 'order_approve_delay', label: `POST /api/v1/orders/${currentTrackingOrder.id}/delay/approve`, method: 'POST' });
+                        }
+                        if (onUpdateOrder) onUpdateOrder(currentTrackingOrder.id, 'accepted');
+                      }}
+                      className="flex-1 py-3 bg-amber-500 text-white rounded-xl font-bold hover:bg-amber-600 transition-colors"
+                    >
+                      Approve Delay
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (onAddApiLog) {
+                          onAddApiLog({ id: 'order_cancel', label: `POST /api/v1/orders/${currentTrackingOrder.id}/cancel`, method: 'POST' });
+                        }
+                        if (onUpdateOrder) onUpdateOrder(currentTrackingOrder.id, 'cancelled'); setTrackingOrder(null);
+                      }}
+                      className="flex-1 py-3 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-[#f0ede6] rounded-xl font-bold hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors border border-rose-500/30 dark:border-rose-500/30"
+                    >
+                      Cancel Order
+                    </button>
+                  </div>
+                )}
+
+                {/* OTP Code Card */}
+                {currentTrackingOrder.status !== 'on_hold' && (
+                  <div className="bg-white/40 dark:bg-slate-950/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 p-4 rounded-2xl flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] text-slate-500 dark:text-[#f0ede6] font-bold block uppercase font-mono tracking-wider">Secure Delivery Verification</span>
+                      <span className="text-sm font-semibold">Share OTP with Rider at delivery</span>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
+                    <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white font-mono text-xl font-black px-4 py-2 rounded-xl tracking-wider shadow-md">
+                      {currentTrackingOrder.otp}
+                    </div>
+                  </div>
+                )}
 
-            {/* Quick action / note */}
-            <div className="bg-amber-500/5 border border-amber-500/10 p-4 rounded-2xl text-center">
-              <p className="text-xs text-amber-500 leading-relaxed">
-                👉 <strong>How to complete?</strong> You can switch roles from the top menu, navigate to the <strong>Restaurant View</strong> to accept/cook, then to the <strong>Delivery Partner View</strong> to navigate and insert the OTP!
-              </p>
-            </div>
-          </motion.div>
+                {/* Step checklist */}
+                <div className="space-y-3 pt-2">
+                  {[
+                    { status: 'placed', label: 'Order Received' },
+                    { status: 'accepted', label: 'Accepted by Kitchen' },
+                    { status: 'preparing', label: 'Cooking & Packaging' },
+                    { status: 'picked_up', label: 'Picked up by Delivery Executive' },
+                    { status: 'delivered', label: 'Handed Over & Verified' },
+                  ].map((step, idx) => {
+                    const isDone = getStatusIndex(currentTrackingOrder.status) >= getStatusIndex(step.status as OrderStatus);
+                    const isCurrent = currentTrackingOrder.status === step.status;
+                    
+                    return (
+                      <div key={idx} className="flex items-center gap-3">
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center border text-xs ${
+                          isDone 
+                            ? 'bg-emerald-500 border-emerald-500 text-slate-950' 
+                            : 'border-rose-500/30 dark:border-rose-500/30 text-slate-400 dark:text-slate-300'
+                        }`}>
+                          {isDone ? <Check className="w-3.5 h-3.5" /> : idx + 1}
+                        </div>
+                        <span className={`text-sm ${isDone ? 'font-semibold text-slate-800 dark:text-[#f0ede6]' : 'text-slate-400 dark:text-slate-300'} ${isCurrent ? 'text-amber-500 font-bold' : ''}`}>
+                          {step.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Quick action / note */}
+              <div className="bg-amber-500/5 border border-amber-500/10 p-4 rounded-2xl text-center">
+                <p className="text-xs text-amber-500 leading-relaxed">
+                  👉 <strong>How to complete?</strong> You can switch roles from the top menu, navigate to the <strong>Restaurant View</strong> to accept/cook, then to the <strong>Delivery Partner View</strong> to navigate and insert the OTP!
+                </p>
+              </div>
+            </motion.div>
+          )
         ) : selectedRestaurant ? (
           /* ------------------- RESTAURANT DETAIL & MENU ------------------- */
           <motion.div
@@ -1451,10 +1543,10 @@ export default function CustomerDashboard({
       </AnimatePresence>
 
       {/* Floating Active Orders Slider at bottom */}
-      {activeOrders.length > 0 && !trackingOrder && (
+      {activeOrders.filter(o => o.status !== 'delivered').length > 0 && !trackingOrder && (
         <div className={`fixed left-0 right-0 max-w-3xl mx-auto z-30 pointer-events-none transition-all duration-300 ${cart.length > 0 && selectedRestaurant ? 'bottom-24' : 'bottom-4'}`}>
           <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-none px-5 gap-4 pb-2 pointer-events-auto">
-            {activeOrders.slice().reverse().map((order) => (
+            {activeOrders.filter(o => o.status !== 'delivered').slice().reverse().map((order) => (
               <button 
                 key={order.id} 
                 onClick={() => setTrackingOrder(order)}
@@ -1492,396 +1584,36 @@ export default function CustomerDashboard({
         </div>
       )}
 
-      {/* ------------------- CART DRAWER ------------------- */}
-      <AnimatePresence>
-        {isCartOpen && selectedRestaurant && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsCartOpen(false)}
-              className="fixed inset-0 bg-black z-40"
-            />
-            
-            {/* Drawer */}
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed bottom-0 sm:bottom-auto sm:top-1/2 left-0 right-0 sm:-translate-y-1/2 max-w-[412px] mx-auto bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border-t border-rose-500/20 dark:border-rose-500/30 rounded-t-[32px] sm:rounded-[32px] p-6 pb-8 z-50 shadow-2xl space-y-5"
-            >
-              <div className="flex justify-between items-center">
-                <div>
-                  <h4 className="font-bold text-lg">Your Order</h4>
-                  <p className="text-xs text-slate-400 dark:text-slate-300">from {selectedRestaurant.name}</p>
-                </div>
-                <button
-                  onClick={() => setIsCartOpen(false)}
-                  className="p-1.5 rounded-full bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-300 cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Items List */}
-              <div className="max-h-48 overflow-y-auto overflow-x-hidden space-y-3 pr-1">
-                {cart.map(cartItem => (
-                  <div key={cartItem.item.id} className="flex justify-between items-center text-sm">
-                    <div className="flex-1">
-                      <span className="font-semibold text-slate-900 dark:text-[#f0ede6]">{cartItem.item.name}</span>
-                      <p className="text-xs text-amber-500 font-mono">${cartItem.item.price}</p>
-                    </div>
-                    <div className="flex items-center bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-[#f0ede6] rounded-lg font-bold">
-                      <button 
-                        onClick={() => removeFromCart(cartItem.item.id)}
-                        className="p-1 px-2.5 text-xs hover:text-red-500 cursor-pointer"
-                      >
-                        -
-                      </button>
-                      <span className="px-1 text-xs">{cartItem.quantity}</span>
-                      <button 
-                        onClick={() => addToCart(cartItem.item)}
-                        className="p-1 px-2.5 text-xs hover:text-emerald-500 cursor-pointer"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Summary calculations */}
-              <div className="border-t border-rose-500/20 dark:border-rose-500/30 pt-4 space-y-2 text-xs font-mono">
-                <div className="flex justify-between text-slate-400 dark:text-slate-300">
-                  <span>Subtotal</span>
-                  <span>${getCartTotal().subtotal.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-slate-400 dark:text-slate-300">
-                  <span>Delivery fee</span>
-                  <span>${getCartTotal().deliveryFee.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-slate-900 dark:text-[#f0ede6] font-bold text-sm">
-                  <span>Grand Total</span>
-                  <span>${getCartTotal().total.toFixed(2)}</span>
-                </div>
-              </div>
-
-              {/* Address indicator */}
-              <div className="p-3 bg-white/40 dark:bg-slate-900/45 backdrop-blur-sm border border-rose-500/20 dark:border-rose-500/30 rounded-xl space-y-1">
-                <span className="text-[10px] text-slate-500 dark:text-[#f0ede6] font-bold block uppercase font-mono">Delivering To</span>
-                <input 
-                  type="text" 
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  className="bg-transparent border-none text-xs w-full font-semibold text-slate-800 dark:text-[#f0ede6] focus:outline-none"
-                />
-              </div>
-
-              <button
-                onClick={handleCheckout}
-                className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-4 rounded-2xl font-black shadow-lg shadow-orange-500/20 hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer border border-white/20"
-              >
-                <ShieldCheck className="w-5 h-5" />
-                Place Cash-on-Delivery Order
-              </button>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* ------------------- ACCOUNT MODAL ------------------- */}
-      <AnimatePresence>
-        {isAccountModalOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsAccountModalOpen(false)}
-              className="fixed inset-0 bg-black z-[60]"
-            />
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed bottom-0 sm:bottom-auto sm:top-1/2 left-0 right-0 sm:-translate-y-1/2 max-w-[412px] mx-auto bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl rounded-t-[32px] sm:rounded-[32px] p-6 pb-8 z-[60] shadow-2xl flex flex-col h-auto max-h-auto max-h-[85vh] overflow-hidden"
-            >
-              <div className="flex justify-between items-center shrink-0 mb-4">
-                <div>
-                  <h4 className="font-bold text-lg text-slate-900 dark:text-[#f0ede6]">Account Settings</h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-300">Manage your profile and orders</p>
-                </div>
-                <button
-                  onClick={() => setIsAccountModalOpen(false)}
-                  className="p-1.5 rounded-full bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-300 cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Tabs */}
-              <div className="flex gap-2 mb-4 shrink-0">
-                <button 
-                  onClick={() => setAccountTab('profile')}
-                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${accountTab === 'profile' ? 'bg-rose-500 text-white' : 'bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'}`}
-                >
-                  Profile
-                </button>
-                <button 
-                  onClick={() => setAccountTab('orders')}
-                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${accountTab === 'orders' ? 'bg-rose-500 text-white' : 'bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'}`}
-                >
-                  Orders History
-                </button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto overscroll-none pr-1">
-                {accountTab === 'profile' && (
-                  <div className="space-y-4">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-500 dark:text-slate-300">Full Name</label>
-                      <input 
-                        type="text" 
-                        value={editName}
-                        readOnly
-                        className="w-full px-4 py-3 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-slate-50 dark:bg-slate-900 text-sm font-medium text-slate-900 dark:text-[#f0ede6] cursor-not-allowed bg-slate-100 dark:bg-slate-800"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-500 dark:text-slate-300">Phone Number</label>
-                      <input 
-                        type="tel" 
-                        value={editPhone}
-                        readOnly
-                        className="w-full px-4 py-3 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-slate-50 dark:bg-slate-900 text-sm font-medium text-slate-900 dark:text-[#f0ede6] cursor-not-allowed bg-slate-100 dark:bg-slate-800"
-                      />
-                    </div>
-                    
-                    <button 
-                      onClick={() => {
-                        setIsAddressModalOpen(true);
-                      }}
-                      className="w-full py-3 mt-2 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-[#f0ede6] text-sm font-bold flex items-center justify-center gap-2 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all"
-                    >
-                      <MapPin className="w-4 h-4" />
-                      Manage Saved Address
-                    </button>
-
-                    <div className="pt-4">
-                      <button 
-                        onClick={() => {
-                          setIsAccountModalOpen(false);
-                          // Note: the app might not have a global state update for these yet, but we are fulfilling the requirement locally for now.
-                        }}
-                        className="w-full py-3.5 bg-rose-500 text-white rounded-xl font-bold shadow-lg shadow-rose-500/20 active:scale-95 transition-all"
-                      >
-                        Save Changes
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {accountTab === 'orders' && (
-                  <div className="space-y-3">
-                    {activeOrders.filter(o => o.customerPhone === userPhone).reverse().map(order => (
-                      <div key={order.id} className="p-4 rounded-2xl border border-rose-500/20 dark:border-rose-500/30 bg-white/50 dark:bg-slate-900/50">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-300 font-mono block">{order.id}</span>
-                            <h5 className="font-bold text-sm text-slate-900 dark:text-[#f0ede6]">{order.restaurantName}</h5>
-                          </div>
-                          <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:shadow-[0_0_12px_rgba(244,63,94,0.5)] tracking-wider`}>
-                            {order.status.replace('_', ' ')}
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-300 mb-3">{order.items.length} items • ${order.total.toFixed(2)}</p>
-                        <button 
-                          onClick={() => {
-                            setTrackingOrder(order);
-                            setIsAccountModalOpen(false);
-                          }}
-                          className="w-full py-2 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-[#f0ede6] rounded-lg text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                        >
-                          View Details
-                        </button>
-                      </div>
-                    ))}
-                    {activeOrders.filter(o => o.customerPhone === userPhone).length === 0 && (
-                      <div className="text-center py-10">
-                        <Package className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                        <p className="text-sm font-bold text-slate-500 dark:text-slate-300">No orders yet</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* ------------------- ADDRESS MODAL ------------------- */}
-      <AnimatePresence>
-        {isAddressModalOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsAddressModalOpen(false)}
-              className="fixed inset-0 bg-black z-[60]"
-            />
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed bottom-0 sm:bottom-auto sm:top-1/2 left-0 right-0 sm:-translate-y-1/2 max-w-[412px] mx-auto bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl rounded-t-[32px] sm:rounded-[32px] p-6 pb-8 z-[60] shadow-2xl flex flex-col h-auto max-h-auto max-h-[85vh] overflow-hidden"
-            >
-              <div className="flex justify-between items-center shrink-0 mb-4">
-                <div>
-                  <h4 className="font-bold text-lg text-slate-900 dark:text-[#f0ede6]">Delivery Location</h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-300">Set your precise location for faster delivery</p>
-                </div>
-                <button
-                  onClick={() => setIsAddressModalOpen(false)}
-                  className="p-1.5 rounded-full bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-300 cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="flex-1 flex flex-col overflow-y-auto overscroll-none overflow-x-hidden min-h-0 space-y-4">
-                {/* Search Bar */}
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-300" />
-                  <input
-                    type="text"
-                    placeholder="Search for area, street name..."
-                    value={addressSearchQuery}
-                    onChange={e => {
-                      setAddressSearchQuery(e.target.value);
-                      if (e.target.value.length > 2 && onAddApiLog) {
-                        onAddApiLog({ id: 'autocomplete', label: `GET /api/v1/places/autocomplete?q=${e.target.value}`, method: 'GET' });
-                      }
-                    }}
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-rose-500/20 dark:border-rose-500/30 rounded-2xl py-3.5 pl-10 pr-4 text-sm font-medium cursor-not-allowed bg-slate-100 dark:bg-slate-800/50"
-                  />
-                </div>
-
-                {/* Simulated Map / Pin Drop */}
-                <div className="relative w-full h-48 rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-rose-500/20 dark:border-rose-500/30 shrink-0">
-                  <div className="absolute inset-0 opacity-20 dark:opacity-10" style={{ backgroundImage: 'radial-gradient(#94a3b8 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-12 h-12 bg-rose-500/20 rounded-full flex items-center justify-center animate-pulse">
-                      <div className="w-8 h-8 bg-rose-500 text-white rounded-full flex items-center justify-center shadow-xl mb-4">
-                        <MapPin className="w-4 h-4" />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="absolute bottom-3 inset-x-0 mx-auto w-fit bg-white/90 dark:bg-slate-900/90 backdrop-blur text-xs font-bold px-3 py-1.5 rounded-full shadow-sm text-slate-700 dark:text-[#f0ede6]">
-                    Drag map to move pin
-                  </div>
-                </div>
-
-                {/* Current Address Details */}
-                <div className="space-y-2 flex-1">
-                  <label className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-300 uppercase">Selected Address</label>
-                  <textarea
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    rows={2}
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-rose-500/20 dark:border-rose-500/30 rounded-xl p-3 text-sm font-medium cursor-not-allowed bg-slate-100 dark:bg-slate-800 resize-none"
-                  />
-                </div>
-
-                <button
-                  onClick={() => {
-                    setIsAddressModalOpen(false);
-                    if (onAddApiLog) {
-                      onAddApiLog({ id: 'reverse_geocode', label: 'GET /api/v1/places/reverse-geocode?lat=...&lng=...', method: 'GET' });
-                      onAddApiLog({ id: 'save_address', label: 'POST /api/v1/customers/addresses', method: 'POST' });
-                    }
-                  }}
-                  className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg shadow-orange-500/20 py-3.5 rounded-2xl font-bold hover:opacity-90 transition-opacity mt-auto"
-                >
-                  Confirm Location
-                </button>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* ------------------- PAYMENT MODAL ------------------- */}
-      <AnimatePresence>
-        {isPaymentModalOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black z-[70]"
-            />
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="fixed inset-0 m-auto w-full max-w-[340px] h-fit bg-white dark:bg-slate-900 rounded-3xl p-6 z-[80] shadow-2xl border border-rose-500/20 dark:border-rose-500/30 flex flex-col items-center text-center space-y-5"
-            >
-              {paymentStatus === 'idle' && (
-                <>
-                  <div className="w-16 h-16 rounded-full bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center text-rose-500 mb-2">
-                    <ShieldCheck className="w-8 h-8" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-[#f0ede6]">Checkout</h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-300 mt-1">Total Amount: <span className="font-bold text-slate-900 dark:text-[#f0ede6]">${getCartTotal().total.toFixed(2)}</span></p>
-                  </div>
-                  
-                  <div className="w-full space-y-2 mt-4">
-                    <button
-                      onClick={processPaymentAndOrder}
-                      className="w-full bg-slate-900 dark:bg-[#f0ede6] text-white dark:text-black py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
-                    >
-                      <Check className="w-4 h-4" />
-                      Pay Securely
-                    </button>
-                    <button
-                      onClick={() => setIsPaymentModalOpen(false)}
-                      className="w-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-[#f0ede6] py-3.5 rounded-2xl font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </>
-              )}
-
-              {paymentStatus === 'processing' && (
-                <div className="py-8 flex flex-col items-center">
-                  <div className="w-16 h-16 rounded-full border-4 border-rose-500/20 dark:border-rose-500/30 border-t-rose-500 animate-spin mb-6" />
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-[#f0ede6]">Processing Payment</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-300 mt-1">Please do not close this window</p>
-                </div>
-              )}
-
-              {paymentStatus === 'success' && (
-                <div className="py-8 flex flex-col items-center">
-                  <div className="w-16 h-16 rounded-full bg-emerald-500 flex items-center justify-center text-white mb-6 animate-[bounce_0.5s_ease-out]">
-                    <Check className="w-8 h-8" />
-                  </div>
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-[#f0ede6]">Payment Successful!</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-300 mt-1">Placing your order...</p>
-                </div>
-              )}
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+      <CustomerCartDrawer
+        address={address}
+        setAddress={setAddress}
+        handleCheckout={handleCheckout} 
+        isCartOpen={isCartOpen}
+        setIsCartOpen={setIsCartOpen}
+        selectedRestaurant={selectedRestaurant}
+        cart={cart}
+        removeFromCart={removeFromCart}
+        addToCart={addToCart}
+        getCartTotal={getCartTotal}
+        setIsPaymentModalOpen={setIsPaymentModalOpen}
+      />
+      
+      <CustomerAddressModal
+        isAddressModalOpen={isAddressModalOpen}
+        setIsAddressModalOpen={setIsAddressModalOpen}
+        addressSearchQuery={addressSearchQuery}
+        setAddressSearchQuery={setAddressSearchQuery}
+        address={address}
+        setAddress={setAddress}
+        onAddApiLog={onAddApiLog}
+      />
+      <CustomerPaymentModal
+        isPaymentModalOpen={isPaymentModalOpen}
+        setIsPaymentModalOpen={setIsPaymentModalOpen}
+        paymentStatus={paymentStatus}
+        getCartTotal={getCartTotal}
+        processPaymentAndOrder={processPaymentAndOrder}
+      />
     </div>
   );
 }
