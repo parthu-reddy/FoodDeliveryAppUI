@@ -6,3 +6,17 @@ coverage/
 *.log
 .env*
 !.env.example
+.npm-cache/
+npm-cache/
+
+# Scratch and test scripts
+*.py
+*.cjs
+*.mjs
+test.tsx
+test_parse.*
+test-console.*
+scratch/
+*.rej
+*.txt
+Deploying Services to Apple Containers.md
