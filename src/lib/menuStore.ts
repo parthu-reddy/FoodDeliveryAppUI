@@ -45,6 +45,12 @@ export async function getOutlets(): Promise<Outlet[]> {
   return res.json();
 }
 
+export async function getOutletsByBrand(brandId: string): Promise<Outlet[]> {
+  const res = await fetch(`${API_BASE}/brands/${brandId}/outlets`);
+  if (!res.ok) return [];
+  return res.json();
+}
+
 export async function saveOutlets(outlets: Outlet[]) {
   // Mocked for now
 }

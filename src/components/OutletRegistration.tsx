@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Store, CheckCircle } from 'lucide-react';
 
-export default function OutletRegistration({ onRefresh }: { onRefresh: () => void }) {
+export default function OutletRegistration({ onRefresh, brandId }: { onRefresh: () => void; brandId: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState('');
   const [fssai, setFssai] = useState('');
@@ -26,7 +26,7 @@ export default function OutletRegistration({ onRefresh }: { onRefresh: () => voi
       createdAt: new Date().toISOString()
     };
 
-    const brandId = 'brand-1'; // Hardcoded for this demo, in a real app this would come from the auth context
+    // Use brandId from props
 
     await fetch(`/api/v1/brands/${brandId}/outlets`, {
       method: 'POST',

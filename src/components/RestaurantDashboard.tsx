@@ -1240,7 +1240,7 @@ export default function RestaurantDashboard({
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="space-y-6">
                     <BrandRegistration onRefresh={loadData} />
-                    <OutletRegistration onRefresh={loadData} />
+                    <OutletRegistration onRefresh={loadData} brandId="brand-1" />
                   </div>
                   <div className="space-y-6">
                     <div className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 p-5 rounded-[2rem] shadow-sm">
