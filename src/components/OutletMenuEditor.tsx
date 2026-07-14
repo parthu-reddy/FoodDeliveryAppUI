@@ -6,11 +6,12 @@ import { MenuItem } from '../types';
 
 interface OutletMenuEditorProps {
   restaurantId: string; // Outlet ID
+  brandId: string;      // Brand UUID from the backend
   menuList: MenuItem[];
   onRefresh: () => void;
 }
 
-export default function OutletMenuEditor({ restaurantId, menuList, onRefresh }: OutletMenuEditorProps) {
+export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRefresh }: OutletMenuEditorProps) {
   const [activeSubTab, setActiveSubTab] = useState<'master' | 'overrides'>('master');
   
   // Master menu states
@@ -33,9 +34,6 @@ export default function OutletMenuEditor({ restaurantId, menuList, onRefresh }: 
   const [isAddingOverride, setIsAddingOverride] = useState<string | null>(null);
   const [oPrice, setOPrice] = useState('');
   const [oActive, setOActive] = useState(true);
-
-  // Brand is hardcoded to brand-1 for this demo
-  const brandId = 'brand-1';
 
   useEffect(() => {
     fetchOverrides(selectedOutlet);
