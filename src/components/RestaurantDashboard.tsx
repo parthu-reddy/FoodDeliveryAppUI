@@ -1370,7 +1370,7 @@ export default function RestaurantDashboard({
             )}
             {settingsTab === "menu-editor" && (
               <OutletMenuEditor
-                restaurantId={restaurantId}
+                restaurantId={selectedOutletId || restaurantId}
                 brandId={brands.length > 0 ? brands[0].id : ''}
                 menuList={menuList}
                 onRefresh={loadData}

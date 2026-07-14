@@ -36,16 +36,24 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
   const [oActive, setOActive] = useState(true);
 
   useEffect(() => {
+    if (restaurantId && restaurantId !== selectedOutlet) {
+      setSelectedOutlet(restaurantId);
+    }
+  }, [restaurantId]);
+
+  useEffect(() => {
     fetchOverrides(selectedOutlet);
   }, [selectedOutlet]);
 
   useEffect(() => {
-    fetchMasterItems();
-    fetchOutlets();
-    fetchOverrides(selectedOutlet);
-  }, []);
+    if (brandId) {
+      fetchMasterItems();
+      fetchOutlets();
+    }
+  }, [brandId]);
 
   const fetchOutlets = async () => {
+    if (!brandId) return;
     try {
       const data = await apiGet(`/api/v1/brands/${brandId}/outlets`);
       setOutlets(data);
@@ -53,6 +61,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
   };
 
   const fetchMasterItems = async () => {
+    if (!brandId) return;
     try {
       const data = await apiGet(`/api/v1/brands/${brandId}/master-menu`);
       setMasterItems(data);
@@ -60,8 +69,9 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
   };
 
   const fetchOverrides = async (targetOutlet: string) => {
+    if (!targetOutlet) return;
     try {
-      const data = await apiGet(`/api/v1/outlets/${selectedOutlet}/menu-overrides`);
+      const data = await apiGet(`/api/v1/outlets/${targetOutlet}/menu-overrides`);
       setOverrides(data);
     } catch (e) { console.error(e); }
   };
