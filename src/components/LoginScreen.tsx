@@ -5,7 +5,8 @@ import { UserRole } from '../types';
 import LaBouffeLogo from './LaBouffeLogo';
 import { LaBouffeLogoMark } from './LaBouffeLogoMark';
 import { apiPost, apiGet } from '../lib/apiClient';
-import { setToken, setUserProfile, decodeJwt } from '../lib/authStore';
+import { setToken, setUserProfile, decodeJwt, clearAllLocalData } from '../lib/authStore';
+import SessionManagementModal from './SessionManagementModal';
 
 const roleToServiceName = (role: UserRole): string => {
   switch (role) {
@@ -32,6 +33,8 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
   const [showNotification, setShowNotification] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showSessionModal, setShowSessionModal] = useState(false);
+  const [activeSessions, setActiveSessions] = useState<any[]>([]);
 
   const [scrollY, setScrollY] = useState(0);
   const [activeCardIndex, setActiveCardIndex] = useState(0);
@@ -41,6 +44,13 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     setScrollY(e.currentTarget.scrollTop);
   };
+
+  // Clear any stale local data when landing on the login screen.
+  // This handles cases where a session was lost (browser crash, cookie clear, etc.)
+  // so leftover tokens/profiles don't interfere with a fresh login.
+  useEffect(() => {
+    clearAllLocalData();
+  }, []);
 
   const handleCardsScroll = () => {
     if (!cardsContainerRef.current) return;
@@ -177,7 +187,12 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
 
       onLoginSuccess(role, phone, name);
     } catch (err: any) {
-      setError(err.message || 'OTP verification failed');
+      if (err.status === 409 && err.data?.data?.activeSessions) {
+        setActiveSessions(err.data.data.activeSessions);
+        setShowSessionModal(true);
+      } else {
+        setError(err.message || 'OTP verification failed');
+      }
     } finally {
       setLoading(false);
     }
@@ -797,6 +812,25 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
           )}
         </AnimatePresence>
       </div>
+
+      <SessionManagementModal
+        isOpen={showSessionModal}
+        onClose={() => setShowSessionModal(false)}
+        sessions={activeSessions}
+        phone={phone}
+        otpCode={otpCode}
+        serviceName={selectedRole ? roleToServiceName(selectedRole) : ''}
+        theme={theme}
+        onSuccess={(token) => {
+          setShowSessionModal(false);
+          setToken(token);
+          const decoded = decodeJwt(token);
+          const name = decoded?.name || decoded?.phone || phone;
+          const role = selectedRole!;
+          setUserProfile({ phone, role, name });
+          onLoginSuccess(role, phone, name);
+        }}
+      />
 
       {/* Footer Disclaimer */}
       <div className="shrink-0 text-center space-y-1 sm:space-y-1.5 mt-auto relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-8">

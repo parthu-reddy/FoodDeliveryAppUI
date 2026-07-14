@@ -84,9 +84,6 @@ export default function AdminPortal({
               {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
             </button>
           )}
-          <button onClick={onLogout} className="p-2.5 rounded-xl bg-rose-100 dark:bg-rose-500/20 text-rose-600 hover:bg-rose-200 dark:hover:bg-rose-500/30 transition-colors">
-            <LogOut className="w-4 h-4" />
-          </button>
         </div>
       </header>
 

@@ -569,12 +569,6 @@ export default function DeliveryDashboard({
             </button>
           )}
 
-          <button 
-            onClick={onLogout}
-            className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6] transition-all cursor-pointer"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
         </div>
       </header>
 
@@ -583,6 +577,7 @@ export default function DeliveryDashboard({
           <SharedSettingsView
             onBack={() => setView('home')}
             theme={theme}
+            onLogout={onLogout}
           />
         </div>
       ) : (

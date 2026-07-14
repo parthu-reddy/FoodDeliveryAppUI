@@ -30,8 +30,8 @@ export default function App() {
     setUserName(displayName);
   };
 
-  const handleLogout = () => {
-    authLogout();
+  const handleLogout = async () => {
+    await authLogout();
     setRole(null);
     setPhone('');
     setUserName('');

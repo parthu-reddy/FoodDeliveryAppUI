@@ -30,13 +30,15 @@ export default function PartnerAccountModal({
   const currentDeviceId = localStorage.getItem('device_id');
   
   const [editName, setEditName] = useState(userName || '');
+  const [initialName, setInitialName] = useState(userName || '');
 
   useEffect(() => {
     setEditName(userName || '');
+    setInitialName(userName || '');
   }, [userName]);
 
   const fetchDevices = () => {
-    apiGet('/api/v1/internal/auth/devices', { 'X-Calling-Service': portalRole || 'RESTAURANT' })
+    apiGet('/api/v1/internal/auth/sessions', { 'X-Calling-Service': portalRole || 'RESTAURANT' })
       .then(res => setDevices(res.data || []))
       .catch(err => console.error('Failed to fetch devices', err));
   };
@@ -47,18 +49,13 @@ export default function PartnerAccountModal({
     }
   }, [isOpen]);
 
-  const handleLogout = async () => {
-    try {
-      await apiPost('/api/v1/internal/auth/logout', { deviceId: currentDeviceId }, { 'X-Calling-Service': portalRole || 'RESTAURANT' });
-    } catch (e) {
-      console.error('Logout failed', e);
-    }
+  const handleLogout = () => {
     if (onLogout) onLogout();
   };
 
   const handleRemoveDevice = async (sessionId: string) => {
     try {
-      await apiDelete(`/api/v1/internal/auth/devices/${sessionId}`, { 'X-Calling-Service': portalRole || 'RESTAURANT' });
+      await apiDelete(`/api/v1/internal/auth/sessions/${sessionId}`, { 'X-Calling-Service': portalRole || 'RESTAURANT' });
       fetchDevices();
     } catch (e) {
       console.error('Failed to remove device', e);
@@ -67,7 +64,7 @@ export default function PartnerAccountModal({
 
   const handleRemoveAllDevices = async () => {
     try {
-      await apiDelete(`/api/v1/internal/auth/devices`, { 'X-Calling-Service': portalRole || 'RESTAURANT' });
+      await apiDelete(`/api/v1/internal/auth/sessions`, { 'X-Calling-Service': portalRole || 'RESTAURANT' });
       if (onLogout) onLogout();
     } catch (e) {
       console.error('Failed to remove all devices', e);
@@ -76,7 +73,7 @@ export default function PartnerAccountModal({
 
   const handleSaveName = async () => {
     try {
-      await apiPut('/api/v1/users/profile/name', { name: editName });
+      await apiPut('/api/v1/users/profile', { name: editName });
       onNameUpdate(editName);
       if (onSaveExtra) {
         await onSaveExtra(editName);
@@ -130,7 +127,8 @@ export default function PartnerAccountModal({
                       type="text" 
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-slate-50 dark:bg-slate-900 text-sm font-medium text-slate-900 dark:text-[#f0ede6]"
+                      disabled={!!initialName}
+                      className={`w-full px-4 py-3 rounded-xl border border-rose-500/20 dark:border-rose-500/30 text-sm font-medium text-slate-900 dark:text-[#f0ede6] ${!!initialName ? 'cursor-not-allowed bg-slate-100 dark:bg-slate-800' : 'bg-slate-50 dark:bg-slate-900'}`}
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -145,19 +143,21 @@ export default function PartnerAccountModal({
                   
                   {children}
 
-                  <div className="pt-4">
-                    <button 
-                      onClick={handleSaveName}
-                      disabled={!editName.trim()}
-                      className={`w-full py-3.5 rounded-xl font-bold shadow-lg transition-all ${
-                        !editName.trim() 
-                          ? 'bg-slate-300 text-slate-500 cursor-not-allowed dark:bg-slate-800 dark:text-slate-600 shadow-none' 
-                          : 'bg-rose-500 text-white shadow-rose-500/20 active:scale-95'
-                      }`}
-                    >
-                      Save Changes
-                    </button>
-                  </div>
+                  {!initialName && (
+                    <div className="pt-4">
+                      <button 
+                        onClick={handleSaveName}
+                        disabled={!editName.trim()}
+                        className={`w-full py-3.5 rounded-xl font-bold shadow-lg transition-all ${
+                          !editName.trim() 
+                            ? 'bg-slate-300 text-slate-500 cursor-not-allowed dark:bg-slate-800 dark:text-slate-600 shadow-none' 
+                            : 'bg-rose-500 text-white shadow-rose-500/20 active:scale-95'
+                        }`}
+                      >
+                        Save Changes
+                      </button>
+                    </div>
+                  )}
 
                   <div className="pt-6 border-t border-rose-500/10">
                     <div className="flex justify-between items-center mb-3">

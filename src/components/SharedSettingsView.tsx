@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, User, Package, LogOut, MapPin, Check } from 'lucide-react';
-import { apiGet, apiPut } from '../lib/apiClient';
+import { apiGet, apiPut, apiDelete } from '../lib/apiClient';
 
 interface SharedSettingsViewProps {
   onBack: () => void;
@@ -13,6 +13,7 @@ interface SharedSettingsViewProps {
   savedAddresses?: any[];
   setIsAddressModalOpen?: (isOpen: boolean) => void;
   onAddApiLog?: (log: any) => void;
+  onLogout: () => void;
 }
 
 export default function SharedSettingsView({
@@ -23,14 +24,63 @@ export default function SharedSettingsView({
   setTrackingOrder,
   savedAddresses = [],
   setIsAddressModalOpen,
-  onAddApiLog
+  onAddApiLog,
+  onLogout
 }: SharedSettingsViewProps) {
   const [accountTab, setAccountTab] = useState<'profile' | 'orders' | 'addresses'>('profile');
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
+  const [initialName, setInitialName] = useState('');
+  const [initialEmail, setInitialEmail] = useState('');
   const [editPhone, setEditPhone] = useState('');
   const [userId, setUserId] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [isLoadingSessions, setIsLoadingSessions] = useState(false);
+
+  const loadSessions = async () => {
+    setIsLoadingSessions(true);
+    try {
+      const res = await apiGet('/api/v1/internal/auth/sessions');
+      if (res?.data) {
+        setSessions(res.data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoadingSessions(false);
+    }
+  };
+
+  const revokeSession = async (sessionId: string) => {
+    try {
+      if (onAddApiLog) {
+        onAddApiLog({ id: `revoke_${sessionId}`, label: `DELETE /api/v1/internal/auth/sessions/${sessionId}`, method: 'DELETE' });
+      }
+      await apiDelete(`/api/v1/internal/auth/sessions/${sessionId}`);
+      
+      // If we revoked the current session, it might throw a 401 on next request. We'll reload sessions to be safe.
+      await loadSessions();
+    } catch (e: any) {
+      if (e.status === 401) {
+        // We revoked our own session
+        window.location.href = '/';
+      } else {
+        console.error(e);
+        alert('Failed to revoke session');
+      }
+    }
+  };
+
+  const handleLogout = () => {
+    if (onLogout) onLogout();
+  };
+
+  useEffect(() => {
+    if (accountTab === 'profile') {
+      loadSessions();
+    }
+  }, [accountTab]);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -38,7 +88,9 @@ export default function SharedSettingsView({
         const res = await apiGet('/api/v1/users/profile');
         if (res?.data) {
           setEditName(res.data.name || '');
+          setInitialName(res.data.name || '');
           setEditEmail(res.data.email || '');
+          setInitialEmail(res.data.email || '');
           setEditPhone(res.data.phone || res.data.phoneNumber || '');
           setUserId(res.data.id || '');
         }
@@ -90,28 +142,30 @@ export default function SharedSettingsView({
         </div>
       </div>
 
-      {showCustomerTabs && (
-        <div className="flex gap-2 mb-4 shrink-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md p-1.5 rounded-xl border border-rose-500/20 dark:border-rose-500/30">
-          <button 
-            onClick={() => setAccountTab('profile')}
-            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all shadow-sm ${accountTab === 'profile' ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white' : 'bg-transparent text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
-          >
-            Profile
-          </button>
-          <button 
-            onClick={() => setAccountTab('orders')}
-            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all shadow-sm ${accountTab === 'orders' ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white' : 'bg-transparent text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
-          >
-            Orders History
-          </button>
-          <button 
-            onClick={() => setAccountTab('addresses')}
-            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all shadow-sm ${accountTab === 'addresses' ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white' : 'bg-transparent text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
-          >
-            Addresses
-          </button>
-        </div>
-      )}
+      <div className="flex gap-2 mb-4 shrink-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md p-1.5 rounded-xl border border-rose-500/20 dark:border-rose-500/30 overflow-x-auto whitespace-nowrap">
+        <button 
+          onClick={() => setAccountTab('profile')}
+          className={`flex-1 min-w-[80px] px-3 py-2 rounded-lg text-xs font-bold transition-all shadow-sm ${accountTab === 'profile' ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white' : 'bg-transparent text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+        >
+          Profile
+        </button>
+        {showCustomerTabs && (
+          <>
+            <button 
+              onClick={() => setAccountTab('orders')}
+              className={`flex-1 min-w-[100px] px-3 py-2 rounded-lg text-xs font-bold transition-all shadow-sm ${accountTab === 'orders' ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white' : 'bg-transparent text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+            >
+              Orders
+            </button>
+            <button 
+              onClick={() => setAccountTab('addresses')}
+              className={`flex-1 min-w-[100px] px-3 py-2 rounded-lg text-xs font-bold transition-all shadow-sm ${accountTab === 'addresses' ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white' : 'bg-transparent text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+            >
+              Addresses
+            </button>
+          </>
+        )}
+      </div>
 
       <div className="flex-1 overflow-y-auto overscroll-none pr-1">
         {accountTab === 'profile' && (
@@ -122,7 +176,8 @@ export default function SharedSettingsView({
                 type="text" 
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md text-sm font-medium text-slate-900 dark:text-[#f0ede6] outline-none focus:border-rose-500/50 transition-colors"
+                disabled={!!initialName}
+                className={`w-full px-4 py-3 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md text-sm font-medium text-slate-900 dark:text-[#f0ede6] outline-none transition-colors ${!!initialName ? 'opacity-70 cursor-not-allowed' : 'focus:border-rose-500/50'}`}
               />
             </div>
             <div className="space-y-1.5">
@@ -131,7 +186,8 @@ export default function SharedSettingsView({
                 type="email" 
                 value={editEmail}
                 onChange={(e) => setEditEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md text-sm font-medium text-slate-900 dark:text-[#f0ede6] outline-none focus:border-rose-500/50 transition-colors"
+                disabled={!!initialEmail}
+                className={`w-full px-4 py-3 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md text-sm font-medium text-slate-900 dark:text-[#f0ede6] outline-none transition-colors ${!!initialEmail ? 'opacity-70 cursor-not-allowed' : 'focus:border-rose-500/50'}`}
               />
             </div>
             <div className="space-y-1.5">
@@ -144,13 +200,61 @@ export default function SharedSettingsView({
               />
             </div>
 
-            <div className="pt-4">
+            {(!initialName || !initialEmail) && (
+              <div className="pt-4">
+                <button 
+                  onClick={saveProfile}
+                  disabled={isSaving || !editName || !editEmail}
+                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 text-white font-bold text-sm shadow-md shadow-rose-500/20 active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer"
+                >
+                  {isSaving ? 'Saving...' : 'Save Profile Changes'}
+                </button>
+              </div>
+            )}
+
+            <div className="pt-6 border-t border-rose-500/10">
+              <div className="flex justify-between items-center mb-3">
+                <h4 className="text-sm font-bold text-slate-900 dark:text-[#f0ede6]">Logged-in Devices</h4>
+              </div>
+              <div className="space-y-2">
+                {isLoadingSessions ? (
+                  <div className="text-center py-6 text-sm font-bold text-slate-500 dark:text-slate-400">
+                    Loading sessions...
+                  </div>
+                ) : sessions.length === 0 ? (
+                  <div className="text-center py-6 text-sm font-bold text-slate-500 dark:text-slate-400">
+                    No active sessions found.
+                  </div>
+                ) : (
+                  sessions.map((session: any) => (
+                    <div key={session.sessionId} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex justify-between items-center">
+                      <div>
+                        <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                          {session.serviceName ? <span className="uppercase text-[9px] bg-rose-100 dark:bg-rose-500/20 text-rose-600 px-1.5 py-0.5 rounded-full mr-2">{session.serviceName}</span> : null}
+                          {session.os} • {session.browser}
+                        </p>
+                        <p className="text-[10px] text-slate-500 mt-0.5 line-clamp-1">{session.deviceInfo}</p>
+                        <p className="text-[9px] text-rose-500 mt-0.5">Last Active: {new Date(session.lastActive).toLocaleString()}</p>
+                      </div>
+                      <button
+                        onClick={() => revokeSession(session.sessionId)}
+                        className="text-xs text-rose-500 hover:text-rose-600 font-bold p-1 shrink-0"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="pt-6">
               <button 
-                onClick={saveProfile}
-                disabled={isSaving || !editName || !editEmail}
-                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 text-white font-bold text-sm shadow-md shadow-rose-500/20 active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer"
+                onClick={handleLogout}
+                className="w-full py-3.5 bg-slate-200 dark:bg-slate-800 text-rose-600 dark:text-rose-400 rounded-xl font-bold active:scale-95 transition-all flex items-center justify-center gap-2 hover:bg-slate-300 dark:hover:bg-slate-700"
               >
-                {isSaving ? 'Saving...' : 'Save Profile Changes'}
+                <LogOut className="w-4 h-4" />
+                Log Out
               </button>
             </div>
           </div>
