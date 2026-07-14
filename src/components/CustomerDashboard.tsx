@@ -167,7 +167,7 @@ export default function CustomerDashboard({
   const [apiAddrLat, setApiAddrLat] = useState('12.9716');
   const [apiAddrLng, setApiAddrLng] = useState('77.5946');
 
-  const [apiAvailRest, setApiAvailRest] = useState('rest-2');
+  const [apiAvailRest, setApiAvailRest] = useState('22222222-2222-2222-2222-222222222222');
   const [apiAvailLat, setApiAvailLat] = useState('12.9716');
   const [apiAvailLng, setApiAvailLng] = useState('77.5946');
 
@@ -175,11 +175,11 @@ export default function CustomerDashboard({
   const [apiNearLng, setApiNearLng] = useState('77.59');
   const [apiNearRadius, setApiNearRadius] = useState('5.0');
 
-  const [apiDelayOrderId, setApiDelayOrderId] = useState('');
+  const [apiDelayOrderId, setApiDelayOrderId] = useState('55555555-5555-5555-5555-555555555555');
   const [apiDelayApproved, setApiDelayApproved] = useState('true');
   const [apiDelayMinutes, setApiDelayMinutes] = useState('15');
 
-  const [apiTrackOrderId, setApiTrackOrderId] = useState('');
+  const [apiTrackOrderId, setApiTrackOrderId] = useState('77777777-7777-7777-7777-777777777777');
   const [isSseActive, setIsSseActive] = useState(false);
   const [sseTicks, setSseTicks] = useState<any[]>([]);
 
@@ -333,9 +333,9 @@ export default function CustomerDashboard({
       success: true,
       message: "Fetched restaurants in nearby radius.",
       data: [
-        { id: "rest-1", name: "Burger Bistro & Fries", distanceKm: 1.2, rating: 4.6, deliveryTime: 18 },
-        { id: "rest-2", name: "Local Pizzeria", distanceKm: 2.4, rating: 4.8, deliveryTime: 25 },
-        { id: "rest-3", name: "Sushi Sakurako Premium", distanceKm: 3.7, rating: 4.9, deliveryTime: 30 }
+        { id: "11111111-1111-1111-1111-111111111111", name: "Burger Bistro & Fries", distanceKm: 1.2, rating: 4.6, deliveryTime: 18 },
+        { id: "22222222-2222-2222-2222-222222222222", name: "Local Pizzeria", distanceKm: 2.4, rating: 4.8, deliveryTime: 25 },
+        { id: "33333333-3333-3333-3333-333333333333", name: "Sushi Sakurako Premium", distanceKm: 3.7, rating: 4.9, deliveryTime: 30 }
       ]
     };
     setApiResponseStatus(200);

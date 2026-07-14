@@ -171,7 +171,7 @@ export default function RestaurantDashboard({
   const [rightCatalogView, setRightCatalogView] = useState<'effective' | 'master' | 'override'>('effective');
 
   // Master Menu Item fields
-  const [masterBrandId, setMasterBrandId] = useState('brand-1');
+  const [masterBrandId, setMasterBrandId] = useState('11111111-1111-1111-1111-111111111111');
   const [masterDishName, setMasterDishName] = useState('');
   const [masterDishPrice, setMasterDishPrice] = useState('');
   const [masterPrepTime, setMasterPrepTime] = useState('15');
