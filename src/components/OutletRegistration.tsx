@@ -21,7 +21,6 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     const newOutlet = {
-      id: `rest-${Math.random().toString(36).substring(2, 7)}`,
       name,
       fssaiLicenseNumber: fssai,
       lat: parseFloat(lat),

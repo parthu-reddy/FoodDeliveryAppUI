@@ -14,7 +14,6 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     const newBrand = {
-      id: `brand-${Math.random().toString(36).substring(2, 7)}`,
       name,
       gstin,
       pan,

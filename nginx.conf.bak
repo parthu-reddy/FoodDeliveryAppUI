@@ -24,7 +24,7 @@ server {
     location /api/ {
         # Use Docker's embedded DNS server to dynamically resolve the api-gateway IP
         # This prevents 502 Bad Gateway errors if the api-gateway container is recreated
-        ##resolver 127.0.0.11 valid=5s;
+        #resolver 127.0.0.11 valid=5s;
         set $upstream http://192.168.1.7:8080;
         
         proxy_pass $upstream$request_uri;
