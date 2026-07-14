@@ -5,7 +5,7 @@ import { UserRole } from '../types';
 import LaBouffeLogo from './LaBouffeLogo';
 import { LaBouffeLogoMark } from './LaBouffeLogoMark';
 import { apiPost, apiGet } from '../lib/apiClient';
-import { setToken, setUserProfile, decodeJwt, clearAllLocalData } from '../lib/authStore';
+import { setToken, setUserProfile, decodeJwt } from '../lib/authStore';
 import SessionManagementModal from './SessionManagementModal';
 
 const roleToServiceName = (role: UserRole): string => {
@@ -44,13 +44,6 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     setScrollY(e.currentTarget.scrollTop);
   };
-
-  // Clear any stale local data when landing on the login screen.
-  // This handles cases where a session was lost (browser crash, cookie clear, etc.)
-  // so leftover tokens/profiles don't interfere with a fresh login.
-  useEffect(() => {
-    clearAllLocalData();
-  }, []);
 
   const handleCardsScroll = () => {
     if (!cardsContainerRef.current) return;

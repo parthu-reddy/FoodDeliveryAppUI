@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { UserRole } from './types';
 import LoginScreen from './components/LoginScreen';
 import CinematicFoodBackground from './components/CinematicFoodBackground';
@@ -9,20 +9,22 @@ import AdminPortal from './components/AdminPortal';
 import { getUserProfile, logout as authLogout } from './lib/authStore';
 
 export default function App() {
-  const [role, setRole] = useState<UserRole | null>(null);
-  const [phone, setPhone] = useState('');
-  const [userName, setUserName] = useState('');
-  const [m3Theme, setM3Theme] = useState<'light' | 'dark'>('light');
-
-  // Restore session from JWT on mount
-  useEffect(() => {
+  // Initialize auth state SYNCHRONOUSLY from localStorage.
+  // This ensures the correct dashboard renders on the first render
+  // and LoginScreen never briefly mounts when a session exists.
+  const [role, setRole] = useState<UserRole | null>(() => {
     const profile = getUserProfile();
-    if (profile && profile.role && profile.phone) {
-      setRole(profile.role as UserRole);
-      setPhone(profile.phone);
-      setUserName(profile.name || '');
-    }
-  }, []);
+    return profile?.role ? (profile.role as UserRole) : null;
+  });
+  const [phone, setPhone] = useState(() => {
+    const profile = getUserProfile();
+    return profile?.phone || '';
+  });
+  const [userName, setUserName] = useState(() => {
+    const profile = getUserProfile();
+    return profile?.name || '';
+  });
+  const [m3Theme, setM3Theme] = useState<'light' | 'dark'>('light');
 
   const handleLoginSuccess = (selectedRole: UserRole, userPhone: string, displayName: string) => {
     setRole(selectedRole);
