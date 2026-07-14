@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Tag, Edit3, Image as ImageIcon, Sparkles, Layers, ListFilter } from 'lucide-react';
+import { apiGet, apiPost } from '../lib/apiClient';
+import { getToken } from '../lib/authStore';
 import { MenuItem } from '../types';
 
 interface OutletMenuEditorProps {
@@ -46,21 +48,24 @@ export default function OutletMenuEditor({ restaurantId, menuList, onRefresh }: 
   }, []);
 
   const fetchOutlets = async () => {
-    const res = await fetch(`/api/v1/brands/${brandId}/outlets`);
-    const data = await res.json();
-    setOutlets(data);
+    try {
+      const data = await apiGet(`/api/v1/brands/${brandId}/outlets`);
+      setOutlets(data);
+    } catch (e) { console.error(e); }
   };
 
   const fetchMasterItems = async () => {
-    const res = await fetch(`/api/v1/brands/${brandId}/master-menu`);
-    const data = await res.json();
-    setMasterItems(data);
+    try {
+      const data = await apiGet(`/api/v1/brands/${brandId}/master-menu`);
+      setMasterItems(data);
+    } catch (e) { console.error(e); }
   };
 
   const fetchOverrides = async (targetOutlet: string) => {
-    const res = await fetch(`/api/v1/outlets/${selectedOutlet}/menu-overrides`);
-    const data = await res.json();
-    setOverrides(data);
+    try {
+      const data = await apiGet(`/api/v1/outlets/${selectedOutlet}/menu-overrides`);
+      setOverrides(data);
+    } catch (e) { console.error(e); }
   };
 
   const handleCreateMaster = async (e: React.FormEvent) => {
@@ -74,11 +79,7 @@ export default function OutletMenuEditor({ restaurantId, menuList, onRefresh }: 
       isVeg: mVeg,
       defaultPrepTimeMinutes: 15
     };
-    await fetch(`/api/v1/brands/${brandId}/master-menu`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+    await apiPost(`/api/v1/brands/${brandId}/master-menu`, payload);
     setIsAddingMaster(false);
     setMName(''); setMPrice(''); setMDesc('');
     fetchMasterItems();
@@ -92,11 +93,7 @@ export default function OutletMenuEditor({ restaurantId, menuList, onRefresh }: 
       price: oPrice ? parseFloat(oPrice) : undefined,
       active: oActive
     };
-    await fetch(`/api/v1/outlets/${selectedOutlet}/menu-overrides/${masterItemId}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
+    await apiPost(`/api/v1/outlets/${selectedOutlet}/menu-overrides/${masterItemId}`, payload);
     setIsAddingOverride(null);
     setOPrice("");
     setOActive(true);
@@ -115,21 +112,12 @@ export default function OutletMenuEditor({ restaurantId, menuList, onRefresh }: 
       isVeg: mVeg,
       defaultPrepTimeMinutes: 15
     };
-    const res = await fetch(`/api/v1/brands/${brandId}/master-menu`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-    const newMaster = await res.json();
+    const newMaster = await apiPost(`/api/v1/brands/${brandId}/master-menu`, payload);
     const overridePayload = {
       price: oPrice ? parseFloat(oPrice) : undefined,
       active: oActive
     };
-    await fetch(`/api/v1/outlets/${selectedOutlet}/menu-overrides/${newMaster.id}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(overridePayload)
-    });
+    await apiPost(`/api/v1/outlets/${selectedOutlet}/menu-overrides/${newMaster.id}`, overridePayload);
     setIsAddingOutletItem(false);
     setMName(""); setMPrice(""); setMDesc(""); setOPrice(""); setOActive(true);
     fetchMasterItems();
@@ -214,6 +202,31 @@ export default function OutletMenuEditor({ restaurantId, menuList, onRefresh }: 
               <h5 className="font-extrabold text-xs text-slate-800 dark:text-[#f0ede6] uppercase tracking-wider">Configure Overrides</h5>
               <button onClick={() => setIsAddingOutletItem(true)} className="flex items-center gap-1 bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-600 transition-colors">
                 <Plus className="w-3 h-3" /> Add Outlet Item
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    const token = getToken();
+                    const baseUrl = (import.meta as any).env.VITE_API_BASE_URL || '';
+                    const headers: Record<string, string> = {};
+                    if (token) headers['Authorization'] = `Bearer ${token}`;
+                    const res = await fetch(`${baseUrl}/api/v1/restaurants/${selectedOutlet}/menu/batch`, { method: 'GET', headers });
+                    if (!res.ok) throw new Error('Download failed');
+                    const blob = await res.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `menu_batch_${selectedOutlet}.json`;
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                  } catch(e) {
+                    console.error(e);
+                    alert('Failed to export menu.');
+                  }
+                }}
+                className="flex items-center gap-1 bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-indigo-600 transition-colors"
+              >
+                <Sparkles className="w-3 h-3" /> Export Menu
               </button>
             </div>
 

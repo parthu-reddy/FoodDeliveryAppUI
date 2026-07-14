@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Order, OrderStatus, MenuItem } from '../types';
-import { RESTAURANTS, MENU_ITEMS } from '../data';
+
 import LaBouffeLogo from './LaBouffeLogo';
 import OutletMenuEditor from './OutletMenuEditor';
 import OutletRegistration from "./OutletRegistration";
@@ -16,18 +16,22 @@ import BrandRegistration from "./BrandRegistration";
 
 import { OrderHistory } from "./OrderHistory";
 
+import CompleteProfileModal from './CompleteProfileModal';
+import SharedSettingsView from './SharedSettingsView';
+import { getUserProfile } from '../lib/authStore';
 
+import { apiGet, apiPost } from '../lib/apiClient';
+import { toFrontendStatus, toBackendStatus } from '../lib/statusMapper';
 import { 
-  getBrands, saveBrands, getOutlets, saveOutlets, 
-  getMasterMenuItems, saveMasterMenuItems, 
-  getOutletOverrides, saveOutletOverrides, 
-  addMasterMenuItem, upsertOverride, getEffectiveMenu 
+  getBrands, getOutlets, 
+  getMasterMenuItems, 
+  getOutletOverrides, getEffectiveMenu 
 } from '../lib/menuStore';
 
 interface RestaurantDashboardProps {
   restaurantId: string;
-  activeOrders: Order[];
-  onUpdateOrderStatus: (orderId: string, status: OrderStatus) => void;
+  activeOrders?: Order[];
+  onUpdateOrderStatus?: (orderId: string, status: OrderStatus) => void;
   onLogout: () => void;
   theme?: 'light' | 'dark';
   onToggleTheme?: () => void;
@@ -36,13 +40,40 @@ interface RestaurantDashboardProps {
 
 export default function RestaurantDashboard({
   restaurantId,
-  activeOrders,
-  onUpdateOrderStatus,
+  activeOrders: externalOrders,
+  onUpdateOrderStatus: externalUpdateStatus,
   onLogout,
   theme = 'light',
   onToggleTheme,
   onAddApiLog
 }: RestaurantDashboardProps) {
+  // Internal order state — fetched from backend
+  const [internalOrders, setInternalOrders] = useState<Order[]>([]);
+  const activeOrders = externalOrders ?? internalOrders;
+
+  const onUpdateOrderStatus = externalUpdateStatus ?? (async (orderId: string, status: OrderStatus) => {
+    // Optimistic UI update
+    setInternalOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
+    
+    // API call
+    try {
+      let endpoint = '';
+      if (status === 'accepted') endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/accept`;
+      else if (status === 'rejected') endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/reject`;
+      else if (status === 'ready_for_pickup') endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/ready`;
+      else if (status === 'cancelled') endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/cancel`;
+      
+      if (endpoint) {
+        await apiPost(endpoint);
+        if (onAddApiLog) {
+          onAddApiLog({ id: `update_${orderId}`, label: `POST ${endpoint}`, method: 'POST' });
+        }
+      }
+    } catch (e) {
+      console.error('Failed to update order status', e);
+      // Optional: Handle rollback if needed
+    }
+  });
   const [activeTab, setActiveTab] = useState<'orders' | 'menu'>('orders');
   const [settingsTab, setSettingsTab] = useState<"menu-editor" | "outlets" | "history">("menu-editor");
 
@@ -51,7 +82,43 @@ export default function RestaurantDashboard({
   
   const [selectedOutletId, setSelectedOutletId] = useState<string>(restaurantId);
 
-  const [menuList, setMenuList] = useState<MenuItem[]>(MENU_ITEMS[restaurantId] || []);
+  const [showCompleteProfileModal, setShowCompleteProfileModal] = useState(false);
+  const [view, setView] = useState<'home' | 'settings'>('home');
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+
+  // Fetch restaurant profile
+  useEffect(() => {
+    const p = getUserProfile();
+    if (p) setEditPhone(p.phoneNumber || '');
+
+    apiGet(`/api/v1/users/profile`)
+      .then(res => {
+        if (res.data) {
+          const profile = res.data;
+          if (profile.name) setEditName(profile.name);
+          if (profile.email) setEditEmail(profile.email);
+          if (!profile.name || !profile.email || profile.name.trim() === '' || profile.email.trim() === '') {
+            setShowCompleteProfileModal(true);
+          }
+        }
+      })
+      .catch(console.error);
+  }, []);
+
+  // Fetch restaurant orders
+  useEffect(() => {
+    if (selectedOutletId) {
+      apiGet(`/api/v1/restaurants/${selectedOutletId}/fulfillment/orders`)
+        .then(res => {
+          if (res.data) setInternalOrders(res.data);
+        })
+        .catch(console.error);
+    }
+  }, [selectedOutletId]);
+
+  const [menuList, setMenuList] = useState<MenuItem[]>([]);
   const [brands, setBrands] = useState<any[]>([]);
   const [outlets, setOutlets] = useState<any[]>([]);
   const [masterItems, setMasterItems] = useState<any[]>([]);
@@ -60,23 +127,33 @@ export default function RestaurantDashboard({
   // Function to load all data
   const loadData = async () => {
     try {
-      const [_brands, _outlets, _effective, _overrides] = await Promise.all([
+      const [_brands, _outlets] = await Promise.all([
         getBrands(),
-        getOutlets(),
-        getEffectiveMenu(selectedOutletId),
-        getOutletOverrides(selectedOutletId)
+        getOutlets()
       ]);
       setBrands(_brands);
       setOutlets(_outlets);
-      setMenuList(_effective);
-      setOverrides(_overrides);
 
-      const _outlet = _outlets.find((o: any) => o.id === selectedOutletId);
-      if (_outlet) {
-        const _masterItems = await getMasterMenuItems(_outlet.brandId);
-        setMasterItems(_masterItems);
-      } else {
-        setMasterItems([]);
+      if (!selectedOutletId && _outlets.length > 0) {
+        setSelectedOutletId(_outlets[0].id);
+        return; // will re-trigger useEffect
+      }
+
+      if (selectedOutletId) {
+        const [_effective, _overrides] = await Promise.all([
+          getEffectiveMenu(selectedOutletId),
+          getOutletOverrides(selectedOutletId)
+        ]);
+        setMenuList(_effective);
+        setOverrides(_overrides);
+
+        const _outlet = _outlets.find((o: any) => o.id === selectedOutletId);
+        if (_outlet) {
+          const _masterItems = await getMasterMenuItems(_outlet.brandId);
+          setMasterItems(_masterItems);
+        } else {
+          setMasterItems([]);
+        }
       }
     } catch(e) {}
   };
@@ -138,7 +215,7 @@ export default function RestaurantDashboard({
 
   const [apiCapacityFactor, setApiCapacityFactor] = useState('1.0');
 
-  const myMenuItems = MENU_ITEMS[restaurantId] || [];
+  const myMenuItems = menuList;
   const [apiMenuItemId, setApiMenuItemId] = useState(myMenuItems[0]?.id || '');
   const [apiMenuAvailable, setApiMenuAvailable] = useState('true');
   const [apiPrepDelta, setApiPrepDelta] = useState('120');
@@ -439,7 +516,7 @@ export default function RestaurantDashboard({
     setDelayingOrderId(null);
   };
 
-  const myRestaurantName = outlets.find(r => r.id === selectedOutletId)?.name || RESTAURANTS.find(r => r.id === selectedOutletId)?.name || 'Bella Italia Kitchen';
+  const myRestaurantName = outlets.find(r => r.id === selectedOutletId)?.name || 'My Restaurant';
 
   return (
     <div className="flex-1 flex flex-col w-full overflow-y-auto overflow-x-hidden min-h-0 bg-transparent text-slate-800 dark:text-[#f0ede6] h-full pb-20">
@@ -511,6 +588,18 @@ export default function RestaurantDashboard({
           )}
 
           <button
+            onClick={() => setView('settings')}
+            className={`p-2.5 rounded-xl transition-all cursor-pointer ${
+              view === 'settings' 
+                ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 shadow-sm shadow-indigo-500/10' 
+                : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6]'
+            }`}
+            title="Profile Settings"
+          >
+            <User className="w-4 h-4 text-indigo-500" />
+          </button>
+
+          <button
             onClick={() => setShowSettings(!showSettings)}
             className={`p-2.5 rounded-xl transition-all cursor-pointer ${
               showSettings 
@@ -531,9 +620,18 @@ export default function RestaurantDashboard({
         </div>
       </header>
 
-      {/* Tabs Switcher */}
-      {!showSettings && (
-        <div className="px-5 pt-4">
+      {view === 'settings' ? (
+        <div className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-y-auto overflow-x-hidden min-h-0 text-slate-800 dark:text-[#f0ede6] h-full mt-4">
+          <SharedSettingsView
+            onBack={() => setView('home')}
+            theme={theme}
+          />
+        </div>
+      ) : (
+        <>
+          {/* Tabs Switcher */}
+          {!showSettings && (
+            <div className="px-5 pt-4">
           <div className="flex bg-white/40 dark:bg-slate-900/40 backdrop-blur-md p-1 rounded-xl border border-rose-500/20 dark:border-rose-500/30 gap-1.5">
             <button
               onClick={() => {
@@ -1609,6 +1707,19 @@ export default function RestaurantDashboard({
         </AnimatePresence>
       </div>
 
+      <CompleteProfileModal 
+        isOpen={showCompleteProfileModal} 
+        theme={theme} 
+        profileId={editPhone}
+        onComplete={(p) => {
+          setEditName(p.name);
+          setEditEmail(p.email);
+          setShowCompleteProfileModal(false);
+        }} 
+      />
+
+    </>
+      )}
     </div>
   );
 }

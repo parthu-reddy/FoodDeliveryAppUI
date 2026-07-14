@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Bike, DollarSign, Map, CheckCircle, Navigation, Play, Eye, 
   MapPin, LogOut, Check, Clock, ArrowRight, ShieldAlert, KeyRound, MessageCircle, Store, Sun, Moon,
@@ -7,11 +7,15 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { Order, OrderStatus } from '../types';
 import LaBouffeLogo from './LaBouffeLogo';
+import { apiGet, apiPost } from '../lib/apiClient';
+import { getUserProfile } from '../lib/authStore';
+import CompleteProfileModal from './CompleteProfileModal';
+import SharedSettingsView from './SharedSettingsView';
 
 interface DeliveryDashboardProps {
   riderPhone: string;
-  activeOrders: Order[];
-  onUpdateOrderStatus: (orderId: string, status: OrderStatus, riderInfo?: { name: string; phone: string }) => void;
+  activeOrders?: Order[];
+  onUpdateOrderStatus?: (orderId: string, status: OrderStatus, riderInfo?: { name: string; phone: string }) => void;
   onLogout: () => void;
   theme?: 'light' | 'dark';
   onToggleTheme?: () => void;
@@ -20,26 +24,34 @@ interface DeliveryDashboardProps {
 
 export default function DeliveryDashboard({
   riderPhone,
-  activeOrders,
-  onUpdateOrderStatus,
+  activeOrders: externalOrders,
+  onUpdateOrderStatus: externalUpdateStatus,
   onLogout,
   theme = 'light',
   onToggleTheme,
   onAddApiLog
 }: DeliveryDashboardProps) {
+  // Internal order state
+  const [internalOrders, setInternalOrders] = useState<Order[]>([]);
+  const activeOrders = externalOrders ?? internalOrders;
+
+  const onUpdateOrderStatus = externalUpdateStatus ?? ((orderId: string, status: OrderStatus) => {
+    setInternalOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
+  });
   const [isOnline, setIsOnline] = useState(true);
   const [historyDateFilter, setHistoryDateFilter] = useState("");
   const [historyPage, setHistoryPage] = useState(1);
 
+  // Fetch delivery orders
+  useEffect(() => {
+    apiGet(`/api/v1/delivery/orders`)
+      .then(res => {
+        if (res.data) setInternalOrders(res.data);
+      })
+      .catch(console.error);
+  }, []);
+
   const todayIso = new Date().toISOString();
-  const MOCK_HISTORY_JOBS = [
-    { id: "MOCK-1", restaurantName: "Burger Joint", deliveryAddress: "123 Main St", payout: 8.50, timestamp: todayIso },
-    { id: "MOCK-2", restaurantName: "Pizza Paradise", deliveryAddress: "456 Oak Ave", payout: 12.00, timestamp: todayIso },
-    { id: "MOCK-3", restaurantName: "Taco Fiesta", deliveryAddress: "789 Pine Ln", payout: 5.50, timestamp: todayIso },
-    { id: "MOCK-4", restaurantName: "Sushi Zen", deliveryAddress: "321 Maple Dr", payout: 9.00, timestamp: todayIso },
-    { id: "MOCK-5", restaurantName: "Curry House", deliveryAddress: "654 Elm St", payout: 7.00, timestamp: todayIso },
-    { id: "MOCK-6", restaurantName: "Vegan Bites", deliveryAddress: "987 Cedar Ct", payout: 6.50, timestamp: new Date(Date.now() - 86400000).toISOString() },
-  ];
 
   const [showHistory, setShowHistory] = useState(false);
 
@@ -49,8 +61,8 @@ export default function DeliveryDashboard({
   const [pickupOtpError, setPickupOtpError] = useState("");
 
   const [otpError, setOtpError] = useState("");
-  const [mockEarnings, setMockEarnings] = useState(48.50);
-  const [completedCount, setCompletedCount] = useState(6);
+  const [mockEarnings, setMockEarnings] = useState(0);
+  const [completedCount, setCompletedCount] = useState(0);
 
   const [riderId, setRiderId] = useState("");
 
@@ -63,6 +75,11 @@ export default function DeliveryDashboard({
   const [pingJob, setPingJob] = useState<Order | null>(null);
   const [pingTimer, setPingTimer] = useState(30);
   const [rejectedIds, setRejectedIds] = useState<Set<string>>(new Set());
+
+  const [showCompleteProfileModal, setShowCompleteProfileModal] = useState(false);
+  const [view, setView] = useState<'home' | 'settings'>('home');
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
 
   React.useEffect(() => {
     if (isOnline && !activeJobId && !pingJob) {
@@ -104,7 +121,7 @@ export default function DeliveryDashboard({
 
   const handleAcceptPing = async (job: Order) => {
     try {
-      await fetch(`/api/delivery/drivers/${riderId}/orders/${job.id}/accept`, { method: "POST" });
+      await apiPost(`/api/delivery/drivers/${riderId}/orders/${job.id}/accept`);
     } catch(e) {}
     setActiveJobId(job.id);
     onUpdateOrderStatus(job.id, "dispatched", { name: riderName, phone: riderPhone });
@@ -113,7 +130,7 @@ export default function DeliveryDashboard({
 
   const handleRejectPing = async (jobId: string) => {
     try {
-      await fetch(`/api/delivery/drivers/${riderId}/orders/${jobId}/reject`, { method: "POST" });
+      await apiPost(`/api/delivery/drivers/${riderId}/orders/${jobId}/reject`);
     } catch(e) {}
     setRejectedIds(prev => new Set(prev).add(jobId));
     setPingJob(null);
@@ -121,7 +138,7 @@ export default function DeliveryDashboard({
 
   const handleTimeoutPing = async (jobId: string) => {
     try {
-      await fetch(`/api/delivery/drivers/${riderId}/orders/${jobId}/timeout`, { method: "POST" });
+      await apiPost(`/api/delivery/drivers/${riderId}/orders/${jobId}/timeout`);
     } catch(e) {}
     setRejectedIds(prev => new Set(prev).add(jobId));
     setPingJob(null);
@@ -147,11 +164,7 @@ export default function DeliveryDashboard({
         if (interval) clearInterval(interval);
         interval = setInterval(async () => {
           try {
-            await fetch("/api/v1/delivery/telemetry/batch", {
-              method: "POST",
-              headers: { "Content-Type": "application/json", "Authorization": "Bearer la-bouffe-jwt-token-courier" },
-              body: JSON.stringify([{ driverId: riderId, lat: 12.9716, lng: 77.5946, timestamp: new Date().toISOString() }])
-            });
+            await apiPost("/api/v1/delivery/telemetry/batch", [{ driverId: riderId, lat: 12.9716, lng: 77.5946, timestamp: new Date().toISOString() }]);
           } catch(e) {}
         }, 5000);
       };
@@ -167,11 +180,28 @@ export default function DeliveryDashboard({
 
 
   React.useEffect(() => {
-    fetch(`/api/delivery/profile?phoneNumber=${riderPhone}`)
-      .then(res => res.json())
+    // Fetch unified profile first
+    apiGet(`/api/v1/users/profile`)
+      .then(res => {
+        if (res.data) {
+          const p = res.data;
+          if (p.name) {
+            setEditName(p.name);
+            setRiderName(p.name);
+          }
+          if (p.email) setEditEmail(p.email);
+          if (!p.name || !p.email || p.name.trim() === '' || p.email.trim() === '') {
+            setShowCompleteProfileModal(true);
+          }
+        }
+      })
+      .catch(console.error);
+
+    // Fetch delivery-specific profile details
+    apiGet(`/api/delivery/profile?phoneNumber=${riderPhone}`)
       .then(data => {
         if (data.success) {
-          setRiderName(data.rider.name);
+          if (!riderName) setRiderName(data.rider.name);
           setVehicleNumber(data.rider.vehicleNumber);
           setPhotoUrl(data.rider.photoUrl);
           setIsOnline(data.rider.isOnline);
@@ -192,12 +222,7 @@ export default function DeliveryDashboard({
     }
     setIsRegistering(true);
     try {
-      const res = await fetch("/api/delivery/onboard", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: riderName, phoneNumber: riderPhone, vehicleNumber, photoUrl })
-      });
-      const data = await res.json();
+      const data = await apiPost("/api/delivery/onboard", { name: riderName, phoneNumber: riderPhone, vehicleNumber, photoUrl });
       if (data.success) {
         setShowProfile(false);
         setRiderId(data.rider.id);
@@ -216,11 +241,7 @@ export default function DeliveryDashboard({
     setIsOnline(newStatus);
     if (riderId) {
       try {
-        await fetch("/api/delivery/status", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ driverId: riderId, available: newStatus })
-        });
+        await apiPost("/api/delivery/status", { driverId: riderId, available: newStatus });
       } catch (e) { console.error(e); }
     }
   };
@@ -426,6 +447,15 @@ export default function DeliveryDashboard({
   // Get active order being delivered by this rider
   const currentJob = activeOrders.find(o => o.id === activeJobId && o.status !== 'delivered');
 
+  React.useEffect(() => {
+    if (currentJob) {
+      if (onAddApiLog) {
+        onAddApiLog({ id: 'delivery_route', label: `GET /api/v1/delivery/route?lat=12.97&lng=77.59`, method: 'GET' });
+      }
+      apiGet(`/api/v1/delivery/route?lat=12.97&lng=77.59`).catch(e => console.warn("Route fetch error", e));
+    }
+  }, [currentJob?.id, currentJob?.status]);
+
   // Filter jobs available on the job board (orders that are dispatched but have no rider assigned yet)
   const availableJobs = activeOrders.filter(o => o.status === 'dispatched' && !o.riderId);
 
@@ -449,11 +479,7 @@ export default function DeliveryDashboard({
       return;
     }
     try {
-      await fetch(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": "Bearer la-bouffe-jwt-token-courier" },
-        body: JSON.stringify({ status: "PICKED_UP" })
-      });
+      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, { status: "PICKED_UP" });
     } catch(e) {}
     onUpdateOrderStatus(currentJob.id, "picked_up");
     setEnteredPickupOtp("");
@@ -469,11 +495,7 @@ export default function DeliveryDashboard({
       return;
     }
     try {
-      await fetch(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": "Bearer la-bouffe-jwt-token-courier" },
-        body: JSON.stringify({ status: "DELIVERED" })
-      });
+      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, { status: "DELIVERED" });
     } catch(e) {}
     onUpdateOrderStatus(currentJob.id, "delivered");
     setMockEarnings(prev => prev + 5.50 + 2.00);
@@ -482,7 +504,7 @@ export default function DeliveryDashboard({
     setActiveJobId(null);
   };
 
-  const allHistoryJobs = [...activeOrders.filter(o => o.riderId === riderPhone && o.status === "delivered").map(job => ({ ...job, payout: 7.50 })), ...MOCK_HISTORY_JOBS];
+  const allHistoryJobs = [...activeOrders.filter(o => o.riderId === riderPhone && o.status === "delivered").map(job => ({ ...job, payout: 7.50 }))];
   const filteredHistoryJobs = allHistoryJobs.filter(job => {
     if (!historyDateFilter) return true;
     if (!job.timestamp) return false;
@@ -526,9 +548,13 @@ export default function DeliveryDashboard({
           </button>
 
           <button
-            onClick={() => setShowProfile(true)}
-            className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6] transition-all cursor-pointer"
-            title="Profile"
+            onClick={() => setView('settings')}
+            className={`p-2.5 rounded-xl transition-all cursor-pointer ${
+              view === 'settings' 
+                ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 shadow-sm shadow-indigo-500/10' 
+                : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6]'
+            }`}
+            title="Profile Settings"
           >
             <User className="w-4 h-4 text-indigo-500" />
           </button>
@@ -552,10 +578,19 @@ export default function DeliveryDashboard({
         </div>
       </header>
 
-      {/* Driver Statistics Panel */}
-      <div className="p-5 grid grid-cols-2 gap-4 shrink-0">
-        <div className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-2xl p-4 shadow-sm flex items-center gap-3">
-          <div className="p-2.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl">
+      {view === 'settings' ? (
+        <div className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-y-auto overflow-x-hidden min-h-0 text-slate-800 dark:text-[#f0ede6] h-full mt-4">
+          <SharedSettingsView
+            onBack={() => setView('home')}
+            theme={theme}
+          />
+        </div>
+      ) : (
+        <>
+          {/* Driver Statistics Panel */}
+          <div className="p-5 grid grid-cols-2 gap-4 shrink-0">
+            <div className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-2xl p-4 shadow-sm flex items-center gap-3">
+              <div className="p-2.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl">
             <DollarSign className="w-5 h-5" />
           </div>
           <div>
@@ -792,8 +827,8 @@ export default function DeliveryDashboard({
                         pattern="[0-9]*"
                         inputMode="numeric"
                         value={enteredPickupOtp}
-                        onChange={(e) => setEnteredPickupOtp(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                        placeholder="Ask restaurant for 4-digit pickup OTP"
+                        onChange={(e) => setEnteredPickupOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                        placeholder="Ask restaurant for 6-digit pickup OTP"
                         className="flex-1 px-4 py-3 bg-transparent text-slate-800 dark:text-[#f0ede6] outline-none font-mono text-center tracking-widest text-sm placeholder-slate-400"
                         required
                       />
@@ -824,8 +859,8 @@ export default function DeliveryDashboard({
                         pattern="[0-9]*"
                         inputMode="numeric"
                         value={enteredOtp}
-                        onChange={(e) => setEnteredOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                        placeholder="Ask customer for 4-digit OTP"
+                        onChange={(e) => setEnteredOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        placeholder="Ask customer for 6-digit OTP"
                         className="flex-1 px-4 py-3 bg-transparent text-slate-800 dark:text-[#f0ede6] outline-none font-mono text-center tracking-widest text-sm placeholder-slate-400"
                         required
                       />
@@ -1382,8 +1417,14 @@ export default function DeliveryDashboard({
             </div>
             <div className="flex gap-3 relative">
               <button
+                onClick={() => handleTimeoutPing(pingJob.id)}
+                className="flex-1 py-3.5 rounded-xl border border-orange-500/30 text-slate-400 dark:text-slate-300 font-bold hover:bg-slate-800 transition-colors hover:shadow-[0_0_12px_rgba(249,115,22,0.4)] dark:hover:shadow-[0_0_12px_rgba(249,115,22,0.5)] hover:border-orange-500/50 transition-all text-[10px]"
+              >
+                Timeout
+              </button>
+              <button
                 onClick={() => handleRejectPing(pingJob.id)}
-                className="flex-1 py-3.5 rounded-xl border border-rose-500/30 text-slate-400 dark:text-slate-300 font-bold hover:bg-slate-800 transition-colors hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all"
+                className="flex-1 py-3.5 rounded-xl border border-rose-500/30 text-slate-400 dark:text-slate-300 font-bold hover:bg-slate-800 transition-colors hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all text-xs"
               >
                 Decline
               </button>
@@ -1398,9 +1439,23 @@ export default function DeliveryDashboard({
         )}
       </AnimatePresence>
 
+      <CompleteProfileModal 
+        isOpen={showCompleteProfileModal} 
+        theme={theme} 
+        profileId={user?.id || ''}
+        onComplete={(profile) => {
+          setUser(prev => prev ? { ...prev, name: profile.name, email: profile.email } : prev);
+          setShowCompleteProfileModal(false);
+          // check if vehicle number is missing, if so show the delivery onboarding
+          if (!vehicleNumber) {
+            setShowProfile(true);
+          }
+        }} 
+      />
 
 
-
+    </>
+      )}
     </div>
   );
 }

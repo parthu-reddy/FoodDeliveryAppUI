@@ -1,4 +1,5 @@
 import { MenuItem, MasterMenuItem, OutletOverride } from '../types';
+import { apiGet, apiPost, apiPut, apiDelete } from './apiClient';
 
 export interface Brand {
   id: string;
@@ -30,9 +31,10 @@ export interface Outlet {
 const API_BASE = '/api/v1';
 
 export async function getBrands(): Promise<Brand[]> {
-  const res = await fetch(`${API_BASE}/brands`);
-  if (!res.ok) return [];
-  return res.json();
+  try {
+    const res = await apiGet(`${API_BASE}/brands`);
+    return res.data || [];
+  } catch { return []; }
 }
 
 export async function saveBrands(brands: Brand[]) {
@@ -40,15 +42,17 @@ export async function saveBrands(brands: Brand[]) {
 }
 
 export async function getOutlets(): Promise<Outlet[]> {
-  const res = await fetch(`${API_BASE}/outlets`);
-  if (!res.ok) return [];
-  return res.json();
+  try {
+    const res = await apiGet(`${API_BASE}/outlets`);
+    return res.data || [];
+  } catch { return []; }
 }
 
 export async function getOutletsByBrand(brandId: string): Promise<Outlet[]> {
-  const res = await fetch(`${API_BASE}/brands/${brandId}/outlets`);
-  if (!res.ok) return [];
-  return res.json();
+  try {
+    const res = await apiGet(`${API_BASE}/brands/${brandId}/outlets`);
+    return res.data || [];
+  } catch { return []; }
 }
 
 export async function saveOutlets(outlets: Outlet[]) {
@@ -56,9 +60,10 @@ export async function saveOutlets(outlets: Outlet[]) {
 }
 
 export async function getMasterMenuItems(brandId: string): Promise<MasterMenuItem[]> {
-  const res = await fetch(`${API_BASE}/brands/${brandId}/master-menu`);
-  if (!res.ok) return [];
-  return res.json();
+  try {
+    const res = await apiGet(`${API_BASE}/brands/${brandId}/master-menu`);
+    return res.data || [];
+  } catch { return []; }
 }
 
 export async function saveMasterMenuItems(items: MasterMenuItem[]) {
@@ -66,9 +71,10 @@ export async function saveMasterMenuItems(items: MasterMenuItem[]) {
 }
 
 export async function getOutletOverrides(outletId: string): Promise<OutletOverride[]> {
-  const res = await fetch(`${API_BASE}/outlets/${outletId}/menu-overrides`);
-  if (!res.ok) return [];
-  return res.json();
+  try {
+    const res = await apiGet(`${API_BASE}/outlets/${outletId}/menu-overrides`);
+    return res.data || [];
+  } catch { return []; }
 }
 
 export async function saveOutletOverrides(overrides: OutletOverride[]) {
@@ -76,25 +82,11 @@ export async function saveOutletOverrides(overrides: OutletOverride[]) {
 }
 
 // Add Master Menu Item
-export async function addMasterMenuItem(
-  brandId: string, 
-  name: string, 
-  basePrice: number, 
-  defaultPrepTimeMinutes: number, 
-  imageUrl: string, 
-  category = 'Burgers', 
-  description = '', 
-  isVeg = false
-): Promise<MasterMenuItem | null> {
-  const res = await fetch(`${API_BASE}/brands/${brandId}/master-menu`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name, basePrice, defaultPrepTimeMinutes, imageUrl, category, description, isVeg
-    })
-  });
-  if (!res.ok) return null;
-  return res.json();
+export async function addMasterMenuItem(brandId: string, item: Partial<MasterMenuItem>): Promise<MasterMenuItem | null> {
+  try {
+    const res = await apiPost(`${API_BASE}/brands/${brandId}/master-menu`, item);
+    return res.data || null;
+  } catch { return null; }
 }
 
 // Add/Update Override
@@ -104,45 +96,37 @@ export async function upsertOverride(
   price?: number, 
   active?: boolean
 ): Promise<OutletOverride | null> {
-  const res = await fetch(`${API_BASE}/outlets/${outletId}/menu-overrides/${masterMenuItemId}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ price, active })
-  });
-  if (!res.ok) return null;
-  return res.json();
+  try {
+    const res = await apiPost(`${API_BASE}/outlets/${outletId}/menu-overrides/${masterMenuItemId}`, { price, active });
+    return res.data || null;
+  } catch { return null; }
 }
 
 // Dynamically calculates the Effective Menu for an outlet
 export async function getEffectiveMenu(restaurantId: string): Promise<MenuItem[]> {
-  const res = await fetch(`${API_BASE}/restaurants/${restaurantId}/catalog/items`);
-  if (!res.ok) return [];
-  return res.json();
+  try {
+    const res = await apiGet(`${API_BASE}/restaurants/${restaurantId}/catalog/items`);
+    return res.data || [];
+  } catch { return []; }
 }
 
 export async function addMenuItem(restaurantId: string, item: Partial<MenuItem>): Promise<MenuItem | null> {
-  const res = await fetch(`${API_BASE}/restaurants/${restaurantId}/menu`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(item)
-  });
-  if (!res.ok) return null;
-  return res.json();
+  try {
+    const res = await apiPost(`${API_BASE}/restaurants/${restaurantId}/menu`, item);
+    return res.data || null;
+  } catch { return null; }
 }
 
 export async function updateMenuItem(restaurantId: string, itemId: string, item: Partial<MenuItem>): Promise<MenuItem | null> {
-  const res = await fetch(`${API_BASE}/restaurants/${restaurantId}/menu/${itemId}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(item)
-  });
-  if (!res.ok) return null;
-  return res.json();
+  try {
+    const res = await apiPut(`${API_BASE}/restaurants/${restaurantId}/menu/${itemId}`, item);
+    return res.data || null;
+  } catch { return null; }
 }
 
 export async function deleteMenuItem(restaurantId: string, itemId: string): Promise<boolean> {
-  const res = await fetch(`${API_BASE}/restaurants/${restaurantId}/menu/${itemId}`, {
-    method: 'DELETE'
-  });
-  return res.ok;
+  try {
+    await apiDelete(`${API_BASE}/restaurants/${restaurantId}/menu/${itemId}`);
+    return true;
+  } catch { return false; }
 }

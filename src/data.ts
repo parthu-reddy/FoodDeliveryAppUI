@@ -15,7 +15,7 @@ export const RESTAURANTS: Restaurant[] = [
   },
   {
     id: 'rest-2',
-    name: 'Bella Italia Pizzeria',
+    name: 'Local Pizzeria',
     image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80',
     cuisine: 'Woodfired Pizza, Italian, Pasta',
     rating: 4.7,

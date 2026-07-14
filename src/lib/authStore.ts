@@ -10,7 +10,14 @@ export const clearToken = () => {
   localStorage.removeItem('auth_token');
 };
 
-export const logout = () => {
+import { apiPost } from './apiClient';
+
+export const logout = async () => {
+  try {
+    await apiPost('/api/v1/internal/auth/logout', {});
+  } catch (e) {
+    console.error('Logout API call failed', e);
+  }
   clearToken();
   localStorage.removeItem('user_profile');
   memoryProfile = null;

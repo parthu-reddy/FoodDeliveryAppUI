@@ -1,4 +1,4 @@
-export type UserRole = 'customer' | 'restaurant' | 'delivery';
+export type UserRole = 'customer' | 'restaurant' | 'delivery' | 'admin';
 
 export interface Restaurant {
   id: string;
@@ -37,7 +37,10 @@ export type OrderStatus =
   | 'dispatched' // Ready & assigned, waiting for delivery pickup
   | 'picked_up' // Picked up by delivery partner
   | 'delivered' // Successfully completed
-  | 'on_hold'; // Held by restaurant due to delay
+  | 'on_hold' // Held by restaurant due to delay
+  | 'ready_for_pickup'
+  | 'rejected'
+  | 'cancelled';
 
 export interface Order {
   id: string;
@@ -51,8 +54,8 @@ export interface Order {
   deliveryFee: number;
   total: number;
   status: OrderStatus;
-  otp: string; // 4-digit code to complete delivery
-  pickupOtp?: string; // 4-digit code to pick up from restaurant
+  otp: string; // 6-digit code to complete delivery
+  pickupOtp?: string; // 6-digit code to pick up from restaurant
   riderId?: string;
   riderName?: string;
   riderPhone?: string;

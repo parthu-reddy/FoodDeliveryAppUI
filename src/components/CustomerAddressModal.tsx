@@ -10,6 +10,7 @@ export default function CustomerAddressModal({
   setAddressSearchQuery,
   address,
   setAddress,
+  savedAddresses = [],
   onAddApiLog
 }: any) {
   return (
@@ -77,6 +78,32 @@ export default function CustomerAddressModal({
                     Drag map to move pin
                   </div>
                 </div>
+                {/* Saved Addresses */}
+                {savedAddresses && savedAddresses.length > 0 && (
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-300 uppercase">Saved Addresses</label>
+                    <div className="flex flex-col gap-2">
+                      {savedAddresses.map((addr: any) => (
+                        <button
+                          key={addr.id}
+                          onClick={() => {
+                            setAddress(`${addr.label}: ${addr.addressLine1}${addr.addressLine2 ? ', ' + addr.addressLine2 : ''}, ${addr.city}`);
+                            setIsAddressModalOpen(false);
+                          }}
+                          className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-rose-500/50 transition-colors text-left"
+                        >
+                          <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+                            <MapPin className="w-4 h-4 text-slate-500" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-slate-900 dark:text-[#f0ede6]">{addr.label}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{addr.addressLine1}, {addr.city}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Current Address Details */}
                 <div className="space-y-2 flex-1">

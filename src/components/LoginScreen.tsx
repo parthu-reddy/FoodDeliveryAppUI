@@ -4,6 +4,17 @@ import { motion, AnimatePresence } from 'motion/react';
 import { UserRole } from '../types';
 import LaBouffeLogo from './LaBouffeLogo';
 import { LaBouffeLogoMark } from './LaBouffeLogoMark';
+import { apiPost, apiGet } from '../lib/apiClient';
+import { setToken, setUserProfile, decodeJwt } from '../lib/authStore';
+
+const roleToServiceName = (role: UserRole): string => {
+  switch (role) {
+    case 'customer': return 'customer-service';
+    case 'restaurant': return 'restaurant-service';
+    case 'delivery': return 'delivery-service';
+    default: return 'customer-service';
+  }
+};
 
 interface LoginScreenProps {
   onLoginSuccess: (role: UserRole, phone: string, name: string) => void;
@@ -69,20 +80,16 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
 
   // Auto dismiss or show SMS simulation
   useEffect(() => {
-    if (otpSent) {
-      // Generate random 4-digit code
-      const code = Math.floor(1000 + Math.random() * 9000).toString();
-      setGeneratedOtp(code);
-      
+    if (otpSent && generatedOtp && ((import.meta as any).env.DEV || (import.meta as any).env.VITE_ENABLE_DEV_OTP === 'true')) {
       const timer = setTimeout(() => {
         setShowNotification(true);
       }, 1000);
 
       return () => clearTimeout(timer);
     }
-  }, [otpSent]);
+  }, [otpSent, generatedOtp]);
 
-  const handleSendOtp = (e: React.FormEvent) => {
+  const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -98,23 +105,42 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
       onAddApiLog({ id: 'auth_initiate', label: 'POST /api/v1/internal/auth/initiate', method: 'POST' });
     }
 
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const serviceName = roleToServiceName(selectedRole!);
+      await apiPost(
+        `/api/v1/internal/auth/initiate?phoneNumber=${encodeURIComponent(phone)}`,
+        undefined,
+        { 'X-Calling-Service': serviceName }
+      );
+      
+      // Try to fetch the OTP via admin endpoint (dev convenience or feature flag)
+      if ((import.meta as any).env.DEV || (import.meta as any).env.VITE_ENABLE_DEV_OTP === 'true') {
+        try {
+          const adminResp = await apiGet(`/api/v1/internal/auth/admin/otp?phoneNumber=${encodeURIComponent(phone)}&serviceName=${encodeURIComponent(serviceName)}`);
+          if (adminResp?.data) {
+            setGeneratedOtp(adminResp.data);
+          } else if (typeof adminResp === 'string') {
+            setGeneratedOtp(adminResp);
+          }
+        } catch {
+          console.warn("Could not fetch OTP from admin endpoint.");
+        }
+      }
+
       setOtpSent(true);
-    }, 800);
+    } catch (err: any) {
+      setError(err.message || 'Failed to send OTP. Is the backend running?');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleVerifyOtp = (e: React.FormEvent) => {
+  const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (otpCode.length !== 4) {
-      setError('Please enter the 4-digit code');
-      return;
-    }
-
-    if (otpCode !== generatedOtp && otpCode !== '1234') {
-      setError('Invalid OTP. Please check the notification or use 1234');
+    if (otpCode.length !== 6) {
+      setError('Please enter the 6-digit code');
       return;
     }
 
@@ -124,15 +150,37 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
       onAddApiLog({ id: 'auth_verify', label: 'POST /api/v1/internal/auth/verify', method: 'POST' });
     }
 
-    setTimeout(() => {
+    try {
+      const serviceName = roleToServiceName(selectedRole!);
+      const resp = await apiPost(
+        `/api/v1/internal/auth/verify?phoneNumber=${encodeURIComponent(phone)}&otp=${encodeURIComponent(otpCode)}`,
+        undefined,
+        { 'X-Calling-Service': serviceName }
+      );
+
+      // The backend returns { success: true, data: "<jwt_token>", message: "Login successful" }
+      const token = resp?.data || resp;
+      if (!token || typeof token !== 'string') {
+        throw new Error('No token received from server');
+      }
+
+      // Store JWT
+      setToken(token);
+
+      // Decode user info from JWT
+      const decoded = decodeJwt(token);
+      const name = decoded?.name || decoded?.phone || phone;
+      const role = selectedRole!;
+
+      // Store profile for session persistence
+      setUserProfile({ phone, role, name });
+
+      onLoginSuccess(role, phone, name);
+    } catch (err: any) {
+      setError(err.message || 'OTP verification failed');
+    } finally {
       setLoading(false);
-      let name = 'Guest';
-      if (selectedRole === 'customer') name = 'Alex Mercer';
-      if (selectedRole === 'restaurant') name = 'Bella Italia Manager';
-      if (selectedRole === 'delivery') name = 'Rider Sam';
-      
-      onLoginSuccess(selectedRole!, phone, name);
-    }, 1000);
+    }
   };
 
   const handleBack = () => {
@@ -594,7 +642,7 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
                 }`}>
                   {!otpSent 
                     ? 'Enter your mobile number to retrieve your secure credentials'
-                    : 'We sent a 4-digit security code to your phone'}
+                    : 'We sent a 6-digit security code to your phone'}
                 </p>
               </div>
 
@@ -673,8 +721,8 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
                         pattern="[0-9]*"
                         inputMode="numeric"
                         value={otpCode}
-                        onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                        placeholder="- - - -"
+                        onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        placeholder="- - - - - -"
                         className={`flex-1 px-4 py-3.5 bg-transparent outline-none font-mono text-xl text-center tracking-[1em] ${
                           theme === 'dark' ? 'text-white' : 'text-slate-800'
                         }`}
@@ -687,13 +735,32 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
                   <div className="flex items-center justify-between">
                     <button
                       type="button"
-                      onClick={() => {
-                        // Resend simulation
+                      onClick={async () => {
                         setError('');
                         setShowNotification(false);
-                        const code = Math.floor(1000 + Math.random() * 9000).toString();
-                        setGeneratedOtp(code);
-                        setTimeout(() => setShowNotification(true), 1200);
+                        try {
+                          const serviceName = roleToServiceName(selectedRole!);
+                          await apiPost(
+                            `/api/v1/internal/auth/initiate?phoneNumber=${encodeURIComponent(phone)}`,
+                            undefined,
+                            { 'X-Calling-Service': serviceName }
+                          );
+                          if ((import.meta as any).env.DEV || (import.meta as any).env.VITE_ENABLE_DEV_OTP === 'true') {
+                            try {
+                              const adminResp = await apiGet(`/api/v1/internal/auth/admin/otp?phoneNumber=${encodeURIComponent(phone)}&serviceName=${encodeURIComponent(serviceName)}`);
+                              if (adminResp?.data) {
+                                setGeneratedOtp(adminResp.data);
+                              } else if (typeof adminResp === 'string') {
+                                setGeneratedOtp(adminResp);
+                              }
+                              setTimeout(() => setShowNotification(true), 1200);
+                            } catch {
+                              console.warn("Could not fetch OTP from admin endpoint.");
+                            }
+                          }
+                        } catch (err: any) {
+                          setError(err.message || 'Failed to resend OTP.');
+                        }
                       }}
                       className="text-xs text-orange-600 font-bold hover:underline cursor-pointer"
                     >

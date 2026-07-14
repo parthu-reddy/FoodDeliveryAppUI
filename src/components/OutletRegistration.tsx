@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
 import { Plus, Store, CheckCircle } from 'lucide-react';
+import { apiPost } from '../lib/apiClient';
 
-export default function OutletRegistration({ onRefresh, brandId }: { onRefresh: () => void; brandId: string }) {
+interface OutletRegistrationProps {
+  onRefresh: () => void;
+  brandId: string;
+}
+
+export default function OutletRegistration({ onRefresh, brandId }: OutletRegistrationProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState('');
   const [fssai, setFssai] = useState('');
@@ -28,11 +34,7 @@ export default function OutletRegistration({ onRefresh, brandId }: { onRefresh: 
 
     // Use brandId from props
 
-    await fetch(`/api/v1/brands/${brandId}/outlets`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newOutlet)
-    });
+    await apiPost(`/api/v1/brands/${brandId}/outlets`, newOutlet);
 
     setIsOpen(false);
     setName('');

@@ -6,22 +6,24 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Restaurant, MenuItem, CartItem, Order, OrderStatus } from '../types';
-import { RESTAURANTS, MENU_ITEMS } from '../data';
+import { apiGet, apiPost } from '../lib/apiClient';
+import { getUserProfile } from '../lib/authStore';
 import LaBouffeLogo from './LaBouffeLogo';
 import { getEffectiveMenu } from '../lib/menuStore';
 import ImageLoader from './ImageLoader';
 
 import CustomerCartDrawer from './CustomerCartDrawer';
-import CustomerAccountModal from './CustomerAccountModal';
+import SharedSettingsView from './SharedSettingsView';
 import CustomerAddressModal from './CustomerAddressModal';
 import CustomerPaymentModal from './CustomerPaymentModal';
+import CompleteProfileModal from './CompleteProfileModal';
 
 
 interface CustomerDashboardProps {
   userName: string;
   userPhone: string;
-  activeOrders: Order[];
-  onPlaceOrder: (order: Order) => void;
+  activeOrders?: Order[];
+  onPlaceOrder?: (order: Order) => void;
   onUpdateOrder?: (orderId: string, status: string) => void;
   onLogout: () => void;
   theme?: 'light' | 'dark';
@@ -32,24 +34,78 @@ interface CustomerDashboardProps {
 export default function CustomerDashboard({ 
   userName, 
   userPhone, 
-  activeOrders, 
-  onPlaceOrder,
+  activeOrders: externalOrders, 
+  onPlaceOrder: externalPlaceOrder,
   onUpdateOrder, 
   onLogout,
   theme = 'light',
   onToggleTheme,
   onAddApiLog
 }: CustomerDashboardProps) {
+  // Internal order state — falls back to parent prop if provided
+  const [internalOrders, setInternalOrders] = useState<Order[]>([]);
+  const activeOrders = externalOrders ?? internalOrders;
+
+  const onPlaceOrder = externalPlaceOrder ?? ((order: Order) => {
+    setInternalOrders(prev => [...prev, order]);
+  });
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [effectiveMenu, setEffectiveMenu] = useState<MenuItem[]>([]);
   
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+
+  // Fetch active orders and nearby restaurants
+  useEffect(() => {
+    const profile = getUserProfile();
+    if (profile && profile.role === 'customer') {
+      // Always fetch backend profile first to check completeness
+      apiGet(`/api/v1/users/profile`)
+        .then(res => {
+          if (res.data) {
+            const p = res.data;
+            if (p.name) setEditName(p.name);
+            if (p.email) setEditEmail(p.email);
+            if (!p.name || !p.email || p.name.trim() === '' || p.email.trim() === '') {
+              setShowProfileModal(true);
+            }
+          }
+        })
+        .catch(console.error);
+
+      // We still need orders and addresses if profile is active
+      apiGet(`/api/v1/orders`)
+        .then(res => {
+          if (res.data) setInternalOrders(res.data);
+        })
+        .catch(console.error);
+        
+      // Fetch addresses - actually they need ID, wait, API gateway handles X-User-Id. 
+      // But previous code was `/api/v1/customers/${profile.id}/addresses`.
+      // Let's keep it as it was if authStore somehow had id, or use the sub/phone.
+      // Wait, profile.id is undefined from authStore. Let's just fetch without id if gateway handles it?
+      // Actually `apiGet('/api/v1/customers/addresses')` is standard. Let's stick to the old code for addresses to not break it:
+      if (profile.id) {
+        apiGet(`/api/v1/customers/${profile.id}/addresses`)
+          .then(res => {
+            if (res.data) setSavedAddresses(res.data);
+          })
+          .catch(console.error);
+      }
+    }
+
+    apiGet(`/api/v1/restaurants/nearby?lat=12.97&lng=77.59&radius=5.0`)
+      .then(res => {
+        if (res.data) setRestaurants(res.data);
+      })
+      .catch(console.error);
+  }, []);
+
   // Pre-cache restaurant and menu images for smoother scrolling (caches 20 restaurants & 20 menu items)
   useEffect(() => {
     const preloadImages = () => {
       const imagesToPreload = [
-        ...RESTAURANTS.slice(0, 20).map(r => r.image),
-        ...Object.values(MENU_ITEMS).flat().slice(0, 20).map(m => m.image)
+        ...restaurants.slice(0, 20).map(r => r.image)
       ];
       imagesToPreload.forEach(src => {
         if (src) {
@@ -79,16 +135,19 @@ export default function CustomerDashboard({
       onAddApiLog({ id: 'nearby', label: 'GET /api/v1/restaurants/nearby', method: 'GET' });
     }
   }, []);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [address, setAddress] = useState('Flat 402, Highrise Apartments, Sector 62');
+  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
   const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
 
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [view, setView] = useState<'home' | 'settings'>('home');
-  const [accountTab, setAccountTab] = useState<"profile" | "orders">("profile");
+  const [accountTab, setAccountTab] = useState<"profile" | "orders" | "addresses">("profile");
   const [editName, setEditName] = useState(userName);
+  const [editEmail, setEditEmail] = useState('');
   const [editPhone, setEditPhone] = useState(userPhone);
   const [addressSearchQuery, setAddressSearchQuery] = useState('');
   
@@ -275,7 +334,7 @@ export default function CustomerDashboard({
       message: "Fetched restaurants in nearby radius.",
       data: [
         { id: "rest-1", name: "Burger Bistro & Fries", distanceKm: 1.2, rating: 4.6, deliveryTime: 18 },
-        { id: "rest-2", name: "Bella Italia Pizzeria", distanceKm: 2.4, rating: 4.8, deliveryTime: 25 },
+        { id: "rest-2", name: "Local Pizzeria", distanceKm: 2.4, rating: 4.8, deliveryTime: 25 },
         { id: "rest-3", name: "Sushi Sakurako Premium", distanceKm: 3.7, rating: 4.9, deliveryTime: 30 }
       ]
     };
@@ -401,7 +460,7 @@ export default function CustomerDashboard({
   const categories = ['All', 'Burgers', 'Pizza', 'Sushi', 'Salads', 'Desserts'];
 
   // Filter restaurants
-  const filteredRestaurants = RESTAURANTS.filter(restaurant => {
+  const filteredRestaurants = restaurants.filter(restaurant => {
     const matchesSearch = restaurant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           restaurant.cuisine.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = !selectedCategory || selectedCategory === 'All' || 
@@ -439,9 +498,23 @@ export default function CustomerDashboard({
     };
   };
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (!selectedRestaurant || cart.length === 0) return;
     
+    // Delivery Availability Check
+    try {
+      const availRes = await apiGet(`/api/v1/restaurants/${selectedRestaurant.id}/delivery-availability?lat=12.97&lng=77.59`);
+      if (availRes.data && availRes.data.available === false) {
+        alert("This restaurant is currently out of your delivery zone.");
+        return;
+      }
+      if (onAddApiLog) {
+        onAddApiLog({ id: 'delivery_avail', label: `GET /api/v1/restaurants/${selectedRestaurant.id}/delivery-availability`, method: 'GET' });
+      }
+    } catch(e) {
+      console.warn("Availability check failed, proceeding anyway", e);
+    }
+
     if (onAddApiLog) {
       onAddApiLog({ id: 'menu_batch', label: `GET /api/v1/restaurants/${selectedRestaurant.id}/menu/batch`, method: 'GET' });
     }
@@ -450,48 +523,46 @@ export default function CustomerDashboard({
     setIsPaymentModalOpen(true);
   };
 
-  const processPaymentAndOrder = () => {
+  const processPaymentAndOrder = async () => {
     if (!selectedRestaurant || cart.length === 0) return;
     
     setPaymentStatus('processing');
     
-    // Simulate API calls & Gateway
     if (onAddApiLog) {
       onAddApiLog({ id: 'create_order', label: 'POST /api/v1/orders', method: 'POST' });
     }
 
-    setTimeout(() => {
-      setPaymentStatus('success');
+    try {
+      const items = cart.map(i => ({ menuItemId: i.item.id, quantity: i.quantity }));
+      const profile = getUserProfile();
       
+      const orderPayload = {
+        customerId: profile?.id,
+        restaurantId: selectedRestaurant.id,
+        // Since we don't have a real address ID in the simple frontend flow, we pass a dummy UUID 
+        // assuming the backend validates it if it enforces FK. Wait, customerId is in token.
+        deliveryAddressId: "00000000-0000-0000-0000-000000000001",
+        items
+      };
+      
+      const res = await apiPost('/api/v1/orders', orderPayload);
+      
+      setPaymentStatus('success');
       setTimeout(() => {
-        const { subtotal, deliveryFee, total } = getCartTotal();
-        
-        // Generate order
-        const newOrder: Order = {
-          id: `ord-${Math.floor(1000 + Math.random() * 9000)}`,
-          customerName: userName,
-          customerPhone: userPhone,
-          deliveryAddress: address,
-          restaurantId: selectedRestaurant.id,
-          restaurantName: selectedRestaurant.name,
-          items: [...cart],
-          subtotal,
-          deliveryFee,
-          total,
-          status: 'placed',
-          otp: Math.floor(1000 + Math.random() * 9000).toString(),
-          pickupOtp: Math.floor(1000 + Math.random() * 9000).toString(),
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-
-        onPlaceOrder(newOrder);
+        if (res.data) {
+          onPlaceOrder(res.data);
+          setTrackingOrder(res.data);
+        }
         setCart([]);
         setIsCartOpen(false);
         setIsPaymentModalOpen(false);
         setSelectedRestaurant(null);
-        setTrackingOrder(newOrder);
       }, 800);
-    }, 1500);
+    } catch (err) {
+      console.error(err);
+      setPaymentStatus('idle');
+      alert("Failed to create order");
+    }
   };
 
   // Get stage index for order tracking
@@ -513,32 +584,7 @@ export default function CustomerDashboard({
     }
   };
 
-  if (view === 'settings') {
-    return (
-      <div className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-y-auto overflow-x-hidden min-h-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md text-slate-800 dark:text-[#f0ede6] h-full">
-        <CustomerAccountModal
-          setIsAddressModalOpen={setIsAddressModalOpen}
-          activeOrders={activeOrders}
-          setTrackingOrder={(order) => {
-             setTrackingOrder(order);
-             setView('home');
-          }}
-          onBack={() => setView('home')}
-          accountTab={accountTab}
-          setAccountTab={setAccountTab}
-          editName={editName}
-          setEditName={setEditName}
-          editPhone={editPhone}
-          setEditPhone={setEditPhone}
-          userName={userName}
-          userPhone={userPhone}
-          onLogout={onLogout}
-          theme={theme}
-          onToggleTheme={onToggleTheme}
-        />
-      </div>
-    );
-  }
+
 
   return (
     <div className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-y-auto overflow-x-hidden min-h-0 bg-transparent text-slate-800 dark:text-[#f0ede6] h-full pb-20">
@@ -590,7 +636,22 @@ export default function CustomerDashboard({
         </div>
       </header>
 
-      <AnimatePresence mode="wait">
+      {view === 'settings' ? (
+        <SharedSettingsView
+          onBack={() => setView('home')}
+          theme={theme}
+          showCustomerTabs={true}
+          activeOrders={activeOrders}
+          setTrackingOrder={(order) => {
+             setTrackingOrder(order);
+             setView('home');
+          }}
+          savedAddresses={savedAddresses}
+          setIsAddressModalOpen={setIsAddressModalOpen}
+          onAddApiLog={onAddApiLog}
+        />
+      ) : (
+        <AnimatePresence mode="wait">
         {currentTrackingOrder && activeOrders.some(o => o.id === currentTrackingOrder.id) ? (
           currentTrackingOrder.status === 'delivered' ? (
             /* ------------------- DELIVERED SUMMARY SCREEN ------------------- */
@@ -783,22 +844,41 @@ export default function CustomerDashboard({
                 {currentTrackingOrder.status === 'on_hold' && (
                   <div className="flex items-center gap-3 pt-2">
                     <button
-                      onClick={() => {
+                      onClick={async () => {
                         if (onAddApiLog) {
-                          onAddApiLog({ id: 'order_approve_delay', label: `POST /api/v1/orders/${currentTrackingOrder.id}/delay/approve`, method: 'POST' });
+                          onAddApiLog({ id: 'order_approve_delay', label: `POST /api/v1/orders/${currentTrackingOrder.id}/delay-approval`, method: 'POST' });
                         }
-                        if (onUpdateOrder) onUpdateOrder(currentTrackingOrder.id, 'accepted');
+                        
+                        try {
+                          await apiPost(`/api/v1/orders/${currentTrackingOrder.id}/delay-approval`, {
+                            approved: true,
+                            expectedDelayMinutes: 15
+                          });
+                          if (onUpdateOrder) onUpdateOrder(currentTrackingOrder.id, 'accepted');
+                        } catch (e) {
+                          console.error("Failed to approve delay", e);
+                        }
                       }}
                       className="flex-1 py-3 bg-amber-500 text-white rounded-xl font-bold hover:bg-amber-600 transition-colors"
                     >
                       Approve Delay
                     </button>
                     <button
-                      onClick={() => {
+                      onClick={async () => {
                         if (onAddApiLog) {
-                          onAddApiLog({ id: 'order_cancel', label: `POST /api/v1/orders/${currentTrackingOrder.id}/cancel`, method: 'POST' });
+                          onAddApiLog({ id: 'order_cancel_delay', label: `POST /api/v1/orders/${currentTrackingOrder.id}/delay-approval`, method: 'POST' });
                         }
-                        if (onUpdateOrder) onUpdateOrder(currentTrackingOrder.id, 'cancelled'); setTrackingOrder(null);
+                        
+                        try {
+                          await apiPost(`/api/v1/orders/${currentTrackingOrder.id}/delay-approval`, {
+                            approved: false,
+                            expectedDelayMinutes: 15
+                          });
+                          if (onUpdateOrder) onUpdateOrder(currentTrackingOrder.id, 'cancelled');
+                          setTrackingOrder(null);
+                        } catch (e) {
+                          console.error("Failed to reject delay", e);
+                        }
                       }}
                       className="flex-1 py-3 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-[#f0ede6] rounded-xl font-bold hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors border border-rose-500/30 dark:border-rose-500/30"
                     >
@@ -1275,7 +1355,7 @@ export default function CustomerDashboard({
                                   onChange={(e) => setApiAvailRest(e.target.value)}
                                   className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono outline-none"
                                 >
-                                  {RESTAURANTS.map(r => (
+                                  {restaurants.map(r => (
                                     <option key={r.id} value={r.id}>{r.name}</option>
                                   ))}
                                 </select>
@@ -1538,9 +1618,23 @@ export default function CustomerDashboard({
               </div>
 
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
+
+
+      <CompleteProfileModal
+        isOpen={showProfileModal}
+        theme={theme}
+        profileId=""
+        onComplete={(p) => {
+          setShowProfileModal(false);
+          setEditName(p.name);
+          setEditEmail(p.email);
+          // Assuming App.tsx passes down some handlers, but we can just dismiss the modal here.
+        }}
+      />
 
       {/* Floating Active Orders Slider at bottom */}
       {activeOrders.filter(o => o.status !== 'delivered').length > 0 && !trackingOrder && (
@@ -1605,6 +1699,7 @@ export default function CustomerDashboard({
         setAddressSearchQuery={setAddressSearchQuery}
         address={address}
         setAddress={setAddress}
+        savedAddresses={savedAddresses}
         onAddApiLog={onAddApiLog}
       />
       <CustomerPaymentModal

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Calendar, Search, Filter, ChevronLeft, ChevronRight, Package, DollarSign, Clock } from 'lucide-react';
 import { Order } from '../types';
+import { apiPost } from '../lib/apiClient';
 
 export function OrderHistory({ orders }: { orders: Order[] }) {
   const [dateFilter, setDateFilter] = useState('');
@@ -84,6 +85,7 @@ export function OrderHistory({ orders }: { orders: Order[] }) {
                 <th className="p-4 whitespace-nowrap">Items</th>
                 <th className="p-4 whitespace-nowrap">Total</th>
                 <th className="p-4 pr-6 whitespace-nowrap">Status</th>
+                <th className="p-4 whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50 text-sm">
@@ -126,6 +128,23 @@ export function OrderHistory({ orders }: { orders: Order[] }) {
                       <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:shadow-[0_0_12px_rgba(244,63,94,0.5)] uppercase`}>
                         {order.status.replace(/_/g, ' ')}
                       </span>
+                    </td>
+                    <td className="p-4 whitespace-nowrap">
+                      <button
+                        onClick={async () => {
+                           try {
+                             // Assuming paymentId is same as order.id or we pass order.id as a fallback
+                             await apiPost(`/api/v1/payments/${order.id}/refund`, { amount: order.total });
+                             alert('Refund requested successfully.');
+                           } catch (e) {
+                             console.error(e);
+                             alert('Refund request failed.');
+                           }
+                        }}
+                        className="text-xs font-bold text-rose-500 hover:text-rose-600 underline"
+                      >
+                        Refund
+                      </button>
                     </td>
                   </tr>
                 ))

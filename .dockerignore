@@ -1,6 +1,6 @@
-node_modules
-**/node_modules
-npm-cache
 .git
 .DS_Store
-scratch
+node_modules
+.npm-cache
+src
+public

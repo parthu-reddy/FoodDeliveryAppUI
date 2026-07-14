@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { apiGet } from '../lib/apiClient';
+import { getToken } from '../lib/authStore';
 
 import { Order } from '../types';
 
@@ -84,9 +85,41 @@ export default function OrderTrackingMap({ order }: { order: Order }) {
     
     initMap();
     
+    // Set up SSE for live tracking
+    let eventSource: EventSource | null = null;
+    let riderMarker: maplibregl.Marker | null = null;
+    try {
+        const token = getToken();
+        const tokenParam = token ? `&token=${token}` : '';
+        eventSource = new EventSource(`${(import.meta as any).env.VITE_API_BASE_URL || ''}/api/v1/tracking/stream?orderId=${order.id}${tokenParam}`);
+        eventSource.onmessage = (event) => {
+            if (!active || !map) return;
+            try {
+                const data = JSON.parse(event.data);
+                if (data.lat && data.lng) {
+                    if (!riderMarker) {
+                        const el = document.createElement('div');
+                        el.className = 'w-6 h-6 bg-indigo-500 rounded-full border-2 border-white shadow-lg flex items-center justify-center';
+                        el.innerHTML = '<div class="w-2 h-2 bg-white rounded-full"></div>';
+                        riderMarker = new maplibregl.Marker({ element: el })
+                            .setLngLat([data.lng, data.lat])
+                            .addTo(map);
+                    } else {
+                        riderMarker.setLngLat([data.lng, data.lat]);
+                    }
+                }
+            } catch (e) {
+                console.warn('Error parsing SSE data', e);
+            }
+        };
+    } catch (e) {
+        console.warn('Could not connect to SSE stream', e);
+    }
+    
     return () => {
       active = false;
       if (map) map.remove();
+      if (eventSource) eventSource.close();
     };
   }, [order.id, order.restaurantId]);
 
