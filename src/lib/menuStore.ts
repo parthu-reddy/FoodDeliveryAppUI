@@ -21,8 +21,7 @@ export interface Outlet {
   fssaiLicenseNumber: string;
   lat: number;
   lng: number;
-  openingTime: string;
-  closingTime: string;
+  timings?: { openingTime: string; closingTime: string }[];
   bannerUrl: string;
   createdAt: string;
 }
@@ -60,6 +59,7 @@ export async function saveOutlets(outlets: Outlet[]) {
 }
 
 export async function getMasterMenuItems(brandId: string): Promise<MasterMenuItem[]> {
+  if (!brandId || brandId === 'undefined') return [];
   try {
     const res = await apiGet(`${API_BASE}/brands/${brandId}/master-menu`);
     return res.data || [];

@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
-import { Plus, Store, CheckCircle } from 'lucide-react';
-import { apiPost } from '../lib/apiClient';
+import React, { useState, useEffect, useRef } from 'react';
+import { Plus, Store, CheckCircle, Trash2, Clock, MapPin, Search, Loader, Navigation } from 'lucide-react';
+import { apiPost, apiGet } from '../lib/apiClient';
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 interface OutletRegistrationProps {
   onRefresh: () => void;
@@ -15,34 +17,207 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
   
   const [lat, setLat] = useState("12.9716");
   const [lng, setLng] = useState("77.5946");
-  const [openingTime, setOpeningTime] = useState("09:00");
-  const [closingTime, setClosingTime] = useState("23:00");
+  const [timings, setTimings] = useState([{ openingTime: "09:00", closingTime: "23:00" }]);
+  const [error, setError] = useState('');
+
+  // Map state
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<maplibregl.Map | null>(null);
+  const markerRef = useRef<maplibregl.Marker | null>(null);
+  
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && mapContainerRef.current && !mapRef.current) {
+      const apiKey = (import.meta as any).env.VITE_OLA_MAPS_API_KEY || '';
+      
+      const map = new maplibregl.Map({
+        container: mapContainerRef.current,
+        style: `https://api.olamaps.io/tiles/vector/v1/styles/default-light-standard/style.json?api_key=${apiKey}`,
+        center: [parseFloat(lng), parseFloat(lat)],
+        zoom: 12,
+        attributionControl: false,
+        transformRequest: (url, resourceType) => {
+          if (url.includes('api.olamaps.io')) {
+            if (!url.includes('api_key=')) {
+              const separator = url.includes('?') ? '&' : '?';
+              return { url: `${url}${separator}api_key=${apiKey}` };
+            }
+          }
+          return { url };
+        }
+      });
+      map.addControl(new maplibregl.NavigationControl(), 'top-right');
+
+      const marker = new maplibregl.Marker({ draggable: true, color: '#f97316' })
+        .setLngLat([parseFloat(lng), parseFloat(lat)])
+        .addTo(map);
+
+      marker.on('dragend', () => {
+        const lngLat = marker.getLngLat();
+        setLng(lngLat.lng.toFixed(6));
+        setLat(lngLat.lat.toFixed(6));
+      });
+
+      mapRef.current = map;
+      markerRef.current = marker;
+    }
+
+    return () => {
+      // Cleanup happens when modal closes
+    };
+  }, [isOpen]);
+
+  // Clean map instance when closing
+  useEffect(() => {
+    if (!isOpen) {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+        markerRef.current = null;
+      }
+    }
+  }, [isOpen]);
+
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    if (query.length < 3) {
+      setSearchResults([]);
+      return;
+    }
+    setIsSearching(true);
+    try {
+      const apiKey = (import.meta as any).env.VITE_OLA_MAPS_API_KEY || '';
+      const res = await fetch(`https://api.olamaps.io/places/v1/autocomplete?input=${encodeURIComponent(query)}&api_key=${apiKey}`);
+      const data = await res.json();
+      if (data.predictions) {
+        setSearchResults(data.predictions);
+      }
+    } catch (err) {
+      console.error('Autocomplete Error:', err);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const selectLocation = async (placeId: string, description: string) => {
+    setSearchQuery(description);
+    setSearchResults([]);
+    try {
+      const apiKey = (import.meta as any).env.VITE_OLA_MAPS_API_KEY || '';
+      const res = await fetch(`https://api.olamaps.io/places/v1/details?place_id=${placeId}&api_key=${apiKey}`);
+      const data = await res.json();
+      if (data.result && data.result.geometry && data.result.geometry.location) {
+        const location = data.result.geometry.location;
+        const newLat = location.lat.toFixed(6);
+        const newLng = location.lng.toFixed(6);
+        setLat(newLat);
+        setLng(newLng);
+        
+        if (mapRef.current) {
+          mapRef.current.flyTo({ center: [location.lng, location.lat], zoom: 15 });
+        }
+        if (markerRef.current) {
+          markerRef.current.setLngLat([location.lng, location.lat]);
+        }
+      }
+    } catch (err) {
+      console.error('Place Details Error:', err);
+    }
+  };
+
+  const handleUseCurrentLocation = () => {
+    if (navigator.geolocation) {
+      setIsSearching(true);
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const { latitude, longitude } = position.coords;
+            setLat(latitude.toString());
+            setLng(longitude.toString());
+            
+            if (mapRef.current) {
+              mapRef.current.flyTo({ center: [longitude, latitude], zoom: 15 });
+            }
+            if (markerRef.current) {
+              markerRef.current.setLngLat([longitude, latitude]);
+            }
+            
+            // Try to reverse geocode
+            const res = await apiGet(`/api/places/reverse-geocode?lat=${latitude}&lng=${longitude}`);
+            if (res && res.address) {
+              setSearchQuery(res.address);
+            }
+          } catch (e) {
+            console.error("Reverse geocoding failed", e);
+          } finally {
+            setIsSearching(false);
+          }
+        },
+        (error) => {
+          console.error("Geolocation error", error);
+          setIsSearching(false);
+          alert("Could not get your current location.");
+        },
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+      );
+    } else {
+      alert("Geolocation is not supported by this browser.");
+    }
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+
+    if (fssai.length !== 14) {
+      setError('FSSAI License must be exactly 14 characters.');
+      return;
+    }
+
     const newOutlet = {
       name,
       fssaiLicenseNumber: fssai,
       lat: parseFloat(lat),
       lng: parseFloat(lng),
-      openingTime: openingTime + ":00",
-      closingTime: closingTime + ":00",
+      timings: timings.map(t => ({
+        openingTime: t.openingTime + ":00",
+        closingTime: t.closingTime + ":00"
+      })),
       bannerUrl: banner,
       createdAt: new Date().toISOString()
     };
 
-    // Use brandId from props
+    try {
+      await apiPost(`/api/v1/brands/${brandId}/outlets`, newOutlet);
+      setIsOpen(false);
+      setName('');
+      setFssai('');
+      setLat("12.9716");
+      setLng("77.5946");
+      setTimings([{ openingTime: "09:00", closingTime: "23:00" }]);
+      onRefresh();
+    } catch (err: any) {
+      setError(err.message || 'Failed to register outlet');
+    }
+  };
 
-    await apiPost(`/api/v1/brands/${brandId}/outlets`, newOutlet);
+  const addTiming = () => {
+    setTimings([...timings, { openingTime: "09:00", closingTime: "23:00" }]);
+  };
 
-    setIsOpen(false);
-    setName('');
-    setFssai('');
-    setLat("12.9716");
-    setLng("77.5946");
-    setOpeningTime("09:00");
-    setClosingTime("23:00");
-    onRefresh();
+  const updateTiming = (index: number, field: 'openingTime' | 'closingTime', value: string) => {
+    const newTimings = [...timings];
+    newTimings[index][field] = value;
+    setTimings(newTimings);
+  };
+
+  const removeTiming = (index: number) => {
+    if (timings.length > 1) {
+      setTimings(timings.filter((_, i) => i !== index));
+    }
   };
 
   if (!isOpen) {
@@ -100,55 +275,162 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">Latitude</label>
-            <input
-              type="number"
-              step="any"
-              required
-              value={lat}
-              onChange={e => setLat(e.target.value)}
-              className="w-full bg-white dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
-            />
+        <div className="space-y-3 pt-2">
+          <label className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase flex items-center gap-1">
+            <MapPin className="w-3 h-3" />
+            Location Coordinates
+          </label>
+          <div className="relative z-10">
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => handleSearch(e.target.value)}
+                placeholder="Search for an address or landmark..."
+                className="w-full bg-white dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 rounded-xl pl-10 pr-24 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+              />
+              <div className="absolute right-3 top-2.5 flex items-center gap-2">
+                {isSearching ? (
+                  <Loader className="w-4 h-4 text-orange-500 animate-spin" />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleUseCurrentLocation}
+                    className="flex items-center gap-1 text-[10px] font-semibold text-orange-500 hover:text-orange-600 bg-orange-50 dark:bg-orange-500/10 px-2 py-1 rounded-lg transition-colors cursor-pointer"
+                    title="Use Current Location"
+                  >
+                    <Navigation className="w-3 h-3" />
+                    <span className="hidden sm:inline">Locate Me</span>
+                  </button>
+                )}
+              </div>
+            </div>
+            {searchResults.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg max-h-48 overflow-y-auto z-20">
+                {searchResults.map((result: any) => (
+                  <button
+                    key={result.place_id}
+                    type="button"
+                    onClick={() => selectLocation(result.place_id, result.description)}
+                    className="w-full text-left px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-b border-slate-100 dark:border-slate-800 last:border-0"
+                  >
+                    {result.description}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">Longitude</label>
-            <input
-              type="number"
-              step="any"
-              required
-              value={lng}
-              onChange={e => setLng(e.target.value)}
-              className="w-full bg-white dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
-            />
+          
+          <div 
+            ref={mapContainerRef} 
+            className="w-full h-[220px] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 relative z-0"
+          />
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase px-1">Latitude</label>
+              <input
+                type="number"
+                step="any"
+                required
+                value={lat}
+                onChange={e => {
+                  setLat(e.target.value);
+                  const newLat = parseFloat(e.target.value);
+                  const newLng = parseFloat(lng);
+                  if (!isNaN(newLat) && !isNaN(newLng)) {
+                    if (markerRef.current) markerRef.current.setLngLat([newLng, newLat]);
+                    if (mapRef.current) mapRef.current.setCenter([newLng, newLat]);
+                  }
+                }}
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase px-1">Longitude</label>
+              <input
+                type="number"
+                step="any"
+                required
+                value={lng}
+                onChange={e => {
+                  setLng(e.target.value);
+                  const newLat = parseFloat(lat);
+                  const newLng = parseFloat(e.target.value);
+                  if (!isNaN(newLat) && !isNaN(newLng)) {
+                    if (markerRef.current) markerRef.current.setLngLat([newLng, newLat]);
+                    if (mapRef.current) mapRef.current.setCenter([newLng, newLat]);
+                  }
+                }}
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+              />
+            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">Opening Time</label>
-            <input
-              type="time"
-              required
-              value={openingTime}
-              onChange={e => setOpeningTime(e.target.value)}
-              className="w-full bg-white dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
-            />
+        <div className="space-y-3 pt-2">
+          <div className="flex items-center justify-between">
+            <label className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              Operating Shifts
+            </label>
+            <button
+              type="button"
+              onClick={addTiming}
+              className="text-xs font-bold text-orange-500 hover:text-orange-600 dark:text-orange-400 flex items-center gap-1 bg-orange-50 dark:bg-orange-950/30 px-2 py-1 rounded-lg"
+            >
+              <Plus className="w-3 h-3" /> Add Shift
+            </button>
           </div>
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">Closing Time</label>
-            <input
-              type="time"
-              required
-              value={closingTime}
-              onChange={e => setClosingTime(e.target.value)}
-              className="w-full bg-white dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
-            />
+          
+          <div className="space-y-2">
+            {timings.map((timing, index) => (
+              <div key={index} className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-xl border border-slate-100 dark:border-slate-800">
+                <div className="flex-1 grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase px-1">Opens</label>
+                    <input
+                      type="time"
+                      required
+                      value={timing.openingTime}
+                      onChange={e => updateTiming(index, 'openingTime', e.target.value)}
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase px-1">Closes</label>
+                    <input
+                      type="time"
+                      required
+                      value={timing.closingTime}
+                      onChange={e => updateTiming(index, 'closingTime', e.target.value)}
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                    />
+                  </div>
+                </div>
+                {timings.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeTiming(index)}
+                    className="p-2 mt-4 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-colors"
+                    title="Remove Shift"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
         </div>
 
-        <div className="flex gap-3 pt-2">
+        {error && (
+          <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-500 text-sm font-bold">
+            {error}
+          </div>
+        )}
+
+        <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
           <button
             type="button"
             onClick={() => setIsOpen(false)}

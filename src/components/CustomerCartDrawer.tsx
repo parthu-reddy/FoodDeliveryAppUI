@@ -92,7 +92,7 @@ export default function CustomerCartDrawer({
                 </div>
                 <div className="flex justify-between text-slate-900 dark:text-[#f0ede6] font-bold text-sm">
                   <span>Grand Total</span>
-                  <span>${getCartTotal().total.toFixed(2)}</span>
+                  <span>${getCartTotal().total?.toFixed(2)}</span>
                 </div>
               </div>
 

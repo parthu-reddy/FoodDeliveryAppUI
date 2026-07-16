@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { 
   Bike, DollarSign, Map, CheckCircle, Navigation, Play, Eye, 
   MapPin, LogOut, Check, Clock, ArrowRight, ShieldAlert, KeyRound, MessageCircle, Store, Sun, Moon,
-  Terminal, Sliders, Code, Send, CheckCircle2, AlertCircle, User, ArrowLeft, X
+  Terminal, Sliders, Code, Send, CheckCircle2, AlertCircle, User, ArrowLeft, X, MapPinOff
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Order, OrderStatus } from '../types';
 import LaBouffeLogo from './LaBouffeLogo';
 import { apiGet, apiPost } from '../lib/apiClient';
-import { getUserProfile } from '../lib/authStore';
+import { getUserProfile, getToken } from '../lib/tokenStore';
 import CompleteProfileModal from './CompleteProfileModal';
 import SharedSettingsView from './SharedSettingsView';
 
@@ -31,6 +31,7 @@ export default function DeliveryDashboard({
   onToggleTheme,
   onAddApiLog
 }: DeliveryDashboardProps) {
+  const [user, setUser] = useState(getUserProfile());
   // Internal order state
   const [internalOrders, setInternalOrders] = useState<Order[]>([]);
   const activeOrders = externalOrders ?? internalOrders;
@@ -42,19 +43,29 @@ export default function DeliveryDashboard({
   const [historyDateFilter, setHistoryDateFilter] = useState("");
   const [historyPage, setHistoryPage] = useState(1);
 
-  // Fetch delivery orders
   useEffect(() => {
-    apiGet(`/api/v1/delivery/orders`)
-      .then(res => {
-        if (res.data) setInternalOrders(res.data);
-      })
-      .catch(console.error);
+    let interval: NodeJS.Timeout;
+    const fetchOrders = () => {
+      apiGet(`/api/v1/delivery/orders`)
+        .then(res => {
+          if (res.data) setInternalOrders(res.data);
+        })
+        .catch(console.error);
+    };
+    
+    fetchOrders(); // Initial fetch
+    
+    interval = setInterval(fetchOrders, 3000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const todayIso = new Date().toISOString();
 
   const [showHistory, setShowHistory] = useState(false);
+  const [isProfileMandatory, setIsProfileMandatory] = useState(false);
 
+  const [showLocationPrompt, setShowLocationPrompt] = useState(false);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [enteredOtp, setEnteredOtp] = useState("");
   const [enteredPickupOtp, setEnteredPickupOtp] = useState("");
@@ -72,6 +83,11 @@ export default function DeliveryDashboard({
   const [photoUrl, setPhotoUrl] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
   const [pingJob, setPingJob] = useState<Order | null>(null);
   const [pingTimer, setPingTimer] = useState(30);
   const [rejectedIds, setRejectedIds] = useState<Set<string>>(new Set());
@@ -83,7 +99,7 @@ export default function DeliveryDashboard({
 
   React.useEffect(() => {
     if (isOnline && !activeJobId && !pingJob) {
-      const jobs = activeOrders.filter(o => o.status === "dispatched" && !o.riderId && !rejectedIds.has(o.id));
+      const jobs = activeOrders.filter(o => !o.riderId && !rejectedIds.has(o.id));
       if (jobs.length > 0) {
         setPingJob(jobs[0]);
         setPingTimer(30);
@@ -95,9 +111,16 @@ export default function DeliveryDashboard({
   }, [activeOrders, isOnline, activeJobId, rejectedIds, pingJob]);
   React.useEffect(() => {
     if (!activeJobId) {
-      const ongoingJob = activeOrders.find(o => (o.riderId === riderPhone || !!o.riderId) && o.status !== "delivered");
+      const ongoingJob = activeOrders.find(o => (o.riderId === riderPhone || !!o.riderId) && o.status !== "delivered" && o.status !== "cancelled" && o.status !== "cancelled_by_restaurant");
       if (ongoingJob) {
         setActiveJobId(ongoingJob.id);
+      }
+    } else {
+      // Check if current job was cancelled
+      const currentJobStatus = activeOrders.find(o => o.id === activeJobId)?.status?.toLowerCase();
+      if (currentJobStatus === 'cancelled' || currentJobStatus === 'cancelled_by_restaurant') {
+        showToast("Your current order was cancelled by the restaurant.");
+        setActiveJobId(null);
       }
     }
   }, [activeOrders, riderPhone, activeJobId]);
@@ -148,14 +171,35 @@ export default function DeliveryDashboard({
     if (!isOnline || !riderId) return;
     let ws: WebSocket;
     let interval: NodeJS.Timeout;
+    let watchId: number;
+    let currentLat = 12.9716;
+    let currentLng = 77.5946;
+
+    if (navigator.geolocation) {
+      watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          currentLat = pos.coords.latitude;
+          currentLng = pos.coords.longitude;
+        },
+        (err) => {
+          console.error("Location error:", err);
+          setShowLocationPrompt(true);
+          apiPost(`/api/delivery/status`, { driverId: riderId, available: false })
+            .catch(e => console.error(e));
+          setIsOnline(false);
+        },
+        { enableHighAccuracy: true }
+      );
+    }
     
     const connectWs = () => {
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      ws = new WebSocket(`${protocol}//${window.location.host}/api/delivery/ws/telemetry?token=la-bouffe-jwt-token-courier`);
+      const token = getToken();
+      ws = new WebSocket(`${protocol}//${window.location.host}/api/delivery/ws/telemetry?token=${token}`);
       ws.onopen = () => {
         interval = setInterval(() => {
           if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ driverId: riderId, lat: 12.9716, lng: 77.5946, timestamp: new Date().toISOString() }));
+            ws.send(JSON.stringify({ driverId: riderId, lat: currentLat, lng: currentLng, timestamp: new Date().toISOString() }));
           }
         }, 5000);
       };
@@ -164,7 +208,7 @@ export default function DeliveryDashboard({
         if (interval) clearInterval(interval);
         interval = setInterval(async () => {
           try {
-            await apiPost("/api/v1/delivery/telemetry/batch", [{ driverId: riderId, lat: 12.9716, lng: 77.5946, timestamp: new Date().toISOString() }]);
+            await apiPost("/api/v1/delivery/telemetry/batch", [{ driverId: riderId, lat: currentLat, lng: currentLng, timestamp: new Date().toISOString() }]);
           } catch(e) {}
         }, 5000);
       };
@@ -174,6 +218,9 @@ export default function DeliveryDashboard({
     return () => {
       if (interval) clearInterval(interval);
       if (ws) ws.close();
+      if (watchId !== undefined && navigator.geolocation) {
+        navigator.geolocation.clearWatch(watchId);
+      }
     };
   }, [isOnline, riderId]);
 
@@ -191,22 +238,31 @@ export default function DeliveryDashboard({
           }
           if (p.email) setEditEmail(p.email);
           if (!p.name || !p.email || p.name.trim() === '' || p.email.trim() === '') {
-            setShowCompleteProfileModal(true);
+            // Do not show modal for delivery executive
           }
         }
       })
       .catch(console.error);
 
     // Fetch delivery-specific profile details
-    apiGet(`/api/delivery/profile?phoneNumber=${riderPhone}`)
+    apiGet(`/api/delivery/profile?phoneNumber=${encodeURIComponent(riderPhone)}`)
       .then(data => {
         if (data.success) {
-          if (!riderName) setRiderName(data.rider.name);
-          setVehicleNumber(data.rider.vehicleNumber);
-          setPhotoUrl(data.rider.photoUrl);
-          setIsOnline(data.rider.isOnline);
-          setRiderId(data.rider.id);
+          const profile = data.data;
+          if (!riderName) setRiderName(profile.fullName || profile.name || "");
+          setVehicleNumber(profile.vehicleNumber || "");
+          setPhotoUrl(profile.photoUrl || "");
+          setIsOnline(profile.isOnline || profile.status === 'ONLINE');
+          setRiderId(profile.id);
+          
+          if (!profile.vehicleNumber || !profile.fullName || !profile.photoUrl) {
+            setIsProfileMandatory(true);
+            setShowProfile(true);
+          } else {
+            setIsProfileMandatory(false);
+          }
         } else {
+          setIsProfileMandatory(true);
           setShowProfile(true);
         }
       })
@@ -222,10 +278,11 @@ export default function DeliveryDashboard({
     }
     setIsRegistering(true);
     try {
-      const data = await apiPost("/api/delivery/onboard", { name: riderName, phoneNumber: riderPhone, vehicleNumber, photoUrl });
+      const data = await apiPost("/api/delivery/onboard", { fullName: riderName, phoneNumber: riderPhone, vehicleNumber, photoUrl });
       if (data.success) {
         setShowProfile(false);
-        setRiderId(data.rider.id);
+        setIsProfileMandatory(false);
+        setRiderId(data.data.id);
       } else {
         setErrorMsg(data.error || "Failed to onboard");
       }
@@ -237,12 +294,51 @@ export default function DeliveryDashboard({
   };
 
   const handleToggleOnline = async () => {
-    const newStatus = !isOnline;
-    setIsOnline(newStatus);
-    if (riderId) {
+    if (!riderId || isProfileMandatory) {
+      setShowProfile(true);
+      return;
+    }
+    if (!isOnline) {
+      if (!('Notification' in window)) {
+        showToast("Notifications are not supported by your browser");
+        return;
+      }
+      
+      let notifyPermission = Notification.permission;
+      if (notifyPermission !== 'granted') {
+        notifyPermission = await Notification.requestPermission();
+        if (notifyPermission !== 'granted') {
+          showToast("Please enable notifications to receive orders.");
+          return;
+        }
+      }
+
+      if (!navigator.geolocation) {
+        showToast("Geolocation is not supported by your browser");
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            await apiPost(`/api/delivery/status`, { driverId: riderId, available: true });
+            setIsOnline(true);
+          } catch(e) {
+            console.error("Failed to toggle status", e);
+          }
+        },
+        (error) => {
+          setShowLocationPrompt(true);
+          console.error("Error getting location", error);
+        },
+        { enableHighAccuracy: true }
+      );
+    } else {
       try {
-        await apiPost("/api/delivery/status", { driverId: riderId, available: newStatus });
-      } catch (e) { console.error(e); }
+        await apiPost(`/api/delivery/status`, { driverId: riderId, available: false });
+        setIsOnline(false);
+      } catch(e) {
+        console.error("Failed to toggle status", e);
+      }
     }
   };
 
@@ -334,14 +430,14 @@ export default function DeliveryDashboard({
   const handleHandoverVerificationApi = (e: React.FormEvent) => {
     e.preventDefault();
     if (!apiOtpOrderId) {
-      alert("Please select or accept an active job first!");
+      showToast("Please select or accept an active job first!");
       return;
     }
     const order = activeOrders.find(o => o.id === apiOtpOrderId);
     if (!order) return;
 
     if (apiOtpCode !== order.otp && apiOtpCode !== '1234') {
-      alert(`Invalid secure handover OTP. True OTP is ${order.otp} or use 1234.`);
+      showToast(`Invalid secure handover OTP. True OTP is ${order.otp} or use 1234.`);
       return;
     }
 
@@ -398,7 +494,7 @@ export default function DeliveryDashboard({
   const handleReportDeliveryDelayApi = (e: React.FormEvent) => {
     e.preventDefault();
     if (!apiDelayOrderId) {
-      alert("Please select or accept an active job first!");
+      showToast("Please select or accept an active job first!");
       return;
     }
     const requestId = 'req-' + Math.random().toString(36).substr(2, 9);
@@ -518,37 +614,70 @@ export default function DeliveryDashboard({
   return (
     <div className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-y-auto overflow-x-hidden min-h-0 bg-transparent text-slate-800 dark:text-[#f0ede6] h-full pb-20">
       
+      {/* Global Toast */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            className="fixed top-12 left-0 right-0 mx-auto max-w-sm z-[100] px-4"
+          >
+            <div className="bg-rose-500/90 backdrop-blur-xl border border-rose-500/50 shadow-2xl rounded-2xl p-4 flex items-start gap-3">
+              <AlertCircle className="w-6 h-6 text-white shrink-0" />
+              <p className="text-white font-medium text-sm pt-0.5">{toastMessage}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Header Area */}
       <header className="sticky top-0 bg-white/60 dark:bg-slate-950/60 backdrop-blur-xl px-5 py-3 flex flex-col sm:flex-row sm:items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 z-30 shrink-0 shadow-[0_2px_15px_rgba(0,0,0,0.01)] gap-3">
         <div className="flex items-center gap-3.5 flex-wrap">
           <LaBouffeLogo showText={false} iconSize="w-8 h-8" textColorClass="text-slate-800 dark:text-[#f0ede6] text-xs" subColorClass="text-rose-500 text-[8px]" />
           <div className="hidden sm:flex h-6 w-[1px] bg-slate-200 dark:bg-slate-800" />
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500">
-              <Bike className="w-4 h-4" />
-            </div>
+          <button 
+            onClick={() => setShowProfile(true)}
+            className="flex items-center gap-2 text-left hover:bg-slate-100 dark:hover:bg-slate-900 p-1.5 -ml-1.5 rounded-xl transition-colors cursor-pointer"
+          >
+            {photoUrl ? (
+              <img src={photoUrl} alt="Profile" className="w-8 h-8 rounded-full object-cover border border-rose-500/20" />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500">
+                <Bike className="w-4 h-4" />
+              </div>
+            )}
             <div>
-              <h3 className="font-extrabold text-xs tracking-tight leading-none text-slate-900 dark:text-[#f0ede6]">Rider Portal</h3>
-              <span className="text-[9px] text-slate-400 dark:text-slate-300 font-bold block mt-0.5">{riderName}</span>
+              <h3 className="font-extrabold text-xs tracking-tight leading-none text-slate-900 dark:text-[#f0ede6]">
+                {riderName || "Rider Portal"}
+              </h3>
+              {vehicleNumber && (
+                <span className="text-[9px] text-slate-400 dark:text-slate-300 font-bold block mt-0.5">
+                  {vehicleNumber}
+                </span>
+              )}
             </div>
-          </div>
+          </button>
         </div>
 
         <div className="flex items-center gap-2 self-end sm:self-auto">
           {/* Duty Switcher */}
           <button
             onClick={handleToggleOnline}
+            disabled={!riderId || isProfileMandatory}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               isOnline 
-                ? 'bg-rose-500 text-white' 
-                : 'bg-slate-200 dark:bg-slate-900 text-slate-500 dark:text-[#f0ede6]'
+                ? 'bg-rose-500 text-white shadow-[0_0_10px_rgba(244,63,94,0.3)]' 
+                : (!riderId || isProfileMandatory)
+                  ? 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-600 opacity-60 cursor-not-allowed'
+                  : 'bg-slate-200 dark:bg-slate-900 text-slate-500 dark:text-[#f0ede6]'
             }`}
           >
             {isOnline ? 'Online Duty' : 'Offline'}
           </button>
 
           <button
-            onClick={() => setView('settings')}
+            onClick={() => view === 'settings' ? setView('home') : setView('settings')}
             className={`p-2.5 rounded-xl transition-all cursor-pointer ${
               view === 'settings' 
                 ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 shadow-sm shadow-indigo-500/10' 
@@ -572,7 +701,65 @@ export default function DeliveryDashboard({
         </div>
       </header>
 
-      {view === 'settings' ? (
+      {showProfile ? (
+        <div className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-y-auto min-h-0 text-slate-800 dark:text-[#f0ede6] h-full mt-4 p-5">
+          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl w-full rounded-3xl p-6 shadow-sm border border-rose-500/20 dark:border-rose-500/30">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500">
+                  <User className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-lg text-slate-900 dark:text-[#f0ede6] leading-tight">Driver Profile</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-300">Update your details for verification</p>
+                </div>
+              </div>
+              {!isProfileMandatory && (
+                <button onClick={() => setShowProfile(false)} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400">
+                  <X className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+            
+            {errorMsg && (
+              <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                <p className="text-[11px] font-bold text-red-600 dark:text-red-400 leading-relaxed">{errorMsg}</p>
+              </div>
+            )}
+            <form onSubmit={handleOnboard} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wide px-1">Full Name</label>
+                <input type="text" required placeholder="e.g. John Doe" value={riderName} onChange={e => setRiderName(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-slate-50 dark:bg-slate-950 text-sm font-medium text-slate-900 dark:text-[#f0ede6] focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all focus:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:focus:shadow-[0_0_12px_rgba(244,63,94,0.5)]" />
+              </div>
+              
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wide px-1">Phone Number</label>
+                <input type="text" readOnly value={riderPhone} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 text-sm font-medium text-slate-500 cursor-not-allowed" />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wide px-1">Vehicle Registration</label>
+                <input type="text" required autoComplete="off" placeholder="e.g. KA01AB1234" value={vehicleNumber} onChange={e => setVehicleNumber(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-slate-50 dark:bg-slate-950 text-sm font-medium text-slate-900 dark:text-[#f0ede6] focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all focus:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:focus:shadow-[0_0_12px_rgba(244,63,94,0.5)]" />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wide px-1">Profile Photo URL</label>
+                <input type="url" required placeholder="https://example.com/photo.jpg" value={photoUrl} onChange={e => setPhotoUrl(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-slate-50 dark:bg-slate-950 text-sm font-medium text-slate-900 dark:text-[#f0ede6] focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all focus:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:focus:shadow-[0_0_12px_rgba(244,63,94,0.5)]" />
+              </div>
+              
+              <div className="pt-4 flex gap-3">
+                {!isProfileMandatory && (
+                  <button type="button" onClick={() => setShowProfile(false)} className="flex-1 py-3 text-xs font-bold text-slate-500 dark:text-slate-300 border border-rose-500/20 dark:border-rose-500/30 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">Cancel</button>
+                )}
+                <button type="submit" disabled={isRegistering} className="flex-1 py-3 bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold rounded-xl transition-colors disabled:opacity-50">
+                  {isRegistering ? "Saving..." : "Save Details"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : view === 'settings' ? (
         <div className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-y-auto overflow-x-hidden min-h-0 text-slate-800 dark:text-[#f0ede6] h-full mt-4">
           <SharedSettingsView
             onBack={() => setView('home')}
@@ -649,7 +836,7 @@ export default function DeliveryDashboard({
                   <div key={job.id} className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-3xl p-5 shadow-sm flex flex-col gap-3 transition-all hover:border-indigo-500/30 hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all">
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="font-mono text-xs text-slate-400 dark:text-slate-300 font-bold">ORDER #{job.id}</p>
+                        <p className="font-mono text-xs text-slate-400 dark:text-slate-300 font-bold">ORDER #{job.id.substring(0, 8)}</p>
                         <p className="font-black text-slate-900 dark:text-[#f0ede6] mt-1">{job.restaurantName}</p>
                         <p className="text-[10px] text-slate-500 dark:text-slate-300 mt-0.5">{job.timestamp ? new Date(job.timestamp).toLocaleString() : ""}</p>
                       </div>
@@ -801,9 +988,9 @@ export default function DeliveryDashboard({
               {/* Items Verification Checklist */}
               <div className="p-4 bg-white/40 dark:bg-slate-950/40 backdrop-blur-sm border border-rose-500/20 dark:border-rose-500/30 rounded-2xl space-y-2">
                 <span className="text-[10px] font-bold text-slate-400 dark:text-slate-300 font-mono block">VERIFY DISH COUNT ({currentJob.items.length})</span>
-                {currentJob.items.map(item => (
-                  <div key={item.item.id} className="flex justify-between text-xs text-slate-600 dark:text-[#f0ede6]">
-                    <span>• {item.quantity}x {item.item.name}</span>
+                {currentJob.items.map((item: any, idx: number) => (
+                  <div key={item.item?.id || idx} className="flex justify-between text-xs text-slate-600 dark:text-[#f0ede6]">
+                    <span>• {item.quantity || 1}x {item.item?.name || item.name || 'Item'}</span>
                     <span className="font-mono text-emerald-500">PAID</span>
                   </div>
                 ))}
@@ -828,9 +1015,7 @@ export default function DeliveryDashboard({
                         required
                       />
                     </div>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-300 text-right italic">
-                      💡 Demo hint: Pickup OTP is <strong className="text-amber-500 font-mono text-xs">{currentJob.pickupOtp || "1111"}</strong> or use 1111
-                    </p>
+
                     {pickupOtpError && <p className="text-xs text-rose-500 font-bold mt-1 text-center">{pickupOtpError}</p>}
                   </div>
                   <button
@@ -861,9 +1046,7 @@ export default function DeliveryDashboard({
                       />
                     </div>
                     {/* Demo Helper Hint */}
-                    <p className="text-[10px] text-slate-500 dark:text-slate-300 text-right italic">
-                      💡 Demo hint: Customer OTP is <strong className="text-amber-500 font-mono text-xs">{currentJob.otp}</strong> or use 1234
-                    </p>
+
                   </div>
 
                   {otpError && (
@@ -901,7 +1084,7 @@ export default function DeliveryDashboard({
                 <Map className="w-8 h-8 mx-auto text-slate-500 dark:text-slate-300 animate-pulse" />
                 <p className="text-sm font-semibold">Scanning for dispatched contracts...</p>
                 <p className="text-xs text-slate-500 dark:text-slate-300 max-w-xs mx-auto leading-relaxed">
-                  How to test? Place an order in the <strong>Customer Hub</strong>, then accept/cook/ready the order inside the <strong>Restaurant Manager</strong> to send it to this job board!
+                  Waiting for new delivery requests in your area. Keep your status Online to receive dispatch pings.
                 </p>
               </div>
             ) : (
@@ -913,7 +1096,7 @@ export default function DeliveryDashboard({
                   >
                     <div className="flex justify-between items-center">
                       <div className="space-y-0.5">
-                        <span className="text-xs font-mono font-bold text-slate-400 dark:text-slate-300">ORDER CONTRACT #{job.id}</span>
+                        <span className="text-xs font-mono font-bold text-slate-400 dark:text-slate-300">ORDER CONTRACT #{job.id.substring(0, 8)}</span>
                         <h5 className="font-black text-slate-900 dark:text-[#f0ede6]">{job.restaurantName}</h5>
                       </div>
                       <div className="text-right">
@@ -942,429 +1125,6 @@ export default function DeliveryDashboard({
         )}
       </AnimatePresence>
 
-      {/* COURIER API INTERACTIVE PLAYGROUND */}
-      <div className="mx-5 mt-10 border border-rose-500/20 bg-white/50 dark:bg-slate-900/40 backdrop-blur-md rounded-[2rem] overflow-hidden shadow-lg">
-        <button
-          onClick={() => setIsApiPlaygroundOpen(!isApiPlaygroundOpen)}
-          className="w-full px-6 py-5 flex items-center justify-between font-black text-sm tracking-wide text-slate-800 dark:text-[#f0ede6] cursor-pointer hover:bg-slate-500/5 transition-colors"
-        >
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500">
-              <Terminal className="w-4.5 h-4.5 animate-pulse" />
-            </div>
-            <div>
-              <h4 className="font-extrabold text-sm flex items-center gap-2">
-                <span>Courier API Interactive Forms</span>
-                <span className="text-[9px] font-mono bg-rose-500/10 text-rose-500 px-2 py-0.5 rounded-full border border-rose-500/20">
-                  LIVE GATEWAY
-                </span>
-              </h4>
-              <p className="text-[10px] text-slate-400 dark:text-slate-300 font-normal">Execute and monitor Ecosystem Rider/Courier API references in real-time</p>
-            </div>
-          </div>
-          <span className="text-xs font-mono text-slate-400 dark:text-slate-300">
-            {isApiPlaygroundOpen ? 'COLLAPSE ▴' : 'EXPAND ▾'}
-          </span>
-        </button>
-
-        <AnimatePresence>
-          {isApiPlaygroundOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="border-t border-rose-500/20 dark:border-rose-500/30 p-5 space-y-5"
-            >
-              {/* Tabs */}
-              <div className="flex flex-wrap gap-1.5 border-b border-rose-500/20 dark:border-rose-500/30 pb-3 text-xs font-bold">
-                {[
-                  { id: 'telemetry', label: 'Submit Telemetry', method: 'POST' },
-                  { id: 'handover', label: 'Handover Verification (OTP)', method: 'POST' },
-                  { id: 'delay', label: 'Report Delivery Delay', method: 'POST' },
-                ].map(t => (
-                  <button
-                    key={t.id}
-                    onClick={() => {
-                      setActivePlaygroundTab(t.id as any);
-                      setApiResponse(null);
-                    }}
-                    className={`px-3 py-2 rounded-xl border cursor-pointer transition-all flex items-center gap-1.5 ${
-                      activePlaygroundTab === t.id
-                        ? 'bg-rose-500 border-transparent text-white shadow-sm shadow-rose-500/10 font-extrabold'
-                        : 'bg-white/40 dark:bg-slate-950/45 border-rose-500/20 dark:border-rose-500/30 text-slate-400 dark:text-slate-300 hover:text-slate-200'
-                    }`}
-                  >
-                    <span className="text-[8px] font-mono font-black px-1 py-0.2 rounded bg-indigo-500/10 text-indigo-400">
-                      {t.method}
-                    </span>
-                    <span>{t.label}</span>
-                  </button>
-                ))}
-              </div>
-
-              {/* Playground Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-                
-                {/* Form Inputs Panel (Left) */}
-                <div className="lg:col-span-6 space-y-4">
-                  
-                  {activePlaygroundTab === 'telemetry' && (
-                    <form onSubmit={handleUpdateTelemetryApi} className="space-y-3.5">
-                      <p className="text-xs text-slate-400 dark:text-slate-300 leading-relaxed">
-                        <strong>POST /api/v1/couriers/&#123;riderId&#125;/telemetry</strong>: Periodically streams live latitude, longitude, and bearing parameters back to the routing dispatcher.
-                      </p>
-                      
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-300 uppercase">Latitude</label>
-                          <input 
-                            type="text"
-                            value={apiLat}
-                            onChange={(e) => setApiLat(e.target.value)}
-                            className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono"
-                            required
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-300 uppercase">Longitude</label>
-                          <input 
-                            type="text"
-                            value={apiLng}
-                            onChange={(e) => setApiLng(e.target.value)}
-                            className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono"
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-2">
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-300 uppercase">Speed (m/s)</label>
-                          <input 
-                            type="number"
-                            step="0.5"
-                            value={apiSpeedMps}
-                            onChange={(e) => setApiSpeedMps(e.target.value)}
-                            className="w-full px-2 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono"
-                            required
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-300 uppercase">Bearing (Deg)</label>
-                          <input 
-                            type="number"
-                            value={apiBearing}
-                            onChange={(e) => setApiBearing(e.target.value)}
-                            className="w-full px-2 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono"
-                            required
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-300 uppercase">Dispatch Mode</label>
-                          <select 
-                            value={apiDispatchMode}
-                            onChange={(e) => setApiDispatchMode(e.target.value as any)}
-                            className="w-full px-2 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono"
-                          >
-                            <option value="AUTOMATIC">AUTOMATIC</option>
-                            <option value="MANUAL">MANUAL</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      <button
-                        type="submit"
-                        className="w-full py-2.5 bg-rose-500 text-white font-black text-xs rounded-xl hover:bg-rose-600 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm shadow-rose-500/10"
-                      >
-                        <Send className="w-3.5 h-3.5" />
-                        <span>Transmit Live Telemetry API</span>
-                      </button>
-                    </form>
-                  )}
-
-                  {activePlaygroundTab === 'handover' && (
-                    <form onSubmit={handleHandoverVerificationApi} className="space-y-3.5">
-                      <p className="text-xs text-slate-400 dark:text-slate-300 leading-relaxed">
-                        <strong>POST /api/v1/couriers/&#123;riderId&#125;/handover-verification</strong>: Validates customer secure handover OTP code inside the logistics gateway and triggers instant payouts.
-                      </p>
-
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-300 uppercase">Select Target Job</label>
-                        {activePickupOrDispatched.length === 0 ? (
-                          <div className="text-xs text-red-400 bg-red-400/5 border border-red-400/10 p-2.5 rounded-xl font-medium">
-                            No active ongoing deliveries. Accept an available contract above first.
-                          </div>
-                        ) : (
-                          <select 
-                            value={apiOtpOrderId}
-                            onChange={(e) => setApiOtpOrderId(e.target.value)}
-                            className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono outline-none"
-                          >
-                            {activePickupOrDispatched.map(o => (
-                              <option key={o.id} value={o.id}>Order #{o.id} - {o.restaurantName} (OTP: {o.otp})</option>
-                            ))}
-                          </select>
-                        )}
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-2">
-                        <div className="col-span-1 space-y-1">
-                          <label className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-300 uppercase">Secure OTP</label>
-                          <input 
-                            type="text"
-                            value={apiOtpCode}
-                            onChange={(e) => setApiOtpCode(e.target.value)}
-                            placeholder="e.g. 1234"
-                            className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono text-center"
-                            maxLength={4}
-                            required
-                          />
-                        </div>
-                        <div className="col-span-1 space-y-1">
-                          <label className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-300 uppercase">Dropoff Lat</label>
-                          <input 
-                            type="text"
-                            value={apiOtpLat}
-                            onChange={(e) => setApiOtpLat(e.target.value)}
-                            className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono text-center"
-                            required
-                          />
-                        </div>
-                        <div className="col-span-1 space-y-1">
-                          <label className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-300 uppercase">Dropoff Lng</label>
-                          <input 
-                            type="text"
-                            value={apiOtpLng}
-                            onChange={(e) => setApiOtpLng(e.target.value)}
-                            className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono text-center"
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      <button
-                        type="submit"
-                        disabled={activePickupOrDispatched.length === 0}
-                        className="w-full py-2.5 bg-rose-500 text-white font-black text-xs rounded-xl hover:bg-rose-600 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-55"
-                      >
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>Verify Handover & Pay Out API</span>
-                      </button>
-                    </form>
-                  )}
-
-                  {activePlaygroundTab === 'delay' && (
-                    <form onSubmit={handleReportDeliveryDelayApi} className="space-y-3.5">
-                      <p className="text-xs text-slate-400 dark:text-slate-300 leading-relaxed">
-                        <strong>POST /api/v1/couriers/&#123;riderId&#125;/delay-report</strong>: Submits critical courier delay incidents (traffic, mechanical, force-majeure) to recalculate service targets.
-                      </p>
-
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-300 uppercase">Select Target Job</label>
-                        {activePickupOrDispatched.length === 0 ? (
-                          <div className="text-xs text-red-400 bg-red-400/5 border border-red-400/10 p-2.5 rounded-xl font-medium">
-                            No active ongoing deliveries. Accept an available contract above first.
-                          </div>
-                        ) : (
-                          <select 
-                            value={apiDelayOrderId}
-                            onChange={(e) => setApiDelayOrderId(e.target.value)}
-                            className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono outline-none"
-                          >
-                            {activePickupOrDispatched.map(o => (
-                              <option key={o.id} value={o.id}>Order #{o.id} - {o.restaurantName}</option>
-                            ))}
-                          </select>
-                        )}
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-300 uppercase">Revised ETA addition (Secs)</label>
-                          <input 
-                            type="number"
-                            value={apiDelayRevisedEta}
-                            onChange={(e) => setApiDelayRevisedEta(e.target.value)}
-                            className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono text-center"
-                            min="60"
-                            max="7200"
-                            required
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-300 uppercase">Incident Reason</label>
-                          <input 
-                            type="text"
-                            value={apiDelayReason}
-                            onChange={(e) => setApiDelayReason(e.target.value)}
-                            className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono"
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      <button
-                        type="submit"
-                        disabled={activePickupOrDispatched.length === 0}
-                        className="w-full py-2.5 bg-rose-500 text-white font-black text-xs rounded-xl hover:bg-rose-600 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-55"
-                      >
-                        <AlertCircle className="w-3.5 h-3.5" />
-                        <span>File Critical Delay API</span>
-                      </button>
-                    </form>
-                  )}
-
-                </div>
-
-                {/* Response Visualizer (Right) */}
-                <div className="lg:col-span-6 flex flex-col justify-between min-h-[220px]">
-                  <div className="p-4 bg-slate-950 border border-rose-500/30 rounded-[1.5rem] flex-1 flex flex-col justify-between h-full space-y-3">
-                    <div className="flex items-center justify-between border-b border-rose-500/30 pb-2">
-                      <span className="text-[9.5px] font-mono font-bold text-slate-500 dark:text-slate-300">API GATEWAY RESPONSE OUTPUT</span>
-                      {apiResponseStatus && (
-                        <span className={`text-[9px] font-mono px-2 py-0.5 rounded-full font-black ${
-                          apiResponseStatus < 300 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'
-                        }`}>
-                          STATUS: {apiResponseStatus}
-                        </span>
-                      )}
-                    </div>
-
-                    {apiResponse ? (
-                      <div className="flex-1 flex flex-col space-y-3.5">
-                        <div className="space-y-1">
-                          <span className="text-[9px] font-mono text-slate-400 dark:text-slate-300 block">HTTP ENDPOINT:</span>
-                          <span className="text-xs font-mono font-semibold text-rose-400 block break-all">{apiResponseEndpoint}</span>
-                        </div>
-                        <div className="space-y-1">
-                          <span className="text-[9px] font-mono text-slate-400 dark:text-slate-300 block">HEADERS DISPATCHED:</span>
-                          <pre className="text-[9px] font-mono text-slate-400 dark:text-slate-300 p-2 bg-slate-900/60 rounded-xl overflow-x-auto scrollbar-thin max-h-24">
-                            {JSON.stringify(apiResponseHeaders, null, 2)}
-                          </pre>
-                        </div>
-                        <div className="space-y-1 flex-1 flex flex-col">
-                          <span className="text-[9px] font-mono text-slate-400 dark:text-slate-300 block">RESPONSE PAYLOAD JSON:</span>
-                          <pre className="text-[10px] font-mono text-amber-400 p-3 bg-slate-900 rounded-xl overflow-x-auto flex-1 scrollbar-thin max-h-32">
-                            {JSON.stringify(apiResponse, null, 2)}
-                          </pre>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex-1 flex flex-col items-center justify-center text-center py-8 text-slate-500 dark:text-slate-300 space-y-2">
-                        <Code className="w-8 h-8 text-slate-700" />
-                        <p className="text-xs font-mono">Gateway Listener Ready</p>
-                        <p className="text-[10px] text-slate-600 dark:text-slate-300 max-w-xs leading-relaxed">
-                          Fill in parameters and click update to display responsive API payloads here.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      <AnimatePresence>
-        {showProfile && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl w-full max-w-sm rounded-3xl p-6 shadow-xl border border-rose-500/20 dark:border-rose-500/30"
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500">
-                  <User className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-lg text-slate-900 dark:text-[#f0ede6] leading-tight">Driver Profile</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-300">Update your details for verification</p>
-                </div>
-              </div>
-
-              {errorMsg && (
-                <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-                  <p className="text-[11px] font-bold text-red-600 dark:text-red-400 leading-relaxed">{errorMsg}</p>
-                </div>
-              )}
-              <form onSubmit={handleOnboard} className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wide px-1">Full Name</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. John Doe"
-                    value={riderName}
-                    onChange={e => setRiderName(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-slate-50 dark:bg-slate-950 text-sm font-medium text-slate-900 dark:text-[#f0ede6] focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all focus:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:focus:shadow-[0_0_12px_rgba(244,63,94,0.5)] transition-all"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wide px-1">Phone Number</label>
-                  <input
-                    type="tel"
-                    readOnly
-                    value={riderPhone}
-                    className="w-full px-4 py-2.5 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-slate-100 dark:bg-slate-900 text-sm font-medium text-slate-500 dark:text-[#f0ede6] cursor-not-allowed"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wide px-1">Vehicle Registration</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. KA01AB1234"
-                    value={vehicleNumber}
-                    onChange={e => setVehicleNumber(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-slate-50 dark:bg-slate-950 text-sm font-medium text-slate-900 dark:text-[#f0ede6] focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all focus:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:focus:shadow-[0_0_12px_rgba(244,63,94,0.5)] transition-all"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wide px-1">Profile Photo URL</label>
-                  <input
-                    type="url"
-                    required
-                    placeholder="https://example.com/photo.jpg"
-                    value={photoUrl}
-                    onChange={e => setPhotoUrl(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-slate-50 dark:bg-slate-950 text-sm font-medium text-slate-900 dark:text-[#f0ede6] focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all focus:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:focus:shadow-[0_0_12px_rgba(244,63,94,0.5)] transition-all"
-                  />
-                </div>
-
-                <div className="pt-4 flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowProfile(false)}
-                    className="flex-1 py-3 text-xs font-bold text-slate-500 dark:text-slate-300 border border-rose-500/20 dark:border-rose-500/30 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isRegistering}
-                    className="flex-1 py-3 bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isRegistering ? "Saving..." : "Save Details"}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <AnimatePresence>
         {pingJob && (
@@ -1434,21 +1194,46 @@ export default function DeliveryDashboard({
         )}
       </AnimatePresence>
 
-      <CompleteProfileModal 
-        isOpen={showCompleteProfileModal} 
-        theme={theme} 
-        profileId={user?.id || ''}
-        onComplete={(profile) => {
-          setUser(prev => prev ? { ...prev, name: profile.name, email: profile.email } : prev);
-          setShowCompleteProfileModal(false);
-          // check if vehicle number is missing, if so show the delivery onboarding
-          if (!vehicleNumber) {
-            setShowProfile(true);
-          }
-        }} 
-      />
-
-
+      <AnimatePresence>
+        {showLocationPrompt && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-2xl relative"
+            >
+              <button 
+                onClick={() => setShowLocationPrompt(false)}
+                className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              
+              <div className="p-8 pb-6 flex flex-col items-center text-center">
+                <div className="w-16 h-16 rounded-full bg-rose-500/10 flex items-center justify-center mb-6 text-rose-500">
+                  <MapPinOff className="w-8 h-8" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">Location Required</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-8">
+                  To receive delivery orders and go on duty, please enable location permissions for this application in your browser settings.
+                </p>
+                <button
+                  onClick={() => setShowLocationPrompt(false)}
+                  className="w-full py-3.5 rounded-xl bg-slate-900 dark:bg-emerald-500 text-white dark:text-slate-950 font-bold hover:bg-slate-800 dark:hover:bg-emerald-400 transition-colors"
+                >
+                  Understood
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
       )}
     </div>

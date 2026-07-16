@@ -6,7 +6,8 @@ import CustomerDashboard from './components/CustomerDashboard';
 import RestaurantDashboard from './components/RestaurantDashboard';
 import DeliveryDashboard from './components/DeliveryDashboard';
 import AdminPortal from './components/AdminPortal';
-import { getUserProfile, logout as authLogout } from './lib/authStore';
+import { getUserProfile } from './lib/tokenStore';
+import { logout as authLogout } from './lib/authStore';
 
 export default function App() {
   // Initialize auth state SYNCHRONOUSLY from localStorage.

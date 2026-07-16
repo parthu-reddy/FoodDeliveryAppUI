@@ -13,14 +13,16 @@ import LaBouffeLogo from './LaBouffeLogo';
 import OutletMenuEditor from './OutletMenuEditor';
 import OutletRegistration from "./OutletRegistration";
 import BrandRegistration from "./BrandRegistration";
+import OutletShiftEditor from "./OutletShiftEditor";
+import BrandMasterMenu from "./BrandMasterMenu";
 
 import { OrderHistory } from "./OrderHistory";
 
 import CompleteProfileModal from './CompleteProfileModal';
 import SharedSettingsView from './SharedSettingsView';
-import { getUserProfile } from '../lib/authStore';
+import { getUserProfile } from '../lib/tokenStore';
 
-import { apiGet, apiPost } from '../lib/apiClient';
+import { apiGet, apiPost, apiPut } from '../lib/apiClient';
 import { toFrontendStatus, toBackendStatus } from '../lib/statusMapper';
 import { 
   getBrands, getOutlets, 
@@ -37,6 +39,17 @@ interface RestaurantDashboardProps {
   onToggleTheme?: () => void;
   onAddApiLog?: (log: any) => void;
 }
+
+// Utility to determine if order is actively tracked
+const isActiveOrder = (status: string) => {
+  const s = (status || '').trim().toLowerCase();
+  return !['delivered', 'partially_refunded', 'cancelled_and_refunded', 'cancelled', 'rejected', 'cancelled_by_restaurant', 'delivery_failed', 'dispatch_failed'].includes(s);
+};
+
+const isFailedOrder = (status: string) => {
+  const s = (status || '').trim().toLowerCase();
+  return ['cancelled', 'rejected', 'cancelled_by_restaurant', 'delivery_failed', 'dispatch_failed', 'partially_refunded', 'cancelled_and_refunded'].includes(s);
+};
 
 export default function RestaurantDashboard({
   restaurantId,
@@ -80,7 +93,16 @@ export default function RestaurantDashboard({
 
   const [showSettings, setShowSettings] = useState(false);
   
-  const [selectedOutletId, setSelectedOutletId] = useState<string>(restaurantId);
+  const [editingOutletShifts, setEditingOutletShifts] = useState<any | null>(null);
+  const [selectedOutletId, setSelectedOutletId] = useState<string>(() => {
+    return localStorage.getItem('restaurant_selectedOutletId') || restaurantId || '';
+  });
+
+  useEffect(() => {
+    if (selectedOutletId) {
+      localStorage.setItem('restaurant_selectedOutletId', selectedOutletId);
+    }
+  }, [selectedOutletId]);
 
   const [showCompleteProfileModal, setShowCompleteProfileModal] = useState(false);
   const [view, setView] = useState<'home' | 'settings'>('home');
@@ -107,15 +129,61 @@ export default function RestaurantDashboard({
       .catch(console.error);
   }, []);
 
-  // Fetch restaurant orders
+  // Fetch restaurant orders with polling
   useEffect(() => {
-    if (selectedOutletId) {
-      apiGet(`/api/v1/restaurants/${selectedOutletId}/fulfillment/orders`)
-        .then(res => {
-          if (res.data) setInternalOrders(res.data);
-        })
-        .catch(console.error);
-    }
+    let interval: ReturnType<typeof setInterval>;
+    
+    const fetchOrders = () => {
+      if (selectedOutletId) {
+        apiGet(`/api/v1/restaurants/${selectedOutletId}/fulfillment/orders`)
+                    .then(res => {
+            if (res.data) {
+              const mapped = res.data.map((o: any) => {
+                let s = o.status?.toLowerCase() || '';
+                if (s === 'created' || s === 'paid') s = 'placed';
+                if (s === 'ready_for_pickup' || s === 'ready') s = 'ready_for_pickup'; // Wait, backend sends READY, UI expects ready_for_pickup?
+                if (s === 'rejected' || s === 'cancelled' || s === 'cancelled_by_restaurant' || s === 'delivery_failed' || s === 'dispatch_failed') s = 'cancelled';
+                if (s === 'delivered') s = 'delivered';
+                
+                let parsedItems = o.items || [];
+                if (o.itemsJson) {
+                    try { parsedItems = JSON.parse(o.itemsJson); } catch (e) {}
+                }
+                let calculatedTotal = parsedItems.reduce((acc: number, item: any) => acc + (item.item?.price || item.price || 0) * (item.quantity || 1), 0);
+                
+                return { 
+                  ...o, 
+                  id: o.orderId || o.id, 
+                  status: s, 
+                  items: parsedItems,
+                  total: o.total || o.totalAmount || calculatedTotal,
+                  subtotal: o.subtotal || calculatedTotal,
+                  customerName: o.customerName || 'Customer'
+                };
+              });
+              setInternalOrders(prev => {
+                return mapped.map((newOrder: any) => {
+                  const oldOrder = prev.find(p => p.id === newOrder.id);
+                  const isLocallyPreparing = localStorage.getItem(`order_preparing_${newOrder.id}`) === 'true';
+                  if ((oldOrder?.status === 'preparing' || isLocallyPreparing) && newOrder.status === 'accepted') {
+                    return { ...newOrder, status: 'preparing' };
+                  }
+                  return newOrder;
+                });
+              });
+            }
+          })
+          .catch(console.error);
+      }
+    };
+
+    // Initial fetch
+    fetchOrders();
+
+    // Setup polling every 3 seconds
+    interval = setInterval(fetchOrders, 3000);
+
+    return () => clearInterval(interval);
   }, [selectedOutletId]);
 
   const [menuList, setMenuList] = useState<MenuItem[]>([]);
@@ -133,6 +201,16 @@ export default function RestaurantDashboard({
       ]);
       setBrands(_brands);
       setOutlets(_outlets);
+      
+      const newAcceptingState: Record<string, boolean> = {};
+      _outlets.forEach((o: any) => {
+        newAcceptingState[o.id] = o.isActive !== false;
+      });
+      setIsAcceptingOrders(newAcceptingState);
+
+      if (_outlets.length === 0) {
+        setSettingsTab("outlets");
+      }
 
       if (!selectedOutletId && _outlets.length > 0) {
         setSelectedOutletId(_outlets[0].id);
@@ -187,15 +265,30 @@ export default function RestaurantDashboard({
   const [overrideActive, setOverrideActive] = useState(true);
 
   const [isAcceptingOrders, setIsAcceptingOrders] = useState<Record<string, boolean>>({});
-  const isCurrentOutletAcceptingOrders = isAcceptingOrders[selectedOutletId] ?? true;
+  const hasOutlets = outlets.length > 0;
+  const isCurrentOutletAcceptingOrders = hasOutlets && (isAcceptingOrders[selectedOutletId] ?? true);
 
-
+  const toggleOutletStatus = async () => {
+    if (!selectedOutletId) return;
+    const newStatus = !isCurrentOutletAcceptingOrders;
+    try {
+        await apiPut(`/api/v1/outlets/${selectedOutletId}/status`, { isActive: newStatus });
+        setIsAcceptingOrders(prev => ({ ...prev, [selectedOutletId]: newStatus }));
+    } catch (err: any) {
+        alert(err.message || "Failed to update outlet status");
+    }
+  };
 
   // Filter orders meant for this restaurant
-  const myOrders = activeOrders.filter(o => o.restaurantId === selectedOutletId);
+  const allRestaurantOrders = activeOrders.filter(o => o.restaurantId === selectedOutletId);
+  
+  // Separate into active and history
+  const myOrders = allRestaurantOrders.filter(o => isActiveOrder(o.status || ''));
+  const historyOrders = allRestaurantOrders.filter(o => !isActiveOrder(o.status || ''));
+
   const pendingOrders = myOrders.filter(o => o.status === 'placed' || o.status === 'on_hold');
   const activePreparing = myOrders.filter(o => o.status === 'accepted' || o.status === 'preparing');
-  const completedOrders = myOrders.filter(o => o.status === 'delivered');
+  const completedOrders = historyOrders.filter(o => o.status === 'delivered');
 
   // Compute stats
   const totalRevenue = myOrders.reduce((acc, curr) => acc + curr.subtotal, 0);
@@ -452,9 +545,11 @@ export default function RestaurantDashboard({
     if (order.status === 'placed' || order.status === 'on_hold') {
       onUpdateOrderStatus(order.id, 'accepted');
     } else if (order.status === 'accepted') {
+      localStorage.setItem(`order_preparing_${order.id}`, 'true');
       onUpdateOrderStatus(order.id, 'preparing');
     } else if (order.status === 'preparing') {
-      onUpdateOrderStatus(order.id, 'dispatched');
+      localStorage.removeItem(`order_preparing_${order.id}`);
+      onUpdateOrderStatus(order.id, 'ready_for_pickup');
     }
   };
 
@@ -516,7 +611,9 @@ export default function RestaurantDashboard({
     setDelayingOrderId(null);
   };
 
-  const myRestaurantName = outlets.find(r => r.id === selectedOutletId)?.name || 'My Restaurant';
+  const myRestaurantName = outlets.length > 0 
+    ? (outlets.find(r => r.id === selectedOutletId)?.name || 'My Restaurant') 
+    : 'No Outlet Registered';
 
   return (
     <div className="flex-1 flex flex-col w-full overflow-y-auto overflow-x-hidden min-h-0 bg-transparent text-slate-800 dark:text-[#f0ede6] h-full pb-20">
@@ -533,24 +630,22 @@ export default function RestaurantDashboard({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-extrabold text-xs tracking-tight leading-none text-slate-900 dark:text-[#f0ede6]">{myRestaurantName}</h3>
-                <select
-                  value={selectedOutletId}
-                  onChange={(e) => setSelectedOutletId(e.target.value)}
-                  className="bg-slate-100 dark:bg-slate-800 border border-rose-500/20 dark:border-rose-500/30 rounded-lg px-2 py-0.5 text-[10px] font-bold text-slate-700 dark:text-[#f0ede6] focus:outline-none"
-                >
-                  {outlets.length > 0 ? (
-                    outlets.map(o => (
+                {hasOutlets && (
+                  <select
+                    value={selectedOutletId}
+                    onChange={(e) => setSelectedOutletId(e.target.value)}
+                    className="bg-slate-100 dark:bg-slate-800 border border-rose-500/20 dark:border-rose-500/30 rounded-lg px-2 py-0.5 text-[10px] font-bold text-slate-700 dark:text-[#f0ede6] focus:outline-none"
+                  >
+                    {outlets.map(o => (
                       <option key={o.id} value={o.id}>{o.name}</option>
-                    ))
-                  ) : (
-                    <option value={restaurantId}>{myRestaurantName}</option>
-                  )}
-                </select>
+                    ))}
+                  </select>
+                )}
               </div>
               <div className="flex items-center gap-1 mt-1.5">
                 <span className={`w-1.5 h-1.5 rounded-full ${isCurrentOutletAcceptingOrders ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
                 <span className={`text-[9px] font-bold font-mono ${isCurrentOutletAcceptingOrders ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {isCurrentOutletAcceptingOrders ? 'ACCEPTING LIVE ORDERS' : 'STORE OFFLINE'}
+                  {hasOutlets ? (isCurrentOutletAcceptingOrders ? 'ACCEPTING LIVE ORDERS' : 'STORE OFFLINE') : 'SETUP REQUIRED'}
                 </span>
               </div>
             </div>
@@ -559,7 +654,7 @@ export default function RestaurantDashboard({
 
         <div className="flex items-center gap-2 self-end sm:self-auto">
           <button
-            onClick={() => setIsAcceptingOrders(prev => ({ ...prev, [selectedOutletId]: !isCurrentOutletAcceptingOrders }))}
+            onClick={toggleOutletStatus}
 
             className="flex items-center gap-1.5 p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 transition-all cursor-pointer"
             title="Toggle Outlet Status"
@@ -588,7 +683,14 @@ export default function RestaurantDashboard({
           )}
 
           <button
-            onClick={() => setView('settings')}
+            onClick={() => {
+              if (view === 'settings') {
+                setView('home');
+              } else {
+                setView('settings');
+                setShowSettings(false);
+              }
+            }}
             className={`p-2.5 rounded-xl transition-all cursor-pointer ${
               view === 'settings' 
                 ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 shadow-sm shadow-indigo-500/10' 
@@ -600,7 +702,10 @@ export default function RestaurantDashboard({
           </button>
 
           <button
-            onClick={() => setShowSettings(!showSettings)}
+            onClick={() => {
+              setShowSettings(!showSettings);
+              if (view === 'settings') setView('home');
+            }}
             className={`p-2.5 rounded-xl transition-all cursor-pointer ${
               showSettings 
                 ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white shadow-sm shadow-rose-500/15' 
@@ -639,7 +744,7 @@ export default function RestaurantDashboard({
                   : 'text-slate-500 dark:text-[#f0ede6] hover:text-slate-700 dark:hover:text-slate-200'
               }`}
             >
-              Live Kitchen Feed ({myOrders.filter(o => o.status !== 'delivered').length})
+              Live Kitchen Feed ({myOrders.length})
             </button>
             <button
               onClick={() => {
@@ -738,7 +843,7 @@ export default function RestaurantDashboard({
                         >
                           <div className="flex justify-between items-start">
                             <div>
-                              <span className="text-xs font-mono font-bold text-orange-500">#{order.id}</span>
+                              <span className="text-xs font-mono font-bold text-orange-500">#{order.id.substring(0, 8)}</span>
                               <span className="text-[10px] text-slate-400 dark:text-slate-300 font-medium block">{order.timestamp}</span>
                             </div>
                             <span className={`text-[9px] font-mono font-black px-2 py-0.5 rounded-full uppercase border ${order.status === 'on_hold' ? 'bg-red-500/10 text-red-500 border-red-500/25' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:shadow-[0_0_12px_rgba(244,63,94,0.5)] uppercase'}`}>
@@ -762,12 +867,12 @@ export default function RestaurantDashboard({
                           <div className="space-y-1">
                             <span className="text-[9px] text-slate-400 dark:text-slate-300 font-extrabold uppercase font-mono">Dishes ({order.items.length})</span>
                             <div className="space-y-1 max-h-[100px] overflow-y-auto scrollbar-thin pl-1">
-                              {order.items.map(cartItem => (
-                                <div key={cartItem.item.id} className="flex justify-between text-[11px]">
+                              {order.items.map((cartItem: any, idx: number) => (
+                                <div key={cartItem.item?.id || idx} className="flex justify-between text-[11px]">
                                   <span className="text-slate-600 dark:text-[#f0ede6]">
-                                    <span className="font-bold text-amber-550 pr-1">{cartItem.quantity}x</span> {cartItem.item.name}
+                                    <span className="font-bold text-amber-550 pr-1">{cartItem.quantity || 1}x</span> {cartItem.item?.name || cartItem.name || 'Item'}
                                   </span>
-                                  <span className="text-slate-400 dark:text-slate-300 font-mono">${(cartItem.item.price * cartItem.quantity).toFixed(2)}</span>
+                                  <span className="text-slate-400 dark:text-slate-300 font-mono">${((cartItem.item?.price || cartItem.price || 0) * (cartItem.quantity || 1)).toFixed(2)}</span>
                                 </div>
                               ))}
                             </div>
@@ -784,7 +889,7 @@ export default function RestaurantDashboard({
                           <div className="pt-2.5 border-t border-rose-500/20 dark:border-rose-500/30 flex flex-col gap-2">
                             <div className="flex justify-between items-center">
                               <span className="text-[10px] text-slate-400 dark:text-slate-300 uppercase font-mono">Total Value:</span>
-                              <span className="text-sm font-black text-slate-850 dark:text-[#f0ede6] font-mono">${order.total.toFixed(2)}</span>
+                              <span className="text-sm font-black text-slate-850 dark:text-[#f0ede6] font-mono">${order.total?.toFixed(2)}</span>
                             </div>
 
                             {/* Action Row */}
@@ -900,7 +1005,7 @@ export default function RestaurantDashboard({
                         >
                           <div className="flex justify-between items-start">
                             <div>
-                              <span className="text-xs font-mono font-bold text-red-500">#{order.id}</span>
+                              <span className="text-xs font-mono font-bold text-red-500">#{order.id.substring(0, 8)}</span>
                               <span className="text-[10px] text-slate-400 dark:text-slate-300 font-medium block">{order.timestamp}</span>
                             </div>
                             <span className="text-[9px] font-mono font-black px-2 py-0.5 rounded-full uppercase border bg-red-500/10 text-red-500 border-red-500/25">
@@ -924,12 +1029,12 @@ export default function RestaurantDashboard({
                           <div className="space-y-1">
                             <span className="text-[9px] text-slate-400 dark:text-slate-300 font-extrabold uppercase font-mono">Dishes ({order.items.length})</span>
                             <div className="space-y-1 max-h-[100px] overflow-y-auto scrollbar-thin pl-1">
-                              {order.items.map(cartItem => (
-                                <div key={cartItem.item.id} className="flex justify-between text-[11px]">
+                              {order.items.map((cartItem: any, idx: number) => (
+                                <div key={cartItem.item?.id || idx} className="flex justify-between text-[11px]">
                                   <span className="text-slate-600 dark:text-[#f0ede6]">
-                                    <span className="font-bold text-amber-550 pr-1">{cartItem.quantity}x</span> {cartItem.item.name}
+                                    <span className="font-bold text-amber-550 pr-1">{cartItem.quantity || 1}x</span> {cartItem.item?.name || cartItem.name || 'Item'}
                                   </span>
-                                  <span className="text-slate-400 dark:text-slate-300 font-mono">${(cartItem.item.price * cartItem.quantity).toFixed(2)}</span>
+                                  <span className="text-slate-400 dark:text-slate-300 font-mono">${((cartItem.item?.price || cartItem.price || 0) * (cartItem.quantity || 1)).toFixed(2)}</span>
                                 </div>
                               ))}
                             </div>
@@ -946,7 +1051,7 @@ export default function RestaurantDashboard({
                           <div className="pt-2.5 border-t border-rose-500/20 dark:border-rose-500/30 flex flex-col gap-2">
                             <div className="flex justify-between items-center">
                               <span className="text-[10px] text-slate-400 dark:text-slate-300 uppercase font-mono">Total Value:</span>
-                              <span className="text-sm font-black text-slate-850 dark:text-[#f0ede6] font-mono">${order.total.toFixed(2)}</span>
+                              <span className="text-sm font-black text-slate-850 dark:text-[#f0ede6] font-mono">${order.total?.toFixed(2)}</span>
                             </div>
 
                             {/* Action Row */}
@@ -998,7 +1103,7 @@ export default function RestaurantDashboard({
                         >
                           <div className="flex justify-between items-start">
                             <div>
-                              <span className="text-xs font-mono font-bold text-orange-500">#{order.id}</span>
+                              <span className="text-xs font-mono font-bold text-orange-500">#{order.id.substring(0, 8)}</span>
                               <span className="text-[10px] text-slate-400 dark:text-slate-300 font-medium block">{order.timestamp}</span>
                             </div>
                             <span className={`text-[9px] font-mono font-black px-2 py-0.5 rounded-full uppercase border ${
@@ -1024,12 +1129,12 @@ export default function RestaurantDashboard({
                           <div className="space-y-1">
                             <span className="text-[9px] text-slate-400 dark:text-slate-300 font-extrabold uppercase font-mono">Dishes ({order.items.length})</span>
                             <div className="space-y-1 max-h-[100px] overflow-y-auto scrollbar-thin pl-1">
-                              {order.items.map(cartItem => (
-                                <div key={cartItem.item.id} className="flex justify-between text-[11px]">
+                              {order.items.map((cartItem: any, idx: number) => (
+                                <div key={cartItem.item?.id || idx} className="flex justify-between text-[11px]">
                                   <span className="text-slate-600 dark:text-[#f0ede6] font-medium">
-                                    <span className="font-mono text-orange-500 font-bold pr-1">{cartItem.quantity}x</span> {cartItem.item.name}
+                                    <span className="font-mono text-orange-500 font-bold pr-1">{cartItem.quantity || 1}x</span> {cartItem.item?.name || cartItem.name || 'Item'}
                                   </span>
-                                  <span className="text-slate-400 dark:text-slate-300 font-mono">${(cartItem.item.price * cartItem.quantity).toFixed(2)}</span>
+                                  <span className="text-slate-400 dark:text-slate-300 font-mono">${((cartItem.item?.price || cartItem.price || 0) * (cartItem.quantity || 1)).toFixed(2)}</span>
                                 </div>
                               ))}
                             </div>
@@ -1039,7 +1144,7 @@ export default function RestaurantDashboard({
                           <div className="pt-2.5 border-t border-rose-500/20 dark:border-rose-500/30 flex items-center justify-between gap-3">
                             <div>
                               <span className="text-[9px] text-slate-400 dark:text-slate-300 uppercase font-mono block">Order Value</span>
-                              <span className="text-xs font-bold text-slate-850 dark:text-[#f0ede6] font-mono">${order.total.toFixed(2)}</span>
+                              <span className="text-xs font-bold text-slate-850 dark:text-[#f0ede6] font-mono">${order.total?.toFixed(2)}</span>
                             </div>
 
                             {order.status === 'accepted' ? (
@@ -1074,19 +1179,19 @@ export default function RestaurantDashboard({
                       <span className="font-extrabold text-xs text-slate-800 dark:text-[#f0ede6] uppercase font-sans tracking-wide">Prepared Ready</span>
                     </div>
                     <span className="text-[10px] font-black font-mono bg-emerald-500/10 text-emerald-650 dark:text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-                      {myOrders.filter(o => o.status === 'dispatched').length}
+                      {myOrders.filter(o => o.status === 'dispatched' || o.status === 'ready_for_pickup').length}
                     </span>
                   </div>
 
                   <div className="flex-1 space-y-3.5 overflow-y-auto h-[500px] scrollbar-thin pr-1">
-                    {myOrders.filter(o => o.status === 'dispatched').length === 0 ? (
+                    {myOrders.filter(o => o.status === 'dispatched' || o.status === 'ready_for_pickup').length === 0 ? (
                       <div className="h-full flex flex-col items-center justify-center text-center py-16 px-4 bg-white/40 dark:bg-slate-900/10 border border-dashed border-rose-500/20 dark:border-rose-500/30 rounded-2xl">
                         <Truck className="w-8 h-8 text-slate-300 dark:text-slate-700 mb-2" />
                         <p className="text-xs font-bold text-slate-400 dark:text-slate-300">No ready packages</p>
                         <p className="text-[10px] text-slate-500 dark:text-slate-300 mt-1 max-w-[180px]">Finished dishes will wait here. Handover to couriers with secure codes.</p>
                       </div>
                     ) : (
-                      myOrders.filter(o => o.status === 'dispatched').slice().reverse().map(order => (
+                      myOrders.filter(o => o.status === 'dispatched' || o.status === 'ready_for_pickup').slice().reverse().map(order => (
                         <motion.div 
                           key={order.id}
                           layoutId={`card-${order.id}`}
@@ -1094,7 +1199,7 @@ export default function RestaurantDashboard({
                         >
                           <div className="flex justify-between items-start">
                             <div>
-                              <span className="text-xs font-mono font-bold text-emerald-500">#{order.id}</span>
+                              <span className="text-xs font-mono font-bold text-emerald-500">#{order.id.substring(0, 8)}</span>
                               <span className="text-[10px] text-slate-400 dark:text-slate-300 font-medium block">{order.timestamp}</span>
                             </div>
                             <span className="text-[9px] font-mono font-black px-2 py-0.5 rounded-full bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:shadow-[0_0_12px_rgba(244,63,94,0.5)] uppercase tracking-wider">
@@ -1144,10 +1249,10 @@ export default function RestaurantDashboard({
                           <div className="space-y-1">
                             <span className="text-[9px] text-slate-400 dark:text-slate-300 font-extrabold uppercase font-mono">Dishes ({order.items.length})</span>
                             <div className="space-y-1 max-h-[80px] overflow-y-auto scrollbar-thin pl-1">
-                              {order.items.map(cartItem => (
-                                <div key={cartItem.item.id} className="flex justify-between text-[11px]">
-                                  <span className="text-slate-500 dark:text-slate-350 truncate max-w-[130px]">{cartItem.item.name}</span>
-                                  <span className="text-slate-400 dark:text-slate-300 font-mono font-bold pr-1">{cartItem.quantity}x</span>
+                              {order.items.map((cartItem: any, idx: number) => (
+                                <div key={cartItem.item?.id || idx} className="flex justify-between text-[11px]">
+                                  <span className="text-slate-500 dark:text-slate-350 truncate max-w-[130px]">{cartItem.item?.name || cartItem.name || 'Item'}</span>
+                                  <span className="text-slate-400 dark:text-slate-300 font-mono font-bold pr-1">{cartItem.quantity || 1}x</span>
                                 </div>
                               ))}
                             </div>
@@ -1283,17 +1388,6 @@ export default function RestaurantDashboard({
             </div>
             <div className="flex bg-slate-100/80 dark:bg-slate-950/45 p-1 rounded-2xl border border-rose-500/20 dark:border-rose-500/30/30 gap-1.5 max-w-md mb-6">
               <button
-                onClick={() => setSettingsTab("menu-editor")}
-                className={`flex-1 py-2 px-3 text-xs font-bold rounded-xl cursor-pointer transition-all flex items-center justify-center gap-1.5 ${
-                  settingsTab === "menu-editor"
-                    ? "bg-white/50 dark:bg-slate-900/50 text-slate-900 dark:text-[#f0ede6] shadow-sm border border-rose-500/20 dark:border-rose-500/30 backdrop-blur-md" 
-                    : "text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-slate-200"
-                }`}
-              >
-                <Utensils className="w-4 h-4 text-orange-500" />
-                <span>Menu Catalog Editor</span>
-              </button>
-              <button
                 onClick={() => setSettingsTab("outlets")}
                 className={`flex-1 py-2 px-3 text-xs font-bold rounded-xl cursor-pointer transition-all flex items-center justify-center gap-1.5 ${
                   settingsTab === "outlets"
@@ -1304,10 +1398,27 @@ export default function RestaurantDashboard({
                 <Store className="w-4 h-4 text-rose-500" />
                 <span>Outlet Management</span>
               </button>
+              <button
+                disabled={outlets.length === 0}
+                onClick={() => setSettingsTab("menu-editor")}
+                className={`flex-1 py-2 px-3 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+                  outlets.length === 0 ? "opacity-50 cursor-not-allowed grayscale" : "cursor-pointer"
+                } ${
+                  settingsTab === "menu-editor"
+                    ? "bg-white/50 dark:bg-slate-900/50 text-slate-900 dark:text-[#f0ede6] shadow-sm border border-rose-500/20 dark:border-rose-500/30 backdrop-blur-md" 
+                    : "text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-slate-200"
+                }`}
+              >
+                <Utensils className="w-4 h-4 text-orange-500" />
+                <span>Menu Catalog Editor</span>
+              </button>
 
               <button
+                disabled={outlets.length === 0}
                 onClick={() => setSettingsTab("history")}
-                className={`flex-1 py-2 px-3 text-xs font-bold rounded-xl cursor-pointer transition-all flex items-center justify-center gap-1.5 ${
+                className={`flex-1 py-2 px-3 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+                  outlets.length === 0 ? "opacity-50 cursor-not-allowed grayscale" : "cursor-pointer"
+                } ${
                   settingsTab === "history"
                     ? "bg-white/50 dark:bg-slate-900/50 text-slate-900 dark:text-[#f0ede6] shadow-sm border border-rose-500/20 dark:border-rose-500/30 backdrop-blur-md" 
                     : "text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-slate-200"
@@ -1332,8 +1443,17 @@ export default function RestaurantDashboard({
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="space-y-6">
-                    <BrandRegistration onRefresh={loadData} />
-                    <OutletRegistration onRefresh={loadData} brandId={brands.length > 0 ? brands[0].id : ''} />
+                    {brands.length === 0 ? (
+                      <BrandRegistration onRefresh={loadData} />
+                    ) : (
+                      <div className="p-4 border border-emerald-500/20 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 flex flex-col gap-1 shadow-sm">
+                        <p className="font-bold text-sm flex items-center gap-2"><CheckCircle className="w-4 h-4" /> Brand Registered Successfully</p>
+                        <p className="text-xs">You have completed brand registration. You can now add an outlet.</p>
+                      </div>
+                    )}
+                    {brands.length > 0 && (
+                      <OutletRegistration onRefresh={loadData} brandId={brands[0].id} />
+                    )}
                   </div>
                   <div className="space-y-6">
                     <div className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 p-5 rounded-[2rem] shadow-sm">
@@ -1355,15 +1475,38 @@ export default function RestaurantDashboard({
                       <div className="space-y-3">
                         {outlets.map(o => (
                           <div key={o.id} className="p-3 bg-white/70 dark:bg-slate-950/45 border border-rose-500/20 dark:border-rose-500/30 rounded-2xl flex flex-col gap-2 shadow-sm">
-                            <div className="flex justify-between items-center">
-                              <span className="font-extrabold text-sm text-slate-800 dark:text-[#f0ede6]">{o.name}</span>
-                              <span className="text-[10px] font-mono text-slate-400 dark:text-slate-300">ID: {o.id}</span>
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <span className="font-extrabold text-sm text-slate-800 dark:text-[#f0ede6]">{o.name}</span>
+                                <span className="text-[10px] font-mono text-slate-400 dark:text-slate-300 block">ID: {o.id}</span>
+                              </div>
+                              <button
+                                onClick={() => setEditingOutletShifts(o)}
+                                className="p-1.5 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-500/20 transition-colors"
+                                title="Edit Shifts"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                              </button>
                             </div>
                             <div className="text-xs text-slate-500 dark:text-slate-300">FSSAI: {o.fssaiLicenseNumber}</div>
+                            {o.timings && o.timings.length > 0 && (
+                              <div className="mt-1 flex flex-wrap gap-1.5">
+                                {o.timings.map((t: any, i: number) => (
+                                  <span key={i} className="text-[9px] font-bold font-mono bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">
+                                    {t.openingTime.substring(0,5)} - {t.closingTime.substring(0,5)}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
                     </div>
+                    {brands.length > 0 && (
+                      <div className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 p-5 rounded-[2rem] shadow-sm mt-6">
+                        <BrandMasterMenu brandId={brands[0].id} onRefresh={loadData} />
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1378,7 +1521,7 @@ export default function RestaurantDashboard({
             )}
             {settingsTab === "history" && (
               <div className="space-y-6 animate-fade-in">
-                <OrderHistory orders={myOrders} />
+                <OrderHistory orders={historyOrders} />
               </div>
             )}
           </motion.div>
@@ -1572,7 +1715,7 @@ export default function RestaurantDashboard({
                             className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono outline-none"
                           >
                             {activePreparingOrders.map(o => (
-                              <option key={o.id} value={o.id}>Order #{o.id} - ${o.total.toFixed(2)}</option>
+                              <option key={o.id} value={o.id}>Order #{o.id} - ${o.total?.toFixed(2)}</option>
                             ))}
                           </select>
                         )}
@@ -1633,7 +1776,7 @@ export default function RestaurantDashboard({
                             className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono outline-none"
                           >
                             {activePreparingOrders.map(o => (
-                              <option key={o.id} value={o.id}>Order #{o.id} - ${o.total.toFixed(2)}</option>
+                              <option key={o.id} value={o.id}>Order #{o.id} - ${o.total?.toFixed(2)}</option>
                             ))}
                           </select>
                         )}
@@ -1713,6 +1856,14 @@ export default function RestaurantDashboard({
           setShowCompleteProfileModal(false);
         }} 
       />
+      
+      {editingOutletShifts && (
+        <OutletShiftEditor
+          outlet={editingOutletShifts}
+          onRefresh={loadData}
+          onClose={() => setEditingOutletShifts(null)}
+        />
+      )}
 
     </>
       )}

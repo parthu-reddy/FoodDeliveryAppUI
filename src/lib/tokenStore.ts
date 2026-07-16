@@ -34,6 +34,16 @@ export const getUserProfile = (): any | null => {
   if (stored) {
     try {
       memoryProfile = JSON.parse(stored);
+      if (!memoryProfile.id) {
+        const token = getToken();
+        if (token) {
+          const decoded = decodeJwt(token);
+          if (decoded && decoded.sub) {
+            memoryProfile.id = decoded.sub;
+            setUserProfile(memoryProfile);
+          }
+        }
+      }
       return memoryProfile;
     } catch {}
   }
@@ -46,7 +56,7 @@ export const getUserProfile = (): any | null => {
       const role = Array.isArray(decoded.roles) && decoded.roles.length > 0
         ? decoded.roles[0].toLowerCase()
         : (decoded.role || 'customer').toLowerCase();
-      const profile = { phone: decoded.phone || decoded.sub, role, name: decoded.name || '' };
+      const profile = { id: decoded.sub, phone: decoded.phone || decoded.sub, role, name: decoded.name || '' };
       setUserProfile(profile);
       return profile;
     }

@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { 
   Search, MapPin, ShoppingBag, LogOut, ChevronRight, Star, Clock, 
   Bike, Plus, Minus, X, Check, Timer, ArrowLeft, ShieldCheck, Heart, Store, Sun, Moon,
-  Terminal, Sliders, Code, Send, RefreshCw, Package, User
+  Terminal, Sliders, Code, Send, RefreshCw, Package, User, Navigation, AlertCircle, MapPinOff, XCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Restaurant, MenuItem, CartItem, Order, OrderStatus } from '../types';
 import { apiGet, apiPost } from '../lib/apiClient';
-import { getUserProfile } from '../lib/authStore';
+import { getUserProfile } from '../lib/tokenStore';
 import LaBouffeLogo from './LaBouffeLogo';
 import { getEffectiveMenu } from '../lib/menuStore';
 import ImageLoader from './ImageLoader';
@@ -17,6 +17,7 @@ import SharedSettingsView from './SharedSettingsView';
 import CustomerAddressModal from './CustomerAddressModal';
 import CustomerPaymentModal from './CustomerPaymentModal';
 import CompleteProfileModal from './CompleteProfileModal';
+import OrderTrackingMap from './OrderTrackingMap';
 
 
 interface CustomerDashboardProps {
@@ -30,6 +31,18 @@ interface CustomerDashboardProps {
   onToggleTheme?: () => void;
   onAddApiLog?: (log: any) => void;
 }
+
+
+// Utility to determine if order is actively tracked
+const isActiveOrder = (status: string) => {
+  const s = (status || '').trim().toLowerCase();
+  return !['delivered', 'partially_refunded', 'cancelled_and_refunded', 'cancelled', 'rejected', 'cancelled_by_restaurant', 'delivery_failed', 'dispatch_failed'].includes(s);
+};
+
+const isFailedOrder = (status: string) => {
+  const s = (status || '').trim().toLowerCase();
+  return ['cancelled', 'rejected', 'cancelled_by_restaurant', 'delivery_failed', 'dispatch_failed'].includes(s);
+};
 
 export default function CustomerDashboard({ 
   userName, 
@@ -54,6 +67,14 @@ export default function CustomerDashboard({
   const [effectiveMenu, setEffectiveMenu] = useState<MenuItem[]>([]);
   
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [address, setAddress] = useState('Flat 402, Highrise Apartments, Sector 62');
+  const [deliveryLat, setDeliveryLat] = useState<string | number>('12.97');
+  const [deliveryLng, setDeliveryLng] = useState<string | number>('77.59');
+  const [deliveryAddressId, setDeliveryAddressId] = useState<string>('');
+  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+  const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
+  const [globalError, setGlobalError] = useState<string | null>(null);
+  const [showLocationPrompt, setShowLocationPrompt] = useState(false);
 
   // Fetch active orders and nearby restaurants
   useEffect(() => {
@@ -74,11 +95,25 @@ export default function CustomerDashboard({
         .catch(console.error);
 
       // We still need orders and addresses if profile is active
-      apiGet(`/api/v1/orders`)
-        .then(res => {
-          if (res.data) setInternalOrders(res.data);
-        })
-        .catch(console.error);
+      let orderInterval: NodeJS.Timeout | null = null;
+      const fetchOrders = () => {
+        apiGet(`/api/v1/orders`)
+          .then(res => {
+            if (res.data) {
+              const mapped = res.data.map((o: any) => ({
+                ...o,
+                status: o.status?.toLowerCase() || ''
+              }));
+              setInternalOrders(mapped);
+            }
+          })
+          .catch(console.error);
+      };
+      fetchOrders();
+      orderInterval = setInterval(fetchOrders, 5000);
+      
+      // Store interval ID on window to clear it later (since this useEffect doesn't easily return a closure with the interval due to other async logic, wait... it can return a cleanup function safely)
+      (window as any).customerOrderInterval = orderInterval;
         
       // Fetch addresses - actually they need ID, wait, API gateway handles X-User-Id. 
       // But previous code was `/api/v1/customers/${profile.id}/addresses`.
@@ -94,12 +129,20 @@ export default function CustomerDashboard({
       }
     }
 
-    apiGet(`/api/v1/restaurants/nearby?lat=12.97&lng=77.59&radius=5.0`)
-      .then(res => {
-        if (res.data) setRestaurants(res.data);
-      })
-      .catch(console.error);
-  }, []);
+    if (deliveryLat && deliveryLng) {
+      apiGet(`/api/v1/restaurants/nearby?lat=${deliveryLat}&lng=${deliveryLng}&radius=5.0`)
+        .then(res => {
+          if (res.data) setRestaurants(res.data);
+        })
+        .catch(console.error);
+    }
+    
+    return () => {
+      if ((window as any).customerOrderInterval) {
+        clearInterval((window as any).customerOrderInterval);
+      }
+    };
+  }, [deliveryLat, deliveryLng]);
 
   // Pre-cache restaurant and menu images for smoother scrolling (caches 20 restaurants & 20 menu items)
   useEffect(() => {
@@ -139,12 +182,12 @@ export default function CustomerDashboard({
   const [searchQuery, setSearchQuery] = useState('');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [address, setAddress] = useState('Flat 402, Highrise Apartments, Sector 62');
-  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
-  const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
+
 
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  const [isAddressSelectorOpen, setIsAddressSelectorOpen] = useState(false);
   const [view, setView] = useState<'home' | 'settings'>('home');
+  const [settingsTab, setSettingsTab] = useState<'profile' | 'orders' | 'addresses'>('profile');
   const [accountTab, setAccountTab] = useState<"profile" | "orders" | "addresses">("profile");
   const [editName, setEditName] = useState(userName);
   const [editEmail, setEditEmail] = useState('');
@@ -305,13 +348,13 @@ export default function CustomerDashboard({
     setApiResponseStatus(200);
     setApiResponseHeaders(headers);
     setApiResponse(responseBody);
-    setApiResponseEndpoint(`GET /api/v1/restaurants/${apiAvailRest}/delivery-availability?lat=${apiAvailLat}&lng=${apiAvailLng}`);
+    setApiResponseEndpoint(`GET /api/v1/restaurants/${apiAvailRest}/delivery-availability`);
 
     if (onAddApiLog) {
       onAddApiLog({
         id: `api-${Date.now()}`,
         method: 'GET',
-        endpoint: `/api/v1/restaurants/${apiAvailRest}/delivery-availability?lat=${apiAvailLat}&lng=${apiAvailLng}`,
+        endpoint: `/api/v1/restaurants/${apiAvailRest}/delivery-availability`,
         headers,
         response: responseBody,
         status: 200,
@@ -364,8 +407,9 @@ export default function CustomerDashboard({
       setSseTicks([]);
       return;
     }
-    if (!apiTrackOrderId) {
-      alert("Please select or place an order first!");
+    if (!trackingOrder) {
+      setGlobalError("Please select or place an order first!");
+      setTimeout(() => setGlobalError(null), 3000);
       return;
     }
     setIsSseActive(true);
@@ -399,8 +443,9 @@ export default function CustomerDashboard({
 
   const handleDelayApprovalApi = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!apiDelayOrderId) {
-      alert("Please select an active order to approve delay!");
+    if (!trackingOrder) {
+      setGlobalError("Please select an active order to approve delay!");
+      setTimeout(() => setGlobalError(null), 3000);
       return;
     }
     const requestId = 'req-' + Math.random().toString(36).substr(2, 9);
@@ -461,10 +506,10 @@ export default function CustomerDashboard({
 
   // Filter restaurants
   const filteredRestaurants = restaurants.filter(restaurant => {
-    const matchesSearch = restaurant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          restaurant.cuisine.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = (restaurant.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (restaurant.cuisine || '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = !selectedCategory || selectedCategory === 'All' || 
-                            restaurant.tags.includes(selectedCategory);
+                            (restaurant.tags || []).includes(selectedCategory);
     return matchesSearch && matchesCategory;
   });
 
@@ -503,16 +548,21 @@ export default function CustomerDashboard({
     
     // Delivery Availability Check
     try {
-      const availRes = await apiGet(`/api/v1/restaurants/${selectedRestaurant.id}/delivery-availability?lat=12.97&lng=77.59`);
+      const availRes = await apiGet(`/api/v1/restaurants/${selectedRestaurant.id}/delivery-availability`);
       if (availRes.data && availRes.data.available === false) {
-        alert("This restaurant is currently out of your delivery zone.");
+        setGlobalError("This restaurant is currently out of your delivery zone.");
+        setTimeout(() => setGlobalError(null), 3000);
         return;
       }
       if (onAddApiLog) {
         onAddApiLog({ id: 'delivery_avail', label: `GET /api/v1/restaurants/${selectedRestaurant.id}/delivery-availability`, method: 'GET' });
       }
-    } catch(e) {
-      console.warn("Availability check failed, proceeding anyway", e);
+    } catch(e: any) {
+      console.warn("Availability check failed", e);
+      const errorMsg = e?.message || "Delivery partner check failed.";
+      setGlobalError(errorMsg);
+      setTimeout(() => setGlobalError(null), 3000);
+      return;
     }
 
     if (onAddApiLog) {
@@ -536,12 +586,29 @@ export default function CustomerDashboard({
       const items = cart.map(i => ({ menuItemId: i.item.id, quantity: i.quantity }));
       const profile = getUserProfile();
       
+      let finalAddressId = deliveryAddressId;
+      if (!finalAddressId) {
+        const payload = {
+          label: "Current Location",
+          addressLine1: address,
+          city: "Unknown",
+          state: "Unknown",
+          zipCode: "000000",
+          latitude: parseFloat(deliveryLat as any),
+          longitude: parseFloat(deliveryLng as any)
+        };
+        try {
+          const addrRes = await apiPost(`/api/v1/customers/${profile?.id}/addresses`, payload);
+          if (addrRes.data?.id) finalAddressId = addrRes.data.id;
+        } catch (e) {
+          console.error("Failed to save temporary address", e);
+        }
+      }
+
       const orderPayload = {
         customerId: profile?.id,
         restaurantId: selectedRestaurant.id,
-        // Since we don't have a real address ID in the simple frontend flow, we pass a dummy UUID 
-        // assuming the backend validates it if it enforces FK. Wait, customerId is in token.
-        deliveryAddressId: "00000000-0000-0000-0000-000000000001",
+        deliveryAddressId: finalAddressId || "00000000-0000-0000-0000-000000000001",
         items
       };
       
@@ -558,16 +625,18 @@ export default function CustomerDashboard({
         setIsPaymentModalOpen(false);
         setSelectedRestaurant(null);
       }, 800);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
       setPaymentStatus('idle');
-      alert("Failed to create order");
+      const errorMsg = err?.message || "Failed to create order";
+      setGlobalError(errorMsg);
+      setTimeout(() => setGlobalError(null), 3000);
     }
   };
 
   // Get stage index for order tracking
   const getStatusIndex = (status: OrderStatus) => {
-    const statuses: OrderStatus[] = ['placed', 'accepted', 'preparing', 'dispatched', 'picked_up', 'delivered'];
+    const statuses: OrderStatus[] = ['placed', 'accepted', 'preparing', 'ready_for_pickup', 'dispatched', 'picked_up', 'delivered'];
     return statuses.indexOf(status);
   };
 
@@ -589,13 +658,32 @@ export default function CustomerDashboard({
   return (
     <div className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-y-auto overflow-x-hidden min-h-0 bg-transparent text-slate-800 dark:text-[#f0ede6] h-full pb-20">
       
+      {/* Global Error Toast */}
+        <AnimatePresence>
+          {globalError && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+              className="fixed top-12 left-0 right-0 mx-auto max-w-sm z-[100] px-4"
+            >
+              <div className="bg-rose-500/90 backdrop-blur-xl border border-rose-500/50 shadow-2xl rounded-2xl p-4 flex items-start gap-3">
+                <AlertCircle className="w-6 h-6 text-white shrink-0" />
+                <p className="text-white font-medium text-sm pt-0.5">{globalError}</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
       {/* 1. Header Area */}
       <header className="sticky top-0 bg-white/40 dark:bg-white/5 backdrop-blur-xl px-5 py-3 flex items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 z-30 shrink-0 shadow-[0_2px_15px_rgba(0,0,0,0.01)] gap-3">
         <div className="flex items-center gap-2 sm:gap-3.5 flex-1 min-w-0">
           <LaBouffeLogo showText={false} iconSize="w-8 h-8 shrink-0" textColorClass="text-slate-800 dark:text-[#f0ede6] text-xs" subColorClass="text-rose-500 text-[8px]" />
           <div className="flex h-6 w-[1px] bg-slate-200 dark:bg-slate-800 shrink-0" />
           <button 
-            onClick={() => setIsAddressModalOpen(true)}
+            onClick={() => {
+              setIsAddressSelectorOpen(true);
+            }}
             className="flex items-center gap-2 min-w-0 flex-1 hover:bg-slate-50 dark:hover:bg-slate-900/50 p-1.5 -ml-1.5 rounded-2xl transition-colors cursor-pointer text-left"
           >
             <div className="w-8 h-8 shrink-0 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500">
@@ -611,11 +699,15 @@ export default function CustomerDashboard({
 
         <div className="flex items-center gap-2 shrink-0">
           <button
-            className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6] transition-all cursor-pointer"
-            title="Account Info"
-            onClick={() => setView('settings')}
+            onClick={() => view === 'settings' ? setView('home') : setView('settings')}
+            className={`p-2.5 rounded-xl transition-all cursor-pointer ${
+              view === 'settings' 
+                ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 shadow-sm shadow-indigo-500/10' 
+                : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6]'
+            }`}
+            title="Profile Settings"
           >
-            <User className="w-4 h-4" />
+            <User className="w-4 h-4 text-indigo-500" />
           </button>
           {onToggleTheme && (
             <button
@@ -631,19 +723,35 @@ export default function CustomerDashboard({
 
       {view === 'settings' ? (
         <SharedSettingsView
-          onBack={() => setView('home')}
-          theme={theme}
-          showCustomerTabs={true}
-          activeOrders={activeOrders}
-          setTrackingOrder={(order) => {
-             setTrackingOrder(order);
-             setView('home');
-          }}
-          savedAddresses={savedAddresses}
-          setIsAddressModalOpen={setIsAddressModalOpen}
-          onAddApiLog={onAddApiLog}
-          onLogout={onLogout}
-        />
+            onBack={() => setView('home')}
+            theme={theme}
+            showCustomerTabs={true}
+            activeOrders={activeOrders}
+            setTrackingOrder={(order) => {
+              setTrackingOrder(order);
+              setView('home');
+            }}
+            savedAddresses={savedAddresses}
+            initialTab={settingsTab}
+            isAddressModalOpen={isAddressModalOpen}
+            setIsAddressModalOpen={setIsAddressModalOpen}
+            addressSearchQuery={addressSearchQuery}
+            setAddressSearchQuery={setAddressSearchQuery}
+            address={address}
+            setAddress={setAddress}
+            onAddApiLog={onAddApiLog}
+            onLogout={onLogout}
+            customerId={getUserProfile()?.id}
+            onSelectDeliveryLocation={(addr: string, lat?: string | number, lng?: string | number) => {
+              setAddress(addr);
+              if (lat !== undefined && lng !== undefined) {
+                setDeliveryLat(lat);
+                setDeliveryLng(lng);
+              }
+              setIsAddressSelectorOpen(false);
+              setView('home');
+            }}
+          />
       ) : (
         <AnimatePresence mode="wait">
         {currentTrackingOrder && activeOrders.some(o => o.id === currentTrackingOrder.id) ? (
@@ -685,10 +793,10 @@ export default function CustomerDashboard({
                   <span className="text-xs font-mono text-slate-500">#{currentTrackingOrder.id.substring(0, 8).toUpperCase()}</span>
                 </div>
                 <div className="space-y-3 mb-6">
-                  {currentTrackingOrder.items.map(item => (
-                    <div key={item.item.id} className="flex justify-between text-sm text-slate-600 dark:text-slate-300">
-                      <span>{item.quantity}x {item.item.name}</span>
-                      <span>${(item.item.price * item.quantity).toFixed(2)}</span>
+                  {currentTrackingOrder.items.map((item: any, idx: number) => (
+                    <div key={item.item?.id || idx} className="flex justify-between text-sm text-slate-600 dark:text-slate-300">
+                      <span>{item.quantity || 1}x {item.item?.name || item.name || 'Item'}</span>
+                      <span>${((item.item?.price || item.price || 0) * (item.quantity || 1)).toFixed(2)}</span>
                     </div>
                   ))}
                   <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300 pt-3 border-t border-slate-200 dark:border-slate-800">
@@ -697,11 +805,14 @@ export default function CustomerDashboard({
                   </div>
                   <div className="flex justify-between text-lg font-black text-slate-900 dark:text-[#f0ede6] pt-2">
                     <span>Total Paid</span>
-                    <span>${currentTrackingOrder.total.toFixed(2)}</span>
+                    <span>${currentTrackingOrder.total?.toFixed(2)}</span>
                   </div>
                 </div>
                 <button 
-                  onClick={() => alert('Invoice downloaded successfully!')}
+                  onClick={() => {
+                    setGlobalError('Invoice downloaded successfully!');
+                    setTimeout(() => setGlobalError(null), 3000);
+                  }}
                   className="w-full py-3 bg-slate-800 dark:bg-white text-white dark:text-slate-900 font-bold rounded-xl flex items-center justify-center gap-2 transition-all hover:bg-slate-700 dark:hover:bg-slate-100 shadow-md active:scale-[0.98] cursor-pointer text-sm"
                 >
                   <Package className="w-5 h-5" /> Download PDF Invoice
@@ -725,8 +836,8 @@ export default function CustomerDashboard({
                   <ArrowLeft className="w-4 h-4" />
                 </button>
                 <h3 className="font-bold text-lg flex items-center gap-2">
-                  Order Tracking
-                  {activeOrders.filter(o => o.status !== 'delivered').length > 1 ? (
+                  {isActiveOrder(currentTrackingOrder.status) ? 'Order Tracking' : 'Order Details'}
+                  {activeOrders.filter(o => isActiveOrder(o.status)).length > 1 ? (
                     <select
                       className="text-xs font-mono bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded text-slate-500 dark:text-slate-300 border-none outline-none cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors font-semibold hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all"
                       value={currentTrackingOrder.id}
@@ -735,7 +846,7 @@ export default function CustomerDashboard({
                         if (order) setTrackingOrder(order);
                       }}
                     >
-                      {activeOrders.filter(o => o.status !== 'delivered').map((o) => (
+                      {activeOrders.filter(o => isActiveOrder(o.status)).map((o) => (
                         <option key={o.id} value={o.id}>
                           #{o.id} - {o.status}
                         </option>
@@ -747,69 +858,11 @@ export default function CustomerDashboard({
                 </h3>
               </div>
 
+              {isActiveOrder(currentTrackingOrder.status) && !isFailedOrder(currentTrackingOrder.status) ? (
+                <>
               {/* Immersive Delivery map (Vector path simulation) */}
               <div className="relative w-full h-44 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-3xl overflow-hidden shadow-inner">
-                {/* Grids and elements resembling maps */}
-                <div className="absolute inset-0 bg-[radial-gradient(#64748b_1px,transparent_1px)] [background-size:16px_16px] opacity-10" />
-                
-                {/* SSE Live Tracking Indicator */}
-                {(currentTrackingOrder.status === 'dispatched' || currentTrackingOrder.status === 'picked_up') && (
-                  <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-2.5 py-1 rounded-full backdrop-blur-md z-10 shadow-sm">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-[9px] font-bold font-mono tracking-wider">LIVE GPS (SSE)</span>
-                  </div>
-                )}
-
-                {/* Animated Map Line/Road */}
-                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                  <path 
-                    d="M 15 50 Q 50 20 85 50" 
-                    fill="none" 
-                    stroke="#334155" 
-                    strokeWidth="2" 
-                    strokeDasharray="4 4"
-                  />
-                  <path 
-                    d="M 15 50 Q 50 20 85 50" 
-                    fill="none" 
-                    stroke="#f59e0b" 
-                    strokeWidth="2" 
-                    strokeDasharray="100"
-                    strokeDashoffset={100 - getDeliveryProgress(currentTrackingOrder.status)}
-                    className="transition-all duration-1000 ease-in-out"
-                  />
-                </svg>
-
-                {/* Restaurant Node */}
-                <div className="absolute left-[15%] top-[50%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
-                  <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-amber-500 flex items-center justify-center shadow-lg">
-                    <Store className="w-4 h-4 text-amber-500" />
-                  </div>
-                  <span className="text-[9px] font-bold mt-1 max-w-[80px] text-center truncate">{currentTrackingOrder.restaurantName}</span>
-                </div>
-
-                {/* Customer Node */}
-                <div className="absolute right-[15%] top-[50%] translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
-                  <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-emerald-500 flex items-center justify-center shadow-lg">
-                    <MapPin className="w-4 h-4 text-emerald-500" />
-                  </div>
-                  <span className="text-[9px] font-bold mt-1">Your Home</span>
-                </div>
-
-                {/* Moving Rider on Path */}
-                <div 
-                  className="absolute transition-all duration-1000 ease-in-out flex flex-col items-center"
-                  style={{
-                    left: `${15 + (70 * getDeliveryProgress(currentTrackingOrder.status)) / 100}%`,
-                    top: `${50 - Math.sin((getDeliveryProgress(currentTrackingOrder.status) / 100) * Math.PI) * 20}%`,
-                    transform: 'translate(-50%, -100%)'
-                  }}
-                >
-                  <div className="bg-amber-500 text-slate-950 p-2 rounded-full shadow-lg ring-4 ring-amber-500/20 animate-bounce">
-                    <Bike className="w-4 h-4" />
-                  </div>
-                  <span className="text-[8px] bg-slate-950 text-amber-400 font-mono px-1 rounded border border-rose-500/30 mt-1">Rider</span>
-                </div>
+                <OrderTrackingMap order={currentTrackingOrder} />
               </div>
 
               {/* Active Status Display Card */}
@@ -821,17 +874,20 @@ export default function CustomerDashboard({
                       {currentTrackingOrder.status === 'on_hold' && 'Restaurant Requested Delay'}
                       {currentTrackingOrder.status === 'accepted' && 'Order Confirmed!'}
                       {currentTrackingOrder.status === 'preparing' && 'Kitchen is Cooking...'}
-                      {currentTrackingOrder.status === 'dispatched' && 'Waiting for Rider Pickup...'}
+                      {(currentTrackingOrder.status === 'ready_for_pickup' || currentTrackingOrder.status === 'dispatched') && 'Waiting for Rider Pickup...'}
                       {currentTrackingOrder.status === 'picked_up' && 'Rider is on the Way!'}
+                      {isFailedOrder(currentTrackingOrder.status) && 'Order Failed / Cancelled'}
                     </h4>
                     <p className="text-xs text-slate-400 dark:text-slate-300">
                       {currentTrackingOrder.status === 'on_hold' 
                         ? 'The restaurant is experiencing high volume and needs more time. Do you wish to continue?'
+                        : isFailedOrder(currentTrackingOrder.status)
+                        ? 'Your order could not be completed and will be refunded.'
                         : 'Estimated delivery: 15-20 mins'}
                     </p>
                   </div>
-                  <div className="bg-amber-500/10 text-amber-500 p-2.5 rounded-2xl">
-                    {currentTrackingOrder.status === 'on_hold' ? <Clock className="w-5 h-5 text-red-500" /> : <Timer className="w-5 h-5" />}
+                  <div className={`p-2.5 rounded-2xl ${isFailedOrder(currentTrackingOrder.status) ? 'bg-red-500/10 text-red-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                    {currentTrackingOrder.status === 'on_hold' || isFailedOrder(currentTrackingOrder.status) ? <Clock className="w-5 h-5 text-red-500" /> : <Timer className="w-5 h-5" />}
                   </div>
                 </div>
 
@@ -860,29 +916,41 @@ export default function CustomerDashboard({
                     <button
                       onClick={async () => {
                         if (onAddApiLog) {
-                          onAddApiLog({ id: 'order_cancel_delay', label: `POST /api/v1/orders/${currentTrackingOrder.id}/delay-approval`, method: 'POST' });
+                          onAddApiLog({ id: 'order_reject_delay', label: `POST /api/v1/orders/${currentTrackingOrder.id}/delay-approval`, method: 'POST' });
                         }
                         
                         try {
                           await apiPost(`/api/v1/orders/${currentTrackingOrder.id}/delay-approval`, {
-                            approved: false,
-                            expectedDelayMinutes: 15
+                            approved: false
                           });
                           if (onUpdateOrder) onUpdateOrder(currentTrackingOrder.id, 'cancelled');
-                          setTrackingOrder(null);
                         } catch (e) {
                           console.error("Failed to reject delay", e);
                         }
                       }}
-                      className="flex-1 py-3 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-[#f0ede6] rounded-xl font-bold hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors border border-rose-500/30 dark:border-rose-500/30"
+                      className="flex-1 py-3 bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400 font-bold rounded-2xl hover:bg-red-200 dark:hover:bg-red-500/20 transition-all text-sm"
                     >
                       Cancel Order
                     </button>
                   </div>
                 )}
+                
+                {isFailedOrder(currentTrackingOrder.status) && (
+                  <div className="flex items-center gap-3 pt-2">
+                    <button
+                      onClick={() => {
+                        // Dismiss from local UI state
+                        setInternalOrders(prev => prev.filter(o => o.id !== currentTrackingOrder.id));
+                        setTrackingOrder(null);
+                      }}
+                      className="flex-1 py-3 bg-red-500 text-white font-bold rounded-2xl hover:bg-red-600 transition-all text-sm shadow-xl shadow-red-500/20"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                )}
 
-                {/* OTP Code Card */}
-                {currentTrackingOrder.status !== 'on_hold' && (
+                {currentTrackingOrder.status !== 'on_hold' && !isFailedOrder(currentTrackingOrder.status) && (
                   <div className="bg-white/40 dark:bg-slate-950/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 p-4 rounded-2xl flex items-center justify-between">
                     <div>
                       <span className="text-[10px] text-slate-500 dark:text-[#f0ede6] font-bold block uppercase font-mono tracking-wider">Secure Delivery Verification</span>
@@ -895,34 +963,167 @@ export default function CustomerDashboard({
                 )}
 
                 {/* Step checklist */}
-                <div className="space-y-3 pt-2">
-                  {[
-                    { status: 'placed', label: 'Order Received' },
+                {isFailedOrder(currentTrackingOrder.status) ? (
+                  <div className="bg-rose-500/10 dark:bg-rose-500/5 border border-rose-500/20 p-5 rounded-2xl flex flex-col items-center justify-center text-center space-y-2 mt-4 mx-2">
+                    <XCircle className="w-10 h-10 text-rose-500 mb-1" />
+                    <h3 className="font-black text-rose-600 dark:text-rose-400">Order Cancelled</h3>
+                    <p className="text-xs font-semibold text-rose-500/80">This order was cancelled. Any payments made will be refunded automatically.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-0 pt-4 px-2">
+                    {[
+                      { status: 'placed', label: 'Order Received' },
                     { status: 'accepted', label: 'Accepted by Kitchen' },
                     { status: 'preparing', label: 'Cooking & Packaging' },
                     { status: 'picked_up', label: 'Picked up by Delivery Executive' },
                     { status: 'delivered', label: 'Handed Over & Verified' },
-                  ].map((step, idx) => {
-                    const isDone = getStatusIndex(currentTrackingOrder.status) >= getStatusIndex(step.status as OrderStatus);
-                    const isCurrent = currentTrackingOrder.status === step.status;
+                  ].map((step, idx, arr) => {
+                    // For UI steps, 'ready_for_pickup' acts as 'preparing' being done but 'picked_up' not yet done
+                    const stepStatusIndex = getStatusIndex(step.status as OrderStatus);
+                    const currentStatusIndex = getStatusIndex(currentTrackingOrder.status);
+                    
+                    const isDone = currentStatusIndex > stepStatusIndex || (currentStatusIndex === stepStatusIndex && step.status !== 'delivered');
+                    const isCurrent = currentStatusIndex === stepStatusIndex || (step.status === 'preparing' && currentTrackingOrder.status === 'ready_for_pickup');
+                    const isLast = idx === arr.length - 1;
                     
                     return (
-                      <div key={idx} className="flex items-center gap-3">
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center border text-xs ${
+                      <div key={idx} className="flex items-start gap-4 relative">
+                        {/* Vertical line connector */}
+                        {!isLast && (
+                          <div className={`absolute left-3 top-6 bottom-[-6px] w-[2px] -ml-[1px] ${
+                            isDone ? 'bg-emerald-500' : 'bg-rose-500/10 dark:bg-rose-500/20'
+                          }`} />
+                        )}
+                        
+                        <div className={`w-6 h-6 rounded-full shrink-0 flex items-center justify-center border text-[10px] font-bold z-10 transition-colors ${
                           isDone 
-                            ? 'bg-emerald-500 border-emerald-500 text-slate-950' 
-                            : 'border-rose-500/30 dark:border-rose-500/30 text-slate-400 dark:text-slate-300'
+                            ? 'bg-emerald-500 border-emerald-500 text-slate-950 shadow-[0_0_10px_rgba(16,185,129,0.3)]' 
+                            : isCurrent
+                              ? 'bg-amber-500 border-amber-500 text-slate-950 shadow-[0_0_10px_rgba(245,158,11,0.3)] ring-4 ring-amber-500/20'
+                              : 'bg-white dark:bg-slate-900 border-rose-500/30 dark:border-rose-500/30 text-slate-400 dark:text-slate-500'
                         }`}>
                           {isDone ? <Check className="w-3.5 h-3.5" /> : idx + 1}
                         </div>
-                        <span className={`text-sm ${isDone ? 'font-semibold text-slate-800 dark:text-[#f0ede6]' : 'text-slate-400 dark:text-slate-300'} ${isCurrent ? 'text-amber-500 font-bold' : ''}`}>
-                          {step.label}
-                        </span>
+                        
+                        <div className={`pb-6 ${isLast ? 'pb-2' : ''}`}>
+                          <span className={`text-sm tracking-wide ${
+                            isDone 
+                              ? 'font-extrabold text-slate-800 dark:text-[#f0ede6]' 
+                              : isCurrent 
+                                ? 'font-black text-amber-500'
+                                : 'font-semibold text-slate-400 dark:text-slate-500'
+                          }`}>
+                            {step.label}
+                          </span>
+                          {isCurrent && currentTrackingOrder.status !== 'delivered' && (
+                            <p className="text-[11px] text-amber-500/80 mt-0.5 font-bold uppercase tracking-wider">
+                              {currentTrackingOrder.status === 'ready_for_pickup' 
+                                ? 'Waiting for Driver...' 
+                                : 'Currently in progress...'}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
                 </div>
+                )}
               </div>
+              
+              {/* Active Order Details */}
+              <div className="bg-white/40 dark:bg-slate-950/40 backdrop-blur-md border border-slate-200/50 dark:border-slate-800/50 p-6 rounded-3xl mt-6">
+                <h3 className="font-bold text-lg text-slate-900 dark:text-[#f0ede6] mb-4">Order Details</h3>
+                {currentTrackingOrder.restaurantName && (
+                  <div className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-3 pb-3 border-b border-dashed border-slate-200 dark:border-slate-800">
+                    From: {currentTrackingOrder.restaurantName}
+                  </div>
+                )}
+                <div className="space-y-3">
+                  {currentTrackingOrder.items && currentTrackingOrder.items.map((item: any, idx: number) => (
+                    <div key={idx} className="flex justify-between text-sm font-semibold text-slate-700 dark:text-slate-300">
+                      <span>{item.quantity || 1}x {item.item?.name || item.name || 'Item'}</span>
+                      <span>${((item.item?.price || item.price || 0) * (item.quantity || 1)).toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="pt-4 mt-4 border-t border-dashed border-slate-200 dark:border-slate-700 space-y-2">
+                  <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
+                    <span>Items Total</span>
+                    <span>${currentTrackingOrder.items ? currentTrackingOrder.items.reduce((sum: number, item: any) => sum + ((item.item?.price || item.price || 0) * (item.quantity || 1)), 0).toFixed(2) : '0.00'}</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
+                    <span>Delivery Fee</span>
+                    <span>${currentTrackingOrder.items ? ((currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0) - currentTrackingOrder.items.reduce((sum: number, item: any) => sum + ((item.item?.price || item.price || 0) * (item.quantity || 1)), 0)).toFixed(2) : '0.00'}</span>
+                  </div>
+                  <div className="flex justify-between text-lg font-black text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-slate-700">
+                    <span>Total Paid</span>
+                    <span>${(currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0).toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+
+                </>
+              ) : (
+                <div className="bg-white/60 dark:bg-slate-900/50 backdrop-blur-xl border border-rose-500/20 dark:border-rose-500/30 rounded-3xl p-6 shadow-[0_8px_32px_rgba(251,146,60,0.05)] space-y-6">
+                  <div className="text-center pb-4 border-b border-rose-500/10 dark:border-slate-800">
+                    <div className="inline-flex w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 items-center justify-center mb-3">
+                      {currentTrackingOrder.status.toLowerCase() === 'delivered' ? <Check className="w-6 h-6 text-emerald-500" /> : <X className="w-6 h-6 text-red-500" />}
+                    </div>
+                    <h2 className="text-2xl font-black mb-1 capitalize">{currentTrackingOrder.status.toLowerCase() === 'delivered' ? 'Order Delivered' : 'Order ' + currentTrackingOrder.status.replace(/_/g, ' ')}</h2>
+                    <p className="text-sm font-bold text-slate-500 dark:text-slate-400">#{currentTrackingOrder.id.substring(0, 8)}</p>
+                    
+                    {/* Invoice Details */}
+                    <div className="mt-4 flex flex-col gap-1 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                      {currentTrackingOrder.restaurantName && (
+                        <div className="flex justify-between">
+                          <span>Restaurant</span>
+                          <span className="text-slate-700 dark:text-slate-300 font-bold">{currentTrackingOrder.restaurantName}</span>
+                        </div>
+                      )}
+                      {currentTrackingOrder.createdAt && (
+                        <div className="flex justify-between">
+                          <span>Date</span>
+                          <span className="text-slate-700 dark:text-slate-300 font-mono">{new Date(currentTrackingOrder.createdAt).toLocaleString()}</span>
+                        </div>
+                      )}
+                      {currentTrackingOrder.deliveryAddress && (
+                        <div className="flex justify-between mt-2 pt-2 border-t border-rose-500/10 dark:border-slate-700/50">
+                          <span>Delivery To</span>
+                          <span className="text-slate-700 dark:text-slate-300 text-right max-w-[200px] leading-tight truncate">{currentTrackingOrder.deliveryAddress}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <h3 className="font-bold text-lg text-slate-900 dark:text-[#f0ede6]">{currentTrackingOrder.restaurantName}</h3>
+                    <div className="space-y-3">
+                      {currentTrackingOrder.items && currentTrackingOrder.items.map((item: any, idx: number) => (
+                        <div key={idx} className="flex justify-between text-sm font-semibold text-slate-700 dark:text-slate-300">
+                          <span>{item.quantity || 1}x {item.item?.name || item.name || 'Item'}</span>
+                          <span>${((item.item?.price || item.price || 0) * (item.quantity || 1)).toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <div className="pt-4 border-t border-dashed border-rose-500/20 dark:border-slate-700 space-y-2">
+                      <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
+                        <span>Items Total</span>
+                        <span>${currentTrackingOrder.items ? currentTrackingOrder.items.reduce((sum: number, item: any) => sum + ((item.item?.price || item.price || 0) * (item.quantity || 1)), 0).toFixed(2) : '0.00'}</span>
+                      </div>
+                      <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
+                        <span>Delivery Fee</span>
+                        <span>${currentTrackingOrder.items ? ((currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0) - currentTrackingOrder.items.reduce((sum: number, item: any) => sum + ((item.item?.price || item.price || 0) * (item.quantity || 1)), 0)).toFixed(2) : '0.00'}</span>
+                      </div>
+                      <div className="flex justify-between text-lg font-black text-slate-900 dark:text-white pt-2 border-t border-rose-500/20 dark:border-slate-700">
+                        <span>{['cancelled', 'rejected'].includes(currentTrackingOrder.status.toLowerCase()) ? 'Total Refunded' : 'Total Paid'}</span>
+                        <span className={['cancelled', 'rejected'].includes(currentTrackingOrder.status.toLowerCase()) ? 'text-red-500' : ''}>${(currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0).toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Quick action / note */}
               <div className="bg-amber-500/5 border border-amber-500/10 p-4 rounded-2xl text-center">
@@ -983,72 +1184,84 @@ export default function CustomerDashboard({
             <div className="p-5 space-y-4">
               <h4 className="font-bold text-lg text-slate-900 dark:text-[#f0ede6]">Menu items</h4>
               
-              <div className="space-y-4">
-                {effectiveMenu.map(dish => {
-                  const cartQty = cart.find(i => i.item.id === dish.id)?.quantity || 0;
-                  
-                  return (
-                    <div 
-                      key={dish.id}
-                      className="bg-white/40 dark:bg-white/5 border border-rose-500/20 dark:border-rose-500/30 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:bg-white/60 dark:hover:bg-white/10 hover:border-orange-400/30 dark:hover:border-orange-500/50 hover:shadow-[0_8px_30px_rgb(249,115,22,0.1)] dark:hover:shadow-[0_0_30px_rgba(249,115,22,0.15)] backdrop-blur-md rounded-[2rem] p-4 flex gap-4 transition-all duration-300 relative text-left hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all"
-                    >
-                      <div className="w-20 h-20 rounded-xl bg-transparent overflow-hidden shrink-0">
-                        <ImageLoader 
-                          src={dish.image} 
-                          alt={dish.name}
-                          className="w-full h-full object-cover"
-                          referrerPolicy="no-referrer"
-                          containerClassName="w-full h-full"
-                        />
-                      </div>
-
-                      <div className="flex-1 flex flex-col justify-between">
-                        <div>
-                          <div className="flex items-center gap-1.5">
-                            <span className={`w-3.5 h-3.5 border-2 rounded flex items-center justify-center p-0.5 ${dish.isVeg ? 'border-emerald-500' : 'border-red-500'}`}>
-                              <span className={`w-1.5 h-1.5 rounded-full ${dish.isVeg ? 'bg-emerald-500' : 'bg-red-500'}`} />
-                            </span>
-                            <h5 className="font-bold text-sm text-slate-900 dark:text-[#f0ede6]">{dish.name}</h5>
-                          </div>
-                          <p className="text-xs text-slate-400 dark:text-slate-300 mt-1 line-clamp-2 leading-relaxed">{dish.description}</p>
-                        </div>
-
-                        <div className="flex justify-between items-center mt-2">
-                          <span className="text-base font-black text-amber-500">${dish.price}</span>
-                          
-                          {dish.isAvailable === false ? (
-                            <span className="px-3 py-1 bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 text-xs font-bold rounded-xl border border-red-200/20">
-                              Out of Stock
-                            </span>
-                          ) : cartQty > 0 ? (
-                            <div className="flex items-center bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl overflow-hidden font-bold shadow-md shadow-orange-500/15">
-                              <button 
-                                onClick={() => removeFromCart(dish.id)}
-                                className="px-3 py-1.5 hover:bg-orange-600 cursor-pointer"
-                              >
-                                <Minus className="w-3.5 h-3.5" />
-                              </button>
-                              <span className="px-2 text-sm">{cartQty}</span>
-                              <button 
-                                onClick={() => addToCart(dish)}
-                                className="px-3 py-1.5 hover:bg-orange-600 cursor-pointer"
-                              >
-                                <Plus className="w-3.5 h-3.5" />
-                              </button>
+              <div className="space-y-8">
+                {Object.entries(effectiveMenu.reduce((acc, dish) => {
+                  const cat = dish.categoryName || 'Food';
+                  if (!acc[cat]) acc[cat] = [];
+                  acc[cat].push(dish);
+                  return acc;
+                }, {} as Record<string, MenuItem[]>)).map(([category, dishes]) => (
+                  <div key={category} className="space-y-4">
+                    <h5 className="font-extrabold text-sm text-slate-800 dark:text-slate-300 uppercase tracking-widest">{category}</h5>
+                    <div className="space-y-4">
+                      {(dishes as any[]).map(dish => {
+                        const cartQty = cart.find(i => i.item.id === dish.id)?.quantity || 0;
+                        
+                        return (
+                          <div 
+                            key={dish.id}
+                            className="bg-white/40 dark:bg-white/5 border border-rose-500/20 dark:border-rose-500/30 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:bg-white/60 dark:hover:bg-white/10 hover:border-orange-400/30 dark:hover:border-orange-500/50 hover:shadow-[0_8px_30px_rgb(249,115,22,0.1)] dark:hover:shadow-[0_0_30px_rgba(249,115,22,0.15)] backdrop-blur-md rounded-[2rem] p-4 flex gap-4 transition-all duration-300 relative text-left hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] transition-all"
+                          >
+                            <div className="w-20 h-20 rounded-xl bg-transparent overflow-hidden shrink-0">
+                              <ImageLoader 
+                                src={dish.imageUrl || dish.image} 
+                                alt={dish.name}
+                                className="w-full h-full object-cover"
+                                referrerPolicy="no-referrer"
+                                containerClassName="w-full h-full"
+                              />
                             </div>
-                          ) : (
-                            <button
-                              onClick={() => addToCart(dish)}
-                              className="px-4 py-1.5 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm hover:bg-gradient-to-r hover:from-orange-500 hover:to-amber-500 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1 cursor-pointer border border-rose-500/20 dark:border-rose-500/30 hover:border-orange-500 hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all"
-                            >
-                              <Plus className="w-3.5 h-3.5" /> Add
-                            </button>
-                          )}
-                        </div>
-                      </div>
+
+                            <div className="flex-1 flex flex-col justify-between">
+                              <div>
+                                <div className="flex items-center gap-1.5">
+                                  <span className={`w-3.5 h-3.5 border-2 rounded flex items-center justify-center p-0.5 ${dish.isVeg ? 'border-emerald-500' : 'border-red-500'}`}>
+                                    <span className={`w-1.5 h-1.5 rounded-full ${dish.isVeg ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                                  </span>
+                                  <h5 className="font-bold text-sm text-slate-900 dark:text-[#f0ede6]">{dish.name}</h5>
+                                </div>
+                                <p className="text-xs text-slate-400 dark:text-slate-300 mt-1 line-clamp-2 leading-relaxed">{dish.description}</p>
+                              </div>
+
+                              <div className="flex justify-between items-center mt-2">
+                                <span className="text-base font-black text-amber-500">${dish.price}</span>
+                                
+                                {dish.isAvailable === false ? (
+                                  <span className="px-3 py-1 bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 text-xs font-bold rounded-xl border border-red-200/20">
+                                    Out of Stock
+                                  </span>
+                                ) : cartQty > 0 ? (
+                                  <div className="flex items-center bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl overflow-hidden font-bold shadow-md shadow-orange-500/15">
+                                    <button 
+                                      onClick={() => removeFromCart(dish.id)}
+                                      className="px-3 py-1.5 hover:bg-orange-600 cursor-pointer"
+                                    >
+                                      <Minus className="w-3.5 h-3.5" />
+                                    </button>
+                                    <span className="px-2 text-sm">{cartQty}</span>
+                                    <button 
+                                      onClick={() => addToCart(dish)}
+                                      className="px-3 py-1.5 hover:bg-orange-600 cursor-pointer"
+                                    >
+                                      <Plus className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={() => addToCart(dish)}
+                                    className="px-4 py-1.5 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm hover:bg-gradient-to-r hover:from-orange-500 hover:to-amber-500 hover:text-white rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer border border-rose-500/20 dark:border-rose-500/30 hover:border-orange-500 hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] transition-all"
+                                  >
+                                    <Plus className="w-3.5 h-3.5" /> Add
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
             </div>
           </motion.div>
@@ -1631,20 +1844,20 @@ export default function CustomerDashboard({
       />
 
       {/* Floating Active Orders Slider at bottom */}
-      {activeOrders.filter(o => o.status !== 'delivered').length > 0 && !trackingOrder && (
+      {activeOrders.filter(o => isActiveOrder(o.status)).length > 0 && !trackingOrder && (
         <div className={`fixed left-0 right-0 max-w-3xl mx-auto z-30 pointer-events-none transition-all duration-300 ${cart.length > 0 && selectedRestaurant ? 'bottom-24' : 'bottom-4'}`}>
           <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-none px-5 gap-4 pb-2 pointer-events-auto">
-            {activeOrders.filter(o => o.status !== 'delivered').slice().reverse().map((order) => (
+            {activeOrders.filter(o => isActiveOrder(o.status)).slice().reverse().map((order) => (
               <button 
                 key={order.id} 
                 onClick={() => setTrackingOrder(order)}
                 className="shrink-0 w-[85%] sm:w-[340px] snap-center bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl rounded-[20px] shadow-2xl shadow-slate-900/10 dark:shadow-black/40 border border-rose-500/20 dark:border-rose-500/30 p-3.5 text-left cursor-pointer transition-all active:scale-[0.98] hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all"
               >
                 <div className="flex justify-between items-center gap-2">
-                  <span className="shrink-0 text-[10px] font-mono font-bold text-slate-600 dark:text-[#f0ede6] bg-slate-200/80 dark:bg-slate-700 px-2 py-0.5 rounded-full">#{order.id}</span>
+                  <span className="shrink-0 text-[10px] font-mono font-bold text-slate-600 dark:text-[#f0ede6] bg-slate-200/80 dark:bg-slate-700 px-2 py-0.5 rounded-full">#{order.id.substring(0, 8)}</span>
                   <h5 className="font-extrabold text-[14px] text-slate-900 dark:text-[#f0ede6] line-clamp-1 flex-1">{order.restaurantName}</h5>
                   <span className="shrink-0 text-[9px] font-black px-2 py-1 rounded-md bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:shadow-[0_0_12px_rgba(244,63,94,0.5)] uppercase tracking-wider">
-                    {order.status.replace('_', ' ')}
+                    {order.status.replace(/_/g, ' ')}
                   </span>
                 </div>
               </button>
@@ -1665,12 +1878,132 @@ export default function CustomerDashboard({
               <span>{cart.reduce((a, b) => a + b.quantity, 0)} Items Added</span>
             </div>
             <div className="flex items-center gap-1">
-              <span>View Cart (${getCartTotal().total.toFixed(2)})</span>
+              <span>View Cart (${getCartTotal().total?.toFixed(2)})</span>
               <ChevronRight className="w-4 h-4" />
             </div>
           </button>
         </div>
       )}
+
+      {/* Address Selector Modal */}
+      <AnimatePresence>
+        {isAddressSelectorOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/40 backdrop-blur-sm"
+            onClick={() => setIsAddressSelectorOpen(false)}
+          >
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              onClick={e => e.stopPropagation()}
+              className="w-full sm:max-w-md bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden"
+            >
+              <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 z-10 sticky top-0">
+                <h2 className="font-bold text-lg text-slate-900 dark:text-white">Select Delivery Location</h2>
+                <button onClick={() => setIsAddressSelectorOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full cursor-pointer">
+                  <X className="w-5 h-5 text-slate-500" />
+                </button>
+              </div>
+              
+              <div className="p-4 overflow-y-auto space-y-3 pb-8">
+                <button
+                  onClick={() => {
+                    if (navigator.geolocation) {
+                      navigator.geolocation.getCurrentPosition(async (pos) => {
+                        try {
+                          const apiKey = (import.meta as any).env.VITE_OLA_MAPS_API_KEY || '';
+                          const res = await fetch(`https://api.olamaps.io/places/v1/reverse-geocode?latlng=${pos.coords.latitude},${pos.coords.longitude}&api_key=${apiKey}`);
+                          const data = await res.json();
+                          if (data.results && data.results.length > 0) {
+                            setAddress(`Current Location: ${data.results[0].formatted_address}`);
+                          } else {
+                            setAddress('Current Location');
+                          }
+                          setDeliveryLat(pos.coords.latitude);
+                          setDeliveryLng(pos.coords.longitude);
+                          setDeliveryAddressId('');
+                          setIsAddressSelectorOpen(false);
+                        } catch (e) {
+                          setAddress('Current Location');
+                          setDeliveryLat(pos.coords.latitude);
+                          setDeliveryLng(pos.coords.longitude);
+                          setDeliveryAddressId('');
+                          setIsAddressSelectorOpen(false);
+                        }
+                      }, (err) => {
+                        if (err.code === err.PERMISSION_DENIED) {
+                          setIsAddressSelectorOpen(false);
+                          setShowLocationPrompt(true);
+                        }
+                      });
+                    }
+                  }}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl border border-indigo-100 dark:border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-500/10 hover:bg-indigo-50 dark:hover:bg-indigo-500/20 transition-colors text-left cursor-pointer"
+                >
+                  <Navigation className="w-5 h-5 text-indigo-500 shrink-0" />
+                  <div>
+                    <p className="font-bold text-indigo-600 dark:text-indigo-400">Use Current Location</p>
+                    <p className="text-xs text-indigo-500/80 dark:text-indigo-400/80">Using GPS</p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setIsAddressSelectorOpen(false);
+                    setView('settings');
+                    setSettingsTab('addresses');
+                    setIsAddressModalOpen(true);
+                  }}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl border border-rose-100 dark:border-rose-500/20 bg-rose-50/50 dark:bg-rose-500/10 hover:bg-rose-50 dark:hover:bg-rose-500/20 transition-colors text-left cursor-pointer"
+                >
+                  <MapPin className="w-5 h-5 text-rose-500 shrink-0" />
+                  <div>
+                    <p className="font-bold text-rose-600 dark:text-rose-400">Add New Address</p>
+                    <p className="text-xs text-rose-500/80 dark:text-rose-400/80">Search or pick from map</p>
+                  </div>
+                </button>
+                
+                <div className="pt-2">
+                  <p className="text-xs font-bold text-slate-400 dark:text-slate-500 mb-3 px-1 uppercase tracking-wider">Saved Addresses</p>
+                  {savedAddresses.length > 0 ? (
+                    <div className="space-y-2">
+                      {savedAddresses.map(addr => (
+                        <button
+                          key={addr.id}
+                          onClick={() => {
+                            setAddress(`${addr.label}: ${addr.addressLine1}${addr.addressLine2 ? ', ' + addr.addressLine2 : ''}, ${addr.city}`);
+                            if (addr.latitude !== undefined && addr.longitude !== undefined) {
+                              setDeliveryLat(addr.latitude);
+                              setDeliveryLng(addr.longitude);
+                            }
+                            setDeliveryAddressId(addr.id);
+                            setIsAddressSelectorOpen(false);
+                          }}
+                          className="w-full flex items-start gap-3 p-3 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors text-left group cursor-pointer"
+                        >
+                          <MapPin className="w-5 h-5 text-slate-400 mt-0.5 group-hover:text-rose-500 transition-colors shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-bold text-slate-900 dark:text-white text-sm">{addr.label}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-0.5 line-clamp-2">
+                              {addr.addressLine1}{addr.addressLine2 ? ', ' + addr.addressLine2 : ''}, {addr.city}
+                            </p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-500 dark:text-slate-400 px-1">No saved addresses found.</p>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <CustomerCartDrawer
         address={address}
@@ -1685,17 +2018,7 @@ export default function CustomerDashboard({
         getCartTotal={getCartTotal}
         setIsPaymentModalOpen={setIsPaymentModalOpen}
       />
-      
-      <CustomerAddressModal
-        isAddressModalOpen={isAddressModalOpen}
-        setIsAddressModalOpen={setIsAddressModalOpen}
-        addressSearchQuery={addressSearchQuery}
-        setAddressSearchQuery={setAddressSearchQuery}
-        address={address}
-        setAddress={setAddress}
-        savedAddresses={savedAddresses}
-        onAddApiLog={onAddApiLog}
-      />
+
       <CustomerPaymentModal
         isPaymentModalOpen={isPaymentModalOpen}
         setIsPaymentModalOpen={setIsPaymentModalOpen}
@@ -1703,6 +2026,38 @@ export default function CustomerDashboard({
         getCartTotal={getCartTotal}
         processPaymentAndOrder={processPaymentAndOrder}
       />
+
+      <AnimatePresence>
+        {showLocationPrompt && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl border border-slate-100 dark:border-slate-800"
+            >
+              <div className="w-16 h-16 bg-red-100 dark:bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MapPinOff className="w-8 h-8 text-red-500" />
+              </div>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Location Required</h2>
+              <p className="text-slate-500 dark:text-slate-400 mb-6">
+                Please enable location permissions in your browser settings to automatically find your address.
+              </p>
+              <button
+                onClick={() => setShowLocationPrompt(false)}
+                className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors"
+              >
+                Understood
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

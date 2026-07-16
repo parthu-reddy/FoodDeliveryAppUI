@@ -5,15 +5,16 @@ import { UserRole } from '../types';
 import LaBouffeLogo from './LaBouffeLogo';
 import { LaBouffeLogoMark } from './LaBouffeLogoMark';
 import { apiPost, apiGet } from '../lib/apiClient';
-import { setToken, setUserProfile, decodeJwt } from '../lib/authStore';
+import { setToken, setUserProfile, decodeJwt, getToken, clearAllLocalData } from '../lib/tokenStore';
+import { logout } from '../lib/authStore';
 import SessionManagementModal from './SessionManagementModal';
 
 const roleToServiceName = (role: UserRole): string => {
   switch (role) {
-    case 'customer': return 'customer-service';
-    case 'restaurant': return 'restaurant-service';
-    case 'delivery': return 'delivery-service';
-    default: return 'customer-service';
+    case 'customer': return 'customer';
+    case 'restaurant': return 'restaurant';
+    case 'delivery': return 'delivery';
+    default: return 'customer';
   }
 };
 
@@ -73,6 +74,15 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
   ];
 
   const [currentBgIndex, setCurrentBgIndex] = useState(0);
+
+  useEffect(() => {
+    // Proactively clear backend session and local data if a user lands on login
+    // This handles the edge case where session is lost locally but active on backend.
+    const token = getToken();
+    if (token) {
+      logout().catch(console.error);
+    }
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -173,12 +183,12 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
       // Decode user info from JWT
       const decoded = decodeJwt(token);
       const name = decoded?.name || decoded?.phone || phone;
-      const role = selectedRole!;
+      const id = decoded?.sub;
 
       // Store profile for session persistence
-      setUserProfile({ phone, role, name });
+      setUserProfile({ id, phone, role: selectedRole!, name });
 
-      onLoginSuccess(role, phone, name);
+      onLoginSuccess(selectedRole!, phone, name);
     } catch (err: any) {
       if (err.status === 409 && err.data?.data?.activeSessions) {
         setActiveSessions(err.data.data.activeSessions);
@@ -819,8 +829,9 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
           setToken(token);
           const decoded = decodeJwt(token);
           const name = decoded?.name || decoded?.phone || phone;
+          const id = decoded?.sub;
           const role = selectedRole!;
-          setUserProfile({ phone, role, name });
+          setUserProfile({ id, phone, role, name });
           onLoginSuccess(role, phone, name);
         }}
       />

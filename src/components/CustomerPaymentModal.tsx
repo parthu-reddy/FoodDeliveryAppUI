@@ -35,7 +35,7 @@ export default function CustomerPaymentModal({
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-slate-900 dark:text-[#f0ede6]">Checkout</h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-300 mt-1">Total Amount: <span className="font-bold text-slate-900 dark:text-[#f0ede6]">${getCartTotal().total.toFixed(2)}</span></p>
+                    <p className="text-sm text-slate-500 dark:text-slate-300 mt-1">Total Amount: <span className="font-bold text-slate-900 dark:text-[#f0ede6]">${getCartTotal().total?.toFixed(2)}</span></p>
                   </div>
                   
                   <div className="w-full space-y-2 mt-4">

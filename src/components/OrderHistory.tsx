@@ -112,8 +112,8 @@ export function OrderHistory({ orders }: { orders: Order[] }) {
                       <div className="flex flex-col gap-1">
                         {order.items.map((item, idx) => (
                           <div key={idx} className="text-xs flex items-center gap-1.5 text-slate-600 dark:text-[#f0ede6]">
-                            <span className="font-bold text-slate-800 dark:text-[#f0ede6]">{item.quantity}x</span>
-                            <span className="truncate max-w-[120px] sm:max-w-[180px]">{item.item.name}</span>
+                            <span className="font-bold text-slate-800 dark:text-[#f0ede6]">{item.quantity || 1}x</span>
+                            <span className="truncate max-w-[120px] sm:max-w-[180px]">{item.item?.name || item.name || 'Item'}</span>
                           </div>
                         ))}
                       </div>
@@ -121,7 +121,7 @@ export function OrderHistory({ orders }: { orders: Order[] }) {
                     <td className="p-4 whitespace-nowrap">
                       <div className="flex items-center gap-1 font-black text-slate-800 dark:text-[#f0ede6]">
                         <DollarSign className="w-3 h-3 text-emerald-500" />
-                        {order.total.toFixed(2)}
+                        {order.total?.toFixed(2)}
                       </div>
                     </td>
                     <td className="p-4 pr-6 whitespace-nowrap">

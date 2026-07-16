@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, User, Package, LogOut, MapPin, Check } from 'lucide-react';
 import { apiGet, apiPut, apiDelete } from '../lib/apiClient';
+import CustomerAddressModal from './CustomerAddressModal';
 
 interface SharedSettingsViewProps {
   onBack: () => void;
@@ -11,9 +12,17 @@ interface SharedSettingsViewProps {
   activeOrders?: any[];
   setTrackingOrder?: (order: any) => void;
   savedAddresses?: any[];
+  initialTab?: 'profile' | 'orders' | 'addresses';
+  isAddressModalOpen?: boolean;
   setIsAddressModalOpen?: (isOpen: boolean) => void;
+  addressSearchQuery?: string;
+  setAddressSearchQuery?: (q: string) => void;
+  address?: string;
+  setAddress?: (a: string) => void;
   onAddApiLog?: (log: any) => void;
   onLogout: () => void;
+  customerId?: string;
+  onSelectDeliveryLocation?: (addr: string) => void;
 }
 
 export default function SharedSettingsView({
@@ -23,11 +32,26 @@ export default function SharedSettingsView({
   activeOrders = [],
   setTrackingOrder,
   savedAddresses = [],
+  initialTab = 'profile',
+  isAddressModalOpen = false,
   setIsAddressModalOpen,
+  addressSearchQuery,
+  setAddressSearchQuery,
+  address,
+  setAddress,
   onAddApiLog,
-  onLogout
+  onLogout,
+  customerId,
+  onSelectDeliveryLocation
 }: SharedSettingsViewProps) {
-  const [accountTab, setAccountTab] = useState<'profile' | 'orders' | 'addresses'>('profile');
+  const [accountTab, setAccountTab] = useState<'profile' | 'orders' | 'addresses' | 'refunds'>(initialTab);
+
+  useEffect(() => {
+    if (initialTab) {
+      setAccountTab(initialTab);
+    }
+  }, [initialTab]);
+
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [initialName, setInitialName] = useState('');
@@ -163,6 +187,12 @@ export default function SharedSettingsView({
             >
               Addresses
             </button>
+            <button 
+              onClick={() => setAccountTab('refunds')}
+              className={`flex-1 min-w-[100px] px-3 py-2 rounded-lg text-xs font-bold transition-all shadow-sm ${accountTab === 'refunds' ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white' : 'bg-transparent text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+            >
+              Refunds
+            </button>
           </>
         )}
       </div>
@@ -262,7 +292,44 @@ export default function SharedSettingsView({
 
         {showCustomerTabs && accountTab === 'orders' && (
           <div className="space-y-3">
-            {activeOrders.slice().reverse().map((order: any) => (
+            {activeOrders.filter((o: any) => !['cancelled', 'rejected', 'cancelled_by_restaurant', 'delivery_failed', 'partially_refunded', 'cancelled_and_refunded'].includes(o.status.toLowerCase())).slice().reverse().map((order: any) => (
+              <div key={order.id} className="p-4 rounded-2xl border border-rose-500/20 dark:border-rose-500/30 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-300 font-mono block">{order.id.substring(0, 8)}</span>
+                    <h5 className="font-bold text-sm text-slate-900 dark:text-[#f0ede6]">{order.restaurantName}</h5>
+                  </div>
+                  <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:shadow-[0_0_12px_rgba(244,63,94,0.5)] tracking-wider`}>
+                    {order.status.replace(/_/g, ' ')}
+                  </span>
+                </div>
+                <div className="text-xs text-slate-500 dark:text-slate-300 mb-3">
+                  <div className="mb-1 font-semibold">{order.items?.length || 0} items • ${(order.totalAmount || order.total || 0).toFixed(2)}</div>
+                  {order.items && order.items.length > 0 && (
+                    <ul className="list-disc pl-4 space-y-0.5 text-slate-400">
+                      {order.items.map((it: any, idx: number) => (
+                        <li key={idx}>{it.quantity || 1}x {it.item?.name || it.name || 'Item'}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <button 
+                  onClick={() => {
+                    if (setTrackingOrder) setTrackingOrder(order);
+                    onBack();
+                  }}
+                  className="w-full py-2 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-[#f0ede6] rounded-lg text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                >
+                  Track Order
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {showCustomerTabs && accountTab === 'refunds' && (
+          <div className="space-y-3">
+            {activeOrders.filter((o: any) => ['cancelled', 'rejected', 'cancelled_by_restaurant', 'delivery_failed', 'partially_refunded', 'cancelled_and_refunded'].includes(o.status.toLowerCase())).slice().reverse().map((order: any) => (
               <div key={order.id} className="p-4 rounded-2xl border border-rose-500/20 dark:border-rose-500/30 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md">
                 <div className="flex justify-between items-start mb-2">
                   <div>
@@ -270,10 +337,19 @@ export default function SharedSettingsView({
                     <h5 className="font-bold text-sm text-slate-900 dark:text-[#f0ede6]">{order.restaurantName}</h5>
                   </div>
                   <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:shadow-[0_0_12px_rgba(244,63,94,0.5)] tracking-wider`}>
-                    {order.status.replace('_', ' ')}
+                    {order.status.replace(/_/g, ' ')}
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-300 mb-3">{order.items.length} items • ${order.total.toFixed(2)}</p>
+                <div className="text-xs text-slate-500 dark:text-slate-300 mb-3">
+                  <div className="mb-1 font-semibold">{order.items?.length || 0} items • ${(order.totalAmount || order.total || 0).toFixed(2)}</div>
+                  {order.items && order.items.length > 0 && (
+                    <ul className="pl-4 list-disc marker:text-rose-400 dark:marker:text-rose-500 opacity-80">
+                      {order.items.map((it: any, idx: number) => (
+                        <li key={idx}>{it.quantity || 1}x {it.item?.name || it.name || 'Item'}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
                 <button 
                   onClick={() => {
                     if (setTrackingOrder) setTrackingOrder(order);
@@ -325,15 +401,32 @@ export default function SharedSettingsView({
               </div>
             )}
 
-            <button 
-              onClick={() => {
-                if (setIsAddressModalOpen) setIsAddressModalOpen(true);
-              }}
-              className="w-full py-3 mt-2 rounded-xl border-2 border-dashed border-rose-500/30 dark:border-rose-500/40 text-rose-600 dark:text-rose-400 text-sm font-bold flex items-center justify-center gap-2 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all cursor-pointer"
-            >
-              <MapPin className="w-4 h-4" />
-              Add / Manage Addresses
-            </button>
+            {!isAddressModalOpen ? (
+              <button 
+                onClick={() => {
+                  if (setIsAddressModalOpen) setIsAddressModalOpen(true);
+                }}
+                className="w-full py-3 mt-2 rounded-xl border-2 border-dashed border-rose-500/30 dark:border-rose-500/40 text-rose-600 dark:text-rose-400 text-sm font-bold flex items-center justify-center gap-2 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all cursor-pointer"
+              >
+                <MapPin className="w-4 h-4" />
+                Add / Manage Addresses
+              </button>
+            ) : (
+              <div className="mt-4">
+                <CustomerAddressModal
+                  isAddressModalOpen={isAddressModalOpen}
+                  setIsAddressModalOpen={setIsAddressModalOpen}
+                  addressSearchQuery={addressSearchQuery}
+                  setAddressSearchQuery={setAddressSearchQuery}
+                  address={address}
+                  setAddress={setAddress}
+                  savedAddresses={savedAddresses}
+                  onAddApiLog={onAddApiLog}
+                  customerId={customerId}
+                  onSelectDeliveryLocation={onSelectDeliveryLocation}
+                />
+              </div>
+            )}
           </div>
         )}
       </div>
