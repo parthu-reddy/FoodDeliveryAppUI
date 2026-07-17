@@ -26,7 +26,7 @@ export default function CustomerPaymentModal({
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="fixed inset-0 m-auto w-full max-w-[340px] h-fit bg-white dark:bg-slate-900 rounded-3xl p-6 z-[80] shadow-2xl border border-rose-500/20 dark:border-rose-500/30 flex flex-col items-center text-center space-y-5"
+              className="fixed inset-0 m-auto w-full max-w-[340px] h-fit bg-white/20 dark:bg-slate-900/20 backdrop-blur-md rounded-3xl p-6 z-[80] shadow-2xl border border-rose-500/20 dark:border-rose-500/30 flex flex-col items-center text-center space-y-5"
             >
               {paymentStatus === 'idle' && (
                 <>

@@ -3,6 +3,7 @@ import { Plus, Edit3, Sparkles } from 'lucide-react';
 import { apiGet, apiPost } from '../lib/apiClient';
 import { getToken } from '../lib/tokenStore';
 import { MenuItem } from '../types';
+import CategorySelector from './CategorySelector';
 
 interface OutletMenuEditorProps {
   restaurantId: string; // Outlet ID
@@ -86,7 +87,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
   const handleCreateOverride = async (e: React.FormEvent, masterItemId: string) => {
     e.preventDefault();
     const payload = {
-      price: oPrice ? parseFloat(oPrice) : undefined,
+      overriddenPrice: oPrice ? parseFloat(oPrice) : null,
       isAvailable: oActive
     };
     await apiPost(`/api/v1/outlets/${selectedOutlet}/menu-overrides/${masterItemId}`, payload);
@@ -103,14 +104,14 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
       name: mName,
       basePrice: parseFloat(mPrice) || 0,
       description: mDesc,
-      categoryId: mCatId,
+      categoryId: mCatId || null,
       imageUrl: mImg,
       isVeg: mVeg,
       defaultPrepTimeMinutes: 15
     };
     const newMaster = await apiPost(`/api/v1/brands/${brandId}/master-menu`, payload);
     const overridePayload = {
-      price: oPrice ? parseFloat(oPrice) : undefined,
+      overriddenPrice: oPrice ? parseFloat(oPrice) : null,
       isAvailable: oActive
     };
     await apiPost(`/api/v1/outlets/${selectedOutlet}/menu-overrides/${newMaster.data.id}`, overridePayload);
@@ -140,23 +141,25 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
             <h6 className="font-extrabold text-sm text-slate-800 dark:text-[#f0ede6] mb-3">Add New Item for Outlet</h6>
             <form onSubmit={handleCreateOutletItem} className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
-                <input required placeholder="Item Name" value={mName} onChange={e=>setMName(e.target.value)} className="w-full bg-white dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 rounded-lg px-3 py-2 text-xs font-bold dark:text-[#f0ede6]" />
-                <input required type="number" step="0.01" placeholder="Master Base Price" value={mPrice} onChange={e=>setMPrice(e.target.value)} className="w-full bg-white dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 rounded-lg px-3 py-2 text-xs font-bold dark:text-[#f0ede6]" />
+                <input required placeholder="Item Name" value={mName} onChange={e=>setMName(e.target.value)} className="w-full bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-lg px-3 py-2 text-xs font-bold dark:text-[#f0ede6]" />
+                <input required type="number" step="0.01" min="0" placeholder="Master Base Price" value={mPrice} onChange={e=>setMPrice(e.target.value)} className="w-full bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-lg px-3 py-2 text-xs font-bold dark:text-[#f0ede6]" />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <input required placeholder="Description" value={mDesc} onChange={e=>setMDesc(e.target.value)} className="w-full bg-white dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 rounded-lg px-3 py-2 text-xs dark:text-[#f0ede6]" />
-                <select required value={mCatId} onChange={e=>setMCatId(e.target.value)} className="w-full bg-white dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 rounded-lg px-3 py-2 text-xs dark:text-[#f0ede6]">
-                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
+              <div className="grid grid-cols-2 gap-3 z-10 relative">
+                <input required placeholder="Description" value={mDesc} onChange={e=>setMDesc(e.target.value)} className="w-full bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-lg px-3 py-2 text-xs dark:text-[#f0ede6]" />
+                <CategorySelector 
+                  categories={categories} 
+                  value={mCatId} 
+                  onChange={setMCatId} 
+                />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[10px] font-bold text-slate-500 dark:text-slate-300 uppercase block mb-1">Override Price (Optional)</label>
-                  <input type="number" step="0.01" placeholder="Override Price" value={oPrice} onChange={e=>setOPrice(e.target.value)} className="w-full bg-white dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 rounded-lg px-3 py-2 text-xs font-bold dark:text-[#f0ede6]" />
+                  <input type="number" step="0.01" min="0" placeholder="Override Price" value={oPrice} onChange={e=>setOPrice(e.target.value)} className="w-full bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-lg px-3 py-2 text-xs font-bold dark:text-[#f0ede6]" />
                 </div>
                 <div>
                   <label className="text-[10px] font-bold text-slate-500 dark:text-slate-300 uppercase block mb-1">Status</label>
-                  <select value={oActive ? "true" : "false"} onChange={e=>setOActive(e.target.value === "true")} className="w-full bg-white dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 rounded-lg px-3 py-2 text-xs font-bold dark:text-[#f0ede6]">
+                  <select value={oActive ? "true" : "false"} onChange={e=>setOActive(e.target.value === "true")} className="w-full bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-lg px-3 py-2 text-xs font-bold dark:text-[#f0ede6]">
                     <option value="true">Active</option>
                     <option value="false">Inactive</option>
                   </select>
@@ -176,23 +179,50 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
             const isOverriding = isAddingOverride === item.id;
             
             return (
-              <div key={item.id} className="bg-white/50 dark:bg-slate-900/40 border border-rose-500/20 dark:border-rose-500/30 p-4 rounded-2xl shadow-sm">
+              <div key={item.id} className="bg-white/20 dark:bg-slate-900/20 border border-rose-500/20 dark:border-rose-500/30 p-4 rounded-2xl shadow-sm">
                 <div className="flex justify-between items-center">
                   <div>
                     <h6 className="font-bold text-sm text-slate-800 dark:text-[#f0ede6]">{item.name}</h6>
-                    <p className="text-[10px] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wide mb-1">{item.categoryName || 'Food'}</p>
-                    <div className="flex gap-4 mt-1">
-                      <span className="text-xs text-slate-500 dark:text-slate-300">Base: ${item.basePrice.toFixed(2)}</span>
-                      {currentOverride && (
-                        <>
-                          {currentOverride.price !== undefined && <span className="text-xs font-bold text-rose-500">Override: ${currentOverride.price.toFixed(2)}</span>}
-                          <span className={`text-xs font-bold ${currentOverride.isAvailable ? 'text-emerald-500' : 'text-slate-400 dark:text-slate-300'}`}>{currentOverride.isAvailable ? 'Active' : 'Inactive'}</span>
-                        </>
+                    {item.categoryName && (
+                      <div className="mt-1 mb-1">
+                        <span className="inline-block px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded text-[10px] font-bold uppercase tracking-wide">
+                          {item.categoryName}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex flex-wrap items-center gap-2 mt-2">
+                      {currentOverride && currentOverride.overriddenPrice !== null && currentOverride.overriddenPrice !== undefined ? (
+                        <div className="flex items-center gap-2 bg-rose-500/5 border border-rose-500/20 rounded-full px-3 py-1">
+                          <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 line-through">
+                            ${item.basePrice.toFixed(2)}
+                          </span>
+                          <span className="text-xs font-extrabold text-rose-500 dark:text-rose-400">
+                            ${currentOverride.overriddenPrice.toFixed(2)}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-full px-3 py-1">
+                          <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                            ${item.basePrice.toFixed(2)}
+                          </span>
+                        </div>
+                      )}
+
+                      {currentOverride && !currentOverride.isAvailable ? (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 rounded-full text-[11px] font-bold uppercase tracking-wide">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                          Out of Stock
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-full text-[11px] font-bold uppercase tracking-wide">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                          Available
+                        </span>
                       )}
                     </div>
                   </div>
                   {!isOverriding && (
-                    <button onClick={() => { setIsAddingOverride(item.id); setOPrice(currentOverride?.price?.toString() || ''); setOActive(currentOverride?.isAvailable ?? true); }} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 dark:text-slate-300 transition-colors">
+                    <button onClick={() => { setIsAddingOverride(item.id); setOPrice(currentOverride?.overriddenPrice?.toString() || ''); setOActive(currentOverride?.isAvailable ?? true); }} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 dark:text-slate-300 transition-colors">
                       <Edit3 className="w-4 h-4" />
                     </button>
                   )}
@@ -202,7 +232,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
                   <form onSubmit={(e) => handleCreateOverride(e, item.id)} className="mt-4 pt-4 border-t border-rose-500/20 dark:border-rose-500/30 flex gap-3 items-end">
                     <div className="space-y-1 flex-1">
                       <label className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">Override Price</label>
-                      <input type="number" step="0.01" value={oPrice} onChange={e=>setOPrice(e.target.value)} placeholder={`Base: ${item.basePrice}`} className="w-full bg-slate-50 dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 rounded-lg px-3 py-2 text-xs font-bold dark:text-[#f0ede6]" />
+                      <input type="number" step="0.01" min="0" value={oPrice} onChange={e=>setOPrice(e.target.value)} placeholder={`Base: ${item.basePrice}`} className="w-full bg-slate-50 dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 rounded-lg px-3 py-2 text-xs font-bold dark:text-[#f0ede6]" />
                     </div>
                     <div className="space-y-1">
                       <label className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase block">Status</label>

@@ -40,6 +40,8 @@ export type OrderStatus =
   | 'delivered' // Successfully completed
   | 'on_hold' // Held by restaurant due to delay
   | 'ready_for_pickup'
+  | 'out_for_delivery'
+  | 'created'
   | 'rejected'
   | 'cancelled';
 
@@ -48,6 +50,8 @@ export interface Order {
   customerName: string;
   customerPhone: string;
   deliveryAddress: string;
+  deliveryLat?: number;
+  deliveryLng?: number;
   restaurantId: string;
   restaurantName: string;
   items: CartItem[];
@@ -60,7 +64,8 @@ export interface Order {
   riderId?: string;
   riderName?: string;
   riderPhone?: string;
-  timestamp: string;
+  createdAt?: string;
+  timestamp?: string;
 }
 
 export interface EarningRecord {
@@ -68,7 +73,8 @@ export interface EarningRecord {
   orderId: string;
   amount: number;
   type: 'payout' | 'tip';
-  timestamp: string;
+  createdAt?: string;
+  timestamp?: string;
 }
 
 export interface MasterMenuItem {

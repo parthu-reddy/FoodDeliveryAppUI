@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Bike, DollarSign, Map, CheckCircle, Navigation, Play, Eye, 
   MapPin, LogOut, Check, Clock, ArrowRight, ShieldAlert, KeyRound, MessageCircle, Store, Sun, Moon,
@@ -10,7 +10,8 @@ import LaBouffeLogo from './LaBouffeLogo';
 import { apiGet, apiPost } from '../lib/apiClient';
 import { getUserProfile, getToken } from '../lib/tokenStore';
 import CompleteProfileModal from './CompleteProfileModal';
-import SharedSettingsView from './SharedSettingsView';
+import RiderSettingsView from './RiderSettingsView';
+import OrderTrackingMap from './OrderTrackingMap';
 
 interface DeliveryDashboardProps {
   riderPhone: string;
@@ -39,60 +40,133 @@ export default function DeliveryDashboard({
   const onUpdateOrderStatus = externalUpdateStatus ?? ((orderId: string, status: OrderStatus) => {
     setInternalOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
   });
-  const [isOnline, setIsOnline] = useState(true);
-  const [historyDateFilter, setHistoryDateFilter] = useState("");
+  const [isOnline, setIsOnline] = useState(false);
+  const todayDateString = new Date().toISOString().split('T')[0];
+  const [historyDateFilter, setHistoryDateFilter] = useState(todayDateString);
   const [historyPage, setHistoryPage] = useState(1);
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    const fetchOrders = () => {
-      apiGet(`/api/v1/delivery/orders`)
-        .then(res => {
-          if (res.data) setInternalOrders(res.data);
-        })
-        .catch(console.error);
-    };
-    
-    fetchOrders(); // Initial fetch
-    
-    interval = setInterval(fetchOrders, 3000);
-    
-    return () => clearInterval(interval);
-  }, []);
 
   const todayIso = new Date().toISOString();
 
   const [showHistory, setShowHistory] = useState(false);
   const [isProfileMandatory, setIsProfileMandatory] = useState(false);
-
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
+  const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
+  const [showProfileRequiredPrompt, setShowProfileRequiredPrompt] = useState(false);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [enteredOtp, setEnteredOtp] = useState("");
   const [enteredPickupOtp, setEnteredPickupOtp] = useState("");
   const [pickupOtpError, setPickupOtpError] = useState("");
 
   const [otpError, setOtpError] = useState("");
+  const [isUpdatingPickup, setIsUpdatingPickup] = useState(false);
+  const [isUpdatingDelivery, setIsUpdatingDelivery] = useState(false);
   const [mockEarnings, setMockEarnings] = useState(0);
   const [completedCount, setCompletedCount] = useState(0);
 
   const [riderId, setRiderId] = useState("");
 
-  const [showProfile, setShowProfile] = useState(false);
   const [riderName, setRiderName] = useState("");
   const [vehicleNumber, setVehicleNumber] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
-  const [isRegistering, setIsRegistering] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
   };
+
+  const historyRef = useRef<any[]>([]);
+
+  useEffect(() => {
+    if (!isOnline || !riderId) return; // Only fetch if actively online
+
+    let timeout: NodeJS.Timeout;
+    let isCancelled = false;
+
+    let lastActiveCount = 0;
+
+    const fetchOrders = async () => {
+      try {
+        let fetchedActiveJobs: any[] = [];
+        let fetchedAvailableJobs: any[] = [];
+
+        // 1. Fetch Active Job
+        const activeRes = await apiGet(`/api/v1/delivery/orders/active`);
+        if (!isCancelled && activeRes.data) {
+           fetchedActiveJobs = activeRes.data.map((o: any) => ({ ...o, status: o.status?.toLowerCase() || '' }));
+        }
+
+        // 2. Fetch Available Pings (Only if NO active jobs)
+        if (!isCancelled && fetchedActiveJobs.length === 0) {
+           const availableRes = await apiGet(`/api/v1/delivery/orders/available`);
+           if (availableRes.data) {
+              fetchedAvailableJobs = availableRes.data.map((o: any) => ({ ...o, status: o.status?.toLowerCase() || '' }));
+           }
+        }
+
+        // 3. Fetch History if an active job disappeared (e.g. cancelled by restaurant)
+        if (!isCancelled && lastActiveCount > 0 && fetchedActiveJobs.length === 0) {
+           const today = new Date().toISOString().split('T')[0];
+           const histRes = await apiGet(`/api/v1/delivery/orders/history?date=${today}`);
+           if (histRes.data) {
+              historyRef.current = histRes.data.map((o: any) => ({ ...o, status: o.status?.toLowerCase() || '' }));
+           }
+        }
+        
+        if (!isCancelled) {
+           lastActiveCount = fetchedActiveJobs.length;
+           // Merge by ID to avoid duplicates (active jobs override history jobs)
+           const mergedMap = new Map();
+           historyRef.current.forEach(j => mergedMap.set(j.id, j));
+           fetchedActiveJobs.forEach(j => mergedMap.set(j.id, j));
+           fetchedAvailableJobs.forEach(j => mergedMap.set(j.id, j));
+           setInternalOrders(Array.from(mergedMap.values()));
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (!isCancelled) {
+          timeout = setTimeout(fetchOrders, 5000);
+        }
+      }
+    };
+    
+    fetchOrders(); // Initial fetch
+    
+    return () => {
+      isCancelled = true;
+      clearTimeout(timeout);
+    };
+  }, [isOnline, riderId]);
+
+  // Handle fetching history independently
+  useEffect(() => {
+    if (!isOnline || !riderId) return;
+    
+    // If history modal is open, fetch for the selected date. Otherwise fetch today's date for the badge.
+    const dateToFetch = showHistory ? historyDateFilter : new Date().toISOString().split('T')[0];
+    if (!dateToFetch) return;
+
+    apiGet(`/api/v1/delivery/orders/history?date=${dateToFetch}`).then(res => {
+      if (res.data) {
+        historyRef.current = res.data.map((o: any) => ({ ...o, status: o.status?.toLowerCase() || '' }));
+        // We don't want to overwrite active jobs, just merge the updated history
+        setInternalOrders(prev => {
+          const active = prev.filter(o => ['dispatched', 'ready_for_pickup', 'out_for_delivery'].includes(o.status));
+          const mergedMap = new Map();
+          historyRef.current.forEach((j: any) => mergedMap.set(j.id, j));
+          active.forEach(j => mergedMap.set(j.id, j));
+          return Array.from(mergedMap.values());
+        });
+      }
+    }).catch(console.error);
+  }, [showHistory, historyDateFilter, isOnline, riderId]);
+
   const [pingJob, setPingJob] = useState<Order | null>(null);
   const [pingTimer, setPingTimer] = useState(30);
   const [rejectedIds, setRejectedIds] = useState<Set<string>>(new Set());
 
   const [showCompleteProfileModal, setShowCompleteProfileModal] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [view, setView] = useState<'home' | 'settings'>('home');
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
@@ -111,7 +185,7 @@ export default function DeliveryDashboard({
   }, [activeOrders, isOnline, activeJobId, rejectedIds, pingJob]);
   React.useEffect(() => {
     if (!activeJobId) {
-      const ongoingJob = activeOrders.find(o => (o.riderId === riderPhone || !!o.riderId) && o.status !== "delivered" && o.status !== "cancelled" && o.status !== "cancelled_by_restaurant");
+      const ongoingJob = activeOrders.find(o => (o.riderId === riderId || !!o.riderId) && o.status !== "delivered" && o.status !== "cancelled" && o.status !== "cancelled_by_restaurant");
       if (ongoingJob) {
         setActiveJobId(ongoingJob.id);
       }
@@ -123,7 +197,7 @@ export default function DeliveryDashboard({
         setActiveJobId(null);
       }
     }
-  }, [activeOrders, riderPhone, activeJobId]);
+  }, [activeOrders, riderId, activeJobId]);
 
 
   React.useEffect(() => {
@@ -183,10 +257,12 @@ export default function DeliveryDashboard({
         },
         (err) => {
           console.error("Location error:", err);
-          setShowLocationPrompt(true);
-          apiPost(`/api/delivery/status`, { driverId: riderId, available: false })
-            .catch(e => console.error(e));
+          if (riderId) { // Safeguard against missing riderId
+            apiPost(`/api/delivery/status`, { driverId: riderId, available: false })
+              .catch(e => console.error(e));
+          }
           setIsOnline(false);
+          setShowLocationPrompt(true);
         },
         { enableHighAccuracy: true }
       );
@@ -242,7 +318,9 @@ export default function DeliveryDashboard({
           }
         }
       })
-      .catch(console.error);
+      .catch(err => {
+        if (err?.status !== 404) console.warn("Failed to fetch unified profile:", err);
+      });
 
     // Fetch delivery-specific profile details
     apiGet(`/api/delivery/profile?phoneNumber=${encodeURIComponent(riderPhone)}`)
@@ -252,55 +330,42 @@ export default function DeliveryDashboard({
           if (!riderName) setRiderName(profile.fullName || profile.name || "");
           setVehicleNumber(profile.vehicleNumber || "");
           setPhotoUrl(profile.photoUrl || "");
-          setIsOnline(profile.isOnline || profile.status === 'ONLINE');
+          setIsOnline(profile.isOnline || profile.status === 'ONLINE' || profile.status === 'ON_DELIVERY');
           setRiderId(profile.id);
           
           if (!profile.vehicleNumber || !profile.fullName || !profile.photoUrl) {
             setIsProfileMandatory(true);
-            setShowProfile(true);
+            setShowProfileRequiredPrompt(true);
           } else {
             setIsProfileMandatory(false);
           }
         } else {
           setIsProfileMandatory(true);
-          setShowProfile(true);
+          setShowProfileRequiredPrompt(true);
         }
       })
-      .catch(console.error);
+      .catch(err => {
+        if (err?.status === 404) {
+          setIsProfileMandatory(true);
+          setShowProfileRequiredPrompt(true);
+        } else {
+          console.error("Profile fetch error:", err);
+          showToast(err.message || "Failed to load profile");
+        }
+      })
+      .finally(() => setIsLoadingProfile(false));
   }, [riderPhone]);
 
-  const handleOnboard = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMsg("");
-    if (!riderName || !vehicleNumber || !photoUrl) {
-      setErrorMsg("All fields are mandatory");
-      return;
-    }
-    setIsRegistering(true);
-    try {
-      const data = await apiPost("/api/delivery/onboard", { fullName: riderName, phoneNumber: riderPhone, vehicleNumber, photoUrl });
-      if (data.success) {
-        setShowProfile(false);
-        setIsProfileMandatory(false);
-        setRiderId(data.data.id);
-      } else {
-        setErrorMsg(data.error || "Failed to onboard");
-      }
-    } catch (error) {
-      setErrorMsg("Network error");
-    } finally {
-      setIsRegistering(false);
-    }
-  };
+
 
   const handleToggleOnline = async () => {
     if (!riderId || isProfileMandatory) {
-      setShowProfile(true);
+      setShowProfileRequiredPrompt(true);
       return;
     }
     if (!isOnline) {
       if (!('Notification' in window)) {
-        showToast("Notifications are not supported by your browser");
+        setShowNotificationPrompt(true);
         return;
       }
       
@@ -308,7 +373,7 @@ export default function DeliveryDashboard({
       if (notifyPermission !== 'granted') {
         notifyPermission = await Notification.requestPermission();
         if (notifyPermission !== 'granted') {
-          showToast("Please enable notifications to receive orders.");
+          setShowNotificationPrompt(true);
           return;
         }
       }
@@ -546,19 +611,33 @@ export default function DeliveryDashboard({
   React.useEffect(() => {
     if (currentJob) {
       if (onAddApiLog) {
-        onAddApiLog({ id: 'delivery_route', label: `GET /api/v1/delivery/route?lat=12.97&lng=77.59`, method: 'GET' });
+        onAddApiLog({ id: 'delivery_route', label: `GET /api/v1/logistics/route?sourceLat={riderLat}&sourceLng={riderLng}&destLat=${currentJob.deliveryLat}&destLng=${currentJob.deliveryLng}`, method: 'GET' });
       }
-      apiGet(`/api/v1/delivery/route?lat=12.97&lng=77.59`).catch(e => console.warn("Route fetch error", e));
+      // Note: Actually fetching the route is not strictly needed for the map to render (the map uses MapLibre with native directions).
+      // If we wanted to draw the exact polyline, we would call /api/v1/logistics/route here and pass it to the map.
     }
   }, [currentJob?.id, currentJob?.status]);
+
+  React.useEffect(() => {
+    if (currentJob?.status) {
+      setIsUpdatingPickup(false);
+      setIsUpdatingDelivery(false);
+    }
+  }, [currentJob?.status]);
 
   // Filter jobs available on the job board (orders that are dispatched but have no rider assigned yet)
   const availableJobs = activeOrders.filter(o => o.status === 'dispatched' && !o.riderId);
 
-  const handleAcceptJob = (order: Order) => {
-    setActiveJobId(order.id);
-    // Assign rider info to the order immediately
-    onUpdateOrderStatus(order.id, 'dispatched', { name: riderName, phone: riderPhone });
+  const handleAcceptJob = async (order: Order) => {
+    try {
+      await apiPost(`/api/delivery/drivers/${riderId}/orders/${order.id}/accept`, {});
+      setActiveJobId(order.id);
+      // Wait for next fetchOrders cycle or update optimisticly
+      onUpdateOrderStatus(order.id, 'dispatched', { name: riderName, phone: riderPhone });
+    } catch (e: any) {
+      console.error("Failed to accept job", e);
+      alert(e.response?.data?.message || "Failed to accept job. It might have been assigned to someone else or cancelled.");
+    }
   };
 
   const handleArrivedAtRestaurant = () => {
@@ -570,14 +649,24 @@ export default function DeliveryDashboard({
     e.preventDefault();
     setPickupOtpError("");
     if (!currentJob) return;
-    if (enteredPickupOtp !== currentJob.pickupOtp && enteredPickupOtp !== "1111") {
+    if (enteredPickupOtp !== currentJob.pickupOtp) {
       setPickupOtpError("Invalid verification code. Please check with restaurant.");
       return;
     }
+    
+    // Optimistic Update
+    const previousStatus = currentJob.status;
+    onUpdateOrderStatus(currentJob.id, 'out_for_delivery');
+    setIsUpdatingPickup(true);
+    
     try {
-      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, { status: "PICKED_UP" });
-    } catch(e) {}
-    onUpdateOrderStatus(currentJob.id, "picked_up");
+      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, { status: "PICKED_UP", pickupOtp: enteredPickupOtp });
+      setIsUpdatingPickup(false);
+    } catch(e) {
+      setIsUpdatingPickup(false);
+      onUpdateOrderStatus(currentJob.id, previousStatus); // Revert on failure
+      showToast("Failed to verify OTP with server. Please try again.");
+    }
     setEnteredPickupOtp("");
   };
 
@@ -586,30 +675,51 @@ export default function DeliveryDashboard({
     e.preventDefault();
     setOtpError("");
     if (!currentJob) return;
-    if (enteredOtp !== currentJob.otp && enteredOtp !== "1234") {
+    if (enteredOtp !== currentJob.otp) {
       setOtpError("Invalid verification code. Please check with customer.");
       return;
     }
+    
+    // Optimistic Update
+    const previousStatus = currentJob.status;
+    onUpdateOrderStatus(currentJob.id, 'delivered');
+    setIsUpdatingDelivery(true);
+    
     try {
       await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, { status: "DELIVERED" });
-    } catch(e) {}
-    onUpdateOrderStatus(currentJob.id, "delivered");
-    setMockEarnings(prev => prev + 5.50 + 2.00);
-    setCompletedCount(prev => prev + 1);
+      setIsUpdatingDelivery(false);
+      
+      // Update history so it's immediately visible
+      historyRef.current = [{...currentJob, status: 'delivered'}, ...historyRef.current];
+
+      setMockEarnings(prev => prev + 5.50 + 2.00);
+      setCompletedCount(prev => prev + 1);
+      setActiveJobId(null);
+    } catch(e) {
+      setIsUpdatingDelivery(false);
+      onUpdateOrderStatus(currentJob.id, previousStatus); // Revert on failure
+      showToast("Failed to verify Delivery OTP with server. Please try again.");
+    }
     setEnteredOtp("");
-    setActiveJobId(null);
   };
 
-  const allHistoryJobs = [...activeOrders.filter(o => o.riderId === riderPhone && o.status === "delivered").map(job => ({ ...job, payout: 7.50 }))];
+  const allHistoryJobs = [...activeOrders.filter(o => o.riderId === riderId && o.status === "delivered").map(job => ({ ...job, payout: 7.50 }))];
   const filteredHistoryJobs = allHistoryJobs.filter(job => {
     if (!historyDateFilter) return true;
-    if (!job.timestamp) return false;
-    return job.timestamp.startsWith(historyDateFilter);
+    if (!job.createdAt) return false;
+    return job.createdAt.startsWith(historyDateFilter);
   });
   const historyPageSize = 100;
   const paginatedHistoryJobs = filteredHistoryJobs.slice((historyPage - 1) * historyPageSize, historyPage * historyPageSize);
   const totalHistoryPages = Math.ceil(filteredHistoryJobs.length / historyPageSize);
 
+  if (isLoadingProfile) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center min-h-0 bg-transparent h-full">
+        <div className="w-8 h-8 rounded-full border-2 border-rose-500/20 border-t-rose-500 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-y-auto overflow-x-hidden min-h-0 bg-transparent text-slate-800 dark:text-[#f0ede6] h-full pb-20">
@@ -632,12 +742,12 @@ export default function DeliveryDashboard({
       </AnimatePresence>
 
       {/* Header Area */}
-      <header className="sticky top-0 bg-white/60 dark:bg-slate-950/60 backdrop-blur-xl px-5 py-3 flex flex-col sm:flex-row sm:items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 z-30 shrink-0 shadow-[0_2px_15px_rgba(0,0,0,0.01)] gap-3">
+      <header className="sticky top-0 bg-white/20 dark:bg-slate-950/20 backdrop-blur-xl px-5 py-3 flex flex-col sm:flex-row sm:items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 z-30 shrink-0 shadow-[0_2px_15px_rgba(0,0,0,0.01)] gap-3">
         <div className="flex items-center gap-3.5 flex-wrap">
           <LaBouffeLogo showText={false} iconSize="w-8 h-8" textColorClass="text-slate-800 dark:text-[#f0ede6] text-xs" subColorClass="text-rose-500 text-[8px]" />
           <div className="hidden sm:flex h-6 w-[1px] bg-slate-200 dark:bg-slate-800" />
           <button 
-            onClick={() => setShowProfile(true)}
+            onClick={() => setView('settings')}
             className="flex items-center gap-2 text-left hover:bg-slate-100 dark:hover:bg-slate-900 p-1.5 -ml-1.5 rounded-xl transition-colors cursor-pointer"
           >
             {photoUrl ? (
@@ -701,77 +811,34 @@ export default function DeliveryDashboard({
         </div>
       </header>
 
-      {showProfile ? (
-        <div className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-y-auto min-h-0 text-slate-800 dark:text-[#f0ede6] h-full mt-4 p-5">
-          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl w-full rounded-3xl p-6 shadow-sm border border-rose-500/20 dark:border-rose-500/30">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500">
-                  <User className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-lg text-slate-900 dark:text-[#f0ede6] leading-tight">Driver Profile</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-300">Update your details for verification</p>
-                </div>
-              </div>
-              {!isProfileMandatory && (
-                <button onClick={() => setShowProfile(false)} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400">
-                  <X className="w-5 h-5" />
-                </button>
-              )}
-            </div>
-            
-            {errorMsg && (
-              <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-                <p className="text-[11px] font-bold text-red-600 dark:text-red-400 leading-relaxed">{errorMsg}</p>
-              </div>
-            )}
-            <form onSubmit={handleOnboard} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wide px-1">Full Name</label>
-                <input type="text" required placeholder="e.g. John Doe" value={riderName} onChange={e => setRiderName(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-slate-50 dark:bg-slate-950 text-sm font-medium text-slate-900 dark:text-[#f0ede6] focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all focus:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:focus:shadow-[0_0_12px_rgba(244,63,94,0.5)]" />
-              </div>
-              
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wide px-1">Phone Number</label>
-                <input type="text" readOnly value={riderPhone} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 text-sm font-medium text-slate-500 cursor-not-allowed" />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wide px-1">Vehicle Registration</label>
-                <input type="text" required autoComplete="off" placeholder="e.g. KA01AB1234" value={vehicleNumber} onChange={e => setVehicleNumber(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-slate-50 dark:bg-slate-950 text-sm font-medium text-slate-900 dark:text-[#f0ede6] focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all focus:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:focus:shadow-[0_0_12px_rgba(244,63,94,0.5)]" />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wide px-1">Profile Photo URL</label>
-                <input type="url" required placeholder="https://example.com/photo.jpg" value={photoUrl} onChange={e => setPhotoUrl(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-slate-50 dark:bg-slate-950 text-sm font-medium text-slate-900 dark:text-[#f0ede6] focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all focus:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:focus:shadow-[0_0_12px_rgba(244,63,94,0.5)]" />
-              </div>
-              
-              <div className="pt-4 flex gap-3">
-                {!isProfileMandatory && (
-                  <button type="button" onClick={() => setShowProfile(false)} className="flex-1 py-3 text-xs font-bold text-slate-500 dark:text-slate-300 border border-rose-500/20 dark:border-rose-500/30 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">Cancel</button>
-                )}
-                <button type="submit" disabled={isRegistering} className="flex-1 py-3 bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold rounded-xl transition-colors disabled:opacity-50">
-                  {isRegistering ? "Saving..." : "Save Details"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      ) : view === 'settings' ? (
+      {view === 'settings' ? (
         <div className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-y-auto overflow-x-hidden min-h-0 text-slate-800 dark:text-[#f0ede6] h-full mt-4">
-          <SharedSettingsView
+          <RiderSettingsView
             onBack={() => setView('home')}
             theme={theme}
             onLogout={onLogout}
+            isProfileMandatory={isProfileMandatory}
+            riderPhone={riderPhone}
+            onProfileUpdated={() => {
+              apiGet(`/api/delivery/profile?phoneNumber=${encodeURIComponent(riderPhone)}`)
+                .then(data => {
+                  if (data.success) {
+                    const profile = data.data;
+                    setRiderName(profile.fullName || profile.name || "");
+                    setVehicleNumber(profile.vehicleNumber || "");
+                    setPhotoUrl(profile.photoUrl || "");
+                    setIsProfileMandatory(false);
+                    setView('home');
+                  }
+                });
+            }}
           />
         </div>
       ) : (
         <>
           {/* Driver Statistics Panel */}
           <div className="p-5 grid grid-cols-2 gap-4 shrink-0">
-            <div className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-2xl p-4 shadow-sm flex items-center gap-3">
+            <div className="bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-2xl p-4 shadow-sm flex items-center gap-3">
               <div className="p-2.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl">
             <DollarSign className="w-5 h-5" />
           </div>
@@ -783,7 +850,7 @@ export default function DeliveryDashboard({
 
         <button 
           onClick={() => setShowHistory(true)}
-          className={`bg-white/50 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-2xl p-4 shadow-sm flex items-center gap-3 text-left transition-all cursor-pointer hover:border-indigo-500/30 ${showHistory ? "ring-2 ring-indigo-500 border-transparent dark:border-transparent" : ""}`}
+          className={`bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-2xl p-4 shadow-sm flex items-center gap-3 text-left transition-all cursor-pointer hover:border-indigo-500/30 ${showHistory ? "ring-2 ring-indigo-500 border-transparent dark:border-transparent" : ""}`}
         >
           <div className="p-2.5 bg-orange-500/10 text-orange-600 dark:text-orange-400 rounded-xl">
             <Check className="w-5 h-5" />
@@ -817,7 +884,7 @@ export default function DeliveryDashboard({
                   type="date"
                   value={historyDateFilter}
                   onChange={(e) => { setHistoryDateFilter(e.target.value); setHistoryPage(1); }}
-                  className="px-3 py-1.5 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono outline-none"
+                  className="px-3 py-1.5 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono outline-none"
                 />
                 {historyDateFilter && (
                   <button onClick={() => { setHistoryDateFilter(""); setHistoryPage(1); }} className="text-[10px] text-slate-400 dark:text-slate-300 hover:text-slate-600 dark:text-slate-300 underline">Clear</button>
@@ -826,19 +893,19 @@ export default function DeliveryDashboard({
             </div>
             <div className="space-y-4 overflow-y-auto">
               {paginatedHistoryJobs.length === 0 ? (
-                <div className="p-12 text-center text-slate-400 dark:text-slate-300 border border-dashed border-rose-500/30 dark:border-rose-500/30 rounded-3xl space-y-2.5 bg-white/40 dark:bg-slate-900/45">
+                <div className="p-12 text-center text-slate-400 dark:text-slate-300 border border-dashed border-rose-500/30 dark:border-rose-500/30 rounded-3xl space-y-2.5 bg-white/20 dark:bg-slate-900/45">
                   <Clock className="w-8 h-8 mx-auto text-slate-500 dark:text-slate-300 opacity-50" />
                   <p className="text-sm font-semibold">No completed deliveries found.</p>
                   <p className="text-xs text-slate-500 dark:text-slate-300">Try selecting a different date.</p>
                 </div>
               ) : (
                 paginatedHistoryJobs.map(job => (
-                  <div key={job.id} className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-3xl p-5 shadow-sm flex flex-col gap-3 transition-all hover:border-indigo-500/30 hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all">
+                  <div key={job.id} className="bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-3xl p-5 shadow-sm flex flex-col gap-3 transition-all hover:border-indigo-500/30 hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all">
                     <div className="flex justify-between items-start">
                       <div>
                         <p className="font-mono text-xs text-slate-400 dark:text-slate-300 font-bold">ORDER #{job.id.substring(0, 8)}</p>
                         <p className="font-black text-slate-900 dark:text-[#f0ede6] mt-1">{job.restaurantName}</p>
-                        <p className="text-[10px] text-slate-500 dark:text-slate-300 mt-0.5">{job.timestamp ? new Date(job.timestamp).toLocaleString() : ""}</p>
+                        <p className="text-[10px] text-slate-500 dark:text-slate-300 mt-0.5">{job.createdAt ? new Date(job.createdAt).toLocaleString() : ""}</p>
                       </div>
                       <div className="text-right">
                         <p className="font-black text-emerald-500 text-lg">+${job.payout.toFixed(2)}</p>
@@ -909,58 +976,21 @@ export default function DeliveryDashboard({
               <span className="text-xs font-mono bg-slate-200 dark:bg-slate-900 px-2 py-0.5 rounded">#{currentJob.id}</span>
             </div>
 
-            {/* Immersive Navigation Map Route */}
-            <div className="relative w-full h-48 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-3xl overflow-hidden shadow-inner">
-              <div className="absolute inset-0 bg-[radial-gradient(#64748b_1px,transparent_1px)] [background-size:16px_16px] opacity-10" />
-              
-              {/* Dynamic Map Routing Vector */}
-              <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                <path 
-                  d="M 15 50 Q 50 20 85 50" 
-                  fill="none" 
-                  stroke="#334155" 
-                  strokeWidth="3" 
-                />
-                <circle cx="15" cy="50" r="4" fill="#f59e0b" />
-                <circle cx="85" cy="50" r="4" fill="#10b981" />
-              </svg>
-
-              {/* Waypoints */}
-              <div className="absolute left-[15%] top-[50%] -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
-                <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 border border-amber-500 flex items-center justify-center shadow">
-                  <Store className="w-3.5 h-3.5 text-amber-500" />
-                </div>
-                <span className="text-[8px] font-bold mt-1 max-w-[60px] truncate text-center bg-slate-900/80 px-1 rounded">{currentJob.restaurantName}</span>
-              </div>
-
-              <div className="absolute right-[15%] top-[50%] translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
-                <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 border border-emerald-500 flex items-center justify-center shadow">
-                  <MapPin className="w-3.5 h-3.5 text-emerald-500" />
-                </div>
-                <span className="text-[8px] font-bold mt-1 max-w-[60px] truncate text-center bg-slate-900/80 px-1 rounded">{currentJob.customerName}</span>
-              </div>
-
-              {/* Rider Marker */}
-              <div 
-                className="absolute transition-all duration-1000 ease-in-out flex flex-col items-center"
-                style={{
-                  left: currentJob.status === 'dispatched' ? '25%' : '75%',
-                  top: currentJob.status === 'dispatched' ? '40%' : '40%',
-                  transform: 'translate(-50%, -100%)'
-                }}
-              >
-                <div className="bg-amber-500 text-slate-950 p-1.5 rounded-full shadow-lg ring-2 ring-amber-500/30 animate-bounce">
-                  <Bike className="w-3.5 h-3.5" />
-                </div>
+            {/* Map Integration */}
+            <div className="relative w-full h-64 bg-slate-200/50 dark:bg-slate-800/50 rounded-xl mb-6 overflow-hidden border border-slate-200 dark:border-slate-700/50">
+              <OrderTrackingMap order={currentJob} />
+              <div className="absolute top-2 right-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-2.5 py-1 rounded-lg text-[10px] font-bold text-slate-600 dark:text-slate-300 shadow-sm border border-slate-200/50 dark:border-slate-700/50 flex items-center gap-1.5 pointer-events-none">
+                <MapPin className="w-3 h-3 text-indigo-500" />
+                Tap markers for Google Maps
               </div>
             </div>
 
             {/* Navigation Steps Card */}
-            <div className="bg-white/60 dark:bg-slate-900/50 backdrop-blur-xl border border-rose-500/20 dark:border-rose-500/30 rounded-3xl p-5 shadow-[0_8px_32px_rgba(251,146,60,0.05)] space-y-4">
+            <div className="bg-white/20 dark:bg-slate-900/20 backdrop-blur-xl border border-rose-500/20 dark:border-rose-500/30 rounded-3xl p-5 shadow-[0_8px_32px_rgba(251,146,60,0.05)] space-y-4">
               <div className="space-y-1">
                 <h5 className="font-bold text-sm text-slate-400 dark:text-slate-300 font-mono tracking-wider">NAVIGATIONAL STEPS</h5>
                 <p className="text-base font-bold text-slate-900 dark:text-[#f0ede6]">
-                  {currentJob.status === 'dispatched' ? 'Step 1: Collect food packages' : 'Step 2: Deliver to door'}
+                  {['dispatched', 'DISPATCHED', 'ready_for_pickup', 'READY_FOR_PICKUP'].includes(currentJob.status) ? 'Step 1: Collect food packages' : 'Step 2: Deliver to door'}
                 </p>
               </div>
 
@@ -986,9 +1016,9 @@ export default function DeliveryDashboard({
               </div>
 
               {/* Items Verification Checklist */}
-              <div className="p-4 bg-white/40 dark:bg-slate-950/40 backdrop-blur-sm border border-rose-500/20 dark:border-rose-500/30 rounded-2xl space-y-2">
-                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-300 font-mono block">VERIFY DISH COUNT ({currentJob.items.length})</span>
-                {currentJob.items.map((item: any, idx: number) => (
+              <div className="p-4 bg-white/20 dark:bg-slate-950/20 backdrop-blur-sm border border-rose-500/20 dark:border-rose-500/30 rounded-2xl space-y-2">
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-300 font-mono block">VERIFY DISH COUNT ({(currentJob.items || []).length})</span>
+                {(currentJob.items || []).map((item: any, idx: number) => (
                   <div key={item.item?.id || idx} className="flex justify-between text-xs text-slate-600 dark:text-[#f0ede6]">
                     <span>• {item.quantity || 1}x {item.item?.name || item.name || 'Item'}</span>
                     <span className="font-mono text-emerald-500">PAID</span>
@@ -997,20 +1027,20 @@ export default function DeliveryDashboard({
               </div>
 
               {/* State Transition Actions */}
-              {currentJob.status === 'dispatched' ? (
+              {['dispatched', 'DISPATCHED', 'ready_for_pickup', 'READY_FOR_PICKUP'].includes(currentJob.status) ? (
                 <form onSubmit={handlePickUpFood} className="space-y-4 pt-2">
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-slate-400 dark:text-slate-300 tracking-wider font-mono flex items-center gap-1.5">
                       <KeyRound className="w-4 h-4 text-amber-500" /> RESTAURANT HANDOVER OTP
                     </label>
-                    <div className="flex bg-white/40 dark:bg-slate-950/60 border border-rose-500/20 dark:border-rose-500/30 rounded-2xl overflow-hidden focus-within:border-amber-500 transition-colors">
+                    <div className="flex bg-white/20 dark:bg-slate-950/20 border border-rose-500/20 dark:border-rose-500/30 rounded-2xl overflow-hidden focus-within:border-amber-500 transition-colors">
                       <input
                         type="password"
                         pattern="[0-9]*"
                         inputMode="numeric"
                         value={enteredPickupOtp}
                         onChange={(e) => setEnteredPickupOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                        placeholder="Ask restaurant for 6-digit pickup OTP"
+                        placeholder="Enter 6-digit pickup OTP"
                         className="flex-1 px-4 py-3 bg-transparent text-slate-800 dark:text-[#f0ede6] outline-none font-mono text-center tracking-widest text-sm placeholder-slate-400"
                         required
                       />
@@ -1020,9 +1050,10 @@ export default function DeliveryDashboard({
                   </div>
                   <button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black py-4 rounded-2xl shadow-lg hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-1 cursor-pointer border border-white/20"
+                    disabled={isUpdatingPickup}
+                    className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black py-4 rounded-2xl shadow-lg hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-1 cursor-pointer border border-white/20 disabled:opacity-70"
                   >
-                    Confirm Pickup & Start Driving <ArrowRight className="w-5 h-5" />
+                    {isUpdatingPickup ? "Confirming..." : <>Confirm Pickup & Start Driving <ArrowRight className="w-5 h-5" /></>}
                   </button>
                 </form>
 
@@ -1033,7 +1064,7 @@ export default function DeliveryDashboard({
                     <label className="text-xs font-bold text-slate-400 dark:text-slate-300 tracking-wider font-mono flex items-center gap-1.5">
                       <KeyRound className="w-4 h-4 text-amber-500" /> SECURE CUSTOMER VERIFICATION OTP
                     </label>
-                    <div className="flex bg-white/40 dark:bg-slate-950/60 border border-rose-500/20 dark:border-rose-500/30 rounded-2xl overflow-hidden focus-within:border-orange-500 transition-colors">
+                    <div className="flex bg-white/20 dark:bg-slate-950/20 border border-rose-500/20 dark:border-rose-500/30 rounded-2xl overflow-hidden focus-within:border-orange-500 transition-colors">
                       <input
                         type="password"
                         pattern="[0-9]*"
@@ -1057,9 +1088,10 @@ export default function DeliveryDashboard({
 
                   <button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black py-4 rounded-2xl shadow-lg hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-white/15"
+                    disabled={isUpdatingDelivery}
+                    className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black py-4 rounded-2xl shadow-lg hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-white/15 disabled:opacity-70"
                   >
-                    <CheckCircle className="w-5 h-5" /> Confirm Delivery & Credit $7.50
+                    {isUpdatingDelivery ? "Confirming..." : <><CheckCircle className="w-5 h-5" /> Confirm Delivery & Credit $7.50</>}
                   </button>
                 </form>
               )}
@@ -1080,7 +1112,7 @@ export default function DeliveryDashboard({
             </div>
 
             {availableJobs.length === 0 ? (
-              <div className="p-12 text-center text-slate-400 dark:text-slate-300 border border-dashed border-rose-500/30 dark:border-rose-500/30 rounded-3xl space-y-2.5 bg-white/40 dark:bg-slate-900/45">
+              <div className="p-12 text-center text-slate-400 dark:text-slate-300 border border-dashed border-rose-500/30 dark:border-rose-500/30 rounded-3xl space-y-2.5 bg-white/20 dark:bg-slate-900/45">
                 <Map className="w-8 h-8 mx-auto text-slate-500 dark:text-slate-300 animate-pulse" />
                 <p className="text-sm font-semibold">Scanning for dispatched contracts...</p>
                 <p className="text-xs text-slate-500 dark:text-slate-300 max-w-xs mx-auto leading-relaxed">
@@ -1092,7 +1124,7 @@ export default function DeliveryDashboard({
                 {availableJobs.map(job => (
                   <div 
                     key={job.id} 
-                    className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-3xl p-5 shadow-sm space-y-4"
+                    className="bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-3xl p-5 shadow-sm space-y-4"
                   >
                     <div className="flex justify-between items-center">
                       <div className="space-y-0.5">
@@ -1108,7 +1140,7 @@ export default function DeliveryDashboard({
                     <div className="space-y-2 text-xs font-mono text-slate-500 dark:text-slate-300">
                       <p>📍 Pickup: Sector 62 Food Lane</p>
                       <p>🏠 Dropoff: {job.deliveryAddress}</p>
-                      <p>📦 Package: {job.items.length} items • Cash on Delivery</p>
+                      <p>📦 Package: {(job.items || []).length} items • Cash on Delivery</p>
                     </div>
 
                     <button
@@ -1200,13 +1232,13 @@ export default function DeliveryDashboard({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-sm"
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-2xl relative"
+              className="w-full max-w-sm bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-2xl relative"
             >
               <button 
                 onClick={() => setShowLocationPrompt(false)}
@@ -1228,6 +1260,91 @@ export default function DeliveryDashboard({
                   className="w-full py-3.5 rounded-xl bg-slate-900 dark:bg-emerald-500 text-white dark:text-slate-950 font-bold hover:bg-slate-800 dark:hover:bg-emerald-400 transition-colors"
                 >
                   Understood
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showNotificationPrompt && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              className="w-full max-w-sm bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-2xl relative"
+            >
+              <button 
+                onClick={() => setShowNotificationPrompt(false)}
+                className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              
+              <div className="p-8 pb-6 flex flex-col items-center text-center">
+                <div className="w-16 h-16 rounded-full bg-rose-500/10 flex items-center justify-center mb-6 text-rose-500">
+                  <AlertCircle className="w-8 h-8" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">Notifications Required</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-8">
+                  To receive order assignments and go on duty, please enable notification permissions for this application in your browser settings.
+                </p>
+                <button
+                  onClick={() => setShowNotificationPrompt(false)}
+                  className="w-full py-3.5 rounded-xl bg-slate-900 dark:bg-emerald-500 text-white dark:text-slate-950 font-bold hover:bg-slate-800 dark:hover:bg-emerald-400 transition-colors"
+                >
+                  Understood
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showProfileRequiredPrompt && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              className="w-full max-w-sm bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-2xl relative"
+            >
+              <button 
+                onClick={() => setShowProfileRequiredPrompt(false)}
+                className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              
+              <div className="p-8 pb-6 flex flex-col items-center text-center">
+                <div className="w-16 h-16 rounded-full bg-rose-500/10 flex items-center justify-center mb-6 text-rose-500">
+                  <User className="w-8 h-8" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">Profile Required</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-8">
+                  Please complete your driver profile (Name, Vehicle, Photo) before you can go on duty and start receiving orders.
+                </p>
+                <button
+                  onClick={() => {
+                    setShowProfileRequiredPrompt(false);
+                    setView('settings');
+                  }}
+                  className="w-full py-3.5 rounded-xl bg-slate-900 dark:bg-emerald-500 text-white dark:text-slate-950 font-bold hover:bg-slate-800 dark:hover:bg-emerald-400 transition-colors"
+                >
+                  Complete Profile
                 </button>
               </div>
             </motion.div>

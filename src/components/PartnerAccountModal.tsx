@@ -94,7 +94,7 @@ export default function PartnerAccountModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm cursor-pointer"
+            className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm cursor-pointer"
           />
 
           {/* Slide-in Panel */}
@@ -103,13 +103,13 @@ export default function PartnerAccountModal({
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: '100%', opacity: 0 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="relative w-full max-w-md h-full bg-white/70 dark:bg-slate-950/70 backdrop-blur-2xl shadow-2xl border-l border-white/20 dark:border-white/10 flex flex-col"
+            className="relative w-full max-w-md h-full bg-white/20 dark:bg-slate-950/20 backdrop-blur-2xl shadow-2xl border-l border-white/20 dark:border-white/10 flex flex-col"
           >
             <div className="flex-1 overflow-y-auto w-full p-5 flex flex-col space-y-4 bg-transparent">
               <div className="flex items-center gap-3 shrink-0 mb-4">
                 <button
                   onClick={onClose}
-                  className="p-2 rounded-xl bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 text-slate-500 dark:text-slate-300 hover:text-slate-900 hover:bg-white dark:hover:text-white cursor-pointer transition-all"
+                  className="p-2 rounded-xl bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 text-slate-500 dark:text-slate-300 hover:text-slate-900 hover:bg-white dark:hover:text-white cursor-pointer transition-all"
                 >
                   <X className="w-5 h-5" />
                 </button>

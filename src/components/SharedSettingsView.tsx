@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, User, Package, LogOut, MapPin, Check } from 'lucide-react';
 import { apiGet, apiPut, apiDelete } from '../lib/apiClient';
+import { useToast } from '../context/ToastContext';
 import CustomerAddressModal from './CustomerAddressModal';
 
 interface SharedSettingsViewProps {
@@ -45,6 +46,7 @@ export default function SharedSettingsView({
   onSelectDeliveryLocation
 }: SharedSettingsViewProps) {
   const [accountTab, setAccountTab] = useState<'profile' | 'orders' | 'addresses' | 'refunds'>(initialTab);
+  const { showSuccess, showError } = useToast();
 
   useEffect(() => {
     if (initialTab) {
@@ -91,7 +93,7 @@ export default function SharedSettingsView({
         window.location.href = '/';
       } else {
         console.error(e);
-        alert('Failed to revoke session');
+        showError('Failed to revoke session');
       }
     }
   };
@@ -137,10 +139,10 @@ export default function SharedSettingsView({
         email: editEmail,
         phone: editPhone
       });
-      alert('Profile updated successfully');
+      showSuccess('Profile updated successfully');
     } catch (e) {
       console.error(e);
-      alert('Failed to update profile');
+      showError('Failed to update profile');
     } finally {
       setIsSaving(false);
     }
@@ -156,7 +158,7 @@ export default function SharedSettingsView({
       <div className="flex items-center gap-3 shrink-0 mb-2">
         <button
           onClick={onBack}
-          className="p-2 rounded-xl bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 text-slate-500 dark:text-slate-300 hover:text-slate-900 hover:bg-white dark:hover:text-white cursor-pointer transition-all shadow-sm"
+          className="p-2 rounded-xl bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 text-slate-500 dark:text-slate-300 hover:text-slate-900 hover:bg-white dark:hover:text-white cursor-pointer transition-all shadow-sm"
         >
           <X className="w-5 h-5" />
         </button>
@@ -166,7 +168,7 @@ export default function SharedSettingsView({
         </div>
       </div>
 
-      <div className="flex gap-2 mb-4 shrink-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md p-1.5 rounded-xl border border-rose-500/20 dark:border-rose-500/30 overflow-x-auto whitespace-nowrap">
+      <div className="flex gap-2 mb-4 shrink-0 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md p-1.5 rounded-xl border border-rose-500/20 dark:border-rose-500/30 overflow-x-auto whitespace-nowrap">
         <button 
           onClick={() => setAccountTab('profile')}
           className={`flex-1 min-w-[80px] px-3 py-2 rounded-lg text-xs font-bold transition-all shadow-sm ${accountTab === 'profile' ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white' : 'bg-transparent text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
@@ -207,7 +209,7 @@ export default function SharedSettingsView({
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
                 disabled={!!initialName}
-                className={`w-full px-4 py-3 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md text-sm font-medium text-slate-900 dark:text-[#f0ede6] outline-none transition-colors ${!!initialName ? 'opacity-70 cursor-not-allowed' : 'focus:border-rose-500/50'}`}
+                className={`w-full px-4 py-3 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md text-sm font-medium text-slate-900 dark:text-[#f0ede6] outline-none transition-colors ${!!initialName ? 'opacity-70 cursor-not-allowed' : 'focus:border-rose-500/50'}`}
               />
             </div>
             <div className="space-y-1.5">
@@ -217,7 +219,7 @@ export default function SharedSettingsView({
                 value={editEmail}
                 onChange={(e) => setEditEmail(e.target.value)}
                 disabled={!!initialEmail}
-                className={`w-full px-4 py-3 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md text-sm font-medium text-slate-900 dark:text-[#f0ede6] outline-none transition-colors ${!!initialEmail ? 'opacity-70 cursor-not-allowed' : 'focus:border-rose-500/50'}`}
+                className={`w-full px-4 py-3 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md text-sm font-medium text-slate-900 dark:text-[#f0ede6] outline-none transition-colors ${!!initialEmail ? 'opacity-70 cursor-not-allowed' : 'focus:border-rose-500/50'}`}
               />
             </div>
             <div className="space-y-1.5">
@@ -293,7 +295,7 @@ export default function SharedSettingsView({
         {showCustomerTabs && accountTab === 'orders' && (
           <div className="space-y-3">
             {activeOrders.filter((o: any) => !['cancelled', 'rejected', 'cancelled_by_restaurant', 'delivery_failed', 'partially_refunded', 'cancelled_and_refunded'].includes(o.status.toLowerCase())).slice().reverse().map((order: any) => (
-              <div key={order.id} className="p-4 rounded-2xl border border-rose-500/20 dark:border-rose-500/30 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md">
+              <div key={order.id} className="p-4 rounded-2xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md">
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <span className="text-[10px] font-bold text-slate-400 dark:text-slate-300 font-mono block">{order.id.substring(0, 8)}</span>
@@ -330,7 +332,7 @@ export default function SharedSettingsView({
         {showCustomerTabs && accountTab === 'refunds' && (
           <div className="space-y-3">
             {activeOrders.filter((o: any) => ['cancelled', 'rejected', 'cancelled_by_restaurant', 'delivery_failed', 'partially_refunded', 'cancelled_and_refunded'].includes(o.status.toLowerCase())).slice().reverse().map((order: any) => (
-              <div key={order.id} className="p-4 rounded-2xl border border-rose-500/20 dark:border-rose-500/30 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md">
+              <div key={order.id} className="p-4 rounded-2xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md">
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <span className="text-[10px] font-bold text-slate-400 dark:text-slate-300 font-mono block">{order.id}</span>
@@ -362,7 +364,7 @@ export default function SharedSettingsView({
               </div>
             ))}
             {activeOrders.length === 0 && (
-              <div className="text-center py-10 bg-white/40 dark:bg-slate-900/40 rounded-2xl border border-rose-500/20 dark:border-rose-500/30">
+              <div className="text-center py-10 bg-white/20 dark:bg-slate-900/20 rounded-2xl border border-rose-500/20 dark:border-rose-500/30">
                 <Package className="w-10 h-10 text-slate-300 mx-auto mb-3" />
                 <p className="text-sm font-bold text-slate-500 dark:text-slate-300">No orders yet</p>
               </div>
@@ -377,7 +379,7 @@ export default function SharedSettingsView({
                 {savedAddresses.map((addr: any) => (
                   <div
                     key={addr.id}
-                    className="flex items-start gap-3 p-4 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md"
+                    className="flex items-start gap-3 p-4 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md"
                   >
                     <div className="w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-500/10 flex items-center justify-center shrink-0">
                       <MapPin className="w-5 h-5 text-rose-500" />
@@ -395,7 +397,7 @@ export default function SharedSettingsView({
                 ))}
               </div>
             ) : (
-              <div className="text-center py-10 bg-white/40 dark:bg-slate-900/40 rounded-2xl border border-rose-500/20 dark:border-rose-500/30">
+              <div className="text-center py-10 bg-white/20 dark:bg-slate-900/20 rounded-2xl border border-rose-500/20 dark:border-rose-500/30">
                 <MapPin className="w-10 h-10 text-slate-300 mx-auto mb-3" />
                 <p className="text-sm font-bold text-slate-500 dark:text-slate-300">No saved addresses</p>
               </div>

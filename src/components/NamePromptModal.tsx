@@ -28,7 +28,7 @@ export default function NamePromptModal({ theme, onSubmit }: NamePromptModalProp
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" />
+      <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-md" />
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -59,7 +59,7 @@ export default function NamePromptModal({ theme, onSubmit }: NamePromptModalProp
             </label>
             <div className={`flex items-center border rounded-xl overflow-hidden focus-within:border-orange-500 transition-colors ${
               theme === 'dark'
-                ? 'bg-slate-900/50 border-slate-700'
+                ? 'bg-slate-900/20 border-slate-700'
                 : 'bg-slate-50 border-slate-200'
             }`}>
               <div className="px-4 text-slate-400">
@@ -87,7 +87,7 @@ export default function NamePromptModal({ theme, onSubmit }: NamePromptModalProp
             </label>
             <div className={`flex items-center border rounded-xl overflow-hidden focus-within:border-orange-500 transition-colors ${
               theme === 'dark'
-                ? 'bg-slate-900/50 border-slate-700'
+                ? 'bg-slate-900/20 border-slate-700'
                 : 'bg-slate-50 border-slate-200'
             }`}>
               <div className="px-4 text-slate-400">

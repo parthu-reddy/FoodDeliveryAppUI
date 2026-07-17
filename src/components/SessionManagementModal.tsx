@@ -109,7 +109,7 @@ export default function SessionManagementModal({ isOpen, onClose, sessions, phon
                 <div 
                   key={session.sessionId}
                   className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${
-                    theme === 'dark' ? 'bg-slate-800/50 border-slate-700 hover:border-slate-600' : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                    theme === 'dark' ? 'bg-slate-800/20 border-slate-700 hover:border-slate-600' : 'bg-slate-50 border-slate-200 hover:border-slate-300'
                   }`}
                 >
                   <div className="flex items-center gap-4">

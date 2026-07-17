@@ -50,7 +50,7 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
   }
 
   return (
-    <div className="bg-white/50 dark:bg-slate-900/40 border border-rose-500/20 dark:border-rose-500/30 rounded-[2rem] p-5 shadow-sm animate-fade-in">
+    <div className="bg-white/20 dark:bg-slate-900/20 border border-rose-500/20 dark:border-rose-500/30 rounded-[2rem] p-5 shadow-sm animate-fade-in">
       <div className="flex items-center gap-2 text-rose-500 mb-4">
         <Sparkles className="w-5 h-5 animate-pulse" />
         <h4 className="font-extrabold text-sm tracking-tight uppercase">New Brand Registration</h4>
@@ -68,7 +68,7 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
           <label className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">Brand Name</label>
           <input
             type="text" required value={name} onChange={e => setName(e.target.value)}
-            className="w-full bg-white dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-rose-500/50"
+            className="w-full bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-rose-500/50"
             placeholder="e.g. KFC"
           />
         </div>
@@ -77,21 +77,21 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
             <label className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">GSTIN</label>
             <input
               type="text" required minLength={15} maxLength={15} value={gstin} onChange={e => setGstin(e.target.value)}
-              className="w-full bg-white dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-rose-500/50"
+              className="w-full bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-rose-500/50"
             />
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">PAN</label>
             <input
               type="text" required minLength={10} maxLength={10} value={pan} onChange={e => setPan(e.target.value)}
-              className="w-full bg-white dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-rose-500/50"
+              className="w-full bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-rose-500/50"
             />
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">CIN</label>
             <input
               type="text" required minLength={21} maxLength={21} value={cin} onChange={e => setCin(e.target.value)}
-              className="w-full bg-white dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-rose-500/50"
+              className="w-full bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-rose-500/50"
             />
           </div>
         </div>
@@ -100,14 +100,14 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
             <label className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">Bank Account #</label>
             <input
               type="text" required value={bankAccount} onChange={e => setBankAccount(e.target.value)}
-              className="w-full bg-white dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-rose-500/50"
+              className="w-full bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-rose-500/50"
             />
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">IFSC Code</label>
             <input
               type="text" required minLength={11} maxLength={11} value={ifsc} onChange={e => setIfsc(e.target.value)}
-              className="w-full bg-white dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-rose-500/50"
+              className="w-full bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-rose-500/50"
             />
           </div>
         </div>

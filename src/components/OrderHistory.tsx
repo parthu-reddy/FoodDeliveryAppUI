@@ -2,11 +2,13 @@ import React, { useState, useMemo } from 'react';
 import { Calendar, Search, Filter, ChevronLeft, ChevronRight, Package, DollarSign, Clock } from 'lucide-react';
 import { Order } from '../types';
 import { apiPost } from '../lib/apiClient';
+import { useToast } from '../context/ToastContext';
 
 export function OrderHistory({ orders }: { orders: Order[] }) {
   const [dateFilter, setDateFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 100;
+  const { showSuccess, showError } = useToast();
 
   const filteredOrders = useMemo(() => {
     let filtered = orders.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
@@ -37,7 +39,7 @@ export function OrderHistory({ orders }: { orders: Order[] }) {
   };
 
   return (
-    <div className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 p-5 sm:p-8 rounded-[2rem] shadow-sm">
+    <div className="bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 p-5 sm:p-8 rounded-[2rem] shadow-sm">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h4 className="font-extrabold text-lg tracking-tight uppercase font-sans text-slate-800 dark:text-[#f0ede6] flex items-center gap-2">
@@ -57,7 +59,7 @@ export function OrderHistory({ orders }: { orders: Order[] }) {
                 setDateFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="pl-9 pr-4 py-2 bg-white dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 outline-none w-full sm:w-auto"
+              className="pl-9 pr-4 py-2 bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 outline-none w-full sm:w-auto"
             />
           </div>
           {dateFilter && (
@@ -74,11 +76,11 @@ export function OrderHistory({ orders }: { orders: Order[] }) {
         </div>
       </div>
 
-      <div className="bg-white/80 dark:bg-slate-950/80 rounded-2xl border border-rose-500/20 dark:border-rose-500/30 overflow-hidden">
+      <div className="bg-white/20 dark:bg-slate-950/20 rounded-2xl border border-rose-500/20 dark:border-rose-500/30 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-rose-500/20 dark:border-rose-500/30 bg-slate-50/50 dark:bg-slate-900/50 text-[10px] uppercase font-extrabold text-slate-500 dark:text-slate-300 tracking-wider">
+              <tr className="border-b border-rose-500/20 dark:border-rose-500/30 bg-slate-50/50 dark:bg-slate-900/20 text-[10px] uppercase font-extrabold text-slate-500 dark:text-slate-300 tracking-wider">
                 <th className="p-4 pl-6 whitespace-nowrap">Order ID</th>
                 <th className="p-4 whitespace-nowrap">Date & Time</th>
                 <th className="p-4 whitespace-nowrap">Customer</th>
@@ -91,7 +93,7 @@ export function OrderHistory({ orders }: { orders: Order[] }) {
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50 text-sm">
               {paginatedOrders.length > 0 ? (
                 paginatedOrders.map(order => (
-                  <tr key={order.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
+                  <tr key={order.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/20 transition-colors">
                     <td className="p-4 pl-6 font-mono text-xs text-slate-600 dark:text-[#f0ede6]">
                       {order.id.slice(0, 8)}...
                     </td>
@@ -135,10 +137,10 @@ export function OrderHistory({ orders }: { orders: Order[] }) {
                            try {
                              // Assuming paymentId is same as order.id or we pass order.id as a fallback
                              await apiPost(`/api/v1/payments/${order.id}/refund`, { amount: order.total });
-                             alert('Refund requested successfully.');
+                             showSuccess('Refund requested successfully.');
                            } catch (e) {
                              console.error(e);
-                             alert('Refund request failed.');
+                             showError('Refund request failed.');
                            }
                         }}
                         className="text-xs font-bold text-rose-500 hover:text-rose-600 underline"
@@ -173,7 +175,7 @@ export function OrderHistory({ orders }: { orders: Order[] }) {
             <button
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="p-2 rounded-lg bg-white dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 text-slate-600 dark:text-[#f0ede6] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all"
+              className="p-2 rounded-lg bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 text-slate-600 dark:text-[#f0ede6] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -193,7 +195,7 @@ export function OrderHistory({ orders }: { orders: Order[] }) {
                     className={`w-8 h-8 rounded-lg text-xs font-bold transition-colors ${
                       currentPage === pageNum
                         ? 'bg-emerald-500 text-white'
-                        : 'bg-white dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 text-slate-600 dark:text-[#f0ede6] hover:bg-slate-50 dark:hover:bg-slate-900'
+                        : 'bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 text-slate-600 dark:text-[#f0ede6] hover:bg-slate-50 dark:hover:bg-slate-900'
                     }`}
                   >
                     {pageNum}
@@ -205,7 +207,7 @@ export function OrderHistory({ orders }: { orders: Order[] }) {
             <button
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="p-2 rounded-lg bg-white dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 text-slate-600 dark:text-[#f0ede6] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all"
+              className="p-2 rounded-lg bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 text-slate-600 dark:text-[#f0ede6] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all"
             >
               <ChevronRight className="w-4 h-4" />
             </button>

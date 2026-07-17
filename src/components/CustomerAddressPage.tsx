@@ -56,7 +56,10 @@ export default function CustomerAddressPage({
         
         map = new maplibregl.Map({
              container: mapContainerRef.current!,
-             style: 'https://api.olamaps.io/tiles/vector/v1/styles/default-light-standard/style.json',
+             style: 'https://api.olamaps.io/styleEditor/v1/styleEdit/styles/53575843-c000-4b22-ac12-5818a67991bd/LowCost',
+             minZoom: 10,
+             maxZoom: 17,
+             interactive: false,
              transformRequest: (url, resourceType) => {
                  if (url.includes('api.olamaps.io')) {
                      return {
@@ -228,7 +231,7 @@ export default function CustomerAddressPage({
       <div className="flex items-center gap-3 shrink-0 mb-4">
         <button
           onClick={() => setView('settings')}
-          className="p-2 rounded-xl bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 text-slate-500 dark:text-slate-300 hover:text-slate-900 hover:bg-white dark:hover:text-white cursor-pointer transition-all"
+          className="p-2 rounded-xl bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 text-slate-500 dark:text-slate-300 hover:text-slate-900 hover:bg-white dark:hover:text-white cursor-pointer transition-all"
         >
           <X className="w-5 h-5" />
         </button>
@@ -284,7 +287,7 @@ export default function CustomerAddressPage({
           </div>
 
           {/* Current Address Details */}
-          <div className="space-y-4 bg-white dark:bg-slate-900/50 p-5 sm:p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm">
+          <div className="space-y-4 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md/50 p-5 sm:p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm">
             <div className="flex gap-4">
                <div className="flex-1 space-y-1.5">
                   <label className="text-xs font-bold font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider">Label</label>

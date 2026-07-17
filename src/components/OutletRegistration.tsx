@@ -3,6 +3,7 @@ import { Plus, Store, CheckCircle, Trash2, Clock, MapPin, Search, Loader, Naviga
 import { apiPost, apiGet } from '../lib/apiClient';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { useToast } from '../context/ToastContext';
 
 interface OutletRegistrationProps {
   onRefresh: () => void;
@@ -28,6 +29,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const { showError } = useToast();
 
   useEffect(() => {
     if (isOpen && mapContainerRef.current && !mapRef.current) {
@@ -35,9 +37,12 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
       
       const map = new maplibregl.Map({
         container: mapContainerRef.current,
-        style: `https://api.olamaps.io/tiles/vector/v1/styles/default-light-standard/style.json?api_key=${apiKey}`,
+        style: `https://api.olamaps.io/styleEditor/v1/styleEdit/styles/53575843-c000-4b22-ac12-5818a67991bd/LowCost?api_key=${apiKey}`,
         center: [parseFloat(lng), parseFloat(lat)],
         zoom: 12,
+        minZoom: 10,
+        maxZoom: 17,
+        interactive: false,
         attributionControl: false,
         transformRequest: (url, resourceType) => {
           if (url.includes('api.olamaps.io')) {
@@ -159,12 +164,12 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
         (error) => {
           console.error("Geolocation error", error);
           setIsSearching(false);
-          alert("Could not get your current location.");
+          showError("Could not get your current location.");
         },
         { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
       );
     } else {
-      alert("Geolocation is not supported by this browser.");
+      showError("Geolocation is not supported by this browser.");
     }
   };
 
@@ -233,7 +238,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
   }
 
   return (
-    <div className="bg-white/50 dark:bg-slate-900/40 border border-rose-500/20 dark:border-rose-500/30 rounded-[2rem] p-5 shadow-sm animate-fade-in">
+    <div className="bg-white/20 dark:bg-slate-900/20 border border-rose-500/20 dark:border-rose-500/30 rounded-[2rem] p-5 shadow-sm animate-fade-in">
       <div className="flex items-center gap-2 text-orange-500 mb-4">
         <Store className="w-5 h-5" />
         <h4 className="font-extrabold text-sm tracking-tight uppercase">New Outlet Registration</h4>
@@ -246,7 +251,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
             required
             value={name}
             onChange={e => setName(e.target.value)}
-            className="w-full bg-white dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+            className="w-full bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
             placeholder="e.g. Bella Italia (Downtown)"
           />
         </div>
@@ -259,7 +264,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
               required
               value={fssai}
               onChange={e => setFssai(e.target.value)}
-              className="w-full bg-white dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+              className="w-full bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
               placeholder="14-digit FSSAI number"
             />
           </div>
@@ -270,7 +275,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
               required
               value={banner}
               onChange={e => setBanner(e.target.value)}
-              className="w-full bg-white dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+              className="w-full bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
             />
           </div>
         </div>
@@ -288,7 +293,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
                 value={searchQuery}
                 onChange={e => handleSearch(e.target.value)}
                 placeholder="Search for an address or landmark..."
-                className="w-full bg-white dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 rounded-xl pl-10 pr-24 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                className="w-full bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-xl pl-10 pr-24 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
               />
               <div className="absolute right-3 top-2.5 flex items-center gap-2">
                 {isSearching ? (
@@ -307,7 +312,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
               </div>
             </div>
             {searchResults.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg max-h-48 overflow-y-auto z-20">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg max-h-48 overflow-y-auto z-20">
                 {searchResults.map((result: any) => (
                   <button
                     key={result.place_id}
@@ -344,7 +349,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
                     if (mapRef.current) mapRef.current.setCenter([newLng, newLat]);
                   }
                 }}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                className="w-full bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
               />
             </div>
             <div className="space-y-1">
@@ -363,7 +368,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
                     if (mapRef.current) mapRef.current.setCenter([newLng, newLat]);
                   }
                 }}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                className="w-full bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
               />
             </div>
           </div>
@@ -386,7 +391,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
           
           <div className="space-y-2">
             {timings.map((timing, index) => (
-              <div key={index} className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900/50 p-2 rounded-xl border border-slate-100 dark:border-slate-800">
+              <div key={index} className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900/20 p-2 rounded-xl border border-slate-100 dark:border-slate-800">
                 <div className="flex-1 grid grid-cols-2 gap-2">
                   <div>
                     <label className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase px-1">Opens</label>
@@ -395,7 +400,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
                       required
                       value={timing.openingTime}
                       onChange={e => updateTiming(index, 'openingTime', e.target.value)}
-                      className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                      className="w-full bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
                     />
                   </div>
                   <div>
@@ -405,7 +410,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
                       required
                       value={timing.closingTime}
                       onChange={e => updateTiming(index, 'closingTime', e.target.value)}
-                      className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                      className="w-full bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
                     />
                   </div>
                 </div>

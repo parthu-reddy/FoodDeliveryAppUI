@@ -68,8 +68,8 @@ export default function OutletShiftEditor({ outlet, onRefresh, onClose }: Outlet
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 dark:bg-slate-950/60 backdrop-blur-sm p-4">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/20 dark:bg-slate-950/20 backdrop-blur-sm p-4">
+      <div className="bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
         <div className="flex justify-between items-center p-4 border-b border-slate-200 dark:border-slate-800">
           <h3 className="font-extrabold text-sm text-slate-800 dark:text-[#f0ede6] flex items-center gap-2">
             <Clock className="w-4 h-4 text-orange-500" />
@@ -101,7 +101,7 @@ export default function OutletShiftEditor({ outlet, onRefresh, onClose }: Outlet
           
           <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
             {timings.map((timing, index) => (
-              <div key={index} className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+              <div key={index} className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950/20 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
                 <div className="flex-1 grid grid-cols-2 gap-3">
                   <div>
                     <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase px-1">Opens</label>
@@ -110,7 +110,7 @@ export default function OutletShiftEditor({ outlet, onRefresh, onClose }: Outlet
                       required
                       value={timing.openingTime}
                       onChange={e => updateTiming(index, 'openingTime', e.target.value)}
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                      className="w-full bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
                     />
                   </div>
                   <div>
@@ -120,7 +120,7 @@ export default function OutletShiftEditor({ outlet, onRefresh, onClose }: Outlet
                       required
                       value={timing.closingTime}
                       onChange={e => updateTiming(index, 'closingTime', e.target.value)}
-                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                      className="w-full bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
                     />
                   </div>
                 </div>

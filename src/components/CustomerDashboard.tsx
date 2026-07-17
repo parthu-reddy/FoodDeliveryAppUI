@@ -94,32 +94,19 @@ export default function CustomerDashboard({
         })
         .catch(console.error);
 
-      // We still need orders and addresses if profile is active
-      let orderInterval: NodeJS.Timeout | null = null;
-      const fetchOrders = () => {
-        apiGet(`/api/v1/orders`)
-          .then(res => {
-            if (res.data) {
-              const mapped = res.data.map((o: any) => ({
-                ...o,
-                status: o.status?.toLowerCase() || ''
-              }));
-              setInternalOrders(mapped);
-            }
-          })
-          .catch(console.error);
-      };
-      fetchOrders();
-      orderInterval = setInterval(fetchOrders, 5000);
-      
-      // Store interval ID on window to clear it later (since this useEffect doesn't easily return a closure with the interval due to other async logic, wait... it can return a cleanup function safely)
-      (window as any).customerOrderInterval = orderInterval;
+      // Fetch all orders once after login
+      apiGet(`/api/v1/orders`)
+        .then(res => {
+          if (res.data) {
+            const mapped = res.data.map((o: any) => ({
+              ...o,
+              status: o.status?.toLowerCase() || ''
+            }));
+            setInternalOrders(mapped);
+          }
+        })
+        .catch(console.error);
         
-      // Fetch addresses - actually they need ID, wait, API gateway handles X-User-Id. 
-      // But previous code was `/api/v1/customers/${profile.id}/addresses`.
-      // Let's keep it as it was if authStore somehow had id, or use the sub/phone.
-      // Wait, profile.id is undefined from authStore. Let's just fetch without id if gateway handles it?
-      // Actually `apiGet('/api/v1/customers/addresses')` is standard. Let's stick to the old code for addresses to not break it:
       if (profile.id) {
         apiGet(`/api/v1/customers/${profile.id}/addresses`)
           .then(res => {
@@ -128,7 +115,9 @@ export default function CustomerDashboard({
           .catch(console.error);
       }
     }
+  }, []);
 
+  useEffect(() => {
     if (deliveryLat && deliveryLng) {
       apiGet(`/api/v1/restaurants/nearby?lat=${deliveryLat}&lng=${deliveryLng}&radius=5.0`)
         .then(res => {
@@ -136,13 +125,42 @@ export default function CustomerDashboard({
         })
         .catch(console.error);
     }
-    
-    return () => {
-      if ((window as any).customerOrderInterval) {
-        clearInterval((window as any).customerOrderInterval);
-      }
-    };
   }, [deliveryLat, deliveryLng]);
+
+  // Smart polling for active orders only (every 60s)
+  useEffect(() => {
+    const activeOrders = internalOrders.filter(o => 
+      ['created', 'preparing', 'out_for_delivery'].includes(o.status?.toLowerCase() || '')
+    );
+    
+    // Stop polling if no active orders
+    if (activeOrders.length === 0) return;
+
+    const intervalId = setInterval(() => {
+      Promise.all(activeOrders.map(o => apiGet(`/api/v1/orders/${o.id}`)))
+        .then(results => {
+          const updatedOrders = results.map(res => res.data).filter(Boolean);
+          if (updatedOrders.length === 0) return;
+          
+          setInternalOrders(prev => {
+            const newOrders = [...prev];
+            let changed = false;
+            updatedOrders.forEach(updated => {
+              updated.status = updated.status?.toLowerCase() || '';
+              const idx = newOrders.findIndex(o => o.id === updated.id);
+              if (idx !== -1 && JSON.stringify(newOrders[idx]) !== JSON.stringify(updated)) {
+                newOrders[idx] = updated;
+                changed = true;
+              }
+            });
+            return changed ? newOrders : prev;
+          });
+        })
+        .catch(console.error);
+    }, 60000);
+
+    return () => clearInterval(intervalId);
+  }, [internalOrders]);
 
   // Pre-cache restaurant and menu images for smoother scrolling (caches 20 restaurants & 20 menu items)
   useEffect(() => {
@@ -676,7 +694,7 @@ export default function CustomerDashboard({
         </AnimatePresence>
 
       {/* 1. Header Area */}
-      <header className="sticky top-0 bg-white/40 dark:bg-white/5 backdrop-blur-xl px-5 py-3 flex items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 z-30 shrink-0 shadow-[0_2px_15px_rgba(0,0,0,0.01)] gap-3">
+      <header className="sticky top-0 bg-white/20 dark:bg-white/5 backdrop-blur-xl px-5 py-3 flex items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 z-30 shrink-0 shadow-[0_2px_15px_rgba(0,0,0,0.01)] gap-3">
         <div className="flex items-center gap-2 sm:gap-3.5 flex-1 min-w-0">
           <LaBouffeLogo showText={false} iconSize="w-8 h-8 shrink-0" textColorClass="text-slate-800 dark:text-[#f0ede6] text-xs" subColorClass="text-rose-500 text-[8px]" />
           <div className="flex h-6 w-[1px] bg-slate-200 dark:bg-slate-800 shrink-0" />
@@ -684,7 +702,7 @@ export default function CustomerDashboard({
             onClick={() => {
               setIsAddressSelectorOpen(true);
             }}
-            className="flex items-center gap-2 min-w-0 flex-1 hover:bg-slate-50 dark:hover:bg-slate-900/50 p-1.5 -ml-1.5 rounded-2xl transition-colors cursor-pointer text-left"
+            className="flex items-center gap-2 min-w-0 flex-1 hover:bg-slate-50 dark:hover:bg-slate-900/20 p-1.5 -ml-1.5 rounded-2xl transition-colors cursor-pointer text-left"
           >
             <div className="w-8 h-8 shrink-0 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500">
               <MapPin className="w-4 h-4 animate-pulse" />
@@ -787,7 +805,7 @@ export default function CustomerDashboard({
                 </p>
               </div>
 
-              <div className="bg-white/40 dark:bg-slate-950/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 p-5 rounded-3xl">
+              <div className="bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 p-5 rounded-3xl">
                 <div className="flex items-center justify-between mb-4 pb-4 border-b border-rose-500/10">
                   <span className="font-bold text-slate-800 dark:text-[#f0ede6]">Digital Invoice</span>
                   <span className="text-xs font-mono text-slate-500">#{currentTrackingOrder.id.substring(0, 8).toUpperCase()}</span>
@@ -861,12 +879,12 @@ export default function CustomerDashboard({
               {isActiveOrder(currentTrackingOrder.status) && !isFailedOrder(currentTrackingOrder.status) ? (
                 <>
               {/* Immersive Delivery map (Vector path simulation) */}
-              <div className="relative w-full h-44 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-3xl overflow-hidden shadow-inner">
-                <OrderTrackingMap order={currentTrackingOrder} />
+              <div className="relative w-full h-44 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-3xl overflow-hidden shadow-inner">
+                <OrderTrackingMap order={currentTrackingOrder} enableLiveTracking={true} />
               </div>
 
               {/* Active Status Display Card */}
-              <div className="bg-white/60 dark:bg-slate-900/50 backdrop-blur-xl border border-rose-500/20 dark:border-rose-500/30 rounded-3xl p-5 shadow-[0_8px_32px_rgba(251,146,60,0.05)] space-y-4">
+              <div className="bg-white/20 dark:bg-slate-900/20 backdrop-blur-xl border border-rose-500/20 dark:border-rose-500/30 rounded-3xl p-5 shadow-[0_8px_32px_rgba(251,146,60,0.05)] space-y-4">
                 <div className="flex justify-between items-start">
                   <div className="space-y-1">
                     <h4 className="font-bold text-lg">
@@ -951,7 +969,7 @@ export default function CustomerDashboard({
                 )}
 
                 {currentTrackingOrder.status !== 'on_hold' && !isFailedOrder(currentTrackingOrder.status) && (
-                  <div className="bg-white/40 dark:bg-slate-950/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 p-4 rounded-2xl flex items-center justify-between">
+                  <div className="bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 p-4 rounded-2xl flex items-center justify-between">
                     <div>
                       <span className="text-[10px] text-slate-500 dark:text-[#f0ede6] font-bold block uppercase font-mono tracking-wider">Secure Delivery Verification</span>
                       <span className="text-sm font-semibold">Share OTP with Rider at delivery</span>
@@ -1000,7 +1018,7 @@ export default function CustomerDashboard({
                             ? 'bg-emerald-500 border-emerald-500 text-slate-950 shadow-[0_0_10px_rgba(16,185,129,0.3)]' 
                             : isCurrent
                               ? 'bg-amber-500 border-amber-500 text-slate-950 shadow-[0_0_10px_rgba(245,158,11,0.3)] ring-4 ring-amber-500/20'
-                              : 'bg-white dark:bg-slate-900 border-rose-500/30 dark:border-rose-500/30 text-slate-400 dark:text-slate-500'
+                              : 'bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border-rose-500/30 dark:border-rose-500/30 text-slate-400 dark:text-slate-500'
                         }`}>
                           {isDone ? <Check className="w-3.5 h-3.5" /> : idx + 1}
                         </div>
@@ -1031,7 +1049,7 @@ export default function CustomerDashboard({
               </div>
               
               {/* Active Order Details */}
-              <div className="bg-white/40 dark:bg-slate-950/40 backdrop-blur-md border border-slate-200/50 dark:border-slate-800/50 p-6 rounded-3xl mt-6">
+              <div className="bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-slate-200/50 dark:border-slate-800/50 p-6 rounded-3xl mt-6">
                 <h3 className="font-bold text-lg text-slate-900 dark:text-[#f0ede6] mb-4">Order Details</h3>
                 {currentTrackingOrder.restaurantName && (
                   <div className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-3 pb-3 border-b border-dashed border-slate-200 dark:border-slate-800">
@@ -1065,7 +1083,7 @@ export default function CustomerDashboard({
 
                 </>
               ) : (
-                <div className="bg-white/60 dark:bg-slate-900/50 backdrop-blur-xl border border-rose-500/20 dark:border-rose-500/30 rounded-3xl p-6 shadow-[0_8px_32px_rgba(251,146,60,0.05)] space-y-6">
+                <div className="bg-white/20 dark:bg-slate-900/20 backdrop-blur-xl border border-rose-500/20 dark:border-rose-500/30 rounded-3xl p-6 shadow-[0_8px_32px_rgba(251,146,60,0.05)] space-y-6">
                   <div className="text-center pb-4 border-b border-rose-500/10 dark:border-slate-800">
                     <div className="inline-flex w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 items-center justify-center mb-3">
                       {currentTrackingOrder.status.toLowerCase() === 'delivered' ? <Check className="w-6 h-6 text-emerald-500" /> : <X className="w-6 h-6 text-red-500" />}
@@ -1153,14 +1171,14 @@ export default function CustomerDashboard({
               />
               <button 
                 onClick={() => setSelectedRestaurant(null)}
-                className="absolute top-4 left-4 p-2.5 rounded-xl bg-slate-950/80 hover:bg-slate-950 text-white backdrop-blur-sm cursor-pointer border border-rose-500/30"
+                className="absolute top-4 left-4 p-2.5 rounded-xl bg-slate-950/20 hover:bg-slate-950 text-white backdrop-blur-sm cursor-pointer border border-rose-500/30"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
             </div>
 
             {/* Restaurant Info Panel */}
-            <div className="p-5 border-b border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/40 backdrop-blur-md space-y-3">
+            <div className="p-5 border-b border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-950/20 backdrop-blur-md space-y-3">
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="text-2xl font-black text-slate-900 dark:text-[#f0ede6] tracking-tight">{selectedRestaurant.name}</h3>
@@ -1200,7 +1218,7 @@ export default function CustomerDashboard({
                         return (
                           <div 
                             key={dish.id}
-                            className="bg-white/40 dark:bg-white/5 border border-rose-500/20 dark:border-rose-500/30 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:bg-white/60 dark:hover:bg-white/10 hover:border-orange-400/30 dark:hover:border-orange-500/50 hover:shadow-[0_8px_30px_rgb(249,115,22,0.1)] dark:hover:shadow-[0_0_30px_rgba(249,115,22,0.15)] backdrop-blur-md rounded-[2rem] p-4 flex gap-4 transition-all duration-300 relative text-left hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] transition-all"
+                            className="bg-white/20 dark:bg-white/5 border border-rose-500/20 dark:border-rose-500/30 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:bg-white/20 dark:hover:bg-white/10 hover:border-orange-400/30 dark:hover:border-orange-500/50 hover:shadow-[0_8px_30px_rgb(249,115,22,0.1)] dark:hover:shadow-[0_0_30px_rgba(249,115,22,0.15)] backdrop-blur-md rounded-[2rem] p-4 flex gap-4 transition-all duration-300 relative text-left hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] transition-all"
                           >
                             <div className="w-20 h-20 rounded-xl bg-transparent overflow-hidden shrink-0">
                               <ImageLoader 
@@ -1249,7 +1267,7 @@ export default function CustomerDashboard({
                                 ) : (
                                   <button
                                     onClick={() => addToCart(dish)}
-                                    className="px-4 py-1.5 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm hover:bg-gradient-to-r hover:from-orange-500 hover:to-amber-500 hover:text-white rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer border border-rose-500/20 dark:border-rose-500/30 hover:border-orange-500 hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] transition-all"
+                                    className="px-4 py-1.5 bg-white/20 dark:bg-slate-800/20 backdrop-blur-sm hover:bg-gradient-to-r hover:from-orange-500 hover:to-amber-500 hover:text-white rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer border border-rose-500/20 dark:border-rose-500/30 hover:border-orange-500 hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] transition-all"
                                   >
                                     <Plus className="w-3.5 h-3.5" /> Add
                                   </button>
@@ -1295,7 +1313,7 @@ export default function CustomerDashboard({
                     className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer border ${
                       (cat === 'All' && !selectedCategory) || selectedCategory === cat
                         ? 'bg-gradient-to-r from-orange-500 to-amber-500 border-transparent text-white shadow-md shadow-orange-500/15'
-                        : 'bg-white/40 dark:bg-white/5 backdrop-blur-sm border-rose-500/20 dark:border-rose-500/30 text-slate-500 dark:text-[#f0ede6] hover:border-orange-500/30 dark:hover:border-orange-500/50 hover:bg-white/60 dark:hover:bg-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)]'
+                        : 'bg-white/20 dark:bg-white/5 backdrop-blur-sm border-rose-500/20 dark:border-rose-500/30 text-slate-500 dark:text-[#f0ede6] hover:border-orange-500/30 dark:hover:border-orange-500/50 hover:bg-white/20 dark:hover:bg-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)]'
                     }`}
                   >
                     {cat}
@@ -1305,7 +1323,7 @@ export default function CustomerDashboard({
             </div>
 
             {/* Search Bar */}
-            <div className="sticky top-[69px] z-20 flex items-center bg-white/40 dark:bg-white/5 border border-rose-500/20 dark:border-rose-500/30 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:bg-white/60 dark:hover:bg-white/10 focus-within:bg-white/60 dark:focus-within:bg-white/10 backdrop-blur-md rounded-[2rem] px-4 py-3 focus-within:border-orange-500/50 dark:focus-within:border-orange-500/50 transition-all hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all">
+            <div className="sticky top-[69px] z-20 flex items-center bg-white/20 dark:bg-white/5 border border-rose-500/20 dark:border-rose-500/30 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:bg-white/20 dark:hover:bg-white/10 focus-within:bg-white/20 dark:focus-within:bg-white/10 backdrop-blur-md rounded-[2rem] px-4 py-3 focus-within:border-orange-500/50 dark:focus-within:border-orange-500/50 transition-all hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all">
               <Search className="w-4.5 h-4.5 text-slate-400 dark:text-slate-300 mr-2 shrink-0" />
               <input
                 type="text"
@@ -1339,7 +1357,7 @@ export default function CustomerDashboard({
                           onAddApiLog({ id: 'catalog', label: `GET /api/v1/restaurants/${restaurant.id}/catalog/items`, method: 'GET' });
                         }
                       }}
-                      className="group flex flex-col rounded-3xl transition-all duration-300 border backdrop-blur-xl relative overflow-hidden cursor-pointer shadow-lg hover:-translate-y-1.5 bg-white/12 hover:bg-white/20 border-white/30 shadow-[0_15px_35px_rgba(0,0,0,0.06)] hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all dark:bg-slate-900/40 dark:hover:bg-slate-900/60 dark:border-rose-500/30 dark:shadow-[0_15px_35px_rgba(0,0,0,0.35)]  text-left"
+                      className="group flex flex-col rounded-3xl transition-all duration-300 border backdrop-blur-xl relative overflow-hidden cursor-pointer shadow-lg hover:-translate-y-1.5 bg-white/12 hover:bg-white/20 border-white/30 shadow-[0_15px_35px_rgba(0,0,0,0.06)] hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all dark:bg-slate-900/20 dark:hover:bg-slate-900/20 dark:border-rose-500/30 dark:shadow-[0_15px_35px_rgba(0,0,0,0.35)]  text-left"
                     >
                       <div className="h-44 w-full relative overflow-hidden bg-transparent">
                         <ImageLoader
@@ -1349,7 +1367,7 @@ export default function CustomerDashboard({
                           referrerPolicy="no-referrer"
                           containerClassName="w-full h-full"
                         />
-                        <div className="absolute top-3 right-3 bg-slate-950/80 backdrop-blur-sm p-1.5 rounded-full text-white/80 hover:text-red-500 border border-rose-500/30">
+                        <div className="absolute top-3 right-3 bg-slate-950/20 backdrop-blur-sm p-1.5 rounded-full text-white/80 hover:text-red-500 border border-rose-500/30">
                           <Heart className="w-4 h-4" />
                         </div>
                       </div>
@@ -1377,7 +1395,7 @@ export default function CustomerDashboard({
               )}
 
               {/* CUSTOMER API INTERACTIVE PLAYGROUND */}
-              <div className="mt-10 border border-rose-500/20 bg-white/50 dark:bg-slate-900/40 backdrop-blur-md rounded-[2rem] overflow-hidden shadow-lg">
+              <div className="mt-10 border border-rose-500/20 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md rounded-[2rem] overflow-hidden shadow-lg">
                 <button
                   onClick={() => setIsApiPlaygroundOpen(!isApiPlaygroundOpen)}
                   className="w-full px-6 py-5 flex items-center justify-between font-black text-sm tracking-wide text-slate-800 dark:text-[#f0ede6] cursor-pointer hover:bg-slate-500/5 transition-colors"
@@ -1427,7 +1445,7 @@ export default function CustomerDashboard({
                             className={`px-3 py-2 rounded-xl border cursor-pointer transition-all flex items-center gap-1.5 ${
                               activePlaygroundTab === t.id
                                 ? 'bg-rose-500 border-transparent text-white shadow-sm shadow-rose-500/10 font-extrabold'
-                                : 'bg-white/40 dark:bg-slate-950/45 border-rose-500/20 dark:border-rose-500/30 text-slate-400 dark:text-slate-300 hover:text-slate-200'
+                                : 'bg-white/20 dark:bg-slate-950/45 border-rose-500/20 dark:border-rose-500/30 text-slate-400 dark:text-slate-300 hover:text-slate-200'
                             }`}
                           >
                             <span className={`text-[8px] font-mono font-black px-1 py-0.2 rounded ${
@@ -1460,7 +1478,7 @@ export default function CustomerDashboard({
                                     type="text"
                                     value={apiAddrLabel}
                                     onChange={(e) => setApiAddrLabel(e.target.value)}
-                                    className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono outline-none focus:border-rose-500 focus:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:focus:shadow-[0_0_12px_rgba(244,63,94,0.5)] transition-all"
+                                    className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono outline-none focus:border-rose-500 focus:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:focus:shadow-[0_0_12px_rgba(244,63,94,0.5)] transition-all"
                                     required
                                   />
                                 </div>
@@ -1471,14 +1489,14 @@ export default function CustomerDashboard({
                                       type="text"
                                       value={apiAddrLat}
                                       onChange={(e) => setApiAddrLat(e.target.value)}
-                                      className="w-full px-2 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono text-center"
+                                      className="w-full px-2 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono text-center"
                                       required
                                     />
                                     <input 
                                       type="text"
                                       value={apiAddrLng}
                                       onChange={(e) => setApiAddrLng(e.target.value)}
-                                      className="w-full px-2 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono text-center"
+                                      className="w-full px-2 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono text-center"
                                       required
                                     />
                                   </div>
@@ -1492,7 +1510,7 @@ export default function CustomerDashboard({
                                     type="text"
                                     value={apiAddrLine1}
                                     onChange={(e) => setApiAddrLine1(e.target.value)}
-                                    className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono outline-none focus:border-rose-500 focus:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:focus:shadow-[0_0_12px_rgba(244,63,94,0.5)] transition-all"
+                                    className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono outline-none focus:border-rose-500 focus:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:focus:shadow-[0_0_12px_rgba(244,63,94,0.5)] transition-all"
                                     required
                                   />
                                 </div>
@@ -1502,7 +1520,7 @@ export default function CustomerDashboard({
                                     type="text"
                                     value={apiAddrLine2}
                                     onChange={(e) => setApiAddrLine2(e.target.value)}
-                                    className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono outline-none focus:border-rose-500 focus:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:focus:shadow-[0_0_12px_rgba(244,63,94,0.5)] transition-all"
+                                    className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono outline-none focus:border-rose-500 focus:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:focus:shadow-[0_0_12px_rgba(244,63,94,0.5)] transition-all"
                                   />
                                 </div>
                               </div>
@@ -1513,7 +1531,7 @@ export default function CustomerDashboard({
                                     type="text"
                                     value={apiCity}
                                     onChange={(e) => setApiCity(e.target.value)}
-                                    className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono outline-none focus:border-rose-500 focus:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:focus:shadow-[0_0_12px_rgba(244,63,94,0.5)] transition-all"
+                                    className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono outline-none focus:border-rose-500 focus:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:focus:shadow-[0_0_12px_rgba(244,63,94,0.5)] transition-all"
                                     required
                                   />
                                 </div>
@@ -1523,7 +1541,7 @@ export default function CustomerDashboard({
                                     type="text"
                                     value={apiState}
                                     onChange={(e) => setApiState(e.target.value)}
-                                    className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono outline-none focus:border-rose-500 focus:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:focus:shadow-[0_0_12px_rgba(244,63,94,0.5)] transition-all"
+                                    className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono outline-none focus:border-rose-500 focus:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:focus:shadow-[0_0_12px_rgba(244,63,94,0.5)] transition-all"
                                     required
                                   />
                                 </div>
@@ -1533,7 +1551,7 @@ export default function CustomerDashboard({
                                     type="text"
                                     value={apiZipCode}
                                     onChange={(e) => setApiZipCode(e.target.value)}
-                                    className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono outline-none focus:border-rose-500 focus:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:focus:shadow-[0_0_12px_rgba(244,63,94,0.5)] transition-all"
+                                    className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono outline-none focus:border-rose-500 focus:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:focus:shadow-[0_0_12px_rgba(244,63,94,0.5)] transition-all"
                                     required
                                   />
                                 </div>
@@ -1560,7 +1578,7 @@ export default function CustomerDashboard({
                                 <select 
                                   value={apiAvailRest}
                                   onChange={(e) => setApiAvailRest(e.target.value)}
-                                  className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono outline-none"
+                                  className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono outline-none"
                                 >
                                   {restaurants.map(r => (
                                     <option key={r.id} value={r.id}>{r.name}</option>
@@ -1575,7 +1593,7 @@ export default function CustomerDashboard({
                                     type="text"
                                     value={apiAvailLat}
                                     onChange={(e) => setApiAvailLat(e.target.value)}
-                                    className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono"
+                                    className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono"
                                     required
                                   />
                                 </div>
@@ -1585,7 +1603,7 @@ export default function CustomerDashboard({
                                     type="text"
                                     value={apiAvailLng}
                                     onChange={(e) => setApiAvailLng(e.target.value)}
-                                    className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono"
+                                    className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono"
                                     required
                                   />
                                 </div>
@@ -1614,7 +1632,7 @@ export default function CustomerDashboard({
                                     type="text"
                                     value={apiNearLat}
                                     onChange={(e) => setApiNearLat(e.target.value)}
-                                    className="w-full px-2 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono"
+                                    className="w-full px-2 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono"
                                     required
                                   />
                                 </div>
@@ -1624,7 +1642,7 @@ export default function CustomerDashboard({
                                     type="text"
                                     value={apiNearLng}
                                     onChange={(e) => setApiNearLng(e.target.value)}
-                                    className="w-full px-2 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono"
+                                    className="w-full px-2 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono"
                                     required
                                   />
                                 </div>
@@ -1634,7 +1652,7 @@ export default function CustomerDashboard({
                                     type="text"
                                     value={apiNearRadius}
                                     onChange={(e) => setApiNearRadius(e.target.value)}
-                                    className="w-full px-2 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono text-center"
+                                    className="w-full px-2 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono text-center"
                                     required
                                   />
                                 </div>
@@ -1670,7 +1688,7 @@ export default function CustomerDashboard({
                                       setIsSseActive(false);
                                       setSseTicks([]);
                                     }}
-                                    className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono outline-none"
+                                    className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono outline-none"
                                   >
                                     {activeOrders.map(o => (
                                       <option key={o.id} value={o.id}>Order #{o.id} ({o.restaurantName})</option>
@@ -1725,7 +1743,7 @@ export default function CustomerDashboard({
                                   <select 
                                     value={apiDelayOrderId}
                                     onChange={(e) => setApiDelayOrderId(e.target.value)}
-                                    className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono outline-none"
+                                    className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono outline-none"
                                   >
                                     {activeOrders.map(o => (
                                       <option key={o.id} value={o.id}>Order #{o.id} ({o.restaurantName})</option>
@@ -1740,7 +1758,7 @@ export default function CustomerDashboard({
                                   <select 
                                     value={apiDelayApproved}
                                     onChange={(e) => setApiDelayApproved(e.target.value)}
-                                    className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono outline-none"
+                                    className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono outline-none"
                                   >
                                     <option value="true">APPROVE ETA DELAY & SAVE CODES</option>
                                     <option value="false">REJECT & TRIGGER REDIRECTION</option>
@@ -1752,7 +1770,7 @@ export default function CustomerDashboard({
                                     type="number"
                                     value={apiDelayMinutes}
                                     onChange={(e) => setApiDelayMinutes(e.target.value)}
-                                    className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/40 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono text-center"
+                                    className="w-full px-3 py-2 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono text-center"
                                     min="5"
                                     max="60"
                                     required
@@ -1795,7 +1813,7 @@ export default function CustomerDashboard({
                                 </div>
                                 <div className="space-y-1">
                                   <span className="text-[9px] font-mono text-slate-400 dark:text-slate-300 block">HEADERS DISPATCHED:</span>
-                                  <pre className="text-[9px] font-mono text-slate-400 dark:text-slate-300 p-2 bg-slate-900/60 rounded-xl overflow-x-auto scrollbar-thin max-h-24">
+                                  <pre className="text-[9px] font-mono text-slate-400 dark:text-slate-300 p-2 bg-slate-900/20 rounded-xl overflow-x-auto scrollbar-thin max-h-24">
                                     {JSON.stringify(apiResponseHeaders, null, 2)}
                                   </pre>
                                 </div>
@@ -1851,7 +1869,7 @@ export default function CustomerDashboard({
               <button 
                 key={order.id} 
                 onClick={() => setTrackingOrder(order)}
-                className="shrink-0 w-[85%] sm:w-[340px] snap-center bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl rounded-[20px] shadow-2xl shadow-slate-900/10 dark:shadow-black/40 border border-rose-500/20 dark:border-rose-500/30 p-3.5 text-left cursor-pointer transition-all active:scale-[0.98] hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all"
+                className="shrink-0 w-[85%] sm:w-[340px] snap-center bg-white/20 dark:bg-slate-900/20 backdrop-blur-xl rounded-[20px] shadow-2xl shadow-slate-900/10 dark:shadow-black/40 border border-rose-500/20 dark:border-rose-500/30 p-3.5 text-left cursor-pointer transition-all active:scale-[0.98] hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all"
               >
                 <div className="flex justify-between items-center gap-2">
                   <span className="shrink-0 text-[10px] font-mono font-bold text-slate-600 dark:text-[#f0ede6] bg-slate-200/80 dark:bg-slate-700 px-2 py-0.5 rounded-full">#{order.id.substring(0, 8)}</span>
@@ -1892,7 +1910,7 @@ export default function CustomerDashboard({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/40 backdrop-blur-sm"
+            className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/20 backdrop-blur-sm"
             onClick={() => setIsAddressSelectorOpen(false)}
           >
             <motion.div
@@ -1900,9 +1918,9 @@ export default function CustomerDashboard({
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               onClick={e => e.stopPropagation()}
-              className="w-full sm:max-w-md bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden"
+              className="w-full sm:max-w-md bg-white/20 dark:bg-slate-900/20 backdrop-blur-md rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden"
             >
-              <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 z-10 sticky top-0">
+              <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white/20 dark:bg-slate-900/20 backdrop-blur-md z-10 sticky top-0">
                 <h2 className="font-bold text-lg text-slate-900 dark:text-white">Select Delivery Location</h2>
                 <button onClick={() => setIsAddressSelectorOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full cursor-pointer">
                   <X className="w-5 h-5 text-slate-500" />
@@ -2033,13 +2051,13 @@ export default function CustomerDashboard({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-sm"
           >
             <motion.div
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
-              className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl border border-slate-100 dark:border-slate-800"
+              className="bg-white/20 dark:bg-slate-900/20 backdrop-blur-md rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl border border-slate-100 dark:border-slate-800"
             >
               <div className="w-16 h-16 bg-red-100 dark:bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <MapPinOff className="w-8 h-8 text-red-500" />

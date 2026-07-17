@@ -15,6 +15,7 @@ import OutletRegistration from "./OutletRegistration";
 import BrandRegistration from "./BrandRegistration";
 import OutletShiftEditor from "./OutletShiftEditor";
 import BrandMasterMenu from "./BrandMasterMenu";
+import CategoryTimingsTab from "./CategoryTimingsTab";
 
 import { OrderHistory } from "./OrderHistory";
 
@@ -60,7 +61,7 @@ export default function RestaurantDashboard({
   onToggleTheme,
   onAddApiLog
 }: RestaurantDashboardProps) {
-  // Internal order state — fetched from backend
+
   const [internalOrders, setInternalOrders] = useState<Order[]>([]);
   const activeOrders = externalOrders ?? internalOrders;
 
@@ -131,12 +132,14 @@ export default function RestaurantDashboard({
 
   // Fetch restaurant orders with polling
   useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
+    let timeout: NodeJS.Timeout;
+    let isCancelled = false;
     
     const fetchOrders = () => {
       if (selectedOutletId) {
         apiGet(`/api/v1/restaurants/${selectedOutletId}/fulfillment/orders`)
                     .then(res => {
+            if (isCancelled) return;
             if (res.data) {
               const mapped = res.data.map((o: any) => {
                 let s = o.status?.toLowerCase() || '';
@@ -173,17 +176,22 @@ export default function RestaurantDashboard({
               });
             }
           })
-          .catch(console.error);
+          .catch(console.error)
+          .finally(() => {
+            if (!isCancelled) {
+              timeout = setTimeout(fetchOrders, 3000);
+            }
+          });
       }
     };
 
     // Initial fetch
     fetchOrders();
 
-    // Setup polling every 3 seconds
-    interval = setInterval(fetchOrders, 3000);
-
-    return () => clearInterval(interval);
+    return () => {
+      isCancelled = true;
+      clearTimeout(timeout);
+    };
   }, [selectedOutletId]);
 
   const [menuList, setMenuList] = useState<MenuItem[]>([]);
@@ -614,6 +622,8 @@ export default function RestaurantDashboard({
   const myRestaurantName = outlets.length > 0 
     ? (outlets.find(r => r.id === selectedOutletId)?.name || 'My Restaurant') 
     : 'No Outlet Registered';
+
+  const selectedOutletBrandId = brands.length > 0 ? brands[0].id : null;
 
   return (
     <div className="flex-1 flex flex-col w-full overflow-y-auto overflow-x-hidden min-h-0 bg-transparent text-slate-800 dark:text-[#f0ede6] h-full pb-20">
@@ -1258,38 +1268,81 @@ export default function RestaurantDashboard({
                             </div>
                           </div>
 
-                          <div className="pt-2.5 border-t border-rose-500/20 dark:border-rose-500/30 space-y-2">
-                            {/* Simulator Trigger */}
-                            <button
-                              onClick={() => {
-                                onUpdateOrderStatus(order.id, 'picked_up');
-                                if (onAddApiLog) {
-                                  onAddApiLog({
-                                    id: `api-handover-${Date.now()}`,
-                                    method: 'POST',
-                                    endpoint: `/api/v1/restaurants/${restaurantId}/orders/${order.id}/handover`,
-                                    headers: {
-                                      'Content-Type': 'application/json',
-                                      'Authorization': 'Bearer la-bouffe-jwt-token-restaurant'
-                                    },
-                                    payload: { otp: order.otp },
-                                    response: {
-                                      success: true,
-                                      message: `Order ${order.id} verified with OTP. Handed over to ${order.riderName || 'Rider Alex'}`,
-                                      timestamp: new Date().toISOString()
-                                    },
-                                    status: 200,
-                                    duration: 45,
-                                    correlationId: 'handover-sim-' + Math.random().toString(36).substr(2, 5),
-                                    timestamp: new Date().toISOString()
-                                  });
-                                }
-                              }}
-                              className="w-full py-2 rounded-xl bg-slate-900 hover:bg-black dark:bg-slate-800 dark:hover:bg-slate-750 text-white text-[10px] font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer border border-rose-500/30"
-                            >
-                              <ArrowRight className="w-3.5 h-3.5 text-emerald-500 animate-pulse" />
-                              <span>Simulate Rider Pickup Handover</span>
-                            </button>
+                          </motion.div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* COLUMN 5: Being Delivered (Picked up) */}
+                <div className="w-[85%] xs:w-[310px] sm:w-[350px] shrink-0 snap-center flex flex-col bg-slate-50/50 dark:bg-slate-950/40 border border-purple-500/20 dark:border-purple-500/30 p-4 rounded-3xl min-h-[480px]">
+                  <div className="flex items-center justify-between border-b border-purple-500/20 dark:border-purple-500/30 pb-3 mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+                      <span className="font-extrabold text-xs text-slate-800 dark:text-[#f0ede6] uppercase font-sans tracking-wide">Being Delivered</span>
+                    </div>
+                    <span className="text-[10px] font-black font-mono bg-purple-500/10 text-purple-650 dark:text-purple-400 px-2.5 py-0.5 rounded-full border border-purple-500/20">
+                      {myOrders.filter(o => o.status === 'picked_up').length}
+                    </span>
+                  </div>
+
+                  <div className="flex-1 space-y-3.5 overflow-y-auto h-[500px] scrollbar-thin pr-1">
+                    {myOrders.filter(o => o.status === 'picked_up').length === 0 ? (
+                      <div className="h-full flex flex-col items-center justify-center text-center py-16 px-4 bg-white/40 dark:bg-slate-900/10 border border-dashed border-purple-500/20 dark:border-purple-500/30 rounded-2xl">
+                        <Bike className="w-8 h-8 text-slate-300 dark:text-slate-700 mb-2" />
+                        <p className="text-xs font-bold text-slate-400 dark:text-slate-300">No orders in transit</p>
+                        <p className="text-[10px] text-slate-500 dark:text-slate-300 mt-1 max-w-[180px]">Orders picked up by riders will appear here until delivered.</p>
+                      </div>
+                    ) : (
+                      myOrders.filter(o => o.status === 'picked_up').slice().reverse().map(order => (
+                        <motion.div 
+                          key={order.id}
+                          layoutId={`card-${order.id}`}
+                          className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-purple-500/20 dark:border-purple-500/30 p-4 rounded-2xl shadow-sm space-y-3.5 relative overflow-hidden ring-1 ring-purple-500/10"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <span className="text-xs font-mono font-bold text-purple-500">#{order.id.substring(0, 8)}</span>
+                              <span className="text-[10px] text-slate-400 dark:text-slate-300 font-medium block">{order.timestamp}</span>
+                            </div>
+                            <span className="text-[9px] font-mono font-black px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-200/60 dark:border-purple-500/30 shadow-[0_0_12px_rgba(168,85,247,0.4)] dark:shadow-[0_0_12px_rgba(168,85,247,0.5)] uppercase tracking-wider">
+                              PICKED UP
+                            </span>
+                          </div>
+
+                          {/* Rider Assignments Info */}
+                          <div className="text-[11px] bg-slate-50 dark:bg-slate-950/40 p-2.5 rounded-xl border border-purple-500/20 dark:border-purple-500/30 space-y-1.5">
+                            <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-300 border-b border-purple-500/20 pb-1">
+                              <span>COURIER STATUS</span>
+                              <span className="font-bold flex items-center gap-0.5 text-indigo-400">
+                                <span className="w-1 h-1 rounded-full bg-indigo-500 animate-ping" />
+                                IN TRANSIT
+                              </span>
+                            </div>
+                            {order.riderName && (
+                              <div className="flex items-center gap-2 mt-2">
+                                <div className="w-7 h-7 rounded-full bg-indigo-500/15 flex items-center justify-center text-indigo-550">
+                                  <Bike className="w-3.5 h-3.5" />
+                                </div>
+                                <div>
+                                  <p className="font-bold text-slate-750 dark:text-[#f0ede6] leading-none">{order.riderName}</p>
+                                  <span className="text-[10px] text-slate-500 dark:text-slate-300 font-mono mt-0.5 block">{order.riderPhone}</span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Dishes List Summary */}
+                          <div className="space-y-1">
+                            <span className="text-[9px] text-slate-400 dark:text-slate-300 font-extrabold uppercase font-mono">Dishes ({order.items.length})</span>
+                            <div className="space-y-1 max-h-[80px] overflow-y-auto scrollbar-thin pl-1">
+                              {order.items.map((cartItem: any, idx: number) => (
+                                <div key={cartItem.item?.id || idx} className="flex justify-between text-[11px]">
+                                  <span className="text-slate-500 dark:text-slate-350 truncate max-w-[130px]">{cartItem.item?.name || cartItem.name || 'Item'}</span>
+                                  <span className="text-slate-400 dark:text-slate-300 font-mono font-bold pr-1">{cartItem.quantity || 1}x</span>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         </motion.div>
                       ))
@@ -1318,7 +1371,9 @@ export default function RestaurantDashboard({
 
             <div className="space-y-3">
               {menuList.map(dish => {
-                const available = stockStatus[`${selectedOutletId}_${dish.id}`] !== false;
+                const available = stockStatus[`${selectedOutletId}_${dish.id}`] !== undefined 
+                    ? stockStatus[`${selectedOutletId}_${dish.id}`] 
+                    : dish.isAvailable !== false;
                 return (
                   <div 
                     key={dish.id} 
@@ -1326,7 +1381,7 @@ export default function RestaurantDashboard({
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-200 dark:bg-slate-800 shrink-0">
-                        <img src={dish.image} alt={dish.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        <img src={dish.imageUrl || dish.image} alt={dish.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                       </div>
                       <div>
                         <h5 className="font-bold text-sm">{dish.name}</h5>
@@ -1509,18 +1564,39 @@ export default function RestaurantDashboard({
                     )}
                   </div>
                 </div>
+
+                {/* Moved Brand Category Timings here */}
+                {selectedOutletId && selectedOutletBrandId && (
+                  <div className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-md border border-indigo-500/20 dark:border-indigo-500/30 p-6 rounded-[2rem] shadow-sm mt-6">
+                    <h5 className="font-extrabold text-xs text-slate-800 dark:text-[#f0ede6] uppercase tracking-wider mb-4 border-b border-indigo-500/20 dark:border-indigo-500/30 pb-3">
+                      Brand Global Category Availability Settings
+                    </h5>
+                    <CategoryTimingsTab outletId={selectedOutletId} brandId={selectedOutletBrandId} level="brand" />
+                  </div>
+                )}
               </div>
             )}
             {settingsTab === "menu-editor" && (
-              <OutletMenuEditor
-                restaurantId={selectedOutletId || restaurantId}
-                brandId={brands.length > 0 ? brands[0].id : ''}
-                menuList={menuList}
-                onRefresh={loadData}
-              />
+              <div className="space-y-6">
+                <OutletMenuEditor
+                  restaurantId={selectedOutletId || restaurantId}
+                  brandId={brands.length > 0 ? brands[0].id : ''}
+                  menuList={menuList}
+                  onRefresh={loadData}
+                />
+                
+                {selectedOutletId && selectedOutletBrandId && (
+                  <div className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-md border border-indigo-500/20 dark:border-indigo-500/30 p-6 rounded-[2rem] shadow-sm mt-6">
+                    <h5 className="font-extrabold text-xs text-slate-800 dark:text-[#f0ede6] uppercase tracking-wider mb-4 border-b border-indigo-500/20 dark:border-indigo-500/30 pb-3">
+                      Outlet Specific Category Availability Settings
+                    </h5>
+                    <CategoryTimingsTab outletId={selectedOutletId} brandId={selectedOutletBrandId} level="outlet" />
+                  </div>
+                )}
+              </div>
             )}
-            {settingsTab === "history" && (
-              <div className="space-y-6 animate-fade-in">
+            {settingsTab === "history" && selectedOutletId && (
+              <div className="animate-fade-in bg-white/40 dark:bg-slate-900/40 p-6 rounded-3xl border border-emerald-500/20 dark:border-emerald-500/30 backdrop-blur-md shadow-sm">
                 <OrderHistory orders={historyOrders} />
               </div>
             )}

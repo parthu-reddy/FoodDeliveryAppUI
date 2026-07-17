@@ -38,7 +38,7 @@ export default function CustomerCartDrawer({
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed bottom-0 sm:bottom-auto sm:top-1/2 left-0 right-0 sm:-translate-y-1/2 max-w-[412px] mx-auto bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border-t border-rose-500/20 dark:border-rose-500/30 rounded-t-[32px] sm:rounded-[32px] p-6 pb-8 z-50 shadow-2xl space-y-5"
+              className="fixed bottom-0 sm:bottom-auto sm:top-1/2 left-0 right-0 sm:-translate-y-1/2 max-w-[412px] mx-auto bg-white/20 dark:bg-slate-950/20 backdrop-blur-2xl border-t border-rose-500/20 dark:border-rose-500/30 rounded-t-[32px] sm:rounded-[32px] p-6 pb-8 z-50 shadow-2xl space-y-5"
             >
               <div className="flex justify-between items-center">
                 <div>
@@ -97,7 +97,7 @@ export default function CustomerCartDrawer({
               </div>
 
               {/* Address indicator */}
-              <div className="p-3 bg-white/40 dark:bg-slate-900/45 backdrop-blur-sm border border-rose-500/20 dark:border-rose-500/30 rounded-xl space-y-1">
+              <div className="p-3 bg-white/20 dark:bg-slate-900/45 backdrop-blur-sm border border-rose-500/20 dark:border-rose-500/30 rounded-xl space-y-1">
                 <span className="text-[10px] text-slate-500 dark:text-[#f0ede6] font-bold block uppercase font-mono">Delivering To</span>
                 <input 
                   type="text" 

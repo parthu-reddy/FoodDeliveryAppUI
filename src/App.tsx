@@ -8,6 +8,7 @@ import DeliveryDashboard from './components/DeliveryDashboard';
 import AdminPortal from './components/AdminPortal';
 import { getUserProfile } from './lib/tokenStore';
 import { logout as authLogout } from './lib/authStore';
+import { ToastProvider } from './context/ToastContext';
 
 export default function App() {
   // Initialize auth state SYNCHRONOUSLY from localStorage.
@@ -45,7 +46,8 @@ export default function App() {
   };
 
   return (
-    <div className={`flex-1 flex flex-col overflow-hidden relative w-full h-[100dvh] ${m3Theme === 'dark' ? 'dark text-[#f0ede6]' : 'text-slate-900'}`}>
+    <ToastProvider>
+      <div className={`flex-1 flex flex-col overflow-hidden relative w-full h-[100dvh] ${m3Theme === 'dark' ? 'dark text-[#f0ede6]' : 'text-slate-900'}`}>
       {!role ? (
         <div className="w-full h-full flex-1 flex flex-col overflow-hidden relative ">
           <CinematicFoodBackground theme={m3Theme} />
@@ -116,5 +118,6 @@ export default function App() {
         </div>
       )}
     </div>
+    </ToastProvider>
   );
 }

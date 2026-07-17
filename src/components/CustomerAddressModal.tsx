@@ -1,10 +1,10 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Search, MapPin, Loader, Navigation } from 'lucide-react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { apiPost, apiGet } from '../lib/apiClient';
+import { useToast } from '../context/ToastContext';
 
 export default function CustomerAddressModal({
   isAddressModalOpen,
@@ -35,6 +35,7 @@ export default function CustomerAddressModal({
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const { showError } = useToast();
 
   const handleSearch = async (query: string) => {
     setAddressSearchQuery(query);
@@ -133,12 +134,12 @@ export default function CustomerAddressModal({
         (error) => {
           console.error("Geolocation error", error);
           setIsSearching(false);
-          alert("Could not get your current location.");
+          showError("Could not get your current location.");
         },
         { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
       );
     } else {
-      alert("Geolocation is not supported by this browser.");
+      showError("Geolocation is not supported by this browser.");
     }
   };
 
@@ -167,9 +168,12 @@ export default function CustomerAddressModal({
       
       const map = new maplibregl.Map({
         container: mapContainerRef.current,
-        style: `https://api.olamaps.io/tiles/vector/v1/styles/default-light-standard/style.json?api_key=${apiKey}`,
+        style: `https://api.olamaps.io/styleEditor/v1/styleEdit/styles/53575843-c000-4b22-ac12-5818a67991bd/LowCost?api_key=${apiKey}`,
         center: [parseFloat(lng), parseFloat(lat)],
         zoom: 12,
+        minZoom: 10,
+        maxZoom: 17,
+        interactive: false,
         attributionControl: false,
         transformRequest: (url) => {
           if (url.includes('api.olamaps.io') && !url.includes('api_key=')) {
@@ -208,7 +212,7 @@ export default function CustomerAddressModal({
     <>
       {/* ------------------- ADDRESS MODAL ------------------- */}
       {isAddressModalOpen && (
-        <div className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-[2rem] p-5 shadow-sm animate-fade-in flex flex-col space-y-4">
+        <div className="bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-[2rem] p-5 shadow-sm animate-fade-in flex flex-col space-y-4">
               <div className="flex justify-between items-center shrink-0 mb-4">
                 <div>
                   <h4 className="font-bold text-lg text-slate-900 dark:text-[#f0ede6]">Delivery Location</h4>
@@ -277,7 +281,7 @@ export default function CustomerAddressModal({
 
                 {/* Maplibre Map */}
                 <div ref={mapContainerRef} className="relative w-full h-48 rounded-2xl overflow-hidden shrink-0 border border-rose-500/20 dark:border-rose-500/30">
-                  <div className="absolute bottom-3 inset-x-0 mx-auto w-fit bg-white/90 dark:bg-slate-900/90 backdrop-blur text-xs font-bold px-3 py-1.5 rounded-full shadow-sm text-slate-700 dark:text-[#f0ede6] z-10 pointer-events-none">
+                  <div className="absolute bottom-3 inset-x-0 mx-auto w-fit bg-white/20 dark:bg-slate-900/20 backdrop-blur text-xs font-bold px-3 py-1.5 rounded-full shadow-sm text-slate-700 dark:text-[#f0ede6] z-10 pointer-events-none">
                     Drag pin to move
                   </div>
                 </div>

@@ -14,6 +14,7 @@ const roleToServiceName = (role: UserRole): string => {
     case 'customer': return 'customer';
     case 'restaurant': return 'restaurant';
     case 'delivery': return 'delivery';
+    case 'admin': return 'admin';
     default: return 'customer';
   }
 };
@@ -237,8 +238,8 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
         <div 
           className={`sticky top-0 left-0 right-0 z-30 transition-all duration-300 flex flex-col items-center justify-center text-center pb-5 px-4 sm:px-6 rounded-b-3xl border-b backdrop-blur-xl ${
             theme === 'dark'
-              ? 'bg-slate-900/50 border-rose-500/30/40 shadow-[0_10px_30px_rgba(0,0,0,0.2)]'
-              : 'bg-white/70 border-white/30 shadow-[0_4px_20px_rgba(0,0,0,0.02)]'
+              ? 'bg-slate-900/20 border-rose-500/30/40 shadow-[0_10px_30px_rgba(0,0,0,0.2)]'
+              : 'bg-white/20 border-white/30 shadow-[0_4px_20px_rgba(0,0,0,0.02)]'
           }`}
           style={{
             paddingTop: 'calc(1.25rem + env(safe-area-inset-top, 16px))'
@@ -250,8 +251,8 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
               onClick={onToggleTheme}
               className={`absolute right-6 sm:right-8 top-1/2 -translate-y-1/2 p-2.5 rounded-xl border backdrop-blur-xl transition-all cursor-pointer z-40 ${
                 theme === 'dark'
-                  ? 'bg-slate-900/50 border-rose-500/30/40 text-amber-400 hover:text-amber-300 shadow-[0_4px_20px_rgba(0,0,0,0.15)]'
-                  : 'bg-white/70 border-white/30 text-indigo-600 hover:text-indigo-800 shadow-sm'
+                  ? 'bg-slate-900/20 border-rose-500/30/40 text-amber-400 hover:text-amber-300 shadow-[0_4px_20px_rgba(0,0,0,0.15)]'
+                  : 'bg-white/20 border-white/30 text-indigo-600 hover:text-indigo-800 shadow-sm'
               }`}
               style={{
                 right: 'calc(1.5rem + env(safe-area-inset-right, 0px))'
@@ -289,7 +290,7 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
             initial={{ opacity: 0, y: -80, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -80, scale: 0.95 }}
-            className="absolute left-4 right-4 max-w-md mx-auto backdrop-blur-2xl bg-white/90 dark:bg-slate-900/90 border border-rose-500/20 dark:border-rose-500/30 text-slate-800 dark:text-[#f0ede6] p-4 rounded-2xl shadow-[0_15px_30px_rgba(249,115,22,0.1)] z-50 flex items-start gap-3 cursor-pointer hover:border-orange-500/50 transition-all hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all"
+            className="absolute left-4 right-4 max-w-md mx-auto backdrop-blur-2xl bg-white/20 dark:bg-slate-900/20 border border-rose-500/20 dark:border-rose-500/30 text-slate-800 dark:text-[#f0ede6] p-4 rounded-2xl shadow-[0_15px_30px_rgba(249,115,22,0.1)] z-50 flex items-start gap-3 cursor-pointer hover:border-orange-500/50 transition-all hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all"
             style={{
               top: 'calc(1rem + env(safe-area-inset-top, 16px))'
             }}
@@ -321,7 +322,7 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
           <button
             onClick={handleBack}
             className={`p-2.5 rounded-xl transition-all border cursor-pointer backdrop-blur-md ${
-              theme === 'dark' ? 'bg-slate-900 border-rose-500/30 text-slate-300 hover:bg-slate-800' : 'bg-white/60 border-rose-500/20 text-slate-600 dark:text-slate-300 hover:bg-white/80'
+              theme === 'dark' ? 'bg-slate-900 border-rose-500/30 text-slate-300 hover:bg-slate-800' : 'bg-white/20 border-rose-500/20 text-slate-600 dark:text-slate-300 hover:bg-white/20'
             }`}
           >
             <ArrowLeft className="w-5 h-5" />
@@ -336,7 +337,7 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
               className={`p-2.5 rounded-xl border transition-all cursor-pointer backdrop-blur-md ${
                 theme === 'dark'
                   ? 'bg-slate-900 border-rose-500/30 text-amber-400 hover:text-amber-300'
-                  : 'bg-white/60 border-rose-500/20 text-indigo-600 hover:bg-white/80'
+                  : 'bg-white/20 border-rose-500/20 text-indigo-600 hover:bg-white/20'
               }`}
               title="Toggle Light/Dark Mode"
             >
@@ -362,14 +363,14 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
               className="pt-4 sm:pt-6 md:pt-8"
             >
               {/* Desktop view: Stable, spacious 3-column grid with deep hover-glow highlights */}
-              <div className="hidden lg:grid lg:grid-cols-3 gap-8 max-w-4xl mx-auto w-full px-4">
+              <div className="hidden lg:grid lg:grid-cols-4 gap-6 max-w-6xl mx-auto w-full px-4">
                 {/* Customer Card */}
                 <button
                   onClick={() => setSelectedRole('customer')}
                   className={`group flex flex-col items-center justify-center text-center p-8 rounded-3xl transition-all duration-300 border backdrop-blur-xl relative overflow-hidden cursor-pointer shadow-lg hover:-translate-y-1.5 min-h-[260px] ${
                     theme === 'dark'
-                      ? 'bg-slate-900/60 hover:bg-slate-900/80 border-rose-500/30/40 shadow-[0_15px_35px_rgba(0,0,0,0.35)] hover:shadow-[0_20px_45px_rgba(249,115,22,0.25)] hover:border-orange-500/40'
-                      : 'bg-white/70 hover:bg-white/90 border-white/30 shadow-[0_15px_35px_rgba(0,0,0,0.06)] hover:shadow-[0_20px_45px_rgba(249,115,22,0.18)] hover:border-orange-400/40'
+                      ? 'bg-slate-900/20 hover:bg-slate-900/20 border-rose-500/30/40 shadow-[0_15px_35px_rgba(0,0,0,0.35)] hover:shadow-[0_20px_45px_rgba(249,115,22,0.25)] hover:border-orange-500/40'
+                      : 'bg-white/20 hover:bg-white/20 border-white/30 shadow-[0_15px_35px_rgba(0,0,0,0.06)] hover:shadow-[0_20px_45px_rgba(249,115,22,0.18)] hover:border-orange-400/40'
                   }`}
                 >
                   <div className="mb-4.5 p-4 rounded-2xl bg-gradient-to-br from-orange-400 to-amber-500 text-white shadow-lg shadow-orange-500/20 transition-transform duration-300 group-hover:scale-110 shrink-0">
@@ -396,8 +397,8 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
                   onClick={() => setSelectedRole('restaurant')}
                   className={`group flex flex-col items-center justify-center text-center p-8 rounded-3xl transition-all duration-300 border backdrop-blur-xl relative overflow-hidden cursor-pointer shadow-lg hover:-translate-y-1.5 min-h-[260px] ${
                     theme === 'dark'
-                      ? 'bg-slate-900/60 hover:bg-slate-900/80 border-rose-500/30/40 shadow-[0_15px_35px_rgba(0,0,0,0.35)] hover:shadow-[0_20px_45px_rgba(239,68,68,0.25)] hover:border-red-500/40'
-                      : 'bg-white/70 hover:bg-white/90 border-white/30 shadow-[0_15px_35px_rgba(0,0,0,0.06)] hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all'
+                      ? 'bg-slate-900/20 hover:bg-slate-900/20 border-rose-500/30/40 shadow-[0_15px_35px_rgba(0,0,0,0.35)] hover:shadow-[0_20px_45px_rgba(239,68,68,0.25)] hover:border-red-500/40'
+                      : 'bg-white/20 hover:bg-white/20 border-white/30 shadow-[0_15px_35px_rgba(0,0,0,0.06)] hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all'
                   }`}
                 >
                   <div className="mb-4.5 p-4 rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-lg shadow-orange-500/20 transition-transform duration-300 group-hover:scale-110 shrink-0">
@@ -424,8 +425,8 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
                   onClick={() => setSelectedRole('delivery')}
                   className={`group flex flex-col items-center justify-center text-center p-8 rounded-3xl transition-all duration-300 border backdrop-blur-xl relative overflow-hidden cursor-pointer shadow-lg hover:-translate-y-1.5 min-h-[260px] ${
                     theme === 'dark'
-                      ? 'bg-slate-900/60 hover:bg-slate-900/80 border-rose-500/30/40 shadow-[0_15px_35px_rgba(0,0,0,0.35)] hover:shadow-[0_20px_45px_rgba(16,185,129,0.25)] hover:border-emerald-500/40'
-                      : 'bg-white/70 hover:bg-white/90 border-white/30 shadow-[0_15px_35px_rgba(0,0,0,0.06)] hover:shadow-[0_20px_45px_rgba(16,185,129,0.18)] hover:border-emerald-400/40'
+                      ? 'bg-slate-900/20 hover:bg-slate-900/20 border-rose-500/30/40 shadow-[0_15px_35px_rgba(0,0,0,0.35)] hover:shadow-[0_20px_45px_rgba(16,185,129,0.25)] hover:border-emerald-500/40'
+                      : 'bg-white/20 hover:bg-white/20 border-white/30 shadow-[0_15px_35px_rgba(0,0,0,0.06)] hover:shadow-[0_20px_45px_rgba(16,185,129,0.18)] hover:border-emerald-400/40'
                   }`}
                 >
                   <div className="mb-4.5 p-4 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-lg shadow-emerald-500/20 transition-transform duration-300 group-hover:scale-110 shrink-0">
@@ -446,6 +447,34 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
                     </p>
                   </div>
                 </button>
+
+                {/* System Admin */}
+                <button
+                  onClick={() => setSelectedRole('admin')}
+                  className={`group flex flex-col items-center justify-center text-center p-8 rounded-3xl transition-all duration-300 border backdrop-blur-xl relative overflow-hidden cursor-pointer shadow-lg hover:-translate-y-1.5 min-h-[260px] ${
+                    theme === 'dark'
+                      ? 'bg-slate-900/20 hover:bg-slate-900/20 border-indigo-500/30/40 shadow-[0_15px_35px_rgba(0,0,0,0.35)] hover:shadow-[0_20px_45px_rgba(99,102,241,0.25)] hover:border-indigo-500/40'
+                      : 'bg-white/20 hover:bg-white/20 border-white/30 shadow-[0_15px_35px_rgba(0,0,0,0.06)] hover:shadow-[0_20px_45px_rgba(99,102,241,0.18)] hover:border-indigo-400/40'
+                  }`}
+                >
+                  <div className="mb-4.5 p-4 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/20 transition-transform duration-300 group-hover:scale-110 shrink-0">
+                    <Shield className="w-7 h-7" />
+                  </div>
+                  <div>
+                    <h3 className={`font-extrabold transition-colors text-lg mb-2 ${
+                      theme === 'dark' 
+                        ? 'text-white group-hover:text-indigo-400' 
+                        : 'text-slate-800 group-hover:text-indigo-600'
+                    }`}>
+                      System Admin
+                    </h3>
+                    <p className={`text-xs leading-relaxed max-w-[210px] mx-auto ${
+                      theme === 'dark' ? 'text-slate-300' : 'text-slate-600 dark:text-slate-300'
+                    }`}>
+                      Manage overall operations, manual assignments, and system settings
+                    </p>
+                  </div>
+                </button>
               </div>
 
               {/* Mobile/Tablet view: Gorgeous Centered Looping Carousel with adjacent card peeks */}
@@ -455,8 +484,8 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
                   onClick={() => setActiveCardIndex((prev) => (prev - 1 + 3) % 3)}
                   className={`absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 p-2 sm:p-2.5 rounded-full border backdrop-blur-xl transition-all cursor-pointer z-30 shadow-md ${
                     theme === 'dark'
-                      ? 'bg-slate-900/60 border-rose-500/30/80 text-white hover:bg-slate-900/90'
-                      : 'bg-white/60 border-rose-500/20 text-slate-700 hover:bg-white/90'
+                      ? 'bg-slate-900/20 border-rose-500/30/80 text-white hover:bg-slate-900/20'
+                      : 'bg-white/20 border-rose-500/20 text-slate-700 hover:bg-white/20'
                   }`}
                   aria-label="Previous card"
                 >
@@ -467,8 +496,8 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
                   onClick={() => setActiveCardIndex((prev) => (prev + 1) % 3)}
                   className={`absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 p-2 sm:p-2.5 rounded-full border backdrop-blur-xl transition-all cursor-pointer z-30 shadow-md ${
                     theme === 'dark'
-                      ? 'bg-slate-900/60 border-rose-500/30/80 text-white hover:bg-slate-900/90'
-                      : 'bg-white/60 border-rose-500/20 text-slate-700 hover:bg-white/90'
+                      ? 'bg-slate-900/20 border-rose-500/30/80 text-white hover:bg-slate-900/20'
+                      : 'bg-white/20 border-rose-500/20 text-slate-700 hover:bg-white/20'
                   }`}
                   aria-label="Next card"
                 >
@@ -505,8 +534,8 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
                           : 'scale-90 opacity-40 z-10'
                       } ${
                         theme === 'dark'
-                          ? 'bg-slate-900/60 border-rose-500/30/40 shadow-[0_15px_35px_rgba(0,0,0,0.35)]'
-                          : 'bg-white/70 border-white/30 shadow-[0_15px_35px_rgba(0,0,0,0.06)]'
+                          ? 'bg-slate-900/20 border-rose-500/30/40 shadow-[0_15px_35px_rgba(0,0,0,0.35)]'
+                          : 'bg-white/20 border-white/30 shadow-[0_15px_35px_rgba(0,0,0,0.06)]'
                       } ${
                         activeCardIndex === 0 
                           ? theme === 'dark'
@@ -543,8 +572,8 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
                           : 'scale-90 opacity-40 z-10'
                       } ${
                         theme === 'dark'
-                          ? 'bg-slate-900/60 border-rose-500/30/40 shadow-[0_15px_35px_rgba(0,0,0,0.35)]'
-                          : 'bg-white/70 border-white/30 shadow-[0_15px_35px_rgba(0,0,0,0.06)]'
+                          ? 'bg-slate-900/20 border-rose-500/30/40 shadow-[0_15px_35px_rgba(0,0,0,0.35)]'
+                          : 'bg-white/20 border-white/30 shadow-[0_15px_35px_rgba(0,0,0,0.06)]'
                       } ${
                         activeCardIndex === 1 
                           ? theme === 'dark'
@@ -581,8 +610,8 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
                           : 'scale-90 opacity-40 z-10'
                       } ${
                         theme === 'dark'
-                          ? 'bg-slate-900/60 border-rose-500/30/40 shadow-[0_15px_35px_rgba(0,0,0,0.35)]'
-                          : 'bg-white/70 border-white/30 shadow-[0_15px_35px_rgba(0,0,0,0.06)]'
+                          ? 'bg-slate-900/20 border-rose-500/30/40 shadow-[0_15px_35px_rgba(0,0,0,0.35)]'
+                          : 'bg-white/20 border-white/30 shadow-[0_15px_35px_rgba(0,0,0,0.06)]'
                       } ${
                         activeCardIndex === 2 
                           ? theme === 'dark'
@@ -609,12 +638,50 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
                         </p>
                       </div>
                     </button>
+
+                    {/* ADMIN CARD */}
+                    <button
+                      onClick={() => activeCardIndex === 3 ? setSelectedRole('admin') : setActiveCardIndex(3)}
+                      className={`shrink-0 w-[250px] group flex flex-col items-center justify-center text-center p-6 rounded-3xl transition-all duration-500 border backdrop-blur-xl relative overflow-hidden cursor-pointer ${
+                        activeCardIndex === 3
+                          ? 'scale-102 opacity-100 z-20'
+                          : 'scale-90 opacity-40 z-10'
+                      } ${
+                        theme === 'dark'
+                          ? 'bg-slate-900/20 border-indigo-500/30/40 shadow-[0_15px_35px_rgba(0,0,0,0.35)]'
+                          : 'bg-white/20 border-white/30 shadow-[0_15px_35px_rgba(0,0,0,0.06)]'
+                      } ${
+                        activeCardIndex === 3 
+                          ? theme === 'dark'
+                            ? 'shadow-[0_20px_45px_rgba(99,102,241,0.25)] border-indigo-500/40'
+                            : 'shadow-[0_20px_45px_rgba(99,102,241,0.18)] border-indigo-400/40'
+                          : ''
+                      }`}
+                    >
+                      <div className="mb-4 p-4 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/20 transition-transform duration-300 group-hover:scale-105 shrink-0">
+                        <Shield className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className={`font-extrabold transition-colors text-base mb-1.5 ${
+                          theme === 'dark' 
+                            ? 'text-white group-hover:text-indigo-400' 
+                            : 'text-slate-800 group-hover:text-indigo-600'
+                        }`}>
+                          System Admin
+                        </h3>
+                        <p className={`text-xs leading-relaxed max-w-[190px] mx-auto ${
+                          theme === 'dark' ? 'text-slate-300' : 'text-slate-600 dark:text-slate-300'
+                        }`}>
+                          Manage overall operations, manual assignments, and system settings
+                        </p>
+                      </div>
+                    </button>
                   </motion.div>
                 </div>
 
                 {/* Mobile/Tablet Carousel Indicators (clickable) */}
                 <div className="flex justify-center items-center gap-2 mt-5">
-                  {[0, 1, 2].map((idx) => (
+                  {[0, 1, 2, 3].map((idx) => (
                     <button 
                       key={idx}
                       onClick={() => setActiveCardIndex(idx)}
@@ -643,12 +710,14 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
                 <span className={`inline-flex items-center gap-1 text-xs font-bold font-mono px-2.5 py-1 rounded-full border ${
                   selectedRole === 'customer' ? 'bg-orange-500/10 text-orange-600 border-orange-500/20' :
                   selectedRole === 'restaurant' ? 'bg-orange-500/10 text-orange-600 border-orange-500/20' :
+                  selectedRole === 'admin' ? 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20' :
                   'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
                 }`}>
                   {selectedRole === 'customer' ? <Utensils className="w-3.5 h-3.5" /> :
                    selectedRole === 'restaurant' ? <Store className="w-3.5 h-3.5" /> :
+                   selectedRole === 'admin' ? <Shield className="w-3.5 h-3.5" /> :
                    <Bike className="w-3.5 h-3.5" />}
-                  {selectedRole === 'customer' ? 'Customer' : selectedRole === 'restaurant' ? 'Restaurant Partner' : 'Delivery Rider'}
+                  {selectedRole === 'customer' ? 'Customer' : selectedRole === 'restaurant' ? 'Restaurant Partner' : selectedRole === 'admin' ? 'System Admin' : 'Delivery Rider'}
                 </span>
                 <h2 className={`text-3xl font-black tracking-tight ${
                   theme === 'dark' ? 'text-white' : 'text-slate-800'
@@ -680,11 +749,11 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
                     }`}>PHONE NUMBER</label>
                     <div className={`flex backdrop-blur-md border rounded-2xl overflow-hidden focus-within:border-orange-500 transition-colors ${
                       theme === 'dark'
-                        ? 'bg-slate-900/40 border-rose-500/30'
-                        : 'bg-white/60 border-rose-500/20'
+                        ? 'bg-slate-900/20 border-rose-500/30'
+                        : 'bg-white/20 border-rose-500/20'
                     }`}>
                       <div className={`px-4 flex items-center border-r font-mono text-sm ${
-                        theme === 'dark' ? 'bg-slate-800/60 text-slate-300 border-rose-500/30' : 'bg-slate-100/60 text-slate-500 dark:text-slate-300 border-rose-500/20'
+                        theme === 'dark' ? 'bg-slate-800/20 text-slate-300 border-rose-500/30' : 'bg-slate-100/60 text-slate-500 dark:text-slate-300 border-rose-500/20'
                       }`}>
                         +91
                       </div>
@@ -726,11 +795,11 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
                     }`}>ENTER SECURE CODE</label>
                     <div className={`flex backdrop-blur-md border rounded-2xl overflow-hidden focus-within:border-orange-500 transition-colors ${
                       theme === 'dark'
-                        ? 'bg-slate-900/40 border-rose-500/30'
-                        : 'bg-white/60 border-rose-500/20'
+                        ? 'bg-slate-900/20 border-rose-500/30'
+                        : 'bg-white/20 border-rose-500/20'
                     }`}>
                       <div className={`px-4 flex items-center border-r ${
-                        theme === 'dark' ? 'bg-slate-800/60 border-rose-500/30' : 'bg-slate-100/60 border-rose-500/20'
+                        theme === 'dark' ? 'bg-slate-800/20 border-rose-500/30' : 'bg-slate-100/60 border-rose-500/20'
                       }`}>
                         <KeyRound className="w-4 h-4 text-orange-500" />
                       </div>
