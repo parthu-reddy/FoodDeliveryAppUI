@@ -64,6 +64,58 @@ export default function SharedSettingsView({
   const [sessions, setSessions] = useState<any[]>([]);
   const [isLoadingSessions, setIsLoadingSessions] = useState(false);
 
+  const [paginatedOrders, setPaginatedOrders] = useState<any[]>([]);
+  const [paginatedRefunds, setPaginatedRefunds] = useState<any[]>([]);
+  const [currentPageOrders, setCurrentPageOrders] = useState(0);
+  const [currentPageRefunds, setCurrentPageRefunds] = useState(0);
+  const [hasMoreOrders, setHasMoreOrders] = useState(false);
+  const [hasMoreRefunds, setHasMoreRefunds] = useState(false);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+  const [isLoadingRefunds, setIsLoadingRefunds] = useState(false);
+  const [hasFetchedOrders, setHasFetchedOrders] = useState(false);
+  const [hasFetchedRefunds, setHasFetchedRefunds] = useState(false);
+
+  const fetchOrders = async (page: number, type: 'active' | 'refunds') => {
+    try {
+      if (type === 'active') setIsLoadingOrders(true);
+      if (type === 'refunds') setIsLoadingRefunds(true);
+      
+      const res = await apiGet(`/api/v1/orders/${type}?page=${page}&size=10`);
+      
+      if (res?.data?.content) {
+        if (type === 'active') {
+          setPaginatedOrders(prev => page === 0 ? res.data.content : [...prev, ...res.data.content]);
+          setHasMoreOrders(!res.data.last);
+          setCurrentPageOrders(page);
+        } else {
+          setPaginatedRefunds(prev => page === 0 ? res.data.content : [...prev, ...res.data.content]);
+          setHasMoreRefunds(!res.data.last);
+          setCurrentPageRefunds(page);
+        }
+      } else if (res?.data && Array.isArray(res.data)) { // fallback
+         if (type === 'active') {
+             setPaginatedOrders(res.data.filter((o: any) => !['cancelled', 'rejected', 'cancelled_by_restaurant', 'delivery_failed', 'partially_refunded', 'cancelled_and_refunded'].includes((o.status||'').toLowerCase())));
+             setHasMoreOrders(false);
+         } else {
+             setPaginatedRefunds(res.data.filter((o: any) => ['cancelled', 'rejected', 'cancelled_by_restaurant', 'delivery_failed', 'partially_refunded', 'cancelled_and_refunded'].includes((o.status||'').toLowerCase())));
+             setHasMoreRefunds(false);
+         }
+      }
+    } catch (e) {
+      console.error(e);
+      showError('Failed to fetch orders');
+    } finally {
+      if (type === 'active') {
+          setIsLoadingOrders(false);
+          setHasFetchedOrders(true);
+      }
+      if (type === 'refunds') {
+          setIsLoadingRefunds(false);
+          setHasFetchedRefunds(true);
+      }
+    }
+  };
+
   const loadSessions = async () => {
     setIsLoadingSessions(true);
     try {
@@ -105,8 +157,12 @@ export default function SharedSettingsView({
   useEffect(() => {
     if (accountTab === 'profile') {
       loadSessions();
+    } else if (accountTab === 'orders' && !hasFetchedOrders) {
+      fetchOrders(0, 'active');
+    } else if (accountTab === 'refunds' && !hasFetchedRefunds) {
+      fetchOrders(0, 'refunds');
     }
-  }, [accountTab]);
+  }, [accountTab, hasFetchedOrders, hasFetchedRefunds]);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -294,7 +350,7 @@ export default function SharedSettingsView({
 
         {showCustomerTabs && accountTab === 'orders' && (
           <div className="space-y-3">
-            {activeOrders.filter((o: any) => !['cancelled', 'rejected', 'cancelled_by_restaurant', 'delivery_failed', 'partially_refunded', 'cancelled_and_refunded'].includes(o.status.toLowerCase())).slice().reverse().map((order: any) => (
+            {paginatedOrders.map((order: any) => (
               <div key={order.id} className="p-4 rounded-2xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md">
                 <div className="flex justify-between items-start mb-2">
                   <div>
@@ -302,7 +358,7 @@ export default function SharedSettingsView({
                     <h5 className="font-bold text-sm text-slate-900 dark:text-[#f0ede6]">{order.restaurantName}</h5>
                   </div>
                   <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:shadow-[0_0_12px_rgba(244,63,94,0.5)] tracking-wider`}>
-                    {order.status.replace(/_/g, ' ')}
+                    {(order.status || '').replace(/_/g, ' ')}
                   </span>
                 </div>
                 <div className="text-xs text-slate-500 dark:text-slate-300 mb-3">
@@ -326,12 +382,31 @@ export default function SharedSettingsView({
                 </button>
               </div>
             ))}
+            {paginatedOrders.length === 0 && !isLoadingOrders && (
+              <div className="text-center py-10 bg-white/20 dark:bg-slate-900/20 rounded-2xl border border-rose-500/20 dark:border-rose-500/30">
+                <Package className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                <p className="text-sm font-bold text-slate-500 dark:text-slate-300">No active orders</p>
+              </div>
+            )}
+            {isLoadingOrders && (
+              <div className="text-center py-4">
+                <p className="text-xs font-bold text-slate-500">Loading orders...</p>
+              </div>
+            )}
+            {hasMoreOrders && !isLoadingOrders && (
+              <button 
+                onClick={() => fetchOrders(currentPageOrders + 1, 'active')}
+                className="w-full py-2.5 rounded-xl border border-rose-500/30 text-rose-500 font-bold text-xs hover:bg-rose-500/10 transition-colors"
+              >
+                Load More Orders
+              </button>
+            )}
           </div>
         )}
 
         {showCustomerTabs && accountTab === 'refunds' && (
           <div className="space-y-3">
-            {activeOrders.filter((o: any) => ['cancelled', 'rejected', 'cancelled_by_restaurant', 'delivery_failed', 'partially_refunded', 'cancelled_and_refunded'].includes(o.status.toLowerCase())).slice().reverse().map((order: any) => (
+            {paginatedRefunds.map((order: any) => (
               <div key={order.id} className="p-4 rounded-2xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md">
                 <div className="flex justify-between items-start mb-2">
                   <div>
@@ -339,7 +414,7 @@ export default function SharedSettingsView({
                     <h5 className="font-bold text-sm text-slate-900 dark:text-[#f0ede6]">{order.restaurantName}</h5>
                   </div>
                   <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:shadow-[0_0_12px_rgba(244,63,94,0.5)] tracking-wider`}>
-                    {order.status.replace(/_/g, ' ')}
+                    {(order.status || '').replace(/_/g, ' ')}
                   </span>
                 </div>
                 <div className="text-xs text-slate-500 dark:text-slate-300 mb-3">
@@ -363,11 +438,24 @@ export default function SharedSettingsView({
                 </button>
               </div>
             ))}
-            {activeOrders.length === 0 && (
+            {paginatedRefunds.length === 0 && !isLoadingRefunds && (
               <div className="text-center py-10 bg-white/20 dark:bg-slate-900/20 rounded-2xl border border-rose-500/20 dark:border-rose-500/30">
                 <Package className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                <p className="text-sm font-bold text-slate-500 dark:text-slate-300">No orders yet</p>
+                <p className="text-sm font-bold text-slate-500 dark:text-slate-300">No refunds found</p>
               </div>
+            )}
+            {isLoadingRefunds && (
+              <div className="text-center py-4">
+                <p className="text-xs font-bold text-slate-500">Loading refunds...</p>
+              </div>
+            )}
+            {hasMoreRefunds && !isLoadingRefunds && (
+              <button 
+                onClick={() => fetchOrders(currentPageRefunds + 1, 'refunds')}
+                className="w-full py-2.5 rounded-xl border border-rose-500/30 text-rose-500 font-bold text-xs hover:bg-rose-500/10 transition-colors"
+              >
+                Load More Refunds
+              </button>
             )}
           </div>
         )}

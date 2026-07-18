@@ -94,10 +94,17 @@ export default function CustomerDashboard({
         })
         .catch(console.error);
 
-      // Fetch all orders once after login
-      apiGet(`/api/v1/orders`)
+      // Fetch initial active orders after login for the tracking UI
+      apiGet(`/api/v1/orders/active?page=0&size=10`)
         .then(res => {
-          if (res.data) {
+          if (res.data && res.data.content) {
+            const mapped = res.data.content.map((o: any) => ({
+              ...o,
+              status: o.status?.toLowerCase() || ''
+            }));
+            setInternalOrders(mapped);
+          } else if (res.data && Array.isArray(res.data)) {
+            // Fallback just in case
             const mapped = res.data.map((o: any) => ({
               ...o,
               status: o.status?.toLowerCase() || ''
