@@ -872,6 +872,12 @@ export default function RestaurantDashboard({
                               <MapPin className="w-3 h-3 text-rose-450" />
                               <span className="truncate">{order.deliveryAddress}</span>
                             </div>
+                            {order.estimatedCompletionTime && (
+                              <div className="flex items-center gap-1 text-[10px] text-amber-500 font-bold mt-1">
+                                <Clock className="w-3 h-3" />
+                                <span>ETA: {new Date(order.estimatedCompletionTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                              </div>
+                            )}
                           </div>
 
                           {/* Items */}
@@ -1034,6 +1040,12 @@ export default function RestaurantDashboard({
                               <MapPin className="w-3 h-3 text-rose-450" />
                               <span className="truncate">{order.deliveryAddress}</span>
                             </div>
+                            {order.estimatedCompletionTime && (
+                              <div className="flex items-center gap-1 text-[10px] text-amber-500 font-bold mt-1">
+                                <Clock className="w-3 h-3" />
+                                <span>ETA: {new Date(order.estimatedCompletionTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                              </div>
+                            )}
                           </div>
 
                           {/* Items */}
@@ -1132,7 +1144,7 @@ export default function RestaurantDashboard({
                             <p className="font-bold text-slate-700 dark:text-[#f0ede6]">Customer: {order.customerName}</p>
                             <div className="flex items-center gap-1 text-[10px] text-slate-400 dark:text-slate-300">
                               <Clock className="w-3 h-3 text-orange-400" />
-                              <span>Estimated cook time: ~20 mins</span>
+                              <span>ETA: {order.estimatedCompletionTime ? new Date(order.estimatedCompletionTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '~20 mins'}</span>
                             </div>
                           </div>
 
