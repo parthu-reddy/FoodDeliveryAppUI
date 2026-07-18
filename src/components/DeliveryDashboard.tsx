@@ -261,7 +261,7 @@ export default function DeliveryDashboard({
               .catch(e => console.error(e));
           }
           setIsOnline(false);
-          setShowLocationPrompt(true);
+          setShowPermissionsPrompt(true);
         },
         { enableHighAccuracy: true }
       );
