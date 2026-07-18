@@ -49,8 +49,7 @@ export default function DeliveryDashboard({
 
   const [showHistory, setShowHistory] = useState(false);
   const [isProfileMandatory, setIsProfileMandatory] = useState(false);
-  const [showLocationPrompt, setShowLocationPrompt] = useState(false);
-  const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
+  const [showPermissionsPrompt, setShowPermissionsPrompt] = useState(false);
   const [showProfileRequiredPrompt, setShowProfileRequiredPrompt] = useState(false);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [enteredOtp, setEnteredOtp] = useState("");
@@ -358,45 +357,80 @@ export default function DeliveryDashboard({
 
 
 
+  const requestPermissionsAndGoOnline = async () => {
+    if ('Notification' in window && Notification.permission !== 'granted') {
+      const notifyPermission = await Notification.requestPermission();
+      if (notifyPermission !== 'granted') {
+        showToast("Notification permission is required. Please enable in browser settings if denied.");
+        return;
+      }
+    }
+
+    if (!navigator.geolocation) {
+      showToast("Geolocation is not supported by your browser");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          await apiPost(`/api/delivery/status`, { driverId: riderId, available: true });
+          setIsOnline(true);
+          setShowPermissionsPrompt(false);
+        } catch(e) {
+          console.error("Failed to toggle status", e);
+        }
+      },
+      (error) => {
+        showToast("Location permission is required. Please enable in browser settings if denied.");
+        console.error("Error getting location", error);
+      },
+      { enableHighAccuracy: true }
+    );
+  };
+
   const handleToggleOnline = async () => {
     if (!riderId || isProfileMandatory) {
       setShowProfileRequiredPrompt(true);
       return;
     }
     if (!isOnline) {
-      if (!('Notification' in window)) {
-        setShowNotificationPrompt(true);
-        return;
-      }
-      
-      let notifyPermission = Notification.permission;
-      if (notifyPermission !== 'granted') {
-        notifyPermission = await Notification.requestPermission();
-        if (notifyPermission !== 'granted') {
-          setShowNotificationPrompt(true);
-          return;
-        }
+      let notifyGranted = false;
+      if ('Notification' in window && Notification.permission === 'granted') {
+        notifyGranted = true;
       }
 
-      if (!navigator.geolocation) {
-        showToast("Geolocation is not supported by your browser");
-        return;
-      }
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          try {
-            await apiPost(`/api/delivery/status`, { driverId: riderId, available: true });
-            setIsOnline(true);
-          } catch(e) {
-            console.error("Failed to toggle status", e);
+      let locationGranted = false;
+      try {
+        if (navigator.permissions) {
+          const perm = await navigator.permissions.query({ name: 'geolocation' });
+          if (perm.state === 'granted') {
+            locationGranted = true;
           }
-        },
-        (error) => {
-          setShowLocationPrompt(true);
-          console.error("Error getting location", error);
-        },
-        { enableHighAccuracy: true }
-      );
+        }
+      } catch (e) {
+        // Fallback or ignore if navigator.permissions is not supported
+      }
+
+      if (notifyGranted && locationGranted) {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            try {
+              await apiPost(`/api/delivery/status`, { driverId: riderId, available: true });
+              setIsOnline(true);
+            } catch(e) {
+              console.error("Failed to toggle status", e);
+            }
+          },
+          (error) => {
+            setShowPermissionsPrompt(true);
+            console.error("Error getting location", error);
+          },
+          { enableHighAccuracy: true }
+        );
+      } else {
+        setShowPermissionsPrompt(true);
+      }
     } else {
       try {
         await apiPost(`/api/delivery/status`, { driverId: riderId, available: false });
@@ -1227,48 +1261,7 @@ export default function DeliveryDashboard({
       </AnimatePresence>
 
       <AnimatePresence>
-        {showLocationPrompt && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-sm"
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-sm bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-2xl relative"
-            >
-              <button 
-                onClick={() => setShowLocationPrompt(false)}
-                className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-              
-              <div className="p-8 pb-6 flex flex-col items-center text-center">
-                <div className="w-16 h-16 rounded-full bg-rose-500/10 flex items-center justify-center mb-6 text-rose-500">
-                  <MapPinOff className="w-8 h-8" />
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">Location Required</h3>
-                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-8">
-                  To receive delivery orders and go on duty, please enable location permissions for this application in your browser settings.
-                </p>
-                <button
-                  onClick={() => setShowLocationPrompt(false)}
-                  className="w-full py-3.5 rounded-xl bg-slate-900 dark:bg-emerald-500 text-white dark:text-slate-950 font-bold hover:bg-slate-800 dark:hover:bg-emerald-400 transition-colors"
-                >
-                  Understood
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {showNotificationPrompt && (
+        {showPermissionsPrompt && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1282,25 +1275,25 @@ export default function DeliveryDashboard({
               className="w-full max-w-sm bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-2xl relative"
             >
               <button 
-                onClick={() => setShowNotificationPrompt(false)}
+                onClick={() => setShowPermissionsPrompt(false)}
                 className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
               
               <div className="p-8 pb-6 flex flex-col items-center text-center">
-                <div className="w-16 h-16 rounded-full bg-rose-500/10 flex items-center justify-center mb-6 text-rose-500">
+                <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center mb-6 text-blue-500">
                   <AlertCircle className="w-8 h-8" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">Notifications Required</h3>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">Permissions Required</h3>
                 <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-8">
-                  To receive order assignments and go on duty, please enable notification permissions for this application in your browser settings.
+                  To receive order assignments and go on duty, we need your permission to access your location and send notifications.
                 </p>
                 <button
-                  onClick={() => setShowNotificationPrompt(false)}
+                  onClick={requestPermissionsAndGoOnline}
                   className="w-full py-3.5 rounded-xl bg-slate-900 dark:bg-emerald-500 text-white dark:text-slate-950 font-bold hover:bg-slate-800 dark:hover:bg-emerald-400 transition-colors"
                 >
-                  Understood
+                  Enable Permissions
                 </button>
               </div>
             </motion.div>
