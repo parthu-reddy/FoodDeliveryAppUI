@@ -43,13 +43,8 @@ const handleHttpError = async (res: Response) => {
     else if (typeof body === 'string') errorMessage = body;
   } catch { /* body wasn't json */ }
 
-  // Only auto-redirect on 401 for non-auth endpoints (expired session)
+  // Auto-redirect on 401 for non-auth endpoints (invalid session or missing user)
   if (res.status === 401 && !res.url.includes('/api/v1/internal/auth/')) {
-    clearAllLocalData();
-    window.location.href = '/';
-  } else if (res.status === 400 && errorMessage === 'User not found') {
-    // If the database was wiped but JWT is still cryptographically valid, 
-    // the backend will throw a 400 User not found. We must clear session.
     clearAllLocalData();
     window.location.href = '/';
   }

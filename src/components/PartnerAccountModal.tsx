@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, LogOut } from 'lucide-react';
 import { apiDelete, apiPut, apiGet, apiPost } from '../lib/apiClient';
+import { z } from 'zod';
+
+const nameSchema = z.string().min(1, 'Name is required').max(100, 'Name cannot exceed 100 characters');
 
 interface PartnerAccountModalProps {
   isOpen: boolean;
@@ -72,6 +75,11 @@ export default function PartnerAccountModal({
   };
 
   const handleSaveName = async () => {
+    const validation = nameSchema.safeParse(editName);
+    if (!validation.success) {
+      alert(validation.error.issues[0].message);
+      return;
+    }
     try {
       await apiPut('/api/v1/users/profile', { name: editName });
       onNameUpdate(editName);

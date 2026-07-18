@@ -4,6 +4,15 @@ import { apiPost, apiGet } from '../lib/apiClient';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useToast } from '../context/ToastContext';
+import { z } from 'zod';
+
+const outletSchema = z.object({
+  name: z.string().min(1, 'Outlet name is required.').max(100, 'Outlet name cannot exceed 100 characters.'),
+  fssai: z.string().length(14, 'FSSAI License must be exactly 14 characters.'),
+  banner: z.string().url('Invalid Banner URL.').max(1000, 'Banner URL cannot exceed 1000 characters.'),
+  lat: z.number().min(-90, 'Invalid Latitude').max(90, 'Invalid Latitude'),
+  lng: z.number().min(-180, 'Invalid Longitude').max(180, 'Invalid Longitude')
+});
 
 interface OutletRegistrationProps {
   onRefresh: () => void;
@@ -177,16 +186,27 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
     e.preventDefault();
     setError('');
 
-    if (fssai.length !== 14) {
-      setError('FSSAI License must be exactly 14 characters.');
+    const parsedLat = parseFloat(lat);
+    const parsedLng = parseFloat(lng);
+    
+    const validation = outletSchema.safeParse({
+      name,
+      fssai,
+      banner,
+      lat: parsedLat,
+      lng: parsedLng
+    });
+
+    if (!validation.success) {
+      setError(validation.error.issues[0].message);
       return;
     }
 
     const newOutlet = {
       name,
       fssaiLicenseNumber: fssai,
-      lat: parseFloat(lat),
-      lng: parseFloat(lng),
+      lat: parsedLat,
+      lng: parsedLng,
       timings: timings.map(t => ({
         openingTime: t.openingTime + ":00",
         closingTime: t.closingTime + ":00"

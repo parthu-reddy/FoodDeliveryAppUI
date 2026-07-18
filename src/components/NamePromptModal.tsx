@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { User, Check } from 'lucide-react';
+import { z } from 'zod';
+
+const namePromptSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters').max(100, 'Name cannot exceed 100 characters'),
+  email: z.string().email('Please enter a valid email address').max(255, 'Email cannot exceed 255 characters')
+});
 
 interface NamePromptModalProps {
   theme: 'light' | 'dark';
@@ -14,13 +20,9 @@ export default function NamePromptModal({ theme, onSubmit }: NamePromptModalProp
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (name.trim().length < 2) {
-      setError('Please enter a valid name (at least 2 characters)');
-      return;
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setError('Please enter a valid email address');
+    const validation = namePromptSchema.safeParse({ name: name.trim(), email: email.trim() });
+    if (!validation.success) {
+      setError(validation.error.issues[0].message);
       return;
     }
     onSubmit(name.trim(), email.trim());

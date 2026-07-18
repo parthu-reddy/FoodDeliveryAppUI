@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { apiPut } from '../lib/apiClient';
+import { z } from 'zod';
+
+const profileSchema = z.object({
+  name: z.string().min(1, 'Please enter your full name.').max(100, 'Name cannot exceed 100 characters.'),
+  email: z.string().min(1, 'Please enter your email address.').email('Please enter a valid email address.').max(255, 'Email cannot exceed 255 characters.')
+});
 
 interface CompleteProfileModalProps {
   isOpen: boolean;
@@ -15,25 +21,14 @@ export default function CompleteProfileModal({ isOpen, theme, onComplete, profil
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const validateEmail = (email: string) => {
-    return String(email)
-      .toLowerCase()
-      .match(
-        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-      );
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (!name.trim()) {
-      setError('Please enter your full name.');
-      return;
-    }
-
-    if (!email.trim() || !validateEmail(email)) {
-      setError('Please enter a valid email address.');
+    const validation = profileSchema.safeParse({ name: name.trim(), email: email.trim() });
+    
+    if (!validation.success) {
+      setError(validation.error.issues[0].message);
       return;
     }
 

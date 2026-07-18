@@ -5,6 +5,18 @@ import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { apiPost, apiGet } from '../lib/apiClient';
 import { useToast } from '../context/ToastContext';
+import { z } from 'zod';
+
+const addressSchema = z.object({
+  label: z.string().min(1, 'Label is required').max(50, 'Label cannot exceed 50 characters'),
+  addressLine1: z.string().min(1, 'Address Line 1 is required').max(255, 'Address cannot exceed 255 characters'),
+  addressLine2: z.string().max(255, 'Address cannot exceed 255 characters').optional(),
+  city: z.string().min(1, 'City is required').max(100, 'City cannot exceed 100 characters'),
+  state: z.string().min(1, 'State is required').max(100, 'State cannot exceed 100 characters'),
+  zipCode: z.string().min(1, 'ZIP Code is required').max(20, 'ZIP Code cannot exceed 20 characters'),
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180)
+});
 
 export default function CustomerAddressModal({
   isAddressModalOpen,
@@ -145,12 +157,19 @@ export default function CustomerAddressModal({
 
   const handleSave = async () => {
     try {
-      setIsSaving(true);
       const payload = {
         ...addressForm,
         latitude: parseFloat(lat),
         longitude: parseFloat(lng)
       };
+
+      const validation = addressSchema.safeParse(payload);
+      if (!validation.success) {
+        showError(validation.error.issues[0].message);
+        return;
+      }
+
+      setIsSaving(true);
       if (!customerId) throw new Error("Customer ID missing");
       await apiPost(`/api/v1/customers/${customerId}/addresses`, payload);
       setIsAddressModalOpen(false);

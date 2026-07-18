@@ -3,6 +3,14 @@ import { motion } from 'motion/react';
 import { X, User, Phone, Mail, Car, Image as ImageIcon, AlertCircle, LogOut } from 'lucide-react';
 import { apiGet, apiPut, apiDelete, apiPost } from '../lib/apiClient';
 import { useToast } from '../context/ToastContext';
+import { z } from 'zod';
+
+const riderProfileSchema = z.object({
+  name: z.string().min(1, 'Please enter your full name.').max(100, 'Name cannot exceed 100 characters.'),
+  email: z.string().min(1, 'Please enter your email address.').email('Please enter a valid email address.').max(255, 'Email cannot exceed 255 characters.'),
+  vehicle: z.string().min(1, 'Please enter your vehicle registration.').max(50, 'Vehicle registration cannot exceed 50 characters.'),
+  photoUrl: z.string().url('Please enter a valid URL for your profile photo.').max(1000, 'URL cannot exceed 1000 characters.')
+});
 
 interface RiderSettingsViewProps {
   onBack: () => void;
@@ -106,6 +114,19 @@ export default function RiderSettingsView({
   const saveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
+    
+    const validation = riderProfileSchema.safeParse({
+      name: editName.trim(),
+      email: editEmail.trim(),
+      vehicle: editVehicle.trim(),
+      photoUrl: editPhoto.trim()
+    });
+
+    if (!validation.success) {
+      setErrorMsg(validation.error.issues[0].message);
+      return;
+    }
+
     setIsSaving(true);
     
     try {

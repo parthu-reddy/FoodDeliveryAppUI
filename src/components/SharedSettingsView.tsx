@@ -4,6 +4,12 @@ import { X, User, Package, LogOut, MapPin, Check } from 'lucide-react';
 import { apiGet, apiPut, apiDelete } from '../lib/apiClient';
 import { useToast } from '../context/ToastContext';
 import CustomerAddressModal from './CustomerAddressModal';
+import { z } from 'zod';
+
+const sharedProfileSchema = z.object({
+  name: z.string().min(1, 'Please enter your full name.').max(100, 'Name cannot exceed 100 characters.'),
+  email: z.string().min(1, 'Please enter your email address.').email('Please enter a valid email address.').max(255, 'Email cannot exceed 255 characters.')
+});
 
 interface SharedSettingsViewProps {
   onBack: () => void;
@@ -184,6 +190,16 @@ export default function SharedSettingsView({
   }, []);
 
   const saveProfile = async () => {
+    const validation = sharedProfileSchema.safeParse({
+      name: editName.trim(),
+      email: editEmail.trim()
+    });
+
+    if (!validation.success) {
+      showError(validation.error.issues[0].message);
+      return;
+    }
+
     setIsSaving(true);
     if (onAddApiLog) {
       onAddApiLog({ id: 'update_profile', label: `PUT /api/v1/users/profile`, method: 'PUT' });

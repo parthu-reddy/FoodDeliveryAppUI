@@ -4,6 +4,17 @@ import { ChevronLeft, Search, MapPin, X } from 'lucide-react';
 import { apiGet, apiPost } from '../lib/apiClient';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { z } from 'zod';
+
+const addressSchema = z.object({
+  label: z.string().min(1, 'Label is required').max(50, 'Label cannot exceed 50 characters'),
+  addressLine1: z.string().min(1, 'Address Line 1 is required').max(255, 'Address cannot exceed 255 characters'),
+  city: z.string().min(1, 'City is required').max(100, 'City cannot exceed 100 characters'),
+  state: z.string().min(1, 'State is required').max(100, 'State cannot exceed 100 characters'),
+  zipCode: z.string().min(1, 'ZIP Code is required').max(20, 'ZIP Code cannot exceed 20 characters'),
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180)
+});
 
 (window as any).maplibregl = maplibregl;
 
@@ -354,34 +365,24 @@ export default function CustomerAddressPage({
              <div className="pt-4">
                <button
                  onClick={async () => {
-                   if (!address || address.length < 5) {
-                     setError("Please provide a valid address line 1.");
-                     return;
-                   }
-                   if (!city || city.length < 2) {
-                     setError("Please provide a valid city.");
-                     return;
-                   }
-                   if (!state || state.length < 2) {
-                     setError("Please provide a valid state.");
-                     return;
-                   }
-                   if (!zipCode || !/^\d{5,10}$/.test(zipCode)) {
-                     setError("Please provide a valid numeric zip code (5-10 digits).");
+                   const payload = {
+                     label: label || 'New Address',
+                     addressLine1: address,
+                     city: city,
+                     state: state,
+                     zipCode: zipCode,
+                     latitude: mapInstance ? mapInstance.getCenter().lat : 12.9716,
+                     longitude: mapInstance ? mapInstance.getCenter().lng : 77.5946
+                   };
+
+                   const validation = addressSchema.safeParse(payload);
+                   if (!validation.success) {
+                     setError(validation.error.issues[0].message);
                      return;
                    }
 
                    if (setSavedAddresses && userId) {
                      try {
-                       const payload = {
-                         label: label || 'New Address',
-                         addressLine1: address,
-                         city: city,
-                         state: state,
-                         zipCode: zipCode,
-                         latitude: mapInstance ? mapInstance.getCenter().lat : 12.9716,
-                         longitude: mapInstance ? mapInstance.getCenter().lng : 77.5946
-                       };
                        const res = await apiPost(`/api/v1/customers/${userId}/addresses`, payload);
                        const data = res?.data || res;
                        if (data && data.id) {

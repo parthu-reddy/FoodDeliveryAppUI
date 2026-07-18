@@ -67,10 +67,17 @@ export default function CustomerDashboard({
   const [effectiveMenu, setEffectiveMenu] = useState<MenuItem[]>([]);
   
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-  const [address, setAddress] = useState('Flat 402, Highrise Apartments, Sector 62');
-  const [deliveryLat, setDeliveryLat] = useState<string | number>('12.97');
-  const [deliveryLng, setDeliveryLng] = useState<string | number>('77.59');
-  const [deliveryAddressId, setDeliveryAddressId] = useState<string>('');
+  const [address, setAddress] = useState(() => localStorage.getItem('deliveryAddress') || 'Flat 402, Highrise Apartments, Sector 62');
+  const [deliveryLat, setDeliveryLat] = useState<string | number>(() => localStorage.getItem('deliveryLat') || '12.97');
+  const [deliveryLng, setDeliveryLng] = useState<string | number>(() => localStorage.getItem('deliveryLng') || '77.59');
+  const [deliveryAddressId, setDeliveryAddressId] = useState<string>(() => localStorage.getItem('deliveryAddressId') || '');
+
+  useEffect(() => {
+    localStorage.setItem('deliveryAddress', address);
+    localStorage.setItem('deliveryLat', String(deliveryLat));
+    localStorage.setItem('deliveryLng', String(deliveryLng));
+    localStorage.setItem('deliveryAddressId', deliveryAddressId);
+  }, [address, deliveryLat, deliveryLng, deliveryAddressId]);
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
   const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
   const [globalError, setGlobalError] = useState<string | null>(null);

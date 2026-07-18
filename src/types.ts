@@ -94,7 +94,8 @@ export interface OutletOverride {
   id: string;
   outletId: string;
   masterMenuItemId: string;
-  price?: number;
-  active?: boolean;
+  overriddenPrice?: number;
+  isAvailable?: boolean;
+  overriddenPrepTimeMinutes?: number;
 }
 

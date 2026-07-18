@@ -5,6 +5,7 @@ import {
   Terminal, Sliders, Code, Send, CheckCircle2, AlertCircle, User, ArrowLeft, X, MapPinOff
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { z } from 'zod';
 import { Order, OrderStatus } from '../types';
 import LaBouffeLogo from './LaBouffeLogo';
 import { apiGet, apiPost } from '../lib/apiClient';
@@ -12,6 +13,8 @@ import { getUserProfile, getToken } from '../lib/tokenStore';
 import CompleteProfileModal from './CompleteProfileModal';
 import RiderSettingsView from './RiderSettingsView';
 import OrderTrackingMap from './OrderTrackingMap';
+
+const otpSchema = z.string().length(6, "OTP must be exactly 6 digits").regex(/^\d+$/, "OTP must contain only digits");
 
 interface DeliveryDashboardProps {
   riderPhone: string;
@@ -682,6 +685,12 @@ export default function DeliveryDashboard({
   const handlePickUpFood = async (e: React.FormEvent) => {
     e.preventDefault();
     setPickupOtpError("");
+    const validation = otpSchema.safeParse(enteredPickupOtp);
+    if (!validation.success) {
+      setPickupOtpError(validation.error.issues[0].message);
+      return;
+    }
+    
     if (!currentJob) return;
     if (enteredPickupOtp !== currentJob.pickupOtp) {
       setPickupOtpError("Invalid verification code. Please check with restaurant.");
@@ -708,6 +717,12 @@ export default function DeliveryDashboard({
   const handleCompleteDelivery = async (e: React.FormEvent) => {
     e.preventDefault();
     setOtpError("");
+    const validation = otpSchema.safeParse(enteredOtp);
+    if (!validation.success) {
+      setOtpError(validation.error.issues[0].message);
+      return;
+    }
+
     if (!currentJob) return;
     if (enteredOtp !== currentJob.otp) {
       setOtpError("Invalid verification code. Please check with customer.");

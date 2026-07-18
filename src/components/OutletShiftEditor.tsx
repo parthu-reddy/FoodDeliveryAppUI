@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { Clock, Plus, Trash2, CheckCircle, X, AlertCircle } from 'lucide-react';
 import { apiPut } from '../lib/apiClient';
+import { z } from 'zod';
+
+const shiftSchema = z.object({
+  openingTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid opening time format'),
+  closingTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid closing time format')
+});
 
 interface OutletShiftEditorProps {
   outlet: any;
@@ -47,6 +53,11 @@ export default function OutletShiftEditor({ outlet, onRefresh, onClose }: Outlet
     for (const t of timings) {
       if (!t.openingTime || !t.closingTime) {
         setError('Please fill all timing fields.');
+        return;
+      }
+      const validation = shiftSchema.safeParse(t);
+      if (!validation.success) {
+        setError(validation.error.issues[0].message);
         return;
       }
     }

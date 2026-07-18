@@ -8,6 +8,10 @@ import { apiPost, apiGet } from '../lib/apiClient';
 import { setToken, setUserProfile, decodeJwt, getToken, clearAllLocalData } from '../lib/tokenStore';
 import { logout } from '../lib/authStore';
 import SessionManagementModal from './SessionManagementModal';
+import { z } from 'zod';
+
+const phoneSchema = z.string().min(8, 'Phone number must be at least 8 digits').max(20, 'Phone number cannot exceed 20 digits');
+const otpSchema = z.string().length(6, 'Please enter the 6-digit code');
 
 const roleToServiceName = (role: UserRole): string => {
   switch (role) {
@@ -107,9 +111,9 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
     e.preventDefault();
     setError('');
 
-    // Basic Indian/Global 10-digit number validation
-    if (phone.length < 8) {
-      setError('Please enter a valid phone number');
+    const validation = phoneSchema.safeParse(phone);
+    if (!validation.success) {
+      setError(validation.error.issues[0].message);
       return;
     }
 
@@ -153,8 +157,9 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
     e.preventDefault();
     setError('');
 
-    if (otpCode.length !== 6) {
-      setError('Please enter the 6-digit code');
+    const validation = otpSchema.safeParse(otpCode);
+    if (!validation.success) {
+      setError(validation.error.issues[0].message);
       return;
     }
 

@@ -1,8 +1,13 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Plus, Minus, Package, Timer, ShieldCheck } from 'lucide-react';
+import { X, Plus, Minus, Package, Timer, ShieldCheck, AlertCircle } from 'lucide-react';
 import { Restaurant, CartItem, MenuItem } from '../types';
+import { z } from 'zod';
+
+const checkoutSchema = z.object({
+  address: z.string().min(5, "Please enter a valid delivery address").max(200, "Address is too long")
+});
 
 export default function CustomerCartDrawer({
   address,
@@ -17,6 +22,18 @@ export default function CustomerCartDrawer({
   getCartTotal,
   setIsPaymentModalOpen
 }: any) {
+  const [error, setError] = React.useState<string | null>(null);
+
+  const onCheckoutClick = () => {
+    const validation = checkoutSchema.safeParse({ address: address.trim() });
+    if (!validation.success) {
+      setError(validation.error.issues[0].message);
+      return;
+    }
+    setError(null);
+    handleCheckout();
+  };
+
   return (
     <>
       {/* ------------------- CART DRAWER ------------------- */}
@@ -106,9 +123,15 @@ export default function CustomerCartDrawer({
                   className="bg-transparent border-none text-xs w-full font-semibold text-slate-800 dark:text-[#f0ede6] focus:outline-none"
                 />
               </div>
+              {error && (
+                <div className="flex items-center gap-2 p-2 rounded-xl bg-red-500/10 text-red-500 text-xs font-bold">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  {error}
+                </div>
+              )}
 
               <button
-                onClick={handleCheckout}
+                onClick={onCheckoutClick}
                 className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-4 rounded-2xl font-black shadow-lg shadow-orange-500/20 hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer border border-white/20"
               >
                 <ShieldCheck className="w-5 h-5" />

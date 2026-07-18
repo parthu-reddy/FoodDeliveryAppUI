@@ -4,6 +4,14 @@ import { useToast } from '../context/ToastContext';
 import { Search, Shield, User, X, LogOut, Sun, Moon, Plus, Package, Truck, Check, MapPin, Users, Activity, Tags, Navigation } from 'lucide-react';
 import LaBouffeLogo from './LaBouffeLogo';
 import AdminAssignmentMap from './AdminAssignmentMap';
+import { z } from 'zod';
+
+const roleSchema = z.string().min(2, "Role must be at least 2 characters").max(50, "Role cannot exceed 50 characters").regex(/^[A-Z_]+$/, "Role must contain only uppercase letters and underscores");
+
+const categorySchema = z.object({
+  name: z.string().min(2, "Category name is required").max(100, "Category name cannot exceed 100 characters"),
+  description: z.string().max(500, "Description cannot exceed 500 characters").optional()
+});
 
 export default function AdminPortal({
   onLogout,
@@ -105,6 +113,11 @@ export default function AdminPortal({
 
   const handleAddRole = async () => {
     if (!selectedUser || !newRole) return;
+    const validation = roleSchema.safeParse(newRole);
+    if (!validation.success) {
+      showError(validation.error.issues[0].message);
+      return;
+    }
     try {
       await apiPost(`/api/v1/internal/users/${selectedUser.id}/roles`, { role: newRole });
       setSelectedUser({ ...selectedUser, roles: [...(selectedUser.roles || []), newRole] });
@@ -398,6 +411,13 @@ export default function AdminPortal({
                     const nameInput = form.elements.namedItem('categoryName') as HTMLInputElement;
                     const descInput = form.elements.namedItem('categoryDesc') as HTMLInputElement;
                     if (!nameInput.value) return;
+
+                    const validation = categorySchema.safeParse({ name: nameInput.value, description: descInput.value });
+                    if (!validation.success) {
+                      showError(validation.error.issues[0].message);
+                      return;
+                    }
+
                     try {
                     await apiPost('/api/v1/restaurants/categories', { name: nameInput.value, description: descInput.value });
                     showSuccess('Category created successfully');
