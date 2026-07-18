@@ -66,6 +66,7 @@ export interface Order {
   riderPhone?: string;
   createdAt?: string;
   timestamp?: string;
+  estimatedCompletionTime?: number;
 }
 
 export interface EarningRecord {

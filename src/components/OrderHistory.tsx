@@ -83,6 +83,7 @@ export function OrderHistory({ orders }: { orders: Order[] }) {
               <tr className="border-b border-rose-500/20 dark:border-rose-500/30 bg-slate-50/50 dark:bg-slate-900/20 text-[10px] uppercase font-extrabold text-slate-500 dark:text-slate-300 tracking-wider">
                 <th className="p-4 pl-6 whitespace-nowrap">Order ID</th>
                 <th className="p-4 whitespace-nowrap">Date & Time</th>
+                <th className="p-4 whitespace-nowrap">ETA</th>
                 <th className="p-4 whitespace-nowrap">Customer</th>
                 <th className="p-4 whitespace-nowrap">Items</th>
                 <th className="p-4 whitespace-nowrap">Total</th>
@@ -106,6 +107,17 @@ export function OrderHistory({ orders }: { orders: Order[] }) {
                           {new Date(order.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
+                    </td>
+                    <td className="p-4 whitespace-nowrap">
+                      {order.estimatedCompletionTime ? (
+                        <div className="flex flex-col">
+                          <span className="font-bold text-indigo-600 dark:text-indigo-400">
+                            {new Date(order.estimatedCompletionTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-slate-400 text-xs">-</span>
+                      )}
                     </td>
                     <td className="p-4 whitespace-nowrap">
                       <span className="font-medium text-slate-800 dark:text-[#f0ede6]">{order.customerName}</span>

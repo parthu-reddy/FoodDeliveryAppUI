@@ -561,61 +561,50 @@ export default function RestaurantDashboard({
     }
   };
 
-  const handleCardDelaySubmit = (orderId: string) => {
+  const handleCardDelaySubmit = async (orderId: string) => {
     const minutes = parseInt(customDelayMinutes[orderId] || '15', 10);
     const reason = customDelayReasonText[orderId] || 'High Kitchen Load';
     const seconds = minutes * 60;
 
-    const requestId = 'req-' + Math.random().toString(36).substr(2, 9);
-    const headers = {
-      'Content-Type': 'application/json',
-      'X-Request-Id': requestId,
-      'X-Device-Id': 'restaurant-pos-terminal-01',
-      'X-App-Version': '1.0.0',
-      'Authorization': 'Bearer la-bouffe-jwt-token-restaurant'
-    };
+    const endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/accept`;
     const body = {
-      prepTimeSeconds: seconds,
+      additionalPrepTime: minutes,
       delayReason: reason
     };
-    const responseBody = {
-      success: true,
-      message: `Revised Estimated Preparation Time of +${minutes} minutes recorded successfully.`,
-      data: {
-        orderId,
-        prepTimeSeconds: seconds,
-        delayReason: reason,
-        revisedEta: new Date(Date.now() + seconds * 1000).toISOString()
+
+    try {
+      await apiPost(endpoint, body);
+      
+      setCardDelayStatus(prev => ({
+        ...prev,
+        [orderId]: { minutes, reason }
+      }));
+      
+      if (minutes > 10) {
+        // Optimistic update
+        setInternalOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'on_hold' } : o));
+        if (externalUpdateStatus) externalUpdateStatus(orderId, 'on_hold');
+      } else {
+        // Accept right away if <= 10 mins
+        setInternalOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'accepted' } : o));
+        if (externalUpdateStatus) externalUpdateStatus(orderId, 'accepted');
       }
-    };
-
-    setApiResponseStatus(200);
-    setApiResponseHeaders(headers);
-    setApiResponse(responseBody);
-    setApiResponseEndpoint(`POST /api/v1/restaurants/${restaurantId}/orders/${orderId}/eta`);
-
-    if (onAddApiLog) {
-      onAddApiLog({
-        id: `api-${Date.now()}`,
-        method: 'POST',
-        endpoint: `/api/v1/restaurants/${restaurantId}/orders/${orderId}/eta`,
-        headers,
-        payload: body,
-        response: responseBody,
-        status: 200,
-        duration: Math.floor(95 + Math.random() * 35),
-        timestamp: new Date().toISOString(),
-        correlationId: requestId
-      });
+      
+      if (onAddApiLog) {
+        onAddApiLog({
+          id: `api-${Date.now()}`,
+          method: 'POST',
+          endpoint,
+          payload: body,
+          status: 200,
+          timestamp: new Date().toISOString()
+        });
+      }
+    } catch (e) {
+      console.error('Failed to submit delay / accept order', e);
+      alert('Failed to submit delay request.');
     }
-
-    setCardDelayStatus(prev => ({
-      ...prev,
-      [orderId]: { minutes, reason }
-    }));
-    if (minutes > 10) {
-      onUpdateOrderStatus(orderId, 'on_hold');
-    }
+    
     setDelayingOrderId(null);
   };
 
