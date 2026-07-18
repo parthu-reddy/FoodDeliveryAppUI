@@ -47,6 +47,11 @@ const handleHttpError = async (res: Response) => {
   if (res.status === 401 && !res.url.includes('/api/v1/internal/auth/')) {
     clearAllLocalData();
     window.location.href = '/';
+  } else if (res.status === 400 && errorMessage === 'User not found') {
+    // If the database was wiped but JWT is still cryptographically valid, 
+    // the backend will throw a 400 User not found. We must clear session.
+    clearAllLocalData();
+    window.location.href = '/';
   }
   
   throw new ApiError(errorMessage, res.status, errorData);

@@ -96,7 +96,7 @@ export default function RestaurantDashboard({
   
   const [editingOutletShifts, setEditingOutletShifts] = useState<any | null>(null);
   const [selectedOutletId, setSelectedOutletId] = useState<string>(() => {
-    return localStorage.getItem('restaurant_selectedOutletId') || restaurantId || '';
+    return localStorage.getItem('restaurant_selectedOutletId') || '';
   });
 
   useEffect(() => {
@@ -218,11 +218,23 @@ export default function RestaurantDashboard({
 
       if (_outlets.length === 0) {
         setSettingsTab("outlets");
+        if (selectedOutletId) {
+          setSelectedOutletId('');
+          localStorage.removeItem('restaurant_selectedOutletId');
+          return;
+        }
       }
 
       if (!selectedOutletId && _outlets.length > 0) {
         setSelectedOutletId(_outlets[0].id);
+        localStorage.setItem('restaurant_selectedOutletId', _outlets[0].id);
         return; // will re-trigger useEffect
+      } else if (selectedOutletId && _outlets.length > 0 && !_outlets.find((o: any) => o.id === selectedOutletId)) {
+        setSelectedOutletId(_outlets[0].id);
+        localStorage.setItem('restaurant_selectedOutletId', _outlets[0].id);
+        return; // replace stale id with first available
+      } else if (selectedOutletId) {
+        localStorage.setItem('restaurant_selectedOutletId', selectedOutletId);
       }
 
       if (selectedOutletId) {
@@ -267,7 +279,7 @@ export default function RestaurantDashboard({
   const [masterDishIsVeg, setMasterDishIsVeg] = useState(false);
 
   // Outlet Override fields
-  const [overrideOutletId, setOverrideOutletId] = useState(restaurantId);
+  const [overrideOutletId, setOverrideOutletId] = useState(selectedOutletId || '');
   const [overrideMasterItemId, setOverrideMasterItemId] = useState('');
   const [overridePrice, setOverridePrice] = useState('');
   const [overrideActive, setOverrideActive] = useState(true);
@@ -381,13 +393,13 @@ export default function RestaurantDashboard({
     setApiResponseStatus(200);
     setApiResponseHeaders(headers);
     setApiResponse(responseBody);
-    setApiResponseEndpoint(`POST /api/v1/restaurants/${restaurantId}/status`);
+    setApiResponseEndpoint(`POST /api/v1/restaurants/${selectedOutletId}/status`);
 
     if (onAddApiLog) {
       onAddApiLog({
         id: `api-${Date.now()}`,
         method: 'POST',
-        endpoint: `/api/v1/restaurants/${restaurantId}/status`,
+        endpoint: `/api/v1/restaurants/${selectedOutletId}/status`,
         headers,
         payload: body,
         response: responseBody,
@@ -426,7 +438,7 @@ export default function RestaurantDashboard({
     setApiResponseStatus(200);
     setApiResponseHeaders(headers);
     setApiResponse(responseBody);
-    setApiResponseEndpoint(`POST /api/v1/restaurants/${restaurantId}/menu/item-availability`);
+    setApiResponseEndpoint(`POST /api/v1/restaurants/${selectedOutletId}/menu/item-availability`);
 
     // Side effect: update stock state directly!
     setStockStatus(prev => ({
@@ -438,7 +450,7 @@ export default function RestaurantDashboard({
       onAddApiLog({
         id: `api-${Date.now()}`,
         method: 'POST',
-        endpoint: `/api/v1/restaurants/${restaurantId}/menu/item-availability`,
+        endpoint: `/api/v1/restaurants/${selectedOutletId}/menu/item-availability`,
         headers,
         payload: body,
         response: responseBody,
@@ -479,13 +491,13 @@ export default function RestaurantDashboard({
     setApiResponseStatus(200);
     setApiResponseHeaders(headers);
     setApiResponse(responseBody);
-    setApiResponseEndpoint(`POST /api/v1/restaurants/${restaurantId}/orders/${apiEtaOrderId}/eta`);
+    setApiResponseEndpoint(`POST /api/v1/restaurants/${selectedOutletId}/orders/${apiEtaOrderId}/eta`);
 
     if (onAddApiLog) {
       onAddApiLog({
         id: `api-${Date.now()}`,
         method: 'POST',
-        endpoint: `/api/v1/restaurants/${restaurantId}/orders/${apiEtaOrderId}/eta`,
+        endpoint: `/api/v1/restaurants/${selectedOutletId}/orders/${apiEtaOrderId}/eta`,
         headers,
         payload: body,
         response: responseBody,
@@ -528,7 +540,7 @@ export default function RestaurantDashboard({
     setApiResponseStatus(200);
     setApiResponseHeaders(headers);
     setApiResponse(responseBody);
-    setApiResponseEndpoint(`POST /api/v1/restaurants/${restaurantId}/orders/${apiReadyOrderId}/ready-for-pickup`);
+    setApiResponseEndpoint(`POST /api/v1/restaurants/${selectedOutletId}/orders/${apiReadyOrderId}/ready-for-pickup`);
 
     // Side effect: update order status in-memory directly!
     onUpdateOrderStatus(apiReadyOrderId, 'dispatched');
@@ -537,7 +549,7 @@ export default function RestaurantDashboard({
       onAddApiLog({
         id: `api-${Date.now()}`,
         method: 'POST',
-        endpoint: `/api/v1/restaurants/${restaurantId}/orders/${apiReadyOrderId}/ready-for-pickup`,
+        endpoint: `/api/v1/restaurants/${selectedOutletId}/orders/${apiReadyOrderId}/ready-for-pickup`,
         headers,
         payload: body,
         response: responseBody,
