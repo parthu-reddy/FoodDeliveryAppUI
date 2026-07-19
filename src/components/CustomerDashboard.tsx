@@ -105,17 +105,21 @@ export default function CustomerDashboard({
       apiGet(`/api/v1/orders/active?page=0&size=10`)
         .then(res => {
           if (res.data && res.data.content) {
-            const mapped = res.data.content.map((o: any) => ({
-              ...o,
-              status: o.status?.toLowerCase() || ''
-            }));
+            const mapped = res.data.content.map((o: any) => {
+              let s = o.status?.toLowerCase() || '';
+              if (s === 'awaiting_delay_approval') s = 'on_hold';
+              if (s === 'paid' || s === 'created') s = 'placed';
+              return { ...o, status: s };
+            });
             setInternalOrders(mapped);
           } else if (res.data && Array.isArray(res.data)) {
             // Fallback just in case
-            const mapped = res.data.map((o: any) => ({
-              ...o,
-              status: o.status?.toLowerCase() || ''
-            }));
+            const mapped = res.data.map((o: any) => {
+              let s = o.status?.toLowerCase() || '';
+              if (s === 'awaiting_delay_approval') s = 'on_hold';
+              if (s === 'paid' || s === 'created') s = 'placed';
+              return { ...o, status: s };
+            });
             setInternalOrders(mapped);
           }
         })
@@ -160,7 +164,10 @@ export default function CustomerDashboard({
             const newOrders = [...prev];
             let changed = false;
             updatedOrders.forEach(updated => {
-              updated.status = updated.status?.toLowerCase() || '';
+              let s = updated.status?.toLowerCase() || '';
+              if (s === 'awaiting_delay_approval') s = 'on_hold';
+              if (s === 'paid' || s === 'created') s = 'placed';
+              updated.status = s;
               const idx = newOrders.findIndex(o => o.id === updated.id);
               if (idx !== -1 && JSON.stringify(newOrders[idx]) !== JSON.stringify(updated)) {
                 newOrders[idx] = updated;
@@ -667,9 +674,14 @@ export default function CustomerDashboard({
   };
 
   // Get stage index for order tracking
-  const getStatusIndex = (status: OrderStatus) => {
-    const statuses: OrderStatus[] = ['placed', 'accepted', 'preparing', 'ready_for_pickup', 'dispatched', 'out_for_delivery', 'delivered'];
-    return statuses.indexOf(status);
+  const getStatusIndex = (status: OrderStatus | string) => {
+    let effectiveStatus = status;
+    if (status === 'on_hold') effectiveStatus = 'placed';
+    if (status === 'paid' || status === 'created') effectiveStatus = 'placed';
+    if (status === 'ready') effectiveStatus = 'ready_for_pickup';
+    
+    const statuses: string[] = ['placed', 'accepted', 'preparing', 'ready_for_pickup', 'dispatched', 'out_for_delivery', 'delivered'];
+    return statuses.indexOf(effectiveStatus as string);
   };
 
   // Simulated GPS Path Coordinate (translating step status to percentage of route progress)

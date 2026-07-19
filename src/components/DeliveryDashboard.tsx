@@ -703,7 +703,7 @@ export default function DeliveryDashboard({
     setIsUpdatingPickup(true);
     
     try {
-      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, { status: "PICKED_UP", pickupOtp: enteredPickupOtp });
+      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, { status: "OUT_FOR_DELIVERY", pickupOtp: enteredPickupOtp });
       setIsUpdatingPickup(false);
     } catch(e) {
       setIsUpdatingPickup(false);
