@@ -251,7 +251,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
       </div>
 
       {isAddingItem && (
-        <div className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-emerald-500/20 dark:border-emerald-500/30 p-4 rounded-2xl animate-fade-in shadow-sm">
+        <div className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-emerald-500/20 dark:border-emerald-500/30 p-4 rounded-2xl animate-fade-in shadow-sm relative z-50">
           <h6 className="font-bold text-sm text-slate-800 dark:text-[#f0ede6] mb-3">Create New Outlet Item</h6>
           <form onSubmit={(e) => handleCreateOutletItem(e, mCatId)} className="space-y-3">
             <input required placeholder="Item Name" value={mName} onChange={e=>setMName(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-emerald-500/20 dark:border-emerald-500/30 rounded-lg px-3 py-2 text-xs font-bold dark:text-[#f0ede6]" />
@@ -260,7 +260,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
               <input required type="number" min="1" placeholder="Prep (mins)" value={mPrepTime} onChange={e=>setMPrepTime(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-emerald-500/20 dark:border-emerald-500/30 rounded-lg px-3 py-2 text-xs font-bold dark:text-[#f0ede6]" />
             </div>
             <input required placeholder="Description" value={mDesc} onChange={e=>setMDesc(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-emerald-500/20 dark:border-emerald-500/30 rounded-lg px-3 py-2 text-xs dark:text-[#f0ede6]" />
-            <div className="z-10 relative">
+            <div className="z-[60] relative">
               <CategorySelector categories={categories} value={mCatId} onChange={setMCatId} />
             </div>
             <div className="grid grid-cols-3 gap-3">
