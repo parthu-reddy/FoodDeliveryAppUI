@@ -735,7 +735,7 @@ export default function DeliveryDashboard({
     setIsUpdatingDelivery(true);
     
     try {
-      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, { status: "DELIVERED" });
+      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, { status: "DELIVERED", deliveryOtp: enteredOtp });
       setIsUpdatingDelivery(false);
       
       // Update history so it's immediately visible

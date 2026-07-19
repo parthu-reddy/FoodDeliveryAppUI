@@ -526,7 +526,7 @@ export default function CustomerDashboard({
 
 
   useEffect(() => {
-    if (currentTrackingOrder && (currentTrackingOrder.status === 'dispatched' || currentTrackingOrder.status === 'picked_up')) {
+    if (currentTrackingOrder && (currentTrackingOrder.status === 'dispatched' || currentTrackingOrder.status === 'out_for_delivery')) {
       if (onAddApiLog) {
         onAddApiLog({ id: 'live_tracking', label: `GET /api/v1/orders/${currentTrackingOrder.id}/live-tracking (SSE)`, method: 'GET' });
       }
@@ -668,7 +668,7 @@ export default function CustomerDashboard({
 
   // Get stage index for order tracking
   const getStatusIndex = (status: OrderStatus) => {
-    const statuses: OrderStatus[] = ['placed', 'accepted', 'preparing', 'ready_for_pickup', 'dispatched', 'picked_up', 'delivered'];
+    const statuses: OrderStatus[] = ['placed', 'accepted', 'preparing', 'ready_for_pickup', 'dispatched', 'out_for_delivery', 'delivered'];
     return statuses.indexOf(status);
   };
 
@@ -679,7 +679,7 @@ export default function CustomerDashboard({
       case 'accepted': return 20;
       case 'preparing': return 40;
       case 'dispatched': return 60;
-      case 'picked_up': return 80;
+      case 'out_for_delivery': return 80;
       case 'delivered': return 100;
       default: return 0;
     }
@@ -907,7 +907,7 @@ export default function CustomerDashboard({
                       {currentTrackingOrder.status === 'accepted' && 'Order Confirmed!'}
                       {currentTrackingOrder.status === 'preparing' && 'Kitchen is Cooking...'}
                       {(currentTrackingOrder.status === 'ready_for_pickup' || currentTrackingOrder.status === 'dispatched') && 'Waiting for Rider Pickup...'}
-                      {currentTrackingOrder.status === 'picked_up' && 'Rider is on the Way!'}
+                      {currentTrackingOrder.status === 'out_for_delivery' && 'Rider is on the Way!'}
                       {isFailedOrder(currentTrackingOrder.status) && 'Order Failed / Cancelled'}
                     </h4>
                     <p className="text-xs text-slate-400 dark:text-slate-300">
@@ -1007,10 +1007,10 @@ export default function CustomerDashboard({
                       { status: 'placed', label: 'Order Received' },
                     { status: 'accepted', label: 'Accepted by Kitchen' },
                     { status: 'preparing', label: 'Cooking & Packaging' },
-                    { status: 'picked_up', label: 'Picked up by Delivery Executive' },
+                    { status: 'out_for_delivery', label: 'Picked up by Delivery Executive' },
                     { status: 'delivered', label: 'Handed Over & Verified' },
                   ].map((step, idx, arr) => {
-                    // For UI steps, 'ready_for_pickup' acts as 'preparing' being done but 'picked_up' not yet done
+                    // For UI steps, 'ready_for_pickup' acts as 'preparing' being done but 'out_for_delivery' not yet done
                     const stepStatusIndex = getStatusIndex(step.status as OrderStatus);
                     const currentStatusIndex = getStatusIndex(currentTrackingOrder.status);
                     

@@ -36,11 +36,10 @@ export type OrderStatus =
   | 'accepted' // Accepted by restaurant
   | 'preparing' // Being cooked
   | 'dispatched' // Ready & assigned, waiting for delivery pickup
-  | 'picked_up' // Picked up by delivery partner
+  | 'out_for_delivery' // Picked up by delivery partner
   | 'delivered' // Successfully completed
   | 'on_hold' // Held by restaurant due to delay
   | 'ready_for_pickup'
-  | 'out_for_delivery'
   | 'created'
   | 'rejected'
   | 'cancelled';

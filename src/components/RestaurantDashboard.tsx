@@ -149,7 +149,13 @@ export default function RestaurantDashboard({
             if (res.data) {
               const mapped = res.data.map((o: any) => {
                 let s = o.status?.toLowerCase() || '';
-                if (s === 'created' || s === 'paid') s = 'placed';
+                if (s === 'created' || s === 'paid') {
+                  if (o.additionalPrepTime && o.additionalPrepTime > 10) {
+                    s = 'on_hold';
+                  } else {
+                    s = 'placed';
+                  }
+                }
                 if (s === 'ready_for_pickup' || s === 'ready') s = 'ready_for_pickup'; // Wait, backend sends READY, UI expects ready_for_pickup?
                 if (s === 'rejected' || s === 'cancelled' || s === 'cancelled_by_restaurant' || s === 'delivery_failed' || s === 'dispatch_failed') s = 'cancelled';
                 if (s === 'delivered') s = 'delivered';

@@ -23,6 +23,7 @@ export interface Outlet {
   lng: number;
   timings?: { openingTime: string; closingTime: string }[];
   bannerUrl: string;
+  defaultPrepTimeSeconds?: number;
   createdAt: string;
 }
 
