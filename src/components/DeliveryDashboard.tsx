@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Bike, DollarSign, Map, CheckCircle, Navigation, Play, Eye, 
+  Bike, DollarSign, Map as MapIcon, CheckCircle, Navigation, Play, Eye, 
   MapPin, LogOut, Check, Clock, ArrowRight, ShieldAlert, KeyRound, MessageCircle, Store, Sun, Moon,
   Terminal, Sliders, Code, Send, CheckCircle2, AlertCircle, User, ArrowLeft, X, MapPinOff
 } from 'lucide-react';
@@ -1162,7 +1162,7 @@ export default function DeliveryDashboard({
 
             {availableJobs.length === 0 ? (
               <div className="p-12 text-center text-slate-400 dark:text-slate-300 border border-dashed border-rose-500/30 dark:border-rose-500/30 rounded-3xl space-y-2.5 bg-white/20 dark:bg-slate-900/45">
-                <Map className="w-8 h-8 mx-auto text-slate-500 dark:text-slate-300 animate-pulse" />
+                <MapIcon className="w-8 h-8 mx-auto text-slate-500 dark:text-slate-300 animate-pulse" />
                 <p className="text-sm font-semibold">Scanning for dispatched contracts...</p>
                 <p className="text-xs text-slate-500 dark:text-slate-300 max-w-xs mx-auto leading-relaxed">
                   Waiting for new delivery requests in your area. Keep your status Online to receive dispatch pings.

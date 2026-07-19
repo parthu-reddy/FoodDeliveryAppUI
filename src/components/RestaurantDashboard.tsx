@@ -14,6 +14,7 @@ import OutletMenuEditor from './OutletMenuEditor';
 import OutletRegistration from "./OutletRegistration";
 import BrandRegistration from "./BrandRegistration";
 import OutletShiftEditor from "./OutletShiftEditor";
+import OutletSettingsEditor from "./OutletSettingsEditor";
 import BrandMasterMenu from "./BrandMasterMenu";
 
 import { OrderHistory } from "./OrderHistory";
@@ -98,8 +99,8 @@ export default function RestaurantDashboard({
 
 
   const [showSettings, setShowSettings] = useState(false);
-  
   const [editingOutletShifts, setEditingOutletShifts] = useState<any | null>(null);
+  const [editingOutletSettings, setEditingOutletSettings] = useState<any | null>(null);
   const [selectedOutletId, setSelectedOutletId] = useState<string>(() => {
     return localStorage.getItem('restaurant_selectedOutletId') || '';
   });
@@ -238,6 +239,10 @@ export default function RestaurantDashboard({
         setSelectedOutletId(_outlets[0].id);
         localStorage.setItem('restaurant_selectedOutletId', _outlets[0].id);
         return; // replace stale id with first available
+      } else if (selectedOutletId && _outlets.length === 0) {
+        setSelectedOutletId('');
+        localStorage.removeItem('restaurant_selectedOutletId');
+        return;
       } else if (selectedOutletId) {
         localStorage.setItem('restaurant_selectedOutletId', selectedOutletId);
       }
@@ -254,6 +259,10 @@ export default function RestaurantDashboard({
         if (_outlet) {
           const _masterItems = await getMasterMenuItems(_outlet.brandId);
           setMasterItems(_masterItems);
+          
+          if (_outlet.defaultPrepTimeSeconds) {
+            setApiPrepSeconds(_outlet.defaultPrepTimeSeconds.toString());
+          }
         } else {
           setMasterItems([]);
         }
@@ -340,7 +349,7 @@ export default function RestaurantDashboard({
 
   const activePreparingOrders = myOrders.filter(o => o.status === 'placed' || o.status === 'on_hold' || o.status === 'accepted' || o.status === 'preparing');
   const [apiEtaOrderId, setApiEtaOrderId] = useState('');
-  const [apiPrepSeconds, setApiPrepSeconds] = useState('1200');
+  const [apiPrepSeconds, setApiPrepSeconds] = useState('900');
   const [apiEtaReason, setApiEtaReason] = useState('High custom order density');
 
   const [apiReadyOrderId, setApiReadyOrderId] = useState('');
@@ -1571,13 +1580,22 @@ export default function RestaurantDashboard({
                                 <span className="font-extrabold text-sm text-slate-800 dark:text-[#f0ede6]">{o.name}</span>
                                 <span className="text-[10px] font-mono text-slate-400 dark:text-slate-300 block">ID: {o.id}</span>
                               </div>
-                              <button
-                                onClick={() => setEditingOutletShifts(o)}
-                                className="p-1.5 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-500/20 transition-colors"
-                                title="Edit Shifts"
-                              >
-                                <Edit3 className="w-3.5 h-3.5" />
-                              </button>
+                              <div className="flex gap-1.5">
+                                <button
+                                  onClick={() => setEditingOutletSettings(o)}
+                                  className="p-1.5 bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-lg hover:bg-rose-100 dark:hover:bg-rose-500/20 transition-colors"
+                                  title="Edit Settings"
+                                >
+                                  <Settings className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => setEditingOutletShifts(o)}
+                                  className="p-1.5 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-500/20 transition-colors"
+                                  title="Edit Shifts"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
                             </div>
                             <div className="text-xs text-slate-500 dark:text-slate-300">FSSAI: {o.fssaiLicenseNumber}</div>
                             {o.timings && o.timings.length > 0 && (
@@ -1955,6 +1973,14 @@ export default function RestaurantDashboard({
           outlet={editingOutletShifts}
           onRefresh={loadData}
           onClose={() => setEditingOutletShifts(null)}
+        />
+      )}
+      
+      {editingOutletSettings && (
+        <OutletSettingsEditor
+          outlet={editingOutletSettings}
+          onRefresh={loadData}
+          onClose={() => setEditingOutletSettings(null)}
         />
       )}
 
