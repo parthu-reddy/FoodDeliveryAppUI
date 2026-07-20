@@ -357,7 +357,7 @@ export default function RestaurantDashboard({
     }));
 
     try {
-      const endpoint = `/api/v1/internal/restaurant/api/v1/outlets/${selectedOutletId}/menu-overrides/${dishId}`;
+      const endpoint = `/api/v1/outlets/${selectedOutletId}/menu-overrides/${dishId}`;
       await apiPost(endpoint, {
         isAvailable: newStockStatus
       });
