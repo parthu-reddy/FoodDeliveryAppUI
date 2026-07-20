@@ -94,14 +94,14 @@ export default function DeliveryDashboard({
         // 1. Fetch Active Job
         const activeRes = await apiGet(`/api/v1/delivery/orders/active`);
         if (!isCancelled && activeRes.data) {
-           fetchedActiveJobs = activeRes.data.map((o: any) => ({ ...o, status: o.status?.toLowerCase() || '' }));
+           fetchedActiveJobs = activeRes.data.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
         }
 
         // 2. Fetch Available Pings (Only if NO active jobs)
         if (!isCancelled && fetchedActiveJobs.length === 0) {
            const availableRes = await apiGet(`/api/v1/delivery/orders/available`);
            if (availableRes.data) {
-              fetchedAvailableJobs = availableRes.data.map((o: any) => ({ ...o, status: o.status?.toLowerCase() || '' }));
+              fetchedAvailableJobs = availableRes.data.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
            }
         }
 
@@ -110,7 +110,7 @@ export default function DeliveryDashboard({
            const today = new Date().toISOString().split('T')[0];
            const histRes = await apiGet(`/api/v1/delivery/orders/history?date=${today}`);
            if (histRes.data) {
-              historyRef.current = histRes.data.map((o: any) => ({ ...o, status: o.status?.toLowerCase() || '' }));
+              historyRef.current = histRes.data.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
            }
         }
         
@@ -150,7 +150,7 @@ export default function DeliveryDashboard({
 
     apiGet(`/api/v1/delivery/orders/history?date=${dateToFetch}`).then(res => {
       if (res.data) {
-        historyRef.current = res.data.map((o: any) => ({ ...o, status: o.status?.toLowerCase() || '' }));
+        historyRef.current = res.data.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
         // We don't want to overwrite active jobs, just merge the updated history
         setInternalOrders(prev => {
           const active = prev.filter(o => [OrderStatus.DISPATCHED, OrderStatus.READY_FOR_PICKUP, OrderStatus.OUT_FOR_DELIVERY].includes(o.status));
@@ -193,7 +193,7 @@ export default function DeliveryDashboard({
       }
     } else {
       // Check if current job was cancelled
-      const currentJobStatus = activeOrders.find(o => o.id === activeJobId)?.status?.toLowerCase();
+      const currentJobStatus = activeOrders.find(o => o.id === activeJobId)?.status?.toUpperCase();
       if (currentJobStatus === OrderStatus.CANCELLED || currentJobStatus === 'cancelled_by_restaurant') {
         showToast("Your current order was cancelled by the restaurant.");
         setActiveJobId(null);

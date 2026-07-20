@@ -1,30 +1,63 @@
 import React, { useState, useMemo } from 'react';
 import { Calendar, Search, Filter, ChevronLeft, ChevronRight, Package, DollarSign, Clock } from 'lucide-react';
 import { OrderStatus, Order } from '../types';
-import { apiPost } from '../lib/apiClient';
+import { apiPost, apiGet } from '../lib/apiClient';
 import { useToast } from '../context/ToastContext';
 
-export function OrderHistory({ orders }: { orders: Order[] }) {
+export function OrderHistory({ restaurantId }: { restaurantId: string }) {
   const [dateFilter, setDateFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 100;
+  const itemsPerPage = 10;
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalElements, setTotalElements] = useState(0);
   const { showSuccess, showError } = useToast();
 
-  const filteredOrders = useMemo(() => {
-    let filtered = orders.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-    
-    if (dateFilter) {
-      filtered = filtered.filter(order => {
-        const orderDate = new Date(order.timestamp).toISOString().split('T')[0];
-        return orderDate === dateFilter;
-      });
-    }
-    
-    return filtered;
-  }, [orders, dateFilter]);
+  React.useEffect(() => {
+    if (!restaurantId) return;
+    const fetchHistory = async () => {
+      try {
+        const queryParams = new URLSearchParams();
+        if (dateFilter) queryParams.append('date', dateFilter);
+        queryParams.append('page', (currentPage - 1).toString());
+        queryParams.append('size', itemsPerPage.toString());
 
-  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
-  const paginatedOrders = filteredOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+        const res = await apiGet(`/api/v1/restaurants/${restaurantId}/fulfillment/orders/history?${queryParams.toString()}`);
+        if (res.data) {
+          const mapped = (res.data.content || []).map((o: any) => {
+            let s = (o.status || '').toUpperCase();
+            if (s === OrderStatus.READY_FOR_PICKUP || s === 'READY') s = OrderStatus.READY_FOR_PICKUP; 
+            if (s === OrderStatus.CANCELLED_BY_RESTAURANT || s === 'CANCELLED_BY_RESTAURANT' || s === OrderStatus.DELIVERY_FAILED) s = OrderStatus.CANCELLED;
+            
+            let parsedItems = o.items || [];
+            if (o.itemsJson) {
+                try { parsedItems = JSON.parse(o.itemsJson); } catch (e) {}
+            }
+            let calculatedTotal = parsedItems.reduce((acc: number, item: any) => acc + (item.item?.price || item.price || 0) * (item.quantity || 1), 0);
+            
+            return {
+              ...o, 
+              id: o.orderId || o.id, 
+              status: s, 
+              items: parsedItems,
+              total: o.total || o.totalAmount || calculatedTotal,
+              subtotal: o.subtotal || calculatedTotal,
+              customerName: o.customerName || 'Customer',
+              timestamp: o.createdAt || new Date().toISOString()
+            };
+          });
+          setOrders(mapped);
+          setTotalPages(res.data.totalPages || 1);
+          setTotalElements(res.data.totalElements || mapped.length);
+        }
+      } catch (err) {
+        console.error('Failed to fetch history orders', err);
+      }
+    };
+    fetchHistory();
+  }, [restaurantId, dateFilter, currentPage]);
+
+  const paginatedOrders = orders;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -180,7 +213,7 @@ export function OrderHistory({ orders }: { orders: Order[] }) {
       {totalPages > 1 && (
         <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
           <div className="text-xs text-slate-500 dark:text-slate-300 font-medium">
-            Showing <span className="font-bold text-slate-800 dark:text-[#f0ede6]">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-bold text-slate-800 dark:text-[#f0ede6]">{Math.min(currentPage * itemsPerPage, filteredOrders.length)}</span> of <span className="font-bold text-slate-800 dark:text-[#f0ede6]">{filteredOrders.length}</span> orders
+            Showing <span className="font-bold text-slate-800 dark:text-[#f0ede6]">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-bold text-slate-800 dark:text-[#f0ede6]">{Math.min(currentPage * itemsPerPage, totalElements)}</span> of <span className="font-bold text-slate-800 dark:text-[#f0ede6]">{totalElements}</span> orders
           </div>
           
           <div className="flex items-center gap-2">

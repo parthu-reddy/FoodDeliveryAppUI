@@ -101,10 +101,10 @@ export default function SharedSettingsView({
         }
       } else if (res?.data && Array.isArray(res.data)) { // fallback
          if (type === 'active') {
-             setPaginatedOrders(res.data.filter((o: any) => ![OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT, 'cancelled_by_restaurant', OrderStatus.DELIVERY_FAILED, OrderStatus.PARTIALLY_REFUNDED, OrderStatus.CANCELLED_AND_REFUNDED].includes((o.status||'').toLowerCase())));
+             setPaginatedOrders(res.data.filter((o: any) => ![OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT, 'CANCELLED_BY_RESTAURANT', OrderStatus.DELIVERY_FAILED, OrderStatus.PARTIALLY_REFUNDED, OrderStatus.CANCELLED_AND_REFUNDED].includes((o.status||'').toUpperCase())));
              setHasMoreOrders(false);
          } else {
-             setPaginatedRefunds(res.data.filter((o: any) => [OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT, 'cancelled_by_restaurant', OrderStatus.DELIVERY_FAILED, OrderStatus.PARTIALLY_REFUNDED, OrderStatus.CANCELLED_AND_REFUNDED].includes((o.status||'').toLowerCase())));
+             setPaginatedRefunds(res.data.filter((o: any) => [OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT, 'CANCELLED_BY_RESTAURANT', OrderStatus.DELIVERY_FAILED, OrderStatus.PARTIALLY_REFUNDED, OrderStatus.CANCELLED_AND_REFUNDED].includes((o.status||'').toUpperCase())));
              setHasMoreRefunds(false);
          }
       }

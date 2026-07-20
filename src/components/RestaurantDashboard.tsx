@@ -49,12 +49,12 @@ interface RestaurantDashboardProps {
 
 // Utility to determine if order is actively tracked
 const isActiveOrder = (status: string) => {
-  const s = (status || '').trim().toLowerCase();
+  const s = (status || '').trim().toUpperCase();
   return ![OrderStatus.DELIVERED, OrderStatus.PARTIALLY_REFUNDED, OrderStatus.CANCELLED_AND_REFUNDED, OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT, 'cancelled_by_restaurant', OrderStatus.DELIVERY_FAILED, OrderStatus.CANCELLED].includes(s);
 };
 
 const isFailedOrder = (status: string) => {
-  const s = (status || '').trim().toLowerCase();
+  const s = (status || '').trim().toUpperCase();
   return [OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT, 'cancelled_by_restaurant', OrderStatus.DELIVERY_FAILED, OrderStatus.CANCELLED, OrderStatus.PARTIALLY_REFUNDED, OrderStatus.CANCELLED_AND_REFUNDED].includes(s);
 };
 
@@ -81,6 +81,7 @@ export default function RestaurantDashboard({
       if (status === OrderStatus.ACCEPTED) endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/accept`;
       else if (status === OrderStatus.CANCELLED_BY_RESTAURANT) endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/reject`;
       else if (status === OrderStatus.READY_FOR_PICKUP) endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/ready`;
+      else if (status === OrderStatus.DISPATCHED) endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/dispatch`;
       else if (status === OrderStatus.CANCELLED) endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/cancel`;
       
       if (endpoint) {
@@ -143,12 +144,12 @@ export default function RestaurantDashboard({
     
     const fetchOrders = () => {
       if (selectedOutletId) {
-        apiGet(`/api/v1/restaurants/${selectedOutletId}/fulfillment/orders`)
+        apiGet(`/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/active`)
                     .then(res => {
             if (isCancelled) return;
             if (res.data) {
               const mapped = res.data.map((o: any) => {
-                let s = o.status?.toLowerCase() || '';
+                let s = o.status?.toUpperCase() || '';
                 if (s === OrderStatus.CREATED || s === OrderStatus.PAID) {
                   if (o.additionalPrepTime && o.additionalPrepTime > 10) {
                     s = OrderStatus.AWAITING_DELAY_APPROVAL;
@@ -156,8 +157,8 @@ export default function RestaurantDashboard({
                     s = OrderStatus.PAID;
                   }
                 }
-                if (s === OrderStatus.READY_FOR_PICKUP || s === OrderStatus.READY_FOR_PICKUP) s = OrderStatus.READY_FOR_PICKUP; // Wait, backend sends READY, UI expects ready_for_pickup?
-                if (s === OrderStatus.CANCELLED_BY_RESTAURANT || s === OrderStatus.CANCELLED || s === 'cancelled_by_restaurant' || s === OrderStatus.DELIVERY_FAILED || s === OrderStatus.CANCELLED) s = OrderStatus.CANCELLED;
+                if (s === OrderStatus.READY_FOR_PICKUP || s === 'READY') s = OrderStatus.READY_FOR_PICKUP;
+                if (s === OrderStatus.CANCELLED_BY_RESTAURANT || s === OrderStatus.CANCELLED || s === 'CANCELLED_BY_RESTAURANT' || s === OrderStatus.DELIVERY_FAILED) s = OrderStatus.CANCELLED;
                 if (s === OrderStatus.DELIVERED) s = OrderStatus.DELIVERED;
                 
                 let parsedItems = o.items || [];
@@ -1228,19 +1229,19 @@ export default function RestaurantDashboard({
                       <span className="font-extrabold text-xs text-slate-800 dark:text-[#f0ede6] uppercase font-sans tracking-wide">Prepared Ready</span>
                     </div>
                     <span className="text-[10px] font-black font-mono bg-emerald-500/10 text-emerald-650 dark:text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-                      {myOrders.filter(o => o.status === OrderStatus.DISPATCHED || o.status === OrderStatus.READY_FOR_PICKUP).length}
+                      {myOrders.filter(o => o.status === OrderStatus.READY_FOR_PICKUP).length}
                     </span>
                   </div>
 
                   <div className="flex-1 space-y-3.5 overflow-y-auto h-[500px] scrollbar-thin pr-1">
-                    {myOrders.filter(o => o.status === OrderStatus.DISPATCHED || o.status === OrderStatus.READY_FOR_PICKUP).length === 0 ? (
+                    {myOrders.filter(o => o.status === OrderStatus.READY_FOR_PICKUP).length === 0 ? (
                       <div className="h-full flex flex-col items-center justify-center text-center py-16 px-4 bg-white/40 dark:bg-slate-900/10 border border-dashed border-rose-500/20 dark:border-rose-500/30 rounded-2xl">
                         <Truck className="w-8 h-8 text-slate-300 dark:text-slate-700 mb-2" />
                         <p className="text-xs font-bold text-slate-400 dark:text-slate-300">No ready packages</p>
                         <p className="text-[10px] text-slate-500 dark:text-slate-300 mt-1 max-w-[180px]">Finished dishes will wait here. Handover to couriers with secure codes.</p>
                       </div>
                     ) : (
-                      myOrders.filter(o => o.status === OrderStatus.DISPATCHED || o.status === OrderStatus.READY_FOR_PICKUP).slice().reverse().map(order => (
+                      myOrders.filter(o => o.status === OrderStatus.READY_FOR_PICKUP).slice().reverse().map(order => (
                         <motion.div 
                           key={order.id}
                           layoutId={`card-${order.id}`}
@@ -1321,19 +1322,19 @@ export default function RestaurantDashboard({
                       <span className="font-extrabold text-xs text-slate-800 dark:text-[#f0ede6] uppercase font-sans tracking-wide">Being Delivered</span>
                     </div>
                     <span className="text-[10px] font-black font-mono bg-purple-500/10 text-purple-650 dark:text-purple-400 px-2.5 py-0.5 rounded-full border border-purple-500/20">
-                      {myOrders.filter(o => o.status === 'picked_up').length}
+                      {myOrders.filter(o => o.status === OrderStatus.DISPATCHED).length}
                     </span>
                   </div>
 
                   <div className="flex-1 space-y-3.5 overflow-y-auto h-[500px] scrollbar-thin pr-1">
-                    {myOrders.filter(o => o.status === 'picked_up').length === 0 ? (
+                    {myOrders.filter(o => o.status === OrderStatus.DISPATCHED).length === 0 ? (
                       <div className="h-full flex flex-col items-center justify-center text-center py-16 px-4 bg-white/40 dark:bg-slate-900/10 border border-dashed border-purple-500/20 dark:border-purple-500/30 rounded-2xl">
                         <Bike className="w-8 h-8 text-slate-300 dark:text-slate-700 mb-2" />
                         <p className="text-xs font-bold text-slate-400 dark:text-slate-300">No orders in transit</p>
                         <p className="text-[10px] text-slate-500 dark:text-slate-300 mt-1 max-w-[180px]">Orders picked up by riders will appear here until delivered.</p>
                       </div>
                     ) : (
-                      myOrders.filter(o => o.status === 'picked_up').slice().reverse().map(order => (
+                      myOrders.filter(o => o.status === OrderStatus.DISPATCHED).slice().reverse().map(order => (
                         <motion.div 
                           key={order.id}
                           layoutId={`card-${order.id}`}
@@ -1638,7 +1639,7 @@ export default function RestaurantDashboard({
             )}
             {settingsTab === "history" && selectedOutletId && (
               <div className="animate-fade-in bg-white/40 dark:bg-slate-900/40 p-6 rounded-3xl border border-emerald-500/20 dark:border-emerald-500/30 backdrop-blur-md shadow-sm">
-                <OrderHistory orders={historyOrders} />
+                <OrderHistory restaurantId={selectedOutletId} />
               </div>
             )}
           </motion.div>

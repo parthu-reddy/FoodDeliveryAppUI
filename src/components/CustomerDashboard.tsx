@@ -35,12 +35,12 @@ interface CustomerDashboardProps {
 
 // Utility to determine if order is actively tracked
 const isActiveOrder = (status: string) => {
-  const s = (status || '').trim().toLowerCase();
+  const s = (status || '').trim().toUpperCase();
   return ![OrderStatus.DELIVERED, OrderStatus.PARTIALLY_REFUNDED, OrderStatus.CANCELLED_AND_REFUNDED, OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT, 'cancelled_by_restaurant', OrderStatus.DELIVERY_FAILED, OrderStatus.CANCELLED].includes(s);
 };
 
 const isFailedOrder = (status: string) => {
-  const s = (status || '').trim().toLowerCase();
+  const s = (status || '').trim().toUpperCase();
   return [OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT, 'cancelled_by_restaurant', OrderStatus.DELIVERY_FAILED, OrderStatus.CANCELLED].includes(s);
 };
 
@@ -106,7 +106,7 @@ export default function CustomerDashboard({
         .then(res => {
           if (res.data && res.data.content) {
             const mapped = res.data.content.map((o: any) => {
-              let s = o.status?.toLowerCase() || '';
+              let s = o.status?.toUpperCase() || '';
               if (s === 'awaiting_delay_approval') s = OrderStatus.AWAITING_DELAY_APPROVAL;
               if (s === OrderStatus.PAID || s === OrderStatus.CREATED) s = OrderStatus.PAID;
               return { ...o, status: s };
@@ -115,7 +115,7 @@ export default function CustomerDashboard({
           } else if (res.data && Array.isArray(res.data)) {
             // Fallback just in case
             const mapped = res.data.map((o: any) => {
-              let s = o.status?.toLowerCase() || '';
+              let s = o.status?.toUpperCase() || '';
               if (s === 'awaiting_delay_approval') s = OrderStatus.AWAITING_DELAY_APPROVAL;
               if (s === OrderStatus.PAID || s === OrderStatus.CREATED) s = OrderStatus.PAID;
               return { ...o, status: s };
@@ -148,7 +148,7 @@ export default function CustomerDashboard({
   // Smart polling for active orders only (every 60s)
   useEffect(() => {
     const activeOrders = internalOrders.filter(o => 
-      [OrderStatus.CREATED, OrderStatus.ACCEPTED, OrderStatus.OUT_FOR_DELIVERY].includes(o.status?.toLowerCase() || '')
+      [OrderStatus.CREATED, OrderStatus.ACCEPTED, OrderStatus.OUT_FOR_DELIVERY].includes(o.status?.toUpperCase() || '')
     );
     
     // Stop polling if no active orders
@@ -164,7 +164,7 @@ export default function CustomerDashboard({
             const newOrders = [...prev];
             let changed = false;
             updatedOrders.forEach(updated => {
-              let s = updated.status?.toLowerCase() || '';
+              let s = updated.status?.toUpperCase() || '';
               if (s === 'awaiting_delay_approval') s = OrderStatus.AWAITING_DELAY_APPROVAL;
               if (s === OrderStatus.PAID || s === OrderStatus.CREATED) s = OrderStatus.PAID;
               updated.status = s;
@@ -1112,9 +1112,9 @@ export default function CustomerDashboard({
                 <div className="bg-white/20 dark:bg-slate-900/20 backdrop-blur-xl border border-rose-500/20 dark:border-rose-500/30 rounded-3xl p-6 shadow-[0_8px_32px_rgba(251,146,60,0.05)] space-y-6">
                   <div className="text-center pb-4 border-b border-rose-500/10 dark:border-slate-800">
                     <div className="inline-flex w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 items-center justify-center mb-3">
-                      {currentTrackingOrder.status.toLowerCase() === OrderStatus.DELIVERED ? <Check className="w-6 h-6 text-emerald-500" /> : <X className="w-6 h-6 text-red-500" />}
+                      {currentTrackingOrder.status.toUpperCase() === OrderStatus.DELIVERED ? <Check className="w-6 h-6 text-emerald-500" /> : <X className="w-6 h-6 text-red-500" />}
                     </div>
-                    <h2 className="text-2xl font-black mb-1 capitalize">{currentTrackingOrder.status.toLowerCase() === OrderStatus.DELIVERED ? 'Order Delivered' : 'Order ' + currentTrackingOrder.status.replace(/_/g, ' ')}</h2>
+                    <h2 className="text-2xl font-black mb-1 capitalize">{currentTrackingOrder.status.toUpperCase() === OrderStatus.DELIVERED ? 'Order Delivered' : 'Order ' + currentTrackingOrder.status.replace(/_/g, ' ')}</h2>
                     <p className="text-sm font-bold text-slate-500 dark:text-slate-400">#{currentTrackingOrder.id.substring(0, 8)}</p>
                     
                     {/* Invoice Details */}

@@ -55,8 +55,8 @@ export const getUserProfile = (): any | null => {
     const decoded = decodeJwt(token);
     if (decoded && decoded.sub) {
       const role = Array.isArray(decoded.roles) && decoded.roles.length > 0
-        ? decoded.roles[0].toLowerCase()
-        : (decoded.role || RoleName.CUSTOMER).toLowerCase();
+        ? decoded.roles[0].toUpperCase()
+        : (decoded.role || RoleName.CUSTOMER).toUpperCase();
       const profile = { id: decoded.sub, phone: decoded.phone || decoded.sub, role, name: decoded.name || '' };
       setUserProfile(profile);
       return profile;
