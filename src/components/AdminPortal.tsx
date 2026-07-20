@@ -5,6 +5,7 @@ import { useToast } from '../context/ToastContext';
 import { Search, Shield, User, X, LogOut, Sun, Moon, Plus, Package, Truck, Check, MapPin, Users, Activity, Tags, Navigation } from 'lucide-react';
 import LaBouffeLogo from './LaBouffeLogo';
 import AdminAssignmentMap from './AdminAssignmentMap';
+import AdminFleetMap from './AdminFleetMap';
 import { z } from 'zod';
 
 const roleSchema = z.string().min(2, "Role must be at least 2 characters").max(50, "Role cannot exceed 50 characters").regex(/^[A-Z_]+$/, "Role must contain only uppercase letters and underscores");
@@ -19,7 +20,7 @@ export default function AdminPortal({
   theme,
   onToggleTheme
 }: any) {
-  const [activeTab, setActiveTab] = useState<'deliveries' | 'users' | 'categories'>('deliveries');
+  const [activeTab, setActiveTab] = useState<'deliveries' | 'users' | 'categories' | 'map'>('map');
   const { showSuccess, showError } = useToast();
 
   // deliveries state
@@ -183,6 +184,13 @@ export default function AdminPortal({
           >
             <Tags className="w-5 h-5" /> Categories
           </button>
+          
+          <button 
+            onClick={() => setActiveTab('map')} 
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'map' ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30' : 'text-slate-600 dark:text-slate-300 hover:bg-white/20 dark:hover:bg-slate-800/40'}`}
+          >
+            <MapPin className="w-5 h-5" /> Fleet Map
+          </button>
         </div>
 
         <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
@@ -201,6 +209,12 @@ export default function AdminPortal({
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 bg-transparent text-slate-800 dark:text-[#f0ede6]">
+        {activeTab === 'map' && (
+            <div className="flex-1 flex w-full h-full relative overflow-hidden">
+                <AdminFleetMap />
+            </div>
+        )}
+        
         {activeTab === 'deliveries' && (
           <div className="flex-1 flex w-full h-full overflow-hidden">
              {/* Live Orders List */}

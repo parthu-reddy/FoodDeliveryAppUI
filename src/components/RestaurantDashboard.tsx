@@ -106,6 +106,7 @@ export default function RestaurantDashboard({
   });
   const [activeTab, setActiveTab] = useState<'orders' | 'menu'>('orders');
   const [settingsTab, setSettingsTab] = useState<"menu-editor" | "outlets" | "history">("menu-editor");
+  const [apiPrepSeconds, setApiPrepSeconds] = useState('15');
 
 
   const [showSettings, setShowSettings] = useState(false);
