@@ -50,12 +50,12 @@ interface RestaurantDashboardProps {
 // Utility to determine if order is actively tracked
 const isActiveOrder = (status: string) => {
   const s = (status || '').trim().toLowerCase();
-  return !['delivered', 'partially_refunded', 'cancelled_and_refunded', 'cancelled', 'rejected', 'cancelled_by_restaurant', 'delivery_failed', 'dispatch_failed'].includes(s);
+  return ![OrderStatus.DELIVERED, OrderStatus.PARTIALLY_REFUNDED, OrderStatus.CANCELLED_AND_REFUNDED, OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT, 'cancelled_by_restaurant', OrderStatus.DELIVERY_FAILED, OrderStatus.CANCELLED].includes(s);
 };
 
 const isFailedOrder = (status: string) => {
   const s = (status || '').trim().toLowerCase();
-  return ['cancelled', 'rejected', 'cancelled_by_restaurant', 'delivery_failed', 'dispatch_failed', 'partially_refunded', 'cancelled_and_refunded'].includes(s);
+  return [OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT, 'cancelled_by_restaurant', OrderStatus.DELIVERY_FAILED, OrderStatus.CANCELLED, OrderStatus.PARTIALLY_REFUNDED, OrderStatus.CANCELLED_AND_REFUNDED].includes(s);
 };
 
 export default function RestaurantDashboard({
@@ -78,10 +78,10 @@ export default function RestaurantDashboard({
     // API call
     try {
       let endpoint = '';
-      if (status === 'accepted') endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/accept`;
-      else if (status === 'rejected') endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/reject`;
-      else if (status === 'ready_for_pickup') endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/ready`;
-      else if (status === 'cancelled') endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/cancel`;
+      if (status === OrderStatus.ACCEPTED) endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/accept`;
+      else if (status === OrderStatus.CANCELLED_BY_RESTAURANT) endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/reject`;
+      else if (status === OrderStatus.READY_FOR_PICKUP) endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/ready`;
+      else if (status === OrderStatus.CANCELLED) endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/cancel`;
       
       if (endpoint) {
         await apiPost(endpoint);
@@ -149,16 +149,16 @@ export default function RestaurantDashboard({
             if (res.data) {
               const mapped = res.data.map((o: any) => {
                 let s = o.status?.toLowerCase() || '';
-                if (s === 'created' || s === 'paid') {
+                if (s === OrderStatus.CREATED || s === OrderStatus.PAID) {
                   if (o.additionalPrepTime && o.additionalPrepTime > 10) {
-                    s = 'on_hold';
+                    s = OrderStatus.AWAITING_DELAY_APPROVAL;
                   } else {
-                    s = 'placed';
+                    s = OrderStatus.PAID;
                   }
                 }
-                if (s === 'ready_for_pickup' || s === 'ready') s = 'ready_for_pickup'; // Wait, backend sends READY, UI expects ready_for_pickup?
-                if (s === 'rejected' || s === 'cancelled' || s === 'cancelled_by_restaurant' || s === 'delivery_failed' || s === 'dispatch_failed') s = 'cancelled';
-                if (s === 'delivered') s = 'delivered';
+                if (s === OrderStatus.READY_FOR_PICKUP || s === OrderStatus.READY_FOR_PICKUP) s = OrderStatus.READY_FOR_PICKUP; // Wait, backend sends READY, UI expects ready_for_pickup?
+                if (s === OrderStatus.CANCELLED_BY_RESTAURANT || s === OrderStatus.CANCELLED || s === 'cancelled_by_restaurant' || s === OrderStatus.DELIVERY_FAILED || s === OrderStatus.CANCELLED) s = OrderStatus.CANCELLED;
+                if (s === OrderStatus.DELIVERED) s = OrderStatus.DELIVERED;
                 
                 let parsedItems = o.items || [];
                 if (o.itemsJson) {
@@ -180,8 +180,8 @@ export default function RestaurantDashboard({
                 return mapped.map((newOrder: any) => {
                   const oldOrder = prev.find(p => p.id === newOrder.id);
                   const isLocallyPreparing = localStorage.getItem(`order_preparing_${newOrder.id}`) === 'true';
-                  if ((oldOrder?.status === 'preparing' || isLocallyPreparing) && newOrder.status === 'accepted') {
-                    return { ...newOrder, status: 'preparing' };
+                  if ((oldOrder?.status === OrderStatus.ACCEPTED || isLocallyPreparing) && newOrder.status === OrderStatus.ACCEPTED) {
+                    return { ...newOrder, status: OrderStatus.ACCEPTED };
                   }
                   return newOrder;
                 });
@@ -326,9 +326,9 @@ export default function RestaurantDashboard({
   const myOrders = allRestaurantOrders.filter(o => isActiveOrder(o.status || ''));
   const historyOrders = allRestaurantOrders.filter(o => !isActiveOrder(o.status || ''));
 
-  const pendingOrders = myOrders.filter(o => o.status === 'placed' || o.status === 'on_hold');
-  const activePreparing = myOrders.filter(o => o.status === 'accepted' || o.status === 'preparing');
-  const completedOrders = historyOrders.filter(o => o.status === 'delivered');
+  const pendingOrders = myOrders.filter(o => o.status === OrderStatus.PAID || o.status === OrderStatus.AWAITING_DELAY_APPROVAL);
+  const activePreparing = myOrders.filter(o => o.status === OrderStatus.ACCEPTED || o.status === OrderStatus.ACCEPTED);
+  const completedOrders = historyOrders.filter(o => o.status === OrderStatus.DELIVERED);
 
   // Compute stats
   const totalRevenue = myOrders.reduce((acc, curr) => acc + curr.subtotal, 0);
@@ -353,7 +353,7 @@ export default function RestaurantDashboard({
   const [apiMenuAvailable, setApiMenuAvailable] = useState('true');
   const [apiPrepDelta, setApiPrepDelta] = useState('120');
 
-  const activePreparingOrders = myOrders.filter(o => o.status === 'placed' || o.status === 'on_hold' || o.status === 'accepted' || o.status === 'preparing');
+  const activePreparingOrders = myOrders.filter(o => o.status === OrderStatus.PAID || o.status === OrderStatus.AWAITING_DELAY_APPROVAL || o.status === OrderStatus.ACCEPTED || o.status === OrderStatus.ACCEPTED);
   const [apiEtaOrderId, setApiEtaOrderId] = useState('');
   const [apiPrepSeconds, setApiPrepSeconds] = useState('900');
   const [apiEtaReason, setApiEtaReason] = useState('High custom order density');
@@ -563,7 +563,7 @@ export default function RestaurantDashboard({
     setApiResponseEndpoint(`POST /api/v1/restaurants/${selectedOutletId}/orders/${apiReadyOrderId}/ready-for-pickup`);
 
     // Side effect: update order status in-memory directly!
-    onUpdateOrderStatus(apiReadyOrderId, 'dispatched');
+    onUpdateOrderStatus(apiReadyOrderId, OrderStatus.DISPATCHED);
 
     if (onAddApiLog) {
       onAddApiLog({
@@ -582,14 +582,14 @@ export default function RestaurantDashboard({
   };
 
   const handleStatusTransition = (order: Order) => {
-    if (order.status === 'placed' || order.status === 'on_hold') {
-      onUpdateOrderStatus(order.id, 'accepted');
-    } else if (order.status === 'accepted') {
+    if (order.status === OrderStatus.PAID || order.status === OrderStatus.AWAITING_DELAY_APPROVAL) {
+      onUpdateOrderStatus(order.id, OrderStatus.ACCEPTED);
+    } else if (order.status as any === OrderStatus.ACCEPTED) {
       localStorage.setItem(`order_preparing_${order.id}`, 'true');
-      onUpdateOrderStatus(order.id, 'preparing');
-    } else if (order.status === 'preparing') {
+      onUpdateOrderStatus(order.id, OrderStatus.ACCEPTED);
+    } else if (order.status as any === OrderStatus.ACCEPTED) {
       localStorage.removeItem(`order_preparing_${order.id}`);
-      onUpdateOrderStatus(order.id, 'ready_for_pickup');
+      onUpdateOrderStatus(order.id, OrderStatus.READY_FOR_PICKUP);
     }
   };
 
@@ -620,12 +620,12 @@ export default function RestaurantDashboard({
       
       if (minutes > 10) {
         // Optimistic update
-        setInternalOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'on_hold' } : o));
-        if (externalUpdateStatus) externalUpdateStatus(orderId, 'on_hold');
+        setInternalOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: OrderStatus.AWAITING_DELAY_APPROVAL } : o));
+        if (externalUpdateStatus) externalUpdateStatus(orderId, OrderStatus.AWAITING_DELAY_APPROVAL);
       } else {
         // Accept right away if <= 10 mins
-        setInternalOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'accepted' } : o));
-        if (externalUpdateStatus) externalUpdateStatus(orderId, 'accepted');
+        setInternalOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: OrderStatus.ACCEPTED } : o));
+        if (externalUpdateStatus) externalUpdateStatus(orderId, OrderStatus.ACCEPTED);
       }
       
       if (onAddApiLog) {
@@ -860,19 +860,19 @@ export default function RestaurantDashboard({
                       <span className="font-extrabold text-xs text-slate-800 dark:text-[#f0ede6] uppercase font-sans tracking-wide">New Placed</span>
                     </div>
                     <span className="text-[10px] font-black font-mono bg-amber-500/10 text-amber-550 dark:text-amber-400 px-2.5 py-0.5 rounded-full border border-amber-500/20">
-                      {myOrders.filter(o => o.status === 'placed').length}
+                      {myOrders.filter(o => o.status === OrderStatus.PAID).length}
                     </span>
                   </div>
 
                   <div className="flex-1 space-y-3.5 overflow-y-auto h-[500px] scrollbar-thin pr-1">
-                    {myOrders.filter(o => o.status === 'placed').length === 0 ? (
+                    {myOrders.filter(o => o.status === OrderStatus.PAID).length === 0 ? (
                       <div className="h-full flex flex-col items-center justify-center text-center py-16 px-4 bg-white/40 dark:bg-slate-900/10 border border-dashed border-rose-500/20 dark:border-rose-500/30 rounded-2xl">
                         <Package className="w-8 h-8 text-slate-300 dark:text-slate-700 mb-2" />
                         <p className="text-xs font-bold text-slate-400 dark:text-slate-300">No new orders placed</p>
                         <p className="text-[10px] text-slate-500 dark:text-slate-300 mt-1 max-w-[180px]">When customers place live orders, they will ping in this slot instantly.</p>
                       </div>
                     ) : (
-                      myOrders.filter(o => o.status === 'placed').slice().reverse().map(order => (
+                      myOrders.filter(o => o.status === OrderStatus.PAID).slice().reverse().map(order => (
                         <motion.div 
                           key={order.id}
                           layoutId={`card-${order.id}`}
@@ -883,8 +883,8 @@ export default function RestaurantDashboard({
                               <span className="text-xs font-mono font-bold text-orange-500">#{order.id.substring(0, 8)}</span>
                               <span className="text-[10px] text-slate-400 dark:text-slate-300 font-medium block">{order.timestamp}</span>
                             </div>
-                            <span className={`text-[9px] font-mono font-black px-2 py-0.5 rounded-full uppercase border ${order.status === 'on_hold' ? 'bg-red-500/10 text-red-500 border-red-500/25' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:shadow-[0_0_12px_rgba(244,63,94,0.5)] uppercase'}`}>
-                              {order.status === 'on_hold' ? 'ON HOLD' : 'PLACED'}
+                            <span className={`text-[9px] font-mono font-black px-2 py-0.5 rounded-full uppercase border ${order.status === OrderStatus.AWAITING_DELAY_APPROVAL ? 'bg-red-500/10 text-red-500 border-red-500/25' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:shadow-[0_0_12px_rgba(244,63,94,0.5)] uppercase'}`}>
+                              {order.status === OrderStatus.AWAITING_DELAY_APPROVAL ? 'ON HOLD' : 'PLACED'}
                             </span>
                           </div>
 
@@ -1029,18 +1029,18 @@ export default function RestaurantDashboard({
                       <span className="font-extrabold text-xs text-slate-800 dark:text-[#f0ede6] uppercase font-sans tracking-wide">Requested Delay</span>
                     </div>
                     <span className="text-[10px] font-black font-mono bg-red-500/10 text-red-500 px-2.5 py-0.5 rounded-full border border-red-500/20">
-                      {myOrders.filter(o => o.status === 'on_hold').length}
+                      {myOrders.filter(o => o.status === OrderStatus.AWAITING_DELAY_APPROVAL).length}
                     </span>
                   </div>
 
                   <div className="flex-1 space-y-3.5 overflow-y-auto h-[500px] scrollbar-thin pr-1">
-                    {myOrders.filter(o => o.status === 'on_hold').length === 0 ? (
+                    {myOrders.filter(o => o.status === OrderStatus.AWAITING_DELAY_APPROVAL).length === 0 ? (
                       <div className="h-full flex flex-col items-center justify-center text-center py-16 px-4 bg-white/40 dark:bg-slate-900/10 border border-dashed border-rose-500/20 dark:border-rose-500/30 rounded-2xl">
                         <Clock className="w-8 h-8 text-slate-300 dark:text-slate-700 mb-2" />
                         <p className="text-xs font-bold text-slate-400 dark:text-slate-300">No delayed orders</p>
                       </div>
                     ) : (
-                      myOrders.filter(o => o.status === 'on_hold').slice().reverse().map(order => (
+                      myOrders.filter(o => o.status === OrderStatus.AWAITING_DELAY_APPROVAL).slice().reverse().map(order => (
                         <motion.div 
                           key={order.id}
                           layoutId={`card-${order.id}`}
@@ -1128,24 +1128,24 @@ export default function RestaurantDashboard({
                       <span className="font-extrabold text-xs text-slate-800 dark:text-[#f0ede6] uppercase font-sans tracking-wide">Cooking Feed</span>
                     </div>
                     <span className="text-[10px] font-black font-mono bg-orange-500/10 text-orange-600 dark:text-orange-400 px-2.5 py-0.5 rounded-full border border-orange-500/20">
-                      {myOrders.filter(o => o.status === 'accepted' || o.status === 'preparing').length}
+                      {myOrders.filter(o => o.status === OrderStatus.ACCEPTED || o.status === OrderStatus.ACCEPTED).length}
                     </span>
                   </div>
 
                   <div className="flex-1 space-y-3.5 overflow-y-auto h-[500px] scrollbar-thin pr-1">
-                    {myOrders.filter(o => o.status === 'accepted' || o.status === 'preparing').length === 0 ? (
+                    {myOrders.filter(o => o.status === OrderStatus.ACCEPTED || o.status === OrderStatus.ACCEPTED).length === 0 ? (
                       <div className="h-full flex flex-col items-center justify-center text-center py-16 px-4 bg-white/40 dark:bg-slate-900/10 border border-dashed border-rose-500/20 dark:border-rose-500/30 rounded-2xl">
                         <ChefHat className="w-8 h-8 text-slate-300 dark:text-slate-700 mb-2" />
                         <p className="text-xs font-bold text-slate-400 dark:text-slate-300">Kitchen is idle</p>
                         <p className="text-[10px] text-slate-500 dark:text-slate-300 mt-1 max-w-[180px]">Accepted tickets appear here. Start cooking to alert couriers!</p>
                       </div>
                     ) : (
-                      myOrders.filter(o => o.status === 'accepted' || o.status === 'preparing').slice().reverse().map(order => (
+                      myOrders.filter(o => o.status === OrderStatus.ACCEPTED || o.status === OrderStatus.ACCEPTED).slice().reverse().map(order => (
                         <motion.div 
                           key={order.id}
                           layoutId={`card-${order.id}`}
                           className={`bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border p-4 rounded-2xl shadow-sm space-y-3.5 relative overflow-hidden transition-all ${
-                            order.status === 'preparing'
+                            order.status as any === OrderStatus.ACCEPTED
                               ? 'ring-1 ring-orange-500/20 border-orange-500/30 bg-orange-500/[0.01]'
                               : 'border-rose-500/20 dark:border-rose-500/30'
                           }`}
@@ -1156,12 +1156,12 @@ export default function RestaurantDashboard({
                               <span className="text-[10px] text-slate-400 dark:text-slate-300 font-medium block">{order.timestamp}</span>
                             </div>
                             <span className={`text-[9px] font-mono font-black px-2 py-0.5 rounded-full uppercase border ${
-                              order.status === 'preparing' 
+                              order.status as any === OrderStatus.ACCEPTED 
                                 ? 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:shadow-[0_0_12px_rgba(244,63,94,0.5)] uppercase tracking-wider flex items-center gap-1' 
                                 : 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:shadow-[0_0_12px_rgba(244,63,94,0.5)] uppercase tracking-wider'
                             }`}>
-                              {order.status === 'preparing' && <Flame className="w-3 h-3 text-orange-500 animate-bounce" />}
-                              <span>{order.status === 'preparing' ? 'COOKING' : 'ACCEPTED'}</span>
+                              {order.status as any === OrderStatus.ACCEPTED && <Flame className="w-3 h-3 text-orange-500 animate-bounce" />}
+                              <span>{order.status as any === OrderStatus.ACCEPTED ? 'COOKING' : 'ACCEPTED'}</span>
                             </span>
                           </div>
 
@@ -1196,7 +1196,7 @@ export default function RestaurantDashboard({
                               <span className="text-xs font-bold text-slate-850 dark:text-[#f0ede6] font-mono">${order.total?.toFixed(2)}</span>
                             </div>
 
-                            {order.status === 'accepted' ? (
+                            {order.status as any === OrderStatus.ACCEPTED ? (
                               <button
                                 onClick={() => handleStatusTransition(order)}
                                 className="py-2 px-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-slate-950 text-[10.5px] font-black rounded-xl hover:brightness-110 shadow-sm shadow-yellow-500/10 transition-all cursor-pointer flex items-center gap-1"
@@ -1228,19 +1228,19 @@ export default function RestaurantDashboard({
                       <span className="font-extrabold text-xs text-slate-800 dark:text-[#f0ede6] uppercase font-sans tracking-wide">Prepared Ready</span>
                     </div>
                     <span className="text-[10px] font-black font-mono bg-emerald-500/10 text-emerald-650 dark:text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-                      {myOrders.filter(o => o.status === 'dispatched' || o.status === 'ready_for_pickup').length}
+                      {myOrders.filter(o => o.status === OrderStatus.DISPATCHED || o.status === OrderStatus.READY_FOR_PICKUP).length}
                     </span>
                   </div>
 
                   <div className="flex-1 space-y-3.5 overflow-y-auto h-[500px] scrollbar-thin pr-1">
-                    {myOrders.filter(o => o.status === 'dispatched' || o.status === 'ready_for_pickup').length === 0 ? (
+                    {myOrders.filter(o => o.status === OrderStatus.DISPATCHED || o.status === OrderStatus.READY_FOR_PICKUP).length === 0 ? (
                       <div className="h-full flex flex-col items-center justify-center text-center py-16 px-4 bg-white/40 dark:bg-slate-900/10 border border-dashed border-rose-500/20 dark:border-rose-500/30 rounded-2xl">
                         <Truck className="w-8 h-8 text-slate-300 dark:text-slate-700 mb-2" />
                         <p className="text-xs font-bold text-slate-400 dark:text-slate-300">No ready packages</p>
                         <p className="text-[10px] text-slate-500 dark:text-slate-300 mt-1 max-w-[180px]">Finished dishes will wait here. Handover to couriers with secure codes.</p>
                       </div>
                     ) : (
-                      myOrders.filter(o => o.status === 'dispatched' || o.status === 'ready_for_pickup').slice().reverse().map(order => (
+                      myOrders.filter(o => o.status === OrderStatus.DISPATCHED || o.status === OrderStatus.READY_FOR_PICKUP).slice().reverse().map(order => (
                         <motion.div 
                           key={order.id}
                           layoutId={`card-${order.id}`}

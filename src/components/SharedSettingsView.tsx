@@ -1,3 +1,4 @@
+import { OrderStatus } from '../types';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, User, Package, LogOut, MapPin, Check } from 'lucide-react';
@@ -100,10 +101,10 @@ export default function SharedSettingsView({
         }
       } else if (res?.data && Array.isArray(res.data)) { // fallback
          if (type === 'active') {
-             setPaginatedOrders(res.data.filter((o: any) => !['cancelled', 'rejected', 'cancelled_by_restaurant', 'delivery_failed', 'partially_refunded', 'cancelled_and_refunded'].includes((o.status||'').toLowerCase())));
+             setPaginatedOrders(res.data.filter((o: any) => ![OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT, 'cancelled_by_restaurant', OrderStatus.DELIVERY_FAILED, OrderStatus.PARTIALLY_REFUNDED, OrderStatus.CANCELLED_AND_REFUNDED].includes((o.status||'').toLowerCase())));
              setHasMoreOrders(false);
          } else {
-             setPaginatedRefunds(res.data.filter((o: any) => ['cancelled', 'rejected', 'cancelled_by_restaurant', 'delivery_failed', 'partially_refunded', 'cancelled_and_refunded'].includes((o.status||'').toLowerCase())));
+             setPaginatedRefunds(res.data.filter((o: any) => [OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT, 'cancelled_by_restaurant', OrderStatus.DELIVERY_FAILED, OrderStatus.PARTIALLY_REFUNDED, OrderStatus.CANCELLED_AND_REFUNDED].includes((o.status||'').toLowerCase())));
              setHasMoreRefunds(false);
          }
       }

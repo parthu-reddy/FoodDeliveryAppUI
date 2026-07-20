@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Smartphone, Shield, ArrowLeft, Utensils, Store, Bike, KeyRound, AlertCircle, MessageSquare, Sun, Moon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { UserRole } from '../types';
+import { RoleName, UserRole } from '../types';
 import LaBouffeLogo from './LaBouffeLogo';
 import { LaBouffeLogoMark } from './LaBouffeLogoMark';
 import { apiPost, apiGet } from '../lib/apiClient';
@@ -15,11 +15,11 @@ const otpSchema = z.string().length(6, 'Please enter the 6-digit code');
 
 const roleToServiceName = (role: UserRole): string => {
   switch (role) {
-    case 'customer': return 'customer';
-    case 'restaurant': return 'restaurant';
-    case 'delivery': return 'delivery';
-    case 'admin': return 'admin';
-    default: return 'customer';
+    case RoleName.CUSTOMER: return RoleName.CUSTOMER;
+    case RoleName.RESTAURANT: return RoleName.RESTAURANT;
+    case RoleName.DELIVERY: return RoleName.DELIVERY;
+    case RoleName.ADMIN: return RoleName.ADMIN;
+    default: return RoleName.CUSTOMER;
   }
 };
 
@@ -371,7 +371,7 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
               <div className="hidden lg:grid lg:grid-cols-4 gap-6 max-w-6xl mx-auto w-full px-4">
                 {/* Customer Card */}
                 <button
-                  onClick={() => setSelectedRole('customer')}
+                  onClick={() => setSelectedRole(RoleName.CUSTOMER)}
                   className={`group flex flex-col items-center justify-center text-center p-8 rounded-3xl transition-all duration-300 border backdrop-blur-xl relative overflow-hidden cursor-pointer shadow-lg hover:-translate-y-1.5 min-h-[260px] ${
                     theme === 'dark'
                       ? 'bg-slate-900/20 hover:bg-slate-900/20 border-rose-500/30/40 shadow-[0_15px_35px_rgba(0,0,0,0.35)] hover:shadow-[0_20px_45px_rgba(249,115,22,0.25)] hover:border-orange-500/40'
@@ -399,7 +399,7 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
 
                 {/* Restaurant Partner */}
                 <button
-                  onClick={() => setSelectedRole('restaurant')}
+                  onClick={() => setSelectedRole(RoleName.RESTAURANT)}
                   className={`group flex flex-col items-center justify-center text-center p-8 rounded-3xl transition-all duration-300 border backdrop-blur-xl relative overflow-hidden cursor-pointer shadow-lg hover:-translate-y-1.5 min-h-[260px] ${
                     theme === 'dark'
                       ? 'bg-slate-900/20 hover:bg-slate-900/20 border-rose-500/30/40 shadow-[0_15px_35px_rgba(0,0,0,0.35)] hover:shadow-[0_20px_45px_rgba(239,68,68,0.25)] hover:border-red-500/40'
@@ -427,7 +427,7 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
 
                 {/* Delivery Executive */}
                 <button
-                  onClick={() => setSelectedRole('delivery')}
+                  onClick={() => setSelectedRole(RoleName.DELIVERY)}
                   className={`group flex flex-col items-center justify-center text-center p-8 rounded-3xl transition-all duration-300 border backdrop-blur-xl relative overflow-hidden cursor-pointer shadow-lg hover:-translate-y-1.5 min-h-[260px] ${
                     theme === 'dark'
                       ? 'bg-slate-900/20 hover:bg-slate-900/20 border-rose-500/30/40 shadow-[0_15px_35px_rgba(0,0,0,0.35)] hover:shadow-[0_20px_45px_rgba(16,185,129,0.25)] hover:border-emerald-500/40'
@@ -455,7 +455,7 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
 
                 {/* System Admin */}
                 <button
-                  onClick={() => setSelectedRole('admin')}
+                  onClick={() => setSelectedRole(RoleName.ADMIN)}
                   className={`group flex flex-col items-center justify-center text-center p-8 rounded-3xl transition-all duration-300 border backdrop-blur-xl relative overflow-hidden cursor-pointer shadow-lg hover:-translate-y-1.5 min-h-[260px] ${
                     theme === 'dark'
                       ? 'bg-slate-900/20 hover:bg-slate-900/20 border-indigo-500/30/40 shadow-[0_15px_35px_rgba(0,0,0,0.35)] hover:shadow-[0_20px_45px_rgba(99,102,241,0.25)] hover:border-indigo-500/40'
@@ -532,7 +532,7 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
                   >
                     {/* CUSTOMER CARD */}
                     <button
-                      onClick={() => activeCardIndex === 0 ? setSelectedRole('customer') : setActiveCardIndex(0)}
+                      onClick={() => activeCardIndex === 0 ? setSelectedRole(RoleName.CUSTOMER) : setActiveCardIndex(0)}
                       className={`shrink-0 w-[250px] group flex flex-col items-center justify-center text-center p-6 rounded-3xl transition-all duration-500 border backdrop-blur-xl relative overflow-hidden cursor-pointer ${
                         activeCardIndex === 0
                           ? 'scale-102 opacity-100 z-20'
@@ -570,7 +570,7 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
 
                     {/* RESTAURANT CARD */}
                     <button
-                      onClick={() => activeCardIndex === 1 ? setSelectedRole('restaurant') : setActiveCardIndex(1)}
+                      onClick={() => activeCardIndex === 1 ? setSelectedRole(RoleName.RESTAURANT) : setActiveCardIndex(1)}
                       className={`shrink-0 w-[250px] group flex flex-col items-center justify-center text-center p-6 rounded-3xl transition-all duration-500 border backdrop-blur-xl relative overflow-hidden cursor-pointer ${
                         activeCardIndex === 1
                           ? 'scale-102 opacity-100 z-20'
@@ -608,7 +608,7 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
 
                     {/* DELIVERY CARD */}
                     <button
-                      onClick={() => activeCardIndex === 2 ? setSelectedRole('delivery') : setActiveCardIndex(2)}
+                      onClick={() => activeCardIndex === 2 ? setSelectedRole(RoleName.DELIVERY) : setActiveCardIndex(2)}
                       className={`shrink-0 w-[250px] group flex flex-col items-center justify-center text-center p-6 rounded-3xl transition-all duration-500 border backdrop-blur-xl relative overflow-hidden cursor-pointer ${
                         activeCardIndex === 2
                           ? 'scale-102 opacity-100 z-20'
@@ -646,7 +646,7 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
 
                     {/* ADMIN CARD */}
                     <button
-                      onClick={() => activeCardIndex === 3 ? setSelectedRole('admin') : setActiveCardIndex(3)}
+                      onClick={() => activeCardIndex === 3 ? setSelectedRole(RoleName.ADMIN) : setActiveCardIndex(3)}
                       className={`shrink-0 w-[250px] group flex flex-col items-center justify-center text-center p-6 rounded-3xl transition-all duration-500 border backdrop-blur-xl relative overflow-hidden cursor-pointer ${
                         activeCardIndex === 3
                           ? 'scale-102 opacity-100 z-20'
@@ -713,16 +713,16 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
             >
               <div className="space-y-2">
                 <span className={`inline-flex items-center gap-1 text-xs font-bold font-mono px-2.5 py-1 rounded-full border ${
-                  selectedRole === 'customer' ? 'bg-orange-500/10 text-orange-600 border-orange-500/20' :
-                  selectedRole === 'restaurant' ? 'bg-orange-500/10 text-orange-600 border-orange-500/20' :
-                  selectedRole === 'admin' ? 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20' :
+                  selectedRole === RoleName.CUSTOMER ? 'bg-orange-500/10 text-orange-600 border-orange-500/20' :
+                  selectedRole === RoleName.RESTAURANT ? 'bg-orange-500/10 text-orange-600 border-orange-500/20' :
+                  selectedRole === RoleName.ADMIN ? 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20' :
                   'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
                 }`}>
-                  {selectedRole === 'customer' ? <Utensils className="w-3.5 h-3.5" /> :
-                   selectedRole === 'restaurant' ? <Store className="w-3.5 h-3.5" /> :
-                   selectedRole === 'admin' ? <Shield className="w-3.5 h-3.5" /> :
+                  {selectedRole === RoleName.CUSTOMER ? <Utensils className="w-3.5 h-3.5" /> :
+                   selectedRole === RoleName.RESTAURANT ? <Store className="w-3.5 h-3.5" /> :
+                   selectedRole === RoleName.ADMIN ? <Shield className="w-3.5 h-3.5" /> :
                    <Bike className="w-3.5 h-3.5" />}
-                  {selectedRole === 'customer' ? 'Customer' : selectedRole === 'restaurant' ? 'Restaurant Partner' : selectedRole === 'admin' ? 'System Admin' : 'Delivery Rider'}
+                  {selectedRole === RoleName.CUSTOMER ? 'Customer' : selectedRole === RoleName.RESTAURANT ? 'Restaurant Partner' : selectedRole === RoleName.ADMIN ? 'System Admin' : 'Delivery Rider'}
                 </span>
                 <h2 className={`text-3xl font-black tracking-tight ${
                   theme === 'dark' ? 'text-white' : 'text-slate-800'

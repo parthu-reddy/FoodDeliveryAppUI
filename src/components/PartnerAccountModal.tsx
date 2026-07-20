@@ -1,3 +1,4 @@
+import { RoleName } from '../types';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, LogOut } from 'lucide-react';
@@ -41,7 +42,7 @@ export default function PartnerAccountModal({
   }, [userName]);
 
   const fetchDevices = () => {
-    apiGet('/api/v1/internal/auth/sessions', { 'X-Calling-Service': portalRole || 'RESTAURANT' })
+    apiGet('/api/v1/internal/auth/sessions', { 'X-Calling-Service': portalRole || RoleName.RESTAURANT })
       .then(res => setDevices(res.data || []))
       .catch(err => console.error('Failed to fetch devices', err));
   };
@@ -58,7 +59,7 @@ export default function PartnerAccountModal({
 
   const handleRemoveDevice = async (sessionId: string) => {
     try {
-      await apiDelete(`/api/v1/internal/auth/sessions/${sessionId}`, { 'X-Calling-Service': portalRole || 'RESTAURANT' });
+      await apiDelete(`/api/v1/internal/auth/sessions/${sessionId}`, { 'X-Calling-Service': portalRole || RoleName.RESTAURANT });
       fetchDevices();
     } catch (e) {
       console.error('Failed to remove device', e);
@@ -67,7 +68,7 @@ export default function PartnerAccountModal({
 
   const handleRemoveAllDevices = async () => {
     try {
-      await apiDelete(`/api/v1/internal/auth/sessions`, { 'X-Calling-Service': portalRole || 'RESTAURANT' });
+      await apiDelete(`/api/v1/internal/auth/sessions`, { 'X-Calling-Service': portalRole || RoleName.RESTAURANT });
       if (onLogout) onLogout();
     } catch (e) {
       console.error('Failed to remove all devices', e);

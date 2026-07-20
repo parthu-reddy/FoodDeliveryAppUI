@@ -1,3 +1,4 @@
+import { RoleName } from '../types';
 import React, { useState, useEffect } from 'react';
 import { apiGet, apiPost, apiDelete } from '../lib/apiClient';
 import { useToast } from '../context/ToastContext';
@@ -29,7 +30,7 @@ export default function AdminPortal({
   // users state
   const [users, setUsers] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [roleFilter, setRoleFilter] = useState('ADMIN');
+  const [roleFilter, setRoleFilter] = useState<RoleName>(RoleName.ADMIN);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [newRole, setNewRole] = useState('');
   const [userActiveOrders, setUserActiveOrders] = useState<any[]>([]);
@@ -291,11 +292,11 @@ export default function AdminPortal({
           <div className="flex-1 flex p-6 gap-6 h-full overflow-hidden">
              <div className="w-1/3 flex flex-col bg-white/10 dark:bg-slate-900/20 backdrop-blur-xl rounded-3xl border border-slate-200 dark:border-slate-800 p-4 shrink-0 shadow-xl">
                 <div className="flex gap-2 mb-4 border-b border-slate-200 dark:border-slate-800 pb-4">
-                  <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} className="w-1/3 px-3 py-2 rounded-xl bg-white/20 dark:bg-slate-800/40 backdrop-blur-md border border-slate-200 dark:border-slate-700 text-sm font-bold focus:outline-none focus:border-indigo-500">
-                    <option value="ADMIN">ADMIN</option>
-                    <option value="CUSTOMER">CUSTOMER</option>
-                    <option value="RESTAURANT">RESTAURANT</option>
-                    <option value="DELIVERY">DELIVERY</option>
+                  <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value as RoleName)} className="w-1/3 px-3 py-2 rounded-xl bg-white/20 dark:bg-slate-800/40 backdrop-blur-md border border-slate-200 dark:border-slate-700 text-sm font-bold focus:outline-none focus:border-indigo-500">
+                    <option value={RoleName.ADMIN}>ADMIN</option>
+                    <option value={RoleName.CUSTOMER}>CUSTOMER</option>
+                    <option value={RoleName.RESTAURANT}>RESTAURANT</option>
+                    <option value={RoleName.DELIVERY}>DELIVERY</option>
                   </select>
                   <form onSubmit={handleSearch} className="flex-1 flex gap-2">
                     <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="User ID / Phone" className="flex-1 w-full px-3 py-2 rounded-xl bg-white/20 dark:bg-slate-800/40 backdrop-blur-md border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:border-indigo-500" />

@@ -5,7 +5,7 @@ import {
   Terminal, Sliders, Code, Send, RefreshCw, Package, User, Navigation, AlertCircle, MapPinOff, XCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Restaurant, MenuItem, CartItem, Order, OrderStatus } from '../types';
+import { RoleName, Restaurant, MenuItem, CartItem, Order, OrderStatus } from '../types';
 import { apiGet, apiPost } from '../lib/apiClient';
 import { getUserProfile } from '../lib/tokenStore';
 import LaBouffeLogo from './LaBouffeLogo';
@@ -36,12 +36,12 @@ interface CustomerDashboardProps {
 // Utility to determine if order is actively tracked
 const isActiveOrder = (status: string) => {
   const s = (status || '').trim().toLowerCase();
-  return !['delivered', 'partially_refunded', 'cancelled_and_refunded', 'cancelled', 'rejected', 'cancelled_by_restaurant', 'delivery_failed', 'dispatch_failed'].includes(s);
+  return ![OrderStatus.DELIVERED, OrderStatus.PARTIALLY_REFUNDED, OrderStatus.CANCELLED_AND_REFUNDED, OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT, 'cancelled_by_restaurant', OrderStatus.DELIVERY_FAILED, OrderStatus.CANCELLED].includes(s);
 };
 
 const isFailedOrder = (status: string) => {
   const s = (status || '').trim().toLowerCase();
-  return ['cancelled', 'rejected', 'cancelled_by_restaurant', 'delivery_failed', 'dispatch_failed'].includes(s);
+  return [OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT, 'cancelled_by_restaurant', OrderStatus.DELIVERY_FAILED, OrderStatus.CANCELLED].includes(s);
 };
 
 export default function CustomerDashboard({ 
@@ -86,7 +86,7 @@ export default function CustomerDashboard({
   // Fetch active orders and nearby restaurants
   useEffect(() => {
     const profile = getUserProfile();
-    if (profile && profile.role === 'customer') {
+    if (profile && profile.role === RoleName.CUSTOMER) {
       // Always fetch backend profile first to check completeness
       apiGet(`/api/v1/users/profile`)
         .then(res => {
@@ -107,8 +107,8 @@ export default function CustomerDashboard({
           if (res.data && res.data.content) {
             const mapped = res.data.content.map((o: any) => {
               let s = o.status?.toLowerCase() || '';
-              if (s === 'awaiting_delay_approval') s = 'on_hold';
-              if (s === 'paid' || s === 'created') s = 'placed';
+              if (s === 'awaiting_delay_approval') s = OrderStatus.AWAITING_DELAY_APPROVAL;
+              if (s === OrderStatus.PAID || s === OrderStatus.CREATED) s = OrderStatus.PAID;
               return { ...o, status: s };
             });
             setInternalOrders(mapped);
@@ -116,8 +116,8 @@ export default function CustomerDashboard({
             // Fallback just in case
             const mapped = res.data.map((o: any) => {
               let s = o.status?.toLowerCase() || '';
-              if (s === 'awaiting_delay_approval') s = 'on_hold';
-              if (s === 'paid' || s === 'created') s = 'placed';
+              if (s === 'awaiting_delay_approval') s = OrderStatus.AWAITING_DELAY_APPROVAL;
+              if (s === OrderStatus.PAID || s === OrderStatus.CREATED) s = OrderStatus.PAID;
               return { ...o, status: s };
             });
             setInternalOrders(mapped);
@@ -148,7 +148,7 @@ export default function CustomerDashboard({
   // Smart polling for active orders only (every 60s)
   useEffect(() => {
     const activeOrders = internalOrders.filter(o => 
-      ['created', 'preparing', 'out_for_delivery'].includes(o.status?.toLowerCase() || '')
+      [OrderStatus.CREATED, OrderStatus.ACCEPTED, OrderStatus.OUT_FOR_DELIVERY].includes(o.status?.toLowerCase() || '')
     );
     
     // Stop polling if no active orders
@@ -165,8 +165,8 @@ export default function CustomerDashboard({
             let changed = false;
             updatedOrders.forEach(updated => {
               let s = updated.status?.toLowerCase() || '';
-              if (s === 'awaiting_delay_approval') s = 'on_hold';
-              if (s === 'paid' || s === 'created') s = 'placed';
+              if (s === 'awaiting_delay_approval') s = OrderStatus.AWAITING_DELAY_APPROVAL;
+              if (s === OrderStatus.PAID || s === OrderStatus.CREATED) s = OrderStatus.PAID;
               updated.status = s;
               const idx = newOrders.findIndex(o => o.id === updated.id);
               if (idx !== -1 && JSON.stringify(newOrders[idx]) !== JSON.stringify(updated)) {
@@ -533,7 +533,7 @@ export default function CustomerDashboard({
 
 
   useEffect(() => {
-    if (currentTrackingOrder && (currentTrackingOrder.status === 'dispatched' || currentTrackingOrder.status === 'out_for_delivery')) {
+    if (currentTrackingOrder && (currentTrackingOrder.status === OrderStatus.DISPATCHED || currentTrackingOrder.status === OrderStatus.OUT_FOR_DELIVERY)) {
       if (onAddApiLog) {
         onAddApiLog({ id: 'live_tracking', label: `GET /api/v1/orders/${currentTrackingOrder.id}/live-tracking (SSE)`, method: 'GET' });
       }
@@ -676,23 +676,23 @@ export default function CustomerDashboard({
   // Get stage index for order tracking
   const getStatusIndex = (status: OrderStatus | string) => {
     let effectiveStatus = status;
-    if (status === 'on_hold') effectiveStatus = 'placed';
-    if (status === 'paid' || status === 'created') effectiveStatus = 'placed';
-    if (status === 'ready') effectiveStatus = 'ready_for_pickup';
+    if (status === OrderStatus.AWAITING_DELAY_APPROVAL) effectiveStatus = OrderStatus.PAID;
+    if (status === OrderStatus.PAID || status === OrderStatus.CREATED) effectiveStatus = OrderStatus.PAID;
+    if (status === OrderStatus.READY_FOR_PICKUP) effectiveStatus = OrderStatus.READY_FOR_PICKUP;
     
-    const statuses: string[] = ['placed', 'accepted', 'preparing', 'ready_for_pickup', 'dispatched', 'out_for_delivery', 'delivered'];
+    const statuses: string[] = [OrderStatus.PAID, OrderStatus.ACCEPTED, OrderStatus.ACCEPTED, OrderStatus.READY_FOR_PICKUP, OrderStatus.DISPATCHED, OrderStatus.OUT_FOR_DELIVERY, OrderStatus.DELIVERED];
     return statuses.indexOf(effectiveStatus as string);
   };
 
   // Simulated GPS Path Coordinate (translating step status to percentage of route progress)
   const getDeliveryProgress = (status: OrderStatus) => {
     switch (status) {
-      case 'placed': return 5;
-      case 'accepted': return 20;
-      case 'preparing': return 40;
-      case 'dispatched': return 60;
-      case 'out_for_delivery': return 80;
-      case 'delivered': return 100;
+      case OrderStatus.PAID: return 5;
+      case OrderStatus.ACCEPTED: return 20;
+      case OrderStatus.ACCEPTED: return 40;
+      case OrderStatus.DISPATCHED: return 60;
+      case OrderStatus.OUT_FOR_DELIVERY: return 80;
+      case OrderStatus.DELIVERED: return 100;
       default: return 0;
     }
   };
@@ -798,8 +798,8 @@ export default function CustomerDashboard({
           />
       ) : (
         <AnimatePresence mode="wait">
-        {currentTrackingOrder && activeOrders.some(o => o.id === currentTrackingOrder.id) ? (
-          currentTrackingOrder.status === 'delivered' ? (
+        {currentTrackingOrder ? (
+          currentTrackingOrder.status === OrderStatus.DELIVERED ? (
             /* ------------------- DELIVERED SUMMARY SCREEN ------------------- */
             <motion.div
               key="summary"
@@ -914,16 +914,16 @@ export default function CustomerDashboard({
                 <div className="flex justify-between items-start">
                   <div className="space-y-1">
                     <h4 className="font-bold text-lg">
-                      {currentTrackingOrder.status === 'placed' && 'Waiting for Restaurant...'}
-                      {currentTrackingOrder.status === 'on_hold' && 'Restaurant Requested Delay'}
-                      {currentTrackingOrder.status === 'accepted' && 'Order Confirmed!'}
-                      {currentTrackingOrder.status === 'preparing' && 'Kitchen is Cooking...'}
-                      {(currentTrackingOrder.status === 'ready_for_pickup' || currentTrackingOrder.status === 'dispatched') && 'Waiting for Rider Pickup...'}
-                      {currentTrackingOrder.status === 'out_for_delivery' && 'Rider is on the Way!'}
+                      {currentTrackingOrder.status === OrderStatus.PAID && 'Waiting for Restaurant...'}
+                      {currentTrackingOrder.status === OrderStatus.AWAITING_DELAY_APPROVAL && 'Restaurant Requested Delay'}
+                      {currentTrackingOrder.status === OrderStatus.ACCEPTED && 'Order Confirmed!'}
+                      {currentTrackingOrder.status === OrderStatus.ACCEPTED && 'Kitchen is Cooking...'}
+                      {(currentTrackingOrder.status === OrderStatus.READY_FOR_PICKUP || currentTrackingOrder.status === OrderStatus.DISPATCHED) && 'Waiting for Rider Pickup...'}
+                      {currentTrackingOrder.status === OrderStatus.OUT_FOR_DELIVERY && 'Rider is on the Way!'}
                       {isFailedOrder(currentTrackingOrder.status) && 'Order Failed / Cancelled'}
                     </h4>
                     <p className="text-xs text-slate-400 dark:text-slate-300">
-                      {currentTrackingOrder.status === 'on_hold' 
+                      {currentTrackingOrder.status === OrderStatus.AWAITING_DELAY_APPROVAL 
                         ? 'The restaurant is experiencing high volume and needs more time. Do you wish to continue?'
                         : isFailedOrder(currentTrackingOrder.status)
                         ? 'Your order could not be completed and will be refunded.'
@@ -931,11 +931,11 @@ export default function CustomerDashboard({
                     </p>
                   </div>
                   <div className={`p-2.5 rounded-2xl ${isFailedOrder(currentTrackingOrder.status) ? 'bg-red-500/10 text-red-500' : 'bg-amber-500/10 text-amber-500'}`}>
-                    {currentTrackingOrder.status === 'on_hold' || isFailedOrder(currentTrackingOrder.status) ? <Clock className="w-5 h-5 text-red-500" /> : <Timer className="w-5 h-5" />}
+                    {currentTrackingOrder.status === OrderStatus.AWAITING_DELAY_APPROVAL || isFailedOrder(currentTrackingOrder.status) ? <Clock className="w-5 h-5 text-red-500" /> : <Timer className="w-5 h-5" />}
                   </div>
                 </div>
 
-                {currentTrackingOrder.status === 'on_hold' && (
+                {currentTrackingOrder.status === OrderStatus.AWAITING_DELAY_APPROVAL && (
                   <div className="flex items-center gap-3 pt-2">
                     <button
                       onClick={async () => {
@@ -948,7 +948,7 @@ export default function CustomerDashboard({
                             approved: true,
                             expectedDelayMinutes: 15
                           });
-                          if (onUpdateOrder) onUpdateOrder(currentTrackingOrder.id, 'accepted');
+                          if (onUpdateOrder) onUpdateOrder(currentTrackingOrder.id, OrderStatus.ACCEPTED);
                         } catch (e) {
                           console.error("Failed to approve delay", e);
                         }
@@ -967,7 +967,7 @@ export default function CustomerDashboard({
                           await apiPost(`/api/v1/orders/${currentTrackingOrder.id}/delay-approval`, {
                             approved: false
                           });
-                          if (onUpdateOrder) onUpdateOrder(currentTrackingOrder.id, 'cancelled');
+                          if (onUpdateOrder) onUpdateOrder(currentTrackingOrder.id, OrderStatus.CANCELLED);
                         } catch (e) {
                           console.error("Failed to reject delay", e);
                         }
@@ -994,7 +994,7 @@ export default function CustomerDashboard({
                   </div>
                 )}
 
-                {currentTrackingOrder.status !== 'on_hold' && !isFailedOrder(currentTrackingOrder.status) && (
+                {currentTrackingOrder.status !== OrderStatus.AWAITING_DELAY_APPROVAL && !isFailedOrder(currentTrackingOrder.status) && (
                   <div className="bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 p-4 rounded-2xl flex items-center justify-between">
                     <div>
                       <span className="text-[10px] text-slate-500 dark:text-[#f0ede6] font-bold block uppercase font-mono tracking-wider">Secure Delivery Verification</span>
@@ -1016,18 +1016,18 @@ export default function CustomerDashboard({
                 ) : (
                   <div className="space-y-0 pt-4 px-2">
                     {[
-                      { status: 'placed', label: 'Order Received' },
-                    { status: 'accepted', label: 'Accepted by Kitchen' },
-                    { status: 'preparing', label: 'Cooking & Packaging' },
-                    { status: 'out_for_delivery', label: 'Picked up by Delivery Executive' },
-                    { status: 'delivered', label: 'Handed Over & Verified' },
+                      { status: OrderStatus.PAID, label: 'Order Received' },
+                    { status: OrderStatus.ACCEPTED, label: 'Accepted by Kitchen' },
+                    { status: OrderStatus.ACCEPTED, label: 'Cooking & Packaging' },
+                    { status: OrderStatus.OUT_FOR_DELIVERY, label: 'Picked up by Delivery Executive' },
+                    { status: OrderStatus.DELIVERED, label: 'Handed Over & Verified' },
                   ].map((step, idx, arr) => {
-                    // For UI steps, 'ready_for_pickup' acts as 'preparing' being done but 'out_for_delivery' not yet done
+                    // For UI steps, OrderStatus.READY_FOR_PICKUP acts as OrderStatus.ACCEPTED being done but OrderStatus.OUT_FOR_DELIVERY not yet done
                     const stepStatusIndex = getStatusIndex(step.status as OrderStatus);
                     const currentStatusIndex = getStatusIndex(currentTrackingOrder.status);
                     
-                    const isDone = currentStatusIndex > stepStatusIndex || (currentStatusIndex === stepStatusIndex && step.status !== 'delivered');
-                    const isCurrent = currentStatusIndex === stepStatusIndex || (step.status === 'preparing' && currentTrackingOrder.status === 'ready_for_pickup');
+                    const isDone = currentStatusIndex > stepStatusIndex || (currentStatusIndex === stepStatusIndex && step.status !== OrderStatus.DELIVERED);
+                    const isCurrent = currentStatusIndex === stepStatusIndex || (step.status === OrderStatus.ACCEPTED && currentTrackingOrder.status === OrderStatus.READY_FOR_PICKUP);
                     const isLast = idx === arr.length - 1;
                     
                     return (
@@ -1059,9 +1059,9 @@ export default function CustomerDashboard({
                           }`}>
                             {step.label}
                           </span>
-                          {isCurrent && currentTrackingOrder.status !== 'delivered' && (
+                          {isCurrent && currentTrackingOrder.status !== OrderStatus.DELIVERED && (
                             <p className="text-[11px] text-amber-500/80 mt-0.5 font-bold uppercase tracking-wider">
-                              {currentTrackingOrder.status === 'ready_for_pickup' 
+                              {currentTrackingOrder.status === OrderStatus.READY_FOR_PICKUP 
                                 ? 'Waiting for Driver...' 
                                 : 'Currently in progress...'}
                             </p>
@@ -1112,9 +1112,9 @@ export default function CustomerDashboard({
                 <div className="bg-white/20 dark:bg-slate-900/20 backdrop-blur-xl border border-rose-500/20 dark:border-rose-500/30 rounded-3xl p-6 shadow-[0_8px_32px_rgba(251,146,60,0.05)] space-y-6">
                   <div className="text-center pb-4 border-b border-rose-500/10 dark:border-slate-800">
                     <div className="inline-flex w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 items-center justify-center mb-3">
-                      {currentTrackingOrder.status.toLowerCase() === 'delivered' ? <Check className="w-6 h-6 text-emerald-500" /> : <X className="w-6 h-6 text-red-500" />}
+                      {currentTrackingOrder.status.toLowerCase() === OrderStatus.DELIVERED ? <Check className="w-6 h-6 text-emerald-500" /> : <X className="w-6 h-6 text-red-500" />}
                     </div>
-                    <h2 className="text-2xl font-black mb-1 capitalize">{currentTrackingOrder.status.toLowerCase() === 'delivered' ? 'Order Delivered' : 'Order ' + currentTrackingOrder.status.replace(/_/g, ' ')}</h2>
+                    <h2 className="text-2xl font-black mb-1 capitalize">{currentTrackingOrder.status.toLowerCase() === OrderStatus.DELIVERED ? 'Order Delivered' : 'Order ' + currentTrackingOrder.status.replace(/_/g, ' ')}</h2>
                     <p className="text-sm font-bold text-slate-500 dark:text-slate-400">#{currentTrackingOrder.id.substring(0, 8)}</p>
                     
                     {/* Invoice Details */}
@@ -1161,8 +1161,8 @@ export default function CustomerDashboard({
                         <span>${currentTrackingOrder.items ? ((currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0) - currentTrackingOrder.items.reduce((sum: number, item: any) => sum + ((item.item?.price || item.price || 0) * (item.quantity || 1)), 0)).toFixed(2) : '0.00'}</span>
                       </div>
                       <div className="flex justify-between text-lg font-black text-slate-900 dark:text-white pt-2 border-t border-rose-500/20 dark:border-slate-700">
-                        <span>{['cancelled', 'rejected'].includes(currentTrackingOrder.status.toLowerCase()) ? 'Total Refunded' : 'Total Paid'}</span>
-                        <span className={['cancelled', 'rejected'].includes(currentTrackingOrder.status.toLowerCase()) ? 'text-red-500' : ''}>${(currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0).toFixed(2)}</span>
+                        <span>{isFailedOrder(currentTrackingOrder.status) ? 'Total Refunded' : 'Total Paid'}</span>
+                        <span className={isFailedOrder(currentTrackingOrder.status) ? 'text-red-500' : ''}>${(currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0).toFixed(2)}</span>
                       </div>
                     </div>
                   </div>

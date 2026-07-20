@@ -1,3 +1,4 @@
+import { RoleName } from '../types';
 import React, { useState, useEffect } from 'react';
 import { getBrands, getOutletsByBrand, Brand, Outlet } from '../lib/menuStore';
 import BrandRegistration from './BrandRegistration';
@@ -94,7 +95,7 @@ export default function RestaurantPortal(props: Props) {
       
       <PartnerAccountModal 
         isOpen={showProfile}
-        portalRole="RESTAURANT"
+        portalRole={RoleName.RESTAURANT}
         onClose={() => setShowProfile(false)}
         userName={props.userName}
         userPhone={props.userPhone}

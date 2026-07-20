@@ -1,5 +1,6 @@
-export type UserRole = 'customer' | 'restaurant' | 'delivery' | 'admin';
-
+export * from './types/backend-enums';
+import { OrderStatus, RoleName as UserRole } from './types/backend-enums';
+export { UserRole };
 export interface Restaurant {
   id: string;
   name: string;
@@ -31,18 +32,7 @@ export interface CartItem {
   quantity: number;
 }
 
-export type OrderStatus =
-  | 'placed' // Placed by customer
-  | 'accepted' // Accepted by restaurant
-  | 'preparing' // Being cooked
-  | 'dispatched' // Ready & assigned, waiting for delivery pickup
-  | 'out_for_delivery' // Picked up by delivery partner
-  | 'delivered' // Successfully completed
-  | 'on_hold' // Held by restaurant due to delay
-  | 'ready_for_pickup'
-  | 'created'
-  | 'rejected'
-  | 'cancelled';
+// OrderStatus is now imported from backend-enums
 
 export interface Order {
   id: string;

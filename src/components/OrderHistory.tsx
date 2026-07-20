@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Calendar, Search, Filter, ChevronLeft, ChevronRight, Package, DollarSign, Clock } from 'lucide-react';
-import { Order } from '../types';
+import { OrderStatus, Order } from '../types';
 import { apiPost } from '../lib/apiClient';
 import { useToast } from '../context/ToastContext';
 
@@ -28,12 +28,12 @@ export function OrderHistory({ orders }: { orders: Order[] }) {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'placed': return 'bg-amber-100 text-amber-600 border-amber-200';
-      case 'accepted': return 'bg-blue-100 text-blue-600 border-blue-200';
-      case 'preparing': return 'bg-indigo-100 text-indigo-600 border-indigo-200';
-      case 'ready': return 'bg-purple-100 text-purple-600 border-purple-200';
-      case 'out_for_delivery': return 'bg-orange-100 text-orange-600 border-orange-200';
-      case 'delivered': return 'bg-emerald-100 text-emerald-600 border-emerald-200';
+      case OrderStatus.PAID: return 'bg-amber-100 text-amber-600 border-amber-200';
+      case OrderStatus.ACCEPTED: return 'bg-blue-100 text-blue-600 border-blue-200';
+      case OrderStatus.ACCEPTED: return 'bg-indigo-100 text-indigo-600 border-indigo-200';
+      case OrderStatus.READY_FOR_PICKUP: return 'bg-purple-100 text-purple-600 border-purple-200';
+      case OrderStatus.OUT_FOR_DELIVERY: return 'bg-orange-100 text-orange-600 border-orange-200';
+      case OrderStatus.DELIVERED: return 'bg-emerald-100 text-emerald-600 border-emerald-200';
       default: return 'bg-slate-100 text-slate-600 dark:text-slate-300 border-rose-500/20';
     }
   };

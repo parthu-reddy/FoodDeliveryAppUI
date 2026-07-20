@@ -1,3 +1,4 @@
+import { RoleName } from '../types';
 /**
  * tokenStore.ts — Pure localStorage operations for auth state.
  * Has ZERO dependencies on apiClient to avoid circular imports.
@@ -55,7 +56,7 @@ export const getUserProfile = (): any | null => {
     if (decoded && decoded.sub) {
       const role = Array.isArray(decoded.roles) && decoded.roles.length > 0
         ? decoded.roles[0].toLowerCase()
-        : (decoded.role || 'customer').toLowerCase();
+        : (decoded.role || RoleName.CUSTOMER).toLowerCase();
       const profile = { id: decoded.sub, phone: decoded.phone || decoded.sub, role, name: decoded.name || '' };
       setUserProfile(profile);
       return profile;
