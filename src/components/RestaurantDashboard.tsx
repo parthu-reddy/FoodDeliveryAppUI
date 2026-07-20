@@ -4,7 +4,7 @@ import {
   ToggleLeft, ToggleRight, DollarSign, Calendar, Eye, MapPin, Sun, Moon,
   Terminal, Sliders, Code, Send, CheckCircle2, AlertCircle,
   ChefHat, Flame, Clock, Info, Shield, HelpCircle, User, Bike, Play, ArrowRight, Sparkles,
-  Check, Truck, Settings, Plus, Trash2, Edit3, ChevronLeft, Layers, Utensils, History, ChevronDown, ChevronUp
+  Check, Truck, Settings, Plus, Trash2, Edit3, ChevronLeft, Layers, Utensils, History, ChevronDown, ChevronUp, XCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Order, OrderStatus, MenuItem } from '../types';
@@ -40,7 +40,7 @@ import {
 interface RestaurantDashboardProps {
   restaurantId: string;
   activeOrders?: Order[];
-  onUpdateOrderStatus?: (orderId: string, status: OrderStatus) => void;
+  onUpdateOrderStatus?: (orderId: string, status: OrderStatus, payload?: any) => void;
   onLogout: () => void;
   theme?: 'light' | 'dark';
   onToggleTheme?: () => void;
@@ -71,7 +71,7 @@ export default function RestaurantDashboard({
   const [internalOrders, setInternalOrders] = useState<Order[]>([]);
   const activeOrders = externalOrders ?? internalOrders;
 
-  const onUpdateOrderStatus = externalUpdateStatus ?? (async (orderId: string, status: OrderStatus) => {
+  const onUpdateOrderStatus = externalUpdateStatus ?? (async (orderId: string, status: OrderStatus, payload?: any) => {
     // Optimistic UI update
     setInternalOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
     
@@ -79,20 +79,29 @@ export default function RestaurantDashboard({
     try {
       let endpoint = '';
       if (status === OrderStatus.ACCEPTED) endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/accept`;
+      else if (status === OrderStatus.PREPARING) {
+        endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/prepare`;
+        localStorage.setItem(`order_preparing_${orderId}`, 'true');
+      }
       else if (status === OrderStatus.CANCELLED_BY_RESTAURANT) endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/reject`;
-      else if (status === OrderStatus.READY_FOR_PICKUP) endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/ready`;
+      else if (status === OrderStatus.READY_FOR_PICKUP) {
+        endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/ready`;
+        localStorage.removeItem(`order_preparing_${orderId}`);
+      }
       else if (status === OrderStatus.DISPATCHED) endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/dispatch`;
       else if (status === OrderStatus.CANCELLED) endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/cancel`;
       
+      console.log(`[Dashboard] Updating order ${orderId} to ${status}. Endpoint: ${endpoint}`);
+
       if (endpoint) {
-        await apiPost(endpoint);
+        await apiPost(endpoint, payload);
         if (onAddApiLog) {
           onAddApiLog({ id: `update_${orderId}`, label: `POST ${endpoint}`, method: 'POST' });
         }
       }
-    } catch (e) {
-      console.error('Failed to update order status', e);
-      // Optional: Handle rollback if needed
+    } catch (error) {
+      console.error('Failed to update order status:', error);
+      // Revert optimistic update on failure (ideally, would need the old status)
     }
   });
   const [activeTab, setActiveTab] = useState<'orders' | 'menu'>('orders');
@@ -117,6 +126,10 @@ export default function RestaurantDashboard({
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editPhone, setEditPhone] = useState('');
+
+  // Cancel order state
+  const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
+  const [customCancelReasonText, setCustomCancelReasonText] = useState<Record<string, string>>({});
 
   // Fetch restaurant profile
   useEffect(() => {
@@ -181,8 +194,8 @@ export default function RestaurantDashboard({
                 return mapped.map((newOrder: any) => {
                   const oldOrder = prev.find(p => p.id === newOrder.id);
                   const isLocallyPreparing = localStorage.getItem(`order_preparing_${newOrder.id}`) === 'true';
-                  if ((oldOrder?.status === OrderStatus.ACCEPTED || isLocallyPreparing) && newOrder.status === OrderStatus.ACCEPTED) {
-                    return { ...newOrder, status: OrderStatus.ACCEPTED };
+                  if (isLocallyPreparing && newOrder.status === OrderStatus.ACCEPTED) {
+                    return { ...newOrder, status: OrderStatus.PREPARING };
                   }
                   return newOrder;
                 });
@@ -192,7 +205,7 @@ export default function RestaurantDashboard({
           .catch(console.error)
           .finally(() => {
             if (!isCancelled) {
-              timeout = setTimeout(fetchOrders, 3000);
+              timeout = setTimeout(fetchOrders, 5000);
             }
           });
       }
@@ -586,11 +599,25 @@ export default function RestaurantDashboard({
     if (order.status === OrderStatus.PAID || order.status === OrderStatus.AWAITING_DELAY_APPROVAL) {
       onUpdateOrderStatus(order.id, OrderStatus.ACCEPTED);
     } else if (order.status as any === OrderStatus.ACCEPTED) {
-      localStorage.setItem(`order_preparing_${order.id}`, 'true');
-      onUpdateOrderStatus(order.id, OrderStatus.ACCEPTED);
-    } else if (order.status as any === OrderStatus.ACCEPTED) {
-      localStorage.removeItem(`order_preparing_${order.id}`);
+      onUpdateOrderStatus(order.id, OrderStatus.PREPARING);
+    } else if (order.status as any === OrderStatus.PREPARING) {
       onUpdateOrderStatus(order.id, OrderStatus.READY_FOR_PICKUP);
+    }
+  };
+
+  const handleCardCancelSubmit = async (orderId: string) => {
+    const reason = customCancelReasonText[orderId] || 'No reason provided';
+    const orderStatus = internalOrders.find(o => o.id === orderId)?.status;
+    const targetStatus = (orderStatus === OrderStatus.PAID || orderStatus === OrderStatus.AWAITING_DELAY_APPROVAL) 
+      ? OrderStatus.CANCELLED_BY_RESTAURANT 
+      : OrderStatus.CANCELLED;
+    
+    try {
+      await onUpdateOrderStatus(orderId, targetStatus as any, { reason });
+      setCancellingOrderId(null);
+    } catch (e) {
+      console.error('Failed to cancel order', e);
+      alert('Failed to cancel order.');
     }
   };
 
@@ -931,38 +958,77 @@ export default function RestaurantDashboard({
                           )}
 
                           <div className="pt-2.5 border-t border-rose-500/20 dark:border-rose-500/30 flex flex-col gap-2">
-                            <div className="flex justify-between items-center">
+                            <div className="flex justify-between items-center mb-1">
                               <span className="text-[10px] text-slate-400 dark:text-slate-300 uppercase font-mono">Total Value:</span>
                               <span className="text-sm font-black text-slate-850 dark:text-[#f0ede6] font-mono">${order.total?.toFixed(2)}</span>
                             </div>
 
                             {/* Action Row */}
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="flex gap-2 w-full">
                               <button
-                                onClick={() => {
-                                  setDelayingOrderId(delayingOrderId === order.id ? null : order.id);
-                                  // Pre-populate delay states
-                                  if (!customDelayMinutes[order.id]) {
-                                    setCustomDelayMinutes(p => ({ ...p, [order.id]: '15' }));
-                                  }
-                                  if (!customDelayReasonText[order.id]) {
-                                    setCustomDelayReasonText(p => ({ ...p, [order.id]: 'High custom cooking volume' }));
-                                  }
-                                }}
-                                className="py-2 px-2.5 rounded-xl border border-rose-500/20 dark:border-rose-500/30 hover:bg-slate-100 dark:hover:bg-slate-850 text-slate-600 dark:text-[#f0ede6] text-[10px] font-extrabold flex items-center justify-center gap-1 transition-colors cursor-pointer hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all"
+                                onClick={() => setCancellingOrderId(cancellingOrderId === order.id ? null : order.id)}
+                                className="py-2 px-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-[10.5px] font-black rounded-xl hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors flex items-center gap-1 shrink-0"
                               >
-                                <Clock className="w-3 h-3 text-amber-500" />
-                                <span>Request Delay</span>
+                                <XCircle className="w-3.5 h-3.5" />
                               </button>
                               
-                              <button
-                                onClick={() => handleStatusTransition(order)}
-                                className="py-2 px-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white text-[10px] font-black flex items-center justify-center gap-1 shadow-md shadow-orange-500/10 hover:brightness-110 transition-all cursor-pointer border border-white/5"
-                              >
-                                <Check className="w-3 h-3" />
-                                <span>Accept Order</span>
-                              </button>
+                              <div className="grid grid-cols-2 gap-2 flex-1">
+                                <button
+                                  onClick={() => {
+                                    setDelayingOrderId(delayingOrderId === order.id ? null : order.id);
+                                    // Pre-populate delay states
+                                    if (!customDelayMinutes[order.id]) {
+                                      setCustomDelayMinutes(p => ({ ...p, [order.id]: '15' }));
+                                    }
+                                    if (!customDelayReasonText[order.id]) {
+                                      setCustomDelayReasonText(p => ({ ...p, [order.id]: 'High custom cooking volume' }));
+                                    }
+                                  }}
+                                  className="py-2 px-1 rounded-xl border border-rose-500/20 dark:border-rose-500/30 hover:bg-slate-100 dark:hover:bg-slate-850 text-slate-600 dark:text-[#f0ede6] text-[10px] font-extrabold flex items-center justify-center gap-1 transition-colors cursor-pointer hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all"
+                                >
+                                  <Clock className="w-3 h-3 text-amber-500 shrink-0" />
+                                  <span className="truncate">Delay</span>
+                                </button>
+                                
+                                <button
+                                  onClick={() => handleStatusTransition(order)}
+                                  className="py-2 px-1 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white text-[10px] font-black flex items-center justify-center gap-1 shadow-md shadow-orange-500/10 hover:brightness-110 transition-all cursor-pointer border border-white/5"
+                                >
+                                  <Check className="w-3 h-3 shrink-0" />
+                                  <span className="truncate">Accept</span>
+                                </button>
+                              </div>
                             </div>
+                            
+                            {/* Cancel Drawer */}
+                            {cancellingOrderId === order.id && (
+                              <div className="mt-2 p-3 bg-red-50 dark:bg-red-950/20 rounded-xl border border-red-200 dark:border-red-900/50 space-y-2 animate-in slide-in-from-top-2 duration-200">
+                                <div>
+                                  <label className="text-[9px] font-bold font-mono text-red-400 dark:text-red-300 uppercase">Reason for cancellation</label>
+                                  <input 
+                                    type="text" 
+                                    className="w-full mt-1 bg-white dark:bg-slate-900 border border-red-200 dark:border-red-900/50 rounded-lg px-2.5 py-1.5 text-[11px] text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-red-400"
+                                    placeholder="e.g. Out of stock, Kitchen busy..."
+                                    value={customCancelReasonText[order.id] || ''}
+                                    onChange={(e) => setCustomCancelReasonText(p => ({ ...p, [order.id]: e.target.value }))}
+                                  />
+                                </div>
+                                <div className="flex gap-2 pt-1">
+                                  <button
+                                    onClick={() => setCancellingOrderId(null)}
+                                    className="flex-1 py-1.5 text-[10px] font-bold text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                                  >
+                                    Back
+                                  </button>
+                                  <button
+                                    onClick={() => handleCardCancelSubmit(order.id)}
+                                    className="flex-1 py-1.5 text-[10px] font-bold bg-red-500 text-white rounded-lg shadow-sm shadow-red-500/20 hover:bg-red-600 transition-colors"
+                                  >
+                                    Confirm Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            )}
 
                             {/* Inline delay request drawer */}
                             <AnimatePresence>
@@ -1099,21 +1165,57 @@ export default function RestaurantDashboard({
                           )}
 
                           <div className="pt-2.5 border-t border-rose-500/20 dark:border-rose-500/30 flex flex-col gap-2">
-                            <div className="flex justify-between items-center">
+                            <div className="flex justify-between items-center mb-1">
                               <span className="text-[10px] text-slate-400 dark:text-slate-300 uppercase font-mono">Total Value:</span>
                               <span className="text-sm font-black text-slate-850 dark:text-[#f0ede6] font-mono">${order.total?.toFixed(2)}</span>
                             </div>
 
                             {/* Action Row */}
-                            <div className="grid grid-cols-1 gap-2 mt-2">
+                            <div className="flex gap-2 w-full mt-2">
+                              <button
+                                onClick={() => setCancellingOrderId(cancellingOrderId === order.id ? null : order.id)}
+                                className="py-2 px-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-[10.5px] font-black rounded-xl hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors flex items-center gap-1 shrink-0"
+                              >
+                                <XCircle className="w-3.5 h-3.5" />
+                              </button>
                               <button
                                 onClick={() => handleStatusTransition(order)}
-                                className="py-2 px-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white text-[10px] font-black flex items-center justify-center gap-1 shadow-md shadow-orange-500/10 hover:brightness-110 transition-all cursor-pointer border border-white/5"
+                                className="flex-1 py-2 px-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white text-[10px] font-black flex items-center justify-center gap-1 shadow-md shadow-orange-500/10 hover:brightness-110 transition-all cursor-pointer border border-white/5"
                               >
-                                <Check className="w-3 h-3" />
+                                <Check className="w-3 h-3 shrink-0" />
                                 <span>Accept Order</span>
                               </button>
                             </div>
+                            
+                            {/* Cancel Drawer */}
+                            {cancellingOrderId === order.id && (
+                              <div className="mt-2 p-3 bg-red-50 dark:bg-red-950/20 rounded-xl border border-red-200 dark:border-red-900/50 space-y-2 animate-in slide-in-from-top-2 duration-200">
+                                <div>
+                                  <label className="text-[9px] font-bold font-mono text-red-400 dark:text-red-300 uppercase">Reason for cancellation</label>
+                                  <input 
+                                    type="text" 
+                                    className="w-full mt-1 bg-white dark:bg-slate-900 border border-red-200 dark:border-red-900/50 rounded-lg px-2.5 py-1.5 text-[11px] text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-red-400"
+                                    placeholder="e.g. Out of stock, Kitchen busy..."
+                                    value={customCancelReasonText[order.id] || ''}
+                                    onChange={(e) => setCustomCancelReasonText(p => ({ ...p, [order.id]: e.target.value }))}
+                                  />
+                                </div>
+                                <div className="flex gap-2 pt-1">
+                                  <button
+                                    onClick={() => setCancellingOrderId(null)}
+                                    className="flex-1 py-1.5 text-[10px] font-bold text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                                  >
+                                    Back
+                                  </button>
+                                  <button
+                                    onClick={() => handleCardCancelSubmit(order.id)}
+                                    className="flex-1 py-1.5 text-[10px] font-bold bg-red-500 text-white rounded-lg shadow-sm shadow-red-500/20 hover:bg-red-600 transition-colors"
+                                  >
+                                    Confirm Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </motion.div>
                       ))
@@ -1129,24 +1231,24 @@ export default function RestaurantDashboard({
                       <span className="font-extrabold text-xs text-slate-800 dark:text-[#f0ede6] uppercase font-sans tracking-wide">Cooking Feed</span>
                     </div>
                     <span className="text-[10px] font-black font-mono bg-orange-500/10 text-orange-600 dark:text-orange-400 px-2.5 py-0.5 rounded-full border border-orange-500/20">
-                      {myOrders.filter(o => o.status === OrderStatus.ACCEPTED || o.status === OrderStatus.ACCEPTED).length}
+                      {myOrders.filter(o => o.status === OrderStatus.ACCEPTED || o.status === OrderStatus.PREPARING).length}
                     </span>
                   </div>
 
                   <div className="flex-1 space-y-3.5 overflow-y-auto h-[500px] scrollbar-thin pr-1">
-                    {myOrders.filter(o => o.status === OrderStatus.ACCEPTED || o.status === OrderStatus.ACCEPTED).length === 0 ? (
+                    {myOrders.filter(o => o.status === OrderStatus.ACCEPTED || o.status === OrderStatus.PREPARING).length === 0 ? (
                       <div className="h-full flex flex-col items-center justify-center text-center py-16 px-4 bg-white/40 dark:bg-slate-900/10 border border-dashed border-rose-500/20 dark:border-rose-500/30 rounded-2xl">
                         <ChefHat className="w-8 h-8 text-slate-300 dark:text-slate-700 mb-2" />
                         <p className="text-xs font-bold text-slate-400 dark:text-slate-300">Kitchen is idle</p>
                         <p className="text-[10px] text-slate-500 dark:text-slate-300 mt-1 max-w-[180px]">Accepted tickets appear here. Start cooking to alert couriers!</p>
                       </div>
                     ) : (
-                      myOrders.filter(o => o.status === OrderStatus.ACCEPTED || o.status === OrderStatus.ACCEPTED).slice().reverse().map(order => (
+                      myOrders.filter(o => o.status === OrderStatus.ACCEPTED || o.status === OrderStatus.PREPARING).slice().reverse().map(order => (
                         <motion.div 
                           key={order.id}
                           layoutId={`card-${order.id}`}
                           className={`bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border p-4 rounded-2xl shadow-sm space-y-3.5 relative overflow-hidden transition-all ${
-                            order.status as any === OrderStatus.ACCEPTED
+                            order.status as any === OrderStatus.PREPARING
                               ? 'ring-1 ring-orange-500/20 border-orange-500/30 bg-orange-500/[0.01]'
                               : 'border-rose-500/20 dark:border-rose-500/30'
                           }`}
@@ -1157,12 +1259,12 @@ export default function RestaurantDashboard({
                               <span className="text-[10px] text-slate-400 dark:text-slate-300 font-medium block">{order.timestamp}</span>
                             </div>
                             <span className={`text-[9px] font-mono font-black px-2 py-0.5 rounded-full uppercase border ${
-                              order.status as any === OrderStatus.ACCEPTED 
+                              order.status as any === OrderStatus.PREPARING 
                                 ? 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:shadow-[0_0_12px_rgba(244,63,94,0.5)] uppercase tracking-wider flex items-center gap-1' 
                                 : 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:shadow-[0_0_12px_rgba(244,63,94,0.5)] uppercase tracking-wider'
                             }`}>
-                              {order.status as any === OrderStatus.ACCEPTED && <Flame className="w-3 h-3 text-orange-500 animate-bounce" />}
-                              <span>{order.status as any === OrderStatus.ACCEPTED ? 'COOKING' : 'ACCEPTED'}</span>
+                              {order.status as any === OrderStatus.PREPARING && <Flame className="w-3 h-3 text-orange-500 animate-bounce" />}
+                              <span>{order.status as any === OrderStatus.PREPARING ? 'COOKING' : 'ACCEPTED'}</span>
                             </span>
                           </div>
 
@@ -1191,28 +1293,69 @@ export default function RestaurantDashboard({
                           </div>
 
                           {/* Actions */}
-                          <div className="pt-2.5 border-t border-rose-500/20 dark:border-rose-500/30 flex items-center justify-between gap-3">
-                            <div>
-                              <span className="text-[9px] text-slate-400 dark:text-slate-300 uppercase font-mono block">Order Value</span>
-                              <span className="text-xs font-bold text-slate-850 dark:text-[#f0ede6] font-mono">${order.total?.toFixed(2)}</span>
+                          <div className="pt-2.5 border-t border-rose-500/20 dark:border-rose-500/30 flex flex-col gap-2">
+                            <div className="flex items-center justify-between gap-3">
+                              <div>
+                                <span className="text-[9px] text-slate-400 dark:text-slate-300 uppercase font-mono block">Order Value</span>
+                                <span className="text-xs font-bold text-slate-850 dark:text-[#f0ede6] font-mono">${order.total?.toFixed(2)}</span>
+                              </div>
+
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => setCancellingOrderId(cancellingOrderId === order.id ? null : order.id)}
+                                  className="py-2 px-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-[10.5px] font-black rounded-xl hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors flex items-center gap-1"
+                                >
+                                  <XCircle className="w-3.5 h-3.5" />
+                                </button>
+
+                                {order.status as any === OrderStatus.ACCEPTED ? (
+                                  <button
+                                    onClick={() => handleStatusTransition(order)}
+                                    className="py-2 px-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-slate-950 text-[10.5px] font-black rounded-xl hover:brightness-110 shadow-sm shadow-yellow-500/10 transition-all cursor-pointer flex items-center gap-1"
+                                  >
+                                    <Play className="w-3 h-3 text-slate-950 fill-slate-950" />
+                                    <span>Start Cook</span>
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => handleStatusTransition(order)}
+                                    className="py-2 px-4 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10.5px] font-black rounded-xl hover:brightness-110 shadow-md shadow-orange-500/10 transition-all cursor-pointer flex items-center gap-1"
+                                  >
+                                    <CheckCircle2 className="w-3.5 h-3.5" />
+                                    <span>Mark Prepared</span>
+                                  </button>
+                                )}
+                              </div>
                             </div>
 
-                            {order.status as any === OrderStatus.ACCEPTED ? (
-                              <button
-                                onClick={() => handleStatusTransition(order)}
-                                className="py-2 px-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-slate-950 text-[10.5px] font-black rounded-xl hover:brightness-110 shadow-sm shadow-yellow-500/10 transition-all cursor-pointer flex items-center gap-1"
-                              >
-                                <Play className="w-3 h-3 text-slate-950 fill-slate-950" />
-                                <span>Start Cook</span>
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => handleStatusTransition(order)}
-                                className="py-2 px-4 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10.5px] font-black rounded-xl hover:brightness-110 shadow-md shadow-orange-500/10 transition-all cursor-pointer flex items-center gap-1"
-                              >
-                                <CheckCircle2 className="w-3.5 h-3.5" />
-                                <span>Mark Prepared</span>
-                              </button>
+                            {/* Cancel Drawer */}
+                            {cancellingOrderId === order.id && (
+                              <div className="mt-2 p-3 bg-red-50 dark:bg-red-950/20 rounded-xl border border-red-200 dark:border-red-900/50 space-y-2 animate-in slide-in-from-top-2 duration-200">
+                                <div>
+                                  <label className="text-[9px] font-bold font-mono text-red-400 dark:text-red-300 uppercase">Reason for cancellation</label>
+                                  <input 
+                                    type="text" 
+                                    className="w-full mt-1 bg-white dark:bg-slate-900 border border-red-200 dark:border-red-900/50 rounded-lg px-2.5 py-1.5 text-[11px] text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-red-400"
+                                    placeholder="e.g. Out of stock, Kitchen busy..."
+                                    value={customCancelReasonText[order.id] || ''}
+                                    onChange={(e) => setCustomCancelReasonText(p => ({ ...p, [order.id]: e.target.value }))}
+                                  />
+                                </div>
+                                <div className="flex gap-2 pt-1">
+                                  <button
+                                    onClick={() => setCancellingOrderId(null)}
+                                    className="flex-1 py-1.5 text-[10px] font-bold text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                                  >
+                                    Back
+                                  </button>
+                                  <button
+                                    onClick={() => handleCardCancelSubmit(order.id)}
+                                    className="flex-1 py-1.5 text-[10px] font-bold bg-red-500 text-white rounded-lg shadow-sm shadow-red-500/20 hover:bg-red-600 transition-colors"
+                                  >
+                                    Confirm Cancel
+                                  </button>
+                                </div>
+                              </div>
                             )}
                           </div>
                         </motion.div>
@@ -1306,6 +1449,48 @@ export default function RestaurantDashboard({
                                 </div>
                               ))}
                             </div>
+                          </div>
+
+                          {/* Cancel Action */}
+                          <div className="pt-2.5 border-t border-rose-500/20 dark:border-rose-500/30">
+                            <div className="flex justify-end">
+                              <button
+                                onClick={() => setCancellingOrderId(cancellingOrderId === order.id ? null : order.id)}
+                                className="py-2 px-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-[10.5px] font-black rounded-xl hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors flex items-center gap-1 shrink-0"
+                              >
+                                <XCircle className="w-3.5 h-3.5" /> <span>Cancel Order</span>
+                              </button>
+                            </div>
+                            
+                            {/* Cancel Drawer */}
+                            {cancellingOrderId === order.id && (
+                              <div className="mt-2 p-3 bg-red-50 dark:bg-red-950/20 rounded-xl border border-red-200 dark:border-red-900/50 space-y-2 animate-in slide-in-from-top-2 duration-200">
+                                <div>
+                                  <label className="text-[9px] font-bold font-mono text-red-400 dark:text-red-300 uppercase">Reason for cancellation</label>
+                                  <input 
+                                    type="text" 
+                                    className="w-full mt-1 bg-white dark:bg-slate-900 border border-red-200 dark:border-red-900/50 rounded-lg px-2.5 py-1.5 text-[11px] text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-red-400"
+                                    placeholder="e.g. Item dropped, Customer dispute..."
+                                    value={customCancelReasonText[order.id] || ''}
+                                    onChange={(e) => setCustomCancelReasonText(p => ({ ...p, [order.id]: e.target.value }))}
+                                  />
+                                </div>
+                                <div className="flex gap-2 pt-1">
+                                  <button
+                                    onClick={() => setCancellingOrderId(null)}
+                                    className="flex-1 py-1.5 text-[10px] font-bold text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                                  >
+                                    Back
+                                  </button>
+                                  <button
+                                    onClick={() => handleCardCancelSubmit(order.id)}
+                                    className="flex-1 py-1.5 text-[10px] font-bold bg-red-500 text-white rounded-lg shadow-sm shadow-red-500/20 hover:bg-red-600 transition-colors"
+                                  >
+                                    Confirm Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            )}
                           </div>
 
                           </motion.div>

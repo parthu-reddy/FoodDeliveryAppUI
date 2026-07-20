@@ -861,11 +861,11 @@ export default function CustomerDashboard({
                   ))}
                   <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300 pt-3 border-t border-slate-200 dark:border-slate-800">
                     <span>Delivery Fee</span>
-                    <span>${currentTrackingOrder.deliveryFee.toFixed(2)}</span>
+                    <span>${(currentTrackingOrder.deliveryFee || 0).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-lg font-black text-slate-900 dark:text-[#f0ede6] pt-2">
                     <span>Total Paid</span>
-                    <span>${currentTrackingOrder.total?.toFixed(2)}</span>
+                    <span>${(currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0).toFixed(2)}</span>
                   </div>
                 </div>
                 <button 

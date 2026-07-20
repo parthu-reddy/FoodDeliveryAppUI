@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 3.2.1263 on 2026-07-20 09:25:22.
+// Generated using typescript-generator version 3.2.1263 on 2026-07-20 13:24:05.
 
 export enum AccountType {
     CUSTOMER = "CUSTOMER",
@@ -21,6 +21,7 @@ export enum OrderStatus {
     PAID = "PAID",
     AWAITING_DELAY_APPROVAL = "AWAITING_DELAY_APPROVAL",
     ACCEPTED = "ACCEPTED",
+    PREPARING = "PREPARING",
     READY_FOR_PICKUP = "READY_FOR_PICKUP",
     DISPATCHED = "DISPATCHED",
     OUT_FOR_DELIVERY = "OUT_FOR_DELIVERY",

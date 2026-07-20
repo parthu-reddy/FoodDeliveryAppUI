@@ -395,7 +395,7 @@ export default function SharedSettingsView({
                   }}
                   className="w-full py-2 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-[#f0ede6] rounded-lg text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                 >
-                  Track Order
+                  {[OrderStatus.DELIVERED, OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT].includes(order.status) ? "View Invoice" : "Track Order"}
                 </button>
               </div>
             ))}
@@ -449,7 +449,7 @@ export default function SharedSettingsView({
                     if (setTrackingOrder) setTrackingOrder(order);
                     onBack();
                   }}
-                  className="w-full py-2 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-[#f0ede6] rounded-lg text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                  className="w-full py-2 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-[#f0ede6] rounded-lg text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer mt-3"
                 >
                   View Details
                 </button>
