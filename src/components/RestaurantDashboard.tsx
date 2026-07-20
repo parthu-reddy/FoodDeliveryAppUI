@@ -347,12 +347,28 @@ export default function RestaurantDashboard({
   // Compute stats
   const totalRevenue = myOrders.reduce((acc, curr) => acc + curr.subtotal, 0);
 
-  const toggleStock = (dishId: string) => {
+  const toggleStock = async (dishId: string, currentStatus: boolean) => {
     const key = `${selectedOutletId}_${dishId}`;
+    const newStockStatus = !currentStatus;
+    
     setStockStatus(prev => ({
       ...prev,
-      [key]: prev[key] === false ? true : false
+      [key]: newStockStatus
     }));
+
+    try {
+      const endpoint = `/api/v1/internal/restaurant/api/v1/outlets/${selectedOutletId}/menu-overrides/${dishId}`;
+      await apiPost(endpoint, {
+        isAvailable: newStockStatus
+      });
+    } catch (e) {
+      console.error('Failed to update stock', e);
+      setStockStatus(prev => ({
+        ...prev,
+        [key]: currentStatus
+      }));
+      alert('Failed to update stock status.');
+    }
   };
 
 
@@ -1624,7 +1640,7 @@ export default function RestaurantDashboard({
                           </div>
 
                           <button 
-                            onClick={() => toggleStock(dish.id)}
+                            onClick={() => toggleStock(dish.id, available)}
                             className="cursor-pointer transition-colors p-1"
                           >
                             {available ? (
