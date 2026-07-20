@@ -67,7 +67,7 @@ export default function CustomerDashboard({
   const [effectiveMenu, setEffectiveMenu] = useState<MenuItem[]>([]);
   
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-  const [address, setAddress] = useState(() => localStorage.getItem('deliveryAddress') || 'Flat 402, Highrise Apartments, Sector 62');
+  const [address, setAddress] = useState(() => localStorage.getItem('deliveryAddress') || 'Please add an address');
   const [deliveryLat, setDeliveryLat] = useState<string | number>(() => localStorage.getItem('deliveryLat') || '12.97');
   const [deliveryLng, setDeliveryLng] = useState<string | number>(() => localStorage.getItem('deliveryLng') || '77.59');
   const [deliveryAddressId, setDeliveryAddressId] = useState<string>(() => localStorage.getItem('deliveryAddressId') || '');
@@ -128,7 +128,23 @@ export default function CustomerDashboard({
       if (profile.id) {
         apiGet(`/api/v1/customers/${profile.id}/addresses`)
           .then(res => {
-            if (res.data) setSavedAddresses(res.data);
+            if (res.data) {
+              setSavedAddresses(res.data);
+              if (res.data.length === 0) {
+                setAddress('Please add an address');
+                setDeliveryAddressId('');
+                localStorage.removeItem('deliveryAddress');
+                localStorage.removeItem('deliveryAddressId');
+              } else {
+                const currentId = localStorage.getItem('deliveryAddressId');
+                const exists = res.data.some((a: any) => a.id === currentId);
+                if (!exists && res.data.length > 0) {
+                  const first = res.data[0];
+                  setAddress(`${first.label || 'Address'}: ${first.addressLine1 || ''}, ${first.city || ''}`);
+                  setDeliveryAddressId(first.id);
+                }
+              }
+            }
           })
           .catch(console.error);
       }
