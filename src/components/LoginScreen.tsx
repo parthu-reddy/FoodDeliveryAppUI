@@ -8,6 +8,7 @@ import { apiPost, apiGet } from '../lib/apiClient';
 import { setToken, setUserProfile, decodeJwt, getToken, clearAllLocalData } from '../lib/tokenStore';
 import { logout } from '../lib/authStore';
 import SessionManagementModal from './SessionManagementModal';
+import CompleteProfileModal from './CompleteProfileModal';
 import { z } from 'zod';
 
 const phoneSchema = z.string().min(8, 'Phone number must be at least 8 digits').max(20, 'Phone number cannot exceed 20 digits');
@@ -41,6 +42,8 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
   const [loading, setLoading] = useState(false);
   const [showSessionModal, setShowSessionModal] = useState(false);
   const [activeSessions, setActiveSessions] = useState<any[]>([]);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [pendingLoginData, setPendingLoginData] = useState<any>(null);
 
   const [scrollY, setScrollY] = useState(0);
   const [activeCardIndex, setActiveCardIndex] = useState(0);
@@ -194,7 +197,25 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
       // Store profile for session persistence
       setUserProfile({ id, phone, role: selectedRole!, name });
 
-      onLoginSuccess(selectedRole!, phone, name);
+      // Fetch profile to check if it is complete
+      try {
+        const profileResp = await apiGet('/api/v1/users/profile');
+        const p = profileResp?.data;
+        if (!p?.name || !p?.email || p.name.trim() === '' || p.email.trim() === '') {
+          setPendingLoginData({ id, phone, role: selectedRole!, name });
+          setShowProfileModal(true);
+          return;
+        } else {
+          // If profile is already complete, just proceed
+          setUserProfile({ id, phone, role: selectedRole!, name: p.name });
+          onLoginSuccess(selectedRole!, phone, p.name);
+        }
+      } catch (profileErr) {
+        // If there's an error fetching profile, show the modal as a fallback
+        setPendingLoginData({ id, phone, role: selectedRole!, name });
+        setShowProfileModal(true);
+        return;
+      }
     } catch (err: any) {
       if (err.status === 409 && err.data?.data?.activeSessions) {
         setActiveSessions(err.data.data.activeSessions);
@@ -898,7 +919,7 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
         otpCode={otpCode}
         serviceName={selectedRole ? roleToServiceName(selectedRole) : ''}
         theme={theme}
-        onSuccess={(token) => {
+        onSuccess={async (token) => {
           setShowSessionModal(false);
           setToken(token);
           const decoded = decodeJwt(token);
@@ -906,7 +927,35 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
           const id = decoded?.sub;
           const role = selectedRole!;
           setUserProfile({ id, phone, role, name });
-          onLoginSuccess(role, phone, name);
+
+          try {
+            const profileResp = await apiGet('/api/v1/users/profile');
+            const p = profileResp?.data;
+            if (!p?.name || !p?.email || p.name.trim() === '' || p.email.trim() === '') {
+              setPendingLoginData({ id, phone, role, name });
+              setShowProfileModal(true);
+            } else {
+              setUserProfile({ id, phone, role, name: p.name });
+              onLoginSuccess(role, phone, p.name);
+            }
+          } catch (err) {
+            setPendingLoginData({ id, phone, role, name });
+            setShowProfileModal(true);
+          }
+        }}
+      />
+
+      <CompleteProfileModal
+        isOpen={showProfileModal}
+        theme={theme}
+        profileId={pendingLoginData?.id || ''}
+        onComplete={(p) => {
+          setShowProfileModal(false);
+          const finalName = p.name || pendingLoginData?.name;
+          if (pendingLoginData) {
+            setUserProfile({ ...pendingLoginData, name: finalName });
+            onLoginSuccess(pendingLoginData.role, pendingLoginData.phone, finalName);
+          }
         }}
       />
 
