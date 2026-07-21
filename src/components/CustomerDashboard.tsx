@@ -404,9 +404,18 @@ export default function CustomerDashboard({
     let effectiveStatus = status;
     if (status === OrderStatus.AWAITING_DELAY_APPROVAL) effectiveStatus = OrderStatus.PAID;
     if (status === OrderStatus.PAID || status === OrderStatus.CREATED) effectiveStatus = OrderStatus.PAID;
-    if (status === OrderStatus.READY_FOR_PICKUP) effectiveStatus = OrderStatus.READY_FOR_PICKUP;
+    if (status === OrderStatus.ON_HOLD) effectiveStatus = OrderStatus.PAID;
     
-    const statuses: string[] = [OrderStatus.PAID, OrderStatus.ACCEPTED, OrderStatus.ACCEPTED, OrderStatus.READY_FOR_PICKUP, OrderStatus.DISPATCHED, OrderStatus.OUT_FOR_DELIVERY, OrderStatus.DELIVERED];
+    const statuses: string[] = [
+      OrderStatus.PAID, 
+      OrderStatus.ACCEPTED, 
+      OrderStatus.PREPARING,
+      OrderStatus.READY,
+      OrderStatus.READY_FOR_PICKUP, 
+      OrderStatus.DISPATCHED, 
+      OrderStatus.OUT_FOR_DELIVERY, 
+      OrderStatus.DELIVERED
+    ];
     return statuses.indexOf(effectiveStatus as string);
   };
 
@@ -415,7 +424,9 @@ export default function CustomerDashboard({
     switch (status) {
       case OrderStatus.PAID: return 5;
       case OrderStatus.ACCEPTED: return 20;
-      case OrderStatus.ACCEPTED: return 40;
+      case OrderStatus.PREPARING: return 40;
+      case OrderStatus.READY: return 45;
+      case OrderStatus.READY_FOR_PICKUP: return 50;
       case OrderStatus.DISPATCHED: return 60;
       case OrderStatus.OUT_FOR_DELIVERY: return 80;
       case OrderStatus.DELIVERED: return 100;
@@ -643,7 +654,8 @@ export default function CustomerDashboard({
                       {currentTrackingOrder.status === OrderStatus.PAID && 'Waiting for Restaurant...'}
                       {currentTrackingOrder.status === OrderStatus.AWAITING_DELAY_APPROVAL && 'Restaurant Requested Delay'}
                       {currentTrackingOrder.status === OrderStatus.ACCEPTED && 'Order Confirmed!'}
-                      {currentTrackingOrder.status === OrderStatus.ACCEPTED && 'Kitchen is Cooking...'}
+                      {currentTrackingOrder.status === OrderStatus.PREPARING && 'Kitchen is Cooking...'}
+                      {currentTrackingOrder.status === OrderStatus.READY && 'Order is Ready!'}
                       {(currentTrackingOrder.status === OrderStatus.READY_FOR_PICKUP || currentTrackingOrder.status === OrderStatus.DISPATCHED) && 'Waiting for Rider Pickup...'}
                       {currentTrackingOrder.status === OrderStatus.OUT_FOR_DELIVERY && 'Rider is on the Way!'}
                       {isFailedOrder(currentTrackingOrder.status) && 'Order Failed / Cancelled'}
@@ -719,6 +731,37 @@ export default function CustomerDashboard({
                     </button>
                   </div>
                 )}
+                
+                {(currentTrackingOrder.status === OrderStatus.PAID || currentTrackingOrder.status === OrderStatus.CREATED) && (
+                  <div className="flex items-center gap-3 pt-2">
+                    <button
+                      onClick={async () => {
+                        if (onAddApiLog) {
+                          onAddApiLog({ id: 'cancel_order', label: `POST /api/v1/orders/${currentTrackingOrder.id}/cancel`, method: 'POST' });
+                        }
+                        try {
+                          await apiPost(`/api/v1/orders/${currentTrackingOrder.id}/cancel`);
+                          if (onUpdateOrder) onUpdateOrder(currentTrackingOrder.id, OrderStatus.CANCELLED);
+                          else {
+                            setInternalOrders(prev => {
+                              const newOrders = [...prev];
+                              const idx = newOrders.findIndex(o => o.id === currentTrackingOrder.id);
+                              if (idx !== -1) {
+                                newOrders[idx].status = OrderStatus.CANCELLED;
+                              }
+                              return newOrders;
+                            });
+                          }
+                        } catch (e) {
+                          console.error("Failed to cancel order", e);
+                        }
+                      }}
+                      className="flex-1 py-3 bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400 font-bold rounded-2xl hover:bg-red-200 dark:hover:bg-red-500/20 transition-all text-sm"
+                    >
+                      Cancel Order
+                    </button>
+                  </div>
+                )}
 
                 {currentTrackingOrder.status !== OrderStatus.AWAITING_DELAY_APPROVAL && !isFailedOrder(currentTrackingOrder.status) && (
                   <div className="bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 p-4 rounded-2xl flex items-center justify-between">
@@ -744,7 +787,7 @@ export default function CustomerDashboard({
                     {[
                       { status: OrderStatus.PAID, label: 'Order Received' },
                     { status: OrderStatus.ACCEPTED, label: 'Accepted by Kitchen' },
-                    { status: OrderStatus.ACCEPTED, label: 'Cooking & Packaging' },
+                    { status: OrderStatus.PREPARING, label: 'Cooking & Packaging' },
                     { status: OrderStatus.OUT_FOR_DELIVERY, label: 'Picked up by Delivery Executive' },
                     { status: OrderStatus.DELIVERED, label: 'Handed Over & Verified' },
                   ].map((step, idx, arr) => {
@@ -753,7 +796,7 @@ export default function CustomerDashboard({
                     const currentStatusIndex = getStatusIndex(currentTrackingOrder.status);
                     
                     const isDone = currentStatusIndex > stepStatusIndex || (currentStatusIndex === stepStatusIndex && step.status !== OrderStatus.DELIVERED);
-                    const isCurrent = currentStatusIndex === stepStatusIndex || (step.status === OrderStatus.ACCEPTED && currentTrackingOrder.status === OrderStatus.READY_FOR_PICKUP);
+                    const isCurrent = currentStatusIndex === stepStatusIndex || (step.status === OrderStatus.PREPARING && [OrderStatus.READY, OrderStatus.READY_FOR_PICKUP, OrderStatus.DISPATCHED].includes(currentTrackingOrder.status as OrderStatus));
                     const isLast = idx === arr.length - 1;
                     
                     return (
@@ -994,7 +1037,15 @@ export default function CustomerDashboard({
                               </div>
 
                               <div className="flex justify-between items-center mt-2">
-                                <span className="text-base font-black text-amber-500">${dish.price}</span>
+                                <div className="flex items-center gap-3">
+                                  <span className="text-base font-black text-amber-500">${dish.price}</span>
+                                  {dish.prepTimeMinutes && (
+                                    <span className="flex items-center gap-1 text-[10px] font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/50 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700/50">
+                                      <Clock className="w-3 h-3" />
+                                      {dish.prepTimeMinutes} mins
+                                    </span>
+                                  )}
+                                </div>
                                 
                                 {dish.isAvailable === false ? (
                                   <span className="px-3 py-1 bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 text-xs font-bold rounded-xl border border-red-200/20">

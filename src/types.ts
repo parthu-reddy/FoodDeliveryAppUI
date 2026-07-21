@@ -25,6 +25,7 @@ export interface MenuItem {
   rating: number;
   isVeg: boolean;
   isAvailable: boolean;
+  prepTimeMinutes?: number;
 }
 
 export interface CartItem {
