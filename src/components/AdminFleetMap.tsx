@@ -107,10 +107,10 @@ export default function AdminFleetMap() {
           bounds.extend([r.lng, r.lat]);
 
           const el = document.createElement('div');
-          el.className = 'fleet-marker w-8 h-8 bg-rose-600 rounded-full flex items-center justify-center shadow-lg border-2 border-white text-white shadow-rose-600/50 hover:scale-110 transition-transform cursor-pointer';
-          el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>';
+          el.className = 'fleet-marker w-8 h-8 bg-rose-600 rounded-full flex items-center justify-center shadow-lg border-2 border-white text-white shadow-rose-600/50 cursor-pointer pointer-events-auto hover:scale-110 transition-transform';
+          el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7"/></svg>';
           
-          new maplibregl.Marker(el)
+          new maplibregl.Marker({ element: el })
             .setLngLat([r.lng, r.lat])
             .setPopup(new maplibregl.Popup({ offset: 25 }).setHTML(`<strong>Restaurant:</strong> ${r.name}<br>Status: ${r.isActive ? 'Active' : 'Inactive'}`))
             .addTo(map!);
@@ -125,30 +125,30 @@ export default function AdminFleetMap() {
           
           const isOnline = r.status === 'ONLINE';
           const bgClass = isOnline ? 'bg-indigo-600' : 'bg-slate-400';
-          const shadowClass = isOnline ? 'shadow-indigo-600/50' : 'shadow-slate-400/50';
+          const shadowClass = isOnline ? 'shadow-indigo-500/50' : 'shadow-slate-400/50';
 
           const el = document.createElement('div');
-          el.className = `fleet-marker w-8 h-8 ${bgClass} rounded-full flex items-center justify-center shadow-lg border-2 border-white text-white ${shadowClass} hover:scale-110 transition-transform cursor-pointer`;
-          el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>';
+          el.className = `fleet-marker w-10 h-10 ${bgClass} rounded-full border-2 border-white shadow-xl flex items-center justify-center ${shadowClass} cursor-pointer pointer-events-auto hover:scale-110 transition-transform`;
+          el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 5.5h5l-4-5h-3L8 12M5.5 17.5 8 12M18.5 17.5 15 11.5"/></svg>';
           
-          new maplibregl.Marker(el)
+          new maplibregl.Marker({ element: el })
             .setLngLat([r.lng, r.lat])
             .setPopup(new maplibregl.Popup({ offset: 25 }).setHTML(`<strong>Rider:</strong> ${r.name}<br>Status: ${r.status}`))
             .addTo(map!);
         }
       });
 
-      // Add Customers (Emerald)
+      // Add Customers (Blue)
       customers.forEach(c => {
         if (c.latitude && c.longitude && c.latitude !== 0 && c.longitude !== 0) {
           hasPoints = true;
           bounds.extend([c.longitude, c.latitude]);
           
           const el = document.createElement('div');
-          el.className = 'fleet-marker w-7 h-7 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg border-2 border-white text-white shadow-emerald-500/50 hover:scale-110 transition-transform cursor-pointer';
-          el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
+          el.className = 'fleet-marker w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center shadow-lg border-2 border-white text-white shadow-blue-600/50 cursor-pointer pointer-events-auto hover:scale-110 transition-transform';
+          el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
           
-          new maplibregl.Marker(el)
+          new maplibregl.Marker({ element: el })
             .setLngLat([c.longitude, c.latitude])
             .setPopup(new maplibregl.Popup({ offset: 25 }).setHTML(`<strong>Customer:</strong> ${c.label || 'Home'}<br>${c.addressLine1}`))
             .addTo(map!);
@@ -182,7 +182,7 @@ export default function AdminFleetMap() {
             <span className="text-slate-600 dark:text-slate-300">Riders ({riders.length})</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+            <div className="w-3 h-3 rounded-full bg-blue-600"></div>
             <span className="text-slate-600 dark:text-slate-300">Customers ({customers.length})</span>
           </div>
         </div>
