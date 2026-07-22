@@ -17,10 +17,9 @@ interface SharedSettingsViewProps {
   theme: 'light' | 'dark';
   // Extra props for Customer dashboard tabs
   showCustomerTabs?: boolean;
-  activeOrders?: any[];
   setTrackingOrder?: (order: any) => void;
   savedAddresses?: any[];
-  initialTab?: 'profile' | 'orders' | 'addresses';
+  initialTab?: 'profile' | 'history' | 'addresses';
   isAddressModalOpen?: boolean;
   setIsAddressModalOpen?: (isOpen: boolean) => void;
   addressSearchQuery?: string;
@@ -37,7 +36,6 @@ export default function SharedSettingsView({
   onBack,
   theme,
   showCustomerTabs = false,
-  activeOrders = [],
   setTrackingOrder,
   savedAddresses = [],
   initialTab = 'profile',
@@ -52,7 +50,7 @@ export default function SharedSettingsView({
   customerId,
   onSelectDeliveryLocation
 }: SharedSettingsViewProps) {
-  const [accountTab, setAccountTab] = useState<'profile' | 'orders' | 'addresses' | 'refunds'>(initialTab);
+  const [accountTab, setAccountTab] = useState<'profile' | 'history' | 'addresses'>(initialTab);
   const { showSuccess, showError } = useToast();
 
   useEffect(() => {
@@ -72,53 +70,36 @@ export default function SharedSettingsView({
   const [isLoadingSessions, setIsLoadingSessions] = useState(false);
 
   const [paginatedOrders, setPaginatedOrders] = useState<any[]>([]);
-  const [paginatedRefunds, setPaginatedRefunds] = useState<any[]>([]);
   const [currentPageOrders, setCurrentPageOrders] = useState(0);
-  const [currentPageRefunds, setCurrentPageRefunds] = useState(0);
   const [hasMoreOrders, setHasMoreOrders] = useState(false);
-  const [hasMoreRefunds, setHasMoreRefunds] = useState(false);
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
-  const [isLoadingRefunds, setIsLoadingRefunds] = useState(false);
   const [hasFetchedOrders, setHasFetchedOrders] = useState(false);
-  const [hasFetchedRefunds, setHasFetchedRefunds] = useState(false);
 
-  const fetchOrders = async (page: number, type: 'active' | 'refunds') => {
+  const fetchOrders = async (page: number, type: 'history') => {
     try {
-      if (type === 'active') setIsLoadingOrders(true);
-      if (type === 'refunds') setIsLoadingRefunds(true);
+      if (type === 'history') setIsLoadingOrders(true);
       
       const res = await apiGet(`/api/v1/orders/${type}?page=${page}&size=10`);
       
       if (res?.data?.content) {
-        if (type === 'active') {
+        if (type === 'history') {
           setPaginatedOrders(prev => page === 0 ? res.data.content : [...prev, ...res.data.content]);
           setHasMoreOrders(!res.data.last);
           setCurrentPageOrders(page);
-        } else {
-          setPaginatedRefunds(prev => page === 0 ? res.data.content : [...prev, ...res.data.content]);
-          setHasMoreRefunds(!res.data.last);
-          setCurrentPageRefunds(page);
         }
       } else if (res?.data && Array.isArray(res.data)) { // fallback
-         if (type === 'active') {
-             setPaginatedOrders(res.data.filter((o: any) => ![OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT, 'CANCELLED_BY_RESTAURANT', OrderStatus.DELIVERY_FAILED, OrderStatus.PARTIALLY_REFUNDED, OrderStatus.CANCELLED_AND_REFUNDED].includes((o.status||'').toUpperCase())));
+         if (type === 'history') {
+             setPaginatedOrders(res.data);
              setHasMoreOrders(false);
-         } else {
-             setPaginatedRefunds(res.data.filter((o: any) => [OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT, 'CANCELLED_BY_RESTAURANT', OrderStatus.DELIVERY_FAILED, OrderStatus.PARTIALLY_REFUNDED, OrderStatus.CANCELLED_AND_REFUNDED].includes((o.status||'').toUpperCase())));
-             setHasMoreRefunds(false);
          }
       }
     } catch (e) {
       console.error(e);
       showError('Failed to fetch orders');
     } finally {
-      if (type === 'active') {
+      if (type === 'history') {
           setIsLoadingOrders(false);
           setHasFetchedOrders(true);
-      }
-      if (type === 'refunds') {
-          setIsLoadingRefunds(false);
-          setHasFetchedRefunds(true);
       }
     }
   };
@@ -164,12 +145,10 @@ export default function SharedSettingsView({
   useEffect(() => {
     if (accountTab === 'profile') {
       loadSessions();
-    } else if (accountTab === 'orders' && !hasFetchedOrders) {
-      fetchOrders(0, 'active');
-    } else if (accountTab === 'refunds' && !hasFetchedRefunds) {
-      fetchOrders(0, 'refunds');
+    } else if (accountTab === 'history' && !hasFetchedOrders) {
+      fetchOrders(0, 'history');
     }
-  }, [accountTab, hasFetchedOrders, hasFetchedRefunds]);
+  }, [accountTab, hasFetchedOrders]);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -251,22 +230,16 @@ export default function SharedSettingsView({
         {showCustomerTabs && (
           <>
             <button 
-              onClick={() => setAccountTab('orders')}
-              className={`flex-1 min-w-[100px] px-3 py-2 rounded-lg text-xs font-bold transition-all shadow-sm ${accountTab === 'orders' ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white' : 'bg-transparent text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+              onClick={() => setAccountTab('history')}
+              className={`flex-1 min-w-[100px] px-3 py-2 rounded-lg text-xs font-bold transition-all shadow-sm ${accountTab === 'history' ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white' : 'bg-transparent text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
             >
-              Orders
+              History
             </button>
             <button 
               onClick={() => setAccountTab('addresses')}
               className={`flex-1 min-w-[100px] px-3 py-2 rounded-lg text-xs font-bold transition-all shadow-sm ${accountTab === 'addresses' ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white' : 'bg-transparent text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
             >
               Addresses
-            </button>
-            <button 
-              onClick={() => setAccountTab('refunds')}
-              className={`flex-1 min-w-[100px] px-3 py-2 rounded-lg text-xs font-bold transition-all shadow-sm ${accountTab === 'refunds' ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white' : 'bg-transparent text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
-            >
-              Refunds
             </button>
           </>
         )}
@@ -365,113 +338,52 @@ export default function SharedSettingsView({
           </div>
         )}
 
-        {showCustomerTabs && accountTab === 'orders' && (
-          <div className="space-y-3">
-            {paginatedOrders.map((order: any) => (
-              <div key={order.id} className="p-4 rounded-2xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-300 font-mono block">{order.id.substring(0, 8)}</span>
-                    <h5 className="font-bold text-sm text-slate-900 dark:text-[#f0ede6]">{order.restaurantName}</h5>
+        {showCustomerTabs && accountTab === 'history' && (
+          <div className="space-y-4">
+            {isLoadingOrders && paginatedOrders.length === 0 ? (
+              <div className="text-center text-slate-500 text-sm py-8">Loading history...</div>
+            ) : paginatedOrders.length === 0 ? (
+              <div className="text-center text-slate-500 text-sm py-8">No order history found.</div>
+            ) : (
+              paginatedOrders.map((order: any) => (
+                <div key={order.id} className="p-4 rounded-2xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-300 font-mono block">{order.id.substring(0, 8)}</span>
+                      <h5 className="font-bold text-sm text-slate-900 dark:text-[#f0ede6]">{order.restaurantName}</h5>
+                    </div>
+                    <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:shadow-[0_0_12px_rgba(244,63,94,0.5)] tracking-wider`}>
+                      {(order.status || '').replace(/_/g, ' ')}
+                    </span>
                   </div>
-                  <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:shadow-[0_0_12px_rgba(244,63,94,0.5)] tracking-wider`}>
-                    {(order.status || '').replace(/_/g, ' ')}
-                  </span>
+                  <div className="text-xs text-slate-500 dark:text-slate-300 mb-3">
+                    <div className="mb-1 font-semibold">{order.items?.length || 0} items • ${(order.totalAmount || order.total || 0).toFixed(2)}</div>
+                    {order.items && order.items.length > 0 && (
+                      <ul className="list-disc pl-4 space-y-0.5 text-slate-400">
+                        {order.items.map((it: any, idx: number) => (
+                          <li key={idx}>{it.quantity || 1}x {it.item?.name || it.name || 'Item'}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <button 
+                    onClick={() => {
+                      if (setTrackingOrder) setTrackingOrder(order);
+                      onBack();
+                    }}
+                    className="w-full py-2 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-[#f0ede6] rounded-lg text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer mt-3"
+                  >
+                    {[OrderStatus.DELIVERED, OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT].includes(order.status) ? "View Invoice" : "View Details"}
+                  </button>
                 </div>
-                <div className="text-xs text-slate-500 dark:text-slate-300 mb-3">
-                  <div className="mb-1 font-semibold">{order.items?.length || 0} items • ${(order.totalAmount || order.total || 0).toFixed(2)}</div>
-                  {order.items && order.items.length > 0 && (
-                    <ul className="list-disc pl-4 space-y-0.5 text-slate-400">
-                      {order.items.map((it: any, idx: number) => (
-                        <li key={idx}>{it.quantity || 1}x {it.item?.name || it.name || 'Item'}</li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-                <button 
-                  onClick={() => {
-                    if (setTrackingOrder) setTrackingOrder(order);
-                    onBack();
-                  }}
-                  className="w-full py-2 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-[#f0ede6] rounded-lg text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
-                >
-                  {[OrderStatus.DELIVERED, OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT].includes(order.status) ? "View Invoice" : "Track Order"}
-                </button>
-              </div>
-            ))}
-            {paginatedOrders.length === 0 && !isLoadingOrders && (
-              <div className="text-center py-10 bg-white/20 dark:bg-slate-900/20 rounded-2xl border border-rose-500/20 dark:border-rose-500/30">
-                <Package className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                <p className="text-sm font-bold text-slate-500 dark:text-slate-300">No active orders</p>
-              </div>
-            )}
-            {isLoadingOrders && (
-              <div className="text-center py-4">
-                <p className="text-xs font-bold text-slate-500">Loading orders...</p>
-              </div>
+              ))
             )}
             {hasMoreOrders && !isLoadingOrders && (
               <button 
-                onClick={() => fetchOrders(currentPageOrders + 1, 'active')}
+                onClick={() => fetchOrders(currentPageOrders + 1, 'history')}
                 className="w-full py-2.5 rounded-xl border border-rose-500/30 text-rose-500 font-bold text-xs hover:bg-rose-500/10 transition-colors"
               >
-                Load More Orders
-              </button>
-            )}
-          </div>
-        )}
-
-        {showCustomerTabs && accountTab === 'refunds' && (
-          <div className="space-y-3">
-            {paginatedRefunds.map((order: any) => (
-              <div key={order.id} className="p-4 rounded-2xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-300 font-mono block">{order.id}</span>
-                    <h5 className="font-bold text-sm text-slate-900 dark:text-[#f0ede6]">{order.restaurantName}</h5>
-                  </div>
-                  <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:shadow-[0_0_12px_rgba(244,63,94,0.5)] tracking-wider`}>
-                    {(order.status || '').replace(/_/g, ' ')}
-                  </span>
-                </div>
-                <div className="text-xs text-slate-500 dark:text-slate-300 mb-3">
-                  <div className="mb-1 font-semibold">{order.items?.length || 0} items • ${(order.totalAmount || order.total || 0).toFixed(2)}</div>
-                  {order.items && order.items.length > 0 && (
-                    <ul className="pl-4 list-disc marker:text-rose-400 dark:marker:text-rose-500 opacity-80">
-                      {order.items.map((it: any, idx: number) => (
-                        <li key={idx}>{it.quantity || 1}x {it.item?.name || it.name || 'Item'}</li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-                <button 
-                  onClick={() => {
-                    if (setTrackingOrder) setTrackingOrder(order);
-                    onBack();
-                  }}
-                  className="w-full py-2 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-[#f0ede6] rounded-lg text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer mt-3"
-                >
-                  View Details
-                </button>
-              </div>
-            ))}
-            {paginatedRefunds.length === 0 && !isLoadingRefunds && (
-              <div className="text-center py-10 bg-white/20 dark:bg-slate-900/20 rounded-2xl border border-rose-500/20 dark:border-rose-500/30">
-                <Package className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                <p className="text-sm font-bold text-slate-500 dark:text-slate-300">No refunds found</p>
-              </div>
-            )}
-            {isLoadingRefunds && (
-              <div className="text-center py-4">
-                <p className="text-xs font-bold text-slate-500">Loading refunds...</p>
-              </div>
-            )}
-            {hasMoreRefunds && !isLoadingRefunds && (
-              <button 
-                onClick={() => fetchOrders(currentPageRefunds + 1, 'refunds')}
-                className="w-full py-2.5 rounded-xl border border-rose-500/30 text-rose-500 font-bold text-xs hover:bg-rose-500/10 transition-colors"
-              >
-                Load More Refunds
+                Load More History
               </button>
             )}
           </div>

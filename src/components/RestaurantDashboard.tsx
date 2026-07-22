@@ -84,7 +84,7 @@ export default function RestaurantDashboard({
         localStorage.setItem(`order_preparing_${orderId}`, 'true');
       }
       else if (status === OrderStatus.CANCELLED_BY_RESTAURANT) endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/reject`;
-      else if (status === OrderStatus.READY) {
+      else if (status === OrderStatus.READY_FOR_PICKUP) {
         endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/ready`;
         localStorage.removeItem(`order_preparing_${orderId}`);
       }
@@ -166,14 +166,15 @@ export default function RestaurantDashboard({
                 let s = o.status?.toUpperCase() || '';
                 if (s === OrderStatus.CREATED || s === OrderStatus.PAID) {
                   if (o.additionalPrepTime && o.additionalPrepTime > 10) {
-                    s = OrderStatus.ON_HOLD;
+                    s = OrderStatus.AWAITING_DELAY_APPROVAL;
                   } else {
                     s = OrderStatus.PAID;
                   }
                 }
-                if (s === OrderStatus.READY || s === 'READY') s = OrderStatus.READY;
+                if (s === OrderStatus.READY_FOR_PICKUP || s === 'READY') s = OrderStatus.READY_FOR_PICKUP;
                 if (s === OrderStatus.CANCELLED_BY_RESTAURANT || s === OrderStatus.CANCELLED || s === 'CANCELLED_BY_RESTAURANT' || s === OrderStatus.DELIVERY_FAILED) s = OrderStatus.CANCELLED;
                 if (s === OrderStatus.DELIVERED) s = OrderStatus.DELIVERED;
+                if (s === 'ON_HOLD') s = OrderStatus.AWAITING_DELAY_APPROVAL;
                 
                 let parsedItems = o.items || [];
                 if (o.itemsJson) {
@@ -341,7 +342,7 @@ export default function RestaurantDashboard({
   const myOrders = allRestaurantOrders.filter(o => isActiveOrder(o.status || ''));
   const historyOrders = allRestaurantOrders.filter(o => !isActiveOrder(o.status || ''));
 
-  const pendingOrders = myOrders.filter(o => o.status === OrderStatus.PAID || o.status === OrderStatus.ON_HOLD);
+  const pendingOrders = myOrders.filter(o => o.status === OrderStatus.PAID);
   const activePreparing = myOrders.filter(o => o.status === OrderStatus.ACCEPTED || o.status === OrderStatus.PREPARING);
   const completedOrders = historyOrders.filter(o => o.status === OrderStatus.DELIVERED);
 
@@ -381,19 +382,19 @@ export default function RestaurantDashboard({
 
 
   const handleStatusTransition = (order: Order) => {
-    if (order.status === OrderStatus.PAID || order.status === OrderStatus.ON_HOLD) {
+    if (order.status === OrderStatus.PAID || order.status === OrderStatus.AWAITING_DELAY_APPROVAL) {
       onUpdateOrderStatus(order.id, OrderStatus.ACCEPTED);
     } else if (order.status as any === OrderStatus.ACCEPTED) {
       onUpdateOrderStatus(order.id, OrderStatus.PREPARING);
     } else if (order.status as any === OrderStatus.PREPARING) {
-      onUpdateOrderStatus(order.id, OrderStatus.READY);
+      onUpdateOrderStatus(order.id, OrderStatus.READY_FOR_PICKUP);
     }
   };
 
   const handleCardCancelSubmit = async (orderId: string) => {
     const reason = customCancelReasonText[orderId] || 'No reason provided';
     const orderStatus = internalOrders.find(o => o.id === orderId)?.status;
-    const targetStatus = (orderStatus === OrderStatus.PAID || orderStatus === OrderStatus.ON_HOLD) 
+    const targetStatus = (orderStatus === OrderStatus.PAID || orderStatus === OrderStatus.AWAITING_DELAY_APPROVAL) 
       ? OrderStatus.CANCELLED_BY_RESTAURANT 
       : OrderStatus.CANCELLED;
     
@@ -433,8 +434,8 @@ export default function RestaurantDashboard({
       
       if (minutes > 10) {
         // Optimistic update
-        setInternalOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: OrderStatus.ON_HOLD } : o));
-        if (externalUpdateStatus) externalUpdateStatus(orderId, OrderStatus.ON_HOLD);
+        setInternalOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: OrderStatus.AWAITING_DELAY_APPROVAL } : o));
+        if (externalUpdateStatus) externalUpdateStatus(orderId, OrderStatus.AWAITING_DELAY_APPROVAL);
       } else {
         // Accept right away if <= 10 mins
         setInternalOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: OrderStatus.ACCEPTED } : o));
@@ -696,8 +697,8 @@ export default function RestaurantDashboard({
                               <span className="text-xs font-mono font-bold text-orange-500">#{order.id.substring(0, 8)}</span>
                               <span className="text-[10px] text-slate-400 dark:text-slate-300 font-medium block">{order.timestamp}</span>
                             </div>
-                            <span className={`text-[9px] font-mono font-black px-2 py-0.5 rounded-full uppercase border ${order.status === OrderStatus.ON_HOLD ? 'bg-red-500/10 text-red-500 border-red-500/25' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:shadow-[0_0_12px_rgba(244,63,94,0.5)] uppercase'}`}>
-                              {order.status === OrderStatus.ON_HOLD ? 'ON HOLD' : 'PLACED'}
+                            <span className={`text-[9px] font-mono font-black px-2 py-0.5 rounded-full uppercase border ${order.status === OrderStatus.AWAITING_DELAY_APPROVAL ? 'bg-red-500/10 text-red-500 border-red-500/25' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:shadow-[0_0_12px_rgba(244,63,94,0.5)] uppercase'}`}>
+                              {order.status === OrderStatus.AWAITING_DELAY_APPROVAL ? 'ON HOLD' : 'PLACED'}
                             </span>
                           </div>
 
@@ -881,18 +882,18 @@ export default function RestaurantDashboard({
                       <span className="font-extrabold text-xs text-slate-800 dark:text-[#f0ede6] uppercase font-sans tracking-wide">Requested Delay</span>
                     </div>
                     <span className="text-[10px] font-black font-mono bg-red-500/10 text-red-500 px-2.5 py-0.5 rounded-full border border-red-500/20">
-                      {myOrders.filter(o => o.status === OrderStatus.ON_HOLD).length}
+                      {myOrders.filter(o => o.status === OrderStatus.AWAITING_DELAY_APPROVAL).length}
                     </span>
                   </div>
 
                   <div className="flex-1 space-y-3.5 overflow-y-auto h-[500px] scrollbar-thin pr-1">
-                    {myOrders.filter(o => o.status === OrderStatus.ON_HOLD).length === 0 ? (
+                    {myOrders.filter(o => o.status === OrderStatus.AWAITING_DELAY_APPROVAL).length === 0 ? (
                       <div className="h-full flex flex-col items-center justify-center text-center py-16 px-4 bg-white/40 dark:bg-slate-900/10 border border-dashed border-rose-500/20 dark:border-rose-500/30 rounded-2xl">
                         <Clock className="w-8 h-8 text-slate-300 dark:text-slate-700 mb-2" />
                         <p className="text-xs font-bold text-slate-400 dark:text-slate-300">No delayed orders</p>
                       </div>
                     ) : (
-                      myOrders.filter(o => o.status === OrderStatus.ON_HOLD).slice().reverse().map(order => (
+                      myOrders.filter(o => o.status === OrderStatus.AWAITING_DELAY_APPROVAL).slice().reverse().map(order => (
                         <motion.div 
                           key={order.id}
                           layoutId={`card-${order.id}`}
@@ -1158,19 +1159,19 @@ export default function RestaurantDashboard({
                       <span className="font-extrabold text-xs text-slate-800 dark:text-[#f0ede6] uppercase font-sans tracking-wide">Prepared Ready</span>
                     </div>
                     <span className="text-[10px] font-black font-mono bg-emerald-500/10 text-emerald-650 dark:text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-                      {myOrders.filter(o => o.status === OrderStatus.READY).length}
+                      {myOrders.filter(o => o.status === OrderStatus.READY_FOR_PICKUP).length}
                     </span>
                   </div>
 
                   <div className="flex-1 space-y-3.5 overflow-y-auto h-[500px] scrollbar-thin pr-1">
-                    {myOrders.filter(o => o.status === OrderStatus.READY).length === 0 ? (
+                    {myOrders.filter(o => o.status === OrderStatus.READY_FOR_PICKUP).length === 0 ? (
                       <div className="h-full flex flex-col items-center justify-center text-center py-16 px-4 bg-white/40 dark:bg-slate-900/10 border border-dashed border-rose-500/20 dark:border-rose-500/30 rounded-2xl">
                         <Truck className="w-8 h-8 text-slate-300 dark:text-slate-700 mb-2" />
                         <p className="text-xs font-bold text-slate-400 dark:text-slate-300">No ready packages</p>
                         <p className="text-[10px] text-slate-500 dark:text-slate-300 mt-1 max-w-[180px]">Finished dishes will wait here. Handover to couriers with secure codes.</p>
                       </div>
                     ) : (
-                      myOrders.filter(o => o.status === OrderStatus.READY).slice().reverse().map(order => (
+                      myOrders.filter(o => o.status === OrderStatus.READY_FOR_PICKUP).slice().reverse().map(order => (
                         <motion.div 
                           key={order.id}
                           layoutId={`card-${order.id}`}

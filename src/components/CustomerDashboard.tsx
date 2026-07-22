@@ -107,7 +107,7 @@ export default function CustomerDashboard({
           if (res.data && res.data.content) {
             const mapped = res.data.content.map((o: any) => {
               let s = o.status?.toUpperCase() || '';
-              if (s === 'awaiting_delay_approval') s = OrderStatus.AWAITING_DELAY_APPROVAL;
+              if (s === 'ON_HOLD') s = OrderStatus.AWAITING_DELAY_APPROVAL;
               if (s === OrderStatus.PAID || s === OrderStatus.CREATED) s = OrderStatus.PAID;
               return { ...o, status: s };
             });
@@ -116,7 +116,7 @@ export default function CustomerDashboard({
             // Fallback just in case
             const mapped = res.data.map((o: any) => {
               let s = o.status?.toUpperCase() || '';
-              if (s === 'awaiting_delay_approval') s = OrderStatus.AWAITING_DELAY_APPROVAL;
+              if (s === 'ON_HOLD') s = OrderStatus.AWAITING_DELAY_APPROVAL;
               if (s === OrderStatus.PAID || s === OrderStatus.CREATED) s = OrderStatus.PAID;
               return { ...o, status: s };
             });
@@ -242,8 +242,8 @@ export default function CustomerDashboard({
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [isAddressSelectorOpen, setIsAddressSelectorOpen] = useState(false);
   const [view, setView] = useState<'home' | 'settings'>('home');
-  const [settingsTab, setSettingsTab] = useState<'profile' | 'orders' | 'addresses'>('profile');
-  const [accountTab, setAccountTab] = useState<"profile" | "orders" | "addresses">("profile");
+  const [settingsTab, setSettingsTab] = useState<'profile' | 'history' | 'addresses'>('profile');
+
   const [editName, setEditName] = useState(userName);
   const [editEmail, setEditEmail] = useState('');
   const [editPhone, setEditPhone] = useState(userPhone);
@@ -259,7 +259,7 @@ export default function CustomerDashboard({
 
 
   useEffect(() => {
-    if (currentTrackingOrder && (currentTrackingOrder.status === OrderStatus.DISPATCHED || currentTrackingOrder.status === OrderStatus.OUT_FOR_DELIVERY)) {
+    if (currentTrackingOrder && (currentTrackingOrder.status === OrderStatus.DISPATCHED || currentTrackingOrder.status === OrderStatus.AT_RESTAURANT || currentTrackingOrder.status === OrderStatus.OUT_FOR_DELIVERY)) {
       if (onAddApiLog) {
         onAddApiLog({ id: 'live_tracking', label: `GET /api/v1/orders/${currentTrackingOrder.id}/live-tracking (SSE)`, method: 'GET' });
       }
@@ -393,9 +393,23 @@ export default function CustomerDashboard({
     } catch (err: any) {
       console.error(err);
       setPaymentStatus('idle');
-      const errorMsg = err?.message || "Failed to create order";
-      setGlobalError(errorMsg);
-      setTimeout(() => setGlobalError(null), 3000);
+      setIsPaymentModalOpen(false); // Close payment modal on error
+
+      if (err?.data?.data && Array.isArray(err.data.data) && err.data.data.length > 0) {
+        const unavailableIds = err.data.data as string[];
+        const removedItemNames = cart
+          .filter(i => unavailableIds.includes(i.item.id))
+          .map(i => i.item.name)
+          .join(', ');
+          
+        setCart(prev => prev.filter(i => !unavailableIds.includes(i.item.id)));
+        setGlobalError(removedItemNames ? `Removed unavailable items from cart: ${removedItemNames}` : "Some items are unavailable.");
+        setTimeout(() => setGlobalError(null), 5000);
+      } else {
+        const errorMsg = err?.message || "Failed to create order";
+        setGlobalError(errorMsg);
+        setTimeout(() => setGlobalError(null), 3000);
+      }
     }
   };
 
@@ -404,15 +418,15 @@ export default function CustomerDashboard({
     let effectiveStatus = status;
     if (status === OrderStatus.AWAITING_DELAY_APPROVAL) effectiveStatus = OrderStatus.PAID;
     if (status === OrderStatus.PAID || status === OrderStatus.CREATED) effectiveStatus = OrderStatus.PAID;
-    if (status === OrderStatus.ON_HOLD) effectiveStatus = OrderStatus.PAID;
+    if (status === OrderStatus.AWAITING_DELAY_APPROVAL) effectiveStatus = OrderStatus.PAID;
     
     const statuses: string[] = [
       OrderStatus.PAID, 
       OrderStatus.ACCEPTED, 
       OrderStatus.PREPARING,
-      OrderStatus.READY,
       OrderStatus.READY_FOR_PICKUP, 
       OrderStatus.DISPATCHED, 
+      OrderStatus.AT_RESTAURANT,
       OrderStatus.OUT_FOR_DELIVERY, 
       OrderStatus.DELIVERED
     ];
@@ -425,9 +439,9 @@ export default function CustomerDashboard({
       case OrderStatus.PAID: return 5;
       case OrderStatus.ACCEPTED: return 20;
       case OrderStatus.PREPARING: return 40;
-      case OrderStatus.READY: return 45;
       case OrderStatus.READY_FOR_PICKUP: return 50;
       case OrderStatus.DISPATCHED: return 60;
+      case OrderStatus.AT_RESTAURANT: return 70;
       case OrderStatus.OUT_FOR_DELIVERY: return 80;
       case OrderStatus.DELIVERED: return 100;
       default: return 0;
@@ -507,7 +521,6 @@ export default function CustomerDashboard({
             onBack={() => setView('home')}
             theme={theme}
             showCustomerTabs={true}
-            activeOrders={activeOrders}
             setTrackingOrder={(order) => {
               setTrackingOrder(order);
               setView('home');
@@ -655,8 +668,9 @@ export default function CustomerDashboard({
                       {currentTrackingOrder.status === OrderStatus.AWAITING_DELAY_APPROVAL && 'Restaurant Requested Delay'}
                       {currentTrackingOrder.status === OrderStatus.ACCEPTED && 'Order Confirmed!'}
                       {currentTrackingOrder.status === OrderStatus.PREPARING && 'Kitchen is Cooking...'}
-                      {currentTrackingOrder.status === OrderStatus.READY && 'Order is Ready!'}
-                      {(currentTrackingOrder.status === OrderStatus.READY_FOR_PICKUP || currentTrackingOrder.status === OrderStatus.DISPATCHED) && 'Waiting for Rider Pickup...'}
+                      {currentTrackingOrder.status === OrderStatus.READY_FOR_PICKUP && 'Order is Ready!'}
+                      {currentTrackingOrder.status === OrderStatus.DISPATCHED && 'Waiting for Rider Pickup...'}
+                      {currentTrackingOrder.status === OrderStatus.AT_RESTAURANT && 'Rider is Waiting at Restaurant...'}
                       {currentTrackingOrder.status === OrderStatus.OUT_FOR_DELIVERY && 'Rider is on the Way!'}
                       {isFailedOrder(currentTrackingOrder.status) && 'Order Failed / Cancelled'}
                     </h4>
@@ -687,6 +701,7 @@ export default function CustomerDashboard({
                             expectedDelayMinutes: 15
                           });
                           if (onUpdateOrder) onUpdateOrder(currentTrackingOrder.id, OrderStatus.ACCEPTED);
+                          setInternalOrders(prev => prev.map(o => o.id === currentTrackingOrder.id ? { ...o, status: OrderStatus.ACCEPTED } : o));
                         } catch (e) {
                           console.error("Failed to approve delay", e);
                         }
@@ -706,6 +721,7 @@ export default function CustomerDashboard({
                             approved: false
                           });
                           if (onUpdateOrder) onUpdateOrder(currentTrackingOrder.id, OrderStatus.CANCELLED);
+                          setInternalOrders(prev => prev.map(o => o.id === currentTrackingOrder.id ? { ...o, status: OrderStatus.CANCELLED } : o));
                         } catch (e) {
                           console.error("Failed to reject delay", e);
                         }
@@ -796,7 +812,7 @@ export default function CustomerDashboard({
                     const currentStatusIndex = getStatusIndex(currentTrackingOrder.status);
                     
                     const isDone = currentStatusIndex > stepStatusIndex || (currentStatusIndex === stepStatusIndex && step.status !== OrderStatus.DELIVERED);
-                    const isCurrent = currentStatusIndex === stepStatusIndex || (step.status === OrderStatus.PREPARING && [OrderStatus.READY, OrderStatus.READY_FOR_PICKUP, OrderStatus.DISPATCHED].includes(currentTrackingOrder.status as OrderStatus));
+                    const isCurrent = currentStatusIndex === stepStatusIndex || (step.status === OrderStatus.PREPARING && [OrderStatus.READY_FOR_PICKUP, OrderStatus.DISPATCHED, OrderStatus.AT_RESTAURANT].includes(currentTrackingOrder.status as OrderStatus));
                     const isLast = idx === arr.length - 1;
                     
                     return (

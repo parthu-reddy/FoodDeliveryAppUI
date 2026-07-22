@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 3.2.1263 on 2026-07-21 13:24:35.
+// Generated using typescript-generator version 3.2.1263 on 2026-07-22 10:54:26.
 
 export enum AccountType {
     CUSTOMER = "CUSTOMER",
@@ -24,6 +24,7 @@ export enum OrderStatus {
     PREPARING = "PREPARING",
     READY_FOR_PICKUP = "READY_FOR_PICKUP",
     DISPATCHED = "DISPATCHED",
+    AT_RESTAURANT = "AT_RESTAURANT",
     OUT_FOR_DELIVERY = "OUT_FOR_DELIVERY",
     DELIVERED = "DELIVERED",
     CANCELLED = "CANCELLED",

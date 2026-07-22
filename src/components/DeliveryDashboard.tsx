@@ -65,6 +65,10 @@ export default function DeliveryDashboard({
   const [mockEarnings, setMockEarnings] = useState(0);
   const [completedCount, setCompletedCount] = useState(0);
 
+  const [goOfflineAfter, setGoOfflineAfter] = useState(false);
+  const [waitTimerSeconds, setWaitTimerSeconds] = useState(0);
+  const [isWaitTimerActive, setIsWaitTimerActive] = useState(false);
+
   const [riderId, setRiderId] = useState("");
 
   const [riderName, setRiderName] = useState("");
@@ -178,11 +182,21 @@ export default function DeliveryDashboard({
       const jobs = activeOrders.filter(o => !o.riderId && !rejectedIds.has(o.id));
       if (jobs.length > 0) {
         setPingJob(jobs[0]);
-        setPingTimer(30);
+        if (jobs[0].expiresAt) {
+          const remainingSecs = Math.max(0, Math.floor((jobs[0].expiresAt - Date.now()) / 1000));
+          setPingTimer(remainingSecs);
+        } else {
+          setPingTimer(30);
+        }
       }
     }
     if (!isOnline || activeJobId) {
       setPingJob(null);
+    } else if (pingJob) {
+      const stillActive = activeOrders.find(o => o.id === pingJob.id);
+      if (!stillActive) {
+        setPingJob(null);
+      }
     }
   }, [activeOrders, isOnline, activeJobId, rejectedIds, pingJob]);
   React.useEffect(() => {
@@ -269,33 +283,74 @@ export default function DeliveryDashboard({
         { enableHighAccuracy: true }
       );
     }
-    
+    let reconnectTimeout: NodeJS.Timeout;
+    let attempt = 0;
+
     const connectWs = () => {
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
       const token = getToken();
-      ws = new WebSocket(`${protocol}//${window.location.host}/api/delivery/ws/telemetry?token=${token}`);
+      // Connect to the tracking endpoint where our dev profile ping logic lives
+      ws = new WebSocket(`${protocol}//${window.location.host}/api/delivery/tracking?token=${token}`);
+      
       ws.onopen = () => {
+        attempt = 0; // reset attempts on success
         interval = setInterval(() => {
           if (ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ driverId: riderId, lat: currentLat, lng: currentLng, timestamp: new Date().toISOString() }));
           }
         }, 5000);
       };
-      ws.onerror = () => {
-        // Fallback to HTTP if WS fails
+      
+      ws.onmessage = async (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === "NEW_ORDER_DISPATCH" && data.orderId) {
+            // Fetch the actual ping details since we only got the orderId
+            const pingRes = await apiGet(`/api/v1/delivery/orders/available`);
+            if (pingRes.data && pingRes.data.length > 0) {
+              const jobs = pingRes.data.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
+              setPingJob(jobs[0]);
+              
+              if (jobs[0].expiresAt) {
+                const remainingSecs = Math.max(0, Math.floor((jobs[0].expiresAt - Date.now()) / 1000));
+                setPingTimer(remainingSecs);
+              } else {
+                setPingTimer(30);
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Failed to parse websocket message", e);
+        }
+      };
+      
+      ws.onclose = () => {
         if (interval) clearInterval(interval);
-        interval = setInterval(async () => {
-          try {
-            await apiPost("/api/v1/delivery/telemetry/batch", [{ driverId: riderId, lat: currentLat, lng: currentLng, timestamp: new Date().toISOString() }]);
-          } catch(e) {}
-        }, 5000);
+        
+        // Exponential backoff: max 30 seconds
+        const delay = Math.min(1000 * Math.pow(2, attempt), 30000);
+        attempt++;
+        
+        reconnectTimeout = setTimeout(() => {
+          connectWs();
+        }, delay);
+      };
+
+      ws.onerror = (err) => {
+        console.error("WebSocket error:", err);
+        ws.close(); // Triggers onclose to handle reconnection
       };
     };
+    
     connectWs();
 
     return () => {
       if (interval) clearInterval(interval);
-      if (ws) ws.close();
+      if (reconnectTimeout) clearTimeout(reconnectTimeout);
+      if (ws) {
+        ws.onclose = null; // Prevent reconnection attempt after unmount
+        ws.close();
+      }
       if (watchId !== undefined && navigator.geolocation) {
         navigator.geolocation.clearWatch(watchId);
       }
@@ -470,8 +525,27 @@ export default function DeliveryDashboard({
     if (currentJob?.status) {
       setIsUpdatingPickup(false);
       setIsUpdatingDelivery(false);
+      
+      // Start timer if Out For Delivery
+      if (currentJob.status === OrderStatus.OUT_FOR_DELIVERY && !isWaitTimerActive) {
+        setIsWaitTimerActive(true);
+        setWaitTimerSeconds(0);
+      }
     }
   }, [currentJob?.status]);
+
+  React.useEffect(() => {
+    let interval: any;
+    if (isWaitTimerActive && currentJob?.status === OrderStatus.OUT_FOR_DELIVERY) {
+      interval = setInterval(() => {
+        setWaitTimerSeconds(prev => prev + 1);
+      }, 1000);
+    } else {
+      setIsWaitTimerActive(false);
+      setWaitTimerSeconds(0);
+    }
+    return () => clearInterval(interval);
+  }, [isWaitTimerActive, currentJob?.status]);
 
   // Filter jobs available on the job board (orders that are dispatched but have no rider assigned yet)
   const availableJobs = activeOrders.filter(o => o.status === OrderStatus.DISPATCHED && !o.riderId);
@@ -488,9 +562,49 @@ export default function DeliveryDashboard({
     }
   };
 
-  const handleArrivedAtRestaurant = () => {
+  const handleArrivedAtRestaurant = async () => {
     if (!currentJob) return;
-    // Keep dispatched but indicate progress or just pick up directly
+    const previousStatus = currentJob.status;
+    onUpdateOrderStatus(currentJob.id, OrderStatus.AT_RESTAURANT);
+    try {
+      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, { status: OrderStatus.AT_RESTAURANT });
+    } catch(e: any) {
+      onUpdateOrderStatus(currentJob.id, previousStatus);
+      showToast(e.response?.data?.message || "Failed to update status.");
+    }
+  };
+
+  const handleAbortJob = async () => {
+    if (!currentJob) return;
+    if (!confirm("Are you sure you want to abort this delivery? This will impact your rating.")) return;
+    
+    try {
+      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/abort`, {});
+      setActiveJobId(null);
+      showToast("Delivery aborted. You will be placed back in the pool.");
+    } catch (e: any) {
+      showToast(e.response?.data?.message || "Failed to abort delivery.");
+    }
+  };
+
+  const handleCustomerUnavailable = async () => {
+    if (!currentJob) return;
+    if (!confirm("Are you sure the customer is unavailable? You should try calling them first.")) return;
+
+    const previousStatus = currentJob.status;
+    onUpdateOrderStatus(currentJob.id, OrderStatus.DELIVERY_FAILED);
+    try {
+      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, { status: OrderStatus.DELIVERY_FAILED, goOfflineAfter });
+      setActiveJobId(null);
+      
+      if (goOfflineAfter) {
+        setIsOnline(false);
+      }
+      showToast("Delivery marked as failed. Please return items if applicable.");
+    } catch (e: any) {
+      onUpdateOrderStatus(currentJob.id, previousStatus);
+      showToast(e.response?.data?.message || "Failed to mark as unavailable.");
+    }
   };
 
   const handlePickUpFood = async (e: React.FormEvent) => {
@@ -534,7 +648,7 @@ export default function DeliveryDashboard({
     setIsUpdatingDelivery(true);
     
     try {
-      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, { status: OrderStatus.DELIVERED, deliveryOtp: enteredOtp });
+      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, { status: OrderStatus.DELIVERED, deliveryOtp: enteredOtp, goOfflineAfter });
       setIsUpdatingDelivery(false);
       
       // Update history so it's immediately visible
@@ -543,6 +657,9 @@ export default function DeliveryDashboard({
       setMockEarnings(prev => prev + 5.50 + 2.00);
       setCompletedCount(prev => prev + 1);
       setActiveJobId(null);
+      if (goOfflineAfter) {
+        setIsOnline(false);
+      }
     } catch(e: any) {
       setIsUpdatingDelivery(false);
       onUpdateOrderStatus(currentJob.id, previousStatus); // Revert on failure
@@ -837,7 +954,7 @@ export default function DeliveryDashboard({
               <div className="space-y-1">
                 <h5 className="font-bold text-sm text-slate-400 dark:text-slate-300 font-mono tracking-wider">NAVIGATIONAL STEPS</h5>
                 <p className="text-base font-bold text-slate-900 dark:text-[#f0ede6]">
-                  {[OrderStatus.DISPATCHED, OrderStatus.READY_FOR_PICKUP].includes(currentJob.status) ? 'Step 1: Collect food packages' : 'Step 2: Deliver to door'}
+                  {[OrderStatus.ACCEPTED, OrderStatus.PREPARING, OrderStatus.DISPATCHED, OrderStatus.READY_FOR_PICKUP, OrderStatus.AT_RESTAURANT].includes(currentJob.status as any) ? 'Step 1: Collect food packages' : 'Step 2: Deliver to door'}
                 </p>
               </div>
 
@@ -874,36 +991,56 @@ export default function DeliveryDashboard({
               </div>
 
               {/* State Transition Actions */}
-              {[OrderStatus.DISPATCHED, OrderStatus.READY_FOR_PICKUP].includes(currentJob.status) ? (
-                <form onSubmit={handlePickUpFood} className="space-y-4 pt-2">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-400 dark:text-slate-300 tracking-wider font-mono flex items-center gap-1.5">
-                      <KeyRound className="w-4 h-4 text-amber-500" /> RESTAURANT HANDOVER OTP
-                    </label>
-                    <div className="flex bg-white/20 dark:bg-slate-950/20 border border-rose-500/20 dark:border-rose-500/30 rounded-2xl overflow-hidden focus-within:border-amber-500 transition-colors">
-                      <input
-                        type="password"
-                        pattern="[0-9]*"
-                        inputMode="numeric"
-                        value={enteredPickupOtp}
-                        onChange={(e) => setEnteredPickupOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                        placeholder="Enter 6-digit pickup OTP"
-                        className="flex-1 px-4 py-3 bg-transparent text-slate-800 dark:text-[#f0ede6] outline-none font-mono text-center tracking-widest text-sm placeholder-slate-400"
-                        required
-                      />
+              {[OrderStatus.ACCEPTED, OrderStatus.PREPARING, OrderStatus.DISPATCHED, OrderStatus.READY_FOR_PICKUP, OrderStatus.AT_RESTAURANT].includes(currentJob.status as any) ? (
+                <div className="space-y-4 pt-2">
+                  {currentJob.status !== OrderStatus.AT_RESTAURANT && (
+                    <button
+                      type="button"
+                      onClick={handleArrivedAtRestaurant}
+                      className="w-full bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-white font-bold py-3 rounded-2xl transition-all cursor-pointer shadow-sm border border-slate-300 dark:border-slate-700"
+                    >
+                      Mark Arrived at Restaurant
+                    </button>
+                  )}
+                  <form onSubmit={handlePickUpFood} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-400 dark:text-slate-300 tracking-wider font-mono flex items-center gap-1.5">
+                        <KeyRound className="w-4 h-4 text-amber-500" /> RESTAURANT HANDOVER OTP
+                      </label>
+                      <div className="flex bg-white/20 dark:bg-slate-950/20 border border-rose-500/20 dark:border-rose-500/30 rounded-2xl overflow-hidden focus-within:border-amber-500 transition-colors">
+                        <input
+                          type="password"
+                          pattern="[0-9]*"
+                          inputMode="numeric"
+                          value={enteredPickupOtp}
+                          onChange={(e) => setEnteredPickupOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                          placeholder="Enter 6-digit pickup OTP"
+                          className="flex-1 px-4 py-3 bg-transparent text-slate-800 dark:text-[#f0ede6] outline-none font-mono text-center tracking-widest text-sm placeholder-slate-400"
+                          required
+                        />
+                      </div>
+
+                      {pickupOtpError && <p className="text-xs text-rose-500 font-bold mt-1 text-center">{pickupOtpError}</p>}
                     </div>
-
-                    {pickupOtpError && <p className="text-xs text-rose-500 font-bold mt-1 text-center">{pickupOtpError}</p>}
+                    <button
+                      type="submit"
+                      disabled={isUpdatingPickup}
+                      className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black py-4 rounded-2xl shadow-lg hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-1 cursor-pointer border border-white/20 disabled:opacity-70"
+                    >
+                      {isUpdatingPickup ? "Confirming..." : <>Confirm Pickup & Start Driving <ArrowRight className="w-5 h-5" /></>}
+                    </button>
+                  </form>
+                  
+                  <div className="pt-2 text-center">
+                    <button 
+                      type="button"
+                      onClick={handleAbortJob}
+                      className="text-xs font-bold text-rose-500 hover:text-rose-600 transition-colors"
+                    >
+                      Abort Delivery (Emergency)
+                    </button>
                   </div>
-                  <button
-                    type="submit"
-                    disabled={isUpdatingPickup}
-                    className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black py-4 rounded-2xl shadow-lg hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-1 cursor-pointer border border-white/20 disabled:opacity-70"
-                  >
-                    {isUpdatingPickup ? "Confirming..." : <>Confirm Pickup & Start Driving <ArrowRight className="w-5 h-5" /></>}
-                  </button>
-                </form>
-
+                </div>
               ) : (
                 /* OTP Verification form to complete order */
                 <form onSubmit={handleCompleteDelivery} className="space-y-4 pt-2">
@@ -933,6 +1070,19 @@ export default function DeliveryDashboard({
                     </div>
                   )}
 
+                  <div className="flex items-center gap-2 pt-2">
+                    <input 
+                      type="checkbox" 
+                      id="goOfflineAfter" 
+                      checked={goOfflineAfter}
+                      onChange={(e) => setGoOfflineAfter(e.target.checked)}
+                      className="w-4 h-4 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500"
+                    />
+                    <label htmlFor="goOfflineAfter" className="text-xs font-medium text-slate-400 dark:text-slate-300">
+                      Go offline after delivery
+                    </label>
+                  </div>
+
                   <button
                     type="submit"
                     disabled={isUpdatingDelivery}
@@ -940,6 +1090,18 @@ export default function DeliveryDashboard({
                   >
                     {isUpdatingDelivery ? "Confirming..." : <><CheckCircle className="w-5 h-5" /> Confirm Delivery & Credit $7.50</>}
                   </button>
+
+                  {waitTimerSeconds > 5 && (
+                    <div className="pt-3 text-center border-t border-slate-200 dark:border-slate-800 mt-4">
+                      <button 
+                        type="button"
+                        onClick={handleCustomerUnavailable}
+                        className="text-xs font-bold text-rose-500 hover:text-rose-600 transition-colors"
+                      >
+                        Customer Unavailable (Mark Failed)
+                      </button>
+                    </div>
+                  )}
                 </form>
               )}
             </div>
