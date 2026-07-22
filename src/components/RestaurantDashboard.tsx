@@ -88,7 +88,6 @@ export default function RestaurantDashboard({
         endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/ready`;
         localStorage.removeItem(`order_preparing_${orderId}`);
       }
-      else if (status === OrderStatus.DISPATCHED) endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/dispatch`;
       else if (status === OrderStatus.CANCELLED) endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/cancel`;
       
       console.log(`[Dashboard] Updating order ${orderId} to ${status}. Endpoint: ${endpoint}`);
@@ -175,6 +174,7 @@ export default function RestaurantDashboard({
                 if (s === OrderStatus.CANCELLED_BY_RESTAURANT || s === OrderStatus.CANCELLED || s === 'CANCELLED_BY_RESTAURANT' || s === OrderStatus.DELIVERY_FAILED) s = OrderStatus.CANCELLED;
                 if (s === OrderStatus.DELIVERED) s = OrderStatus.DELIVERED;
                 if (s === 'ON_HOLD') s = OrderStatus.AWAITING_DELAY_APPROVAL;
+                if (s === 'DISPATCHED') s = OrderStatus.PICKED_UP;
                 
                 let parsedItems = o.items || [];
                 if (o.itemsJson) {
@@ -1294,19 +1294,19 @@ export default function RestaurantDashboard({
                       <span className="font-extrabold text-xs text-slate-800 dark:text-[#f0ede6] uppercase font-sans tracking-wide">Being Delivered</span>
                     </div>
                     <span className="text-[10px] font-black font-mono bg-purple-500/10 text-purple-650 dark:text-purple-400 px-2.5 py-0.5 rounded-full border border-purple-500/20">
-                      {myOrders.filter(o => o.status === OrderStatus.DISPATCHED).length}
+                      {myOrders.filter(o => o.status === OrderStatus.PICKED_UP).length}
                     </span>
                   </div>
 
                   <div className="flex-1 space-y-3.5 overflow-y-auto h-[500px] scrollbar-thin pr-1">
-                    {myOrders.filter(o => o.status === OrderStatus.DISPATCHED).length === 0 ? (
+                    {myOrders.filter(o => o.status === OrderStatus.PICKED_UP).length === 0 ? (
                       <div className="h-full flex flex-col items-center justify-center text-center py-16 px-4 bg-white/40 dark:bg-slate-900/10 border border-dashed border-purple-500/20 dark:border-purple-500/30 rounded-2xl">
                         <Bike className="w-8 h-8 text-slate-300 dark:text-slate-700 mb-2" />
                         <p className="text-xs font-bold text-slate-400 dark:text-slate-300">No orders in transit</p>
                         <p className="text-[10px] text-slate-500 dark:text-slate-300 mt-1 max-w-[180px]">Orders picked up by riders will appear here until delivered.</p>
                       </div>
                     ) : (
-                      myOrders.filter(o => o.status === OrderStatus.DISPATCHED).slice().reverse().map(order => (
+                      myOrders.filter(o => o.status === OrderStatus.PICKED_UP).slice().reverse().map(order => (
                         <motion.div 
                           key={order.id}
                           layoutId={`card-${order.id}`}

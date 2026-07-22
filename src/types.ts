@@ -1,6 +1,6 @@
 export * from './types/backend-enums';
-import { OrderStatus, RoleName as UserRole } from './types/backend-enums';
-export { UserRole };
+import { OrderStatus, DeliveryStatus, RoleName as UserRole } from './types/backend-enums';
+export { UserRole, DeliveryStatus };
 export interface Restaurant {
   id: string;
   name: string;
@@ -49,6 +49,7 @@ export interface Order {
   deliveryFee: number;
   total: number;
   status: OrderStatus;
+  deliveryStatus?: DeliveryStatus;
   otp: string; // 6-digit code to complete delivery
   pickupOtp?: string; // 6-digit code to pick up from restaurant
   riderId?: string;

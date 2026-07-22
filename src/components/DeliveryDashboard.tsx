@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { z } from 'zod';
-import { Order, OrderStatus } from '../types';
+import { Order, OrderStatus, DeliveryStatus } from '../types';
 import LaBouffeLogo from './LaBouffeLogo';
 import { apiGet, apiPost } from '../lib/apiClient';
 import { getUserProfile, getToken } from '../lib/tokenStore';
@@ -19,7 +19,7 @@ const otpSchema = z.string().length(6, "OTP must be exactly 6 digits").regex(/^\
 interface DeliveryDashboardProps {
   riderPhone: string;
   activeOrders?: Order[];
-  onUpdateOrderStatus?: (orderId: string, status: OrderStatus, riderInfo?: { name: string; phone: string }) => void;
+  onUpdateOrderStatus?: (orderId: string, status: OrderStatus, deliveryStatus?: DeliveryStatus, riderInfo?: { name: string; phone: string }) => void;
   onLogout: () => void;
   theme?: 'light' | 'dark';
   onToggleTheme?: () => void;
@@ -40,8 +40,8 @@ export default function DeliveryDashboard({
   const [internalOrders, setInternalOrders] = useState<Order[]>([]);
   const activeOrders = externalOrders ?? internalOrders;
 
-  const onUpdateOrderStatus = externalUpdateStatus ?? ((orderId: string, status: OrderStatus) => {
-    setInternalOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
+  const onUpdateOrderStatus = externalUpdateStatus ?? ((orderId: string, status: OrderStatus, deliveryStatus?: DeliveryStatus, riderInfo?: any) => {
+    setInternalOrders(prev => prev.map(o => o.id === orderId ? { ...o, status, ...(deliveryStatus ? { deliveryStatus } : {}) } : o));
   });
   const [isOnline, setIsOnline] = useState(false);
   const todayDateString = new Date().toISOString().split('T')[0];
@@ -157,7 +157,7 @@ export default function DeliveryDashboard({
         historyRef.current = res.data.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
         // We don't want to overwrite active jobs, just merge the updated history
         setInternalOrders(prev => {
-          const active = prev.filter(o => [OrderStatus.DISPATCHED, OrderStatus.READY_FOR_PICKUP, OrderStatus.OUT_FOR_DELIVERY].includes(o.status));
+          const active = prev.filter(o => o.status !== OrderStatus.DELIVERED && o.status !== OrderStatus.CANCELLED && o.status !== OrderStatus.CANCELLED_BY_RESTAURANT);
           const mergedMap = new Map();
           historyRef.current.forEach((j: any) => mergedMap.set(j.id, j));
           active.forEach(j => mergedMap.set(j.id, j));
@@ -237,7 +237,7 @@ export default function DeliveryDashboard({
       await apiPost(`/api/delivery/drivers/${riderId}/orders/${job.id}/accept`);
     } catch(e) {}
     setActiveJobId(job.id);
-    onUpdateOrderStatus(job.id, OrderStatus.DISPATCHED, { name: riderName, phone: riderPhone });
+    onUpdateOrderStatus(job.id, job.status, DeliveryStatus.DISPATCHED, { name: riderName, phone: riderPhone });
     setPingJob(null);
   };
 
@@ -527,7 +527,7 @@ export default function DeliveryDashboard({
       setIsUpdatingDelivery(false);
       
       // Start timer if Out For Delivery
-      if (currentJob.status === OrderStatus.OUT_FOR_DELIVERY && !isWaitTimerActive) {
+      if (currentJob.deliveryStatus === DeliveryStatus.OUT_FOR_DELIVERY && !isWaitTimerActive) {
         setIsWaitTimerActive(true);
         setWaitTimerSeconds(0);
       }
@@ -536,7 +536,7 @@ export default function DeliveryDashboard({
 
   React.useEffect(() => {
     let interval: any;
-    if (isWaitTimerActive && currentJob?.status === OrderStatus.OUT_FOR_DELIVERY) {
+    if (isWaitTimerActive && currentJob?.deliveryStatus === DeliveryStatus.OUT_FOR_DELIVERY) {
       interval = setInterval(() => {
         setWaitTimerSeconds(prev => prev + 1);
       }, 1000);
@@ -548,14 +548,14 @@ export default function DeliveryDashboard({
   }, [isWaitTimerActive, currentJob?.status]);
 
   // Filter jobs available on the job board (orders that are dispatched but have no rider assigned yet)
-  const availableJobs = activeOrders.filter(o => o.status === OrderStatus.DISPATCHED && !o.riderId);
+  const availableJobs = activeOrders.filter(o => (o.status === OrderStatus.READY_FOR_PICKUP || o.status === OrderStatus.PREPARING || o.status === OrderStatus.ACCEPTED) && !o.riderId);
 
   const handleAcceptJob = async (order: Order) => {
     try {
       await apiPost(`/api/delivery/drivers/${riderId}/orders/${order.id}/accept`, {});
       setActiveJobId(order.id);
       // Wait for next fetchOrders cycle or update optimisticly
-      onUpdateOrderStatus(order.id, OrderStatus.DISPATCHED, { name: riderName, phone: riderPhone });
+      onUpdateOrderStatus(order.id, order.status, DeliveryStatus.DISPATCHED, { name: riderName, phone: riderPhone });
     } catch (e: any) {
       console.error("Failed to accept job", e);
       alert(e.response?.data?.message || "Failed to accept job. It might have been assigned to someone else or cancelled.");
@@ -565,11 +565,11 @@ export default function DeliveryDashboard({
   const handleArrivedAtRestaurant = async () => {
     if (!currentJob) return;
     const previousStatus = currentJob.status;
-    onUpdateOrderStatus(currentJob.id, OrderStatus.AT_RESTAURANT);
+    onUpdateOrderStatus(currentJob.id, currentJob.status, DeliveryStatus.AT_RESTAURANT);
     try {
-      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, { status: OrderStatus.AT_RESTAURANT });
+      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/deliveryStatus`, { deliveryStatus: DeliveryStatus.AT_RESTAURANT });
     } catch(e: any) {
-      onUpdateOrderStatus(currentJob.id, previousStatus);
+      onUpdateOrderStatus(currentJob.id, previousStatus, currentJob.deliveryStatus);
       showToast(e.response?.data?.message || "Failed to update status.");
     }
   };
@@ -592,9 +592,9 @@ export default function DeliveryDashboard({
     if (!confirm("Are you sure the customer is unavailable? You should try calling them first.")) return;
 
     const previousStatus = currentJob.status;
-    onUpdateOrderStatus(currentJob.id, OrderStatus.DELIVERY_FAILED);
+    onUpdateOrderStatus(currentJob.id, OrderStatus.DELIVERY_FAILED, DeliveryStatus.FAILED);
     try {
-      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, { status: OrderStatus.DELIVERY_FAILED, goOfflineAfter });
+      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/deliveryStatus`, { deliveryStatus: DeliveryStatus.FAILED, goOfflineAfter });
       setActiveJobId(null);
       
       if (goOfflineAfter) {
@@ -602,7 +602,7 @@ export default function DeliveryDashboard({
       }
       showToast("Delivery marked as failed. Please return items if applicable.");
     } catch (e: any) {
-      onUpdateOrderStatus(currentJob.id, previousStatus);
+      onUpdateOrderStatus(currentJob.id, previousStatus, currentJob.deliveryStatus);
       showToast(e.response?.data?.message || "Failed to mark as unavailable.");
     }
   };
@@ -618,16 +618,16 @@ export default function DeliveryDashboard({
     
     // Optimistic Update
     const previousStatus = currentJob.status;
-    onUpdateOrderStatus(currentJob.id, OrderStatus.OUT_FOR_DELIVERY);
+    onUpdateOrderStatus(currentJob.id, OrderStatus.PICKED_UP, DeliveryStatus.OUT_FOR_DELIVERY);
     setIsUpdatingPickup(true);
     
     try {
-      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, { status: OrderStatus.OUT_FOR_DELIVERY, pickupOtp: enteredPickupOtp });
+      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/pickup`, { pickupOtp: enteredPickupOtp });
       setIsUpdatingPickup(false);
       setEnteredPickupOtp("");
     } catch(e: any) {
       setIsUpdatingPickup(false);
-      onUpdateOrderStatus(currentJob.id, previousStatus); // Revert on failure
+      onUpdateOrderStatus(currentJob.id, previousStatus, currentJob.deliveryStatus); // Revert on failure
       setPickupOtpError(e.response?.data?.message || "Failed to verify OTP with server.");
     }
   };
@@ -644,11 +644,11 @@ export default function DeliveryDashboard({
 
     // Optimistic Update
     const previousStatus = currentJob.status;
-    onUpdateOrderStatus(currentJob.id, OrderStatus.DELIVERED);
+    onUpdateOrderStatus(currentJob.id, OrderStatus.DELIVERED, DeliveryStatus.DELIVERED);
     setIsUpdatingDelivery(true);
     
     try {
-      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, { status: OrderStatus.DELIVERED, deliveryOtp: enteredOtp, goOfflineAfter });
+      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/deliveryStatus`, { deliveryStatus: DeliveryStatus.DELIVERED, deliveryOtp: enteredOtp, goOfflineAfter });
       setIsUpdatingDelivery(false);
       
       // Update history so it's immediately visible
@@ -662,7 +662,7 @@ export default function DeliveryDashboard({
       }
     } catch(e: any) {
       setIsUpdatingDelivery(false);
-      onUpdateOrderStatus(currentJob.id, previousStatus); // Revert on failure
+      onUpdateOrderStatus(currentJob.id, previousStatus, currentJob.deliveryStatus); // Revert on failure
       setOtpError(e.response?.data?.message || "Failed to verify Delivery OTP with server.");
     }
   };
@@ -954,7 +954,7 @@ export default function DeliveryDashboard({
               <div className="space-y-1">
                 <h5 className="font-bold text-sm text-slate-400 dark:text-slate-300 font-mono tracking-wider">NAVIGATIONAL STEPS</h5>
                 <p className="text-base font-bold text-slate-900 dark:text-[#f0ede6]">
-                  {[OrderStatus.ACCEPTED, OrderStatus.PREPARING, OrderStatus.DISPATCHED, OrderStatus.READY_FOR_PICKUP, OrderStatus.AT_RESTAURANT].includes(currentJob.status as any) ? 'Step 1: Collect food packages' : 'Step 2: Deliver to door'}
+                  {(!currentJob.deliveryStatus || currentJob.deliveryStatus === DeliveryStatus.DISPATCHED || currentJob.deliveryStatus === DeliveryStatus.AT_RESTAURANT) ? 'Step 1: Collect food packages' : 'Step 2: Deliver to door'}
                 </p>
               </div>
 
@@ -991,9 +991,9 @@ export default function DeliveryDashboard({
               </div>
 
               {/* State Transition Actions */}
-              {[OrderStatus.ACCEPTED, OrderStatus.PREPARING, OrderStatus.DISPATCHED, OrderStatus.READY_FOR_PICKUP, OrderStatus.AT_RESTAURANT].includes(currentJob.status as any) ? (
+              {(!currentJob.deliveryStatus || currentJob.deliveryStatus === DeliveryStatus.DISPATCHED || currentJob.deliveryStatus === DeliveryStatus.AT_RESTAURANT) ? (
                 <div className="space-y-4 pt-2">
-                  {currentJob.status !== OrderStatus.AT_RESTAURANT && (
+                  {currentJob.deliveryStatus !== DeliveryStatus.AT_RESTAURANT && (
                     <button
                       type="button"
                       onClick={handleArrivedAtRestaurant}

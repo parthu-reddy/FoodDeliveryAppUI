@@ -164,7 +164,7 @@ export default function CustomerDashboard({
   // Smart polling for active orders only (every 60s)
   useEffect(() => {
     const activeOrders = internalOrders.filter(o => 
-      [OrderStatus.CREATED, OrderStatus.ACCEPTED, OrderStatus.OUT_FOR_DELIVERY].includes(o.status?.toUpperCase() || '')
+      [OrderStatus.CREATED, OrderStatus.PAID, OrderStatus.ACCEPTED, OrderStatus.PREPARING, OrderStatus.READY_FOR_PICKUP, OrderStatus.PICKED_UP].includes(o.status?.toUpperCase() || '')
     );
     
     // Stop polling if no active orders
@@ -259,7 +259,7 @@ export default function CustomerDashboard({
 
 
   useEffect(() => {
-    if (currentTrackingOrder && (currentTrackingOrder.status === OrderStatus.DISPATCHED || currentTrackingOrder.status === OrderStatus.AT_RESTAURANT || currentTrackingOrder.status === OrderStatus.OUT_FOR_DELIVERY)) {
+    if (currentTrackingOrder && (currentTrackingOrder.status === OrderStatus.PICKED_UP || currentTrackingOrder.deliveryStatus === DeliveryStatus.AT_RESTAURANT || currentTrackingOrder.deliveryStatus === DeliveryStatus.OUT_FOR_DELIVERY)) {
       if (onAddApiLog) {
         onAddApiLog({ id: 'live_tracking', label: `GET /api/v1/orders/${currentTrackingOrder.id}/live-tracking (SSE)`, method: 'GET' });
       }
@@ -425,24 +425,23 @@ export default function CustomerDashboard({
       OrderStatus.ACCEPTED, 
       OrderStatus.PREPARING,
       OrderStatus.READY_FOR_PICKUP, 
-      OrderStatus.DISPATCHED, 
-      OrderStatus.AT_RESTAURANT,
-      OrderStatus.OUT_FOR_DELIVERY, 
+      OrderStatus.PICKED_UP,
       OrderStatus.DELIVERED
     ];
     return statuses.indexOf(effectiveStatus as string);
   };
 
   // Simulated GPS Path Coordinate (translating step status to percentage of route progress)
-  const getDeliveryProgress = (status: OrderStatus) => {
-    switch (status) {
+  const getDeliveryProgress = (order: Order) => {
+    switch (order.status) {
       case OrderStatus.PAID: return 5;
       case OrderStatus.ACCEPTED: return 20;
       case OrderStatus.PREPARING: return 40;
       case OrderStatus.READY_FOR_PICKUP: return 50;
-      case OrderStatus.DISPATCHED: return 60;
-      case OrderStatus.AT_RESTAURANT: return 70;
-      case OrderStatus.OUT_FOR_DELIVERY: return 80;
+      case OrderStatus.PICKED_UP: 
+        if (order.deliveryStatus === DeliveryStatus.OUT_FOR_DELIVERY) return 80;
+        if (order.deliveryStatus === DeliveryStatus.AT_RESTAURANT) return 70;
+        return 60;
       case OrderStatus.DELIVERED: return 100;
       default: return 0;
     }
@@ -669,9 +668,10 @@ export default function CustomerDashboard({
                       {currentTrackingOrder.status === OrderStatus.ACCEPTED && 'Order Confirmed!'}
                       {currentTrackingOrder.status === OrderStatus.PREPARING && 'Kitchen is Cooking...'}
                       {currentTrackingOrder.status === OrderStatus.READY_FOR_PICKUP && 'Order is Ready!'}
-                      {currentTrackingOrder.status === OrderStatus.DISPATCHED && 'Waiting for Rider Pickup...'}
-                      {currentTrackingOrder.status === OrderStatus.AT_RESTAURANT && 'Rider is Waiting at Restaurant...'}
-                      {currentTrackingOrder.status === OrderStatus.OUT_FOR_DELIVERY && 'Rider is on the Way!'}
+                      {currentTrackingOrder.status === OrderStatus.PICKED_UP && currentTrackingOrder.deliveryStatus === DeliveryStatus.AT_RESTAURANT && 'Rider is Waiting at Restaurant...'}
+                      {currentTrackingOrder.status === OrderStatus.PICKED_UP && currentTrackingOrder.deliveryStatus === DeliveryStatus.OUT_FOR_DELIVERY && 'Rider is on the Way!'}
+                      {currentTrackingOrder.status === OrderStatus.PICKED_UP && !currentTrackingOrder.deliveryStatus && 'Picked Up by Rider!'}
+                      {currentTrackingOrder.status === OrderStatus.DELIVERED && 'Order Delivered!'}
                       {isFailedOrder(currentTrackingOrder.status) && 'Order Failed / Cancelled'}
                     </h4>
                     <p className="text-xs text-slate-400 dark:text-slate-300">
@@ -804,15 +804,15 @@ export default function CustomerDashboard({
                       { status: OrderStatus.PAID, label: 'Order Received' },
                     { status: OrderStatus.ACCEPTED, label: 'Accepted by Kitchen' },
                     { status: OrderStatus.PREPARING, label: 'Cooking & Packaging' },
-                    { status: OrderStatus.OUT_FOR_DELIVERY, label: 'Picked up by Delivery Executive' },
+                    { status: OrderStatus.PICKED_UP, label: 'Picked up by Delivery Executive' },
                     { status: OrderStatus.DELIVERED, label: 'Handed Over & Verified' },
                   ].map((step, idx, arr) => {
-                    // For UI steps, OrderStatus.READY_FOR_PICKUP acts as OrderStatus.ACCEPTED being done but OrderStatus.OUT_FOR_DELIVERY not yet done
+                    // For UI steps, OrderStatus.READY_FOR_PICKUP acts as OrderStatus.ACCEPTED being done but OrderStatus.PICKED_UP not yet done
                     const stepStatusIndex = getStatusIndex(step.status as OrderStatus);
                     const currentStatusIndex = getStatusIndex(currentTrackingOrder.status);
                     
                     const isDone = currentStatusIndex > stepStatusIndex || (currentStatusIndex === stepStatusIndex && step.status !== OrderStatus.DELIVERED);
-                    const isCurrent = currentStatusIndex === stepStatusIndex || (step.status === OrderStatus.PREPARING && [OrderStatus.READY_FOR_PICKUP, OrderStatus.DISPATCHED, OrderStatus.AT_RESTAURANT].includes(currentTrackingOrder.status as OrderStatus));
+                    const isCurrent = currentStatusIndex === stepStatusIndex || (step.status === OrderStatus.PREPARING && [OrderStatus.READY_FOR_PICKUP, OrderStatus.PICKED_UP].includes(currentTrackingOrder.status as OrderStatus));
                     const isLast = idx === arr.length - 1;
                     
                     return (

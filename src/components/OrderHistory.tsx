@@ -65,7 +65,7 @@ export function OrderHistory({ restaurantId }: { restaurantId: string }) {
       case OrderStatus.ACCEPTED: return 'bg-blue-100 text-blue-600 border-blue-200';
       case OrderStatus.ACCEPTED: return 'bg-indigo-100 text-indigo-600 border-indigo-200';
       case OrderStatus.READY_FOR_PICKUP: return 'bg-purple-100 text-purple-600 border-purple-200';
-      case OrderStatus.OUT_FOR_DELIVERY: return 'bg-orange-100 text-orange-600 border-orange-200';
+      case OrderStatus.PICKED_UP: return 'bg-orange-100 text-orange-600 border-orange-200';
       case OrderStatus.DELIVERED: return 'bg-emerald-100 text-emerald-600 border-emerald-200';
       default: return 'bg-slate-100 text-slate-600 dark:text-slate-300 border-rose-500/20';
     }
