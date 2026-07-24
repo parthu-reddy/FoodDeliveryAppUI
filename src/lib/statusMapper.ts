@@ -6,7 +6,7 @@ import { OrderStatus } from '../types';
  */
 
 const backendToFrontend: Record<string, string> = {
-  RECEIVED: OrderStatus.PAID,
+  RECEIVED: OrderStatus.PENDING_ACCEPTANCE,
   ACCEPTED: OrderStatus.ACCEPTED,
   PREPARING: OrderStatus.ACCEPTED,
   READY_FOR_PICKUP: OrderStatus.READY_FOR_PICKUP,

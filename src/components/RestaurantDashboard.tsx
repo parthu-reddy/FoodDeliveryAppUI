@@ -50,12 +50,12 @@ interface RestaurantDashboardProps {
 // Utility to determine if order is actively tracked
 const isActiveOrder = (status: string) => {
   const s = (status || '').trim().toUpperCase();
-  return ![OrderStatus.DELIVERED, OrderStatus.PARTIALLY_REFUNDED, OrderStatus.CANCELLED_AND_REFUNDED, OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT, 'cancelled_by_restaurant', OrderStatus.DELIVERY_FAILED, OrderStatus.CANCELLED].includes(s);
+  return ![OrderStatus.DELIVERED, OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT, 'cancelled_by_restaurant', OrderStatus.DELIVERY_FAILED].includes(s);
 };
 
 const isFailedOrder = (status: string) => {
   const s = (status || '').trim().toUpperCase();
-  return [OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT, 'cancelled_by_restaurant', OrderStatus.DELIVERY_FAILED, OrderStatus.CANCELLED, OrderStatus.PARTIALLY_REFUNDED, OrderStatus.CANCELLED_AND_REFUNDED].includes(s);
+  return [OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT, 'cancelled_by_restaurant', OrderStatus.DELIVERY_FAILED].includes(s);
 };
 
 export default function RestaurantDashboard({
@@ -98,8 +98,9 @@ export default function RestaurantDashboard({
           onAddApiLog({ id: `update_${orderId}`, label: `POST ${endpoint}`, method: 'POST' });
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to update order status:', error);
+      alert(error.response?.data?.message || 'Failed to update order status');
       // Revert optimistic update on failure (ideally, would need the old status)
     }
   });
@@ -163,11 +164,11 @@ export default function RestaurantDashboard({
             if (res.data) {
               const mapped = res.data.map((o: any) => {
                 let s = o.status?.toUpperCase() || '';
-                if (s === OrderStatus.CREATED || s === OrderStatus.PAID) {
+                if (s === OrderStatus.CREATED || s === OrderStatus.PENDING_ACCEPTANCE) {
                   if (o.additionalPrepTime && o.additionalPrepTime > 10) {
                     s = OrderStatus.AWAITING_DELAY_APPROVAL;
                   } else {
-                    s = OrderStatus.PAID;
+                    s = OrderStatus.PENDING_ACCEPTANCE;
                   }
                 }
                 if (s === OrderStatus.READY_FOR_PICKUP || s === 'READY') s = OrderStatus.READY_FOR_PICKUP;
@@ -342,7 +343,7 @@ export default function RestaurantDashboard({
   const myOrders = allRestaurantOrders.filter(o => isActiveOrder(o.status || ''));
   const historyOrders = allRestaurantOrders.filter(o => !isActiveOrder(o.status || ''));
 
-  const pendingOrders = myOrders.filter(o => o.status === OrderStatus.PAID);
+  const pendingOrders = myOrders.filter(o => o.status === OrderStatus.PENDING_ACCEPTANCE);
   const activePreparing = myOrders.filter(o => o.status === OrderStatus.ACCEPTED || o.status === OrderStatus.PREPARING);
   const completedOrders = historyOrders.filter(o => o.status === OrderStatus.DELIVERED);
 
@@ -382,7 +383,7 @@ export default function RestaurantDashboard({
 
 
   const handleStatusTransition = (order: Order) => {
-    if (order.status === OrderStatus.PAID || order.status === OrderStatus.AWAITING_DELAY_APPROVAL) {
+    if (order.status === OrderStatus.PENDING_ACCEPTANCE || order.status === OrderStatus.AWAITING_DELAY_APPROVAL) {
       onUpdateOrderStatus(order.id, OrderStatus.ACCEPTED);
     } else if (order.status as any === OrderStatus.ACCEPTED) {
       onUpdateOrderStatus(order.id, OrderStatus.PREPARING);
@@ -394,16 +395,16 @@ export default function RestaurantDashboard({
   const handleCardCancelSubmit = async (orderId: string) => {
     const reason = customCancelReasonText[orderId] || 'No reason provided';
     const orderStatus = internalOrders.find(o => o.id === orderId)?.status;
-    const targetStatus = (orderStatus === OrderStatus.PAID || orderStatus === OrderStatus.AWAITING_DELAY_APPROVAL) 
+    const targetStatus = (orderStatus === OrderStatus.PENDING_ACCEPTANCE || orderStatus === OrderStatus.AWAITING_DELAY_APPROVAL) 
       ? OrderStatus.CANCELLED_BY_RESTAURANT 
       : OrderStatus.CANCELLED;
     
     try {
       await onUpdateOrderStatus(orderId, targetStatus as any, { reason });
       setCancellingOrderId(null);
-    } catch (e) {
+    } catch (e: any) {
       console.error('Failed to cancel order', e);
-      alert('Failed to cancel order.');
+      alert('Failed to cancel order: ' + (e.response?.data?.message || e.message || 'Unknown error'));
     }
   };
 
@@ -452,9 +453,9 @@ export default function RestaurantDashboard({
           timestamp: new Date().toISOString()
         });
       }
-    } catch (e) {
-      console.error('Failed to submit delay / accept order', e);
-      alert('Failed to submit delay request.');
+    } catch (e: any) {
+      console.error('Failed to submit delay request', e);
+      alert('Failed to submit delay request: ' + (e.response?.data?.message || e.message || 'Unknown error'));
     }
     
     setDelayingOrderId(null);

@@ -56,8 +56,6 @@ export const apiGet = async (path: string, customHeaders?: Record<string, string
   const token = getToken();
   const headers: Record<string, string> = {
     'Accept': 'application/json',
-    'Cache-Control': 'no-cache',
-    'Pragma': 'no-cache',
     ...getDeviceHeaders()
   };
   if (token) headers['Authorization'] = `Bearer ${token}`;

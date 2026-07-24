@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 3.2.1263 on 2026-07-22 21:42:14.
+// Generated using typescript-generator version 3.2.1263 on 2026-07-23 13:19:54.
 
 export enum AccountType {
     CUSTOMER = "CUSTOMER",
@@ -8,7 +8,6 @@ export enum AccountType {
     RESTAURANT = "RESTAURANT",
     DRIVER = "DRIVER",
 }
-
 
 export enum ChannelType {
     SMS = "SMS",
@@ -29,7 +28,7 @@ export enum DeliveryStatus {
 
 export enum OrderStatus {
     CREATED = "CREATED",
-    PAID = "PAID",
+    PENDING_ACCEPTANCE = "PENDING_ACCEPTANCE",
     AWAITING_DELAY_APPROVAL = "AWAITING_DELAY_APPROVAL",
     ACCEPTED = "ACCEPTED",
     PREPARING = "PREPARING",
@@ -39,8 +38,6 @@ export enum OrderStatus {
     CANCELLED = "CANCELLED",
     CANCELLED_BY_RESTAURANT = "CANCELLED_BY_RESTAURANT",
     DELIVERY_FAILED = "DELIVERY_FAILED",
-    PARTIALLY_REFUNDED = "PARTIALLY_REFUNDED",
-    CANCELLED_AND_REFUNDED = "CANCELLED_AND_REFUNDED",
 }
 
 export enum OutboxStatus {

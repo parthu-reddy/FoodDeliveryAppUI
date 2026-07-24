@@ -5,7 +5,7 @@ import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { apiGet } from '../lib/apiClient';
 import { getToken } from '../lib/tokenStore';
 
-import { Order } from '../types';
+import { Order, OrderStatus } from '../types';
 
 (window as any).maplibregl = maplibregl;
 

@@ -8,8 +8,6 @@ const OrderStatus = {
   DELIVERED: 'DELIVERED',
   CANCELLED: 'CANCELLED',
   CANCELLED_BY_RESTAURANT: 'CANCELLED_BY_RESTAURANT',
-  CANCELLED_AND_REFUNDED: 'CANCELLED_AND_REFUNDED',
-  PARTIALLY_REFUNDED: 'PARTIALLY_REFUNDED',
   DELIVERY_FAILED: 'DELIVERY_FAILED',
   AWAITING_DELAY_APPROVAL: 'AWAITING_DELAY_APPROVAL'
 };
@@ -28,11 +26,16 @@ const res = {
 
 const mapped = res.data.map((o) => {
   let s = o.status?.toUpperCase() || '';
-  if (s === OrderStatus.CREATED || s === OrderStatus.PAID) {
+  if (s === OrderStatus.CREATED || s === OrderStatus.PENDING_ACCEPTANCE) {
+    if (s === OrderStatus.CREATED) {
+      if (Math.random() > 0.5) {
+        s = OrderStatus.PENDING_ACCEPTANCE;
+      }
+    }
     if (o.additionalPrepTime && o.additionalPrepTime > 10) {
       s = OrderStatus.AWAITING_DELAY_APPROVAL;
     } else {
-      s = OrderStatus.PAID;
+      s = OrderStatus.PENDING_ACCEPTANCE;
     }
   }
   if (s === OrderStatus.READY_FOR_PICKUP || s === 'READY') s = OrderStatus.READY_FOR_PICKUP;

@@ -157,7 +157,7 @@ export default function DeliveryDashboard({
         historyRef.current = res.data.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
         // We don't want to overwrite active jobs, just merge the updated history
         setInternalOrders(prev => {
-          const active = prev.filter(o => o.status !== OrderStatus.DELIVERED && o.status !== OrderStatus.CANCELLED && o.status !== OrderStatus.CANCELLED_BY_RESTAURANT);
+          const active = prev.filter(o => o.status !== OrderStatus.DELIVERED && o.status !== OrderStatus.CANCELLED && o.status !== OrderStatus.CANCELLED_BY_RESTAURANT && o.status !== OrderStatus.DELIVERY_FAILED);
           const mergedMap = new Map();
           historyRef.current.forEach((j: any) => mergedMap.set(j.id, j));
           active.forEach(j => mergedMap.set(j.id, j));
@@ -201,15 +201,15 @@ export default function DeliveryDashboard({
   }, [activeOrders, isOnline, activeJobId, rejectedIds, pingJob]);
   React.useEffect(() => {
     if (!activeJobId) {
-      const ongoingJob = activeOrders.find(o => (o.riderId === riderId || !!o.riderId) && o.status !== OrderStatus.DELIVERED && o.status !== OrderStatus.CANCELLED && o.status !== OrderStatus.CANCELLED_BY_RESTAURANT);
+      const ongoingJob = activeOrders.find(o => (o.riderId === riderId || !!o.riderId) && o.status !== OrderStatus.DELIVERED && o.status !== OrderStatus.CANCELLED && o.status !== OrderStatus.CANCELLED_BY_RESTAURANT && o.status !== OrderStatus.DELIVERY_FAILED);
       if (ongoingJob) {
         setActiveJobId(ongoingJob.id);
       }
     } else {
       // Check if current job was cancelled
       const currentJobStatus = activeOrders.find(o => o.id === activeJobId)?.status?.toUpperCase();
-      if (currentJobStatus === OrderStatus.CANCELLED || currentJobStatus === 'cancelled_by_restaurant') {
-        showToast("Your current order was cancelled by the restaurant.");
+      if (currentJobStatus === OrderStatus.CANCELLED || currentJobStatus === OrderStatus.CANCELLED_BY_RESTAURANT || currentJobStatus === 'cancelled_by_restaurant' || currentJobStatus === OrderStatus.DELIVERY_FAILED) {
+        showToast("Your current order is no longer active (cancelled or failed).");
         setActiveJobId(null);
       }
     }
@@ -237,7 +237,7 @@ export default function DeliveryDashboard({
       await apiPost(`/api/delivery/drivers/${riderId}/orders/${job.id}/accept`);
     } catch(e) {}
     setActiveJobId(job.id);
-    onUpdateOrderStatus(job.id, job.status, DeliveryStatus.DISPATCHED, { name: riderName, phone: riderPhone });
+    onUpdateOrderStatus(job.id, job.status, DeliveryStatus.ASSIGNED, { name: riderName, phone: riderPhone });
     setPingJob(null);
   };
 
@@ -294,11 +294,18 @@ export default function DeliveryDashboard({
       
       ws.onopen = () => {
         attempt = 0; // reset attempts on success
-        interval = setInterval(() => {
+        
+        const sendLocation = () => {
           if (ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ driverId: riderId, lat: currentLat, lng: currentLng, timestamp: new Date().toISOString() }));
           }
-        }, 5000);
+        };
+
+        // Send location immediately upon connection
+        sendLocation();
+
+        // Then send periodically
+        interval = setInterval(sendLocation, 5000);
       };
       
       ws.onmessage = async (event) => {
@@ -522,6 +529,46 @@ export default function DeliveryDashboard({
   }, [currentJob?.id, currentJob?.status]);
 
   React.useEffect(() => {
+    if (!currentJob?.id || !riderId) return;
+
+    let eventSource: EventSource | null = null;
+
+    const connectSSE = () => {
+      const token = getToken();
+      const url = `/api/delivery/drivers/${riderId}/orders/${currentJob.id}/restaurant-status-stream`;
+      
+      // Need to append token since EventSource doesn't natively send Authorization headers
+      eventSource = new EventSource(`${url}?token=${token}`);
+
+      eventSource.addEventListener('status-update', (event) => {
+        const newStatus = event.data as OrderStatus;
+        console.log("SSE: Restaurant status updated to", newStatus);
+        
+        // Update the internal state optimistically
+        onUpdateOrderStatus(currentJob.id, newStatus, currentJob.deliveryStatus);
+        
+        if (newStatus === OrderStatus.READY_FOR_PICKUP) {
+          showToast(`Order ${currentJob.id.substring(0, 8)} is now ready for pickup!`);
+        }
+      });
+
+      eventSource.onerror = (err) => {
+        console.error("SSE connection error", err);
+        if (eventSource) eventSource.close();
+        // Fallback retry logic could be added here
+      };
+    };
+
+    connectSSE();
+
+    return () => {
+      if (eventSource) {
+        eventSource.close();
+      }
+    };
+  }, [currentJob?.id, riderId]);
+
+  React.useEffect(() => {
     if (currentJob?.status) {
       setIsUpdatingPickup(false);
       setIsUpdatingDelivery(false);
@@ -555,7 +602,7 @@ export default function DeliveryDashboard({
       await apiPost(`/api/delivery/drivers/${riderId}/orders/${order.id}/accept`, {});
       setActiveJobId(order.id);
       // Wait for next fetchOrders cycle or update optimisticly
-      onUpdateOrderStatus(order.id, order.status, DeliveryStatus.DISPATCHED, { name: riderName, phone: riderPhone });
+      onUpdateOrderStatus(order.id, order.status, DeliveryStatus.ASSIGNED, { name: riderName, phone: riderPhone });
     } catch (e: any) {
       console.error("Failed to accept job", e);
       alert(e.response?.data?.message || "Failed to accept job. It might have been assigned to someone else or cancelled.");
@@ -567,7 +614,7 @@ export default function DeliveryDashboard({
     const previousStatus = currentJob.status;
     onUpdateOrderStatus(currentJob.id, currentJob.status, DeliveryStatus.AT_RESTAURANT);
     try {
-      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/deliveryStatus`, { deliveryStatus: DeliveryStatus.AT_RESTAURANT });
+      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, { status: DeliveryStatus.AT_RESTAURANT });
     } catch(e: any) {
       onUpdateOrderStatus(currentJob.id, previousStatus, currentJob.deliveryStatus);
       showToast(e.response?.data?.message || "Failed to update status.");
@@ -594,7 +641,7 @@ export default function DeliveryDashboard({
     const previousStatus = currentJob.status;
     onUpdateOrderStatus(currentJob.id, OrderStatus.DELIVERY_FAILED, DeliveryStatus.FAILED);
     try {
-      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/deliveryStatus`, { deliveryStatus: DeliveryStatus.FAILED, goOfflineAfter });
+      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, { status: DeliveryStatus.FAILED, goOfflineAfter });
       setActiveJobId(null);
       
       if (goOfflineAfter) {
@@ -622,7 +669,7 @@ export default function DeliveryDashboard({
     setIsUpdatingPickup(true);
     
     try {
-      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/pickup`, { pickupOtp: enteredPickupOtp });
+      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, { status: DeliveryStatus.OUT_FOR_DELIVERY, pickupOtp: enteredPickupOtp });
       setIsUpdatingPickup(false);
       setEnteredPickupOtp("");
     } catch(e: any) {
@@ -648,7 +695,7 @@ export default function DeliveryDashboard({
     setIsUpdatingDelivery(true);
     
     try {
-      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/deliveryStatus`, { deliveryStatus: DeliveryStatus.DELIVERED, deliveryOtp: enteredOtp, goOfflineAfter });
+      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, { status: DeliveryStatus.DELIVERED, deliveryOtp: enteredOtp, goOfflineAfter });
       setIsUpdatingDelivery(false);
       
       // Update history so it's immediately visible
@@ -954,7 +1001,7 @@ export default function DeliveryDashboard({
               <div className="space-y-1">
                 <h5 className="font-bold text-sm text-slate-400 dark:text-slate-300 font-mono tracking-wider">NAVIGATIONAL STEPS</h5>
                 <p className="text-base font-bold text-slate-900 dark:text-[#f0ede6]">
-                  {(!currentJob.deliveryStatus || currentJob.deliveryStatus === DeliveryStatus.DISPATCHED || currentJob.deliveryStatus === DeliveryStatus.AT_RESTAURANT) ? 'Step 1: Collect food packages' : 'Step 2: Deliver to door'}
+                  {(!currentJob.deliveryStatus || currentJob.deliveryStatus === DeliveryStatus.ASSIGNED || currentJob.deliveryStatus === DeliveryStatus.AT_RESTAURANT) ? 'Step 1: Collect food packages' : 'Step 2: Deliver to door'}
                 </p>
               </div>
 
@@ -991,7 +1038,7 @@ export default function DeliveryDashboard({
               </div>
 
               {/* State Transition Actions */}
-              {(!currentJob.deliveryStatus || currentJob.deliveryStatus === DeliveryStatus.DISPATCHED || currentJob.deliveryStatus === DeliveryStatus.AT_RESTAURANT) ? (
+              {(!currentJob.deliveryStatus || currentJob.deliveryStatus === DeliveryStatus.ASSIGNED || currentJob.deliveryStatus === DeliveryStatus.AT_RESTAURANT) ? (
                 <div className="space-y-4 pt-2">
                   {currentJob.deliveryStatus !== DeliveryStatus.AT_RESTAURANT && (
                     <button

@@ -12,6 +12,8 @@ export interface Restaurant {
   deliveryFee: number;
   tags: string[];
   distance: number; // in km
+  brandId?: string;
+  brandName?: string;
 }
 
 export interface MenuItem {

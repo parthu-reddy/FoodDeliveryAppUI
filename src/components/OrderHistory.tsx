@@ -61,7 +61,7 @@ export function OrderHistory({ restaurantId }: { restaurantId: string }) {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case OrderStatus.PAID: return 'bg-amber-100 text-amber-600 border-amber-200';
+      case OrderStatus.PENDING_ACCEPTANCE: return 'bg-amber-100 text-amber-600 border-amber-200';
       case OrderStatus.ACCEPTED: return 'bg-blue-100 text-blue-600 border-blue-200';
       case OrderStatus.ACCEPTED: return 'bg-indigo-100 text-indigo-600 border-indigo-200';
       case OrderStatus.READY_FOR_PICKUP: return 'bg-purple-100 text-purple-600 border-purple-200';

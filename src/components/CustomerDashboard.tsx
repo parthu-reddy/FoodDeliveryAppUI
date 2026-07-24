@@ -5,7 +5,7 @@ import {
   Terminal, Sliders, Code, Send, RefreshCw, Package, User, Navigation, AlertCircle, MapPinOff, XCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { RoleName, Restaurant, MenuItem, CartItem, Order, OrderStatus } from '../types';
+import { RoleName, Restaurant, MenuItem, CartItem, Order, OrderStatus, DeliveryStatus } from '../types';
 import { apiGet, apiPost } from '../lib/apiClient';
 import { getUserProfile } from '../lib/tokenStore';
 import LaBouffeLogo from './LaBouffeLogo';
@@ -36,12 +36,12 @@ interface CustomerDashboardProps {
 // Utility to determine if order is actively tracked
 const isActiveOrder = (status: string) => {
   const s = (status || '').trim().toUpperCase();
-  return ![OrderStatus.DELIVERED, OrderStatus.PARTIALLY_REFUNDED, OrderStatus.CANCELLED_AND_REFUNDED, OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT, 'cancelled_by_restaurant', OrderStatus.DELIVERY_FAILED, OrderStatus.CANCELLED].includes(s);
+  return ![OrderStatus.DELIVERED, OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT, 'cancelled_by_restaurant', OrderStatus.DELIVERY_FAILED].includes(s);
 };
 
 const isFailedOrder = (status: string) => {
   const s = (status || '').trim().toUpperCase();
-  return [OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT, 'cancelled_by_restaurant', OrderStatus.DELIVERY_FAILED, OrderStatus.CANCELLED].includes(s);
+  return [OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT, 'cancelled_by_restaurant', OrderStatus.DELIVERY_FAILED].includes(s);
 };
 
 export default function CustomerDashboard({ 
@@ -64,6 +64,7 @@ export default function CustomerDashboard({
   });
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
+  const [brandOutlets, setBrandOutlets] = useState<Restaurant[]>([]);
   const [effectiveMenu, setEffectiveMenu] = useState<MenuItem[]>([]);
   
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
@@ -108,7 +109,7 @@ export default function CustomerDashboard({
             const mapped = res.data.content.map((o: any) => {
               let s = o.status?.toUpperCase() || '';
               if (s === 'ON_HOLD') s = OrderStatus.AWAITING_DELAY_APPROVAL;
-              if (s === OrderStatus.PAID || s === OrderStatus.CREATED) s = OrderStatus.PAID;
+              if (s === OrderStatus.PENDING_ACCEPTANCE || s === OrderStatus.CREATED) s = OrderStatus.PENDING_ACCEPTANCE;
               return { ...o, status: s };
             });
             setInternalOrders(mapped);
@@ -117,7 +118,7 @@ export default function CustomerDashboard({
             const mapped = res.data.map((o: any) => {
               let s = o.status?.toUpperCase() || '';
               if (s === 'ON_HOLD') s = OrderStatus.AWAITING_DELAY_APPROVAL;
-              if (s === OrderStatus.PAID || s === OrderStatus.CREATED) s = OrderStatus.PAID;
+              if (s === OrderStatus.PENDING_ACCEPTANCE || s === OrderStatus.CREATED) s = OrderStatus.PENDING_ACCEPTANCE;
               return { ...o, status: s };
             });
             setInternalOrders(mapped);
@@ -152,19 +153,21 @@ export default function CustomerDashboard({
   }, []);
 
   useEffect(() => {
+    let ignore = false;
     if (deliveryLat && deliveryLng) {
       apiGet(`/api/v1/restaurants/nearby?lat=${deliveryLat}&lng=${deliveryLng}&radius=5.0`)
         .then(res => {
-          if (res.data) setRestaurants(res.data);
+          if (!ignore && res.data) setRestaurants(res.data);
         })
         .catch(console.error);
     }
+    return () => { ignore = true; };
   }, [deliveryLat, deliveryLng]);
 
   // Smart polling for active orders only (every 60s)
   useEffect(() => {
     const activeOrders = internalOrders.filter(o => 
-      [OrderStatus.CREATED, OrderStatus.PAID, OrderStatus.ACCEPTED, OrderStatus.PREPARING, OrderStatus.READY_FOR_PICKUP, OrderStatus.PICKED_UP].includes(o.status?.toUpperCase() || '')
+      [OrderStatus.CREATED, OrderStatus.PENDING_ACCEPTANCE, OrderStatus.ACCEPTED, OrderStatus.PREPARING, OrderStatus.READY_FOR_PICKUP, OrderStatus.PICKED_UP].includes(o.status?.toUpperCase() || '')
     );
     
     // Stop polling if no active orders
@@ -182,7 +185,7 @@ export default function CustomerDashboard({
             updatedOrders.forEach(updated => {
               let s = updated.status?.toUpperCase() || '';
               if (s === 'awaiting_delay_approval') s = OrderStatus.AWAITING_DELAY_APPROVAL;
-              if (s === OrderStatus.PAID || s === OrderStatus.CREATED) s = OrderStatus.PAID;
+              if (s === OrderStatus.PENDING_ACCEPTANCE || s === OrderStatus.CREATED) s = OrderStatus.PENDING_ACCEPTANCE;
               updated.status = s;
               const idx = newOrders.findIndex(o => o.id === updated.id);
               if (idx !== -1 && JSON.stringify(newOrders[idx]) !== JSON.stringify(updated)) {
@@ -218,14 +221,30 @@ export default function CustomerDashboard({
 
 
   useEffect(() => {
+    let ignore = false;
     if (selectedRestaurant) {
       getEffectiveMenu(selectedRestaurant.id).then(menu => {
-        setEffectiveMenu(menu);
+        if (!ignore) setEffectiveMenu(menu);
       });
     } else {
       setEffectiveMenu([]);
     }
-  }, [selectedRestaurant]);
+    return () => { ignore = true; };
+  }, [selectedRestaurant?.id]); // Only refetch menu when outlet ID changes
+
+  useEffect(() => {
+    let ignore = false;
+    if (selectedRestaurant?.brandId) {
+      apiGet(`/api/v1/restaurants/brands/${selectedRestaurant.brandId}/outlets?lat=${deliveryLat}&lng=${deliveryLng}&radius=5.0`)
+        .then(res => {
+          if (!ignore && res.data) setBrandOutlets(res.data);
+        })
+        .catch(console.error);
+    } else {
+      setBrandOutlets([]);
+    }
+    return () => { ignore = true; };
+  }, [selectedRestaurant?.brandId, deliveryLat, deliveryLng]); // Only refetch outlets when brand changes
 
 
   useEffect(() => {
@@ -236,6 +255,7 @@ export default function CustomerDashboard({
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [cartRestaurant, setCartRestaurant] = useState<any>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
 
@@ -279,10 +299,20 @@ export default function CustomerDashboard({
   });
 
   const addToCart = (item: MenuItem) => {
+    if (cartRestaurant && cartRestaurant.id !== selectedRestaurant.id) {
+      if (window.confirm("Adding items from a new outlet will clear your cart. Continue?")) {
+        setCart([{ item, quantity: 1 }]);
+        setCartRestaurant(selectedRestaurant);
+      }
+      return;
+    }
     setCart(prev => {
       const existing = prev.find(i => i.item.id === item.id);
       if (existing) {
         return prev.map(i => i.item.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
+      }
+      if (prev.length === 0) {
+        setCartRestaurant(selectedRestaurant);
       }
       return [...prev, { item, quantity: 1 }];
     });
@@ -294,13 +324,15 @@ export default function CustomerDashboard({
       if (existing && existing.quantity > 1) {
         return prev.map(i => i.item.id === itemId ? { ...i, quantity: i.quantity - 1 } : i);
       }
-      return prev.filter(i => i.item.id !== itemId);
+      const newCart = prev.filter(i => i.item.id !== itemId);
+      if (newCart.length === 0) setCartRestaurant(null);
+      return newCart;
     });
   };
 
   const getCartTotal = () => {
-    const subtotal = cart.reduce((acc, curr) => acc + (curr.item.price * curr.quantity), 0);
-    const deliveryFee = selectedRestaurant ? selectedRestaurant.deliveryFee : 0;
+    const subtotal = cart.reduce((sum, item) => sum + (item.item.price * item.quantity), 0);
+    const deliveryFee = (cartRestaurant || selectedRestaurant) ? (cartRestaurant || selectedRestaurant).deliveryFee : 0;
     return {
       subtotal,
       deliveryFee,
@@ -309,18 +341,19 @@ export default function CustomerDashboard({
   };
 
   const handleCheckout = async () => {
-    if (!selectedRestaurant || cart.length === 0) return;
+    const activeRest = cartRestaurant || selectedRestaurant;
+    if (!activeRest || cart.length === 0) return;
     
     // Delivery Availability Check
     try {
-      const availRes = await apiGet(`/api/v1/restaurants/${selectedRestaurant.id}/delivery-availability`);
+      const availRes = await apiGet(`/api/v1/restaurants/${activeRest.id}/delivery-availability`);
       if (availRes.data && availRes.data.available === false) {
         setGlobalError("This restaurant is currently out of your delivery zone.");
         setTimeout(() => setGlobalError(null), 3000);
         return;
       }
       if (onAddApiLog) {
-        onAddApiLog({ id: 'delivery_avail', label: `GET /api/v1/restaurants/${selectedRestaurant.id}/delivery-availability`, method: 'GET' });
+        onAddApiLog({ id: 'delivery_avail', label: `GET /api/v1/restaurants/${activeRest.id}/delivery-availability`, method: 'GET' });
       }
     } catch(e: any) {
       console.warn("Availability check failed", e);
@@ -331,7 +364,7 @@ export default function CustomerDashboard({
     }
 
     if (onAddApiLog) {
-      onAddApiLog({ id: 'menu_batch', label: `GET /api/v1/restaurants/${selectedRestaurant.id}/menu/batch`, method: 'GET' });
+      onAddApiLog({ id: 'menu_batch', label: `GET /api/v1/restaurants/${activeRest.id}/menu/batch`, method: 'GET' });
     }
 
     setPaymentStatus('idle');
@@ -339,7 +372,8 @@ export default function CustomerDashboard({
   };
 
   const processPaymentAndOrder = async () => {
-    if (!selectedRestaurant || cart.length === 0) return;
+    const activeRest = cartRestaurant || selectedRestaurant;
+    if (!activeRest || cart.length === 0) return;
     
     setPaymentStatus('processing');
     
@@ -372,7 +406,7 @@ export default function CustomerDashboard({
 
       const orderPayload = {
         customerId: profile?.id,
-        restaurantId: selectedRestaurant.id,
+        restaurantId: activeRest.id,
         deliveryAddressId: finalAddressId || "00000000-0000-0000-0000-000000000001",
         items
       };
@@ -381,14 +415,15 @@ export default function CustomerDashboard({
       
       setPaymentStatus('success');
       setTimeout(() => {
-        if (res.data) {
+        if (res.data?.id) {
           onPlaceOrder(res.data);
           setTrackingOrder(res.data);
+          setCart([]);
+          setCartRestaurant(null);
+          setIsCartOpen(false);
+          setIsPaymentModalOpen(false);
+          setSelectedRestaurant(null);
         }
-        setCart([]);
-        setIsCartOpen(false);
-        setIsPaymentModalOpen(false);
-        setSelectedRestaurant(null);
       }, 800);
     } catch (err: any) {
       console.error(err);
@@ -402,7 +437,11 @@ export default function CustomerDashboard({
           .map(i => i.item.name)
           .join(', ');
           
-        setCart(prev => prev.filter(i => !unavailableIds.includes(i.item.id)));
+        setCart(prev => {
+          const newCart = prev.filter(i => !unavailableIds.includes(i.item.id));
+          if (newCart.length === 0) setCartRestaurant(null);
+          return newCart;
+        });
         setGlobalError(removedItemNames ? `Removed unavailable items from cart: ${removedItemNames}` : "Some items are unavailable.");
         setTimeout(() => setGlobalError(null), 5000);
       } else {
@@ -416,12 +455,12 @@ export default function CustomerDashboard({
   // Get stage index for order tracking
   const getStatusIndex = (status: OrderStatus | string) => {
     let effectiveStatus = status;
-    if (status === OrderStatus.AWAITING_DELAY_APPROVAL) effectiveStatus = OrderStatus.PAID;
-    if (status === OrderStatus.PAID || status === OrderStatus.CREATED) effectiveStatus = OrderStatus.PAID;
-    if (status === OrderStatus.AWAITING_DELAY_APPROVAL) effectiveStatus = OrderStatus.PAID;
+    if (status === OrderStatus.AWAITING_DELAY_APPROVAL) effectiveStatus = OrderStatus.PENDING_ACCEPTANCE;
+    if (status === OrderStatus.PENDING_ACCEPTANCE || status === OrderStatus.CREATED) effectiveStatus = OrderStatus.PENDING_ACCEPTANCE;
+    if (status === OrderStatus.AWAITING_DELAY_APPROVAL) effectiveStatus = OrderStatus.PENDING_ACCEPTANCE;
     
     const statuses: string[] = [
-      OrderStatus.PAID, 
+      OrderStatus.PENDING_ACCEPTANCE, 
       OrderStatus.ACCEPTED, 
       OrderStatus.PREPARING,
       OrderStatus.READY_FOR_PICKUP, 
@@ -434,7 +473,7 @@ export default function CustomerDashboard({
   // Simulated GPS Path Coordinate (translating step status to percentage of route progress)
   const getDeliveryProgress = (order: Order) => {
     switch (order.status) {
-      case OrderStatus.PAID: return 5;
+      case OrderStatus.PENDING_ACCEPTANCE: return 5;
       case OrderStatus.ACCEPTED: return 20;
       case OrderStatus.PREPARING: return 40;
       case OrderStatus.READY_FOR_PICKUP: return 50;
@@ -663,7 +702,7 @@ export default function CustomerDashboard({
                 <div className="flex justify-between items-start">
                   <div className="space-y-1">
                     <h4 className="font-bold text-lg">
-                      {currentTrackingOrder.status === OrderStatus.PAID && 'Waiting for Restaurant...'}
+                      {currentTrackingOrder.status === OrderStatus.PENDING_ACCEPTANCE && 'Waiting for Restaurant...'}
                       {currentTrackingOrder.status === OrderStatus.AWAITING_DELAY_APPROVAL && 'Restaurant Requested Delay'}
                       {currentTrackingOrder.status === OrderStatus.ACCEPTED && 'Order Confirmed!'}
                       {currentTrackingOrder.status === OrderStatus.PREPARING && 'Kitchen is Cooking...'}
@@ -748,7 +787,7 @@ export default function CustomerDashboard({
                   </div>
                 )}
                 
-                {(currentTrackingOrder.status === OrderStatus.PAID || currentTrackingOrder.status === OrderStatus.CREATED) && (
+                {(currentTrackingOrder.status === OrderStatus.PENDING_ACCEPTANCE || currentTrackingOrder.status === OrderStatus.CREATED) && (
                   <div className="flex items-center gap-3 pt-2">
                     <button
                       onClick={async () => {
@@ -768,8 +807,9 @@ export default function CustomerDashboard({
                               return newOrders;
                             });
                           }
-                        } catch (e) {
+                        } catch (e: any) {
                           console.error("Failed to cancel order", e);
+                          alert(e.response?.data?.message || "Failed to cancel order");
                         }
                       }}
                       className="flex-1 py-3 bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400 font-bold rounded-2xl hover:bg-red-200 dark:hover:bg-red-500/20 transition-all text-sm"
@@ -801,7 +841,7 @@ export default function CustomerDashboard({
                 ) : (
                   <div className="space-y-0 pt-4 px-2">
                     {[
-                      { status: OrderStatus.PAID, label: 'Order Received' },
+                      { status: OrderStatus.PENDING_ACCEPTANCE, label: 'Order Received' },
                     { status: OrderStatus.ACCEPTED, label: 'Accepted by Kitchen' },
                     { status: OrderStatus.PREPARING, label: 'Cooking & Packaging' },
                     { status: OrderStatus.PICKED_UP, label: 'Picked up by Delivery Executive' },
@@ -926,7 +966,7 @@ export default function CustomerDashboard({
                   </div>
                   
                   <div className="space-y-4">
-                    <h3 className="font-bold text-lg text-slate-900 dark:text-[#f0ede6]">{currentTrackingOrder.restaurantName}</h3>
+                    <h3 className="font-semibold text-lg text-slate-900 dark:text-[#f0ede6]">{currentTrackingOrder.restaurantName}</h3>
                     <div className="space-y-3">
                       {currentTrackingOrder.items && currentTrackingOrder.items.map((item: any, idx: number) => (
                         <div key={idx} className="flex justify-between text-sm font-semibold text-slate-700 dark:text-slate-300">
@@ -1007,6 +1047,34 @@ export default function CustomerDashboard({
                 <span>•</span>
                 <span>{selectedRestaurant.distance} km away</span>
               </div>
+              
+              {brandOutlets && brandOutlets.length > 1 && (
+                <div className="mt-3">
+                  <label htmlFor="outlet-select" className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Select Outlet Location:
+                  </label>
+                  <select
+                    id="outlet-select"
+                    value={selectedRestaurant.id}
+                    onChange={(e) => {
+                      const newOutlet = brandOutlets.find(o => o.id === e.target.value);
+                      if (newOutlet) {
+                        setSelectedRestaurant(newOutlet);
+                        if (onAddApiLog) {
+                          onAddApiLog({ id: 'catalog', label: `GET /api/v1/restaurants/${newOutlet.id}/catalog/items`, method: 'GET' });
+                        }
+                      }
+                    }}
+                    className="block w-full text-sm rounded-xl border-slate-300 bg-white/50 dark:bg-slate-900/50 dark:border-slate-700 focus:border-rose-500 focus:ring-rose-500 shadow-sm"
+                  >
+                    {brandOutlets.map(outlet => (
+                      <option key={outlet.id} value={outlet.id}>
+                        {outlet.name} ({outlet.distance} km away)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
 
             {/* Dishes Menu List */}
@@ -1193,7 +1261,7 @@ export default function CustomerDashboard({
 
                       <div className="p-4.5 space-y-2">
                         <div className="flex items-center justify-between">
-                          <h5 className="font-bold text-base text-slate-900 dark:text-[#f0ede6] group-hover:text-amber-500 transition-colors">{restaurant.name}</h5>
+                          <h5 className="font-bold text-base text-slate-900 dark:text-[#f0ede6] group-hover:text-amber-500 transition-colors">{restaurant.brandName || restaurant.name}</h5>
                           <div className="flex items-center gap-1 bg-orange-500/10 text-orange-600 dark:text-orange-400 px-2 py-0.5 rounded-lg text-xs font-bold">
                             <Star className="w-3.5 h-3.5 fill-current" />
                             <span>{restaurant.rating}</span>
@@ -1235,7 +1303,7 @@ export default function CustomerDashboard({
 
       {/* Floating Active Orders Slider at bottom */}
       {activeOrders.filter(o => isActiveOrder(o.status)).length > 0 && !trackingOrder && (
-        <div className={`fixed left-0 right-0 max-w-3xl mx-auto z-30 pointer-events-none transition-all duration-300 ${cart.length > 0 && selectedRestaurant ? 'bottom-24' : 'bottom-4'}`}>
+        <div className={`fixed left-0 right-0 max-w-3xl mx-auto z-30 pointer-events-none transition-all duration-300 ${cart.length > 0 && (!selectedRestaurant || cartRestaurant?.id === selectedRestaurant.id) ? 'bottom-24' : 'bottom-4'}`}>
           <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-none px-5 gap-4 pb-2 pointer-events-auto">
             {activeOrders.filter(o => isActiveOrder(o.status)).slice().reverse().map((order) => (
               <button 
@@ -1257,7 +1325,7 @@ export default function CustomerDashboard({
       )}
 
       {/* Floating Cart bar at bottom */}
-      {cart.length > 0 && selectedRestaurant && (
+      {cart.length > 0 && (!selectedRestaurant || cartRestaurant?.id === selectedRestaurant.id) && (
         <div className="fixed bottom-4 left-4 right-4 z-40 max-w-[380px] mx-auto">
           <button
             onClick={() => setIsCartOpen(true)}
@@ -1406,6 +1474,10 @@ export default function CustomerDashboard({
         removeFromCart={removeFromCart}
         addToCart={addToCart}
         getCartTotal={getCartTotal}
+        restaurantName={(cartRestaurant || selectedRestaurant)?.name || ''}
+        restaurantId={(cartRestaurant || selectedRestaurant)?.id || ''}
+        subtotal={getCartTotal().subtotal}
+        deliveryFee={getCartTotal().deliveryFee}
         setIsPaymentModalOpen={setIsPaymentModalOpen}
       />
 
