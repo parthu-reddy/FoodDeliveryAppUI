@@ -152,3 +152,29 @@ export const apiDelete = async (path: string, customHeaders?: Record<string, str
   }
 };
 
+export const apiPostFormData = async (path: string, formData: FormData, customHeaders?: Record<string, string>) => {
+  const token = getToken();
+  const headers: Record<string, string> = {
+    'Accept': 'application/json',
+    ...getDeviceHeaders()
+  };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  if (customHeaders) {
+    Object.assign(headers, customHeaders);
+  }
+
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: 'POST',
+    headers,
+    body: formData
+  });
+  
+  if (!res.ok) await handleHttpError(res);
+  
+  const text = await res.text();
+  try {
+    return text ? JSON.parse(text) : null;
+  } catch {
+    return text;
+  }
+};

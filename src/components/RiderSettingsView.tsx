@@ -3,13 +3,14 @@ import { motion } from 'motion/react';
 import { X, User, Phone, Mail, Car, Image as ImageIcon, AlertCircle, LogOut } from 'lucide-react';
 import { apiGet, apiPut, apiDelete, apiPost } from '../lib/apiClient';
 import { useToast } from '../context/ToastContext';
+import ImageUploadField from './ImageUploadField';
 import { z } from 'zod';
 
 const riderProfileSchema = z.object({
   name: z.string().min(1, 'Please enter your full name.').max(100, 'Name cannot exceed 100 characters.'),
   email: z.string().min(1, 'Please enter your email address.').email('Please enter a valid email address.').max(255, 'Email cannot exceed 255 characters.'),
   vehicle: z.string().min(1, 'Please enter your vehicle registration.').max(50, 'Vehicle registration cannot exceed 50 characters.'),
-  photoUrl: z.string().url('Please enter a valid URL for your profile photo.').max(1000, 'URL cannot exceed 1000 characters.')
+  photoUrl: z.string().url('Please enter a valid URL for your profile photo.').max(1000, 'URL cannot exceed 1000 characters.').optional().or(z.literal(''))
 });
 
 interface RiderSettingsViewProps {
@@ -254,13 +255,11 @@ export default function RiderSettingsView({
             <label className="text-xs font-bold text-slate-500 dark:text-slate-300 flex items-center gap-1">
                <ImageIcon className="w-3.5 h-3.5" /> Profile Photo URL
             </label>
-            <input 
-              type="url" 
-              required
-              placeholder="https://example.com/photo.jpg"
-              value={editPhoto}
-              onChange={(e) => setEditPhoto(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md text-sm font-medium text-slate-900 dark:text-[#f0ede6] outline-none transition-colors focus:border-rose-500/50 focus:bg-white/40 dark:focus:bg-slate-900/40"
+            <ImageUploadField 
+              value={editPhoto} 
+              onChange={setEditPhoto} 
+              folderId={userId || 'default_rider'} 
+              placeholder="Profile Photo URL" 
             />
           </div>
 

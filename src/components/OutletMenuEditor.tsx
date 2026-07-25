@@ -3,6 +3,7 @@ import { Plus, Edit3, X, Clock, Save, Layers } from 'lucide-react';
 import { apiGet, apiPost } from '../lib/apiClient';
 import { MenuItem } from '../types';
 import CategorySelector from './CategorySelector';
+import ImageUploadField from './ImageUploadField';
 import { z } from 'zod';
 
 const masterItemSchema = z.object({
@@ -42,7 +43,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
   const [mPrice, setMPrice] = useState('');
   const [mPrepTime, setMPrepTime] = useState('15');
   const [mDesc, setMDesc] = useState('');
-  const [mImg, setMImg] = useState('https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=400&q=80');
+  const [mImg, setMImg] = useState('');
   const [mVeg, setMVeg] = useState(true);
   
   // Override Value State
@@ -260,6 +261,9 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
               <input required type="number" min="1" placeholder="Prep (mins)" value={mPrepTime} onChange={e=>setMPrepTime(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-emerald-500/20 dark:border-emerald-500/30 rounded-lg px-3 py-2 text-xs font-bold dark:text-[#f0ede6]" />
             </div>
             <input required placeholder="Description" value={mDesc} onChange={e=>setMDesc(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-emerald-500/20 dark:border-emerald-500/30 rounded-lg px-3 py-2 text-xs dark:text-[#f0ede6]" />
+            <div className="z-[60] relative">
+              <ImageUploadField value={mImg} onChange={setMImg} folderId={restaurantId} placeholder="Image URL (Optional)" imageType="menu" />
+            </div>
             <div className="z-[60] relative">
               <CategorySelector categories={categories} value={mCatId} onChange={setMCatId} />
             </div>

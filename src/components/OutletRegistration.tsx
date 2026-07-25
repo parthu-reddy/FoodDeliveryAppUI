@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, Store, CheckCircle, Trash2, Clock, MapPin, Search, Loader, Navigation } from 'lucide-react';
+import { Store, MapPin, ChefHat, Upload, Clock, Save, AlertCircle, CheckCircle, Search, Loader, Plus, Trash2, Navigation } from 'lucide-react';
 import { apiPost, apiGet } from '../lib/apiClient';
+import ImageUploadField from './ImageUploadField';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useToast } from '../context/ToastContext';
@@ -9,7 +10,7 @@ import { z } from 'zod';
 const outletSchema = z.object({
   name: z.string().min(1, 'Outlet name is required.').max(100, 'Outlet name cannot exceed 100 characters.'),
   fssai: z.string().length(14, 'FSSAI License must be exactly 14 characters.'),
-  banner: z.string().url('Invalid Banner URL.').max(1000, 'Banner URL cannot exceed 1000 characters.'),
+  banner: z.string().url('Invalid Banner URL.').max(1000, 'Banner URL cannot exceed 1000 characters.').optional().or(z.literal('')),
   lat: z.number().min(-90, 'Invalid Latitude').max(90, 'Invalid Latitude'),
   lng: z.number().min(-180, 'Invalid Longitude').max(180, 'Invalid Longitude')
 });
@@ -23,7 +24,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState('');
   const [fssai, setFssai] = useState('');
-  const [banner, setBanner] = useState('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80');
+  const [banner, setBanner] = useState('');
   
   const [lat, setLat] = useState("12.9716");
   const [lng, setLng] = useState("77.5946");
@@ -290,12 +291,11 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
           </div>
           <div className="space-y-1">
             <label className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">Banner Image URL</label>
-            <input
-              type="url"
-              required
-              value={banner}
-              onChange={e => setBanner(e.target.value)}
-              className="w-full bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+            <ImageUploadField 
+              value={banner} 
+              onChange={setBanner} 
+              folderId={brandId} 
+              placeholder="Banner Image URL" 
             />
           </div>
         </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit3, X, Clock, Save, Layers } from 'lucide-react';
 import { apiGet, apiPost, apiPut } from '../lib/apiClient';
 import CategorySelector from './CategorySelector';
+import ImageUploadField from './ImageUploadField';
 import { z } from 'zod';
 
 const masterItemSchema = z.object({
@@ -32,7 +33,7 @@ export default function BrandMasterMenu({ brandId, onRefresh }: BrandMasterMenuP
   const [mPrice, setMPrice] = useState('');
   const [mPrepTime, setMPrepTime] = useState('15');
   const [mDesc, setMDesc] = useState('');
-  const [mImg, setMImg] = useState('https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=400&q=80');
+  const [mImg, setMImg] = useState('');
   const [mVeg, setMVeg] = useState(true);
   
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
@@ -264,6 +265,9 @@ export default function BrandMasterMenu({ brandId, onRefresh }: BrandMasterMenuP
             </div>
             <input required placeholder="Description" value={mDesc} onChange={e=>setMDesc(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-orange-500/20 dark:border-orange-500/30 rounded-lg px-3 py-2 text-xs dark:text-[#f0ede6]" />
             <div className="z-[60] relative">
+              <ImageUploadField value={mImg} onChange={setMImg} folderId={brandId} placeholder="Image URL (Optional)" imageType="menu" />
+            </div>
+            <div className="z-[60] relative">
               <CategorySelector categories={categories} value={mCatId} onChange={setMCatId} />
             </div>
             <div className="flex gap-2 pt-1">
@@ -371,6 +375,9 @@ export default function BrandMasterMenu({ brandId, onRefresh }: BrandMasterMenuP
                               <input required type="number" min="1" placeholder="Prep Time (mins)" value={mPrepTime} onChange={e=>setMPrepTime(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 rounded-lg px-3 py-1.5 text-xs font-bold dark:text-[#f0ede6]" />
                             </div>
                             <input required placeholder="Description" value={mDesc} onChange={e=>setMDesc(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 rounded-lg px-3 py-1.5 text-xs dark:text-[#f0ede6]" />
+                            <div className="z-[60] relative">
+                                <ImageUploadField value={mImg} onChange={setMImg} folderId={brandId} placeholder="Image URL (Optional)" imageType="menu" />
+                            </div>
                             <div className="z-[60] relative">
                                 <CategorySelector categories={categories} value={mCatId} onChange={setMCatId} />
                             </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Building, CheckCircle, Sparkles, AlertCircle } from 'lucide-react';
 import { apiPost } from '../lib/apiClient';
+import ImageUploadField from './ImageUploadField';
 import { z } from 'zod';
 
 const brandSchema = z.object({
@@ -10,7 +11,7 @@ const brandSchema = z.object({
   cin: z.string().length(21, 'CIN must be exactly 21 characters.'),
   bankAccount: z.string().min(1, 'Bank Account is required.').max(30, 'Bank Account number too long.'),
   ifsc: z.string().length(11, 'IFSC must be exactly 11 characters.'),
-  logoUrl: z.string().url('Invalid Logo URL.').max(1000, 'Logo URL cannot exceed 1000 characters.')
+  logoUrl: z.string().url('Invalid Logo URL.').max(1000, 'Logo URL cannot exceed 1000 characters.').optional().or(z.literal(''))
 });
 
 export default function BrandRegistration({ onRefresh }: { onRefresh: () => void }) {
@@ -21,7 +22,7 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
   const [cin, setCin] = useState('');
   const [bankAccount, setBankAccount] = useState('');
   const [ifsc, setIfsc] = useState('');
-  const [logoUrl, setLogoUrl] = useState('https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=200&q=80');
+  const [logoUrl, setLogoUrl] = useState('');
   const [error, setError] = useState('');
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -136,6 +137,15 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
               className="w-full bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-rose-500/50"
             />
           </div>
+        </div>
+        <div className="space-y-1">
+          <label className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">Brand Logo</label>
+          <ImageUploadField 
+            value={logoUrl} 
+            onChange={setLogoUrl} 
+            folderId={name ? name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'default' : 'default'} 
+            placeholder="Logo Image URL (Optional)" 
+          />
         </div>
         <div className="flex gap-3 pt-2">
           <button
