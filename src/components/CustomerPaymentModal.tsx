@@ -3,7 +3,17 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ShieldCheck, Check } from 'lucide-react';
 
-export default function CustomerPaymentModal({
+import { ErrorBoundary } from './ErrorBoundary';
+
+export default function CustomerPaymentModal(props: any) {
+  return (
+    <ErrorBoundary>
+      <_CustomerPaymentModal {...props} />
+    </ErrorBoundary>
+  );
+}
+
+function _CustomerPaymentModal({
   isPaymentModalOpen,
   setIsPaymentModalOpen,
   paymentStatus,
@@ -41,7 +51,8 @@ export default function CustomerPaymentModal({
                   <div className="w-full space-y-2 mt-4">
                     <button
                       onClick={processPaymentAndOrder}
-                      className="w-full bg-slate-900 dark:bg-[#f0ede6] text-white dark:text-black py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+                      disabled={paymentStatus !== 'idle'}
+                      className="w-full bg-slate-900 dark:bg-[#f0ede6] text-white dark:text-black py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Check className="w-4 h-4" />
                       Pay Securely

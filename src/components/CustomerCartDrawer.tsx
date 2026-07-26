@@ -20,18 +20,37 @@ export default function CustomerCartDrawer({
   removeFromCart,
   addToCart,
   getCartTotal,
-  setIsPaymentModalOpen
+  setIsPaymentModalOpen,
+  isSubmitting
 }: any) {
   const [error, setError] = React.useState<string | null>(null);
+  const [localAddress, setLocalAddress] = React.useState(address);
+
+  React.useEffect(() => {
+    setLocalAddress(address);
+  }, [address]);
+
+  React.useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (localAddress !== address) {
+        setAddress(localAddress);
+      }
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [localAddress, address, setAddress]);
 
   const onCheckoutClick = () => {
-    const validation = checkoutSchema.safeParse({ address: address.trim() });
+    if (isSubmitting) return;
+    const validation = checkoutSchema.safeParse({ address: localAddress.trim() });
     if (!validation.success) {
       setError(validation.error.issues[0].message);
       return;
     }
     setError(null);
-    handleCheckout();
+    setAddress(localAddress); // ensure parent has latest
+    setTimeout(() => {
+      handleCheckout();
+    }, 0);
   };
 
   return (
@@ -118,8 +137,8 @@ export default function CustomerCartDrawer({
                 <span className="text-[10px] text-slate-500 dark:text-[#f0ede6] font-bold block uppercase font-mono">Delivering To</span>
                 <input 
                   type="text" 
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
+                  value={localAddress}
+                  onChange={(e) => setLocalAddress(e.target.value)}
                   className="bg-transparent border-none text-xs w-full font-semibold text-slate-800 dark:text-[#f0ede6] focus:outline-none"
                 />
               </div>
@@ -132,10 +151,11 @@ export default function CustomerCartDrawer({
 
               <button
                 onClick={onCheckoutClick}
-                className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-4 rounded-2xl font-black shadow-lg shadow-orange-500/20 hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer border border-white/20"
+                disabled={isSubmitting}
+                className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-4 rounded-2xl font-black shadow-lg shadow-orange-500/20 hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ShieldCheck className="w-5 h-5" />
-                Place Cash-on-Delivery Order
+                {isSubmitting ? 'Processing...' : 'Place Cash-on-Delivery Order'}
               </button>
             </motion.div>
           </>

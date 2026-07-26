@@ -28,7 +28,17 @@ interface CustomerAddress {
   longitude: number;
 }
 
+import { ErrorBoundary } from './ErrorBoundary';
+
 export default function AdminFleetMap() {
+  return (
+    <ErrorBoundary>
+      <_AdminFleetMap />
+    </ErrorBoundary>
+  );
+}
+
+function _AdminFleetMap() {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [mapInstance, setMapInstance] = useState<maplibregl.Map | null>(null);
 

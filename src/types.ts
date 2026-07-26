@@ -50,6 +50,7 @@ export interface Order {
   subtotal: number;
   deliveryFee: number;
   total: number;
+  totalAmount?: number;
   status: OrderStatus;
   deliveryStatus?: DeliveryStatus;
   otp: string; // 6-digit code to complete delivery

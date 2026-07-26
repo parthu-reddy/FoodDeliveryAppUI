@@ -1,6 +1,7 @@
 import React from 'react';
 import { Leaf, Flame, Sparkles, Trophy } from 'lucide-react';
 import { motion } from 'motion/react';
+import ImageLoader from './ImageLoader';
 
 const PREMIUM_FOOD_SHOT = {
   url: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1600&q=80',
@@ -24,11 +25,13 @@ export default function CinematicFoodBackground({ theme = 'light' }: CinematicFo
   return (
     <div className="fixed inset-0 w-full h-full overflow-hidden select-none pointer-events-none z-0">
       <div className="absolute inset-0 w-full h-full">
-        <img
+        <ImageLoader
           src={PREMIUM_FOOD_SHOT.url}
           alt="Cinematic gourmet dish"
           referrerPolicy="no-referrer"
           className="w-full h-full object-cover filter brightness-90 saturate-125"
+          containerClassName="w-full h-full"
+          loading="lazy"
         />
       </div>
 

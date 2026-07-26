@@ -3,7 +3,21 @@ import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { apiGet } from '../lib/apiClient';
 
-export default function AdminAssignmentMap({ 
+import { ErrorBoundary } from './ErrorBoundary';
+
+export default function AdminAssignmentMap(props: { 
+    order: any, 
+    availableDrivers: any[], 
+    onAssign: (orderId: string, driverId: string) => void 
+}) {
+  return (
+    <ErrorBoundary>
+      <_AdminAssignmentMap {...props} />
+    </ErrorBoundary>
+  );
+}
+
+function _AdminAssignmentMap({ 
     order, 
     availableDrivers, 
     onAssign 

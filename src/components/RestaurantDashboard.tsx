@@ -24,6 +24,8 @@ import SharedSettingsView from './SharedSettingsView';
 import { getUserProfile } from '../lib/tokenStore';
 
 import { apiGet, apiPost, apiPut } from '../lib/apiClient';
+import { useToast } from '../context/ToastContext';
+import ImageLoader from './ImageLoader';
 import { z } from 'zod';
 
 const delaySchema = z.object({
@@ -253,7 +255,6 @@ export default function RestaurantDashboard({
           return;
         }
       }
-
       if (!selectedOutletId && _outlets.length > 0) {
         setSelectedOutletId(_outlets[0].id);
         localStorage.setItem('restaurant_selectedOutletId', _outlets[0].id);
@@ -292,6 +293,24 @@ export default function RestaurantDashboard({
       }
     } catch(e) {}
   };
+
+  // Poll if any brand is pending KYC or bank verification
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+    const hasPendingVerifications = brands.some(
+      b => b.kycStatus === 'PENDING' || b.pennyDropStatus === 'PENDING'
+    );
+
+    if (hasPendingVerifications) {
+      intervalId = setInterval(() => {
+        loadData();
+      }, 5000);
+    }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [brands]);
 
   useEffect(() => {
     loadData();
@@ -681,10 +700,15 @@ export default function RestaurantDashboard({
 
                   <div className="flex-1 space-y-3.5 overflow-y-auto h-[500px] scrollbar-thin pr-1">
                     {pendingOrders.length === 0 ? (
-                      <div className="h-full flex flex-col items-center justify-center text-center py-16 px-4 bg-white/40 dark:bg-slate-900/10 border border-dashed border-rose-500/20 dark:border-rose-500/30 rounded-2xl">
-                        <Clock className="w-8 h-8 text-slate-300 dark:text-slate-700 mb-2" />
-                        <p className="text-xs font-bold text-slate-400 dark:text-slate-300">No pending orders</p>
-                        <p className="text-[10px] text-slate-500 dark:text-slate-300 mt-1 max-w-[180px]">When customers place live orders, they will ping in this slot instantly.</p>
+                      <div className="h-full flex flex-col items-center justify-center text-center py-16 px-4 animate-in fade-in slide-in-from-bottom-4 duration-500 bg-white/40 dark:bg-slate-900/10 border border-dashed border-rose-500/20 dark:border-rose-500/30 rounded-2xl">
+                        <div className="relative mb-4">
+                          <div className="absolute inset-0 bg-amber-500/20 dark:bg-amber-500/10 rounded-full blur-xl animate-pulse"></div>
+                          <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-lg border border-slate-100 dark:border-slate-700 relative z-10">
+                            <Clock className="w-8 h-8 text-amber-400 dark:text-amber-500" strokeWidth={1.5} />
+                          </div>
+                        </div>
+                        <h3 className="text-sm font-bold text-slate-800 dark:text-[#f0ede6]">No pending orders</h3>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 max-w-[180px]">When customers place live orders, they will ping in this slot instantly.</p>
                       </div>
                     ) : (
                       pendingOrders.slice().reverse().map(order => (
@@ -889,9 +913,14 @@ export default function RestaurantDashboard({
 
                   <div className="flex-1 space-y-3.5 overflow-y-auto h-[500px] scrollbar-thin pr-1">
                     {myOrders.filter(o => o.status === OrderStatus.AWAITING_DELAY_APPROVAL).length === 0 ? (
-                      <div className="h-full flex flex-col items-center justify-center text-center py-16 px-4 bg-white/40 dark:bg-slate-900/10 border border-dashed border-rose-500/20 dark:border-rose-500/30 rounded-2xl">
-                        <Clock className="w-8 h-8 text-slate-300 dark:text-slate-700 mb-2" />
-                        <p className="text-xs font-bold text-slate-400 dark:text-slate-300">No delayed orders</p>
+                      <div className="h-full flex flex-col items-center justify-center text-center py-16 px-4 animate-in fade-in slide-in-from-bottom-4 duration-500 bg-white/40 dark:bg-slate-900/10 border border-dashed border-rose-500/20 dark:border-rose-500/30 rounded-2xl">
+                        <div className="relative mb-4">
+                          <div className="absolute inset-0 bg-red-500/20 dark:bg-red-500/10 rounded-full blur-xl animate-pulse"></div>
+                          <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-lg border border-slate-100 dark:border-slate-700 relative z-10">
+                            <Clock className="w-8 h-8 text-red-400 dark:text-red-500" strokeWidth={1.5} />
+                          </div>
+                        </div>
+                        <h3 className="text-sm font-bold text-slate-800 dark:text-[#f0ede6]">No delayed orders</h3>
                       </div>
                     ) : (
                       myOrders.filter(o => o.status === OrderStatus.AWAITING_DELAY_APPROVAL).slice().reverse().map(order => (
@@ -1025,10 +1054,15 @@ export default function RestaurantDashboard({
                   {/* Body - Scrollable list */}
                   <div className="flex-1 space-y-3.5 overflow-y-auto h-[500px] scrollbar-thin pr-1">
                     {activePreparing.length === 0 ? (
-                      <div className="h-full flex flex-col items-center justify-center text-center py-16 px-4 bg-white/40 dark:bg-slate-900/10 border border-dashed border-rose-500/20 dark:border-rose-500/30 rounded-2xl">
-                        <ChefHat className="w-8 h-8 text-slate-300 dark:text-slate-700 mb-2" />
-                        <p className="text-xs font-bold text-slate-400 dark:text-slate-300">Kitchen is idle</p>
-                        <p className="text-[10px] text-slate-500 dark:text-slate-300 mt-1 max-w-[180px]">Accepted tickets appear here. Start cooking to alert couriers!</p>
+                      <div className="h-full flex flex-col items-center justify-center text-center py-16 px-4 animate-in fade-in slide-in-from-bottom-4 duration-500 bg-white/40 dark:bg-slate-900/10 border border-dashed border-rose-500/20 dark:border-rose-500/30 rounded-2xl">
+                        <div className="relative mb-4">
+                          <div className="absolute inset-0 bg-indigo-500/20 dark:bg-indigo-500/10 rounded-full blur-xl animate-pulse"></div>
+                          <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-lg border border-slate-100 dark:border-slate-700 relative z-10">
+                            <ChefHat className="w-8 h-8 text-indigo-400 dark:text-indigo-500" strokeWidth={1.5} />
+                          </div>
+                        </div>
+                        <h3 className="text-sm font-bold text-slate-800 dark:text-[#f0ede6]">Kitchen is idle</h3>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 max-w-[180px]">Accepted tickets appear here. Start cooking to alert couriers!</p>
                       </div>
                     ) : (
                       activePreparing.slice().reverse().map(order => (
@@ -1166,10 +1200,15 @@ export default function RestaurantDashboard({
 
                   <div className="flex-1 space-y-3.5 overflow-y-auto h-[500px] scrollbar-thin pr-1">
                     {myOrders.filter(o => o.status === OrderStatus.READY_FOR_PICKUP).length === 0 ? (
-                      <div className="h-full flex flex-col items-center justify-center text-center py-16 px-4 bg-white/40 dark:bg-slate-900/10 border border-dashed border-rose-500/20 dark:border-rose-500/30 rounded-2xl">
-                        <Truck className="w-8 h-8 text-slate-300 dark:text-slate-700 mb-2" />
-                        <p className="text-xs font-bold text-slate-400 dark:text-slate-300">No ready packages</p>
-                        <p className="text-[10px] text-slate-500 dark:text-slate-300 mt-1 max-w-[180px]">Finished dishes will wait here. Handover to couriers with secure codes.</p>
+                      <div className="h-full flex flex-col items-center justify-center text-center py-16 px-4 animate-in fade-in slide-in-from-bottom-4 duration-500 bg-white/40 dark:bg-slate-900/10 border border-dashed border-rose-500/20 dark:border-rose-500/30 rounded-2xl">
+                        <div className="relative mb-4">
+                          <div className="absolute inset-0 bg-emerald-500/20 dark:bg-emerald-500/10 rounded-full blur-xl animate-pulse"></div>
+                          <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-lg border border-slate-100 dark:border-slate-700 relative z-10">
+                            <Truck className="w-8 h-8 text-emerald-400 dark:text-emerald-500" strokeWidth={1.5} />
+                          </div>
+                        </div>
+                        <h3 className="text-sm font-bold text-slate-800 dark:text-[#f0ede6]">No ready packages</h3>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 max-w-[180px]">Finished dishes will wait here. Handover to couriers with secure codes.</p>
                       </div>
                     ) : (
                       myOrders.filter(o => o.status === OrderStatus.READY_FOR_PICKUP).slice().reverse().map(order => (
@@ -1301,10 +1340,15 @@ export default function RestaurantDashboard({
 
                   <div className="flex-1 space-y-3.5 overflow-y-auto h-[500px] scrollbar-thin pr-1">
                     {myOrders.filter(o => o.status === OrderStatus.PICKED_UP).length === 0 ? (
-                      <div className="h-full flex flex-col items-center justify-center text-center py-16 px-4 bg-white/40 dark:bg-slate-900/10 border border-dashed border-purple-500/20 dark:border-purple-500/30 rounded-2xl">
-                        <Bike className="w-8 h-8 text-slate-300 dark:text-slate-700 mb-2" />
-                        <p className="text-xs font-bold text-slate-400 dark:text-slate-300">No orders in transit</p>
-                        <p className="text-[10px] text-slate-500 dark:text-slate-300 mt-1 max-w-[180px]">Orders picked up by riders will appear here until delivered.</p>
+                      <div className="h-full flex flex-col items-center justify-center text-center py-16 px-4 animate-in fade-in slide-in-from-bottom-4 duration-500 bg-white/40 dark:bg-slate-900/10 border border-dashed border-purple-500/20 dark:border-purple-500/30 rounded-2xl">
+                        <div className="relative mb-4">
+                          <div className="absolute inset-0 bg-purple-500/20 dark:bg-purple-500/10 rounded-full blur-xl animate-pulse"></div>
+                          <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-lg border border-slate-100 dark:border-slate-700 relative z-10">
+                            <Bike className="w-8 h-8 text-purple-400 dark:text-purple-500" strokeWidth={1.5} />
+                          </div>
+                        </div>
+                        <h3 className="text-sm font-bold text-slate-800 dark:text-[#f0ede6]">No orders in transit</h3>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 max-w-[180px]">Orders picked up by riders will appear here until delivered.</p>
                       </div>
                     ) : (
                       myOrders.filter(o => o.status === OrderStatus.PICKED_UP).slice().reverse().map(order => (
@@ -1403,7 +1447,7 @@ export default function RestaurantDashboard({
                         >
                           <div className="flex items-center gap-3">
                             <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-200 dark:bg-slate-800 shrink-0">
-                              <img src={dish.imageUrl || dish.image} alt={dish.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                              <ImageLoader src={dish.imageUrl || dish.image} alt={dish.name} className="w-full h-full object-cover" containerClassName="w-full h-full" referrerPolicy="no-referrer" loading="lazy" />
                             </div>
                             <div>
                               <h5 className="font-bold text-sm">{dish.name}</h5>
@@ -1545,7 +1589,25 @@ export default function RestaurantDashboard({
                               <span className="font-extrabold text-sm text-slate-800 dark:text-[#f0ede6]">{b.name}</span>
                               <span className="text-[10px] font-mono text-slate-400 dark:text-slate-300">ID: {b.id}</span>
                             </div>
-                            <div className="text-xs text-slate-500 dark:text-slate-300">GSTIN: {b.gstin}</div>
+                            <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-300">
+                              <span>GSTIN: {b.gstin}</span>
+                              <div className="flex gap-2">
+                                <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] uppercase tracking-wider ${
+                                  b.kycStatus === 'VERIFIED' ? 'bg-emerald-500/10 text-emerald-500' :
+                                  b.kycStatus === 'PENDING' ? 'bg-amber-500/10 text-amber-500 animate-pulse' :
+                                  'bg-rose-500/10 text-rose-500'
+                                }`}>
+                                  GSTIN: {b.kycStatus || 'PENDING'}
+                                </span>
+                                <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] uppercase tracking-wider ${
+                                  b.pennyDropStatus === 'VERIFIED' ? 'bg-emerald-500/10 text-emerald-500' :
+                                  b.pennyDropStatus === 'PENDING' ? 'bg-amber-500/10 text-amber-500 animate-pulse' :
+                                  'bg-rose-500/10 text-rose-500'
+                                }`}>
+                                  BANK: {b.pennyDropStatus || 'PENDING'}
+                                </span>
+                              </div>
+                            </div>
                           </div>
                         ))}
                       </div>

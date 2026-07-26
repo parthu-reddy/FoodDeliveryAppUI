@@ -30,6 +30,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
   const [lng, setLng] = useState("77.5946");
   const [timings, setTimings] = useState([{ openingTime: "09:00", closingTime: "23:00" }]);
   const [error, setError] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   // Map state
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -96,6 +97,8 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
     }
   }, [isOpen]);
 
+  const searchTimeoutRef = useRef<any>(null);
+
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
     if (query.length < 3) {
@@ -103,18 +106,25 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
       return;
     }
     setIsSearching(true);
-    try {
-      const apiKey = (import.meta as any).env.VITE_OLA_MAPS_API_KEY || '';
-      const res = await fetch(`https://api.olamaps.io/places/v1/autocomplete?input=${encodeURIComponent(query)}&api_key=${apiKey}`);
-      const data = await res.json();
-      if (data.predictions) {
-        setSearchResults(data.predictions);
-      }
-    } catch (err) {
-      console.error('Autocomplete Error:', err);
-    } finally {
-      setIsSearching(false);
+    
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
     }
+    
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const apiKey = (import.meta as any).env.VITE_OLA_MAPS_API_KEY || '';
+        const res = await fetch(`https://api.olamaps.io/places/v1/autocomplete?input=${encodeURIComponent(query)}&api_key=${apiKey}`);
+        const data = await res.json();
+        if (data.predictions) {
+          setSearchResults(data.predictions);
+        }
+      } catch (err) {
+        console.error('Autocomplete Error:', err);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
   };
 
   const selectLocation = async (placeId: string, description: string) => {
@@ -217,6 +227,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
     };
 
     try {
+      setIsSaving(true);
       await apiPost(`/api/v1/brands/${brandId}/outlets`, newOutlet);
       setIsOpen(false);
       setName('');
@@ -227,6 +238,8 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
       onRefresh();
     } catch (err: any) {
       setError(err.message || 'Failed to register outlet');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -450,8 +463,9 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
         </div>
 
         {error && (
-          <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-500 text-sm font-bold">
-            {error}
+          <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span className="font-bold">{error}</span>
           </div>
         )}
 
@@ -465,10 +479,15 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
           </button>
           <button
             type="submit"
-            className="flex-1 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white text-xs font-black rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
+            disabled={isSaving}
+            className="flex-1 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white text-xs font-black rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
           >
-            <CheckCircle className="w-4 h-4" />
-            Register Outlet
+            {isSaving ? (
+              <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+            ) : (
+              <CheckCircle className="w-4 h-4" />
+            )}
+            {isSaving ? 'Registering...' : 'Register Outlet'}
           </button>
         </div>
       </form>

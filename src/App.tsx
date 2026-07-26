@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { RoleName } from './types/backend-enums';
 import { UserRole } from './types';
-import LoginScreen from './components/LoginScreen';
 import CinematicFoodBackground from './components/CinematicFoodBackground';
-import CustomerDashboard from './components/CustomerDashboard';
-import RestaurantDashboard from './components/RestaurantDashboard';
-import DeliveryDashboard from './components/DeliveryDashboard';
-import AdminPortal from './components/AdminPortal';
 import { getUserProfile } from './lib/tokenStore';
 import { logout as authLogout } from './lib/authStore';
 import { ToastProvider } from './context/ToastContext';
+
+// Lazy load route components for code splitting and bundle optimization
+const LoginScreen = React.lazy(() => import('./components/LoginScreen'));
+const CustomerDashboard = React.lazy(() => import('./components/CustomerDashboard'));
+const RestaurantDashboard = React.lazy(() => import('./components/RestaurantDashboard'));
+const DeliveryDashboard = React.lazy(() => import('./components/DeliveryDashboard'));
+const AdminPortal = React.lazy(() => import('./components/AdminPortal'));
 
 export default function App() {
   // Initialize auth state SYNCHRONOUSLY from localStorage.
@@ -46,79 +48,94 @@ export default function App() {
     setM3Theme(m3Theme === 'dark' ? 'light' : 'dark');
   };
 
+  const renderFallback = () => (
+    <div className="w-full h-full flex-1 flex flex-col overflow-hidden relative">
+      <CinematicFoodBackground theme={m3Theme} />
+      <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative items-center justify-center">
+        <div className="flex flex-col items-center gap-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-6 py-4 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800">
+          <div className="w-8 h-8 border-3 border-rose-500 border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs font-bold tracking-wider uppercase text-slate-700 dark:text-slate-300">Loading Workspace...</span>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <ToastProvider>
       <div className={`flex-1 flex flex-col overflow-hidden relative w-full h-[100dvh] ${m3Theme === 'dark' ? 'dark text-[#f0ede6]' : 'text-slate-900'}`}>
-      {!userRole ? (
-        <div className="w-full h-full flex-1 flex flex-col overflow-hidden relative ">
-          <CinematicFoodBackground theme={m3Theme} />
-          <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative">
-            <div className="flex-1 flex flex-col w-full h-full justify-center items-center overflow-hidden relative">
-              <LoginScreen 
-                onLoginSuccess={handleLoginSuccess} 
-                theme={m3Theme} 
-                onToggleTheme={handleToggleTheme}
-              />
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="flex-1 flex flex-col w-full h-full overflow-hidden  relative">
-          {userRole === RoleName.CUSTOMER && (
+        <Suspense fallback={renderFallback()}>
+          {!userRole ? (
             <div className="w-full h-full flex-1 flex flex-col overflow-hidden relative ">
               <CinematicFoodBackground theme={m3Theme} />
               <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative">
-                <CustomerDashboard 
-                  userName={userName || 'Customer'} 
-                  userPhone={phone}
-                  onLogout={handleLogout}
-                  theme={m3Theme}
-                  onToggleTheme={handleToggleTheme}
-                />
+                <div className="flex-1 flex flex-col w-full h-full justify-center items-center overflow-hidden relative">
+                  <LoginScreen 
+                    onLoginSuccess={handleLoginSuccess} 
+                    theme={m3Theme} 
+                    onToggleTheme={handleToggleTheme}
+                  />
+                </div>
               </div>
             </div>
-          )}
-          {userRole === RoleName.RESTAURANT && (
-            <div className="w-full h-full flex-1 flex flex-col overflow-hidden relative ">
-              <CinematicFoodBackground theme={m3Theme} />
-              <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative">
-                <RestaurantDashboard 
-                  restaurantId=""
-                  onLogout={handleLogout}
-                  theme={m3Theme}
-                  onToggleTheme={handleToggleTheme}
-                />
-              </div>
+          ) : (
+            <div className="flex-1 flex flex-col w-full h-full overflow-hidden relative">
+              {userRole === RoleName.CUSTOMER && (
+                <div className="w-full h-full flex-1 flex flex-col overflow-hidden relative ">
+                  <CinematicFoodBackground theme={m3Theme} />
+                  <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative">
+                    <CustomerDashboard 
+                      userName={userName || 'Customer'} 
+                      userPhone={phone}
+                      onLogout={handleLogout}
+                      theme={m3Theme}
+                      onToggleTheme={handleToggleTheme}
+                    />
+                  </div>
+                </div>
+              )}
+              {userRole === RoleName.RESTAURANT && (
+                <div className="w-full h-full flex-1 flex flex-col overflow-hidden relative ">
+                  <CinematicFoodBackground theme={m3Theme} />
+                  <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative">
+                    <RestaurantDashboard 
+                      restaurantId=""
+                      onLogout={handleLogout}
+                      theme={m3Theme}
+                      onToggleTheme={handleToggleTheme}
+                    />
+                  </div>
+                </div>
+              )}
+              {userRole === RoleName.DELIVERY && (
+                <div className="w-full h-full flex-1 flex flex-col overflow-hidden relative ">
+                  <CinematicFoodBackground theme={m3Theme} />
+                  <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative">
+                    <DeliveryDashboard 
+                      riderPhone={phone}
+                      onLogout={handleLogout}
+                      theme={m3Theme}
+                      onToggleTheme={handleToggleTheme}
+                    />
+                  </div>
+                </div>
+              )}
+              {userRole === RoleName.ADMIN && (
+                <div className="w-full h-full flex-1 flex flex-col overflow-hidden relative ">
+                  <CinematicFoodBackground theme={m3Theme} />
+                  <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative">
+                    <AdminPortal 
+                      onLogout={handleLogout}
+                      theme={m3Theme}
+                      onToggleTheme={handleToggleTheme}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
-          {userRole === RoleName.DELIVERY && (
-            <div className="w-full h-full flex-1 flex flex-col overflow-hidden relative ">
-              <CinematicFoodBackground theme={m3Theme} />
-              <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative">
-                <DeliveryDashboard 
-                  riderPhone={phone}
-                  onLogout={handleLogout}
-                  theme={m3Theme}
-                  onToggleTheme={handleToggleTheme}
-                />
-              </div>
-            </div>
-          )}
-          {userRole === RoleName.ADMIN && (
-            <div className="w-full h-full flex-1 flex flex-col overflow-hidden relative ">
-              <CinematicFoodBackground theme={m3Theme} />
-              <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative">
-                <AdminPortal 
-                  onLogout={handleLogout}
-                  theme={m3Theme}
-                  onToggleTheme={handleToggleTheme}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+        </Suspense>
+      </div>
     </ToastProvider>
   );
 }
+

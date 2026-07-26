@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { AlertCircle } from 'lucide-react';
 import { apiPut } from '../lib/apiClient';
 import { z } from 'zod';
 
@@ -71,8 +72,9 @@ export default function CompleteProfileModal({ isOpen, theme, onComplete, profil
               </div>
 
               {error && (
-                <div className="mb-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-sm font-medium text-center">
-                  {error}
+                <div className="mb-4 p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span className="font-bold">{error}</span>
                 </div>
               )}
 

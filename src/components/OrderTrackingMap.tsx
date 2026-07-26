@@ -4,14 +4,26 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { apiGet } from '../lib/apiClient';
 import { getToken } from '../lib/tokenStore';
+import { useToast } from '../context/ToastContext';
 
 import { Order, OrderStatus } from '../types';
 
 (window as any).maplibregl = maplibregl;
 
-export default function OrderTrackingMap({ order, enableLiveTracking = false }: { order: Order; enableLiveTracking?: boolean }) {
+import { ErrorBoundary } from './ErrorBoundary';
+
+export default function OrderTrackingMap(props: { order: Order; enableLiveTracking?: boolean }) {
+  return (
+    <ErrorBoundary>
+      <_OrderTrackingMap {...props} />
+    </ErrorBoundary>
+  );
+}
+
+function _OrderTrackingMap({ order, enableLiveTracking = false }: { order: Order; enableLiveTracking?: boolean }) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [mapInstance, setMapInstance] = useState<any>(null);
+  const { showError } = useToast();
 
   useEffect(() => {
     let active = true;
@@ -21,7 +33,13 @@ export default function OrderTrackingMap({ order, enableLiveTracking = false }: 
       const el = document.createElement('div');
       el.className = 'w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center shadow-lg border-2 border-white text-white shadow-blue-600/50 cursor-pointer pointer-events-auto';
       el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
-      el.onclick = () => window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+      el.onclick = () => {
+        try {
+          window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+        } catch (e) {
+          console.error("Could not open external map navigation", e);
+        }
+      };
       return el;
     };
 
@@ -37,7 +55,13 @@ export default function OrderTrackingMap({ order, enableLiveTracking = false }: 
       const el = document.createElement('div');
       el.className = 'w-8 h-8 bg-rose-600 rounded-full flex items-center justify-center shadow-lg border-2 border-white text-white shadow-rose-600/50 cursor-pointer pointer-events-auto';
       el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7"/></svg>';
-      el.onclick = () => window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+      el.onclick = () => {
+        try {
+          window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+        } catch (e) {
+          console.error("Could not open external map navigation", e);
+        }
+      };
       return el;
     };
 
@@ -106,7 +130,15 @@ export default function OrderTrackingMap({ order, enableLiveTracking = false }: 
           // Add click to popup as well
           homePopup.on('open', () => {
              const content = homePopup.getElement();
-             if (content) content.onclick = () => window.open(`https://www.google.com/maps/dir/?api=1&destination=${cLat},${cLng}`, '_blank');
+            if (content) {
+              content.onclick = () => {
+                try {
+                  window.open(`https://www.google.com/maps/dir/?api=1&destination=${cLat},${cLng}`, '_blank');
+                } catch (e) {
+                  console.error("Could not open external map navigation", e);
+                }
+              };
+            }
           });
           homeMarker.togglePopup();
 
@@ -121,7 +153,15 @@ export default function OrderTrackingMap({ order, enableLiveTracking = false }: 
             
           restPopup.on('open', () => {
              const content = restPopup.getElement();
-             if (content) content.onclick = () => window.open(`https://www.google.com/maps/dir/?api=1&destination=${rLat},${rLng}`, '_blank');
+            if (content) {
+              content.onclick = () => {
+                try {
+                  window.open(`https://www.google.com/maps/dir/?api=1&destination=${rLat},${rLng}`, '_blank');
+                } catch (e) {
+                  console.error("Could not open external map navigation", e);
+                }
+              };
+            }
           });
           restMarker.togglePopup();
         };
@@ -160,6 +200,9 @@ export default function OrderTrackingMap({ order, enableLiveTracking = false }: 
     const ctrl = new AbortController();
     
     if (enableLiveTracking) {
+        let retryCount = 0;
+        let lastToastTime = 0;
+
         try {
             const token = getToken();
             fetchEventSource(`${(import.meta as any).env.VITE_API_BASE_URL || ''}/api/v1/orders/${order.id}/live-tracking`, {
@@ -168,8 +211,17 @@ export default function OrderTrackingMap({ order, enableLiveTracking = false }: 
                     'Authorization': `Bearer ${token}`
                 } : {},
                 signal: ctrl.signal,
+                async onopen(res) {
+                    if (res.ok && res.status === 200) {
+                        retryCount = 0;
+                    } else if (res.status >= 400 && res.status < 500 && res.status !== 429) {
+                        showError('Live tracking unauthorized or unavailable.');
+                        throw new Error(`Fatal SSE error: ${res.status}`);
+                    }
+                },
                 onmessage(event) {
                     if (!active || !map) return;
+                    retryCount = 0;
                     try {
                         const data = JSON.parse(event.data);
                         if (data.lat && data.lng) {
@@ -187,6 +239,14 @@ export default function OrderTrackingMap({ order, enableLiveTracking = false }: 
                 },
                 onerror(err) {
                     console.warn('Could not connect to SSE stream', err);
+                    retryCount++;
+                    const now = Date.now();
+                    if (now - lastToastTime > 15000) {
+                        showError(`Connection lost. Reconnecting (attempt ${retryCount})...`);
+                        lastToastTime = now;
+                    }
+                    const backoffDelay = Math.min(1000 * Math.pow(2, retryCount - 1), 16000);
+                    return backoffDelay;
                 }
             });
         } catch (e) {

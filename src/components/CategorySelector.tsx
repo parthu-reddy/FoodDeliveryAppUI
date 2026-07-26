@@ -17,7 +17,15 @@ interface CategorySelectorProps {
 export default function CategorySelector({ categories, value, onChange, placeholder = "Select a category", className = "" }: CategorySelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -30,7 +38,7 @@ export default function CategorySelector({ categories, value, onChange, placehol
   }, []);
 
   const filteredCategories = categories.filter(c => 
-    c.name.toLowerCase().includes(searchQuery.toLowerCase())
+    c.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
   );
 
   const selectedCategory = categories.find(c => c.id === value);

@@ -35,6 +35,7 @@ export default function CustomerAddressModal({
   const markerRef = useRef<maplibregl.Marker | null>(null);
   const [lat, setLat] = useState('12.9716');
   const [lng, setLng] = useState('77.5946');
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [addressForm, setAddressForm] = useState({
     label: '',
@@ -49,25 +50,32 @@ export default function CustomerAddressModal({
   const [isSaving, setIsSaving] = useState(false);
   const { showError } = useToast();
 
-  const handleSearch = async (query: string) => {
+  const handleSearch = (query: string) => {
     setAddressSearchQuery(query);
     if (query.length < 3) {
       setSearchResults([]);
       return;
     }
     setIsSearching(true);
-    try {
-      const apiKey = (import.meta as any).env.VITE_OLA_MAPS_API_KEY || '';
-      const res = await fetch(`https://api.olamaps.io/places/v1/autocomplete?input=${encodeURIComponent(query)}&api_key=${apiKey}`);
-      const data = await res.json();
-      if (data.predictions) {
-        setSearchResults(data.predictions);
-      }
-    } catch (err) {
-      console.error('Autocomplete Error:', err);
-    } finally {
-      setIsSearching(false);
+    
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
     }
+    
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const apiKey = (import.meta as any).env.VITE_OLA_MAPS_API_KEY || '';
+        const res = await fetch(`https://api.olamaps.io/places/v1/autocomplete?input=${encodeURIComponent(query)}&api_key=${apiKey}`);
+        const data = await res.json();
+        if (data.predictions) {
+          setSearchResults(data.predictions);
+        }
+      } catch (err) {
+        console.error('Autocomplete Error:', err);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 500);
   };
 
   const handleSelectPlace = async (placeId: string, description: string) => {

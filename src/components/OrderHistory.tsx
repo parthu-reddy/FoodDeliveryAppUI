@@ -197,10 +197,20 @@ export function OrderHistory({ restaurantId }: { restaurantId: string }) {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="p-12 text-center text-slate-500 dark:text-slate-300">
-                    <div className="flex flex-col items-center justify-center gap-3">
-                      <Package className="w-8 h-8 text-slate-300 dark:text-slate-700" />
-                      <p>No orders found for this date.</p>
+                  <td colSpan={8} className="p-16 text-center">
+                    <div className="flex flex-col items-center justify-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                      <div className="relative">
+                        <div className="absolute inset-0 bg-rose-500/20 dark:bg-rose-500/10 rounded-full blur-xl animate-pulse"></div>
+                        <div className="w-20 h-20 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-lg border border-slate-100 dark:border-slate-700 relative z-10">
+                          <Package className="w-10 h-10 text-rose-400 dark:text-rose-500" strokeWidth={1.5} />
+                        </div>
+                      </div>
+                      <h3 className="text-lg font-bold text-slate-800 dark:text-[#f0ede6]">No Orders Found</h3>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm">
+                        {dateFilter 
+                          ? "We couldn't find any orders for the selected date. Try choosing a different date or clear the filter." 
+                          : "You don't have any past orders yet. Once you start receiving orders, they will appear here."}
+                      </p>
                     </div>
                   </td>
                 </tr>

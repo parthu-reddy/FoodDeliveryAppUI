@@ -3,6 +3,7 @@ import { Plus, Edit3, X, Clock, Save, Layers } from 'lucide-react';
 import { apiGet, apiPost, apiPut } from '../lib/apiClient';
 import CategorySelector from './CategorySelector';
 import ImageUploadField from './ImageUploadField';
+import ImageLoader from './ImageLoader';
 import { z } from 'zod';
 
 const masterItemSchema = z.object({
@@ -279,12 +280,7 @@ export default function BrandMasterMenu({ brandId, onRefresh }: BrandMasterMenuP
       )}
 
       <div className="space-y-8">
-        {categories.filter(cat => {
-          const items = masterItems.filter(i => i.categoryId === cat.id);
-          // Hide any category that has no items
-          if (items.length === 0) return false;
-          return true;
-        }).map((cat) => {
+        {categories.map((cat) => {
           const items = masterItems.filter(i => i.categoryId === cat.id);
           const hasTimings = cat.timings && cat.timings.length > 0 && !(cat.timings.length === 1 && cat.timings[0].openingTime === '00:00:00' && cat.timings[0].closingTime === '23:59:59');
 
@@ -357,8 +353,80 @@ export default function BrandMasterMenu({ brandId, onRefresh }: BrandMasterMenuP
 
               {/* Items List */}
               <div className="p-4 bg-white/10 dark:bg-slate-950/20">
+                {items.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-slate-400 dark:text-slate-500">
+                    <Layers className="w-8 h-8 mb-2 opacity-50" />
+                    <p className="text-xs font-bold uppercase tracking-wider">No Items Yet</p>
+                    <p className="text-[10px] mt-1">Click Add Item above to create items in this category.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {items.map(item => (
+                      <div key={item.id} className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-xl flex flex-col shadow-sm transition-all hover:shadow-md ${editingItemId === item.id ? 'relative z-50' : ''}`}>
+                        {editingItemId === item.id ? (
+                          <form onSubmit={handleEditMaster} className="space-y-3">
+                            <div className="flex justify-between items-center mb-2">
+                              <h6 className="font-bold text-sm text-slate-800 dark:text-[#f0ede6]">Edit Item</h6>
+                              <button type="button" onClick={cancelEditing} className="text-slate-400 hover:text-rose-500 transition-colors">
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                            <div className="space-y-2">
+                              <input required placeholder="Item Name" value={mName} onChange={e=>setMName(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 rounded-lg px-3 py-1.5 text-xs font-bold dark:text-[#f0ede6]" />
+                              <div className="flex gap-2">
+                                <input required type="number" step="0.01" min="0" placeholder="Base Price" value={mPrice} onChange={e=>setMPrice(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 rounded-lg px-3 py-1.5 text-xs font-bold dark:text-[#f0ede6]" />
+                                <input required type="number" min="1" placeholder="Prep Time (mins)" value={mPrepTime} onChange={e=>setMPrepTime(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 rounded-lg px-3 py-1.5 text-xs font-bold dark:text-[#f0ede6]" />
+                              </div>
+                              <input required placeholder="Description" value={mDesc} onChange={e=>setMDesc(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-rose-500/20 dark:border-rose-500/30 rounded-lg px-3 py-1.5 text-xs dark:text-[#f0ede6]" />
+                              <div className="z-[60] relative">
+                                  <ImageUploadField value={mImg} onChange={setMImg} folderId={brandId} placeholder="Image URL (Optional)" imageType="menu" />
+                              </div>
+                              <div className="z-[60] relative">
+                                  <CategorySelector categories={categories} value={mCatId} onChange={setMCatId} />
+                              </div>
+                            </div>
+                            <div className="flex justify-end pt-2">
+                              <button type="submit" className="px-3 py-1.5 bg-slate-900 dark:bg-[#f0ede6] text-white dark:text-black text-xs font-bold rounded-lg hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors">Save</button>
+                            </div>
+                          </form>
+                        ) : (
+                          <div className="flex gap-3 h-full">
+                            <ImageLoader src={item.imageUrl} alt={item.name} className="w-14 h-14 object-cover rounded-lg shrink-0" containerClassName="shrink-0" loading="lazy" />
+                            <div className="flex-1 min-w-0 flex flex-col justify-between">
+                              <div>
+                                <div className="flex justify-between items-start">
+                                  <h6 className="font-bold text-sm text-slate-800 dark:text-[#f0ede6] truncate pr-2">{item.name}</h6>
+                                  <span className="font-mono text-xs font-bold text-orange-500 shrink-0">${item.basePrice.toFixed(2)}</span>
+                                </div>
+                                <div className="mt-1 flex items-center gap-2">
+                                  <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-amber-600 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded">
+                                    <Clock className="w-2.5 h-2.5" /> {item.defaultPrepTimeMinutes} min
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="flex justify-end mt-2">
+                                <button onClick={() => startEditing(item)} className="p-1 text-slate-400 hover:text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-500/10 rounded transition-colors">
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+        
+        {/* Uncategorized Items (if any exist that were mapped incorrectly or created without category) */}
+        {masterItems.filter(i => !categories.find(c => c.id === i.categoryId)).length > 0 && (
+            <div className="bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl">
+                <h5 className="font-extrabold text-sm text-slate-800 dark:text-slate-300 uppercase tracking-widest mb-4">Uncategorized</h5>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {items.map(item => (
+                  {masterItems.filter(i => !categories.find(c => c.id === i.categoryId)).map(item => (
                     <div key={item.id} className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-xl flex flex-col shadow-sm transition-all hover:shadow-md ${editingItemId === item.id ? 'relative z-50' : ''}`}>
                       {editingItemId === item.id ? (
                         <form onSubmit={handleEditMaster} className="space-y-3">
@@ -387,48 +455,19 @@ export default function BrandMasterMenu({ brandId, onRefresh }: BrandMasterMenuP
                           </div>
                         </form>
                       ) : (
-                        <div className="flex gap-3 h-full">
-                          <img src={item.imageUrl} alt={item.name} className="w-14 h-14 object-cover rounded-lg shrink-0" />
-                          <div className="flex-1 min-w-0 flex flex-col justify-between">
-                            <div>
-                              <div className="flex justify-between items-start">
-                                <h6 className="font-bold text-sm text-slate-800 dark:text-[#f0ede6] truncate pr-2">{item.name}</h6>
-                                <span className="font-mono text-xs font-bold text-orange-500 shrink-0">${item.basePrice.toFixed(2)}</span>
-                              </div>
-                              <div className="mt-1 flex items-center gap-2">
-                                <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-amber-600 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded">
-                                  <Clock className="w-2.5 h-2.5" /> {item.defaultPrepTimeMinutes} min
-                                </span>
-                              </div>
+                        <div className="flex gap-3 h-full group">
+                            <ImageLoader src={item.imageUrl} alt={item.name} className="w-12 h-12 object-cover rounded-lg shrink-0" containerClassName="shrink-0" loading="lazy" />
+                            <div className="flex-1 min-w-0 flex justify-between">
+                                <div>
+                                    <h6 className="font-bold text-xs text-slate-800 dark:text-[#f0ede6] truncate">{item.name}</h6>
+                                    <span className="font-mono text-[10px] font-bold text-orange-500 shrink-0">${item.basePrice.toFixed(2)}</span>
+                                </div>
+                                <button onClick={() => startEditing(item)} className="p-1 text-slate-400 hover:text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-500/10 rounded transition-colors self-start opacity-0 group-hover:opacity-100">
+                                    <Edit3 className="w-3.5 h-3.5" />
+                                </button>
                             </div>
-                            <div className="flex justify-end mt-2">
-                              <button onClick={() => startEditing(item)} className="p-1 text-slate-400 hover:text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-500/10 rounded transition-colors">
-                                <Edit3 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </div>
                         </div>
                       )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-        
-        {/* Uncategorized Items (if any exist that were mapped incorrectly or created without category) */}
-        {masterItems.filter(i => !categories.find(c => c.id === i.categoryId)).length > 0 && (
-            <div className="bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl">
-                <h5 className="font-extrabold text-sm text-slate-800 dark:text-slate-300 uppercase tracking-widest mb-4">Uncategorized</h5>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {masterItems.filter(i => !categories.find(c => c.id === i.categoryId)).map(item => (
-                    <div key={item.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-xl flex gap-3 shadow-sm">
-                        <img src={item.imageUrl} alt={item.name} className="w-12 h-12 object-cover rounded-lg shrink-0" />
-                        <div>
-                            <h6 className="font-bold text-xs text-slate-800 dark:text-[#f0ede6]">{item.name}</h6>
-                            <span className="font-mono text-[10px] font-bold text-orange-500 shrink-0">${item.basePrice.toFixed(2)}</span>
-                        </div>
                     </div>
                   ))}
                 </div>

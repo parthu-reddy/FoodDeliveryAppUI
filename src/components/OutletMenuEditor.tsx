@@ -286,8 +286,6 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
       <div className="space-y-8">
         {categories.map((cat) => {
           const items = masterItems.filter(i => i.categoryId === cat.id);
-          if (items.length === 0) return null;
-
           const hasTimings = cat.timings && cat.timings.length > 0 && !(cat.timings.length === 1 && cat.timings[0].openingTime === '00:00:00' && cat.timings[0].closingTime === '23:59:59');
           const hasBrandTimings = cat.brandTimings && cat.brandTimings.length > 0 && !(cat.brandTimings.length === 1 && cat.brandTimings[0].openingTime === '00:00:00' && cat.brandTimings[0].closingTime === '23:59:59');
 
@@ -375,89 +373,97 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
 
               {/* Items List */}
               <div className="p-4 bg-white/10 dark:bg-slate-950/20">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {items.map(item => {
-                      const currentOverride = overrides.find(o => o.masterMenuItemId === item.id);
-                      
-                      return (
-                        <div key={item.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-sm transition-all hover:shadow-md">
-                          {isAddingOverride === item.id ? (
-                            <form onSubmit={(e) => handleCreateOverride(e, item.id)} className="space-y-3">
-                              <div className="flex justify-between items-center mb-2">
-                                <h6 className="font-bold text-sm text-slate-800 dark:text-[#f0ede6]">Edit Override for {item.name}</h6>
-                                <button type="button" onClick={() => setIsAddingOverride(null)} className="text-slate-400 hover:text-rose-500 transition-colors">
-                                  <X className="w-4 h-4" />
-                                </button>
-                              </div>
-                              <div className="grid grid-cols-3 gap-3">
-                                <div>
-                                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-300 uppercase block mb-1">Price</label>
-                                  <input type="number" step="0.01" min="0" placeholder={`$${item.basePrice.toFixed(2)}`} value={oPrice} onChange={e=>setOPrice(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-emerald-500/20 rounded-lg px-2 py-1.5 text-xs font-bold dark:text-[#f0ede6]" />
+                {items.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-slate-400 dark:text-slate-500">
+                    <Layers className="w-8 h-8 mb-2 opacity-50" />
+                    <p className="text-xs font-bold uppercase tracking-wider">No Items Yet</p>
+                    <p className="text-[10px] mt-1">This category has no items. Add items from the Brand Master Menu.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {items.map(item => {
+                        const currentOverride = overrides.find(o => o.masterMenuItemId === item.id);
+                        
+                        return (
+                          <div key={item.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-sm transition-all hover:shadow-md">
+                            {isAddingOverride === item.id ? (
+                              <form onSubmit={(e) => handleCreateOverride(e, item.id)} className="space-y-3">
+                                <div className="flex justify-between items-center mb-2">
+                                  <h6 className="font-bold text-sm text-slate-800 dark:text-[#f0ede6]">Edit Override for {item.name}</h6>
+                                  <button type="button" onClick={() => setIsAddingOverride(null)} className="text-slate-400 hover:text-rose-500 transition-colors">
+                                    <X className="w-4 h-4" />
+                                  </button>
                                 </div>
-                                <div>
-                                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-300 uppercase block mb-1">Prep</label>
-                                  <input type="number" min="1" placeholder={`${item.defaultPrepTimeMinutes}m`} value={oPrepTime} onChange={e=>setOPrepTime(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-emerald-500/20 rounded-lg px-2 py-1.5 text-xs font-bold dark:text-[#f0ede6]" />
+                                <div className="grid grid-cols-3 gap-3">
+                                  <div>
+                                    <label className="text-[10px] font-bold text-slate-500 dark:text-slate-300 uppercase block mb-1">Price</label>
+                                    <input type="number" step="0.01" min="0" placeholder={`$${item.basePrice.toFixed(2)}`} value={oPrice} onChange={e=>setOPrice(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-emerald-500/20 rounded-lg px-2 py-1.5 text-xs font-bold dark:text-[#f0ede6]" />
+                                  </div>
+                                  <div>
+                                    <label className="text-[10px] font-bold text-slate-500 dark:text-slate-300 uppercase block mb-1">Prep</label>
+                                    <input type="number" min="1" placeholder={`${item.defaultPrepTimeMinutes}m`} value={oPrepTime} onChange={e=>setOPrepTime(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-emerald-500/20 rounded-lg px-2 py-1.5 text-xs font-bold dark:text-[#f0ede6]" />
+                                  </div>
+                                  <div>
+                                    <label className="text-[10px] font-bold text-slate-500 dark:text-slate-300 uppercase block mb-1">Status</label>
+                                    <select value={oActive ? "true" : "false"} onChange={e=>setOActive(e.target.value === "true")} className="w-full bg-slate-50 dark:bg-slate-950 border border-emerald-500/20 rounded-lg px-2 py-1.5 text-xs font-bold dark:text-[#f0ede6]">
+                                      <option value="true">Active</option>
+                                      <option value="false">Inactive</option>
+                                    </select>
+                                  </div>
                                 </div>
-                                <div>
-                                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-300 uppercase block mb-1">Status</label>
-                                  <select value={oActive ? "true" : "false"} onChange={e=>setOActive(e.target.value === "true")} className="w-full bg-slate-50 dark:bg-slate-950 border border-emerald-500/20 rounded-lg px-2 py-1.5 text-xs font-bold dark:text-[#f0ede6]">
-                                    <option value="true">Active</option>
-                                    <option value="false">Inactive</option>
-                                  </select>
+                                <div className="flex justify-end pt-2">
+                                  <button type="submit" className="px-3 py-1.5 bg-emerald-500 text-white text-xs font-bold rounded-lg hover:bg-emerald-600 transition-colors">Save Override</button>
                                 </div>
-                              </div>
-                              <div className="flex justify-end pt-2">
-                                <button type="submit" className="px-3 py-1.5 bg-emerald-500 text-white text-xs font-bold rounded-lg hover:bg-emerald-600 transition-colors">Save Override</button>
-                              </div>
-                            </form>
-                          ) : (
-                            <div className="flex flex-col h-full justify-between">
-                              <div className="flex justify-between items-start">
-                                <div>
-                                    <h6 className="font-bold text-sm text-slate-800 dark:text-[#f0ede6] mb-2">{item.name}</h6>
-                                    <div className="flex items-center gap-2">
-                                        {currentOverride && currentOverride.overriddenPrice !== null && currentOverride.overriddenPrice !== undefined ? (
-                                          <div className="flex items-center gap-2 bg-emerald-500/5 border border-emerald-500/20 rounded-full px-2 py-0.5">
-                                            <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 line-through">
-                                              ${item.basePrice.toFixed(2)}
+                              </form>
+                            ) : (
+                              <div className="flex flex-col h-full justify-between">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                      <h6 className="font-bold text-sm text-slate-800 dark:text-[#f0ede6] mb-2">{item.name}</h6>
+                                      <div className="flex items-center gap-2">
+                                          {currentOverride && currentOverride.overriddenPrice !== null && currentOverride.overriddenPrice !== undefined ? (
+                                            <div className="flex items-center gap-2 bg-emerald-500/5 border border-emerald-500/20 rounded-full px-2 py-0.5">
+                                              <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 line-through">
+                                                ${item.basePrice.toFixed(2)}
+                                              </span>
+                                              <span className="text-xs font-extrabold text-emerald-500 dark:text-emerald-400">
+                                                ${currentOverride.overriddenPrice.toFixed(2)}
+                                              </span>
+                                            </div>
+                                          ) : (
+                                            <div className="bg-slate-100 dark:bg-slate-800 rounded-full px-2 py-0.5 border border-slate-200 dark:border-slate-700">
+                                              <span className="text-xs font-extrabold text-slate-500 dark:text-[#f0ede6]">
+                                                ${item.basePrice.toFixed(2)}
+                                              </span>
+                                            </div>
+                                          )}
+                                          {currentOverride && currentOverride.isAvailable === false ? (
+                                              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 border border-rose-500/20 uppercase">Unavailable</span>
+                                          ) : (
+                                              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 uppercase">Available</span>
+                                          )}
+                                          {currentOverride && currentOverride.overriddenPrepTimeMinutes !== null && currentOverride.overriddenPrepTimeMinutes !== undefined ? (
+                                            <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-amber-600 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded">
+                                              <Clock className="w-2.5 h-2.5" /> {currentOverride.overriddenPrepTimeMinutes} min <span className="text-[8px] opacity-70">(edited)</span>
                                             </span>
-                                            <span className="text-xs font-extrabold text-emerald-500 dark:text-emerald-400">
-                                              ${currentOverride.overriddenPrice.toFixed(2)}
+                                          ) : (
+                                            <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-amber-600 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded">
+                                              <Clock className="w-2.5 h-2.5" /> {item.defaultPrepTimeMinutes} min
                                             </span>
-                                          </div>
-                                        ) : (
-                                          <div className="bg-slate-100 dark:bg-slate-800 rounded-full px-2 py-0.5 border border-slate-200 dark:border-slate-700">
-                                            <span className="text-xs font-extrabold text-slate-500 dark:text-[#f0ede6]">
-                                              ${item.basePrice.toFixed(2)}
-                                            </span>
-                                          </div>
-                                        )}
-                                        {currentOverride && currentOverride.isAvailable === false ? (
-                                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 border border-rose-500/20 uppercase">Unavailable</span>
-                                        ) : (
-                                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 uppercase">Available</span>
-                                        )}
-                                        {currentOverride && currentOverride.overriddenPrepTimeMinutes !== null && currentOverride.overriddenPrepTimeMinutes !== undefined ? (
-                                          <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-amber-600 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded">
-                                            <Clock className="w-2.5 h-2.5" /> {currentOverride.overriddenPrepTimeMinutes} min <span className="text-[8px] opacity-70">(edited)</span>
-                                          </span>
-                                        ) : (
-                                          <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-amber-600 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded">
-                                            <Clock className="w-2.5 h-2.5" /> {item.defaultPrepTimeMinutes} min
-                                          </span>
-                                        )}
-                                    </div>
+                                          )}
+                                      </div>
+                                  </div>
+                                  <button onClick={() => startEditingOverride(item, currentOverride)} className="p-1.5 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg transition-colors border border-transparent hover:border-emerald-500/20">
+                                    <Edit3 className="w-3.5 h-3.5" />
+                                  </button>
                                 </div>
-                                <button onClick={() => startEditingOverride(item, currentOverride)} className="p-1.5 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg transition-colors border border-transparent hover:border-emerald-500/20">
-                                  <Edit3 className="w-3.5 h-3.5" />
-                                </button>
                               </div>
-                            </div>
-                          )}
-                        </div>
-                      )
-                  })}
-                </div>
+                            )}
+                          </div>
+                        )
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           );
@@ -471,25 +477,32 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
                   {masterItems.filter(i => !categories.find(c => c.id === i.categoryId)).map(item => {
                       const currentOverride = overrides.find(o => o.masterMenuItemId === item.id);
                       return (
-                        <div key={item.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-xl shadow-sm">
-                            <h6 className="font-bold text-xs text-slate-800 dark:text-[#f0ede6] mb-1">{item.name}</h6>
-                            <div className="flex items-center gap-2">
-                                {currentOverride && currentOverride.overriddenPrice !== null && currentOverride.overriddenPrice !== undefined ? (
-                                    <div className="flex items-center gap-2 bg-emerald-500/5 border border-emerald-500/20 rounded-full px-2 py-0.5">
-                                        <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 line-through">
-                                            ${item.basePrice.toFixed(2)}
-                                        </span>
-                                        <span className="text-xs font-extrabold text-emerald-500 dark:text-emerald-400">
-                                            ${currentOverride.overriddenPrice.toFixed(2)}
-                                        </span>
+                        <div key={item.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-xl shadow-sm relative group">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <h6 className="font-bold text-xs text-slate-800 dark:text-[#f0ede6] mb-1">{item.name}</h6>
+                                    <div className="flex items-center gap-2">
+                                        {currentOverride && currentOverride.overriddenPrice !== null && currentOverride.overriddenPrice !== undefined ? (
+                                            <div className="flex items-center gap-2 bg-emerald-500/5 border border-emerald-500/20 rounded-full px-2 py-0.5">
+                                                <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 line-through">
+                                                    ${item.basePrice.toFixed(2)}
+                                                </span>
+                                                <span className="text-xs font-extrabold text-emerald-500 dark:text-emerald-400">
+                                                    ${currentOverride.overriddenPrice.toFixed(2)}
+                                                </span>
+                                            </div>
+                                        ) : (
+                                            <div className="bg-slate-100 dark:bg-slate-800 rounded-full px-2 py-0.5 border border-slate-200 dark:border-slate-700">
+                                                <span className="text-[10px] font-extrabold text-slate-500 dark:text-[#f0ede6]">
+                                                    ${item.basePrice.toFixed(2)}
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
-                                ) : (
-                                    <div className="bg-slate-100 dark:bg-slate-800 rounded-full px-2 py-0.5 border border-slate-200 dark:border-slate-700">
-                                        <span className="text-[10px] font-extrabold text-slate-500 dark:text-[#f0ede6]">
-                                            ${item.basePrice.toFixed(2)}
-                                        </span>
-                                    </div>
-                                )}
+                                </div>
+                                <button onClick={() => startEditingOverride(item, currentOverride)} className="p-1.5 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg transition-colors border border-transparent hover:border-emerald-500/20 opacity-0 group-hover:opacity-100">
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                </button>
                             </div>
                         </div>
                       )

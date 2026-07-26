@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Search, MapPin, ShoppingBag, LogOut, ChevronRight, Star, Clock, 
   Bike, Plus, Minus, X, Check, Timer, ArrowLeft, ShieldCheck, Heart, Store, Sun, Moon,
-  Terminal, Sliders, Code, Send, RefreshCw, Package, User, Navigation, AlertCircle, MapPinOff, XCircle
+  Terminal, Sliders, Code, Send, RefreshCw, Package, User, Navigation, AlertCircle, MapPinOff, XCircle, ChevronDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { RoleName, Restaurant, MenuItem, CartItem, Order, OrderStatus, DeliveryStatus } from '../types';
@@ -11,6 +11,8 @@ import { getUserProfile } from '../lib/tokenStore';
 import LaBouffeLogo from './LaBouffeLogo';
 import { getEffectiveMenu } from '../lib/menuStore';
 import ImageLoader from './ImageLoader';
+import CustomerRestaurantCard from './CustomerRestaurantCard';
+import CustomerActiveOrdersCarousel from './CustomerActiveOrdersCarousel';
 
 import CustomerCartDrawer from './CustomerCartDrawer';
 import SharedSettingsView from './SharedSettingsView';
@@ -66,8 +68,11 @@ export default function CustomerDashboard({
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [brandOutlets, setBrandOutlets] = useState<Restaurant[]>([]);
   const [effectiveMenu, setEffectiveMenu] = useState<MenuItem[]>([]);
+  const [isMenuLoading, setIsMenuLoading] = useState<boolean>(false);
   
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [isRestaurantsLoading, setIsRestaurantsLoading] = useState<boolean>(false);
+  const isSubmittingOrderRef = useRef<boolean>(false);
   const [address, setAddress] = useState(() => localStorage.getItem('deliveryAddress') || 'Please add an address');
   const [deliveryLat, setDeliveryLat] = useState<string | number>(() => localStorage.getItem('deliveryLat') || '12.97');
   const [deliveryLng, setDeliveryLng] = useState<string | number>(() => localStorage.getItem('deliveryLng') || '77.59');
@@ -88,105 +93,98 @@ export default function CustomerDashboard({
   useEffect(() => {
     const profile = getUserProfile();
     if (profile && profile.role === RoleName.CUSTOMER) {
-      // Always fetch backend profile first to check completeness
-      apiGet(`/api/v1/users/profile`)
-        .then(res => {
-          if (res.data) {
-            const p = res.data;
-            if (p.name) setEditName(p.name);
-            if (p.email) setEditEmail(p.email);
-            if (!p.name || !p.email || p.name.trim() === '' || p.email.trim() === '') {
-              setShowProfileModal(true);
-            }
-          }
-        })
-        .catch(console.error);
+      const profilePromise = apiGet(`/api/v1/users/profile`).catch(e => { console.error(e); return { data: null }; });
+      const ordersPromise = apiGet(`/api/v1/orders/active?page=0&size=10`).catch(e => { console.error(e); return { data: null }; });
+      const addressesPromise = profile.id ? apiGet(`/api/v1/customers/${profile.id}/addresses`).catch(e => { console.error(e); return { data: null }; }) : Promise.resolve({ data: null });
 
-      // Fetch initial active orders after login for the tracking UI
-      apiGet(`/api/v1/orders/active?page=0&size=10`)
-        .then(res => {
-          if (res.data && res.data.content) {
-            const mapped = res.data.content.map((o: any) => {
-              let s = o.status?.toUpperCase() || '';
-              if (s === 'ON_HOLD') s = OrderStatus.AWAITING_DELAY_APPROVAL;
-              if (s === OrderStatus.PENDING_ACCEPTANCE || s === OrderStatus.CREATED) s = OrderStatus.PENDING_ACCEPTANCE;
-              return { ...o, status: s };
-            });
-            setInternalOrders(mapped);
-          } else if (res.data && Array.isArray(res.data)) {
-            // Fallback just in case
-            const mapped = res.data.map((o: any) => {
-              let s = o.status?.toUpperCase() || '';
-              if (s === 'ON_HOLD') s = OrderStatus.AWAITING_DELAY_APPROVAL;
-              if (s === OrderStatus.PENDING_ACCEPTANCE || s === OrderStatus.CREATED) s = OrderStatus.PENDING_ACCEPTANCE;
-              return { ...o, status: s };
-            });
-            setInternalOrders(mapped);
+      Promise.all([profilePromise, ordersPromise, addressesPromise]).then(([profileRes, ordersRes, addrRes]) => {
+        // Handle Profile
+        if (profileRes.data) {
+          const p = profileRes.data;
+          if (p.name) setEditName(p.name);
+          if (p.email) setEditEmail(p.email);
+          if (!p.name || !p.email || p.name.trim() === '' || p.email.trim() === '') {
+            setShowProfileModal(true);
           }
-        })
-        .catch(console.error);
+        }
         
-      if (profile.id) {
-        apiGet(`/api/v1/customers/${profile.id}/addresses`)
-          .then(res => {
-            if (res.data) {
-              setSavedAddresses(res.data);
-              if (res.data.length === 0) {
-                setAddress('Please add an address');
-                setDeliveryAddressId('');
-                localStorage.removeItem('deliveryAddress');
-                localStorage.removeItem('deliveryAddressId');
-              } else {
-                const currentId = localStorage.getItem('deliveryAddressId');
-                const exists = res.data.some((a: any) => a.id === currentId);
-                if (!exists && res.data.length > 0) {
-                  const first = res.data[0];
-                  setAddress(`${first.label || 'Address'}: ${first.addressLine1 || ''}, ${first.city || ''}`);
-                  setDeliveryAddressId(first.id);
-                }
-              }
+        // Handle Orders
+        if (ordersRes.data) {
+          const content = ordersRes.data.content || (Array.isArray(ordersRes.data) ? ordersRes.data : []);
+          const mapped = content.map((o: any) => {
+            let s = o.status?.toUpperCase() || '';
+            if (s === 'ON_HOLD') s = OrderStatus.AWAITING_DELAY_APPROVAL;
+            if (s === OrderStatus.PENDING_ACCEPTANCE || s === OrderStatus.CREATED) s = OrderStatus.PENDING_ACCEPTANCE;
+            return { ...o, status: s };
+          });
+          setInternalOrders(mapped);
+        }
+
+        // Handle Addresses
+        if (addrRes.data) {
+          setSavedAddresses(addrRes.data);
+          if (addrRes.data.length === 0) {
+            setAddress('Please add an address');
+            setDeliveryAddressId('');
+            localStorage.removeItem('deliveryAddress');
+            localStorage.removeItem('deliveryAddressId');
+          } else {
+            const currentId = localStorage.getItem('deliveryAddressId');
+            const exists = addrRes.data.some((a: any) => a.id === currentId);
+            if (!exists && addrRes.data.length > 0) {
+              const first = addrRes.data[0];
+              setAddress(`${first.label || 'Address'}: ${first.addressLine1 || ''}, ${first.city || ''}`);
+              setDeliveryAddressId(first.id);
             }
-          })
-          .catch(console.error);
-      }
+          }
+        }
+      });
     }
   }, []);
 
   useEffect(() => {
     let ignore = false;
     if (deliveryLat && deliveryLng) {
+      setIsRestaurantsLoading(true);
       apiGet(`/api/v1/restaurants/nearby?lat=${deliveryLat}&lng=${deliveryLng}&radius=5.0`)
         .then(res => {
           if (!ignore && res.data) setRestaurants(res.data);
         })
-        .catch(console.error);
+        .catch(console.error)
+        .finally(() => {
+          if (!ignore) setIsRestaurantsLoading(false);
+        });
     }
     return () => { ignore = true; };
   }, [deliveryLat, deliveryLng]);
 
   // Smart polling for active orders only (every 60s)
+  const activeOrderIdsStr = internalOrders
+    .filter(o => [OrderStatus.CREATED, OrderStatus.PENDING_ACCEPTANCE, OrderStatus.ACCEPTED, OrderStatus.PREPARING, OrderStatus.READY_FOR_PICKUP, OrderStatus.PICKED_UP].includes(o.status?.toUpperCase() || ''))
+    .map(o => o.id)
+    .sort()
+    .join(',');
+
   useEffect(() => {
-    const activeOrders = internalOrders.filter(o => 
-      [OrderStatus.CREATED, OrderStatus.PENDING_ACCEPTANCE, OrderStatus.ACCEPTED, OrderStatus.PREPARING, OrderStatus.READY_FOR_PICKUP, OrderStatus.PICKED_UP].includes(o.status?.toUpperCase() || '')
-    );
-    
     // Stop polling if no active orders
-    if (activeOrders.length === 0) return;
+    if (!activeOrderIdsStr) return;
 
     const intervalId = setInterval(() => {
-      Promise.all(activeOrders.map(o => apiGet(`/api/v1/orders/${o.id}`)))
-        .then(results => {
-          const updatedOrders = results.map(res => res.data).filter(Boolean);
-          if (updatedOrders.length === 0) return;
+      apiGet(`/api/v1/orders/active?page=0&size=50`)
+        .then(res => {
+          if (!res.data) return;
+          const content = res.data.content || (Array.isArray(res.data) ? res.data : []);
+          const updatedOrders = content.map((o: any) => {
+            let s = o.status?.toUpperCase() || '';
+            if (s === 'ON_HOLD' || s === 'awaiting_delay_approval') s = OrderStatus.AWAITING_DELAY_APPROVAL;
+            if (s === OrderStatus.PENDING_ACCEPTANCE || s === OrderStatus.CREATED) s = OrderStatus.PENDING_ACCEPTANCE;
+            return { ...o, status: s };
+          });
           
           setInternalOrders(prev => {
             const newOrders = [...prev];
             let changed = false;
-            updatedOrders.forEach(updated => {
-              let s = updated.status?.toUpperCase() || '';
-              if (s === 'awaiting_delay_approval') s = OrderStatus.AWAITING_DELAY_APPROVAL;
-              if (s === OrderStatus.PENDING_ACCEPTANCE || s === OrderStatus.CREATED) s = OrderStatus.PENDING_ACCEPTANCE;
-              updated.status = s;
+            updatedOrders.forEach((updated: any) => {
               const idx = newOrders.findIndex(o => o.id === updated.id);
               if (idx !== -1 && JSON.stringify(newOrders[idx]) !== JSON.stringify(updated)) {
                 newOrders[idx] = updated;
@@ -200,7 +198,7 @@ export default function CustomerDashboard({
     }, 60000);
 
     return () => clearInterval(intervalId);
-  }, [internalOrders]);
+  }, [activeOrderIdsStr]);
 
   // Pre-cache restaurant and menu images for smoother scrolling (caches 20 restaurants & 20 menu items)
   useEffect(() => {
@@ -223,11 +221,18 @@ export default function CustomerDashboard({
   useEffect(() => {
     let ignore = false;
     if (selectedRestaurant) {
+      setIsMenuLoading(true);
       getEffectiveMenu(selectedRestaurant.id).then(menu => {
-        if (!ignore) setEffectiveMenu(menu);
+        if (!ignore) {
+          setEffectiveMenu(menu);
+          setIsMenuLoading(false);
+        }
+      }).catch(() => {
+        if (!ignore) setIsMenuLoading(false);
       });
     } else {
       setEffectiveMenu([]);
+      setIsMenuLoading(false);
     }
     return () => { ignore = true; };
   }, [selectedRestaurant?.id]); // Only refetch menu when outlet ID changes
@@ -246,6 +251,23 @@ export default function CustomerDashboard({
     return () => { ignore = true; };
   }, [selectedRestaurant?.brandId, deliveryLat, deliveryLng]); // Only refetch outlets when brand changes
 
+  const [isDeliveryAvailable, setIsDeliveryAvailable] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let ignore = false;
+    if (selectedRestaurant) {
+      setIsDeliveryAvailable(null);
+      apiGet(`/api/v1/restaurants/${selectedRestaurant.id}/delivery-availability`)
+        .then(res => {
+          if (!ignore && res.data && typeof res.data.available === 'boolean') {
+            setIsDeliveryAvailable(res.data.available);
+          }
+        })
+        .catch(console.error);
+    }
+    return () => { ignore = true; };
+  }, [selectedRestaurant?.id]);
+
 
   useEffect(() => {
     if (onAddApiLog) {
@@ -254,6 +276,15 @@ export default function CustomerDashboard({
   }, []);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartRestaurant, setCartRestaurant] = useState<any>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -261,6 +292,7 @@ export default function CustomerDashboard({
 
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [isAddressSelectorOpen, setIsAddressSelectorOpen] = useState(false);
+  const [isOutletSelectorOpen, setIsOutletSelectorOpen] = useState(false);
   const [view, setView] = useState<'home' | 'settings'>('home');
   const [settingsTab, setSettingsTab] = useState<'profile' | 'history' | 'addresses'>('profile');
 
@@ -291,12 +323,29 @@ export default function CustomerDashboard({
 
   // Filter restaurants
   const filteredRestaurants = restaurants.filter(restaurant => {
-    const matchesSearch = (restaurant.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          (restaurant.cuisine || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = (restaurant.name || '').toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+                          (restaurant.cuisine || '').toLowerCase().includes(debouncedSearchQuery.toLowerCase());
     const matchesCategory = !selectedCategory || selectedCategory === 'All' || 
                             (restaurant.tags || []).includes(selectedCategory);
     return matchesSearch && matchesCategory;
   });
+
+  const [visibleCount, setVisibleCount] = useState(6);
+
+  useEffect(() => {
+    setVisibleCount(6);
+  }, [debouncedSearchQuery, selectedCategory, restaurants]);
+
+  const observerRef = React.useRef<IntersectionObserver>();
+  const lastElementRef = React.useCallback((node: any) => {
+    if (observerRef.current) observerRef.current.disconnect();
+    observerRef.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) {
+        setVisibleCount(prev => prev + 6);
+      }
+    });
+    if (node) observerRef.current.observe(node);
+  }, []);
 
   const addToCart = (item: MenuItem) => {
     if (cartRestaurant && cartRestaurant.id !== selectedRestaurant.id) {
@@ -372,9 +421,11 @@ export default function CustomerDashboard({
   };
 
   const processPaymentAndOrder = async () => {
+    if (isSubmittingOrderRef.current || paymentStatus !== 'idle') return;
     const activeRest = cartRestaurant || selectedRestaurant;
     if (!activeRest || cart.length === 0) return;
     
+    isSubmittingOrderRef.current = true;
     setPaymentStatus('processing');
     
     if (onAddApiLog) {
@@ -424,9 +475,11 @@ export default function CustomerDashboard({
           setIsPaymentModalOpen(false);
           setSelectedRestaurant(null);
         }
+        isSubmittingOrderRef.current = false;
       }, 800);
     } catch (err: any) {
       console.error(err);
+      isSubmittingOrderRef.current = false;
       setPaymentStatus('idle');
       setIsPaymentModalOpen(false); // Close payment modal on error
 
@@ -1041,6 +1094,13 @@ export default function CustomerDashboard({
                 </div>
               </div>
 
+              {isDeliveryAvailable === false && (
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 font-bold text-sm">
+                  <MapPinOff className="w-5 h-5 shrink-0" />
+                  <span>Out of Serviceable Area</span>
+                </div>
+              )}
+
               <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-300 font-mono">
                 <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-amber-500" /> {selectedRestaurant.deliveryTime} mins</span>
                 <span className="flex items-center gap-1"><Bike className="w-3.5 h-3.5 text-emerald-500" /> ${selectedRestaurant.deliveryFee} Delivery</span>
@@ -1053,26 +1113,14 @@ export default function CustomerDashboard({
                   <label htmlFor="outlet-select" className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                     Select Outlet Location:
                   </label>
-                  <select
+                  <button
                     id="outlet-select"
-                    value={selectedRestaurant.id}
-                    onChange={(e) => {
-                      const newOutlet = brandOutlets.find(o => o.id === e.target.value);
-                      if (newOutlet) {
-                        setSelectedRestaurant(newOutlet);
-                        if (onAddApiLog) {
-                          onAddApiLog({ id: 'catalog', label: `GET /api/v1/restaurants/${newOutlet.id}/catalog/items`, method: 'GET' });
-                        }
-                      }
-                    }}
-                    className="block w-full text-sm rounded-xl border-slate-300 bg-white/50 dark:bg-slate-900/50 dark:border-slate-700 focus:border-rose-500 focus:ring-rose-500 shadow-sm"
+                    onClick={() => setIsOutletSelectorOpen(true)}
+                    className="flex w-full items-center justify-between text-sm rounded-xl border border-slate-300 bg-white/50 dark:bg-slate-900/50 dark:border-slate-700 focus:border-rose-500 focus:ring-rose-500 shadow-sm p-2 text-slate-800 dark:text-slate-200"
                   >
-                    {brandOutlets.map(outlet => (
-                      <option key={outlet.id} value={outlet.id}>
-                        {outlet.name} ({outlet.distance} km away)
-                      </option>
-                    ))}
-                  </select>
+                    <span>{selectedRestaurant.name} ({selectedRestaurant.distance} km away)</span>
+                    <ChevronDown className="w-4 h-4 text-slate-500" />
+                  </button>
                 </div>
               )}
             </div>
@@ -1082,7 +1130,20 @@ export default function CustomerDashboard({
               <h4 className="font-bold text-lg text-slate-900 dark:text-[#f0ede6]">Menu items</h4>
               
               <div className="space-y-8">
-                {Object.entries(effectiveMenu.reduce((acc, dish) => {
+                {isMenuLoading ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3, 4].map(i => (
+                      <div key={i} className="h-28 rounded-2xl bg-white/20 dark:bg-slate-900/45 border border-rose-500/20 dark:border-rose-500/30 p-4 animate-pulse flex items-center justify-between gap-4">
+                        <div className="flex-1 space-y-2">
+                          <div className="h-5 w-1/2 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                          <div className="h-3 w-3/4 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                          <div className="h-4 w-1/4 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                        </div>
+                        <div className="w-20 h-20 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+                      </div>
+                    ))}
+                  </div>
+                ) : Object.entries(effectiveMenu.reduce((acc, dish) => {
                   const cat = dish.categoryName || 'Food';
                   if (!acc[cat]) acc[cat] = [];
                   acc[cat].push(dish);
@@ -1134,6 +1195,10 @@ export default function CustomerDashboard({
                                 {dish.isAvailable === false ? (
                                   <span className="px-3 py-1 bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 text-xs font-bold rounded-xl border border-red-200/20">
                                     Out of Stock
+                                  </span>
+                                ) : isDeliveryAvailable === false ? (
+                                  <span className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs font-bold rounded-xl">
+                                    Unavailable Here
                                   </span>
                                 ) : cartQty > 0 ? (
                                   <div className="flex items-center bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl overflow-hidden font-bold shadow-md shadow-orange-500/15">
@@ -1228,55 +1293,60 @@ export default function CustomerDashboard({
                 <span className="text-xs font-mono text-slate-400 dark:text-slate-300">{filteredRestaurants.length} open</span>
               </div>
 
-              {filteredRestaurants.length === 0 ? (
-                <div className="p-12 text-center text-slate-400 dark:text-slate-300 border border-dashed border-rose-500/30 rounded-3xl">
-                  <p className="text-sm">No kitchens matched your search criteria.</p>
+              {restaurants.length === 0 ? (
+                <div className="p-12 text-center text-slate-400 dark:text-slate-300 border border-dashed border-rose-500/30 rounded-3xl bg-white/5 backdrop-blur-sm">
+                  <div className="flex justify-center mb-4">
+                    <MapPinOff className="w-12 h-12 text-rose-500/50" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-800 dark:text-[#f0ede6] mb-2">Out of Range</h3>
+                  <p className="text-sm">We don't have any partner kitchens in your delivery area yet.</p>
+                  <button 
+                    onClick={() => setIsAddressSelectorOpen(true)}
+                    className="mt-4 px-4 py-2 bg-rose-500 text-white font-bold rounded-xl hover:bg-rose-600 transition-colors"
+                  >
+                    Change Address
+                  </button>
+                </div>
+              ) : isRestaurantsLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[1, 2, 3, 4, 5, 6].map(i => (
+                    <div key={i} className="h-64 rounded-3xl bg-white/20 dark:bg-slate-900/45 border border-rose-500/20 dark:border-rose-500/30 p-4 animate-pulse flex flex-col justify-between">
+                      <div className="h-32 bg-slate-200 dark:bg-slate-800 rounded-2xl mb-4" />
+                      <div className="h-6 w-3/4 bg-slate-200 dark:bg-slate-800 rounded-xl mb-2" />
+                      <div className="h-4 w-1/2 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                    </div>
+                  ))}
+                </div>
+              ) : filteredRestaurants.length === 0 ? (
+                <div className="p-12 text-center text-slate-400 dark:text-slate-300 border border-dashed border-rose-500/30 rounded-3xl bg-white/5 backdrop-blur-sm">
+                  <div className="flex justify-center mb-4">
+                    <AlertCircle className="w-12 h-12 text-rose-500/50" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-800 dark:text-[#f0ede6] mb-2">No Kitchens Found</h3>
+                  <p className="text-sm">We couldn't find any kitchens matching your search criteria.</p>
+                  <button 
+                    onClick={() => { setSearchQuery(''); setSelectedCategory(null); }}
+                    className="mt-4 px-4 py-2 bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold rounded-xl hover:bg-rose-500/20 transition-colors"
+                  >
+                    Clear Filters
+                  </button>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredRestaurants.map(restaurant => (
-                    <div
+                  {filteredRestaurants.slice(0, visibleCount).map((restaurant, idx, arr) => (
+                    <CustomerRestaurantCard
                       key={restaurant.id}
-                      onClick={() => {
-                        setSelectedRestaurant(restaurant);
+                      restaurant={restaurant}
+                      isLast={idx === arr.length - 1}
+                      lastElementRef={lastElementRef}
+                      onClick={(rest) => {
+                        setSelectedRestaurant(rest);
                         if (onAddApiLog) {
-                          onAddApiLog({ id: 'delivery_check', label: `GET /api/v1/restaurants/${restaurant.id}/delivery-availability`, method: 'GET' });
-                          onAddApiLog({ id: 'catalog', label: `GET /api/v1/restaurants/${restaurant.id}/catalog/items`, method: 'GET' });
+                          onAddApiLog({ id: 'delivery_check', label: `GET /api/v1/restaurants/${rest.id}/delivery-availability`, method: 'GET' });
+                          onAddApiLog({ id: 'catalog', label: `GET /api/v1/restaurants/${rest.id}/catalog/items`, method: 'GET' });
                         }
                       }}
-                      className="group flex flex-col rounded-3xl transition-all duration-300 border backdrop-blur-xl relative overflow-hidden cursor-pointer shadow-lg hover:-translate-y-1.5 bg-white/12 hover:bg-white/20 border-white/30 shadow-[0_15px_35px_rgba(0,0,0,0.06)] hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all dark:bg-slate-900/20 dark:hover:bg-slate-900/20 dark:border-rose-500/30 dark:shadow-[0_15px_35px_rgba(0,0,0,0.35)]  text-left"
-                    >
-                      <div className="h-44 w-full relative overflow-hidden bg-transparent">
-                        <ImageLoader
-                          src={restaurant.image}
-                          alt={restaurant.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          referrerPolicy="no-referrer"
-                          containerClassName="w-full h-full"
-                        />
-                        <div className="absolute top-3 right-3 bg-slate-950/20 backdrop-blur-sm p-1.5 rounded-full text-white/80 hover:text-red-500 border border-rose-500/30">
-                          <Heart className="w-4 h-4" />
-                        </div>
-                      </div>
-
-                      <div className="p-4.5 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <h5 className="font-bold text-base text-slate-900 dark:text-[#f0ede6] group-hover:text-amber-500 transition-colors">{restaurant.brandName || restaurant.name}</h5>
-                          <div className="flex items-center gap-1 bg-orange-500/10 text-orange-600 dark:text-orange-400 px-2 py-0.5 rounded-lg text-xs font-bold">
-                            <Star className="w-3.5 h-3.5 fill-current" />
-                            <span>{restaurant.rating}</span>
-                          </div>
-                        </div>
-
-                        <p className="text-xs text-slate-400 dark:text-slate-300 font-medium">{restaurant.cuisine}</p>
-
-                        <div className="flex items-center gap-3.5 pt-2 text-xs text-slate-500 dark:text-slate-300 font-mono border-t border-rose-500/20 dark:border-rose-500/30">
-                          <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-amber-500" /> {restaurant.deliveryTime}m</span>
-                          <span className="flex items-center gap-1"><Bike className="w-3.5 h-3.5 text-emerald-500" /> ${restaurant.deliveryFee} fee</span>
-                          <span>{restaurant.distance} km</span>
-                        </div>
-                      </div>
-                    </div>
+                    />
                   ))}
                 </div>
               )}
@@ -1302,27 +1372,15 @@ export default function CustomerDashboard({
       />
 
       {/* Floating Active Orders Slider at bottom */}
-      {activeOrders.filter(o => isActiveOrder(o.status)).length > 0 && !trackingOrder && (
-        <div className={`fixed left-0 right-0 max-w-3xl mx-auto z-30 pointer-events-none transition-all duration-300 ${cart.length > 0 && (!selectedRestaurant || cartRestaurant?.id === selectedRestaurant.id) ? 'bottom-24' : 'bottom-4'}`}>
-          <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-none px-5 gap-4 pb-2 pointer-events-auto">
-            {activeOrders.filter(o => isActiveOrder(o.status)).slice().reverse().map((order) => (
-              <button 
-                key={order.id} 
-                onClick={() => setTrackingOrder(order)}
-                className="shrink-0 w-[85%] sm:w-[340px] snap-center bg-white/20 dark:bg-slate-900/20 backdrop-blur-xl rounded-[20px] shadow-2xl shadow-slate-900/10 dark:shadow-black/40 border border-rose-500/20 dark:border-rose-500/30 p-3.5 text-left cursor-pointer transition-all active:scale-[0.98] hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all"
-              >
-                <div className="flex justify-between items-center gap-2">
-                  <span className="shrink-0 text-[10px] font-mono font-bold text-slate-600 dark:text-[#f0ede6] bg-slate-200/80 dark:bg-slate-700 px-2 py-0.5 rounded-full">#{order.id.substring(0, 8)}</span>
-                  <h5 className="font-extrabold text-[14px] text-slate-900 dark:text-[#f0ede6] line-clamp-1 flex-1">{order.restaurantName}</h5>
-                  <span className="shrink-0 text-[9px] font-black px-2 py-1 rounded-md bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:shadow-[0_0_12px_rgba(244,63,94,0.5)] uppercase tracking-wider">
-                    {order.status.replace(/_/g, ' ')}
-                  </span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      <CustomerActiveOrdersCarousel
+        activeOrders={activeOrders}
+        isActiveOrder={isActiveOrder}
+        trackingOrder={trackingOrder}
+        cartLength={cart.length}
+        selectedRestaurantId={selectedRestaurant?.id}
+        cartRestaurantId={cartRestaurant?.id}
+        setTrackingOrder={setTrackingOrder}
+      />
 
       {/* Floating Cart bar at bottom */}
       {cart.length > 0 && (!selectedRestaurant || cartRestaurant?.id === selectedRestaurant.id) && (
@@ -1463,6 +1521,66 @@ export default function CustomerDashboard({
         )}
       </AnimatePresence>
 
+      {/* Outlet Selector Modal */}
+      <AnimatePresence>
+        {isOutletSelectorOpen && brandOutlets && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/20 backdrop-blur-sm"
+            onClick={() => setIsOutletSelectorOpen(false)}
+          >
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              onClick={e => e.stopPropagation()}
+              className="w-full sm:max-w-md bg-white/20 dark:bg-slate-900/20 backdrop-blur-md rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden"
+            >
+              <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white/20 dark:bg-slate-900/20 backdrop-blur-md z-10 sticky top-0">
+                <h2 className="font-bold text-lg text-slate-900 dark:text-white">Select Outlet Location</h2>
+                <button onClick={() => setIsOutletSelectorOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full cursor-pointer">
+                  <X className="w-5 h-5 text-slate-500" />
+                </button>
+              </div>
+              
+              <div className="p-4 overflow-y-auto space-y-3 pb-8">
+                {brandOutlets.map(outlet => (
+                  <button
+                    key={outlet.id}
+                    onClick={() => {
+                      setSelectedRestaurant(outlet);
+                      if (onAddApiLog) {
+                        onAddApiLog({ id: 'catalog', label: `GET /api/v1/restaurants/${outlet.id}/catalog/items`, method: 'GET' });
+                      }
+                      setIsOutletSelectorOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between p-3 rounded-xl border transition-colors text-left cursor-pointer ${
+                      selectedRestaurant?.id === outlet.id
+                        ? 'border-rose-500 bg-rose-50/50 dark:bg-rose-500/10'
+                        : 'border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                    }`}
+                  >
+                    <div>
+                      <p className={`font-bold text-sm ${selectedRestaurant?.id === outlet.id ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'}`}>
+                        {outlet.name}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        {outlet.distance} km away
+                      </p>
+                    </div>
+                    {selectedRestaurant?.id === outlet.id && (
+                      <Check className="w-5 h-5 text-rose-500" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <CustomerCartDrawer
         address={address}
         setAddress={setAddress}
@@ -1479,6 +1597,7 @@ export default function CustomerDashboard({
         subtotal={getCartTotal().subtotal}
         deliveryFee={getCartTotal().deliveryFee}
         setIsPaymentModalOpen={setIsPaymentModalOpen}
+        isSubmitting={paymentStatus !== 'idle'}
       />
 
       <CustomerPaymentModal

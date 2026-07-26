@@ -388,6 +388,19 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
               transition={{ duration: 0.3 }}
               className="pt-4 sm:pt-6 md:pt-8"
             >
+              {((import.meta as any).env.DEV || (import.meta as any).env.VITE_ENABLE_DEV_OTP === 'true') && (
+                <div className="max-w-6xl mx-auto mb-8 bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 text-center">
+                  <h4 className="text-amber-700 dark:text-amber-400 font-bold mb-3 flex items-center justify-center gap-2">
+                    <AlertCircle className="w-5 h-5" /> Development Setup / Dummy Data
+                  </h4>
+                  <div className="flex flex-wrap justify-center gap-4 text-sm text-slate-700 dark:text-slate-300">
+                    <span className="bg-white/50 dark:bg-slate-800/50 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700/50 shadow-sm">Customer: <strong className="font-mono ml-1 text-orange-600 dark:text-orange-400">8000000001</strong></span>
+                    <span className="bg-white/50 dark:bg-slate-800/50 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700/50 shadow-sm">Restaurant: <strong className="font-mono ml-1 text-red-600 dark:text-red-400">9000000001</strong></span>
+                    <span className="bg-white/50 dark:bg-slate-800/50 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700/50 shadow-sm">Rider: <strong className="font-mono ml-1 text-emerald-600 dark:text-emerald-400">7000000001</strong></span>
+                  </div>
+                </div>
+              )}
+
               {/* Desktop view: Stable, spacious 3-column grid with deep hover-glow highlights */}
               <div className="hidden lg:grid lg:grid-cols-4 gap-6 max-w-6xl mx-auto w-full px-4">
                 {/* Customer Card */}

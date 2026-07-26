@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 3.2.1263 on 2026-07-24 23:55:30.
+// Generated using typescript-generator version 3.2.1263 on 2026-07-26 12:36:53.
 
 export enum AccountType {
     CUSTOMER = "CUSTOMER",
@@ -76,4 +76,28 @@ export enum TransactionStatus {
     PENDING = "PENDING",
     SUCCESS = "SUCCESS",
     FAILED = "FAILED",
+}
+
+export enum VehicleClass {
+    BICYCLE = "BICYCLE",
+    MCWG = "MCWG",
+    LMV = "LMV",
+    EV_TWO_WHEELER = "EV_TWO_WHEELER",
+}
+
+export enum VerificationStatus {
+    PENDING = "PENDING",
+    APPROVED = "APPROVED",
+    VERIFIED = "VERIFIED",
+    REJECTED = "REJECTED",
+    MANUAL_REVIEW = "MANUAL_REVIEW",
+    FAILED = "FAILED",
+}
+
+export enum VerificationType {
+    GSTIN = "GSTIN",
+    PENNY_DROP = "PENNY_DROP",
+    PAN = "PAN",
+    DRIVING_LICENSE = "DRIVING_LICENSE",
+    RC = "RC",
 }

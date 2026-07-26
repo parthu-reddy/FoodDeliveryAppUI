@@ -1,50 +1,69 @@
-import React, { useState } from 'react';
-import { Upload, Image as ImageIcon, Loader2 } from 'lucide-react';
-import { apiPostFormData } from '../lib/apiClient';
-import { compressImageNative } from '../utils/imageCompression';
+import React, { useState, useRef } from 'react';
+import { Upload, File as FileIcon, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { apiGet } from '../lib/apiClient';
 
-interface ImageUploadFieldProps {
+interface DocumentUploadFieldProps {
   value: string;
-  onChange: (url: string) => void;
-  folderId: string;
+  onChange: (objectKey: string) => void;
+  docType: string;
   placeholder?: string;
-  imageType?: string;
+  accept?: string;
+  uploadEndpoint?: string;
 }
 
-export default function ImageUploadField({ value, onChange, folderId, placeholder = "Upload Image", imageType = "default" }: ImageUploadFieldProps) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export default function DocumentUploadField({ 
+  value, 
+  onChange, 
+  docType, 
+  placeholder = "Upload Document",
+  accept = "image/*,application/pdf",
+  uploadEndpoint = "/api/delivery/verification/upload-url"
+}: DocumentUploadFieldProps) {
+  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState('');
   const [isDragging, setIsDragging] = useState(false);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const processFile = async (file: File) => {
-    if (file.size > 20 * 1024 * 1024) {
-      setError('File is too large to process. Maximum allowed size is 20MB.');
+    if (file.size > 5 * 1024 * 1024) {
+      setError('File size should not exceed 5MB');
       return;
     }
 
-    setLoading(true);
-    setError(null);
-    try {
-      const targetSizeKb = imageType === 'menu' ? 4 : 40;
-      const maxWidth = imageType === 'menu' ? 400 : 1200;
-      const compressedFile = await compressImageNative(file, targetSizeKb, maxWidth);
+    setIsUploading(true);
+    setError('');
 
-      const formData = new FormData();
-      formData.append('file', compressedFile);
-      formData.append('folderId', folderId);
-      formData.append('imageType', imageType);
+    try {
+      // 1. Get Presigned URL through the Service proxy
+      const res = await apiGet(`${uploadEndpoint}?docType=${docType}&contentType=${encodeURIComponent(file.type)}`);
       
-      const res = await apiPostFormData('/api/v1/images/upload', formData);
-      if (res && res.data) {
-        onChange(res.data);
-      } else {
-        throw new Error("Failed to get public URL");
+      if (!res?.data?.uploadUrl || !res?.data?.objectKey) {
+        throw new Error("Failed to get secure upload link.");
       }
+
+      const { uploadUrl, objectKey } = res.data;
+
+      // 2. Upload file directly to Cloudflare R2 / S3
+      const uploadRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': file.type
+        },
+        body: file
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error(`Upload failed with status: ${uploadRes.status}`);
+      }
+
+      // 3. Save the object key
+      onChange(objectKey);
+
     } catch (err: any) {
-      setError(err.message || 'Failed to upload file');
+      console.error('Error uploading document:', err);
+      setError(err.message || 'Failed to upload document');
     } finally {
-      setLoading(false);
+      setIsUploading(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -70,7 +89,7 @@ export default function ImageUploadField({ value, onChange, folderId, placeholde
     e.preventDefault();
     setIsDragging(false);
     const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith('image/')) processFile(file);
+    if (file) processFile(file);
   };
 
   return (
@@ -78,7 +97,7 @@ export default function ImageUploadField({ value, onChange, folderId, placeholde
       <div className="flex items-center space-x-3">
         <div 
           onClick={() => {
-            if (!loading) {
+            if (!isUploading) {
               setError('');
               fileInputRef.current?.click();
             }
@@ -93,27 +112,26 @@ export default function ImageUploadField({ value, onChange, folderId, placeholde
             : 'border-rose-500/30 bg-white/10 dark:bg-slate-900/10'
           } backdrop-blur-md cursor-pointer hover:bg-white/20 dark:hover:bg-slate-900/20 transition-all`}
         >
-          {loading ? (
+          {isUploading ? (
             <div className="flex flex-col items-center space-y-2">
               <Loader2 className="h-8 w-8 text-rose-500 animate-spin" />
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Uploading...</span>
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Uploading securely...</span>
             </div>
           ) : value ? (
-            <div className="flex flex-col items-center space-y-3">
-              <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-emerald-500/30 shadow-sm">
-                <img src={value} alt="Preview" className="w-full h-full object-cover" />
-              </div>
+            <div className="flex flex-col items-center space-y-2">
+              <CheckCircle className="h-8 w-8 text-emerald-500" />
+              <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">Document Uploaded</span>
               <span className="text-xs text-slate-500 dark:text-slate-400 text-center px-4 truncate w-full">Click to replace</span>
             </div>
           ) : (
             <div className="flex flex-col items-center space-y-2">
               <div className="h-10 w-10 rounded-full bg-rose-500/10 flex items-center justify-center">
-                <ImageIcon className="h-5 w-5 text-rose-500" />
+                <Upload className="h-5 w-5 text-rose-500" />
               </div>
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-300 text-center">
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 <span className="font-bold text-rose-600 dark:text-rose-400">Click to upload</span> or drag and drop
               </span>
-              <span className="text-xs text-slate-500 dark:text-slate-400">{placeholder} (Max: 20MB)</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">{placeholder} (Max: 5MB)</span>
             </div>
           )}
         </div>
@@ -123,13 +141,13 @@ export default function ImageUploadField({ value, onChange, folderId, placeholde
         type="file"
         ref={fileInputRef}
         onChange={handleFileUpload}
-        accept="image/*"
+        accept={accept}
         className="hidden"
       />
 
       {error && (
-        <div className="mt-2 text-xs font-medium text-red-500 flex items-center">
-          <Loader2 className="w-3 h-3 mr-1 opacity-0" /> {error}
+        <div className="mt-2 flex items-center text-[11px] font-medium text-red-500">
+          <AlertCircle className="h-3 w-3 mr-1" /> {error}
         </div>
       )}
     </div>

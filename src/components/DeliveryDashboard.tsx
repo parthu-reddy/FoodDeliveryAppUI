@@ -12,7 +12,11 @@ import { apiGet, apiPost } from '../lib/apiClient';
 import { getUserProfile, getToken } from '../lib/tokenStore';
 import CompleteProfileModal from './CompleteProfileModal';
 import RiderSettingsView from './RiderSettingsView';
+import RiderOnboardingWizard from './RiderOnboardingWizard';
 import OrderTrackingMap from './OrderTrackingMap';
+import ImageLoader from './ImageLoader';
+import ActiveDeliveryCard from './ActiveDeliveryCard';
+import { fetchEventSource } from '@microsoft/fetch-event-source';
 
 const otpSchema = z.string().length(6, "OTP must be exactly 6 digits").regex(/^\d+$/, "OTP must contain only digits");
 
@@ -44,6 +48,7 @@ export default function DeliveryDashboard({
     setInternalOrders(prev => prev.map(o => o.id === orderId ? { ...o, status, ...(deliveryStatus ? { deliveryStatus } : {}) } : o));
   });
   const [isOnline, setIsOnline] = useState(false);
+  const [wsConnected, setWsConnected] = useState(false);
   const todayDateString = new Date().toISOString().split('T')[0];
   const [historyDateFilter, setHistoryDateFilter] = useState(todayDateString);
   const [historyPage, setHistoryPage] = useState(1);
@@ -54,6 +59,8 @@ export default function DeliveryDashboard({
   const [isProfileMandatory, setIsProfileMandatory] = useState(false);
   const [showPermissionsPrompt, setShowPermissionsPrompt] = useState(false);
   const [showProfileRequiredPrompt, setShowProfileRequiredPrompt] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState<any>(null);
+  const [isVerificationLoaded, setIsVerificationLoaded] = useState(false);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [enteredOtp, setEnteredOtp] = useState("");
   const [enteredPickupOtp, setEnteredPickupOtp] = useState("");
@@ -294,6 +301,7 @@ export default function DeliveryDashboard({
       
       ws.onopen = () => {
         attempt = 0; // reset attempts on success
+        setWsConnected(true);
         
         const sendLocation = () => {
           if (ws.readyState === WebSocket.OPEN) {
@@ -332,6 +340,7 @@ export default function DeliveryDashboard({
       };
       
       ws.onclose = () => {
+        setWsConnected(false);
         if (interval) clearInterval(interval);
         
         // Exponential backoff: max 30 seconds
@@ -397,7 +406,7 @@ export default function DeliveryDashboard({
           setIsOnline(profile.isOnline || profile.status === 'ONLINE' || profile.status === 'ON_DELIVERY');
           setRiderId(profile.id);
           
-          if (!profile.vehicleNumber || !profile.fullName || !profile.photoUrl) {
+          if (!profile.vehicleNumber || !profile.fullName) {
             setIsProfileMandatory(true);
             setShowProfileRequiredPrompt(true);
           } else {
@@ -418,6 +427,14 @@ export default function DeliveryDashboard({
         }
       })
       .finally(() => setIsLoadingProfile(false));
+
+    // Fetch verification status
+    apiGet('/api/delivery/verification/status')
+      .then(res => {
+        if (res?.data) setVerificationStatus(res.data);
+      })
+      .catch(err => console.warn("Failed to fetch verification status", err))
+      .finally(() => setIsVerificationLoaded(true));
   }, [riderPhone]);
 
 
@@ -531,40 +548,61 @@ export default function DeliveryDashboard({
   React.useEffect(() => {
     if (!currentJob?.id || !riderId) return;
 
-    let eventSource: EventSource | null = null;
+    const ctrl = new AbortController();
+    let retryCount = 0;
 
-    const connectSSE = () => {
+    const connectSSE = async () => {
       const token = getToken();
-      const url = `/api/delivery/drivers/${riderId}/orders/${currentJob.id}/restaurant-status-stream`;
+      const url = `${(import.meta as any).env?.VITE_API_BASE_URL || ''}/api/delivery/drivers/${riderId}/orders/${currentJob.id}/restaurant-status-stream`;
       
-      // Need to append token since EventSource doesn't natively send Authorization headers
-      eventSource = new EventSource(`${url}?token=${token}`);
-
-      eventSource.addEventListener('status-update', (event) => {
-        const newStatus = event.data as OrderStatus;
-        console.log("SSE: Restaurant status updated to", newStatus);
-        
-        // Update the internal state optimistically
-        onUpdateOrderStatus(currentJob.id, newStatus, currentJob.deliveryStatus);
-        
-        if (newStatus === OrderStatus.READY_FOR_PICKUP) {
-          showToast(`Order ${currentJob.id.substring(0, 8)} is now ready for pickup!`);
+      try {
+        await fetchEventSource(url, {
+          method: 'GET',
+          headers: token ? {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'text/event-stream'
+          } : { 'Accept': 'text/event-stream' },
+          signal: ctrl.signal,
+          async onopen(res) {
+            if (res.ok && res.status === 200) {
+              retryCount = 0;
+            } else if (res.status >= 400 && res.status < 500 && res.status !== 429) {
+              console.error(`SSE unauthorized or invalid status: ${res.status}`);
+              throw new Error(`Fatal SSE error: ${res.status}`);
+            }
+          },
+          onmessage(event) {
+            retryCount = 0;
+            if (event.event === 'status-update' || !event.event) {
+              const newStatus = event.data as OrderStatus;
+              console.log("SSE: Restaurant status updated to", newStatus);
+              
+              // Update the internal state optimistically
+              onUpdateOrderStatus(currentJob.id, newStatus, currentJob.deliveryStatus);
+              
+              if (newStatus === OrderStatus.READY_FOR_PICKUP) {
+                showToast(`Order ${currentJob.id.substring(0, 8)} is now ready for pickup!`);
+              }
+            }
+          },
+          onerror(err) {
+            console.error("SSE connection error", err);
+            retryCount++;
+            const backoffDelay = Math.min(1000 * Math.pow(2, retryCount - 1), 16000);
+            return backoffDelay;
+          }
+        });
+      } catch (err) {
+        if (!ctrl.signal.aborted) {
+          console.error("SSE stream aborted or failed", err);
         }
-      });
-
-      eventSource.onerror = (err) => {
-        console.error("SSE connection error", err);
-        if (eventSource) eventSource.close();
-        // Fallback retry logic could be added here
-      };
+      }
     };
 
     connectSSE();
 
     return () => {
-      if (eventSource) {
-        eventSource.close();
-      }
+      ctrl.abort();
     };
   }, [currentJob?.id, riderId]);
 
@@ -732,6 +770,27 @@ export default function DeliveryDashboard({
     );
   }
 
+  if (!isVerificationLoaded) {
+    return (
+      <div className="flex-1 flex flex-col w-full h-[100dvh] items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-500">
+        <div className="w-8 h-8 border-4 border-rose-500 border-t-transparent rounded-full animate-spin"></div>
+        <p className="mt-4 text-xs font-bold uppercase tracking-widest">Verifying Account</p>
+      </div>
+    );
+  }
+
+  if (!verificationStatus || !verificationStatus.allDocsApproved || !verificationStatus.bankApproved) {
+    return (
+      <RiderOnboardingWizard 
+        riderPhone={riderPhone} 
+        theme={theme} 
+        onComplete={() => setVerificationStatus({ ...verificationStatus, allDocsApproved: true, bankApproved: true })} 
+        userId={user?.id || ''} 
+        initialName={riderName} 
+      />
+    );
+  }
+
   return (
     <div className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-y-auto overflow-x-hidden min-h-0 bg-transparent text-slate-800 dark:text-[#f0ede6] h-full pb-20">
       
@@ -762,7 +821,7 @@ export default function DeliveryDashboard({
             className="flex items-center gap-2 text-left hover:bg-slate-100 dark:hover:bg-slate-900 p-1.5 -ml-1.5 rounded-xl transition-colors cursor-pointer"
           >
             {photoUrl ? (
-              <img src={photoUrl} alt="Profile" className="w-8 h-8 rounded-full object-cover border border-rose-500/20" />
+              <ImageLoader src={photoUrl} alt="Profile" className="w-8 h-8 rounded-full object-cover border border-rose-500/20" containerClassName="w-8 h-8 rounded-full" loading="lazy" />
             ) : (
               <div className="w-8 h-8 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500">
                 <Bike className="w-4 h-4" />
@@ -822,6 +881,21 @@ export default function DeliveryDashboard({
         </div>
       </header>
 
+      {/* Connection Banner */}
+      <AnimatePresence>
+        {isOnline && !wsConnected && view === 'home' && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="bg-rose-500/10 border-b border-rose-500/20 px-5 py-2 flex items-center gap-2"
+          >
+            <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse shrink-0" />
+            <p className="text-xs font-bold text-rose-600 dark:text-rose-400">Connection lost. Reconnecting to dispatch...</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {view === 'settings' ? (
         <div className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-y-auto overflow-x-hidden min-h-0 text-slate-800 dark:text-[#f0ede6] h-full mt-4">
           <RiderSettingsView
@@ -838,8 +912,15 @@ export default function DeliveryDashboard({
                     setRiderName(profile.fullName || profile.name || "");
                     setVehicleNumber(profile.vehicleNumber || "");
                     setPhotoUrl(profile.photoUrl || "");
+                    
+                    const wasMandatory = isProfileMandatory;
                     setIsProfileMandatory(false);
                     setView('home');
+                    
+                    if (wasMandatory) {
+                      // Profile just completed, seamlessly start the online process
+                      handleToggleOnline();
+                    }
                   }
                 });
             }}
@@ -996,89 +1077,20 @@ export default function DeliveryDashboard({
               </div>
             </div>
 
-            {/* Navigation Steps Card */}
-            <div className="bg-white/20 dark:bg-slate-900/20 backdrop-blur-xl border border-rose-500/20 dark:border-rose-500/30 rounded-3xl p-5 shadow-[0_8px_32px_rgba(251,146,60,0.05)] space-y-4">
-              <div className="space-y-1">
-                <h5 className="font-bold text-sm text-slate-400 dark:text-slate-300 font-mono tracking-wider">NAVIGATIONAL STEPS</h5>
-                <p className="text-base font-bold text-slate-900 dark:text-[#f0ede6]">
-                  {(!currentJob.deliveryStatus || currentJob.deliveryStatus === DeliveryStatus.ASSIGNED || currentJob.deliveryStatus === DeliveryStatus.AT_RESTAURANT) ? 'Step 1: Collect food packages' : 'Step 2: Deliver to door'}
-                </p>
-              </div>
+            <ActiveDeliveryCard
+              currentJob={currentJob}
+              enteredPickupOtp={enteredPickupOtp}
+              setEnteredPickupOtp={setEnteredPickupOtp}
+              pickupOtpError={pickupOtpError}
+              isUpdatingPickup={isUpdatingPickup}
+              handleArrivedAtRestaurant={handleArrivedAtRestaurant}
+              handlePickUpFood={handlePickUpFood}
+            />
 
-              {/* Waypoint details */}
-              <div className="space-y-3.5 text-sm">
-                <div className="flex gap-3">
-                  <div className="w-5 h-5 rounded bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">A</div>
-                  <div>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-300 block font-mono">RESTAURANT ADDRESS</span>
-                    <span className="font-bold text-slate-800 dark:text-[#f0ede6]">{currentJob.restaurantName}</span>
-                    <p className="text-xs text-slate-400 dark:text-slate-300">Sector 62 food lane, Block B</p>
-                  </div>
-                </div>
-
-                <div className="flex gap-3">
-                  <div className="w-5 h-5 rounded bg-emerald-500/10 text-emerald-500 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">B</div>
-                  <div>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-300 block font-mono">DELIVERY ADDRESS</span>
-                    <span className="font-bold text-slate-800 dark:text-[#f0ede6]">{currentJob.customerName}</span>
-                    <p className="text-xs text-slate-400 dark:text-slate-300">{currentJob.deliveryAddress}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Items Verification Checklist */}
-              <div className="p-4 bg-white/20 dark:bg-slate-950/20 backdrop-blur-sm border border-rose-500/20 dark:border-rose-500/30 rounded-2xl space-y-2">
-                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-300 font-mono block">VERIFY DISH COUNT ({(currentJob.items || []).length})</span>
-                {(currentJob.items || []).map((item: any, idx: number) => (
-                  <div key={item.item?.id || idx} className="flex justify-between text-xs text-slate-600 dark:text-[#f0ede6]">
-                    <span>• {item.quantity || 1}x {item.item?.name || item.name || 'Item'}</span>
-                    <span className="font-mono text-emerald-500">PAID</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* State Transition Actions */}
-              {(!currentJob.deliveryStatus || currentJob.deliveryStatus === DeliveryStatus.ASSIGNED || currentJob.deliveryStatus === DeliveryStatus.AT_RESTAURANT) ? (
-                <div className="space-y-4 pt-2">
-                  {currentJob.deliveryStatus !== DeliveryStatus.AT_RESTAURANT && (
-                    <button
-                      type="button"
-                      onClick={handleArrivedAtRestaurant}
-                      className="w-full bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-white font-bold py-3 rounded-2xl transition-all cursor-pointer shadow-sm border border-slate-300 dark:border-slate-700"
-                    >
-                      Mark Arrived at Restaurant
-                    </button>
-                  )}
-                  <form onSubmit={handlePickUpFood} className="space-y-4">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-400 dark:text-slate-300 tracking-wider font-mono flex items-center gap-1.5">
-                        <KeyRound className="w-4 h-4 text-amber-500" /> RESTAURANT HANDOVER OTP
-                      </label>
-                      <div className="flex bg-white/20 dark:bg-slate-950/20 border border-rose-500/20 dark:border-rose-500/30 rounded-2xl overflow-hidden focus-within:border-amber-500 transition-colors">
-                        <input
-                          type="password"
-                          pattern="[0-9]*"
-                          inputMode="numeric"
-                          value={enteredPickupOtp}
-                          onChange={(e) => setEnteredPickupOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                          placeholder="Enter 6-digit pickup OTP"
-                          className="flex-1 px-4 py-3 bg-transparent text-slate-800 dark:text-[#f0ede6] outline-none font-mono text-center tracking-widest text-sm placeholder-slate-400"
-                          required
-                        />
-                      </div>
-
-                      {pickupOtpError && <p className="text-xs text-rose-500 font-bold mt-1 text-center">{pickupOtpError}</p>}
-                    </div>
-                    <button
-                      type="submit"
-                      disabled={isUpdatingPickup}
-                      className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white font-black py-4 rounded-2xl shadow-lg hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-1 cursor-pointer border border-white/20 disabled:opacity-70"
-                    >
-                      {isUpdatingPickup ? "Confirming..." : <>Confirm Pickup & Start Driving <ArrowRight className="w-5 h-5" /></>}
-                    </button>
-                  </form>
-                  
-                  <div className="pt-2 text-center">
+            {/* State Transition Actions */}
+            {(!currentJob.deliveryStatus || currentJob.deliveryStatus === DeliveryStatus.ASSIGNED || currentJob.deliveryStatus === DeliveryStatus.AT_RESTAURANT) ? (
+              <div className="space-y-4 pt-2">
+                <div className="pt-2 text-center">
                     <button 
                       type="button"
                       onClick={handleAbortJob}
@@ -1151,7 +1163,6 @@ export default function DeliveryDashboard({
                   )}
                 </form>
               )}
-            </div>
           </motion.div>
         ) : (
           /* ------------------- AVAILABLE JOBS BOARD ------------------- */
@@ -1350,7 +1361,7 @@ export default function DeliveryDashboard({
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">Profile Required</h3>
                 <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-8">
-                  Please complete your driver profile (Name, Vehicle, Photo) before you can go on duty and start receiving orders.
+                  Please complete your driver profile (Name, Vehicle) before you can go on duty and start receiving orders.
                 </p>
                 <button
                   onClick={() => {

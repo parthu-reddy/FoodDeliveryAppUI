@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { X, User, Phone, Mail, Car, Image as ImageIcon, AlertCircle, LogOut } from 'lucide-react';
+import { X, User, Phone, Mail, Car, Image as ImageIcon, AlertCircle, LogOut, ShieldCheck, FileText, CreditCard, CheckCircle } from 'lucide-react';
 import { apiGet, apiPut, apiDelete, apiPost } from '../lib/apiClient';
 import { useToast } from '../context/ToastContext';
 import ImageUploadField from './ImageUploadField';
+import DocumentUploadField from './DocumentUploadField';
 import { z } from 'zod';
 
 const riderProfileSchema = z.object({
   name: z.string().min(1, 'Please enter your full name.').max(100, 'Name cannot exceed 100 characters.'),
   email: z.string().min(1, 'Please enter your email address.').email('Please enter a valid email address.').max(255, 'Email cannot exceed 255 characters.'),
   vehicle: z.string().min(1, 'Please enter your vehicle registration.').max(50, 'Vehicle registration cannot exceed 50 characters.'),
+  vehicleType: z.string().min(1, 'Please select your vehicle type.'),
   photoUrl: z.string().url('Please enter a valid URL for your profile photo.').max(1000, 'URL cannot exceed 1000 characters.').optional().or(z.literal(''))
 });
 
@@ -39,13 +41,26 @@ export default function RiderSettingsView({
 
   // Delivery Profile
   const [editVehicle, setEditVehicle] = useState('');
+  const [editVehicleType, setEditVehicleType] = useState('BICYCLE');
   const [editPhoto, setEditPhoto] = useState('');
+
+  // Document Verification State
+  const [dlNumber, setDlNumber] = useState('');
+  const [dob, setDob] = useState('');
+  const [rcNumber, setRcNumber] = useState('');
+  const [dlDocumentKey, setDlDocumentKey] = useState('');
+  const [rcDocumentKey, setRcDocumentKey] = useState('');
+  const [bankAccount, setBankAccount] = useState('');
+  const [ifscCode, setIfscCode] = useState('');
+  const [selfieDocumentKey, setSelfieDocumentKey] = useState('');
+  const [verificationStatus, setVerificationStatus] = useState<any>(null);
 
   // State
   const [isSaving, setIsSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [sessions, setSessions] = useState<any[]>([]);
   const [isLoadingSessions, setIsLoadingSessions] = useState(false);
+  const [isSubmittingDoc, setIsSubmittingDoc] = useState<string | null>(null);
   const { showSuccess, showError } = useToast();
 
   const loadSessions = async () => {
@@ -94,12 +109,22 @@ export default function RiderSettingsView({
         if (deliveryRes && deliveryRes.data) {
           const profile = deliveryRes.data;
           setEditVehicle(profile.vehicleNumber || '');
+          setEditVehicleType(profile.vehicleType || 'BICYCLE');
           setEditPhoto(profile.photoUrl || '');
-          // Delivery Profile might also have fullName but identity has it too.
           if (profile.fullName && !identityRes?.data?.name) {
              setEditName(profile.fullName);
              setInitialName(profile.fullName);
           }
+        }
+
+        // Load Verification Status
+        try {
+          const verRes = await apiGet(`/api/delivery/verification/status`);
+          if (verRes?.data) {
+            setVerificationStatus(verRes.data);
+          }
+        } catch (verErr: any) {
+          console.error("Error loading verification status:", verErr);
         }
       } catch (e: any) {
         if (e?.status !== 404) {
@@ -120,6 +145,7 @@ export default function RiderSettingsView({
       name: editName.trim(),
       email: editEmail.trim(),
       vehicle: editVehicle.trim(),
+      vehicleType: editVehicleType,
       photoUrl: editPhoto.trim()
     });
 
@@ -146,6 +172,7 @@ export default function RiderSettingsView({
         phoneNumber: riderPhone,
         fullName: editName,
         vehicleNumber: editVehicle,
+        vehicleType: editVehicleType,
         photoUrl: editPhoto
       });
 
@@ -158,6 +185,21 @@ export default function RiderSettingsView({
       setErrorMsg(e.response?.data?.error || e.message || 'Failed to update profile');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const submitVerificationDoc = async (type: string, payload: any) => {
+    setIsSubmittingDoc(type);
+    try {
+      const res = await apiPost(`/api/delivery/verification/${type}`, payload);
+      showSuccess(res.message || 'Document submitted for verification');
+      // Reload status
+      const verRes = await apiGet(`/api/delivery/verification/status`);
+      if (verRes?.data) setVerificationStatus(verRes.data);
+    } catch (e: any) {
+      showError(e.response?.data?.error || 'Failed to submit document');
+    } finally {
+      setIsSubmittingDoc(null);
     }
   };
 
@@ -253,6 +295,22 @@ export default function RiderSettingsView({
 
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-slate-500 dark:text-slate-300 flex items-center gap-1">
+               <Car className="w-3.5 h-3.5" /> Vehicle Type
+            </label>
+            <select
+              value={editVehicleType}
+              onChange={(e) => setEditVehicleType(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md text-sm font-medium text-slate-900 dark:text-[#f0ede6] outline-none transition-colors focus:border-rose-500/50 focus:bg-white/40 dark:focus:bg-slate-900/40 appearance-none"
+            >
+              <option value="BICYCLE">Bicycle (No License Required)</option>
+              <option value="EV_TWO_WHEELER">EV Two-Wheeler</option>
+              <option value="MCWG">Motorcycle / Scooter (MCWG)</option>
+              <option value="LMV">Light Motor Vehicle (Car)</option>
+            </select>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-500 dark:text-slate-300 flex items-center gap-1">
                <ImageIcon className="w-3.5 h-3.5" /> Profile Photo URL
             </label>
             <ImageUploadField 
@@ -273,6 +331,26 @@ export default function RiderSettingsView({
             </button>
           </div>
         </form>
+
+        <div className="pt-8 mt-8 border-t border-rose-500/20 space-y-6">
+          <div>
+            <h4 className="text-sm font-bold text-slate-900 dark:text-[#f0ede6] flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-emerald-500" /> Document Verification
+            </h4>
+            <div className="mt-4 p-4 rounded-xl bg-white/10 dark:bg-slate-900/10 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-bold text-slate-800 dark:text-[#f0ede6]">Verification Status</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  Documents: {verificationStatus?.allDocsApproved ? <span className="text-emerald-500 font-bold">Approved</span> : <span className="text-amber-500 font-bold">Pending</span>} | 
+                  Bank: {verificationStatus?.bankApproved ? <span className="text-emerald-500 font-bold">Approved</span> : <span className="text-amber-500 font-bold">Pending</span>}
+                </p>
+              </div>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-500">
+                {verificationStatus?.allDocsApproved && verificationStatus?.bankApproved ? <CheckCircle className="w-5 h-5 text-emerald-500" /> : <AlertCircle className="w-5 h-5 text-amber-500" />}
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div className="pt-8 mt-8 border-t border-rose-500/20">
           <div className="flex justify-between items-center mb-4">
