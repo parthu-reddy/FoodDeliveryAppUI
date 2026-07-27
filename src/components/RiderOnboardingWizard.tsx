@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { AlertCircle, CheckCircle, ChevronRight, FileText, Car, Landmark, UserSquare, Loader2 } from 'lucide-react';
+import { AlertCircle, CheckCircle, ChevronRight, FileText, Car, Landmark, UserSquare, Loader2, LogOut } from 'lucide-react';
 import { apiGet, apiPost, apiPut } from '../lib/apiClient';
 import DocumentUploadField from './DocumentUploadField';
 import ImageUploadField from './ImageUploadField';
@@ -14,6 +14,7 @@ interface RiderOnboardingWizardProps {
   onComplete: () => void;
   userId: string;
   initialName: string;
+  onLogout?: () => void;
 }
 
 const steps = [
@@ -24,7 +25,7 @@ const steps = [
   { id: 'selfie', title: 'Face Match', icon: UserSquare, description: 'Biometric verification' }
 ];
 
-export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, userId, initialName }: RiderOnboardingWizardProps) {
+export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, userId, initialName, onLogout }: RiderOnboardingWizardProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -266,7 +267,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-500 uppercase">Upload RC Document</label>
-              <DocumentUploadField value={rcDoc} onChange={setRcDoc} docType="VEHICLE_RC" placeholder="Upload RC PDF/Image" />
+              <DocumentUploadField value={rcDoc} onChange={setRcDoc} docType="RC" placeholder="Upload RC PDF/Image" />
             </div>
             <button onClick={submitRC} disabled={isSubmitting} className="w-full py-3.5 mt-4 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 text-white font-bold text-sm shadow-md flex justify-center items-center gap-2">
               {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
@@ -336,7 +337,16 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
         animate={{ y: 0, opacity: 1 }}
         className={`w-full max-w-xl z-10 p-6 md:p-8 rounded-3xl shadow-2xl border ${theme === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white/95 border-white'} backdrop-blur-xl relative flex flex-col max-h-[90vh]`}
       >
-        <div className="text-center mb-8 shrink-0">
+        {onLogout && (
+          <div className="absolute top-4 right-4 md:top-6 md:right-6 z-20">
+            <button onClick={onLogout} className="px-3 py-2 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-500 hover:text-rose-600 hover:bg-rose-100 dark:hover:bg-rose-500/20 transition-colors shadow-sm border border-rose-100 dark:border-rose-500/30 flex items-center gap-2 text-xs font-bold" title="Logout">
+              <LogOut className="w-4 h-4" />
+              <span>Logout</span>
+            </button>
+          </div>
+        )}
+        
+        <div className="text-center mb-8 shrink-0 mt-4 md:mt-0">
           <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-orange-500 mb-2">Partner Onboarding</h2>
           <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Complete your KYC to start delivering</p>
         </div>

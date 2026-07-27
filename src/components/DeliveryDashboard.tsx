@@ -69,8 +69,6 @@ export default function DeliveryDashboard({
   const [otpError, setOtpError] = useState("");
   const [isUpdatingPickup, setIsUpdatingPickup] = useState(false);
   const [isUpdatingDelivery, setIsUpdatingDelivery] = useState(false);
-  const [mockEarnings, setMockEarnings] = useState(0);
-  const [completedCount, setCompletedCount] = useState(0);
 
   const [goOfflineAfter, setGoOfflineAfter] = useState(false);
   const [waitTimerSeconds, setWaitTimerSeconds] = useState(0);
@@ -102,17 +100,21 @@ export default function DeliveryDashboard({
         let fetchedActiveJobs: any[] = [];
         let fetchedAvailableJobs: any[] = [];
 
+        const getArrayFromRes = (res: any) => res?.data?.data || res?.data || (Array.isArray(res) ? res : []);
+
         // 1. Fetch Active Job
         const activeRes = await apiGet(`/api/v1/delivery/orders/active`);
-        if (!isCancelled && activeRes.data) {
-           fetchedActiveJobs = activeRes.data.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
+        if (!isCancelled && activeRes) {
+           const activeData = getArrayFromRes(activeRes);
+           fetchedActiveJobs = activeData.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
         }
 
         // 2. Fetch Available Pings (Only if NO active jobs)
         if (!isCancelled && fetchedActiveJobs.length === 0) {
            const availableRes = await apiGet(`/api/v1/delivery/orders/available`);
-           if (availableRes.data) {
-              fetchedAvailableJobs = availableRes.data.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
+           if (availableRes) {
+              const availableData = getArrayFromRes(availableRes);
+              fetchedAvailableJobs = availableData.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
            }
         }
 
@@ -120,8 +122,9 @@ export default function DeliveryDashboard({
         if (!isCancelled && lastActiveCount > 0 && fetchedActiveJobs.length === 0) {
            const today = new Date().toISOString().split('T')[0];
            const histRes = await apiGet(`/api/v1/delivery/orders/history?date=${today}`);
-           if (histRes.data) {
-              historyRef.current = histRes.data.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
+           if (histRes) {
+              const histData = getArrayFromRes(histRes);
+              historyRef.current = histData.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
            }
         }
         
@@ -160,8 +163,10 @@ export default function DeliveryDashboard({
     if (!dateToFetch) return;
 
     apiGet(`/api/v1/delivery/orders/history?date=${dateToFetch}`).then(res => {
-      if (res.data) {
-        historyRef.current = res.data.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
+      if (res) {
+        const getArrayFromRes = (res: any) => res?.data?.data || res?.data || (Array.isArray(res) ? res : []);
+        const histData = getArrayFromRes(res);
+        historyRef.current = histData.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
         // We don't want to overwrite active jobs, just merge the updated history
         setInternalOrders(prev => {
           const active = prev.filter(o => o.status !== OrderStatus.DELIVERED && o.status !== OrderStatus.CANCELLED && o.status !== OrderStatus.CANCELLED_BY_RESTAURANT && o.status !== OrderStatus.DELIVERY_FAILED);
@@ -193,7 +198,7 @@ export default function DeliveryDashboard({
           const remainingSecs = Math.max(0, Math.floor((jobs[0].expiresAt - Date.now()) / 1000));
           setPingTimer(remainingSecs);
         } else {
-          setPingTimer(30);
+          setPingTimer(60);
         }
       }
     }
@@ -242,10 +247,13 @@ export default function DeliveryDashboard({
   const handleAcceptPing = async (job: Order) => {
     try {
       await apiPost(`/api/delivery/drivers/${riderId}/orders/${job.id}/accept`);
-    } catch(e) {}
-    setActiveJobId(job.id);
-    onUpdateOrderStatus(job.id, job.status, DeliveryStatus.ASSIGNED, { name: riderName, phone: riderPhone });
-    setPingJob(null);
+      setActiveJobId(job.id);
+      onUpdateOrderStatus(job.id, job.status, DeliveryStatus.ASSIGNED, { name: riderName, phone: riderPhone });
+    } catch(e: any) {
+      showToast(e.response?.data?.message || "Failed to accept order. Ping expired or order already accepted.");
+    } finally {
+      setPingJob(null);
+    }
   };
 
   const handleRejectPing = async (jobId: string) => {
@@ -322,15 +330,16 @@ export default function DeliveryDashboard({
           if (data.type === "NEW_ORDER_DISPATCH" && data.orderId) {
             // Fetch the actual ping details since we only got the orderId
             const pingRes = await apiGet(`/api/v1/delivery/orders/available`);
-            if (pingRes.data && pingRes.data.length > 0) {
-              const jobs = pingRes.data.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
+            const pingData = pingRes.data.data || pingRes.data;
+            if (pingData && pingData.length > 0) {
+              const jobs = pingData.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
               setPingJob(jobs[0]);
               
               if (jobs[0].expiresAt) {
                 const remainingSecs = Math.max(0, Math.floor((jobs[0].expiresAt - Date.now()) / 1000));
                 setPingTimer(remainingSecs);
               } else {
-                setPingTimer(30);
+                setPingTimer(60);
               }
             }
           }
@@ -739,8 +748,7 @@ export default function DeliveryDashboard({
       // Update history so it's immediately visible
       historyRef.current = [{...currentJob, status: OrderStatus.DELIVERED}, ...historyRef.current];
 
-      setMockEarnings(prev => prev + 5.50 + 2.00);
-      setCompletedCount(prev => prev + 1);
+
       setActiveJobId(null);
       if (goOfflineAfter) {
         setIsOnline(false);
@@ -753,6 +761,10 @@ export default function DeliveryDashboard({
   };
 
   const allHistoryJobs = [...activeOrders.filter(o => o.riderId === riderId && o.status === OrderStatus.DELIVERED).map(job => ({ ...job, payout: 7.50 }))];
+  const todayDateStr = new Date().toISOString().split('T')[0];
+  const todayHistoryJobs = allHistoryJobs.filter(job => job.createdAt?.startsWith(todayDateStr));
+  const todayEarnings = todayHistoryJobs.reduce((acc, job) => acc + (job.payout || 7.50), 0);
+  const todayCompletedCount = todayHistoryJobs.length;
   const filteredHistoryJobs = allHistoryJobs.filter(job => {
     if (!historyDateFilter) return true;
     if (!job.createdAt) return false;
@@ -786,7 +798,8 @@ export default function DeliveryDashboard({
         theme={theme} 
         onComplete={() => setVerificationStatus({ ...verificationStatus, allDocsApproved: true, bankApproved: true })} 
         userId={user?.id || ''} 
-        initialName={riderName} 
+        initialName={riderName}
+        onLogout={onLogout}
       />
     );
   }
@@ -936,7 +949,7 @@ export default function DeliveryDashboard({
           </div>
           <div>
             <span className="text-[10px] text-slate-500 dark:text-[#f0ede6] uppercase font-mono block">Today's Earnings</span>
-            <span className="text-base font-black text-slate-800 dark:text-[#f0ede6]">${mockEarnings.toFixed(2)}</span>
+            <span className="text-base font-black text-slate-800 dark:text-[#f0ede6]">${todayEarnings.toFixed(2)}</span>
           </div>
         </div>
 
@@ -949,7 +962,7 @@ export default function DeliveryDashboard({
           </div>
           <div>
             <span className="text-[10px] text-slate-500 dark:text-[#f0ede6] uppercase font-mono block">Trips Completed</span>
-            <span className="text-base font-black text-slate-800 dark:text-[#f0ede6]">{completedCount} orders</span>
+            <span className="text-base font-black text-slate-800 dark:text-[#f0ede6]">{todayCompletedCount} orders</span>
           </div>
         </button>
 
@@ -1244,7 +1257,7 @@ export default function DeliveryDashboard({
               </div>
               <div className="w-10 h-10 rounded-full border-2 border-emerald-500/50 flex items-center justify-center text-emerald-400 font-bold font-mono text-sm relative">
                 <svg className="absolute inset-0 w-full h-full -rotate-90">
-                  <circle cx="18" cy="18" r="16" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="100" strokeDashoffset={100 - (pingTimer / 30) * 100} className="text-emerald-500 transition-all duration-1000 ease-linear" />
+                  <circle cx="18" cy="18" r="16" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="100" strokeDashoffset={100 - (pingTimer / 60) * 100} className="text-emerald-500 transition-all duration-1000 ease-linear" />
                 </svg>
                 {pingTimer}s
               </div>

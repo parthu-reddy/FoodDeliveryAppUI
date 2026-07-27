@@ -40,18 +40,27 @@ export default function AdminPortal({
   const fetchActiveOrders = async () => {
     try {
       const res = await apiGet(`/api/v1/internal/admin/orders/active-all`);
-      setActiveOrders(Array.isArray(res) ? res : []);
+      const data = res.data?.data || res.data || (Array.isArray(res) ? res : res.data);
+      setActiveOrders(Array.isArray(data) ? data : []);
     } catch (e) {
       console.error(e);
       setActiveOrders([]);
     }
   };
 
-  const fetchAvailableDrivers = async () => {
+  const fetchAvailableDrivers = async (lat?: number, lng?: number, radiusKm?: number) => {
     try {
-      const res = await apiGet(`/api/v1/internal/admin/delivery/drivers/available-with-location`);
+      let url = `/api/v1/internal/admin/delivery/drivers/available-with-location`;
+      if (lat !== undefined && lng !== undefined) {
+        url += `?lat=${lat}&lng=${lng}`;
+        if (radiusKm !== undefined) {
+          url += `&radiusKm=${radiusKm}`;
+        }
+      }
+      const res = await apiGet(url);
       console.log("fetchAvailableDrivers response:", res);
-      setAvailableDrivers(Array.isArray(res) ? res : []);
+      const data = res.data?.data || res.data || (Array.isArray(res) ? res : res.data);
+      setAvailableDrivers(Array.isArray(data) ? data : []);
     } catch (e) {
       console.error("fetchAvailableDrivers error:", e);
       setAvailableDrivers([]);
@@ -61,7 +70,8 @@ export default function AdminPortal({
   const fetchByRole = async () => {
     try {
       const res = await apiGet(`/api/v1/internal/users/by-role?role=${roleFilter}`);
-      setUsers(Array.isArray(res) ? res : []);
+      const data = res.data?.data || res.data || (Array.isArray(res) ? res : res.data);
+      setUsers(Array.isArray(data) ? data : []);
     } catch(e) {
       console.error(e);
       setUsers([]);
@@ -71,7 +81,8 @@ export default function AdminPortal({
   const fetchUserActiveOrders = async (userId: string) => {
     try {
       const res = await apiGet(`/api/v1/internal/admin/orders/user/${userId}/active`);
-      setUserActiveOrders(Array.isArray(res) ? res : []);
+      const data = res.data?.data || res.data || (Array.isArray(res) ? res : res.data);
+      setUserActiveOrders(Array.isArray(data) ? data : []);
     } catch (e) {
       console.error(e);
       setUserActiveOrders([]);
@@ -82,7 +93,6 @@ export default function AdminPortal({
   useEffect(() => {
     if (activeTab === 'deliveries') {
       fetchActiveOrders();
-      fetchAvailableDrivers();
     } else if (activeTab === 'users') {
       fetchByRole();
     }
@@ -95,6 +105,32 @@ export default function AdminPortal({
       setUserActiveOrders([]);
     }
   }, [selectedUser]);
+
+  const refreshDrivers = () => {
+    if (selectedOrder) {
+      apiGet(`/api/v1/restaurants/${selectedOrder.restaurantId}`)
+        .then(res => {
+           const rest = res.data || res;
+           if (rest && rest.lat !== undefined && rest.lng !== undefined) {
+               fetchAvailableDrivers(rest.lat, rest.lng, 5);
+           } else {
+               fetchAvailableDrivers();
+           }
+        })
+        .catch(err => {
+           console.error("Could not fetch restaurant location", err);
+           fetchAvailableDrivers();
+        });
+    } else {
+      fetchAvailableDrivers();
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'deliveries') {
+      refreshDrivers();
+    }
+  }, [selectedOrder, activeTab]);
 
   // handlers
   const handleSearch = async (e: React.FormEvent) => {
@@ -221,7 +257,7 @@ export default function AdminPortal({
              <div className="w-80 flex flex-col border-r border-slate-200 dark:border-slate-800 bg-white/10 dark:bg-slate-950/20 backdrop-blur-xl shrink-0">
                 <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-white/20 dark:bg-slate-900/30">
                     <h3 className="font-black text-lg">Active Orders</h3>
-                    <button onClick={() => { fetchActiveOrders(); fetchAvailableDrivers(); }} className="text-sm font-bold text-indigo-500 hover:underline">Refresh</button>
+                    <button onClick={() => { fetchActiveOrders(); refreshDrivers(); }} className="text-sm font-bold text-indigo-500 hover:underline">Refresh</button>
                 </div>
                 <div className="flex-1 overflow-y-auto p-3 space-y-2">
                     {activeOrders.map(order => {

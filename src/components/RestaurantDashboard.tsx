@@ -164,7 +164,8 @@ export default function RestaurantDashboard({
                     .then(res => {
             if (isCancelled) return;
             if (res.data) {
-              const mapped = res.data.map((o: any) => {
+              const activeOrdersData = res.data.data || res.data;
+              const mapped = activeOrdersData.map((o: any) => {
                 let s = o.status?.toUpperCase() || '';
                 if (s === OrderStatus.CREATED || s === OrderStatus.PENDING_ACCEPTANCE) {
                   if (o.additionalPrepTime && o.additionalPrepTime > 10) {
@@ -302,8 +303,11 @@ export default function RestaurantDashboard({
     );
 
     if (hasPendingVerifications) {
-      intervalId = setInterval(() => {
-        loadData();
+      intervalId = setInterval(async () => {
+        try {
+          const _brands = await getBrands();
+          setBrands(_brands);
+        } catch (e) {}
       }, 5000);
     }
 
