@@ -381,11 +381,15 @@ export default function CustomerDashboard({
 
   const getCartTotal = () => {
     const subtotal = cart.reduce((sum, item) => sum + (item.item.price * item.quantity), 0);
+    const sgst = subtotal * 0.025;
+    const cgst = subtotal * 0.025;
     const deliveryFee = (cartRestaurant || selectedRestaurant) ? (cartRestaurant || selectedRestaurant).deliveryFee : 0;
     return {
       subtotal,
+      sgst,
+      cgst,
       deliveryFee,
-      total: subtotal + deliveryFee
+      total: subtotal + sgst + cgst + deliveryFee
     };
   };
 
@@ -976,8 +980,20 @@ export default function CustomerDashboard({
                   </div>
                   <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
                     <span>Delivery Fee</span>
-                    <span>${currentTrackingOrder.items ? ((currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0) - currentTrackingOrder.items.reduce((sum: number, item: any) => sum + ((item.item?.price || item.price || 0) * (item.quantity || 1)), 0)).toFixed(2) : '0.00'}</span>
+                    <span>${currentTrackingOrder.deliveryFee !== undefined ? currentTrackingOrder.deliveryFee.toFixed(2) : (currentTrackingOrder.items ? ((currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0) - currentTrackingOrder.items.reduce((sum: number, item: any) => sum + ((item.item?.price || item.price || 0) * (item.quantity || 1)), 0)).toFixed(2) : '0.00')}</span>
                   </div>
+                  {currentTrackingOrder.sgst !== undefined && (
+                    <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
+                      <span>SGST</span>
+                      <span>${currentTrackingOrder.sgst.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {currentTrackingOrder.cgst !== undefined && (
+                    <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
+                      <span>CGST</span>
+                      <span>${currentTrackingOrder.cgst.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-lg font-black text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-slate-700">
                     <span>Total Paid</span>
                     <span>${(currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0).toFixed(2)}</span>
@@ -1036,8 +1052,20 @@ export default function CustomerDashboard({
                       </div>
                       <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
                         <span>Delivery Fee</span>
-                        <span>${currentTrackingOrder.items ? ((currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0) - currentTrackingOrder.items.reduce((sum: number, item: any) => sum + ((item.item?.price || item.price || 0) * (item.quantity || 1)), 0)).toFixed(2) : '0.00'}</span>
+                        <span>${currentTrackingOrder.deliveryFee !== undefined ? currentTrackingOrder.deliveryFee.toFixed(2) : (currentTrackingOrder.items ? ((currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0) - currentTrackingOrder.items.reduce((sum: number, item: any) => sum + ((item.item?.price || item.price || 0) * (item.quantity || 1)), 0)).toFixed(2) : '0.00')}</span>
                       </div>
+                      {currentTrackingOrder.sgst !== undefined && (
+                        <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
+                          <span>SGST</span>
+                          <span>${currentTrackingOrder.sgst.toFixed(2)}</span>
+                        </div>
+                      )}
+                      {currentTrackingOrder.cgst !== undefined && (
+                        <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
+                          <span>CGST</span>
+                          <span>${currentTrackingOrder.cgst.toFixed(2)}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between text-lg font-black text-slate-900 dark:text-white pt-2 border-t border-rose-500/20 dark:border-slate-700">
                         <span>{isFailedOrder(currentTrackingOrder.status) ? 'Total Refunded' : 'Total Paid'}</span>
                         <span className={isFailedOrder(currentTrackingOrder.status) ? 'text-red-500' : ''}>${(currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0).toFixed(2)}</span>

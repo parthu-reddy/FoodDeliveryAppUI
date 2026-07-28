@@ -51,6 +51,10 @@ export interface Order {
   deliveryFee: number;
   total: number;
   totalAmount?: number;
+  itemTotal?: number;
+  sgst?: number;
+  cgst?: number;
+  paymentIntent?: string;
   status: OrderStatus;
   deliveryStatus?: DeliveryStatus;
   otp: string; // 6-digit code to complete delivery

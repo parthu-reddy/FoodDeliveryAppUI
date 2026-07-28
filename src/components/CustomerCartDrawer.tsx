@@ -126,6 +126,14 @@ export default function CustomerCartDrawer({
                   <span>Delivery fee</span>
                   <span>${getCartTotal().deliveryFee.toFixed(2)}</span>
                 </div>
+                <div className="flex justify-between text-slate-400 dark:text-slate-300">
+                  <span>SGST (2.5%)</span>
+                  <span>${getCartTotal().sgst.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-slate-400 dark:text-slate-300">
+                  <span>CGST (2.5%)</span>
+                  <span>${getCartTotal().cgst.toFixed(2)}</span>
+                </div>
                 <div className="flex justify-between text-slate-900 dark:text-[#f0ede6] font-bold text-sm">
                   <span>Grand Total</span>
                   <span>${getCartTotal().total?.toFixed(2)}</span>

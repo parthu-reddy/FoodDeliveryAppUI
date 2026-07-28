@@ -2,10 +2,11 @@ import { RoleName } from '../types';
 import React, { useState, useEffect } from 'react';
 import { apiGet, apiPost, apiDelete } from '../lib/apiClient';
 import { useToast } from '../context/ToastContext';
-import { Search, Shield, User, X, LogOut, Sun, Moon, Plus, Package, Truck, Check, MapPin, Users, Activity, Tags, Navigation } from 'lucide-react';
+import { Search, Shield, User, X, LogOut, Sun, Moon, Plus, Package, Truck, Check, MapPin, Users, Activity, Tags, Navigation, Database } from 'lucide-react';
 import LaBouffeLogo from './LaBouffeLogo';
 import AdminAssignmentMap from './AdminAssignmentMap';
 import AdminFleetMap from './AdminFleetMap';
+import AdminLedgerView from './AdminLedgerView';
 import { z } from 'zod';
 
 const roleSchema = z.string().min(2, "Role must be at least 2 characters").max(50, "Role cannot exceed 50 characters").regex(/^[A-Z_]+$/, "Role must contain only uppercase letters and underscores");
@@ -20,7 +21,7 @@ export default function AdminPortal({
   theme,
   onToggleTheme
 }: any) {
-  const [activeTab, setActiveTab] = useState<'deliveries' | 'users' | 'categories' | 'map'>('map');
+  const [activeTab, setActiveTab] = useState<'deliveries' | 'users' | 'categories' | 'map' | 'ledger'>('map');
   const { showSuccess, showError } = useToast();
 
   // deliveries state
@@ -227,6 +228,13 @@ export default function AdminPortal({
           >
             <MapPin className="w-5 h-5" /> Fleet Map
           </button>
+
+          <button 
+            onClick={() => setActiveTab('ledger')} 
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'ledger' ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30' : 'text-slate-600 dark:text-slate-300 hover:bg-white/20 dark:hover:bg-slate-800/40'}`}
+          >
+            <Database className="w-5 h-5" /> Ledger Entries
+          </button>
         </div>
 
         <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
@@ -248,6 +256,12 @@ export default function AdminPortal({
         {activeTab === 'map' && (
             <div className="flex-1 flex w-full h-full relative overflow-hidden">
                 <AdminFleetMap />
+            </div>
+        )}
+
+        {activeTab === 'ledger' && (
+            <div className="flex-1 flex w-full h-full relative overflow-hidden">
+                <AdminLedgerView />
             </div>
         )}
         

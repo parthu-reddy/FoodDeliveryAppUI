@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 3.2.1263 on 2026-07-28 07:43:56.
+// Generated using typescript-generator version 3.2.1263 on 2026-07-28 18:42:54.
 
 export enum AccountType {
     CUSTOMER = "CUSTOMER",
@@ -14,6 +14,22 @@ export enum ChannelType {
     EMAIL = "EMAIL",
     PUSH = "PUSH",
     WHATSAPP = "WHATSAPP",
+}
+
+export enum ChargeCategory {
+    DELIVERY_FEE = "DELIVERY_FEE",
+    PLATFORM_FIXED_FEE = "PLATFORM_FIXED_FEE",
+    PLATFORM_BONUS = "PLATFORM_BONUS",
+    FOOD_COST = "FOOD_COST",
+    TIP = "TIP",
+    PACKAGING_FEE = "PACKAGING_FEE",
+    SURGE_PRICING = "SURGE_PRICING",
+    TAX = "TAX",
+    SGST = "SGST",
+    CGST = "CGST",
+    REFUND = "REFUND",
+    ORDER_TOTAL = "ORDER_TOTAL",
+    PAYOUT = "PAYOUT",
 }
 
 export enum DeliveryStatus {
