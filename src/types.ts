@@ -77,6 +77,7 @@ export interface MasterMenuItem {
   brandId: string;
   name: string;
   basePrice: number;
+  packingCharge?: number;
   defaultPrepTimeMinutes: number;
   imageUrl: string;
   category: string;
