@@ -272,7 +272,8 @@ export default function DeliveryDashboard({
         setPingTimer(prev => {
           if (prev <= 1) {
             clearInterval(timer);
-            handleTimeoutPing(pingJob.id);
+            setRejectedIds(prev => new Set(prev).add(pingJob.id));
+            setPingJob(null);
             return 0;
           }
           return prev - 1;
@@ -302,13 +303,6 @@ export default function DeliveryDashboard({
     setPingJob(null);
   };
 
-  const handleTimeoutPing = async (jobId: string) => {
-    try {
-      await apiPost(`/api/delivery/drivers/${riderId}/orders/${jobId}/timeout`);
-    } catch(e) {}
-    setRejectedIds(prev => new Set(prev).add(jobId));
-    setPingJob(null);
-  };
 
   React.useEffect(() => {
     if (!isOnline || !riderId) return;
