@@ -21,7 +21,7 @@ export default function AdminPortal({
   theme,
   onToggleTheme
 }: any) {
-  const [activeTab, setActiveTab] = useState<'deliveries' | 'users' | 'categories' | 'map' | 'ledger'>('map');
+  const [activeTab, setActiveTab] = useState<'deliveries' | 'users' | 'categories' | 'map' | 'ledger' | 'interventions'>('map');
   const { showSuccess, showError } = useToast();
 
   // deliveries state
@@ -36,6 +36,11 @@ export default function AdminPortal({
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [newRole, setNewRole] = useState('');
   const [userActiveOrders, setUserActiveOrders] = useState<any[]>([]);
+
+  // interventions state
+  const [interventions, setInterventions] = useState<any[]>([]);
+  const [selectedIntervention, setSelectedIntervention] = useState<any>(null);
+  const [cancelReason, setCancelReason] = useState('');
 
   // fetches
   const fetchActiveOrders = async () => {
@@ -90,12 +95,27 @@ export default function AdminPortal({
     }
   };
 
+  const fetchInterventions = async () => {
+    try {
+      const res = await apiGet(`/api/v1/internal/admin/orders/intervention`);
+      // Spring Data Page<Order> returns items in .content
+      const content = res.data?.content || res.data?.data?.content || (Array.isArray(res.data) ? res.data : []);
+      setInterventions(Array.isArray(content) ? content : []);
+    } catch (e) {
+      console.error(e);
+      setInterventions([]);
+    }
+  };
+
   // effects
   useEffect(() => {
     if (activeTab === 'deliveries') {
       fetchActiveOrders();
     } else if (activeTab === 'users') {
       fetchByRole();
+    } else if (activeTab === 'interventions') {
+      fetchInterventions();
+      fetchAvailableDrivers();
     }
   }, [activeTab, roleFilter]);
 
@@ -191,6 +211,31 @@ export default function AdminPortal({
     }
   };
 
+  const handleAssignDriverToIntervention = async (orderId: string, driverId: string) => {
+    try {
+      await apiPost(`/api/v1/internal/admin/orders/intervention/${orderId}/assign-driver`, { deliveryExecutiveId: driverId });
+      showSuccess("Driver manually assigned and order resumed!");
+      fetchInterventions();
+      setSelectedIntervention(null);
+    } catch (e) {
+      console.error(e);
+      showError("Failed to manually assign driver");
+    }
+  };
+
+  const handleCancelIntervention = async (orderId: string) => {
+    try {
+      await apiPost(`/api/v1/internal/admin/orders/intervention/${orderId}/cancel`, { reason: cancelReason || 'Cancelled by Admin' });
+      showSuccess("Order cancelled successfully!");
+      fetchInterventions();
+      setSelectedIntervention(null);
+      setCancelReason('');
+    } catch (e) {
+      console.error(e);
+      showError("Failed to cancel order");
+    }
+  };
+
   return (
     <div className="flex w-full h-full bg-transparent overflow-hidden">
       {/* Sidebar Navigation */}
@@ -208,6 +253,16 @@ export default function AdminPortal({
             <Activity className="w-5 h-5" /> Live Operations
           </button>
           
+          <button 
+            onClick={() => setActiveTab('interventions')} 
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'interventions' ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/30' : 'text-slate-600 dark:text-slate-300 hover:bg-white/20 dark:hover:bg-slate-800/40'}`}
+          >
+            <Shield className="w-5 h-5" /> Manual Interventions
+            {interventions.length > 0 && activeTab !== 'interventions' && (
+                <span className="ml-auto w-5 h-5 rounded-full bg-rose-500 text-white text-xs flex items-center justify-center font-bold">{interventions.length}</span>
+            )}
+          </button>
+
           <button 
             onClick={() => setActiveTab('users')} 
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === 'users' ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30' : 'text-slate-600 dark:text-slate-300 hover:bg-white/20 dark:hover:bg-slate-800/40'}`}
@@ -263,6 +318,96 @@ export default function AdminPortal({
             <div className="flex-1 flex w-full h-full relative overflow-hidden">
                 <AdminLedgerView />
             </div>
+        )}
+
+        {activeTab === 'interventions' && (
+          <div className="flex-1 flex w-full h-full overflow-hidden">
+             {/* Live Interventions List */}
+             <div className="w-80 flex flex-col border-r border-slate-200 dark:border-slate-800 bg-rose-500/5 dark:bg-rose-500/10 backdrop-blur-xl shrink-0">
+                <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-white/20 dark:bg-slate-900/30">
+                    <h3 className="font-black text-lg text-rose-600 dark:text-rose-400">Interventions</h3>
+                    <button onClick={() => { fetchInterventions(); fetchAvailableDrivers(); }} className="text-sm font-bold text-rose-500 hover:underline">Refresh</button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                    {interventions.map(order => (
+                        <button 
+                            key={order.id} 
+                            onClick={() => setSelectedIntervention(order)} 
+                            className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${selectedIntervention?.id === order.id ? 'bg-rose-500/10 border-rose-500 shadow-md' : 'bg-white/20 dark:bg-slate-900/40 backdrop-blur-md border-slate-200 dark:border-slate-800 hover:border-rose-300'}`}
+                        >
+                            <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-rose-500/20">
+                                <Shield className="w-5 h-5 text-rose-500" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="font-bold text-sm truncate">#{order.id.substring(0, 8)}</p>
+                                <p className="text-xs text-slate-500 truncate">{order.restaurantName || order.restaurantId}</p>
+                            </div>
+                        </button>
+                    ))}
+                    {interventions.length === 0 && <p className="text-center text-slate-400 text-sm mt-10">No orders require manual intervention.</p>}
+                </div>
+             </div>
+
+             {/* Intervention Detail View */}
+             <div className="flex-1 flex flex-col p-8 bg-slate-50 dark:bg-[#0f111a] overflow-y-auto">
+                {selectedIntervention ? (
+                    <div className="max-w-4xl mx-auto w-full">
+                        <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl border border-rose-500/30 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+                            <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-rose-500 to-orange-500" />
+                            
+                            <h2 className="text-3xl font-black mb-2 flex items-center gap-3">
+                                <Shield className="w-8 h-8 text-rose-500" />
+                                Order #{selectedIntervention.id.substring(0, 8)} requires intervention
+                            </h2>
+                            <p className="text-slate-600 dark:text-slate-400 mb-8">This order failed to dispatch to any driver after multiple attempts.</p>
+
+                            <div className="grid grid-cols-2 gap-8 mb-8">
+                                <div className="space-y-4">
+                                    <h3 className="font-bold text-lg border-b border-slate-200 dark:border-slate-700 pb-2">Assign Available Driver</h3>
+                                    <div className="max-h-64 overflow-y-auto space-y-2 pr-2">
+                                        {availableDrivers.map(driver => (
+                                            <div key={driver.id} className="flex items-center justify-between p-3 rounded-xl bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                                                <div className="flex items-center gap-3">
+                                                    <Truck className="w-5 h-5 text-indigo-500" />
+                                                    <p className="font-bold text-sm">{driver.fullName || 'Driver'}</p>
+                                                </div>
+                                                <button onClick={() => handleAssignDriverToIntervention(selectedIntervention.id, driver.id)} className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-bold shadow-lg shadow-emerald-500/20">
+                                                    Force Assign
+                                                </button>
+                                            </div>
+                                        ))}
+                                        {availableDrivers.length === 0 && <p className="text-sm text-slate-500">No online drivers available.</p>}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <h3 className="font-bold text-lg border-b border-slate-200 dark:border-slate-700 pb-2 text-rose-500">Cancel Order</h3>
+                                    <p className="text-sm text-slate-500">If no driver can be found, cancel the order and trigger a refund.</p>
+                                    <textarea 
+                                        value={cancelReason}
+                                        onChange={(e) => setCancelReason(e.target.value)}
+                                        placeholder="Reason for cancellation..."
+                                        className="w-full px-4 py-3 rounded-xl bg-white/40 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-rose-500 min-h-[100px]"
+                                    />
+                                    <button 
+                                        onClick={() => handleCancelIntervention(selectedIntervention.id)}
+                                        className="w-full px-4 py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-bold shadow-lg shadow-rose-500/30"
+                                    >
+                                        Cancel & Refund
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="flex-1 flex flex-col items-center justify-center text-slate-400">
+                        <Shield className="w-16 h-16 mb-4 opacity-30 text-rose-500" />
+                        <h2 className="text-2xl font-black mb-2 text-slate-800 dark:text-[#f0ede6]">Manual Interventions</h2>
+                        <p>Select an order that failed dispatch to assign a driver or cancel.</p>
+                    </div>
+                )}
+             </div>
+          </div>
         )}
         
         {activeTab === 'deliveries' && (

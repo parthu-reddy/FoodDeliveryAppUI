@@ -146,7 +146,7 @@ export default function CustomerDashboard({
     let ignore = false;
     if (deliveryLat && deliveryLng) {
       setIsRestaurantsLoading(true);
-      apiGet(`/api/v1/restaurants/nearby?lat=${deliveryLat}&lng=${deliveryLng}&radius=5.0`)
+      apiGet(`/api/v1/restaurants/nearby?lat=${deliveryLat}&lng=${deliveryLng}&radius=10.0`)
         .then(res => {
           if (!ignore && res.data) setRestaurants(res.data);
         })
@@ -240,7 +240,7 @@ export default function CustomerDashboard({
   useEffect(() => {
     let ignore = false;
     if (selectedRestaurant?.brandId) {
-      apiGet(`/api/v1/restaurants/brands/${selectedRestaurant.brandId}/outlets?lat=${deliveryLat}&lng=${deliveryLng}&radius=5.0`)
+      apiGet(`/api/v1/restaurants/brands/${selectedRestaurant.brandId}/outlets?lat=${deliveryLat}&lng=${deliveryLng}&radius=10.0`)
         .then(res => {
           if (!ignore && res.data) setBrandOutlets(res.data);
         })

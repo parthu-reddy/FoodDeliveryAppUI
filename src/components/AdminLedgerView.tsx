@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiGet } from '../lib/apiClient';
-import { Search, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Filter, ArrowRight, Copy, Check } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 
 export default function AdminLedgerView() {
@@ -23,13 +23,13 @@ export default function AdminLedgerView() {
       const params = new URLSearchParams();
       params.append('page', page.toString());
       params.append('size', '20');
-      if (transactionId) params.append('transactionId', transactionId);
-      if (ownerId) params.append('ownerId', ownerId);
+      if (transactionId) params.append('transactionId', transactionId.trim());
+      if (ownerId) params.append('ownerId', ownerId.trim());
       if (ownerType) params.append('ownerType', ownerType);
       if (category) params.append('category', category);
       if (direction) params.append('direction', direction);
 
-      const res = await apiGet(`/api/v1/ledger/admin/entries?${params.toString()}`);
+      const res = await apiGet(`/api/v1/ledger/admin/transactions?${params.toString()}`);
       if (res) {
         const pageData = res.data || res;
         setEntries(pageData.content || []);
@@ -37,7 +37,7 @@ export default function AdminLedgerView() {
       }
     } catch (e) {
       console.error(e);
-      showError('Failed to fetch ledger entries');
+      showError('Failed to fetch ledger transactions');
     } finally {
       setLoading(false);
     }
@@ -72,6 +72,17 @@ export default function AdminLedgerView() {
       fetchEntries();
     }, 0);
   };
+
+  const [copiedTxnId, setCopiedTxnId] = useState<string | null>(null);
+
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedTxnId(text);
+    setTimeout(() => setCopiedTxnId(null), 2000);
+  };
+
+  // Directly use entries from the backend as they are now grouped transactions
+  const groupedTransactions = entries;
 
   return (
     <div className="flex flex-col h-full bg-slate-50 dark:bg-[#0f111a] text-slate-800 dark:text-[#f0ede6] p-6">
@@ -150,33 +161,86 @@ export default function AdminLedgerView() {
         <div className="overflow-x-auto flex-1">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-100/50 dark:bg-slate-800/50">
-                <th className="p-4 font-bold text-slate-500 uppercase text-xs">Date</th>
-                <th className="p-4 font-bold text-slate-500 uppercase text-xs">Transaction ID</th>
-                <th className="p-4 font-bold text-slate-500 uppercase text-xs">Account ID</th>
-                <th className="p-4 font-bold text-slate-500 uppercase text-xs">Category</th>
-                <th className="p-4 font-bold text-slate-500 uppercase text-xs text-right">Amount</th>
+              <tr className="bg-slate-100/50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+                <th className="p-4 font-bold text-slate-500 uppercase text-xs tracking-wider">Date</th>
+                <th className="p-4 font-bold text-slate-500 uppercase text-xs tracking-wider">Transaction Details</th>
+                <th className="p-4 font-bold text-slate-500 uppercase text-xs tracking-wider">From Account</th>
+                <th className="p-4 font-bold text-slate-500 uppercase text-xs tracking-wider">To Account</th>
+                <th className="p-4 font-bold text-slate-500 uppercase text-xs tracking-wider text-right">Amount</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-slate-500 font-medium">Loading entries...</td>
+                  <td colSpan={5} className="p-8 text-center text-slate-500 font-medium">
+                    <div className="flex justify-center items-center gap-3">
+                      <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                      Loading transactions...
+                    </div>
+                  </td>
                 </tr>
-              ) : entries.length === 0 ? (
+              ) : groupedTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-slate-500 font-medium">No ledger entries found.</td>
+                  <td colSpan={5} className="p-8 text-center text-slate-500 font-medium bg-slate-50/50 dark:bg-slate-900/50">
+                    No ledger transactions found.
+                  </td>
                 </tr>
               ) : (
-                entries.map(entry => (
-                  <tr key={entry.id} className="border-t border-slate-200 dark:border-slate-800/50 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                    <td className="p-4 text-sm text-slate-500">{new Date(entry.createdAt).toLocaleString()}</td>
-                    <td className="p-4 font-mono text-xs">{entry.transactionId}</td>
-                    <td className="p-4 font-mono text-xs text-slate-400">{entry.accountId}</td>
-                    <td className="p-4 text-sm font-bold">{entry.category}</td>
-                    <td className="p-4 text-right">
-                      <span className={`px-3 py-1 rounded-lg text-sm font-bold ${entry.direction === 'CREDIT' ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'bg-rose-500/20 text-rose-600 dark:text-rose-400'}`}>
-                        {entry.direction === 'CREDIT' ? '+' : '-'}${entry.amount.toFixed(2)}
+                groupedTransactions.map(tx => (
+                  <tr key={tx.transactionId} className="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-all group">
+                    <td className="p-4 align-middle">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                          {new Date(tx.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </span>
+                        <span className="text-xs text-slate-400">
+                          {new Date(tx.date).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="p-4 align-middle">
+                      <div className="flex flex-col gap-1.5 items-start">
+                        <span className="px-2.5 py-1 rounded-md text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 tracking-wide">
+                          {tx.category.replace(/_/g, ' ')}
+                        </span>
+                        <div className="flex items-center gap-1.5 group/copy cursor-pointer" onClick={() => handleCopy(tx.transactionId)}>
+                          <span className="font-mono text-xs text-slate-500 dark:text-slate-400 truncate max-w-[120px]" title={tx.transactionId}>
+                            {tx.transactionId.substring(0, 8)}...{tx.transactionId.substring(tx.transactionId.length - 4)}
+                          </span>
+                          {copiedTxnId === tx.transactionId ? (
+                            <Check className="w-3.5 h-3.5 text-emerald-500" />
+                          ) : (
+                            <Copy className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover/copy:opacity-100 transition-opacity" />
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4 align-middle">
+                      {tx.fromAccountId ? (
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-rose-400 shadow-[0_0_8px_rgba(251,113,133,0.6)]"></span>
+                          <span className="font-mono text-xs text-slate-600 dark:text-slate-300">{tx.fromAccountId}</span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-slate-400 italic">External / Unknown</span>
+                      )}
+                    </td>
+                    <td className="p-4 align-middle relative">
+                      <div className="absolute -left-6 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-700 hidden md:block">
+                        <ArrowRight className="w-4 h-4" />
+                      </div>
+                      {tx.toAccountId ? (
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]"></span>
+                          <span className="font-mono text-xs text-slate-600 dark:text-slate-300">{tx.toAccountId}</span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-slate-400 italic">External / Unknown</span>
+                      )}
+                    </td>
+                    <td className="p-4 align-middle text-right">
+                      <span className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm border border-slate-200/50 dark:border-slate-700/50">
+                        ${tx.amount != null ? tx.amount.toFixed(2) : '0.00'}
                       </span>
                     </td>
                   </tr>

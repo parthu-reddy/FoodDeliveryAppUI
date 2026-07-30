@@ -65,8 +65,18 @@ export const apiGet = async (path: string, customHeaders?: Record<string, string
     Object.assign(headers, customHeaders);
   }
 
-  const res = await fetch(`${BASE_URL}${path}`, { headers });
-  if (!res.ok) await handleHttpError(res);
+  let res: Response;
+  try {
+    res = await fetch(`${BASE_URL}${path}`, { headers });
+  } catch (error) {
+    console.error(`[API_ERROR] fetch failed for GET ${BASE_URL}${path}`, error);
+    throw error;
+  }
+
+  if (!res.ok) {
+    console.error(`[API_ERROR] HTTP error for GET ${BASE_URL}${path}: ${res.status}`);
+    await handleHttpError(res);
+  }
   return res.json();
 };
 

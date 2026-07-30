@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 3.2.1263 on 2026-07-28 18:42:54.
+// Generated using typescript-generator version 3.2.1263 on 2026-07-29 14:30:01.
 
 export enum AccountType {
     CUSTOMER = "CUSTOMER",
@@ -54,6 +54,7 @@ export enum OrderStatus {
     CANCELLED = "CANCELLED",
     CANCELLED_BY_RESTAURANT = "CANCELLED_BY_RESTAURANT",
     DELIVERY_FAILED = "DELIVERY_FAILED",
+    REQUIRES_MANUAL_INTERVENTION = "REQUIRES_MANUAL_INTERVENTION",
 }
 
 export enum OutboxStatus {

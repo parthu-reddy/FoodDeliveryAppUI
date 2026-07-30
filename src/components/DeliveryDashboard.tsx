@@ -115,6 +115,18 @@ export default function DeliveryDashboard({
            if (availableRes) {
               const availableData = getArrayFromRes(availableRes);
               fetchedAvailableJobs = availableData.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
+              
+              if (fetchedAvailableJobs.length > 0) {
+                const newPingId = fetchedAvailableJobs[0].id;
+                setRejectedIds(prev => {
+                  if (prev.has(newPingId)) {
+                    const newSet = new Set(prev);
+                    newSet.delete(newPingId);
+                    return newSet;
+                  }
+                  return prev;
+                });
+              }
            }
         }
 
@@ -230,6 +242,32 @@ export default function DeliveryDashboard({
 
   React.useEffect(() => {
     if (pingJob) {
+      // Play notification ping sound
+      try {
+        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+        if (AudioContext) {
+          const ctx = new AudioContext();
+          const osc = ctx.createOscillator();
+          const gainNode = ctx.createGain();
+          
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(880, ctx.currentTime); // A5
+          osc.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.1); // A6
+          
+          gainNode.gain.setValueAtTime(0, ctx.currentTime);
+          gainNode.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.05);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+          
+          osc.connect(gainNode);
+          gainNode.connect(ctx.destination);
+          
+          osc.start(ctx.currentTime);
+          osc.stop(ctx.currentTime + 0.5);
+        }
+      } catch (e) {
+        console.log('Audio playback failed', e);
+      }
+
       const timer = setInterval(() => {
         setPingTimer(prev => {
           if (prev <= 1) {
@@ -333,6 +371,20 @@ export default function DeliveryDashboard({
             const pingData = pingRes.data.data || pingRes.data;
             if (pingData && pingData.length > 0) {
               const jobs = pingData.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
+              
+              setRejectedIds(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(jobs[0].id);
+                return newSet;
+              });
+
+              setInternalOrders(prev => {
+                const mergedMap = new Map();
+                prev.forEach(j => mergedMap.set(j.id, j));
+                jobs.forEach(j => mergedMap.set(j.id, j));
+                return Array.from(mergedMap.values());
+              });
+
               setPingJob(jobs[0]);
               
               if (jobs[0].expiresAt) {
