@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Calendar, Search, Filter, ChevronLeft, ChevronRight, Package, DollarSign, Clock } from 'lucide-react';
 import { OrderStatus, Order } from '../types';
+import { getFriendlyStatusMessage } from '../utils/statusMessaging';
 import { apiPost, apiGet } from '../lib/apiClient';
 import { useToast } from '../context/ToastContext';
 
@@ -27,7 +28,7 @@ export function OrderHistory({ restaurantId }: { restaurantId: string }) {
           const mapped = (res.data.content || []).map((o: any) => {
             let s = (o.status || '').toUpperCase();
             if (s === OrderStatus.READY_FOR_PICKUP || s === 'READY') s = OrderStatus.READY_FOR_PICKUP; 
-            if (s === OrderStatus.CANCELLED_BY_RESTAURANT || s === 'CANCELLED_BY_RESTAURANT' || s === OrderStatus.DELIVERY_FAILED) s = OrderStatus.CANCELLED;
+            if (s === OrderStatus.CANCELLED_BY_RESTAURANT) s = OrderStatus.CANCELLED;
             
             let parsedItems = o.items || [];
             if (o.itemsJson) {
@@ -65,8 +66,7 @@ export function OrderHistory({ restaurantId }: { restaurantId: string }) {
       case OrderStatus.ACCEPTED: return 'bg-blue-100 text-blue-600 border-blue-200';
       case OrderStatus.ACCEPTED: return 'bg-indigo-100 text-indigo-600 border-indigo-200';
       case OrderStatus.READY_FOR_PICKUP: return 'bg-purple-100 text-purple-600 border-purple-200';
-      case OrderStatus.PICKED_UP: return 'bg-orange-100 text-orange-600 border-orange-200';
-      case OrderStatus.DELIVERED: return 'bg-emerald-100 text-emerald-600 border-emerald-200';
+      case OrderStatus.HANDED_OVER: return 'bg-emerald-100 text-emerald-600 border-emerald-200';
       default: return 'bg-slate-100 text-slate-600 dark:text-slate-300 border-rose-500/20';
     }
   };
@@ -180,7 +180,7 @@ export function OrderHistory({ restaurantId }: { restaurantId: string }) {
                     </td>
                     <td className="p-4 pr-6 whitespace-nowrap">
                       <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:shadow-[0_0_12px_rgba(244,63,94,0.5)] uppercase`}>
-                        {order.status.replace(/_/g, ' ')}
+                        {getFriendlyStatusMessage(order.status, order.deliveryStatus)}
                       </span>
                     </td>
                     <td className="p-4 whitespace-nowrap">

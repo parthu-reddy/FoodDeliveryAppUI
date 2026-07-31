@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useToast } from '../context/ToastContext';
 import { 
   Search, MapPin, ShoppingBag, LogOut, ChevronRight, Star, Clock, 
   Bike, Plus, Minus, X, Check, Timer, ArrowLeft, ShieldCheck, Heart, Store, Sun, Moon,
   Terminal, Sliders, Code, Send, RefreshCw, Package, User, Navigation, AlertCircle, MapPinOff, XCircle, ChevronDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { RoleName, Restaurant, MenuItem, CartItem, Order, OrderStatus, DeliveryStatus } from '../types';
+import { RoleName, Restaurant, MenuItem, CartItem } from '../types';
+import { OrderStatus, DeliveryStatus, Order } from '../types';
+import { getFriendlyStatusMessage } from '../utils/statusMessaging';
 import { apiGet, apiPost } from '../lib/apiClient';
 import { getUserProfile } from '../lib/tokenStore';
 import LaBouffeLogo from './LaBouffeLogo';
@@ -20,6 +23,7 @@ import CustomerAddressModal from './CustomerAddressModal';
 import CustomerPaymentModal from './CustomerPaymentModal';
 import CompleteProfileModal from './CompleteProfileModal';
 import OrderTrackingMap from './OrderTrackingMap';
+import { isActiveOrder, isFailedOrder } from '../utils/orderStatus';
 
 
 interface CustomerDashboardProps {
@@ -35,16 +39,6 @@ interface CustomerDashboardProps {
 }
 
 
-// Utility to determine if order is actively tracked
-const isActiveOrder = (status: string) => {
-  const s = (status || '').trim().toUpperCase();
-  return ![OrderStatus.DELIVERED, OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT, 'cancelled_by_restaurant', OrderStatus.DELIVERY_FAILED].includes(s);
-};
-
-const isFailedOrder = (status: string) => {
-  const s = (status || '').trim().toUpperCase();
-  return [OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT, 'cancelled_by_restaurant', OrderStatus.DELIVERY_FAILED].includes(s);
-};
 
 export default function CustomerDashboard({ 
   userName, 
@@ -57,6 +51,7 @@ export default function CustomerDashboard({
   onToggleTheme,
   onAddApiLog
 }: CustomerDashboardProps) {
+  const { showError, showSuccess, showInfo } = useToast();
   // Internal order state — falls back to parent prop if provided
   const [internalOrders, setInternalOrders] = useState<Order[]>([]);
   const activeOrders = externalOrders ?? internalOrders;
@@ -160,7 +155,7 @@ export default function CustomerDashboard({
 
   // Smart polling for active orders only (every 60s)
   const activeOrderIdsStr = internalOrders
-    .filter(o => [OrderStatus.CREATED, OrderStatus.PENDING_ACCEPTANCE, OrderStatus.ACCEPTED, OrderStatus.PREPARING, OrderStatus.READY_FOR_PICKUP, OrderStatus.PICKED_UP].includes(o.status?.toUpperCase() || ''))
+    .filter(o => [OrderStatus.CREATED, OrderStatus.PENDING_ACCEPTANCE, OrderStatus.ACCEPTED, OrderStatus.PREPARING, OrderStatus.READY_FOR_PICKUP, OrderStatus.HANDED_OVER].includes(o.status?.toUpperCase() || ''))
     .map(o => o.id)
     .sort()
     .join(',');
@@ -176,21 +171,49 @@ export default function CustomerDashboard({
           const content = res.data.content || (Array.isArray(res.data) ? res.data : []);
           const updatedOrders = content.map((o: any) => {
             let s = o.status?.toUpperCase() || '';
-            if (s === 'ON_HOLD' || s === 'awaiting_delay_approval') s = OrderStatus.AWAITING_DELAY_APPROVAL;
-            if (s === OrderStatus.PENDING_ACCEPTANCE || s === OrderStatus.CREATED) s = OrderStatus.PENDING_ACCEPTANCE;
             return { ...o, status: s };
           });
           
           setInternalOrders(prev => {
             const newOrders = [...prev];
             let changed = false;
+            
+            // 1. Update active orders
             updatedOrders.forEach((updated: any) => {
               const idx = newOrders.findIndex(o => o.id === updated.id);
-              if (idx !== -1 && JSON.stringify(newOrders[idx]) !== JSON.stringify(updated)) {
-                newOrders[idx] = updated;
+              if (idx !== -1) {
+                if (JSON.stringify(newOrders[idx]) !== JSON.stringify(updated)) {
+                  newOrders[idx] = updated;
+                  changed = true;
+                }
+              } else {
+                newOrders.push(updated);
                 changed = true;
               }
             });
+            
+            // 2. Identify missing active orders and fetch them (since they probably completed)
+            const activePrevIds = prev.filter(o => isActiveOrder(o)).map(o => o.id);
+            const missingIds = activePrevIds.filter(id => !updatedOrders.find((u: any) => u.id === id));
+            
+            if (missingIds.length > 0) {
+               missingIds.forEach(id => {
+                  apiGet(`/api/v1/orders/${id}`).then(res => {
+                     if (res.data) {
+                        setInternalOrders(curr => {
+                            const currentList = [...curr];
+                            const idx = currentList.findIndex(o => o.id === res.data.id);
+                            if (idx !== -1 && JSON.stringify(currentList[idx]) !== JSON.stringify(res.data)) {
+                               currentList[idx] = res.data;
+                               return currentList;
+                            }
+                            return curr;
+                        });
+                     }
+                  }).catch(console.error);
+               });
+            }
+            
             return changed ? newOrders : prev;
           });
         })
@@ -311,7 +334,7 @@ export default function CustomerDashboard({
 
 
   useEffect(() => {
-    if (currentTrackingOrder && (currentTrackingOrder.status === OrderStatus.PICKED_UP || currentTrackingOrder.deliveryStatus === DeliveryStatus.AT_RESTAURANT || currentTrackingOrder.deliveryStatus === DeliveryStatus.OUT_FOR_DELIVERY)) {
+    if (currentTrackingOrder && (currentTrackingOrder.status === OrderStatus.HANDED_OVER || currentTrackingOrder.deliveryStatus === DeliveryStatus.AT_RESTAURANT || currentTrackingOrder.deliveryStatus === DeliveryStatus.OUT_FOR_DELIVERY)) {
       if (onAddApiLog) {
         onAddApiLog({ id: 'live_tracking', label: `GET /api/v1/orders/${currentTrackingOrder.id}/live-tracking (SSE)`, method: 'GET' });
       }
@@ -461,6 +484,7 @@ export default function CustomerDashboard({
 
       const orderPayload = {
         customerId: profile?.id,
+        customerName: profile?.fullName || profile?.name || 'Customer',
         restaurantId: activeRest.id,
         deliveryAddressId: finalAddressId || "00000000-0000-0000-0000-000000000001",
         items
@@ -521,8 +545,7 @@ export default function CustomerDashboard({
       OrderStatus.ACCEPTED, 
       OrderStatus.PREPARING,
       OrderStatus.READY_FOR_PICKUP, 
-      OrderStatus.PICKED_UP,
-      OrderStatus.DELIVERED
+      OrderStatus.HANDED_OVER
     ];
     return statuses.indexOf(effectiveStatus as string);
   };
@@ -534,11 +557,10 @@ export default function CustomerDashboard({
       case OrderStatus.ACCEPTED: return 20;
       case OrderStatus.PREPARING: return 40;
       case OrderStatus.READY_FOR_PICKUP: return 50;
-      case OrderStatus.PICKED_UP: 
-        if (order.deliveryStatus === DeliveryStatus.OUT_FOR_DELIVERY) return 80;
+      case OrderStatus.HANDED_OVER:
+        if (order.deliveryStatus === DeliveryStatus.DELIVERED) return 100;
         if (order.deliveryStatus === DeliveryStatus.AT_RESTAURANT) return 70;
-        return 60;
-      case OrderStatus.DELIVERED: return 100;
+        return 80;
       default: return 0;
     }
   };
@@ -644,7 +666,7 @@ export default function CustomerDashboard({
       ) : (
         <AnimatePresence mode="wait">
         {currentTrackingOrder ? (
-          currentTrackingOrder.status === OrderStatus.DELIVERED ? (
+          currentTrackingOrder.deliveryStatus === DeliveryStatus.DELIVERED ? (
             /* ------------------- DELIVERED SUMMARY SCREEN ------------------- */
             <motion.div
               key="summary"
@@ -725,8 +747,8 @@ export default function CustomerDashboard({
                   <ArrowLeft className="w-4 h-4" />
                 </button>
                 <h3 className="font-bold text-lg flex items-center gap-2">
-                  {isActiveOrder(currentTrackingOrder.status) ? 'Order Tracking' : 'Order Details'}
-                  {activeOrders.filter(o => isActiveOrder(o.status)).length > 1 ? (
+                  {isActiveOrder(currentTrackingOrder) ? 'Order Tracking' : 'Order Details'}
+                  {activeOrders.filter(o => isActiveOrder(o)).length > 1 ? (
                     <select
                       className="text-xs font-mono bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded text-slate-500 dark:text-slate-300 border-none outline-none cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors font-semibold hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all"
                       value={currentTrackingOrder.id}
@@ -735,7 +757,7 @@ export default function CustomerDashboard({
                         if (order) setTrackingOrder(order);
                       }}
                     >
-                      {activeOrders.filter(o => isActiveOrder(o.status)).map((o) => (
+                      {activeOrders.filter(o => isActiveOrder(o)).map((o) => (
                         <option key={o.id} value={o.id}>
                           #{o.id} - {o.status}
                         </option>
@@ -747,7 +769,7 @@ export default function CustomerDashboard({
                 </h3>
               </div>
 
-              {isActiveOrder(currentTrackingOrder.status) && !isFailedOrder(currentTrackingOrder.status) ? (
+              {isActiveOrder(currentTrackingOrder) && !isFailedOrder(currentTrackingOrder) ? (
                 <>
               {/* Immersive Delivery map (Vector path simulation) */}
               <div className="relative w-full h-44 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-3xl overflow-hidden shadow-inner">
@@ -764,22 +786,25 @@ export default function CustomerDashboard({
                       {currentTrackingOrder.status === OrderStatus.ACCEPTED && 'Order Confirmed!'}
                       {currentTrackingOrder.status === OrderStatus.PREPARING && 'Kitchen is Cooking...'}
                       {currentTrackingOrder.status === OrderStatus.READY_FOR_PICKUP && 'Order is Ready!'}
-                      {currentTrackingOrder.status === OrderStatus.PICKED_UP && currentTrackingOrder.deliveryStatus === DeliveryStatus.AT_RESTAURANT && 'Rider is Waiting at Restaurant...'}
-                      {currentTrackingOrder.status === OrderStatus.PICKED_UP && currentTrackingOrder.deliveryStatus === DeliveryStatus.OUT_FOR_DELIVERY && 'Rider is on the Way!'}
-                      {currentTrackingOrder.status === OrderStatus.PICKED_UP && !currentTrackingOrder.deliveryStatus && 'Picked Up by Rider!'}
-                      {currentTrackingOrder.status === OrderStatus.DELIVERED && 'Order Delivered!'}
-                      {isFailedOrder(currentTrackingOrder.status) && 'Order Failed / Cancelled'}
+                      {currentTrackingOrder.status === OrderStatus.HANDED_OVER && currentTrackingOrder.deliveryStatus === DeliveryStatus.AT_RESTAURANT && 'Rider is Waiting at Restaurant...'}
+                      {currentTrackingOrder.status === OrderStatus.HANDED_OVER && currentTrackingOrder.deliveryStatus === DeliveryStatus.OUT_FOR_DELIVERY && 'Rider is on the Way!'}
+                      {currentTrackingOrder.status === OrderStatus.HANDED_OVER && !currentTrackingOrder.deliveryStatus && 'Picked Up by Rider!'}
+                      {currentTrackingOrder.deliveryStatus === DeliveryStatus.DELIVERED && 'Order Delivered!'}
+                      {currentTrackingOrder.deliveryStatus === DeliveryStatus.FAILED && 'Order Delayed - Finding a Driver...'}
+                      {currentTrackingOrder.deliveryStatus !== DeliveryStatus.FAILED && isFailedOrder(currentTrackingOrder) && 'Order Failed / Cancelled'}
                     </h4>
                     <p className="text-xs text-slate-400 dark:text-slate-300">
                       {currentTrackingOrder.status === OrderStatus.AWAITING_DELAY_APPROVAL 
-                        ? 'The restaurant is experiencing high volume and needs more time. Do you wish to continue?'
-                        : isFailedOrder(currentTrackingOrder.status)
+                        ? 'Restaurant needs more time to prepare your order. Please wait...'
+                        : isFailedOrder(currentTrackingOrder)
                         ? 'Your order could not be completed and will be refunded.'
+                        : currentTrackingOrder.deliveryStatus === DeliveryStatus.FAILED
+                        ? 'We are looking for a nearby delivery partner. Thank you for your patience.'
                         : 'Estimated delivery: 15-20 mins'}
                     </p>
                   </div>
-                  <div className={`p-2.5 rounded-2xl ${isFailedOrder(currentTrackingOrder.status) ? 'bg-red-500/10 text-red-500' : 'bg-amber-500/10 text-amber-500'}`}>
-                    {currentTrackingOrder.status === OrderStatus.AWAITING_DELAY_APPROVAL || isFailedOrder(currentTrackingOrder.status) ? <Clock className="w-5 h-5 text-red-500" /> : <Timer className="w-5 h-5" />}
+                  <div className={`p-2.5 rounded-2xl ${isFailedOrder(currentTrackingOrder) ? 'bg-red-500/10 text-red-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                    {currentTrackingOrder.status === OrderStatus.AWAITING_DELAY_APPROVAL || isFailedOrder(currentTrackingOrder) ? <Clock className="w-5 h-5 text-red-500" /> : <Timer className="w-5 h-5" />}
                   </div>
                 </div>
 
@@ -829,7 +854,7 @@ export default function CustomerDashboard({
                   </div>
                 )}
                 
-                {isFailedOrder(currentTrackingOrder.status) && (
+                {isFailedOrder(currentTrackingOrder) && (
                   <div className="flex items-center gap-3 pt-2">
                     <button
                       onClick={() => {
@@ -866,7 +891,7 @@ export default function CustomerDashboard({
                           }
                         } catch (e: any) {
                           console.error("Failed to cancel order", e);
-                          alert(e.response?.data?.message || "Failed to cancel order");
+                          showError(e.response?.data?.message || "Failed to cancel order");
                         }
                       }}
                       className="flex-1 py-3 bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400 font-bold rounded-2xl hover:bg-red-200 dark:hover:bg-red-500/20 transition-all text-sm"
@@ -876,7 +901,7 @@ export default function CustomerDashboard({
                   </div>
                 )}
 
-                {currentTrackingOrder.status !== OrderStatus.AWAITING_DELAY_APPROVAL && !isFailedOrder(currentTrackingOrder.status) && (
+                {currentTrackingOrder.status !== OrderStatus.AWAITING_DELAY_APPROVAL && !isFailedOrder(currentTrackingOrder) && (
                   <div className="bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 p-4 rounded-2xl flex items-center justify-between">
                     <div>
                       <span className="text-[10px] text-slate-500 dark:text-[#f0ede6] font-bold block uppercase font-mono tracking-wider">Secure Delivery Verification</span>
@@ -889,7 +914,7 @@ export default function CustomerDashboard({
                 )}
 
                 {/* Step checklist */}
-                {isFailedOrder(currentTrackingOrder.status) ? (
+                {isFailedOrder(currentTrackingOrder) ? (
                   <div className="bg-rose-500/10 dark:bg-rose-500/5 border border-rose-500/20 p-5 rounded-2xl flex flex-col items-center justify-center text-center space-y-2 mt-4 mx-2">
                     <XCircle className="w-10 h-10 text-rose-500 mb-1" />
                     <h3 className="font-black text-rose-600 dark:text-rose-400">Order Cancelled</h3>
@@ -897,20 +922,23 @@ export default function CustomerDashboard({
                   </div>
                 ) : (
                   <div className="space-y-0 pt-4 px-2">
-                    {[
-                      { status: OrderStatus.PENDING_ACCEPTANCE, label: 'Order Received' },
-                    { status: OrderStatus.ACCEPTED, label: 'Accepted by Kitchen' },
-                    { status: OrderStatus.PREPARING, label: 'Cooking & Packaging' },
-                    { status: OrderStatus.PICKED_UP, label: 'Picked up by Delivery Executive' },
-                    { status: OrderStatus.DELIVERED, label: 'Handed Over & Verified' },
-                  ].map((step, idx, arr) => {
-                    // For UI steps, OrderStatus.READY_FOR_PICKUP acts as OrderStatus.ACCEPTED being done but OrderStatus.PICKED_UP not yet done
-                    const stepStatusIndex = getStatusIndex(step.status as OrderStatus);
-                    const currentStatusIndex = getStatusIndex(currentTrackingOrder.status);
-                    
-                    const isDone = currentStatusIndex > stepStatusIndex || (currentStatusIndex === stepStatusIndex && step.status !== OrderStatus.DELIVERED);
-                    const isCurrent = currentStatusIndex === stepStatusIndex || (step.status === OrderStatus.PREPARING && [OrderStatus.READY_FOR_PICKUP, OrderStatus.PICKED_UP].includes(currentTrackingOrder.status as OrderStatus));
-                    const isLast = idx === arr.length - 1;
+                    {(() => {
+                      const UI_STEPS = [
+                        { status: OrderStatus.PENDING_ACCEPTANCE, label: 'Order Received' },
+                        { status: OrderStatus.ACCEPTED, label: 'Accepted by Kitchen' },
+                        { status: OrderStatus.PREPARING, label: 'Cooking & Packaging' },
+                        { status: OrderStatus.HANDED_OVER, label: 'Picked up by Delivery Executive' },
+                        { status: DeliveryStatus.DELIVERED, label: 'Handed Over & Verified' }
+                      ];
+
+                      return UI_STEPS.map((step, idx, arr) => {
+                      // For UI steps, OrderStatus.READY_FOR_PICKUP acts as OrderStatus.ACCEPTED being done but OrderStatus.HANDED_OVER not yet done
+                      
+                      const stepStatusIndex = UI_STEPS.findIndex(s => s.status === step.status);
+                      const currentStatusIndex = UI_STEPS.findIndex(s => s.status === (currentTrackingOrder.deliveryStatus === DeliveryStatus.DELIVERED ? DeliveryStatus.DELIVERED : currentTrackingOrder.status));
+                      const isDone = currentStatusIndex > stepStatusIndex || (currentStatusIndex === stepStatusIndex && step.status !== DeliveryStatus.DELIVERED);
+                      const isCurrent = currentStatusIndex === stepStatusIndex || (step.status === OrderStatus.PREPARING && [OrderStatus.READY_FOR_PICKUP, OrderStatus.HANDED_OVER].includes(currentTrackingOrder.status as OrderStatus));
+                      const isLast = idx === arr.length - 1;
                     
                     return (
                       <div key={idx} className="flex items-start gap-4 relative">
@@ -941,7 +969,7 @@ export default function CustomerDashboard({
                           }`}>
                             {step.label}
                           </span>
-                          {isCurrent && currentTrackingOrder.status !== OrderStatus.DELIVERED && (
+                          {isCurrent && currentTrackingOrder.deliveryStatus !== DeliveryStatus.DELIVERED && (
                             <p className="text-[11px] text-amber-500/80 mt-0.5 font-bold uppercase tracking-wider">
                               {currentTrackingOrder.status === OrderStatus.READY_FOR_PICKUP 
                                 ? 'Waiting for Driver...' 
@@ -951,8 +979,10 @@ export default function CustomerDashboard({
                         </div>
                       </div>
                     );
-                  })}
-                </div>
+                    });
+                    })()
+                  }
+                  </div>
                 )}
               </div>
               
@@ -1006,9 +1036,9 @@ export default function CustomerDashboard({
                 <div className="bg-white/20 dark:bg-slate-900/20 backdrop-blur-xl border border-rose-500/20 dark:border-rose-500/30 rounded-3xl p-6 shadow-[0_8px_32px_rgba(251,146,60,0.05)] space-y-6">
                   <div className="text-center pb-4 border-b border-rose-500/10 dark:border-slate-800">
                     <div className="inline-flex w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 items-center justify-center mb-3">
-                      {currentTrackingOrder.status.toUpperCase() === OrderStatus.DELIVERED ? <Check className="w-6 h-6 text-emerald-500" /> : <X className="w-6 h-6 text-red-500" />}
+                      {currentTrackingOrder.deliveryStatus === DeliveryStatus.DELIVERED ? <Check className="w-6 h-6 text-emerald-500" /> : <X className="w-6 h-6 text-red-500" />}
                     </div>
-                    <h2 className="text-2xl font-black mb-1 capitalize">{currentTrackingOrder.status.toUpperCase() === OrderStatus.DELIVERED ? 'Order Delivered' : 'Order ' + currentTrackingOrder.status.replace(/_/g, ' ')}</h2>
+                    <h2 className="text-2xl font-black mb-1 capitalize">{getFriendlyStatusMessage(currentTrackingOrder.status, currentTrackingOrder.deliveryStatus)}</h2>
                     <p className="text-sm font-bold text-slate-500 dark:text-slate-400">#{currentTrackingOrder.id.substring(0, 8)}</p>
                     
                     {/* Invoice Details */}
@@ -1067,8 +1097,8 @@ export default function CustomerDashboard({
                         </div>
                       )}
                       <div className="flex justify-between text-lg font-black text-slate-900 dark:text-white pt-2 border-t border-rose-500/20 dark:border-slate-700">
-                        <span>{isFailedOrder(currentTrackingOrder.status) ? 'Total Refunded' : 'Total Paid'}</span>
-                        <span className={isFailedOrder(currentTrackingOrder.status) ? 'text-red-500' : ''}>${(currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0).toFixed(2)}</span>
+                        <span>{isFailedOrder(currentTrackingOrder) ? 'Total Refunded' : 'Total Paid'}</span>
+                        <span className={isFailedOrder(currentTrackingOrder) ? 'text-red-500' : ''}>${(currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0).toFixed(2)}</span>
                       </div>
                     </div>
                   </div>

@@ -171,7 +171,7 @@ function _OrderTrackingMap({ order, enableLiveTracking = false }: { order: Order
              navigator.geolocation.getCurrentPosition(
                (position) => {
                  const { latitude, longitude } = position.coords;
-                 if (order.riderId || order.status === OrderStatus.PICKED_UP) {
+                 if (order.riderId || order.status === OrderStatus.HANDED_OVER) {
                    addMarkers(latitude, longitude);
                  } else {
                    addMarkers(null, null);

@@ -7,7 +7,7 @@ import {
   Check, Truck, Settings, Plus, Trash2, Edit3, ChevronLeft, Layers, Utensils, History, ChevronDown, ChevronUp, XCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Order, OrderStatus, MenuItem } from '../types';
+import { Order, OrderStatus, MenuItem, VerificationStatus } from '../types';
 
 import LaBouffeLogo from './LaBouffeLogo';
 import OutletMenuEditor from './OutletMenuEditor';
@@ -32,7 +32,9 @@ const delaySchema = z.object({
   additionalPrepTime: z.number().int().positive().max(120, 'Delay cannot exceed 120 minutes'),
   delayReason: z.string().max(255, 'Reason must be under 255 characters').optional()
 });
+import { getFriendlyStatusMessage, getFriendlyDeliveryStatusMessage } from '../utils/statusMessaging';
 import { toFrontendStatus, toBackendStatus } from '../lib/statusMapper';
+import { isActiveOrder, isFailedOrder } from '../utils/orderStatus';
 import { 
   getBrands, getOutlets, 
   getMasterMenuItems, 
@@ -49,16 +51,6 @@ interface RestaurantDashboardProps {
   onAddApiLog?: (log: any) => void;
 }
 
-// Utility to determine if order is actively tracked
-const isActiveOrder = (status: string) => {
-  const s = (status || '').trim().toUpperCase();
-  return ![OrderStatus.DELIVERED, OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT, 'cancelled_by_restaurant', OrderStatus.DELIVERY_FAILED].includes(s);
-};
-
-const isFailedOrder = (status: string) => {
-  const s = (status || '').trim().toUpperCase();
-  return [OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT, 'cancelled_by_restaurant', OrderStatus.DELIVERY_FAILED].includes(s);
-};
 
 export default function RestaurantDashboard({
   restaurantId,
@@ -69,6 +61,7 @@ export default function RestaurantDashboard({
   onToggleTheme,
   onAddApiLog
 }: RestaurantDashboardProps) {
+  const { showError, showSuccess, showInfo } = useToast();
 
   const [internalOrders, setInternalOrders] = useState<Order[]>([]);
   const activeOrders = externalOrders ?? internalOrders;
@@ -92,7 +85,7 @@ export default function RestaurantDashboard({
       }
       else if (status === OrderStatus.CANCELLED) endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/cancel`;
       
-      console.log(`[Dashboard] Updating order ${orderId} to ${status}. Endpoint: ${endpoint}`);
+      // Dashboard update order
 
       if (endpoint) {
         await apiPost(endpoint, payload);
@@ -102,7 +95,7 @@ export default function RestaurantDashboard({
       }
     } catch (error: any) {
       console.error('Failed to update order status:', error);
-      alert(error.response?.data?.message || 'Failed to update order status');
+      showError(error.response?.data?.message || 'Failed to update order status');
       // Revert optimistic update on failure (ideally, would need the old status)
     }
   });
@@ -167,18 +160,6 @@ export default function RestaurantDashboard({
               const activeOrdersData = res.data.data || res.data;
               const mapped = activeOrdersData.map((o: any) => {
                 let s = o.status?.toUpperCase() || '';
-                if (s === OrderStatus.CREATED || s === OrderStatus.PENDING_ACCEPTANCE) {
-                  if (o.additionalPrepTime && o.additionalPrepTime > 10) {
-                    s = OrderStatus.AWAITING_DELAY_APPROVAL;
-                  } else {
-                    s = OrderStatus.PENDING_ACCEPTANCE;
-                  }
-                }
-                if (s === OrderStatus.READY_FOR_PICKUP || s === 'READY') s = OrderStatus.READY_FOR_PICKUP;
-                if (s === OrderStatus.CANCELLED_BY_RESTAURANT || s === OrderStatus.CANCELLED || s === 'CANCELLED_BY_RESTAURANT' || s === OrderStatus.DELIVERY_FAILED) s = OrderStatus.CANCELLED;
-                if (s === OrderStatus.DELIVERED) s = OrderStatus.DELIVERED;
-                if (s === 'ON_HOLD') s = OrderStatus.AWAITING_DELAY_APPROVAL;
-                if (s === 'DISPATCHED') s = OrderStatus.PICKED_UP;
                 
                 let parsedItems = o.items || [];
                 if (o.itemsJson) {
@@ -299,7 +280,7 @@ export default function RestaurantDashboard({
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
     const hasPendingVerifications = brands.some(
-      b => b.kycStatus === 'PENDING' || b.pennyDropStatus === 'PENDING'
+      b => b.kycStatus === VerificationStatus.PENDING || b.pennyDropStatus === VerificationStatus.PENDING
     );
 
     if (hasPendingVerifications) {
@@ -355,7 +336,7 @@ export default function RestaurantDashboard({
         await apiPut(`/api/v1/outlets/${selectedOutletId}/status`, { isActive: newStatus });
         setIsAcceptingOrders(prev => ({ ...prev, [selectedOutletId]: newStatus }));
     } catch (err: any) {
-        alert(err.message || "Failed to update outlet status");
+        showError(err.message || "Failed to update outlet status");
     }
   };
 
@@ -363,12 +344,12 @@ export default function RestaurantDashboard({
   const allRestaurantOrders = activeOrders.filter(o => o.restaurantId === selectedOutletId);
   
   // Separate into active and history
-  const myOrders = allRestaurantOrders.filter(o => isActiveOrder(o.status || ''));
-  const historyOrders = allRestaurantOrders.filter(o => !isActiveOrder(o.status || ''));
+  const myOrders = allRestaurantOrders.filter(o => isActiveOrder(o));
+  const historyOrders = allRestaurantOrders.filter(o => !isActiveOrder(o));
 
-  const pendingOrders = myOrders.filter(o => o.status === OrderStatus.PENDING_ACCEPTANCE);
+  const pendingOrders = myOrders.filter(o => o.status === OrderStatus.PENDING_ACCEPTANCE || o.status === OrderStatus.CREATED);
   const activePreparing = myOrders.filter(o => o.status === OrderStatus.ACCEPTED || o.status === OrderStatus.PREPARING);
-  const completedOrders = historyOrders.filter(o => o.status === OrderStatus.DELIVERED);
+  const completedOrders = historyOrders.filter(o => o.status === OrderStatus.HANDED_OVER);
 
   // Compute stats
   const totalRevenue = myOrders.reduce((acc, curr) => acc + curr.subtotal, 0);
@@ -393,7 +374,7 @@ export default function RestaurantDashboard({
         ...prev,
         [key]: currentStatus
       }));
-      alert('Failed to update stock status.');
+      showError('Failed to update stock status.');
     }
   };
 
@@ -406,7 +387,7 @@ export default function RestaurantDashboard({
 
 
   const handleStatusTransition = (order: Order) => {
-    if (order.status === OrderStatus.PENDING_ACCEPTANCE || order.status === OrderStatus.AWAITING_DELAY_APPROVAL) {
+    if (order.status === OrderStatus.PENDING_ACCEPTANCE || order.status === OrderStatus.AWAITING_DELAY_APPROVAL || order.status === OrderStatus.CREATED) {
       onUpdateOrderStatus(order.id, OrderStatus.ACCEPTED);
     } else if (order.status as any === OrderStatus.ACCEPTED) {
       onUpdateOrderStatus(order.id, OrderStatus.PREPARING);
@@ -418,7 +399,7 @@ export default function RestaurantDashboard({
   const handleCardCancelSubmit = async (orderId: string) => {
     const reason = customCancelReasonText[orderId] || 'No reason provided';
     const orderStatus = internalOrders.find(o => o.id === orderId)?.status;
-    const targetStatus = (orderStatus === OrderStatus.PENDING_ACCEPTANCE || orderStatus === OrderStatus.AWAITING_DELAY_APPROVAL) 
+    const targetStatus = (orderStatus === OrderStatus.PENDING_ACCEPTANCE || orderStatus === OrderStatus.AWAITING_DELAY_APPROVAL || orderStatus === OrderStatus.CREATED) 
       ? OrderStatus.CANCELLED_BY_RESTAURANT 
       : OrderStatus.CANCELLED;
     
@@ -427,7 +408,7 @@ export default function RestaurantDashboard({
       setCancellingOrderId(null);
     } catch (e: any) {
       console.error('Failed to cancel order', e);
-      alert('Failed to cancel order: ' + (e.response?.data?.message || e.message || 'Unknown error'));
+      showError('Failed to cancel order: ' + (e.response?.data?.message || e.message || 'Unknown error'));
     }
   };
 
@@ -444,7 +425,7 @@ export default function RestaurantDashboard({
 
     const validation = delaySchema.safeParse(body);
     if (!validation.success) {
-      alert(validation.error.issues[0].message);
+      showError(validation.error.issues[0].message);
       return;
     }
 
@@ -478,7 +459,7 @@ export default function RestaurantDashboard({
       }
     } catch (e: any) {
       console.error('Failed to submit delay request', e);
-      alert('Failed to submit delay request: ' + (e.response?.data?.message || e.message || 'Unknown error'));
+      showError('Failed to submit delay request: ' + (e.response?.data?.message || e.message || 'Unknown error'));
     }
     
     setDelayingOrderId(null);
@@ -731,22 +712,54 @@ export default function RestaurantDashboard({
                             </span>
                           </div>
 
-                          {/* Customer info */}
-                          <div className="text-[11px] bg-slate-50 dark:bg-slate-950/40 p-2.5 rounded-xl border border-rose-500/20 dark:border-rose-500/30 space-y-1">
-                            <p className="font-bold text-slate-700 dark:text-[#f0ede6] flex items-center gap-1">
-                              <User className="w-3 h-3 text-slate-400 dark:text-slate-300" />
-                              <span>{order.customerName}</span>
-                            </p>
-                            <div className="flex items-center gap-1 text-[10px] text-slate-400 dark:text-slate-300">
-                              <MapPin className="w-3 h-3 text-rose-450" />
-                              <span className="truncate">{order.deliveryAddress}</span>
-                            </div>
-                            {order.estimatedCompletionTime && (
-                              <div className="flex items-center gap-1 text-[10px] text-amber-500 font-bold mt-1">
-                                <Clock className="w-3 h-3" />
-                                <span>ETA: {new Date(order.estimatedCompletionTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                    {/* Unified Customer & Rider Info */}
+                          <div className="bg-slate-50 dark:bg-slate-950/40 rounded-xl border border-rose-500/20 dark:border-rose-500/30 overflow-hidden divide-y divide-rose-500/10 dark:divide-rose-500/20">
+                            
+                            {/* Customer Section */}
+                            <div className="p-2.5 space-y-1 text-[11px]">
+                              <div className="flex items-center justify-between gap-1">
+                                <p className="font-bold text-slate-700 dark:text-[#f0ede6] flex items-center gap-1">
+                                  <User className="w-3 h-3 text-slate-400 dark:text-slate-300" />
+                                  <span className="truncate max-w-[120px]">{order.customerName}</span>
+                                </p>
+                                {order.estimatedCompletionTime && (
+                                  <span className="flex items-center gap-1 text-[9px] text-amber-500 font-bold shrink-0">
+                                    <Clock className="w-2.5 h-2.5" />
+                                    {new Date(order.estimatedCompletionTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                )}
                               </div>
-                            )}
+                              {order.deliveryAddress && (
+                                <div className="flex items-center gap-1 text-[10px] text-slate-400 dark:text-slate-300">
+                                  <MapPin className="w-3 h-3 text-rose-450 shrink-0" />
+                                  <span className="truncate max-w-[170px]">{order.deliveryAddress}</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Rider Section */}
+                            <div className="p-2.5 bg-indigo-50/30 dark:bg-indigo-950/20">
+                              <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-300 mb-1.5">
+                                <span className="font-semibold text-[9px] uppercase tracking-wider text-indigo-400/80">Courier</span>
+                                <span className="font-bold flex items-center gap-1 text-indigo-400 text-[9px] uppercase">
+                                  <span className="w-1 h-1 rounded-full bg-indigo-500 animate-ping" />
+                                  {getFriendlyDeliveryStatusMessage(order.deliveryStatus)}
+                                </span>
+                              </div>
+                              {order.riderName ? (
+                                <div className="flex items-center gap-2">
+                                  <div className="w-6 h-6 rounded-full bg-indigo-500/15 flex items-center justify-center text-indigo-550 shrink-0">
+                                    <Bike className="w-3 h-3" />
+                                  </div>
+                                  <p className="font-bold text-[11px] text-slate-750 dark:text-[#f0ede6] truncate">{order.riderName}</p>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-2 py-0.5 text-slate-450">
+                                  <RefreshCw className="w-3 h-3 text-slate-400 dark:text-slate-300 animate-spin shrink-0" />
+                                  <span className="text-[9px]">Awaiting assignment...</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
 
                           {/* Items */}
@@ -943,22 +956,54 @@ export default function RestaurantDashboard({
                             </span>
                           </div>
 
-                          {/* Customer info */}
-                          <div className="text-[11px] bg-white/50 dark:bg-slate-950/40 p-2.5 rounded-xl border border-rose-500/20 dark:border-rose-500/30 space-y-1">
-                            <p className="font-bold text-slate-700 dark:text-[#f0ede6] flex items-center gap-1">
-                              <User className="w-3 h-3 text-slate-400 dark:text-slate-300" />
-                              <span>{order.customerName}</span>
-                            </p>
-                            <div className="flex items-center gap-1 text-[10px] text-slate-400 dark:text-slate-300">
-                              <MapPin className="w-3 h-3 text-rose-450" />
-                              <span className="truncate">{order.deliveryAddress}</span>
-                            </div>
-                            {order.estimatedCompletionTime && (
-                              <div className="flex items-center gap-1 text-[10px] text-amber-500 font-bold mt-1">
-                                <Clock className="w-3 h-3" />
-                                <span>ETA: {new Date(order.estimatedCompletionTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                    {/* Unified Customer & Rider Info */}
+                          <div className="bg-slate-50 dark:bg-slate-950/40 rounded-xl border border-rose-500/20 dark:border-rose-500/30 overflow-hidden divide-y divide-rose-500/10 dark:divide-rose-500/20">
+                            
+                            {/* Customer Section */}
+                            <div className="p-2.5 space-y-1 text-[11px]">
+                              <div className="flex items-center justify-between gap-1">
+                                <p className="font-bold text-slate-700 dark:text-[#f0ede6] flex items-center gap-1">
+                                  <User className="w-3 h-3 text-slate-400 dark:text-slate-300" />
+                                  <span className="truncate max-w-[120px]">{order.customerName}</span>
+                                </p>
+                                {order.estimatedCompletionTime && (
+                                  <span className="flex items-center gap-1 text-[9px] text-amber-500 font-bold shrink-0">
+                                    <Clock className="w-2.5 h-2.5" />
+                                    {new Date(order.estimatedCompletionTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                )}
                               </div>
-                            )}
+                              {order.deliveryAddress && (
+                                <div className="flex items-center gap-1 text-[10px] text-slate-400 dark:text-slate-300">
+                                  <MapPin className="w-3 h-3 text-rose-450 shrink-0" />
+                                  <span className="truncate max-w-[170px]">{order.deliveryAddress}</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Rider Section */}
+                            <div className="p-2.5 bg-indigo-50/30 dark:bg-indigo-950/20">
+                              <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-300 mb-1.5">
+                                <span className="font-semibold text-[9px] uppercase tracking-wider text-indigo-400/80">Courier</span>
+                                <span className="font-bold flex items-center gap-1 text-indigo-400 text-[9px] uppercase">
+                                  <span className="w-1 h-1 rounded-full bg-indigo-500 animate-ping" />
+                                  {getFriendlyDeliveryStatusMessage(order.deliveryStatus)}
+                                </span>
+                              </div>
+                              {order.riderName ? (
+                                <div className="flex items-center gap-2">
+                                  <div className="w-6 h-6 rounded-full bg-indigo-500/15 flex items-center justify-center text-indigo-550 shrink-0">
+                                    <Bike className="w-3 h-3" />
+                                  </div>
+                                  <p className="font-bold text-[11px] text-slate-750 dark:text-[#f0ede6] truncate">{order.riderName}</p>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-2 py-0.5 text-slate-450">
+                                  <RefreshCw className="w-3 h-3 text-slate-400 dark:text-slate-300 animate-spin shrink-0" />
+                                  <span className="text-[9px]">Awaiting assignment...</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
 
                           {/* Items */}
@@ -1094,12 +1139,53 @@ export default function RestaurantDashboard({
                             </span>
                           </div>
 
-                          {/* Customer/ETA summary */}
-                          <div className="text-[11px] bg-slate-50 dark:bg-slate-950/40 p-2.5 rounded-xl border border-rose-500/20 dark:border-rose-500/30 space-y-1">
-                            <p className="font-bold text-slate-700 dark:text-[#f0ede6]">Customer: {order.customerName}</p>
-                            <div className="flex items-center gap-1 text-[10px] text-slate-400 dark:text-slate-300">
-                              <Clock className="w-3 h-3 text-orange-400" />
-                              <span>ETA: {order.estimatedCompletionTime ? new Date(order.estimatedCompletionTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '~20 mins'}</span>
+                                                    {/* Unified Customer & Rider Info */}
+                          <div className="bg-slate-50 dark:bg-slate-950/40 rounded-xl border border-rose-500/20 dark:border-rose-500/30 overflow-hidden divide-y divide-rose-500/10 dark:divide-rose-500/20">
+                            
+                            {/* Customer Section */}
+                            <div className="p-2.5 space-y-1 text-[11px]">
+                              <div className="flex items-center justify-between gap-1">
+                                <p className="font-bold text-slate-700 dark:text-[#f0ede6] flex items-center gap-1">
+                                  <User className="w-3 h-3 text-slate-400 dark:text-slate-300" />
+                                  <span className="truncate max-w-[120px]">{order.customerName}</span>
+                                </p>
+                                {order.estimatedCompletionTime && (
+                                  <span className="flex items-center gap-1 text-[9px] text-amber-500 font-bold shrink-0">
+                                    <Clock className="w-2.5 h-2.5" />
+                                    {new Date(order.estimatedCompletionTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                )}
+                              </div>
+                              {order.deliveryAddress && (
+                                <div className="flex items-center gap-1 text-[10px] text-slate-400 dark:text-slate-300">
+                                  <MapPin className="w-3 h-3 text-rose-450 shrink-0" />
+                                  <span className="truncate max-w-[170px]">{order.deliveryAddress}</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Rider Section */}
+                            <div className="p-2.5 bg-indigo-50/30 dark:bg-indigo-950/20">
+                              <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-300 mb-1.5">
+                                <span className="font-semibold text-[9px] uppercase tracking-wider text-indigo-400/80">Courier</span>
+                                <span className="font-bold flex items-center gap-1 text-indigo-400 text-[9px] uppercase">
+                                  <span className="w-1 h-1 rounded-full bg-indigo-500 animate-ping" />
+                                  {getFriendlyDeliveryStatusMessage(order.deliveryStatus)}
+                                </span>
+                              </div>
+                              {order.riderName ? (
+                                <div className="flex items-center gap-2">
+                                  <div className="w-6 h-6 rounded-full bg-indigo-500/15 flex items-center justify-center text-indigo-550 shrink-0">
+                                    <Bike className="w-3 h-3" />
+                                  </div>
+                                  <p className="font-bold text-[11px] text-slate-750 dark:text-[#f0ede6] truncate">{order.riderName}</p>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-2 py-0.5 text-slate-450">
+                                  <RefreshCw className="w-3 h-3 text-slate-400 dark:text-slate-300 animate-spin shrink-0" />
+                                  <span className="text-[9px]">Awaiting assignment...</span>
+                                </div>
+                              )}
                             </div>
                           </div>
 
@@ -1242,31 +1328,54 @@ export default function RestaurantDashboard({
                             </span>
                           </div>
 
-                          {/* Rider Assignments Info */}
-                          <div className="text-[11px] bg-slate-50 dark:bg-slate-950/40 p-2.5 rounded-xl border border-rose-500/20 dark:border-rose-500/30 space-y-1.5">
-                            <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-300 border-b border-rose-500/20 pb-1">
-                              <span>COURIER DISPATCH</span>
-                              <span className="font-bold flex items-center gap-0.5 text-indigo-400">
-                                <span className="w-1 h-1 rounded-full bg-indigo-500 animate-ping" />
-                                {order.riderName ? 'ASSIGNED' : 'SEARCHING'}
-                              </span>
+                                                    {/* Unified Customer & Rider Info */}
+                          <div className="bg-slate-50 dark:bg-slate-950/40 rounded-xl border border-rose-500/20 dark:border-rose-500/30 overflow-hidden divide-y divide-rose-500/10 dark:divide-rose-500/20">
+                            
+                            {/* Customer Section */}
+                            <div className="p-2.5 space-y-1 text-[11px]">
+                              <div className="flex items-center justify-between gap-1">
+                                <p className="font-bold text-slate-700 dark:text-[#f0ede6] flex items-center gap-1">
+                                  <User className="w-3 h-3 text-slate-400 dark:text-slate-300" />
+                                  <span className="truncate max-w-[120px]">{order.customerName}</span>
+                                </p>
+                                {order.estimatedCompletionTime && (
+                                  <span className="flex items-center gap-1 text-[9px] text-amber-500 font-bold shrink-0">
+                                    <Clock className="w-2.5 h-2.5" />
+                                    {new Date(order.estimatedCompletionTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                )}
+                              </div>
+                              {order.deliveryAddress && (
+                                <div className="flex items-center gap-1 text-[10px] text-slate-400 dark:text-slate-300">
+                                  <MapPin className="w-3 h-3 text-rose-450 shrink-0" />
+                                  <span className="truncate max-w-[170px]">{order.deliveryAddress}</span>
+                                </div>
+                              )}
                             </div>
-                            {order.riderName ? (
-                              <div className="flex items-center gap-2">
-                                <div className="w-7 h-7 rounded-full bg-indigo-500/15 flex items-center justify-center text-indigo-550">
-                                  <Bike className="w-3.5 h-3.5" />
-                                </div>
-                                <div>
-                                  <p className="font-bold text-slate-750 dark:text-[#f0ede6] leading-none">{order.riderName}</p>
-                                  <span className="text-[10px] text-slate-500 dark:text-slate-300 font-mono mt-0.5 block">{order.riderPhone}</span>
-                                </div>
+
+                            {/* Rider Section */}
+                            <div className="p-2.5 bg-indigo-50/30 dark:bg-indigo-950/20">
+                              <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-300 mb-1.5">
+                                <span className="font-semibold text-[9px] uppercase tracking-wider text-indigo-400/80">Courier</span>
+                                <span className="font-bold flex items-center gap-1 text-indigo-400 text-[9px] uppercase">
+                                  <span className="w-1 h-1 rounded-full bg-indigo-500 animate-ping" />
+                                  {getFriendlyDeliveryStatusMessage(order.deliveryStatus)}
+                                </span>
                               </div>
-                            ) : (
-                              <div className="flex items-center gap-2 py-0.5 text-slate-450">
-                                <RefreshCw className="w-3.5 h-3.5 text-slate-400 dark:text-slate-300 animate-spin shrink-0" />
-                                <span className="text-[10px]">Awaiting system courier pickup signal...</span>
-                              </div>
-                            )}
+                              {order.riderName ? (
+                                <div className="flex items-center gap-2">
+                                  <div className="w-6 h-6 rounded-full bg-indigo-500/15 flex items-center justify-center text-indigo-550 shrink-0">
+                                    <Bike className="w-3 h-3" />
+                                  </div>
+                                  <p className="font-bold text-[11px] text-slate-750 dark:text-[#f0ede6] truncate">{order.riderName}</p>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-2 py-0.5 text-slate-450">
+                                  <RefreshCw className="w-3 h-3 text-slate-400 dark:text-slate-300 animate-spin shrink-0" />
+                                  <span className="text-[9px]">Awaiting assignment...</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
 
                           {/* Dishes List Summary */}
@@ -1338,12 +1447,12 @@ export default function RestaurantDashboard({
                       <span className="font-extrabold text-xs text-slate-800 dark:text-[#f0ede6] uppercase font-sans tracking-wide">Being Delivered</span>
                     </div>
                     <span className="text-[10px] font-black font-mono bg-purple-500/10 text-purple-650 dark:text-purple-400 px-2.5 py-0.5 rounded-full border border-purple-500/20">
-                      {myOrders.filter(o => o.status === OrderStatus.PICKED_UP).length}
+                      {myOrders.filter(o => o.status === OrderStatus.HANDED_OVER).length}
                     </span>
                   </div>
 
                   <div className="flex-1 space-y-3.5 overflow-y-auto h-[500px] scrollbar-thin pr-1">
-                    {myOrders.filter(o => o.status === OrderStatus.PICKED_UP).length === 0 ? (
+                    {myOrders.filter(o => o.status === OrderStatus.HANDED_OVER).length === 0 ? (
                       <div className="h-full flex flex-col items-center justify-center text-center py-16 px-4 animate-in fade-in slide-in-from-bottom-4 duration-500 bg-white/40 dark:bg-slate-900/10 border border-dashed border-purple-500/20 dark:border-purple-500/30 rounded-2xl">
                         <div className="relative mb-4">
                           <div className="absolute inset-0 bg-purple-500/20 dark:bg-purple-500/10 rounded-full blur-xl animate-pulse"></div>
@@ -1355,7 +1464,7 @@ export default function RestaurantDashboard({
                         <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 max-w-[180px]">Orders picked up by riders will appear here until delivered.</p>
                       </div>
                     ) : (
-                      myOrders.filter(o => o.status === OrderStatus.PICKED_UP).slice().reverse().map(order => (
+                      myOrders.filter(o => o.status === OrderStatus.HANDED_OVER).slice().reverse().map(order => (
                         <motion.div 
                           key={order.id}
                           layoutId={`card-${order.id}`}
@@ -1371,26 +1480,54 @@ export default function RestaurantDashboard({
                             </span>
                           </div>
 
-                          {/* Rider Assignments Info */}
-                          <div className="text-[11px] bg-slate-50 dark:bg-slate-950/40 p-2.5 rounded-xl border border-purple-500/20 dark:border-purple-500/30 space-y-1.5">
-                            <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-300 border-b border-purple-500/20 pb-1">
-                              <span>COURIER STATUS</span>
-                              <span className="font-bold flex items-center gap-0.5 text-indigo-400">
-                                <span className="w-1 h-1 rounded-full bg-indigo-500 animate-ping" />
-                                IN TRANSIT
-                              </span>
-                            </div>
-                            {order.riderName && (
-                              <div className="flex items-center gap-2 mt-2">
-                                <div className="w-7 h-7 rounded-full bg-indigo-500/15 flex items-center justify-center text-indigo-550">
-                                  <Bike className="w-3.5 h-3.5" />
-                                </div>
-                                <div>
-                                  <p className="font-bold text-slate-750 dark:text-[#f0ede6] leading-none">{order.riderName}</p>
-                                  <span className="text-[10px] text-slate-500 dark:text-slate-300 font-mono mt-0.5 block">{order.riderPhone}</span>
-                                </div>
+                                                    {/* Unified Customer & Rider Info */}
+                          <div className="bg-slate-50 dark:bg-slate-950/40 rounded-xl border border-rose-500/20 dark:border-rose-500/30 overflow-hidden divide-y divide-rose-500/10 dark:divide-rose-500/20">
+                            
+                            {/* Customer Section */}
+                            <div className="p-2.5 space-y-1 text-[11px]">
+                              <div className="flex items-center justify-between gap-1">
+                                <p className="font-bold text-slate-700 dark:text-[#f0ede6] flex items-center gap-1">
+                                  <User className="w-3 h-3 text-slate-400 dark:text-slate-300" />
+                                  <span className="truncate max-w-[120px]">{order.customerName}</span>
+                                </p>
+                                {order.estimatedCompletionTime && (
+                                  <span className="flex items-center gap-1 text-[9px] text-amber-500 font-bold shrink-0">
+                                    <Clock className="w-2.5 h-2.5" />
+                                    {new Date(order.estimatedCompletionTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                )}
                               </div>
-                            )}
+                              {order.deliveryAddress && (
+                                <div className="flex items-center gap-1 text-[10px] text-slate-400 dark:text-slate-300">
+                                  <MapPin className="w-3 h-3 text-rose-450 shrink-0" />
+                                  <span className="truncate max-w-[170px]">{order.deliveryAddress}</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Rider Section */}
+                            <div className="p-2.5 bg-indigo-50/30 dark:bg-indigo-950/20">
+                              <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-300 mb-1.5">
+                                <span className="font-semibold text-[9px] uppercase tracking-wider text-indigo-400/80">Courier</span>
+                                <span className="font-bold flex items-center gap-1 text-indigo-400 text-[9px] uppercase">
+                                  <span className="w-1 h-1 rounded-full bg-indigo-500 animate-ping" />
+                                  {getFriendlyDeliveryStatusMessage(order.deliveryStatus)}
+                                </span>
+                              </div>
+                              {order.riderName ? (
+                                <div className="flex items-center gap-2">
+                                  <div className="w-6 h-6 rounded-full bg-indigo-500/15 flex items-center justify-center text-indigo-550 shrink-0">
+                                    <Bike className="w-3 h-3" />
+                                  </div>
+                                  <p className="font-bold text-[11px] text-slate-750 dark:text-[#f0ede6] truncate">{order.riderName}</p>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-2 py-0.5 text-slate-450">
+                                  <RefreshCw className="w-3 h-3 text-slate-400 dark:text-slate-300 animate-spin shrink-0" />
+                                  <span className="text-[9px]">Awaiting assignment...</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
                           
                           {/* Dishes List Summary */}
@@ -1598,17 +1735,17 @@ export default function RestaurantDashboard({
                               <div className="flex gap-2">
                                 <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] uppercase tracking-wider ${
                                   b.kycStatus === 'VERIFIED' ? 'bg-emerald-500/10 text-emerald-500' :
-                                  b.kycStatus === 'PENDING' ? 'bg-amber-500/10 text-amber-500 animate-pulse' :
+                                  b.kycStatus === VerificationStatus.PENDING ? 'bg-amber-500/10 text-amber-500 animate-pulse' :
                                   'bg-rose-500/10 text-rose-500'
                                 }`}>
-                                  GSTIN: {b.kycStatus || 'PENDING'}
+                                  GSTIN: {b.kycStatus || VerificationStatus.PENDING}
                                 </span>
                                 <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] uppercase tracking-wider ${
                                   b.pennyDropStatus === 'VERIFIED' ? 'bg-emerald-500/10 text-emerald-500' :
-                                  b.pennyDropStatus === 'PENDING' ? 'bg-amber-500/10 text-amber-500 animate-pulse' :
+                                  b.pennyDropStatus === VerificationStatus.PENDING ? 'bg-amber-500/10 text-amber-500 animate-pulse' :
                                   'bg-rose-500/10 text-rose-500'
                                 }`}>
-                                  BANK: {b.pennyDropStatus || 'PENDING'}
+                                  BANK: {b.pennyDropStatus || VerificationStatus.PENDING}
                                 </span>
                               </div>
                             </div>

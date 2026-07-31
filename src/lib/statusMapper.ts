@@ -10,8 +10,7 @@ const backendToFrontend: Record<string, string> = {
   ACCEPTED: OrderStatus.ACCEPTED,
   PREPARING: OrderStatus.ACCEPTED,
   READY_FOR_PICKUP: OrderStatus.READY_FOR_PICKUP,
-  PICKED_UP: OrderStatus.PICKED_UP,
-  DELIVERED: OrderStatus.DELIVERED,
+  HANDED_OVER: OrderStatus.HANDED_OVER,
   CANCELLED: OrderStatus.CANCELLED,
   ON_HOLD: OrderStatus.AWAITING_DELAY_APPROVAL,
 };

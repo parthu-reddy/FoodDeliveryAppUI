@@ -1,4 +1,5 @@
-import { OrderStatus } from '../types';
+import { OrderStatus, DeliveryStatus, Order } from '../types';
+import { getFriendlyStatusMessage } from '../utils/statusMessaging';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, User, Package, LogOut, MapPin, Check } from 'lucide-react';
@@ -353,7 +354,7 @@ export default function SharedSettingsView({
                       <h5 className="font-bold text-sm text-slate-900 dark:text-[#f0ede6]">{order.restaurantName}</h5>
                     </div>
                     <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:shadow-[0_0_12px_rgba(244,63,94,0.5)] tracking-wider`}>
-                      {(order.status || '').replace(/_/g, ' ')}
+                      {getFriendlyStatusMessage(order.status, order.deliveryStatus)}
                     </span>
                   </div>
                   <div className="text-xs text-slate-500 dark:text-slate-300 mb-3">
@@ -373,7 +374,7 @@ export default function SharedSettingsView({
                     }}
                     className="w-full py-2 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-[#f0ede6] rounded-lg text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer mt-3"
                   >
-                    {[OrderStatus.DELIVERED, OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT].includes(order.status) ? "View Invoice" : "View Details"}
+                    {[OrderStatus.HANDED_OVER, OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT].includes(order.status) ? "View Invoice" : "View Details"}
                   </button>
                 </div>
               ))

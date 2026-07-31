@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { apiGet, apiPost, apiDelete } from '../lib/apiClient';
 import { useToast } from '../context/ToastContext';
 import { Search, Shield, User, X, LogOut, Sun, Moon, Plus, Package, Truck, Check, MapPin, Users, Activity, Tags, Navigation, Database } from 'lucide-react';
+import { getFriendlyStatusMessage } from '../utils/statusMessaging';
 import LaBouffeLogo from './LaBouffeLogo';
 import AdminAssignmentMap from './AdminAssignmentMap';
 import AdminFleetMap from './AdminFleetMap';
@@ -64,7 +65,7 @@ export default function AdminPortal({
         }
       }
       const res = await apiGet(url);
-      console.log("fetchAvailableDrivers response:", res);
+      // fetchAvailableDrivers response
       const data = res.data?.data || res.data || (Array.isArray(res) ? res : res.data);
       setAvailableDrivers(Array.isArray(data) ? data : []);
     } catch (e) {
@@ -99,7 +100,7 @@ export default function AdminPortal({
     try {
       const res = await apiGet(`/api/v1/internal/admin/orders/intervention`);
       // Spring Data Page<Order> returns items in .content
-      const content = res.data?.content || res.data?.data?.content || (Array.isArray(res.data) ? res.data : []);
+      const content = res.content || res.data?.content || res.data?.data?.content || (Array.isArray(res.data) ? res.data : (Array.isArray(res) ? res : []));
       setInterventions(Array.isArray(content) ? content : []);
     } catch (e) {
       console.error(e);
@@ -463,7 +464,7 @@ export default function AdminPortal({
                             <div className="flex-1 border-r border-slate-200 dark:border-slate-700 pr-6">
                                 <h2 className="text-2xl font-black mb-1">Order #{selectedOrder.id.substring(0, 8)}</h2>
                                 <p className="text-slate-600 dark:text-slate-400 font-medium">Restaurant: {selectedOrder.restaurantName}</p>
-                                <p className="text-slate-600 dark:text-slate-400 font-medium mt-1">Status: <span className="text-indigo-500 font-bold">{selectedOrder.status.replace(/_/g, ' ')}</span></p>
+                                <p className="text-slate-600 dark:text-slate-400 font-medium mt-1">Status: <span className="text-indigo-500 font-bold">{getFriendlyStatusMessage(selectedOrder.status, selectedOrder.deliveryStatus)}</span></p>
                             </div>
                             <div className="w-1/2">
                                 <h3 className="font-bold text-lg mb-3">Available Drivers ({availableDrivers.length})</h3>

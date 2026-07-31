@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useToast } from '../context/ToastContext';
 import { Plus, Edit3, X, Clock, Save, Layers } from 'lucide-react';
 import { apiGet, apiPost } from '../lib/apiClient';
 import { MenuItem } from '../types';
@@ -26,6 +27,7 @@ interface OutletMenuEditorProps {
 }
 
 export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRefresh }: OutletMenuEditorProps) {
+  const { showError, showSuccess, showInfo } = useToast();
   const [selectedOutlet, setSelectedOutlet] = useState<string>(restaurantId);
   const [masterItems, setMasterItems] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -140,7 +142,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
         fetchCategories();
     } catch (e) {
         console.error(e);
-        alert("Failed to save timings");
+        showError("Failed to save timings");
     }
   };
 
@@ -154,7 +156,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
 
     const validation = overrideSchema.safeParse({ overriddenPrice: payload.overriddenPrice });
     if (!validation.success) {
-      alert(validation.error.issues[0].message);
+      showError(validation.error.issues[0].message);
       return;
     }
 
@@ -188,7 +190,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
     });
 
     if (!validation.success) {
-      alert(validation.error.issues[0].message);
+      showError(validation.error.issues[0].message);
       return;
     }
 
@@ -204,7 +206,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
       overriddenPrepTimeMinutes: overridePayload.overriddenPrepTimeMinutes
     });
     if (!overrideValidation.success) {
-      alert(overrideValidation.error.issues[0].message);
+      showError(overrideValidation.error.issues[0].message);
       return;
     }
 

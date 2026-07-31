@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useToast } from '../context/ToastContext';
 import { Plus, Edit3, X, Clock, Save, Layers } from 'lucide-react';
 import { apiGet, apiPost, apiPut } from '../lib/apiClient';
 import CategorySelector from './CategorySelector';
@@ -25,6 +26,7 @@ interface BrandMasterMenuProps {
 }
 
 export default function BrandMasterMenu({ brandId, onRefresh }: BrandMasterMenuProps) {
+  const { showError, showSuccess, showInfo } = useToast();
   const [masterItems, setMasterItems] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   
@@ -91,7 +93,7 @@ export default function BrandMasterMenu({ brandId, onRefresh }: BrandMasterMenuP
     e.preventDefault();
     const validation = categorySchema.safeParse({ name: newCatName, description: newCatDesc });
     if (!validation.success) {
-      alert(validation.error.issues[0].message);
+      showError(validation.error.issues[0].message);
       return;
     }
     
@@ -103,7 +105,7 @@ export default function BrandMasterMenu({ brandId, onRefresh }: BrandMasterMenuP
       fetchCategories();
     } catch (e) {
       console.error(e);
-      alert("Failed to create category");
+      showError("Failed to create category");
     }
   };
 
@@ -128,7 +130,7 @@ export default function BrandMasterMenu({ brandId, onRefresh }: BrandMasterMenuP
     });
 
     if (!validation.success) {
-      alert(validation.error.issues[0].message);
+      showError(validation.error.issues[0].message);
       return;
     }
 
@@ -141,7 +143,7 @@ export default function BrandMasterMenu({ brandId, onRefresh }: BrandMasterMenuP
       onRefresh(); 
     } catch (e: any) {
       console.error(e);
-      alert(e?.response?.data?.message || "Failed to create menu item. Please try again.");
+      showError(e?.response?.data?.message || "Failed to create menu item. Please try again.");
     }
   };
 
@@ -167,7 +169,7 @@ export default function BrandMasterMenu({ brandId, onRefresh }: BrandMasterMenuP
     });
 
     if (!validation.success) {
-      alert(validation.error.issues[0].message);
+      showError(validation.error.issues[0].message);
       return;
     }
 
@@ -179,7 +181,7 @@ export default function BrandMasterMenu({ brandId, onRefresh }: BrandMasterMenuP
       onRefresh();
     } catch (e: any) {
       console.error(e);
-      alert(e?.response?.data?.message || "Failed to update menu item. Please try again.");
+      showError(e?.response?.data?.message || "Failed to update menu item. Please try again.");
     }
   };
 
@@ -197,7 +199,7 @@ export default function BrandMasterMenu({ brandId, onRefresh }: BrandMasterMenuP
         fetchCategories();
     } catch (e) {
         console.error(e);
-        alert("Failed to save timings");
+        showError("Failed to save timings");
     }
   };
 

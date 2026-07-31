@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useToast } from '../context/ToastContext';
 import { 
   Bike, DollarSign, Map as MapIcon, CheckCircle, Navigation, Play, Eye, 
   MapPin, LogOut, Check, Clock, ArrowRight, ShieldAlert, KeyRound, MessageCircle, Store, Sun, Moon,
@@ -17,13 +18,14 @@ import OrderTrackingMap from './OrderTrackingMap';
 import ImageLoader from './ImageLoader';
 import ActiveDeliveryCard from './ActiveDeliveryCard';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
+import { isActiveOrder, isFailedOrder } from '../utils/orderStatus';
 
 const otpSchema = z.string().length(6, "OTP must be exactly 6 digits").regex(/^\d+$/, "OTP must contain only digits");
 
 interface DeliveryDashboardProps {
   riderPhone: string;
   activeOrders?: Order[];
-  onUpdateOrderStatus?: (orderId: string, status: OrderStatus, deliveryStatus?: DeliveryStatus, riderInfo?: { name: string; phone: string }) => void;
+  onUpdateOrderStatus?: (orderId: string, status: OrderStatus, deliveryStatus?: DeliveryStatus, riderInfo?: { name: string }) => void;
   onLogout: () => void;
   theme?: 'light' | 'dark';
   onToggleTheme?: () => void;
@@ -39,6 +41,7 @@ export default function DeliveryDashboard({
   onToggleTheme,
   onAddApiLog
 }: DeliveryDashboardProps) {
+  const { showError, showSuccess, showInfo } = useToast();
   const [user, setUser] = useState(getUserProfile());
   // Internal order state
   const [internalOrders, setInternalOrders] = useState<Order[]>([]);
@@ -131,7 +134,15 @@ export default function DeliveryDashboard({
         }
 
         // 3. Fetch History if an active job disappeared (e.g. cancelled by restaurant)
-        if (!isCancelled && lastActiveCount > 0 && fetchedActiveJobs.length === 0) {
+        const hasStaleActiveJobInHistory = historyRef.current.some(j => 
+            j.deliveryStatus !== DeliveryStatus.DELIVERED && 
+            j.deliveryStatus !== DeliveryStatus.FAILED && 
+            j.status !== OrderStatus.CANCELLED && 
+            j.status !== OrderStatus.CANCELLED_BY_RESTAURANT && 
+            !fetchedActiveJobs.find(a => a.id === j.id)
+        );
+
+        if (!isCancelled && ((lastActiveCount > 0 && fetchedActiveJobs.length === 0) || hasStaleActiveJobInHistory)) {
            const today = new Date().toISOString().split('T')[0];
            const histRes = await apiGet(`/api/v1/delivery/orders/history?date=${today}`);
            if (histRes) {
@@ -181,7 +192,7 @@ export default function DeliveryDashboard({
         historyRef.current = histData.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
         // We don't want to overwrite active jobs, just merge the updated history
         setInternalOrders(prev => {
-          const active = prev.filter(o => o.status !== OrderStatus.DELIVERED && o.status !== OrderStatus.CANCELLED && o.status !== OrderStatus.CANCELLED_BY_RESTAURANT && o.status !== OrderStatus.DELIVERY_FAILED);
+          const active = prev.filter(o => isActiveOrder(o));
           const mergedMap = new Map();
           historyRef.current.forEach((j: any) => mergedMap.set(j.id, j));
           active.forEach(j => mergedMap.set(j.id, j));
@@ -206,7 +217,9 @@ export default function DeliveryDashboard({
       const jobs = activeOrders.filter(o => !o.riderId && !rejectedIds.has(o.id));
       if (jobs.length > 0) {
         setPingJob(jobs[0]);
-        if (jobs[0].expiresAt) {
+        if (jobs[0].remainingPingSeconds !== undefined) {
+          setPingTimer(jobs[0].remainingPingSeconds);
+        } else if (jobs[0].expiresAt) {
           const remainingSecs = Math.max(0, Math.floor((jobs[0].expiresAt - Date.now()) / 1000));
           setPingTimer(remainingSecs);
         } else {
@@ -225,15 +238,19 @@ export default function DeliveryDashboard({
   }, [activeOrders, isOnline, activeJobId, rejectedIds, pingJob]);
   React.useEffect(() => {
     if (!activeJobId) {
-      const ongoingJob = activeOrders.find(o => (o.riderId === riderId || !!o.riderId) && o.status !== OrderStatus.DELIVERED && o.status !== OrderStatus.CANCELLED && o.status !== OrderStatus.CANCELLED_BY_RESTAURANT && o.status !== OrderStatus.DELIVERY_FAILED);
+      const ongoingJob = activeOrders.find(o => (o.riderId === riderId || !!o.riderId) && o.deliveryStatus !== DeliveryStatus.DELIVERED && o.status !== OrderStatus.CANCELLED && o.status !== OrderStatus.CANCELLED_BY_RESTAURANT && o.deliveryStatus !== DeliveryStatus.FAILED);
       if (ongoingJob) {
         setActiveJobId(ongoingJob.id);
       }
     } else {
-      // Check if current job was cancelled
-      const currentJobStatus = activeOrders.find(o => o.id === activeJobId)?.status?.toUpperCase();
-      if (currentJobStatus === OrderStatus.CANCELLED || currentJobStatus === OrderStatus.CANCELLED_BY_RESTAURANT || currentJobStatus === 'cancelled_by_restaurant' || currentJobStatus === OrderStatus.DELIVERY_FAILED) {
-        showToast("Your current order is no longer active (cancelled or failed).");
+      // Check if current job was cancelled, failed, delivered, or disappeared
+      const currentJob = activeOrders.find(o => o.id === activeJobId);
+      const currentJobStatus = currentJob?.status;
+      const currentJobDeliveryStatus = currentJob?.deliveryStatus;
+      if (!currentJob || currentJobStatus === OrderStatus.CANCELLED || currentJobStatus === OrderStatus.CANCELLED_BY_RESTAURANT || currentJobDeliveryStatus === DeliveryStatus.FAILED || currentJobDeliveryStatus === DeliveryStatus.DELIVERED) {
+        if (currentJobDeliveryStatus === DeliveryStatus.FAILED || currentJobStatus === OrderStatus.CANCELLED || currentJobStatus === OrderStatus.CANCELLED_BY_RESTAURANT) {
+           showToast("Your current order is no longer active (cancelled or failed).");
+        }
         setActiveJobId(null);
       }
     }
@@ -265,7 +282,7 @@ export default function DeliveryDashboard({
           osc.stop(ctx.currentTime + 0.5);
         }
       } catch (e) {
-        console.log('Audio playback failed', e);
+        // Audio playback failed
       }
 
       const timer = setInterval(() => {
@@ -287,7 +304,7 @@ export default function DeliveryDashboard({
     try {
       await apiPost(`/api/delivery/drivers/${riderId}/orders/${job.id}/accept`);
       setActiveJobId(job.id);
-      onUpdateOrderStatus(job.id, job.status, DeliveryStatus.ASSIGNED, { name: riderName, phone: riderPhone });
+      onUpdateOrderStatus(job.id, job.status, DeliveryStatus.ASSIGNED, { name: riderName });
     } catch(e: any) {
       showToast(e.response?.data?.message || "Failed to accept order. Ping expired or order already accepted.");
     } finally {
@@ -362,7 +379,7 @@ export default function DeliveryDashboard({
           if (data.type === "NEW_ORDER_DISPATCH" && data.orderId) {
             // Fetch the actual ping details since we only got the orderId
             const pingRes = await apiGet(`/api/v1/delivery/orders/available`);
-            const pingData = pingRes.data.data || pingRes.data;
+            const pingData = pingRes?.data?.data || pingRes?.data || pingRes;
             if (pingData && pingData.length > 0) {
               const jobs = pingData.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
               
@@ -381,7 +398,9 @@ export default function DeliveryDashboard({
 
               setPingJob(jobs[0]);
               
-              if (jobs[0].expiresAt) {
+              if (jobs[0].remainingPingSeconds !== undefined) {
+                setPingTimer(jobs[0].remainingPingSeconds);
+              } else if (jobs[0].expiresAt) {
                 const remainingSecs = Math.max(0, Math.floor((jobs[0].expiresAt - Date.now()) / 1000));
                 setPingTimer(remainingSecs);
               } else {
@@ -583,12 +602,12 @@ export default function DeliveryDashboard({
 
   // Find rider's active assigned job
   const riderJobs = activeOrders.filter(o => o.riderId === riderPhone || !!o.riderId || o.id === activeJobId);
-  const activePickupOrDispatched = riderJobs.filter(o => o.status !== OrderStatus.DELIVERED);
+  const activePickupOrDispatched = riderJobs.filter(o => o.deliveryStatus !== DeliveryStatus.DELIVERED);
   
 
 
   // Get active order being delivered by this rider
-  const currentJob = activeOrders.find(o => o.id === activeJobId && o.status !== OrderStatus.DELIVERED);
+  const currentJob = activeOrders.find(o => o.id === activeJobId && o.deliveryStatus !== DeliveryStatus.DELIVERED);
 
   React.useEffect(() => {
     if (currentJob) {
@@ -630,7 +649,7 @@ export default function DeliveryDashboard({
             retryCount = 0;
             if (event.event === 'status-update' || !event.event) {
               const newStatus = event.data as OrderStatus;
-              console.log("SSE: Restaurant status updated to", newStatus);
+              // SSE: Restaurant status updated
               
               // Update the internal state optimistically
               onUpdateOrderStatus(currentJob.id, newStatus, currentJob.deliveryStatus);
@@ -695,10 +714,10 @@ export default function DeliveryDashboard({
       await apiPost(`/api/delivery/drivers/${riderId}/orders/${order.id}/accept`, {});
       setActiveJobId(order.id);
       // Wait for next fetchOrders cycle or update optimisticly
-      onUpdateOrderStatus(order.id, order.status, DeliveryStatus.ASSIGNED, { name: riderName, phone: riderPhone });
+      onUpdateOrderStatus(order.id, order.status, DeliveryStatus.ASSIGNED, { name: riderName });
     } catch (e: any) {
       console.error("Failed to accept job", e);
-      alert(e.response?.data?.message || "Failed to accept job. It might have been assigned to someone else or cancelled.");
+      showError(e.response?.data?.message || "Failed to accept job. It might have been assigned to someone else or cancelled.");
     }
   };
 
@@ -732,7 +751,7 @@ export default function DeliveryDashboard({
     if (!confirm("Are you sure the customer is unavailable? You should try calling them first.")) return;
 
     const previousStatus = currentJob.status;
-    onUpdateOrderStatus(currentJob.id, OrderStatus.DELIVERY_FAILED, DeliveryStatus.FAILED);
+    onUpdateOrderStatus(currentJob.id, currentJob.status, DeliveryStatus.FAILED);
     try {
       await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, { status: DeliveryStatus.FAILED, goOfflineAfter });
       setActiveJobId(null);
@@ -758,7 +777,7 @@ export default function DeliveryDashboard({
     
     // Optimistic Update
     const previousStatus = currentJob.status;
-    onUpdateOrderStatus(currentJob.id, OrderStatus.PICKED_UP, DeliveryStatus.OUT_FOR_DELIVERY);
+    onUpdateOrderStatus(currentJob.id, OrderStatus.HANDED_OVER, DeliveryStatus.OUT_FOR_DELIVERY);
     setIsUpdatingPickup(true);
     
     try {
@@ -784,7 +803,7 @@ export default function DeliveryDashboard({
 
     // Optimistic Update
     const previousStatus = currentJob.status;
-    onUpdateOrderStatus(currentJob.id, OrderStatus.DELIVERED, DeliveryStatus.DELIVERED);
+    onUpdateOrderStatus(currentJob.id, OrderStatus.HANDED_OVER, DeliveryStatus.DELIVERED);
     setIsUpdatingDelivery(true);
     
     try {
@@ -792,7 +811,7 @@ export default function DeliveryDashboard({
       setIsUpdatingDelivery(false);
       
       // Update history so it's immediately visible
-      historyRef.current = [{...currentJob, status: OrderStatus.DELIVERED}, ...historyRef.current];
+      historyRef.current = [{...currentJob, deliveryStatus: DeliveryStatus.DELIVERED}, ...historyRef.current];
 
 
       setActiveJobId(null);
@@ -806,7 +825,10 @@ export default function DeliveryDashboard({
     }
   };
 
-  const allHistoryJobs = [...activeOrders.filter(o => o.riderId === riderId && o.status === OrderStatus.DELIVERED).map(job => ({ ...job, payout: 7.50 }))];
+  const allHistoryJobsMap = new Map();
+  [...historyRef.current, ...activeOrders.filter(o => o.riderId === riderId && [DeliveryStatus.DELIVERED, DeliveryStatus.FAILED, DeliveryStatus.CANCELLED].includes(o.deliveryStatus as DeliveryStatus))]
+    .forEach(job => allHistoryJobsMap.set(job.id, { ...job, payout: job.payout || 7.50 }));
+  const allHistoryJobs = Array.from(allHistoryJobsMap.values());
   const todayDateStr = new Date().toISOString().split('T')[0];
   const todayHistoryJobs = allHistoryJobs.filter(job => job.createdAt?.startsWith(todayDateStr));
   const todayEarnings = todayHistoryJobs.reduce((acc, job) => acc + (job.payout || 7.50), 0);
@@ -1329,12 +1351,7 @@ export default function DeliveryDashboard({
               </div>
             </div>
             <div className="flex gap-3 relative">
-              <button
-                onClick={() => handleTimeoutPing(pingJob.id)}
-                className="flex-1 py-3.5 rounded-xl border border-orange-500/30 text-slate-400 dark:text-slate-300 font-bold hover:bg-slate-800 transition-colors hover:shadow-[0_0_12px_rgba(249,115,22,0.4)] dark:hover:shadow-[0_0_12px_rgba(249,115,22,0.5)] hover:border-orange-500/50 transition-all text-[10px]"
-              >
-                Timeout
-              </button>
+
               <button
                 onClick={() => handleRejectPing(pingJob.id)}
                 className="flex-1 py-3.5 rounded-xl border border-rose-500/30 text-slate-400 dark:text-slate-300 font-bold hover:bg-slate-800 transition-colors hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all text-xs"

@@ -1,9 +1,10 @@
 import React from 'react';
+import { getFriendlyStatusMessage } from '../utils/statusMessaging';
 import { Order } from '../types';
 
 interface CustomerActiveOrdersCarouselProps {
   activeOrders: Order[];
-  isActiveOrder: (status: string) => boolean;
+  isActiveOrder: (order: any) => boolean;
   trackingOrder: Order | null;
   cartLength: number;
   selectedRestaurantId?: string;
@@ -20,7 +21,7 @@ export default function CustomerActiveOrdersCarousel({
   cartRestaurantId,
   setTrackingOrder
 }: CustomerActiveOrdersCarouselProps) {
-  if (activeOrders.filter(o => isActiveOrder(o.status)).length === 0 || trackingOrder) {
+  if (activeOrders.filter(o => isActiveOrder(o)).length === 0 || trackingOrder) {
     return null;
   }
 
@@ -29,7 +30,7 @@ export default function CustomerActiveOrdersCarousel({
   return (
     <div className={`fixed left-0 right-0 max-w-3xl mx-auto z-30 pointer-events-none transition-all duration-300 ${isCartActiveForSelectedRestaurant ? 'bottom-24' : 'bottom-4'}`}>
       <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-none px-5 gap-4 pb-2 pointer-events-auto">
-        {activeOrders.filter(o => isActiveOrder(o.status)).slice().reverse().map((order) => (
+        {activeOrders.filter(o => isActiveOrder(o)).slice().reverse().map((order) => (
           <button 
             key={order.id} 
             onClick={() => setTrackingOrder(order)}
@@ -39,7 +40,7 @@ export default function CustomerActiveOrdersCarousel({
               <span className="shrink-0 text-[10px] font-mono font-bold text-slate-600 dark:text-[#f0ede6] bg-slate-200/80 dark:bg-slate-700 px-2 py-0.5 rounded-full">#{order.id.substring(0, 8)}</span>
               <h5 className="font-extrabold text-[14px] text-slate-900 dark:text-[#f0ede6] line-clamp-1 flex-1">{order.restaurantName}</h5>
               <span className="shrink-0 text-[9px] font-black px-2 py-1 rounded-md bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:shadow-[0_0_12px_rgba(244,63,94,0.5)] uppercase tracking-wider">
-                {order.status.replace(/_/g, ' ')}
+                {getFriendlyStatusMessage(order.status, order.deliveryStatus)}
               </span>
             </div>
           </button>

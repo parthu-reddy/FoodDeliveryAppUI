@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 3.2.1263 on 2026-07-29 14:30:01.
+// Generated using typescript-generator version 3.2.1263 on 2026-07-30 23:30:51.
 
 export enum AccountType {
     CUSTOMER = "CUSTOMER",
@@ -34,6 +34,8 @@ export enum ChargeCategory {
 
 export enum DeliveryStatus {
     PENDING = "PENDING",
+    SEARCHING_FOR_DRIVER = "SEARCHING_FOR_DRIVER",
+    MANUAL_INTERVENTION_REQUIRED = "MANUAL_INTERVENTION_REQUIRED",
     ASSIGNED = "ASSIGNED",
     AT_RESTAURANT = "AT_RESTAURANT",
     OUT_FOR_DELIVERY = "OUT_FOR_DELIVERY",
@@ -49,12 +51,9 @@ export enum OrderStatus {
     ACCEPTED = "ACCEPTED",
     PREPARING = "PREPARING",
     READY_FOR_PICKUP = "READY_FOR_PICKUP",
-    PICKED_UP = "PICKED_UP",
-    DELIVERED = "DELIVERED",
+    HANDED_OVER = "HANDED_OVER",
     CANCELLED = "CANCELLED",
     CANCELLED_BY_RESTAURANT = "CANCELLED_BY_RESTAURANT",
-    DELIVERY_FAILED = "DELIVERY_FAILED",
-    REQUIRES_MANUAL_INTERVENTION = "REQUIRES_MANUAL_INTERVENTION",
 }
 
 export enum OutboxStatus {

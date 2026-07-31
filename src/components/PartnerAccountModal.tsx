@@ -1,5 +1,6 @@
 import { RoleName } from '../types';
 import React, { useState, useEffect } from 'react';
+import { useToast } from '../context/ToastContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, LogOut } from 'lucide-react';
 import { apiDelete, apiPut, apiGet, apiPost } from '../lib/apiClient';
@@ -30,6 +31,7 @@ export default function PartnerAccountModal({
   portalRole,
   children
 }: PartnerAccountModalProps) {
+  const { showError, showSuccess, showInfo } = useToast();
   const [devices, setDevices] = useState<any[]>([]);
   const currentDeviceId = localStorage.getItem('device_id');
   
@@ -78,7 +80,7 @@ export default function PartnerAccountModal({
   const handleSaveName = async () => {
     const validation = nameSchema.safeParse(editName);
     if (!validation.success) {
-      alert(validation.error.issues[0].message);
+      showError(validation.error.issues[0].message);
       return;
     }
     try {
