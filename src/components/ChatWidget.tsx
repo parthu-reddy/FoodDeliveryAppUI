@@ -1,16 +1,18 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, X, MessageSquare, Loader2 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { getToken, getUserProfile } from '../lib/tokenStore';
 import { useChatWebSocket, ChatMessage, TypingIndicator } from '../hooks/useChatWebSocket';
-import { API_URL } from '../data';
+import { apiGet, apiPost } from '../lib/apiClient';
 
 interface ChatWidgetProps {
   orderId: string;
   currentUserType: 'CUSTOMER' | 'RESTAURANT' | 'DELIVERY';
+  onClose?: () => void;
 }
 
-export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, currentUserType }) => {
-  const { user, token } = useAuth();
+export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, currentUserType, onClose }) => {
+  const token = getToken();
+  const user = getUserProfile();
   const [isOpen, setIsOpen] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -68,35 +70,24 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, currentUserType
         setIsLoading(true);
         try {
           // 1. Create or get session
-          const res = await fetch(`${API_URL}/chat/sessions`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-              orderId,
-              participants: [
-                {
-                  userId: user.id,
-                  entityType: currentUserType,
-                  displayName: user.name || user.email
-                }
-              ]
-            })
+          const data = await apiPost(`/api/v1/chat/sessions`, {
+            orderId,
+            participants: [
+              {
+                userId: user.id,
+                entityType: currentUserType,
+                displayName: user.name || user.email || user.id
+              }
+            ]
           });
           
-          if (!res.ok) throw new Error('Failed to init chat session');
-          const data = await res.json();
+          if (!data || !data.success) throw new Error('Failed to init chat session');
           const sid = data.data.sessionId;
           setSessionId(sid);
 
           // 2. Load history
-          const histRes = await fetch(`${API_URL}/chat/sessions/${sid}/messages?size=50`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          if (histRes.ok) {
-            const histData = await histRes.json();
+          const histData = await apiGet(`/api/v1/chat/sessions/${sid}/messages?size=50`);
+          if (histData && histData.success) {
             setMessages(histData.data || []);
           }
         } catch (error) {
@@ -151,7 +142,10 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, currentUserType
           <p className="text-orange-100 text-sm">Order #{orderId.substring(0,8)}</p>
         </div>
         <button 
-          onClick={() => setIsOpen(false)}
+          onClick={() => {
+            setIsOpen(false);
+            if (onClose) onClose();
+          }}
           className="text-white hover:bg-orange-700 p-2 rounded-full transition-colors"
         >
           <X className="w-5 h-5" />

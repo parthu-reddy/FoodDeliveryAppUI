@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
-import { useAuth } from '../context/AuthContext';
+import { getToken } from '../lib/tokenStore';
 
 export interface ChatMessage {
   id?: string;
@@ -26,7 +25,7 @@ interface UseChatWebSocketProps {
 }
 
 export const useChatWebSocket = ({ sessionId, onMessageReceived, onTypingIndicator }: UseChatWebSocketProps) => {
-  const { token } = useAuth();
+  const token = getToken();
   const [isConnected, setIsConnected] = useState(false);
   const clientRef = useRef<Client | null>(null);
   const subscriptionRef = useRef<StompSubscription | null>(null);
@@ -38,11 +37,7 @@ export const useChatWebSocket = ({ sessionId, onMessageReceived, onTypingIndicat
     }
 
     const client = new Client({
-      webSocketFactory: () => {
-        // Use the gateway's WebSocket proxy route
-        // Assuming your Vite proxy or gateway handles /ws/chat -> chat-service
-        return new SockJS('/ws/chat');
-      },
+      brokerURL: `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws/chat?token=${token}`,
       connectHeaders: {
         Authorization: `Bearer ${token}`
       },

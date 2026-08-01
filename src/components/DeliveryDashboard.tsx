@@ -1461,7 +1461,7 @@ export default function DeliveryDashboard({
       {currentJob && (
         <ChatWidget 
           orderId={currentJob.id} 
-          currentUserType="RIDER" 
+          currentUserType="DELIVERY" 
         />
       )}
     </div>
