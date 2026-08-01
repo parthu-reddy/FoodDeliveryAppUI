@@ -19,6 +19,7 @@ import ImageLoader from './ImageLoader';
 import ActiveDeliveryCard from './ActiveDeliveryCard';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { isActiveOrder, isFailedOrder } from '../utils/orderStatus';
+import { ChatWidget } from './ChatWidget';
 
 const otpSchema = z.string().length(6, "OTP must be exactly 6 digits").regex(/^\d+$/, "OTP must contain only digits");
 
@@ -1454,6 +1455,14 @@ export default function DeliveryDashboard({
         )}
       </AnimatePresence>
     </>
+      )}
+
+      {/* Chat Widget when tracking an active delivery job */}
+      {currentJob && (
+        <ChatWidget 
+          orderId={currentJob.id} 
+          currentUserType="RIDER" 
+        />
       )}
     </div>
   );

@@ -24,6 +24,7 @@ import CustomerPaymentModal from './CustomerPaymentModal';
 import CompleteProfileModal from './CompleteProfileModal';
 import OrderTrackingMap from './OrderTrackingMap';
 import { isActiveOrder, isFailedOrder } from '../utils/orderStatus';
+import { ChatWidget } from './ChatWidget';
 
 
 interface CustomerDashboardProps {
@@ -1697,6 +1698,14 @@ export default function CustomerDashboard({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Chat Widget when tracking an active order */}
+      {currentTrackingOrder && (
+        <ChatWidget 
+          orderId={currentTrackingOrder.id} 
+          currentUserType="CUSTOMER" 
+        />
+      )}
     </div>
   );
 }
