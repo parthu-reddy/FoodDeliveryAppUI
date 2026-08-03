@@ -20,6 +20,7 @@ import ActiveDeliveryCard from './ActiveDeliveryCard';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { isActiveOrder, isFailedOrder } from '../utils/orderStatus';
 import { ChatWidget } from './ChatWidget';
+import { CallOverlay } from './CallOverlay';
 
 const otpSchema = z.string().length(6, "OTP must be exactly 6 digits").regex(/^\d+$/, "OTP must contain only digits");
 
@@ -828,11 +829,11 @@ export default function DeliveryDashboard({
 
   const allHistoryJobsMap = new Map();
   [...historyRef.current, ...activeOrders.filter(o => o.riderId === riderId && [DeliveryStatus.DELIVERED, DeliveryStatus.FAILED, DeliveryStatus.CANCELLED].includes(o.deliveryStatus as DeliveryStatus))]
-    .forEach(job => allHistoryJobsMap.set(job.id, { ...job, payout: job.payout || 7.50 }));
+    .forEach(job => allHistoryJobsMap.set(job.id, { ...job, payout: job.payout || 0 }));
   const allHistoryJobs = Array.from(allHistoryJobsMap.values());
   const todayDateStr = new Date().toISOString().split('T')[0];
   const todayHistoryJobs = allHistoryJobs.filter(job => job.createdAt?.startsWith(todayDateStr));
-  const todayEarnings = todayHistoryJobs.reduce((acc, job) => acc + (job.payout || 7.50), 0);
+  const todayEarnings = todayHistoryJobs.reduce((acc, job) => acc + (job.payout || 0), 0);
   const todayCompletedCount = todayHistoryJobs.length;
   const filteredHistoryJobs = allHistoryJobs.filter(job => {
     if (!historyDateFilter) return true;
@@ -874,7 +875,9 @@ export default function DeliveryDashboard({
   }
 
   return (
-    <div className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-y-auto overflow-x-hidden min-h-0 bg-transparent text-slate-800 dark:text-[#f0ede6] h-full pb-20">
+    <div className="flex-1 w-full flex flex-col max-w-3xl mx-auto min-h-0 relative z-0">
+      <CallOverlay />
+      <div className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-y-auto overflow-x-hidden min-h-0 bg-transparent text-slate-800 dark:text-[#f0ede6] h-full pb-20">
       
       {/* Global Toast */}
       <AnimatePresence>
@@ -1229,7 +1232,7 @@ export default function DeliveryDashboard({
                     disabled={isUpdatingDelivery}
                     className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black py-4 rounded-2xl shadow-lg hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-white/15 disabled:opacity-70"
                   >
-                    {isUpdatingDelivery ? "Confirming..." : <><CheckCircle className="w-5 h-5" /> Confirm Delivery & Credit $7.50</>}
+                    {isUpdatingDelivery ? "Confirming..." : <><CheckCircle className="w-5 h-5" /> Confirm Delivery {currentJob?.payout ? `& Credit $${currentJob.payout.toFixed(2)}` : ''}</>}
                   </button>
 
                   {waitTimerSeconds > 5 && (
@@ -1282,7 +1285,7 @@ export default function DeliveryDashboard({
                       </div>
                       <div className="text-right">
                         <span className="text-xs text-slate-400 dark:text-slate-300 block font-mono">PAYOUT</span>
-                        <span className="text-lg font-black text-emerald-500">$7.50</span>
+                        <span className="text-lg font-black text-emerald-500">${job.payout ? job.payout.toFixed(2) : '—'}</span>
                       </div>
                     </div>
 
@@ -1322,7 +1325,7 @@ export default function DeliveryDashboard({
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
                   New Dispatch
                 </h3>
-                <p className="text-emerald-400 text-xs font-mono font-bold mt-1">Est. Payout: $7.50</p>
+                <p className="text-emerald-400 text-xs font-mono font-bold mt-1">Est. Payout: {pingJob.payout ? `$${pingJob.payout.toFixed(2)}` : 'Calculating...'}</p>
               </div>
               <div className="w-10 h-10 rounded-full border-2 border-emerald-500/50 flex items-center justify-center text-emerald-400 font-bold font-mono text-sm relative">
                 <svg className="absolute inset-0 w-full h-full -rotate-90">
@@ -1461,9 +1464,23 @@ export default function DeliveryDashboard({
       {currentJob && (
         <ChatWidget 
           orderId={currentJob.id} 
+          order={currentJob}
           currentUserType="DELIVERY" 
+          otherParticipants={[
+            ...(currentJob.customerId ? [{
+              userId: currentJob.customerId,
+              entityType: 'CUSTOMER' as const,
+              displayName: currentJob.customerName || 'Customer'
+            }] : []),
+            ...(currentJob.restaurantId ? [{
+              userId: currentJob.restaurantId,
+              entityType: 'RESTAURANT' as const,
+              displayName: currentJob.restaurantName || 'Restaurant'
+            }] : [])
+          ]}
         />
       )}
+    </div>
     </div>
   );
 }

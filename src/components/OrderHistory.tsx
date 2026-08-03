@@ -5,7 +5,7 @@ import { getFriendlyStatusMessage } from '../utils/statusMessaging';
 import { apiPost, apiGet } from '../lib/apiClient';
 import { useToast } from '../context/ToastContext';
 
-export function OrderHistory({ restaurantId }: { restaurantId: string }) {
+export function OrderHistory({ restaurantId, onOpenChat }: { restaurantId: string, onOpenChat?: (orderId: string) => void }) {
   const [dateFilter, setDateFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -184,21 +184,19 @@ export function OrderHistory({ restaurantId }: { restaurantId: string }) {
                       </span>
                     </td>
                     <td className="p-4 whitespace-nowrap">
-                      <button
-                        onClick={async () => {
-                           try {
-                             // Assuming paymentId is same as order.id or we pass order.id as a fallback
-                             await apiPost(`/api/v1/payments/${order.id}/refund`, { amount: order.total });
-                             showSuccess('Refund requested successfully.');
-                           } catch (e) {
-                             console.error(e);
-                             showError('Refund request failed.');
-                           }
-                        }}
-                        className="text-xs font-bold text-rose-500 hover:text-rose-600 underline"
-                      >
-                        Refund
-                      </button>
+                      <div className="flex flex-col gap-2">
+                        {/* Refund button removed as Restaurants do not have API permissions to issue refunds directly */}
+                        
+                        {/* Restaurant's OrderHistory gives a 4 hour window from HANDED_OVER to account for delivery time */}
+                        {onOpenChat && order.updatedAt && (Date.now() - new Date(order.updatedAt).getTime() < 4 * 60 * 60 * 1000) && (
+                          <button
+                            onClick={() => onOpenChat(order.id)}
+                            className="text-xs font-bold text-blue-500 hover:text-blue-600 underline text-left"
+                          >
+                            Chat
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))

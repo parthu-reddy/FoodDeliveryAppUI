@@ -129,7 +129,7 @@ export default function RestaurantDashboard({
   const [customCancelReasonText, setCustomCancelReasonText] = useState<Record<string, string>>({});
   
   // Chat state
-  const [selectedChatOrderId, setSelectedChatOrderId] = useState<string | null>(null);
+  const [selectedChatOrder, setSelectedChatOrder] = useState<Order | null>(null);
 
   // Fetch restaurant profile
   useEffect(() => {
@@ -1048,7 +1048,7 @@ export default function RestaurantDashboard({
                                 <XCircle className="w-3.5 h-3.5" />
                               </button>
                               <button
-                                onClick={() => setSelectedChatOrderId(order.id)}
+                                onClick={() => setSelectedChatOrder(order)}
                                 className="py-2 px-3 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10.5px] font-black rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors flex items-center gap-1 shrink-0 cursor-pointer"
                               >
                                 <MessageSquare className="w-3.5 h-3.5" />
@@ -1249,7 +1249,7 @@ export default function RestaurantDashboard({
                                 )}
                                 
                                 <button
-                                  onClick={() => setSelectedChatOrderId(order.id)}
+                                  onClick={() => setSelectedChatOrder(order)}
                                   className="py-2 px-1 rounded-xl border border-rose-500/20 dark:border-rose-500/30 hover:bg-slate-100 dark:hover:bg-slate-850 text-slate-600 dark:text-[#f0ede6] text-[10px] font-extrabold flex items-center justify-center gap-1 transition-colors cursor-pointer hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all"
                                 >
                                   <MessageSquare className="w-3 h-3 text-blue-500 shrink-0" />
@@ -1833,7 +1833,13 @@ export default function RestaurantDashboard({
             )}
             {settingsTab === "history" && selectedOutletId && (
               <div className="animate-fade-in bg-white/40 dark:bg-slate-900/40 p-6 rounded-3xl border border-emerald-500/20 dark:border-emerald-500/30 backdrop-blur-md shadow-sm">
-                <OrderHistory restaurantId={selectedOutletId} />
+                <OrderHistory 
+                  restaurantId={selectedOutletId} 
+                  onOpenChat={(id) => {
+                    const o = activeOrders.find(o => o.id === id);
+                    if (o) setSelectedChatOrder(o);
+                  }}
+                />
               </div>
             )}
           </motion.div>
@@ -1868,14 +1874,28 @@ export default function RestaurantDashboard({
         />
       )}
 
-      {selectedChatOrderId && (
+      {selectedChatOrder && (
         <ChatWidget 
-          orderId={selectedChatOrderId} 
+          orderId={selectedChatOrder.id} 
+          order={selectedChatOrder}
           currentUserType="RESTAURANT" 
-          onClose={() => setSelectedChatOrderId(null)}
+          otherParticipants={[
+            ...(selectedChatOrder.customerId ? [{
+              userId: selectedChatOrder.customerId,
+              entityType: 'CUSTOMER' as const,
+              displayName: selectedChatOrder.customerName || 'Customer'
+            }] : []),
+            ...(selectedChatOrder.deliveryExecutiveId ? [{
+              userId: selectedChatOrder.deliveryExecutiveId,
+              entityType: 'DELIVERY' as const,
+              displayName: selectedChatOrder.deliveryExecutiveName || selectedChatOrder.riderName || 'Rider'
+            }] : [])
+          ]}
+          onClose={() => setSelectedChatOrder(null)}
         />
       )}
-
+      
+      <CallOverlay />
     </>
       )}
     </div>

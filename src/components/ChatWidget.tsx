@@ -1,27 +1,41 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, X, MessageSquare, Loader2 } from 'lucide-react';
+import { Send, X, MessageSquare, Loader2, ImagePlus, PhoneCall } from 'lucide-react';
 import { getToken, getUserProfile } from '../lib/tokenStore';
 import { useChatWebSocket, ChatMessage, TypingIndicator } from '../hooks/useChatWebSocket';
 import { apiGet, apiPost } from '../lib/apiClient';
+import { useCallContext } from '../context/CallContext';
+
+export interface ChatParticipant {
+  userId: string;
+  entityType: 'CUSTOMER' | 'RESTAURANT' | 'DELIVERY';
+  displayName: string;
+}
 
 interface ChatWidgetProps {
   orderId: string;
   currentUserType: 'CUSTOMER' | 'RESTAURANT' | 'DELIVERY';
+  otherParticipants?: ChatParticipant[];
+  order?: any; // To pass order details
   onClose?: () => void;
 }
 
-export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, currentUserType, onClose }) => {
+export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentUserType, otherParticipants, onClose }) => {
   const token = getToken();
   const user = getUserProfile();
   const [isOpen, setIsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState<Record<string, boolean>>({});
+  const [targetUserId, setTargetUserId] = useState<string | null>(null);
+  
+  const { startCall } = useCallContext();
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -40,7 +54,16 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, currentUserType
     });
     // If they sent a message, they aren't just typing anymore
     setIsTyping(prev => ({ ...prev, [msg.senderId]: false }));
-  }, []);
+
+    // Play notification sound if message is from someone else and chat is closed
+    if (msg.senderId !== user?.id && !isOpen) {
+      setUnreadCount(prev => prev + 1);
+      try {
+        const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+        audio.play().catch(e => console.warn('Audio play blocked:', e));
+      } catch (e) {}
+    }
+  }, [user?.id, isOpen]);
 
   // Handle typing indicators
   const handleTypingIndicator = useCallback((indicator: TypingIndicator) => {
@@ -57,11 +80,16 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, currentUserType
     }, 3000);
   }, [user]);
 
-  const { isConnected, sendMessage, sendTypingIndicator } = useChatWebSocket({
+  const { isConnected, sendMessage, sendImage, sendTypingIndicator } = useChatWebSocket({
     sessionId,
     onMessageReceived: handleMessageReceived,
     onTypingIndicator: handleTypingIndicator,
   });
+
+  const uploadedImageCount = messages.filter(
+    (msg) => msg.messageType === 'IMAGE' && msg.senderId === user?.id
+  ).length;
+  const isImageUploadDisabled = uploadedImageCount >= 4 || !isConnected || isLoading;
 
   // Initialize session when chat is opened for the first time
   useEffect(() => {
@@ -77,13 +105,21 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, currentUserType
                 userId: user.id,
                 entityType: currentUserType,
                 displayName: user.name || user.email || user.id
-              }
+              },
+              ...(otherParticipants || [])
             ]
           });
           
           if (!data || !data.success) throw new Error('Failed to init chat session');
           const sid = data.data.sessionId;
           setSessionId(sid);
+          
+          if (data.data.participants) {
+            const otherParticipant = data.data.participants.find((p: any) => p.userId !== user.id);
+            if (otherParticipant) {
+              setTargetUserId(otherParticipant.userId);
+            }
+          }
 
           // 2. Load history
           const histData = await apiGet(`/api/v1/chat/sessions/${sid}/messages?size=50`);
@@ -105,14 +141,28 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, currentUserType
     e?.preventDefault();
     if (!inputText.trim() || !isConnected || !user) return;
 
-    sendMessage(
-      inputText.trim(),
-      'TEXT',
-      user.name || user.email,
-      currentUserType
-    );
-    
+    sendMessage(inputText.trim(), 'TEXT');
     setInputText('');
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !sendImage) return;
+    
+    // Clear the input
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    
+    if (uploadedImageCount >= 4) {
+      alert("You have reached the maximum limit of 4 images for this chat session.");
+      return;
+    }
+
+    setIsLoading(true);
+    const imageUrl = await sendImage(file);
+    if (!imageUrl) {
+      alert("Failed to upload image. Please try again or ensure it is under 5MB.");
+    }
+    setIsLoading(false);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -124,10 +174,18 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, currentUserType
   if (!isOpen) {
     return (
       <button
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 bg-orange-600 hover:bg-orange-700 text-white p-4 rounded-full shadow-lg transition-transform hover:scale-105 z-50 flex items-center justify-center"
+        onClick={() => {
+          setIsOpen(true);
+          setUnreadCount(0);
+        }}
+        className="fixed bottom-6 right-6 bg-orange-600 hover:bg-orange-700 text-white p-4 rounded-full shadow-lg transition-transform hover:scale-105 z-50 flex items-center justify-center relative"
       >
         <MessageSquare className="w-6 h-6" />
+        {unreadCount > 0 && (
+          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full animate-bounce">
+            {unreadCount}
+          </span>
+        )}
       </button>
     );
   }
@@ -138,18 +196,49 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, currentUserType
       {/* Header */}
       <div className="bg-orange-600 text-white p-4 flex justify-between items-center shrink-0">
         <div>
-          <h3 className="font-semibold text-lg">Order Chat</h3>
-          <p className="text-orange-100 text-sm">Order #{orderId.substring(0,8)}</p>
+          <h3 className="font-semibold text-lg truncate max-w-[200px]">
+            {otherParticipants?.length ? otherParticipants.map(p => p.displayName).join(', ') : 'Order Chat'}
+          </h3>
+          <div className="flex flex-col text-orange-100 text-sm">
+            <span>Order #{orderId.substring(0,8)}</span>
+            {order && order.items && (
+              <span className="text-xs opacity-90 truncate max-w-[200px]">
+                {order.items.length} items ({order.items.map((i: any) => i.item.name).join(', ')})
+              </span>
+            )}
+          </div>
         </div>
-        <button 
-          onClick={() => {
-            setIsOpen(false);
-            if (onClose) onClose();
-          }}
-          className="text-white hover:bg-orange-700 p-2 rounded-full transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-1">
+          {sessionId && otherParticipants?.length ? otherParticipants.map(p => (
+            <button
+              key={p.userId}
+              onClick={() => startCall(p.userId, sessionId)}
+              className="text-white hover:bg-orange-700 p-2 rounded-full transition-colors"
+              title={`Call ${p.displayName}`}
+            >
+              <PhoneCall className="w-4 h-4" />
+            </button>
+          )) : (
+            targetUserId && sessionId && (
+              <button
+                onClick={() => startCall(targetUserId, sessionId)}
+                className="text-white hover:bg-orange-700 p-2 rounded-full transition-colors"
+                title="Start Audio Call"
+              >
+                <PhoneCall className="w-4 h-4" />
+              </button>
+            )
+          )}
+          <button 
+            onClick={() => {
+              setIsOpen(false);
+              if (onClose) onClose();
+            }}
+            className="text-white hover:bg-orange-700 p-2 rounded-full transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       {/* Connection Status */}
@@ -198,7 +287,16 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, currentUserType
                       : 'bg-white border border-gray-200 text-gray-800 rounded-tl-sm shadow-sm'
                   }`}
                 >
-                  {msg.content}
+                  {msg.messageType === 'IMAGE' ? (
+                    <img src={msg.content} alt="Attachment" className="max-w-full rounded-lg" />
+                  ) : msg.messageType === 'AUDIO' ? (
+                    <div className="flex flex-col space-y-1">
+                      <span className="text-xs font-semibold">📞 Call Recording</span>
+                      <audio controls src={msg.content} className="max-w-[200px] h-10" />
+                    </div>
+                  ) : (
+                    msg.content
+                  )}
                 </div>
               </div>
             );
@@ -223,6 +321,23 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, currentUserType
       {/* Input Area */}
       <form onSubmit={handleSend} className="p-3 bg-white border-t border-gray-200 shrink-0">
         <div className="flex items-center space-x-2 bg-gray-100 rounded-full px-4 py-2">
+          <input 
+            type="file" 
+            accept="image/*" 
+            className="hidden" 
+            ref={fileInputRef} 
+            onChange={handleImageUpload} 
+          />
+          <button 
+            type="button" 
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isImageUploadDisabled}
+            title={uploadedImageCount >= 4 ? "Maximum 4 images allowed per session" : "Upload Image"}
+            className="p-1.5 text-gray-500 hover:text-orange-600 transition-colors disabled:opacity-50"
+          >
+            <ImagePlus className="w-5 h-5" />
+          </button>
+          
           <input
             type="text"
             value={inputText}

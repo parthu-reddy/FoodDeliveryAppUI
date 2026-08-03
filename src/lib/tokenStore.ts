@@ -86,6 +86,7 @@ export const clearAllLocalData = () => {
   clearToken();
   localStorage.removeItem('user_profile');
   localStorage.removeItem('device_id');
+  localStorage.removeItem('deliveryAddressId');
   const keysToRemove: string[] = [];
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);

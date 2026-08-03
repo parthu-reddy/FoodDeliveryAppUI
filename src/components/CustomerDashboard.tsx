@@ -25,6 +25,7 @@ import CompleteProfileModal from './CompleteProfileModal';
 import OrderTrackingMap from './OrderTrackingMap';
 import { isActiveOrder, isFailedOrder } from '../utils/orderStatus';
 import { ChatWidget } from './ChatWidget';
+import { CallOverlay } from './CallOverlay';
 
 
 interface CustomerDashboardProps {
@@ -276,6 +277,39 @@ export default function CustomerDashboard({
   }, [selectedRestaurant?.brandId, deliveryLat, deliveryLng]); // Only refetch outlets when brand changes
 
   const [isDeliveryAvailable, setIsDeliveryAvailable] = useState<boolean | null>(null);
+  const [deliveryPricing, setDeliveryPricing] = useState<{ minimumOrderForFreeDelivery: number, fixedPlatformFee: number, distanceKm: number } | null>(null);
+
+  useEffect(() => {
+    let ignore = false;
+    if (selectedRestaurant && deliveryAddressId) {
+      setDeliveryPricing(null);
+
+      apiGet(`/api/v1/restaurants/${selectedRestaurant.id}/delivery-pricing?addressId=${deliveryAddressId}`)
+        .then(res => {
+          if (!ignore && res.data) {
+            setDeliveryPricing(res.data);
+          }
+        })
+        .catch((err: any) => {
+          if (err?.status === 429) {
+            // Rate limited — show a graceful message, don't swallow silently
+            setDeliveryPricing({ minimumOrderForFreeDelivery: 999999, fixedPlatformFee: 5.0, distanceKm: 0 });
+          } else {
+            console.error(err);
+          }
+        });
+    } else if (selectedRestaurant && deliveryLat && deliveryLng) {
+      const R = 6371;
+      const rLat = Number((selectedRestaurant as any).lat || 0);
+      const rLng = Number((selectedRestaurant as any).lng || 0);
+      const dLat = (rLat - Number(deliveryLat)) * Math.PI / 180;
+      const dLon = (rLng - Number(deliveryLng)) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(Number(deliveryLat) * Math.PI / 180) * Math.cos(rLat * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      setDeliveryPricing({ minimumOrderForFreeDelivery: 999999, fixedPlatformFee: 5.0, distanceKm: Number((R * c).toFixed(2)) });
+    }
+    return () => { ignore = true; };
+  }, [selectedRestaurant?.id, deliveryAddressId, deliveryLat, deliveryLng]);
 
   useEffect(() => {
     let ignore = false;
@@ -483,11 +517,17 @@ export default function CustomerDashboard({
         }
       }
 
+      if (!finalAddressId) {
+        setPaymentStatus('failed');
+        setGlobalError('Could not determine your delivery address. Please select a saved address and try again.');
+        return;
+      }
+
       const orderPayload = {
         customerId: profile?.id,
         customerName: profile?.fullName || profile?.name || 'Customer',
         restaurantId: activeRest.id,
-        deliveryAddressId: finalAddressId || "00000000-0000-0000-0000-000000000001",
+        deliveryAddressId: finalAddressId,
         items
       };
       
@@ -566,11 +606,9 @@ export default function CustomerDashboard({
     }
   };
 
-
-
   return (
     <div className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-y-auto overflow-x-hidden min-h-0 bg-transparent text-slate-800 dark:text-[#f0ede6] h-full pb-20">
-      
+      <CallOverlay />
       {/* Global Error Toast */}
         <AnimatePresence>
           {globalError && (
@@ -1082,8 +1120,8 @@ export default function CustomerDashboard({
                         <span>${currentTrackingOrder.items ? currentTrackingOrder.items.reduce((sum: number, item: any) => sum + ((item.item?.price || item.price || 0) * (item.quantity || 1)), 0).toFixed(2) : '0.00'}</span>
                       </div>
                       <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
-                        <span>Delivery Fee</span>
-                        <span>${currentTrackingOrder.deliveryFee !== undefined ? currentTrackingOrder.deliveryFee.toFixed(2) : (currentTrackingOrder.items ? ((currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0) - currentTrackingOrder.items.reduce((sum: number, item: any) => sum + ((item.item?.price || item.price || 0) * (item.quantity || 1)), 0)).toFixed(2) : '0.00')}</span>
+                        <span>Delivery Fee {currentTrackingOrder.distanceKm ? `(${currentTrackingOrder.distanceKm} km)` : ''}</span>
+                        <span>${currentTrackingOrder.charges?.find((c: any) => c.category === 'DELIVERY_FEE' && c.payerType === 'CUSTOMER')?.amount?.toFixed(2) || (currentTrackingOrder.deliveryFee !== undefined ? currentTrackingOrder.deliveryFee.toFixed(2) : (currentTrackingOrder.items ? ((currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0) - currentTrackingOrder.items.reduce((sum: number, item: any) => sum + ((item.item?.price || item.price || 0) * (item.quantity || 1)), 0)).toFixed(2) : '0.00'))}</span>
                       </div>
                       {currentTrackingOrder.sgst !== undefined && (
                         <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
@@ -1153,6 +1191,32 @@ export default function CustomerDashboard({
                 </div>
               </div>
 
+              {deliveryPricing && deliveryPricing.minimumOrderForFreeDelivery < 999999 && (
+                <div className="mt-3 p-3 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border border-emerald-500/20 shadow-sm relative overflow-hidden">
+                  <div className="absolute top-0 left-0 h-1 bg-gradient-to-r from-emerald-400 to-teal-400 transition-all duration-500 ease-out" style={{ width: `${Math.min(100, (((cartRestaurant?.id === selectedRestaurant.id ? getCartTotal().subtotal : 0) / deliveryPricing.minimumOrderForFreeDelivery) * 100))}%` }} />
+                  <div className="flex items-center gap-3 mt-1">
+                    <div className="p-2 bg-emerald-100 dark:bg-emerald-500/20 rounded-full text-emerald-600 dark:text-emerald-400">
+                      <Bike className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                      {((cartRestaurant?.id === selectedRestaurant.id ? getCartTotal().subtotal : 0) >= deliveryPricing.minimumOrderForFreeDelivery) ? (
+                        <>
+                          <h4 className="text-sm font-bold text-emerald-700 dark:text-emerald-400 tracking-tight">Free Delivery Unlocked! 🎉</h4>
+                          <p className="text-xs text-emerald-600/80 dark:text-emerald-400/80 mt-0.5">You only pay the platform fee (${deliveryPricing.fixedPlatformFee.toFixed(2)})</p>
+                        </>
+                      ) : (
+                        <>
+                          <h4 className="text-sm font-bold text-emerald-700 dark:text-emerald-400 tracking-tight">
+                            Add ${(deliveryPricing.minimumOrderForFreeDelivery - (cartRestaurant?.id === selectedRestaurant.id ? getCartTotal().subtotal : 0)).toFixed(2)} more for Free Delivery!
+                          </h4>
+                          <p className="text-xs text-emerald-600/80 dark:text-emerald-400/80 mt-0.5">Save on variable delivery fees</p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {isDeliveryAvailable === false && (
                 <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 font-bold text-sm">
                   <MapPinOff className="w-5 h-5 shrink-0" />
@@ -1160,11 +1224,17 @@ export default function CustomerDashboard({
                 </div>
               )}
 
-              <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-300 font-mono">
+              {deliveryPricing && deliveryPricing.minimumOrderForFreeDelivery >= 999999 && (
+                <div className="mt-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-500/20 shadow-sm relative overflow-hidden">
+                  <p className="text-xs font-bold text-amber-700 dark:text-amber-400">📍 Select a delivery address to see accurate dynamic pricing and free delivery offers.</p>
+                </div>
+              )}
+
+              <div className="flex items-center gap-4 mt-3 text-xs text-slate-500 dark:text-slate-300 font-mono">
                 <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-amber-500" /> {selectedRestaurant.deliveryTime} mins</span>
-                <span className="flex items-center gap-1"><Bike className="w-3.5 h-3.5 text-emerald-500" /> ${selectedRestaurant.deliveryFee} Delivery</span>
+                <span className="flex items-center gap-1"><Bike className="w-3.5 h-3.5 text-emerald-500" /> {deliveryPricing && deliveryPricing.minimumOrderForFreeDelivery < 999999 ? ((cartRestaurant?.id === selectedRestaurant.id ? getCartTotal().subtotal : 0) >= deliveryPricing.minimumOrderForFreeDelivery ? 'Free Delivery' : 'Dynamic Fee') : `$${selectedRestaurant.deliveryFee} Base`}</span>
                 <span>•</span>
-                <span>{selectedRestaurant.distance} km away</span>
+                <span>{deliveryPricing ? deliveryPricing.distanceKm.toFixed(1) : selectedRestaurant.distance} km away</span>
               </div>
               
               {brandOutlets && brandOutlets.length > 1 && (
@@ -1699,13 +1769,35 @@ export default function CustomerDashboard({
         )}
       </AnimatePresence>
 
-      {/* Chat Widget when tracking an active order */}
-      {currentTrackingOrder && (
-        <ChatWidget 
-          orderId={currentTrackingOrder.id} 
-          currentUserType="CUSTOMER" 
-        />
-      )}
+      {/* Chat Widget when tracking an active order or delivered < 2 hrs ago */}
+      {currentTrackingOrder && (() => {
+        const isCompleted = currentTrackingOrder.deliveryStatus === DeliveryStatus.DELIVERED || 
+                            [OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT].includes(currentTrackingOrder.status);
+        let showChat = !isCompleted;
+        if (isCompleted && currentTrackingOrder.updatedAt) {
+          const updatedTime = new Date(currentTrackingOrder.updatedAt).getTime();
+          showChat = (Date.now() - updatedTime) < (2 * 60 * 60 * 1000);
+        }
+        return showChat ? (
+          <ChatWidget 
+            orderId={currentTrackingOrder.id} 
+            order={currentTrackingOrder}
+            currentUserType="CUSTOMER" 
+            otherParticipants={[
+              ...(currentTrackingOrder.deliveryExecutiveId ? [{
+                userId: currentTrackingOrder.deliveryExecutiveId,
+                entityType: 'DELIVERY' as const,
+                displayName: currentTrackingOrder.deliveryExecutiveName || currentTrackingOrder.riderName || 'Rider'
+              }] : []),
+              ...(currentTrackingOrder.restaurantId ? [{
+                userId: currentTrackingOrder.restaurantId,
+                entityType: 'RESTAURANT' as const,
+                displayName: currentTrackingOrder.restaurantName || 'Restaurant'
+              }] : [])
+            ]}
+          />
+        ) : null;
+      })()}
     </div>
   );
 }

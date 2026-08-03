@@ -39,6 +39,7 @@ export interface CartItem {
 
 export interface Order {
   id: string;
+  customerId?: string;
   customerName: string;
   deliveryAddress: string;
   deliveryLat?: number;
@@ -58,9 +59,12 @@ export interface Order {
   deliveryStatus?: DeliveryStatus;
   otp: string; // 6-digit code to complete delivery
   pickupOtp?: string; // 6-digit code to pick up from restaurant
+  deliveryExecutiveId?: string;
+  deliveryExecutiveName?: string;
   riderId?: string;
   riderName?: string;
   createdAt?: string;
+  updatedAt?: string;
   timestamp?: string;
   estimatedCompletionTime?: number;
 }

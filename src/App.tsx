@@ -5,6 +5,7 @@ import CinematicFoodBackground from './components/CinematicFoodBackground';
 import { getUserProfile } from './lib/tokenStore';
 import { logout as authLogout } from './lib/authStore';
 import { ToastProvider } from './context/ToastContext';
+import { CallProvider } from './context/CallContext';
 
 // Lazy load route components for code splitting and bundle optimization
 const LoginScreen = React.lazy(() => import('./components/LoginScreen'));
@@ -62,8 +63,9 @@ export default function App() {
 
   return (
     <ToastProvider>
-      <div className={`flex-1 flex flex-col overflow-hidden relative w-full h-[100dvh] ${m3Theme === 'dark' ? 'dark text-[#f0ede6]' : 'text-slate-900'}`}>
-        <Suspense fallback={renderFallback()}>
+      <CallProvider>
+        <div className={`flex-1 flex flex-col overflow-hidden relative w-full h-[100dvh] ${m3Theme === 'dark' ? 'dark text-[#f0ede6]' : 'text-slate-900'}`}>
+          <Suspense fallback={renderFallback()}>
           {!userRole ? (
             <div className="w-full h-full flex-1 flex flex-col overflow-hidden relative ">
               <CinematicFoodBackground theme={m3Theme} />
@@ -135,6 +137,7 @@ export default function App() {
           )}
         </Suspense>
       </div>
+      </CallProvider>
     </ToastProvider>
   );
 }

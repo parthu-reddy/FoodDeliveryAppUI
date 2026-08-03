@@ -8,7 +8,7 @@ export interface ChatMessage {
   senderId: string;
   senderName: string;
   senderType: 'CUSTOMER' | 'RESTAURANT' | 'DELIVERY';
-  messageType: 'TEXT' | 'IMAGE' | 'SYSTEM';
+  messageType: 'TEXT' | 'IMAGE' | 'AUDIO' | 'SYSTEM';
   content: string;
   timestamp: string;
 }
@@ -99,13 +99,11 @@ export const useChatWebSocket = ({ sessionId, onMessageReceived, onTypingIndicat
     };
   }, [sessionId, token, onMessageReceived, onTypingIndicator]);
 
-  const sendMessage = useCallback((content: string, messageType: string = 'TEXT', senderName: string, senderType: string) => {
+  const sendMessage = useCallback((content: string, messageType: string = 'TEXT') => {
     if (clientRef.current && clientRef.current.connected && sessionId) {
       const request = {
         content,
-        messageType,
-        senderName,
-        senderType
+        messageType
       };
       clientRef.current.publish({
         destination: `/app/chat.send/${sessionId}`,
@@ -116,6 +114,31 @@ export const useChatWebSocket = ({ sessionId, onMessageReceived, onTypingIndicat
     }
   }, [sessionId]);
 
+  const sendImage = useCallback(async (file: File) => {
+    if (!sessionId || !token) return null;
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const response = await fetch(`/api/v1/chat/sessions/${sessionId}/upload-image`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      const data = await response.json();
+      if (data.success) {
+        return data.data.imageUrl;
+      } else {
+        console.error("Image upload failed:", data.message);
+        return null;
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      return null;
+    }
+  }, [sessionId, token]);
+
   const sendTypingIndicator = useCallback(() => {
     if (clientRef.current && clientRef.current.connected && sessionId) {
       clientRef.current.publish({
@@ -125,5 +148,5 @@ export const useChatWebSocket = ({ sessionId, onMessageReceived, onTypingIndicat
     }
   }, [sessionId]);
 
-  return { isConnected, sendMessage, sendTypingIndicator };
+  return { isConnected, sendMessage, sendImage, sendTypingIndicator };
 };
