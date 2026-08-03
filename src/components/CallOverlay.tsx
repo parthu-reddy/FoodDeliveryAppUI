@@ -27,8 +27,8 @@ export const CallOverlay: React.FC = () => {
   if (callState === 'IDLE') return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 flex flex-col items-center shadow-2xl w-80 animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 flex flex-col items-center shadow-2xl w-80 max-w-[calc(100vw-2rem)] animate-in zoom-in-95 duration-200">
         
         {/* Avatar Placeholder */}
         <div className="w-24 h-24 bg-rose-100 dark:bg-rose-900/50 rounded-full flex items-center justify-center mb-6">
@@ -42,8 +42,8 @@ export const CallOverlay: React.FC = () => {
            'In Call'}
         </h2>
         
-        <p className="text-slate-500 dark:text-slate-400 mb-8 text-center truncate w-full">
-          {callerId || remoteUserId}
+        <p className="text-slate-500 dark:text-slate-400 mb-8 text-center truncate w-full text-sm">
+          {callState === 'CALLING' ? 'Waiting for response...' : 'Voice Connection'}
         </p>
 
         {/* Hidden Audio Element */}

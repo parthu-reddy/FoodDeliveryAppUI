@@ -45,6 +45,11 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
     scrollToBottom();
   }, [messages, isTyping, isOpen]);
 
+  const isOpenRef = useRef(isOpen);
+  useEffect(() => {
+    isOpenRef.current = isOpen;
+  }, [isOpen]);
+
   // Handle incoming WebSocket messages
   const handleMessageReceived = useCallback((msg: ChatMessage) => {
     setMessages(prev => {
@@ -56,14 +61,14 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
     setIsTyping(prev => ({ ...prev, [msg.senderId]: false }));
 
     // Play notification sound if message is from someone else and chat is closed
-    if (msg.senderId !== user?.id && !isOpen) {
+    if (msg.senderId !== user?.id && !isOpenRef.current) {
       setUnreadCount(prev => prev + 1);
       try {
         const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
         audio.play().catch(e => console.warn('Audio play blocked:', e));
       } catch (e) {}
     }
-  }, [user?.id, isOpen]);
+  }, [user?.id]);
 
   // Handle typing indicators
   const handleTypingIndicator = useCallback((indicator: TypingIndicator) => {
@@ -78,7 +83,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
     typingTimeoutRef.current[indicator.userId] = setTimeout(() => {
       setIsTyping(prev => ({ ...prev, [indicator.userId]: false }));
     }, 3000);
-  }, [user]);
+  }, [user?.id]);
 
   const { isConnected, sendMessage, sendImage, sendTypingIndicator } = useChatWebSocket({
     sessionId,
@@ -192,7 +197,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
 
   // The open chat window
   return (
-    <div className="fixed bottom-6 right-6 w-96 max-w-[calc(100vw-2rem)] h-[500px] max-h-[calc(100vh-6rem)] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden z-50 border border-gray-100">
+    <div className="fixed bottom-0 right-0 sm:bottom-6 sm:right-6 w-full sm:w-96 h-[100dvh] sm:h-[500px] max-h-[100dvh] sm:max-h-[calc(100vh-6rem)] bg-white sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden z-[60] sm:border sm:border-gray-100">
       {/* Header */}
       <div className="bg-orange-600 text-white p-4 flex justify-between items-center shrink-0">
         <div>
@@ -213,19 +218,21 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
             <button
               key={p.userId}
               onClick={() => startCall(p.userId, sessionId)}
-              className="text-white hover:bg-orange-700 p-2 rounded-full transition-colors"
+              className="text-white hover:bg-orange-700 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 bg-orange-600/80"
               title={`Call ${p.displayName}`}
             >
               <PhoneCall className="w-4 h-4" />
+              <span className="text-[10px] uppercase font-bold tracking-wider">{p.entityType.substring(0,4)}</span>
             </button>
           )) : (
             targetUserId && sessionId && (
               <button
                 onClick={() => startCall(targetUserId, sessionId)}
-                className="text-white hover:bg-orange-700 p-2 rounded-full transition-colors"
+                className="text-white hover:bg-orange-700 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 bg-orange-600/80"
                 title="Start Audio Call"
               >
                 <PhoneCall className="w-4 h-4" />
+                <span className="text-[10px] uppercase font-bold tracking-wider">CALL</span>
               </button>
             )
           )}
@@ -338,13 +345,31 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
             <ImagePlus className="w-5 h-5" />
           </button>
           
-          <input
-            type="text"
+          <textarea
             value={inputText}
-            onChange={handleInputChange}
+            onChange={(e) => { 
+              setInputText(e.target.value); 
+              sendTypingIndicator(); 
+            }}
+            onInput={(e) => {
+              const target = e.target as HTMLTextAreaElement;
+              target.style.height = 'auto';
+              target.style.height = `${Math.min(target.scrollHeight, 128)}px`; // 128px is 8rem (max-h-32)
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+                // Reset height
+                const target = e.target as HTMLTextAreaElement;
+                target.style.height = 'auto';
+              }
+            }}
             placeholder="Type a message..."
-            className="flex-1 bg-transparent border-none focus:outline-none text-sm text-gray-800 placeholder-gray-500"
+            className="w-full bg-transparent p-3 outline-none resize-none max-h-32 min-h-[44px]"
+            rows={1}
             disabled={!isConnected || isLoading}
+            style={{ overflowY: inputText.split('\n').length > 4 ? 'auto' : 'hidden' }}
           />
           <button 
             type="submit"
