@@ -17,6 +17,7 @@ import OutletShiftEditor from "./OutletShiftEditor";
 import OutletSettingsEditor from "./OutletSettingsEditor";
 import BrandMasterMenu from "./BrandMasterMenu";
 import { ChatWidget } from "./ChatWidget";
+import { CallOverlay } from './CallOverlay';
 
 import { OrderHistory } from "./OrderHistory";
 
