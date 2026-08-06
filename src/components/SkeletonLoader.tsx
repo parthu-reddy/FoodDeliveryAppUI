@@ -12,9 +12,9 @@ export const Skeleton = ({ className = '' }: SkeletonProps) => {
 
 export const RestaurantCardSkeleton = () => {
   return (
-    <div className="flex flex-col rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white/10 p-2 shadow-sm">
-      <Skeleton className="h-44 w-full rounded-2xl" />
-      <div className="p-4 space-y-3">
+    <div className="flex flex-col rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white/10 shadow-sm">
+      <Skeleton className="h-44 w-full" />
+      <div className="p-4.5 space-y-2">
         <div className="flex justify-between items-center">
           <Skeleton className="h-5 w-1/2" />
           <Skeleton className="h-5 w-12" />

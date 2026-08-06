@@ -166,10 +166,17 @@ export default function CustomerDashboard({
     // Stop polling if no active orders
     if (!activeOrderIdsStr) return;
 
-    const intervalId = setInterval(() => {
+    let isSubscribed = true;
+    let timeoutId: NodeJS.Timeout;
+
+    const pollOrders = () => {
       apiGet(`/api/v1/orders/active?page=0&size=50`)
         .then(res => {
-          if (!res.data) return;
+          if (!isSubscribed) return;
+          if (!res.data) {
+            timeoutId = setTimeout(pollOrders, 60000);
+            return;
+          }
           const content = res.data.content || (Array.isArray(res.data) ? res.data : []);
           const updatedOrders = content.map((o: any) => {
             let s = o.status?.toUpperCase() || '';
@@ -219,11 +226,34 @@ export default function CustomerDashboard({
             
             return changed ? newOrders : prev;
           });
-        })
-        .catch(console.error);
-    }, 60000);
 
-    return () => clearInterval(intervalId);
+          // Calculate dynamic polling interval
+          const hasOutForDelivery = updatedOrders.some((o: any) => o.deliveryStatus === 'OUT_FOR_DELIVERY');
+          const hasPreparingOrAccepted = updatedOrders.some((o: any) => o.status === 'PREPARING' || o.status === 'ACCEPTED');
+          
+          let nextInterval = 60000;
+          if (hasOutForDelivery) {
+            nextInterval = 10000; // Poll every 10s if out for delivery
+          } else if (hasPreparingOrAccepted) {
+            nextInterval = 30000; // Poll every 30s if preparing
+          }
+          
+          timeoutId = setTimeout(pollOrders, nextInterval);
+        })
+        .catch(err => {
+          console.error(err);
+          if (isSubscribed) {
+            timeoutId = setTimeout(pollOrders, 60000);
+          }
+        });
+    };
+
+    timeoutId = setTimeout(pollOrders, 60000); // Start initial poll after 60s, since first load is handled elsewhere
+
+    return () => {
+      isSubscribed = false;
+      clearTimeout(timeoutId);
+    };
   }, [activeOrderIdsStr]);
 
   // Image preloading removed to favor lazy loading and better Time-To-Interactive (TTI).
@@ -394,7 +424,13 @@ export default function CustomerDashboard({
     if (node) observerRef.current.observe(node);
   }, []);
 
+  const cartUpdateRef = React.useRef<number>(0);
+
   const addToCart = (item: MenuItem) => {
+    const now = Date.now();
+    if (now - cartUpdateRef.current < 50) return; // Basic throttle to prevent race conditions on rapid clicks
+    cartUpdateRef.current = now;
+
     if (cartRestaurant && cartRestaurant.id !== selectedRestaurant.id) {
       if (window.confirm("Adding items from a new outlet will clear your cart. Continue?")) {
         setCart([{ item, quantity: 1 }]);
@@ -415,6 +451,9 @@ export default function CustomerDashboard({
   };
 
   const removeFromCart = (itemId: string) => {
+    const now = Date.now();
+    if (now - cartUpdateRef.current < 50) return;
+    cartUpdateRef.current = now;
     setCart(prev => {
       const existing = prev.find(i => i.item.id === itemId);
       if (existing && existing.quantity > 1) {
