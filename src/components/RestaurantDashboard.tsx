@@ -4,7 +4,7 @@ import {
   ToggleLeft, ToggleRight, DollarSign, Calendar, Eye, MapPin, Sun, Moon,
   Terminal, Sliders, Code, Send, CheckCircle2, AlertCircle,
   ChefHat, Flame, Clock, Info, Shield, HelpCircle, User, Bike, Play, ArrowRight, Sparkles,
-  Check, Truck, Settings, Plus, Trash2, Edit3, ChevronLeft, Layers, Utensils, History, ChevronDown, ChevronUp, XCircle, MessageSquare
+  Check, Truck, Settings, Plus, Trash2, Edit3, ChevronLeft, Layers, Utensils, History, ChevronDown, ChevronUp, XCircle, MessageSquare, X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Order, OrderStatus, MenuItem, VerificationStatus } from '../types';
@@ -18,6 +18,7 @@ import OutletSettingsEditor from "./OutletSettingsEditor";
 import BrandMasterMenu from "./BrandMasterMenu";
 import { ChatWidget } from "./ChatWidget";
 import { CallOverlay } from './CallOverlay';
+import CampaignManagement from './CampaignManagement';
 
 import { OrderHistory } from "./OrderHistory";
 
@@ -101,7 +102,7 @@ export default function RestaurantDashboard({
       // Revert optimistic update on failure (ideally, would need the old status)
     }
   });
-  const [activeTab, setActiveTab] = useState<'orders' | 'menu'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'menu' | 'campaigns'>('orders');
   const [settingsTab, setSettingsTab] = useState<"menu-editor" | "outlets" | "history">("menu-editor");
   const [apiPrepSeconds, setApiPrepSeconds] = useState('15');
 
@@ -131,6 +132,7 @@ export default function RestaurantDashboard({
   
   // Chat state
   const [selectedChatOrder, setSelectedChatOrder] = useState<Order | null>(null);
+  const [showChatList, setShowChatList] = useState(false);
 
   // Fetch restaurant profile
   useEffect(() => {
@@ -619,6 +621,19 @@ export default function RestaurantDashboard({
               }`}
             >
               Menu Stock Toggles
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('campaigns');
+                setShowSettings(false);
+              }}
+              className={`flex-1 py-2 text-[10.5px] font-bold rounded-lg cursor-pointer transition-all ${
+                activeTab === 'campaigns' && !showSettings
+                  ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white shadow-sm shadow-rose-500/15' 
+                  : 'text-slate-500 dark:text-[#f0ede6] hover:text-slate-700 dark:hover:text-slate-200'
+              }`}
+            >
+              Ad Campaigns
             </button>
           </div>
         </div>
@@ -1641,6 +1656,17 @@ export default function RestaurantDashboard({
           </motion.div>
         )}
 
+        {!showSettings && activeTab === 'campaigns' && (
+          <motion.div
+            key="campaigns-panel"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+          >
+            <CampaignManagement restaurantId={selectedOutletId} />
+          </motion.div>
+        )}
+
         {showSettings && (
           /* ------------------- RESTAURANT SETTINGS CONSOLE ------------------- */
           <motion.div
@@ -1893,7 +1919,59 @@ export default function RestaurantDashboard({
             }] : [])
           ]}
           onClose={() => setSelectedChatOrder(null)}
+          onBack={() => {
+            setSelectedChatOrder(null);
+            setShowChatList(true);
+          }}
         />
+      )}
+      
+      {!selectedChatOrder && (
+        <button
+          onClick={() => setShowChatList(true)}
+          className="fixed bottom-6 right-6 bg-slate-800 hover:bg-slate-700 text-white px-5 py-4 rounded-full shadow-lg transition-transform hover:scale-105 z-40 flex items-center justify-center space-x-2"
+        >
+          <MessageSquare className="w-6 h-6" />
+          <span className="font-bold hidden sm:inline">Messages</span>
+        </button>
+      )}
+
+      {showChatList && !selectedChatOrder && (
+        <div className="fixed bottom-0 right-0 sm:bottom-6 sm:right-6 w-full sm:w-96 h-[100dvh] sm:h-[500px] max-h-[100dvh] sm:max-h-[calc(100vh-6rem)] bg-white sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden z-[50] sm:border sm:border-gray-200">
+          <div className="bg-slate-800 text-white p-4 flex justify-between items-center shrink-0">
+            <h3 className="font-semibold text-lg">Active Chats</h3>
+            <button onClick={() => setShowChatList(false)} className="text-white hover:bg-slate-700 p-2 rounded-full transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 bg-gray-50 space-y-2">
+            {myOrders.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-gray-400 p-4 text-center">
+                <MessageSquare className="w-12 h-12 mb-3 text-gray-300" />
+                <p>No active orders.</p>
+              </div>
+            ) : (
+              myOrders.map(order => (
+                <button
+                  key={order.id}
+                  onClick={() => {
+                    setSelectedChatOrder(order);
+                    setShowChatList(false);
+                  }}
+                  className="w-full text-left bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex justify-between items-center group"
+                >
+                  <div className="flex flex-col overflow-hidden pr-2">
+                    <span className="font-bold text-slate-800">Order #{order.id.substring(0,8)}</span>
+                    <span className="text-sm text-slate-500 truncate">{order.customerName || 'Customer'}</span>
+                  </div>
+                  <div className="text-orange-600 bg-orange-50 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap group-hover:bg-orange-600 group-hover:text-white transition-colors">
+                    Chat
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
+        </div>
       )}
       
       <CallOverlay />

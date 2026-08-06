@@ -1,12 +1,13 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 3.2.1263 on 2026-08-03 19:01:58.
+// Generated using typescript-generator version 3.2.1263 on 2026-08-06 15:37:48.
 
 export enum AccountType {
     CUSTOMER = "CUSTOMER",
     PLATFORM = "PLATFORM",
     RESTAURANT = "RESTAURANT",
     DRIVER = "DRIVER",
+    ADVERTISER_WALLET = "ADVERTISER_WALLET",
 }
 
 export enum ChannelType {
@@ -30,6 +31,11 @@ export enum ChargeCategory {
     REFUND = "REFUND",
     ORDER_TOTAL = "ORDER_TOTAL",
     PAYOUT = "PAYOUT",
+    AD_IMPRESSION = "AD_IMPRESSION",
+    AD_CLICK = "AD_CLICK",
+    AD_CONVERSION = "AD_CONVERSION",
+    AD_WALLET_TOPUP = "AD_WALLET_TOPUP",
+    AD_REVENUE = "AD_REVENUE",
 }
 
 export enum DeliveryStatus {

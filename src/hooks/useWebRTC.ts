@@ -16,6 +16,7 @@ export interface WebRtcSignal {
 }
 
 export type CallState = 'IDLE' | 'CALLING' | 'RINGING' | 'CONNECTED';
+export type CallEndReason = 'DECLINED' | 'TIMEOUT' | 'ENDED' | 'MISSED' | null;
 
 export const useWebRTC = () => {
   const token = getToken();
@@ -26,6 +27,7 @@ export const useWebRTC = () => {
   const [remoteUserId, _setRemoteUserId] = useState<string | null>(null);
   const [activeSessionId, _setActiveSessionId] = useState<string | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const [callEndReason, setCallEndReason] = useState<CallEndReason>(null);
 
   // Refs for stale closures inside STOMP callbacks
   const callStateRef = useRef<CallState>(callState);
@@ -51,6 +53,10 @@ export const useWebRTC = () => {
   const setRemoteUserId = useCallback((id: string | null) => {
     remoteUserIdRef.current = id;
     _setRemoteUserId(id);
+  }, []);
+
+  const setCallEndReasonCallback = useCallback((reason: CallEndReason) => {
+    setCallEndReason(reason);
   }, []);
 
   const setActiveSessionId = useCallback((id: string | null) => {
@@ -144,6 +150,7 @@ export const useWebRTC = () => {
         setCallerId(signal.senderId);
         setRemoteUserId(signal.senderId);
         setActiveSessionId(signal.sessionId || null);
+        setCallEndReasonCallback(null);
         setCallState('RINGING');
         
         startCallTimeout();
@@ -190,6 +197,13 @@ export const useWebRTC = () => {
         break;
 
       case 'HANGUP':
+        if (callStateRef.current === 'CALLING') {
+           setCallEndReasonCallback('DECLINED');
+        } else if (callStateRef.current === 'RINGING') {
+           setCallEndReasonCallback('MISSED');
+        } else if (callStateRef.current === 'CONNECTED') {
+           setCallEndReasonCallback('ENDED');
+        }
         cleanupCall();
         break;
     }
@@ -217,6 +231,7 @@ export const useWebRTC = () => {
   const startCallTimeout = () => {
     clearCallTimeout();
     callTimeoutRef.current = window.setTimeout(() => {
+      setCallEndReasonCallback('TIMEOUT');
       endCall();
     }, 30000);
   };
@@ -398,12 +413,15 @@ export const useWebRTC = () => {
     pc.ontrack = (event) => {
       const incomingStream = event.streams[0];
       setRemoteStream(incomingStream);
-      setCallState('CONNECTED');
-      clearCallTimeout();
+      
+      if (isCallerRef.current) {
+        setCallState('CONNECTED');
+        clearCallTimeout();
 
-      // Only the caller records to prevent duplicate uploads
-      if (isCallerRef.current && localStreamRef.current) {
-         startRecording(localStreamRef.current, incomingStream);
+        // Only the caller records to prevent duplicate uploads
+        if (localStreamRef.current) {
+           startRecording(localStreamRef.current, incomingStream);
+        }
       }
     };
 
@@ -415,11 +433,18 @@ export const useWebRTC = () => {
     };
 
     try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert("Your browser blocks microphone access on insecure connections (HTTP). Please access this site via HTTPS or localhost to make calls.");
+        throw new Error("Media devices API not available. HTTPS is required.");
+      }
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
       localStreamRef.current = stream;
       stream.getTracks().forEach(track => pc.addTrack(track, stream));
     } catch (err) {
       console.error('Error accessing microphone:', err);
+      if (err instanceof Error && err.name !== 'Error') {
+         alert("Could not access microphone: " + err.message);
+      }
       pc.close();
       return null;
     }
@@ -435,6 +460,7 @@ export const useWebRTC = () => {
     isCallerRef.current = true;
     setRemoteUserId(targetUserId);
     setActiveSessionId(sessionId);
+    setCallEndReasonCallback(null);
     setCallState('CALLING');
     startCallTimeout();
     
@@ -489,6 +515,7 @@ export const useWebRTC = () => {
         type: 'HANGUP'
       });
     }
+    setCallEndReasonCallback('DECLINED');
     cleanupCall();
   };
 
@@ -499,6 +526,11 @@ export const useWebRTC = () => {
         targetUserId: remoteUserIdRef.current,
         type: 'HANGUP'
       });
+    }
+    if (callStateRef.current === 'CALLING' || callStateRef.current === 'RINGING') {
+      setCallEndReasonCallback('MISSED');
+    } else {
+      setCallEndReasonCallback('ENDED');
     }
     cleanupCall();
   };
@@ -530,7 +562,8 @@ export const useWebRTC = () => {
     setCallerId(null);
     setRemoteUserId(null);
     setActiveSessionId(null);
-    isCallerRef.current = false;
+    // Note: Do not reset isCallerRef here so the UI can check it after the call ends.
+    // It gets properly initialized in startCall and handleIncomingSignal.
   };
   
   const toggleMute = () => {
@@ -545,6 +578,8 @@ export const useWebRTC = () => {
 
   return {
     callState,
+    callEndReason,
+    isCaller: isCallerRef.current,
     callerId,
     remoteUserId,
     remoteStream,

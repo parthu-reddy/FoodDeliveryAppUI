@@ -1,5 +1,5 @@
-import React from 'react';
-import { Heart, Star, Clock, Bike } from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
+import { Heart, Star, Clock, Bike, Megaphone } from 'lucide-react';
 import { Restaurant } from '../types';
 import ImageLoader from './ImageLoader';
 
@@ -12,11 +12,57 @@ interface CustomerRestaurantCardProps {
 }
 
 export default function CustomerRestaurantCard({ restaurant, isLast, lastElementRef, onClick }: CustomerRestaurantCardProps) {
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  // IntersectionObserver for Impression Tracking
+  useEffect(() => {
+    if (!restaurant.isSponsored || !restaurant.adData) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          // Fire impression tracking call to EventTrackingService
+          // We fire-and-forget the analytics payload containing the encrypted adData
+          fetch(`http://localhost:8080/api/v1/tracking/impression`, {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({ adData: restaurant.adData })
+          }).catch(err => console.error("Impression tracking failed", err));
+          
+          observer.disconnect(); // Only track impression once per render
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    if (cardRef.current) {
+      observer.observe(cardRef.current);
+    }
+    return () => observer.disconnect();
+  }, [restaurant]);
+
+  const handleCardClick = () => {
+    if (restaurant.isSponsored && restaurant.adData) {
+      // Fire click tracking call to EventTrackingService
+      fetch(`http://localhost:8080/api/v1/tracking/click`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ adData: restaurant.adData })
+      }).catch(err => console.error("Click tracking failed", err));
+    }
+    onClick(restaurant);
+  };
+
   return (
     <div
-      ref={isLast ? lastElementRef : null}
-      onClick={() => onClick(restaurant)}
-      className="group flex flex-col rounded-3xl transition-all duration-300 border backdrop-blur-xl relative overflow-hidden cursor-pointer shadow-lg hover:-translate-y-1.5 bg-white/12 hover:bg-white/20 border-white/30 shadow-[0_15px_35px_rgba(0,0,0,0.06)] hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all dark:bg-slate-900/20 dark:hover:bg-slate-900/20 dark:border-rose-500/30 dark:shadow-[0_15px_35px_rgba(0,0,0,0.35)]  text-left"
+      ref={(node) => {
+        // Handle both the infinite scroll ref and our local intersection observer ref
+        if (isLast && lastElementRef) lastElementRef(node);
+        // @ts-ignore
+        cardRef.current = node;
+      }}
+      onClick={handleCardClick}
+      className={`group flex flex-col rounded-3xl transition-all duration-300 border backdrop-blur-xl relative overflow-hidden cursor-pointer shadow-lg hover:-translate-y-1.5 bg-white/12 hover:bg-white/20 border-white/30 shadow-[0_15px_35px_rgba(0,0,0,0.06)] ${restaurant.isSponsored ? 'hover:shadow-[0_0_15px_rgba(234,179,8,0.5)] dark:hover:shadow-[0_0_15px_rgba(234,179,8,0.6)] border-amber-400/40 hover:border-amber-400/60' : 'hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 dark:border-rose-500/30'} transition-all dark:bg-slate-900/20 dark:hover:bg-slate-900/20 dark:shadow-[0_15px_35px_rgba(0,0,0,0.35)] text-left`}
     >
       <div className="h-44 w-full relative overflow-hidden bg-transparent">
         <ImageLoader
@@ -26,6 +72,12 @@ export default function CustomerRestaurantCard({ restaurant, isLast, lastElement
           referrerPolicy="no-referrer"
           containerClassName="w-full h-full"
         />
+        {restaurant.isSponsored && (
+          <div className="absolute top-3 left-3 bg-amber-500/90 backdrop-blur-md px-2.5 py-1 rounded-xl text-white font-black text-[10px] uppercase tracking-wider flex items-center gap-1.5 shadow-lg border border-amber-400/50">
+            <Megaphone className="w-3 h-3" />
+            Sponsored
+          </div>
+        )}
         <div className="absolute top-3 right-3 bg-slate-950/20 backdrop-blur-sm p-1.5 rounded-full text-white/80 hover:text-red-500 border border-rose-500/30">
           <Heart className="w-4 h-4" />
         </div>

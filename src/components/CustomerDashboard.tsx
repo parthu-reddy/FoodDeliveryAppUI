@@ -199,21 +199,22 @@ export default function CustomerDashboard({
             const missingIds = activePrevIds.filter(id => !updatedOrders.find((u: any) => u.id === id));
             
             if (missingIds.length > 0) {
-               missingIds.forEach(id => {
-                  apiGet(`/api/v1/orders/${id}`).then(res => {
-                     if (res.data) {
-                        setInternalOrders(curr => {
-                            const currentList = [...curr];
-                            const idx = currentList.findIndex(o => o.id === res.data.id);
-                            if (idx !== -1 && JSON.stringify(currentList[idx]) !== JSON.stringify(res.data)) {
-                               currentList[idx] = res.data;
-                               return currentList;
+               apiGet(`/api/v1/orders/batch?ids=${missingIds.join(',')}`).then(res => {
+                  if (res.data) {
+                     setInternalOrders(curr => {
+                        const currentList = [...curr];
+                        let batchChanged = false;
+                        res.data.forEach((batchOrder: any) => {
+                            const idx = currentList.findIndex(o => o.id === batchOrder.id);
+                            if (idx !== -1 && JSON.stringify(currentList[idx]) !== JSON.stringify(batchOrder)) {
+                               currentList[idx] = batchOrder;
+                               batchChanged = true;
                             }
-                            return curr;
                         });
-                     }
-                  }).catch(console.error);
-               });
+                        return batchChanged ? currentList : curr;
+                     });
+                  }
+               }).catch(console.error);
             }
             
             return changed ? newOrders : prev;
@@ -225,21 +226,7 @@ export default function CustomerDashboard({
     return () => clearInterval(intervalId);
   }, [activeOrderIdsStr]);
 
-  // Pre-cache restaurant and menu images for smoother scrolling (caches 20 restaurants & 20 menu items)
-  useEffect(() => {
-    const preloadImages = () => {
-      const imagesToPreload = [
-        ...restaurants.slice(0, 20).map(r => r.image)
-      ];
-      imagesToPreload.forEach(src => {
-        if (src) {
-          const img = new Image();
-          img.src = src;
-        }
-      });
-    };
-    preloadImages();
-  }, []);
+  // Image preloading removed to favor lazy loading and better Time-To-Interactive (TTI).
 
 
 
@@ -281,34 +268,36 @@ export default function CustomerDashboard({
 
   useEffect(() => {
     let ignore = false;
-    if (selectedRestaurant && deliveryAddressId) {
-      setDeliveryPricing(null);
+    const timeoutId = setTimeout(() => {
+        if (selectedRestaurant && deliveryAddressId) {
+          setDeliveryPricing(null);
 
-      apiGet(`/api/v1/restaurants/${selectedRestaurant.id}/delivery-pricing?addressId=${deliveryAddressId}`)
-        .then(res => {
-          if (!ignore && res.data) {
-            setDeliveryPricing(res.data);
-          }
-        })
-        .catch((err: any) => {
-          if (err?.status === 429) {
-            // Rate limited — show a graceful message, don't swallow silently
-            setDeliveryPricing({ minimumOrderForFreeDelivery: 999999, fixedPlatformFee: 5.0, distanceKm: 0 });
-          } else {
-            console.error(err);
-          }
-        });
-    } else if (selectedRestaurant && deliveryLat && deliveryLng) {
-      const R = 6371;
-      const rLat = Number((selectedRestaurant as any).lat || 0);
-      const rLng = Number((selectedRestaurant as any).lng || 0);
-      const dLat = (rLat - Number(deliveryLat)) * Math.PI / 180;
-      const dLon = (rLng - Number(deliveryLng)) * Math.PI / 180;
-      const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(Number(deliveryLat) * Math.PI / 180) * Math.cos(rLat * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      setDeliveryPricing({ minimumOrderForFreeDelivery: 999999, fixedPlatformFee: 5.0, distanceKm: Number((R * c).toFixed(2)) });
-    }
-    return () => { ignore = true; };
+          apiGet(`/api/v1/restaurants/${selectedRestaurant.id}/delivery-pricing?addressId=${deliveryAddressId}`)
+            .then(res => {
+              if (!ignore && res.data) {
+                setDeliveryPricing(res.data);
+              }
+            })
+            .catch((err: any) => {
+              if (err?.status === 429) {
+                // Rate limited — show a graceful message, don't swallow silently
+                setDeliveryPricing({ minimumOrderForFreeDelivery: 999999, fixedPlatformFee: 5.0, distanceKm: 0 });
+              } else {
+                console.error(err);
+              }
+            });
+        } else if (selectedRestaurant && deliveryLat && deliveryLng) {
+          const R = 6371;
+          const rLat = Number((selectedRestaurant as any).lat || 0);
+          const rLng = Number((selectedRestaurant as any).lng || 0);
+          const dLat = (rLat - Number(deliveryLat)) * Math.PI / 180;
+          const dLon = (rLng - Number(deliveryLng)) * Math.PI / 180;
+          const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(Number(deliveryLat) * Math.PI / 180) * Math.cos(rLat * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+          setDeliveryPricing({ minimumOrderForFreeDelivery: 999999, fixedPlatformFee: 5.0, distanceKm: Number((R * c).toFixed(2)) });
+        }
+    }, 500); // 500ms debounce
+    return () => { ignore = true; clearTimeout(timeoutId); };
   }, [selectedRestaurant?.id, deliveryAddressId, deliveryLat, deliveryLng]);
 
   useEffect(() => {

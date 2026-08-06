@@ -14,6 +14,8 @@ export interface Restaurant {
   distance: number; // in km
   brandId?: string;
   brandName?: string;
+  isSponsored?: boolean;
+  adData?: any;
 }
 
 export interface MenuItem {

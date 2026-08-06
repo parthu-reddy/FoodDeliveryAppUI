@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, X, MessageSquare, Loader2, ImagePlus, PhoneCall } from 'lucide-react';
+import { Send, X, MessageSquare, Loader2, ImagePlus, PhoneCall, PhoneOff } from 'lucide-react';
 import { getToken, getUserProfile } from '../lib/tokenStore';
 import { useChatWebSocket, ChatMessage, TypingIndicator } from '../hooks/useChatWebSocket';
 import { apiGet, apiPost } from '../lib/apiClient';
@@ -17,9 +17,10 @@ interface ChatWidgetProps {
   otherParticipants?: ChatParticipant[];
   order?: any; // To pass order details
   onClose?: () => void;
+  onBack?: () => void;
 }
 
-export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentUserType, otherParticipants, onClose }) => {
+export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentUserType, otherParticipants, onClose, onBack }) => {
   const token = getToken();
   const user = getUserProfile();
   const [isOpen, setIsOpen] = useState(false);
@@ -31,7 +32,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
   const [isTyping, setIsTyping] = useState<Record<string, boolean>>({});
   const [targetUserId, setTargetUserId] = useState<string | null>(null);
   
-  const { startCall } = useCallContext();
+  const { startCall, callState, callEndReason, isCaller } = useCallContext();
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
@@ -183,9 +184,10 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
           setIsOpen(true);
           setUnreadCount(0);
         }}
-        className="fixed bottom-6 right-6 bg-orange-600 hover:bg-orange-700 text-white p-4 rounded-full shadow-lg transition-transform hover:scale-105 z-50 flex items-center justify-center relative"
+        className="fixed bottom-6 right-6 bg-orange-600 hover:bg-orange-700 text-white px-5 py-4 rounded-full shadow-lg transition-transform hover:scale-105 z-50 flex items-center justify-center space-x-2"
       >
         <MessageSquare className="w-6 h-6" />
+        <span className="font-bold text-sm">#{orderId.substring(0, 6)}</span>
         {unreadCount > 0 && (
           <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full animate-bounce">
             {unreadCount}
@@ -200,17 +202,24 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
     <div className="fixed bottom-0 right-0 sm:bottom-6 sm:right-6 w-full sm:w-96 h-[100dvh] sm:h-[500px] max-h-[100dvh] sm:max-h-[calc(100vh-6rem)] bg-white sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden z-[60] sm:border sm:border-gray-100">
       {/* Header */}
       <div className="bg-orange-600 text-white p-4 flex justify-between items-center shrink-0">
-        <div>
-          <h3 className="font-semibold text-lg truncate max-w-[200px]">
-            {otherParticipants?.length ? otherParticipants.map(p => p.displayName).join(', ') : 'Order Chat'}
-          </h3>
-          <div className="flex flex-col text-orange-100 text-sm">
-            <span>Order #{orderId.substring(0,8)}</span>
-            {order && order.items && (
+        <div className="flex items-center gap-2">
+          {onBack && (
+            <button onClick={onBack} className="hover:bg-orange-700 p-1.5 rounded-full transition-colors mr-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+          )}
+          <div>
+            <h3 className="font-semibold text-lg truncate max-w-[160px] sm:max-w-[200px]">
+              {otherParticipants?.length ? otherParticipants.map(p => p.displayName).join(', ') : 'Order Chat'}
+            </h3>
+            <div className="flex flex-col text-orange-100 text-sm">
+              <span>Order #{orderId.substring(0,8)}</span>
+            {order && order.items && Array.isArray(order.items) && order.items.length > 0 && (
               <span className="text-xs opacity-90 truncate max-w-[200px]">
-                {order.items.length} items ({order.items.map((i: any) => i.item.name).join(', ')})
+                {order.items.length} items ({order.items.map((i: any) => i?.item?.name || i?.name || 'Item').join(', ')})
               </span>
             )}
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-1">
@@ -294,7 +303,17 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
                       : 'bg-white border border-gray-200 text-gray-800 rounded-tl-sm shadow-sm'
                   }`}
                 >
-                  {msg.messageType === 'IMAGE' ? (
+                  {msg.content === '[SYSTEM_MISSED_CALL]' ? (
+                    <div className="flex items-center space-x-2 font-semibold text-red-500">
+                      <PhoneOff className="w-4 h-4" />
+                      <span>Missed Voice Call</span>
+                    </div>
+                  ) : msg.content.startsWith('[SYSTEM_CALL_ENDED') ? (
+                    <div className="flex items-center space-x-2 font-semibold">
+                      <PhoneCall className="w-4 h-4" />
+                      <span>Call Ended {msg.content.replace('[SYSTEM_CALL_ENDED ', '').replace(']', '')}</span>
+                    </div>
+                  ) : msg.messageType === 'IMAGE' ? (
                     <img src={msg.content} alt="Attachment" className="max-w-full rounded-lg" />
                   ) : msg.messageType === 'AUDIO' ? (
                     <div className="flex flex-col space-y-1">

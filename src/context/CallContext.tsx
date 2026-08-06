@@ -1,8 +1,10 @@
 import React, { createContext, useContext, ReactNode } from 'react';
-import { useWebRTC, CallState } from '../hooks/useWebRTC';
+import { useWebRTC, CallState, CallEndReason } from '../hooks/useWebRTC';
 
 interface CallContextType {
   callState: CallState;
+  callEndReason: CallEndReason;
+  isCaller: boolean;
   callerId: string | null;
   remoteUserId: string | null;
   remoteStream: MediaStream | null;
