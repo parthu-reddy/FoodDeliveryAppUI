@@ -1,4 +1,5 @@
 import { getToken, clearAllLocalData } from './tokenStore';
+import { logger } from './logger';
 
 const BASE_URL = (import.meta as any).env.VITE_API_BASE_URL || '';
 
@@ -45,8 +46,13 @@ const handleHttpError = async (res: Response) => {
 
   // Auto-redirect on 401 for non-auth endpoints (invalid session or missing user)
   if (res.status === 401 && !res.url.includes('/api/v1/internal/auth/')) {
+    logger.warn('Unauthorized API access, clearing session', { url: res.url });
     clearAllLocalData();
     window.location.href = '/';
+  } else if (res.status >= 500) {
+    logger.error(`HTTP 5xx Server Error`, { status: res.status, url: res.url, errorMessage });
+  } else if (res.status >= 400) {
+    logger.warn(`HTTP 4xx Client Error`, { status: res.status, url: res.url, errorMessage });
   }
   
   throw new ApiError(errorMessage, res.status, errorData);
@@ -69,12 +75,11 @@ export const apiGet = async (path: string, customHeaders?: Record<string, string
   try {
     res = await fetch(`${BASE_URL}${path}`, { headers });
   } catch (error) {
-    console.error(`[API_ERROR] fetch failed for GET ${BASE_URL}${path}`, error);
+    logger.error(`Network or CORS failure for GET ${BASE_URL}${path}`, { error: error instanceof Error ? error.message : String(error) });
     throw error;
   }
 
   if (!res.ok) {
-    console.error(`[API_ERROR] HTTP error for GET ${BASE_URL}${path}: ${res.status}`);
     await handleHttpError(res);
   }
   return res.json();
@@ -92,11 +97,17 @@ export const apiPost = async (path: string, body?: any, customHeaders?: Record<s
     Object.assign(headers, customHeaders);
   }
 
-  const res = await fetch(`${BASE_URL}${path}`, {
-    method: 'POST',
-    headers,
-    body: body ? JSON.stringify(body) : undefined
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${BASE_URL}${path}`, {
+      method: 'POST',
+      headers,
+      body: body ? JSON.stringify(body) : undefined
+    });
+  } catch (error) {
+    logger.error(`Network or CORS failure for POST ${BASE_URL}${path}`, { error: error instanceof Error ? error.message : String(error) });
+    throw error;
+  }
   
   if (!res.ok) await handleHttpError(res);
   
@@ -120,11 +131,17 @@ export const apiPut = async (path: string, body?: any, customHeaders?: Record<st
     Object.assign(headers, customHeaders);
   }
 
-  const res = await fetch(`${BASE_URL}${path}`, {
-    method: 'PUT',
-    headers,
-    body: body ? JSON.stringify(body) : undefined
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${BASE_URL}${path}`, {
+      method: 'PUT',
+      headers,
+      body: body ? JSON.stringify(body) : undefined
+    });
+  } catch (error) {
+    logger.error(`Network or CORS failure for PUT ${BASE_URL}${path}`, { error: error instanceof Error ? error.message : String(error) });
+    throw error;
+  }
   
   if (!res.ok) await handleHttpError(res);
   
@@ -147,10 +164,16 @@ export const apiDelete = async (path: string, customHeaders?: Record<string, str
     Object.assign(headers, customHeaders);
   }
 
-  const res = await fetch(`${BASE_URL}${path}`, {
-    method: 'DELETE',
-    headers
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${BASE_URL}${path}`, {
+      method: 'DELETE',
+      headers
+    });
+  } catch (error) {
+    logger.error(`Network or CORS failure for DELETE ${BASE_URL}${path}`, { error: error instanceof Error ? error.message : String(error) });
+    throw error;
+  }
   
   if (!res.ok) await handleHttpError(res);
   
@@ -173,11 +196,17 @@ export const apiPostFormData = async (path: string, formData: FormData, customHe
     Object.assign(headers, customHeaders);
   }
 
-  const res = await fetch(`${BASE_URL}${path}`, {
-    method: 'POST',
-    headers,
-    body: formData
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${BASE_URL}${path}`, {
+      method: 'POST',
+      headers,
+      body: formData
+    });
+  } catch (error) {
+    logger.error(`Network or CORS failure for POST FormData ${BASE_URL}${path}`, { error: error instanceof Error ? error.message : String(error) });
+    throw error;
+  }
   
   if (!res.ok) await handleHttpError(res);
   

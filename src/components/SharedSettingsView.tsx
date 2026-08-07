@@ -6,6 +6,7 @@ import { X, User, Package, LogOut, MapPin, Check } from 'lucide-react';
 import { apiGet, apiPut, apiDelete } from '../lib/apiClient';
 import { useToast } from '../context/ToastContext';
 import CustomerAddressModal from './CustomerAddressModal';
+import { TransactionHistoryTable, WalletTransaction } from './TransactionHistoryTable';
 import { z } from 'zod';
 
 const sharedProfileSchema = z.object({
@@ -20,7 +21,7 @@ interface SharedSettingsViewProps {
   showCustomerTabs?: boolean;
   setTrackingOrder?: (order: any) => void;
   savedAddresses?: any[];
-  initialTab?: 'profile' | 'history' | 'addresses';
+  initialTab?: 'profile' | 'history' | 'addresses' | 'wallet';
   isAddressModalOpen?: boolean;
   setIsAddressModalOpen?: (isOpen: boolean) => void;
   addressSearchQuery?: string;
@@ -51,7 +52,7 @@ export default function SharedSettingsView({
   customerId,
   onSelectDeliveryLocation
 }: SharedSettingsViewProps) {
-  const [accountTab, setAccountTab] = useState<'profile' | 'history' | 'addresses'>(initialTab);
+  const [accountTab, setAccountTab] = useState<'profile' | 'history' | 'addresses' | 'wallet'>(initialTab);
   const { showSuccess, showError } = useToast();
 
   useEffect(() => {
@@ -75,6 +76,13 @@ export default function SharedSettingsView({
   const [hasMoreOrders, setHasMoreOrders] = useState(false);
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
   const [hasFetchedOrders, setHasFetchedOrders] = useState(false);
+  
+  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
+  const [txPage, setTxPage] = useState(0);
+  const [txTotalPages, setTxTotalPages] = useState(1);
+  const [txLoading, setTxLoading] = useState(false);
+  const [hasFetchedWallet, setHasFetchedWallet] = useState(false);
 
   const fetchOrders = async (page: number, type: 'history') => {
     try {
@@ -114,8 +122,30 @@ export default function SharedSettingsView({
       }
     } catch (e) {
       console.error(e);
+      showError('Failed to load sessions. Please try again.');
     } finally {
       setIsLoadingSessions(false);
+    }
+  };
+
+  const fetchWalletData = async () => {
+    if (!customerId) return;
+    setTxLoading(true);
+    try {
+      const balanceRes = await apiGet(`/api/v1/wallets/CUSTOMER/${customerId}`);
+      if (balanceRes.data) setWalletBalance(balanceRes.data.balance);
+      
+      const txRes = await apiGet(`/api/v1/wallets/CUSTOMER/${customerId}/transactions?page=${txPage}&size=10`);
+      if (txRes.data) {
+        setTransactions(txRes.data.content || []);
+        setTxTotalPages(txRes.data.totalPages || 1);
+      }
+    } catch (e) {
+      console.error(e);
+      showError('Failed to fetch wallet data');
+    } finally {
+      setTxLoading(false);
+      setHasFetchedWallet(true);
     }
   };
 
@@ -148,8 +178,16 @@ export default function SharedSettingsView({
       loadSessions();
     } else if (accountTab === 'history' && !hasFetchedOrders) {
       fetchOrders(0, 'history');
+    } else if (accountTab === 'wallet' && !hasFetchedWallet) {
+      fetchWalletData();
     }
-  }, [accountTab, hasFetchedOrders]);
+  }, [accountTab, hasFetchedOrders, hasFetchedWallet]);
+
+  useEffect(() => {
+    if (accountTab === 'wallet' && hasFetchedWallet) {
+      fetchWalletData();
+    }
+  }, [txPage]);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -244,6 +282,12 @@ export default function SharedSettingsView({
             </button>
           </>
         )}
+        <button 
+          onClick={() => setAccountTab('wallet')}
+          className={`flex-1 min-w-[100px] px-3 py-2 rounded-lg text-xs font-bold transition-all shadow-sm ${accountTab === 'wallet' ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white' : 'bg-transparent text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+        >
+          Wallet / Earnings
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto overscroll-none pr-1">
@@ -447,6 +491,26 @@ export default function SharedSettingsView({
                 />
               </div>
             )}
+          </div>
+        )}
+
+        {showCustomerTabs && accountTab === 'wallet' && (
+          <div className="space-y-6 pb-6">
+            <div className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 rounded-2xl p-6 text-center">
+              <p className="text-sm font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wide">Available Balance</p>
+              <h2 className="text-4xl font-black text-slate-900 dark:text-[#f0ede6]">₹{walletBalance.toFixed(2)}</h2>
+            </div>
+            
+            <div>
+              <h3 className="font-bold text-lg text-slate-900 dark:text-[#f0ede6] mb-4">Transaction History</h3>
+              <TransactionHistoryTable 
+                transactions={transactions}
+                isLoading={txLoading}
+                page={txPage}
+                totalPages={txTotalPages}
+                onPageChange={setTxPage}
+              />
+            </div>
           </div>
         )}
       </div>

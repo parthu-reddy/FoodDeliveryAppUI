@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Heart, Star, Clock, Bike, Megaphone } from 'lucide-react';
 import { Restaurant } from '../types';
 import ImageLoader from './ImageLoader';
+import { apiGet } from '../lib/apiClient';
 
 interface CustomerRestaurantCardProps {
   key?: React.Key;
@@ -21,13 +22,14 @@ export default function CustomerRestaurantCard({ restaurant, isLast, lastElement
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
-          // Fire impression tracking call to EventTrackingService
-          // We fire-and-forget the analytics payload containing the encrypted adData
-          fetch(`http://localhost:8080/api/v1/tracking/impression`, {
-             method: 'POST',
-             headers: { 'Content-Type': 'application/json' },
-             body: JSON.stringify({ adData: restaurant.adData })
-          }).catch(err => console.error("Impression tracking failed", err));
+          // Fire impression tracking via GET with query params matching the TrackingController signature
+          const params = new URLSearchParams({
+            campaignId: restaurant.adData.campaignId,
+            advertiserId: restaurant.adData.advertiserId,
+            wp: restaurant.adData.wp || ''
+          });
+          apiGet(`/api/v1/tracking/impression?${params.toString()}`)
+            .catch(err => console.error("Impression tracking failed", err));
           
           observer.disconnect(); // Only track impression once per render
         }
@@ -43,12 +45,13 @@ export default function CustomerRestaurantCard({ restaurant, isLast, lastElement
 
   const handleCardClick = () => {
     if (restaurant.isSponsored && restaurant.adData) {
-      // Fire click tracking call to EventTrackingService
-      fetch(`http://localhost:8080/api/v1/tracking/click`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ adData: restaurant.adData })
-      }).catch(err => console.error("Click tracking failed", err));
+      // Fire click tracking via GET with query params matching the TrackingController signature
+      const params = new URLSearchParams({
+        campaignId: restaurant.adData.campaignId,
+        advertiserId: restaurant.adData.advertiserId
+      });
+      apiGet(`/api/v1/tracking/click?${params.toString()}`)
+        .catch(err => console.error("Click tracking failed", err));
     }
     onClick(restaurant);
   };

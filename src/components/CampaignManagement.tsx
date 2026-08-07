@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { apiGet, apiPost } from '../lib/apiClient';
 import { Plus, Play, Pause, DollarSign, TrendingUp, Calendar } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+import { AdPerformanceDashboard, CampaignPerformance } from './AdPerformanceDashboard';
+import { TransactionHistoryTable, WalletTransaction } from './TransactionHistoryTable';
 
 interface Campaign {
   id: string;
@@ -18,7 +20,17 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [walletBalance, setWalletBalance] = useState<number>(1000); // Mock balance
+  const [showTopupModal, setShowTopupModal] = useState(false);
+  const [topupAmount, setTopupAmount] = useState('100');
+  
+  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
+  const [txPage, setTxPage] = useState(0);
+  const [txTotalPages, setTxTotalPages] = useState(1);
+  const [txLoading, setTxLoading] = useState(false);
+  
+  const [performanceData, setPerformanceData] = useState<CampaignPerformance[]>([]);
+  const [perfLoading, setPerfLoading] = useState(false);
 
   // Create Form State
   const [name, setName] = useState('');
@@ -39,9 +51,59 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
   useEffect(() => {
     if (restaurantId) {
       loadCampaigns();
-      // Load wallet balance from LedgerService/WalletService in a real app
+      loadWalletData();
+      loadPerformanceData();
     }
   }, [restaurantId]);
+
+  useEffect(() => {
+    if (restaurantId) {
+      loadTransactions(txPage);
+    }
+  }, [txPage, restaurantId]);
+
+  const loadWalletData = async () => {
+    if (!restaurantId) return;
+    setTxLoading(true);
+    try {
+      const balanceRes = await apiGet(`/api/v1/wallets/ADVERTISER/${restaurantId}`);
+      if (balanceRes.data) setWalletBalance(balanceRes.data.balance);
+    } catch (e) {
+      console.error(e);
+      showError('Failed to fetch wallet balance');
+    } finally {
+      setTxLoading(false);
+    }
+  };
+
+  const loadTransactions = async (page: number) => {
+    setTxLoading(true);
+    try {
+      const res = await apiGet(`/api/v1/wallets/ADVERTISER/${restaurantId}/transactions?page=${page}&size=5`);
+      if (res.data) {
+        setTransactions(res.data.content || []);
+        setTxTotalPages(res.data.totalPages || 1);
+      }
+    } catch (err: any) {
+      console.warn("Could not load transactions", err);
+    } finally {
+      setTxLoading(false);
+    }
+  };
+
+  const loadPerformanceData = async () => {
+    if (!restaurantId) return;
+    setPerfLoading(true);
+    try {
+      const res = await apiGet(`/api/v1/advertisers/${restaurantId}/campaigns/performance`);
+      if (res.data) setPerformanceData(res.data);
+    } catch (e) {
+      console.error(e);
+      showError('Failed to load performance data');
+    } finally {
+      setPerfLoading(false);
+    }
+  };
 
   const loadCampaigns = async () => {
     setLoading(true);
@@ -102,7 +164,12 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
           </div>
           <div>
             <span className="text-[10px] text-slate-500 dark:text-[#f0ede6] uppercase font-mono block">Ad Wallet Balance</span>
-            <span className="text-base font-black text-slate-800 dark:text-[#f0ede6]">${walletBalance.toFixed(2)}</span>
+            <div className="flex items-center gap-3">
+              <span className="text-base font-black text-slate-800 dark:text-[#f0ede6]">${walletBalance.toFixed(2)}</span>
+              <button onClick={() => setShowTopupModal(true)} className="px-2 py-1 bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-bold rounded-lg transition-colors">
+                Top Up
+              </button>
+            </div>
           </div>
         </div>
 
@@ -175,6 +242,23 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
         </div>
       )}
 
+      {/* Analytics Dashboard */}
+      <div className="pt-6 border-t border-slate-200 dark:border-slate-800">
+        <AdPerformanceDashboard performanceData={performanceData} isLoading={perfLoading} />
+      </div>
+
+      {/* Wallet Transactions */}
+      <div className="pt-6 border-t border-slate-200 dark:border-slate-800">
+        <h3 className="font-bold text-lg text-slate-900 dark:text-[#f0ede6] mb-4">Ad Spending History</h3>
+        <TransactionHistoryTable 
+          transactions={transactions}
+          isLoading={txLoading}
+          page={txPage}
+          totalPages={txTotalPages}
+          onPageChange={setTxPage}
+        />
+      </div>
+
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-200 dark:border-slate-800">
@@ -220,6 +304,34 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
                 <button type="submit" className="px-6 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold transition-colors">Launch Campaign</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showTopupModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 w-full max-w-sm shadow-2xl border border-slate-200 dark:border-slate-800">
+            <h3 className="font-bold text-xl mb-4 text-slate-900 dark:text-[#f0ede6]">Top Up Wallet</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="text-[10px] font-bold uppercase text-slate-500 mb-1 block">Amount ($)</label>
+                <input required type="number" step="1" value={topupAmount} onChange={e => setTopupAmount(e.target.value)} className="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-xl p-3 text-sm focus:ring-2 focus:ring-emerald-500" />
+              </div>
+              <div className="pt-4 flex gap-3 justify-end border-t border-slate-100 dark:border-slate-800 mt-2">
+                <button type="button" onClick={() => setShowTopupModal(false)} className="px-4 py-2 rounded-xl text-slate-600 dark:text-slate-400 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Cancel</button>
+                <button type="button" onClick={async () => {
+                  try {
+                    await apiPost(`/api/v1/advertisers/${restaurantId}/campaigns/wallet/topup`, { amount: parseFloat(topupAmount) });
+                    showSuccess('Top-up order created! (Webhook will process payment)');
+                    setShowTopupModal(false);
+                    // Reload wallet data after a short delay for webhook
+                    setTimeout(loadWalletData, 2000);
+                  } catch (err: any) {
+                    showError(err.response?.data?.message || 'Failed to top up wallet');
+                  }
+                }} className="px-6 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold transition-colors">Pay Now</button>
+              </div>
+            </div>
           </div>
         </div>
       )}

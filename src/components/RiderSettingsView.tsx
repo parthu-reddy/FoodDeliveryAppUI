@@ -5,6 +5,7 @@ import { apiGet, apiPut, apiDelete, apiPost } from '../lib/apiClient';
 import { useToast } from '../context/ToastContext';
 import ImageUploadField from './ImageUploadField';
 import DocumentUploadField from './DocumentUploadField';
+import { TransactionHistoryTable, WalletTransaction } from './TransactionHistoryTable';
 import { z } from 'zod';
 
 const riderProfileSchema = z.object({
@@ -62,6 +63,13 @@ export default function RiderSettingsView({
   const [isLoadingSessions, setIsLoadingSessions] = useState(false);
   const [isSubmittingDoc, setIsSubmittingDoc] = useState<string | null>(null);
   const { showSuccess, showError } = useToast();
+  
+  // Wallet State
+  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
+  const [txPage, setTxPage] = useState(0);
+  const [txTotalPages, setTxTotalPages] = useState(1);
+  const [txLoading, setTxLoading] = useState(false);
 
   const loadSessions = async () => {
     setIsLoadingSessions(true);
@@ -136,6 +144,31 @@ export default function RiderSettingsView({
     loadData();
     loadSessions();
   }, [riderPhone]);
+
+  useEffect(() => {
+    if (userId) {
+      loadWalletData(txPage);
+    }
+  }, [userId, txPage]);
+
+  const loadWalletData = async (page: number) => {
+    if (!userId) return;
+    setTxLoading(true);
+    try {
+      const balanceRes = await apiGet(`/api/v1/wallets/DRIVER/${userId}`);
+      if (balanceRes.data) setWalletBalance(balanceRes.data.balance);
+      
+      const txRes = await apiGet(`/api/v1/wallets/DRIVER/${userId}/transactions?page=${page}&size=5`);
+      if (txRes.data) {
+        setTransactions(txRes.data.content || []);
+        setTxTotalPages(txRes.data.totalPages || 1);
+      }
+    } catch (e) {
+      console.warn("Error loading wallet data:", e);
+    } finally {
+      setTxLoading(false);
+    }
+  };
 
   const saveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -381,8 +414,23 @@ export default function RiderSettingsView({
             )}
           </div>
         </div>
+
+        {/* Wallet Transactions */}
+        <div className="pt-8 mt-8 border-t border-rose-500/20">
+          <div className="flex justify-between items-center mb-4">
+            <h4 className="text-sm font-bold text-slate-900 dark:text-[#f0ede6]">Earnings Wallet</h4>
+            <span className="font-black text-slate-900 dark:text-[#f0ede6] text-lg">₹{walletBalance.toFixed(2)}</span>
+          </div>
+          <TransactionHistoryTable 
+            transactions={transactions}
+            isLoading={txLoading}
+            page={txPage}
+            totalPages={txTotalPages}
+            onPageChange={setTxPage}
+          />
+        </div>
         
-        <div className="pt-4">
+        <div className="pt-4 mt-8">
           <button 
             onClick={onLogout}
             className="w-full py-3 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20 font-bold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
