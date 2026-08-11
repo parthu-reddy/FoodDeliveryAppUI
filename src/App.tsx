@@ -1,18 +1,19 @@
 import React, { useState, Suspense } from 'react';
 import { RoleName } from './types/backend-enums';
 import { UserRole } from './types';
-import CinematicFoodBackground from './components/CinematicFoodBackground';
+import CinematicFoodBackground from './components/shared/CinematicFoodBackground';
 import { getUserProfile } from './lib/tokenStore';
 import { logout as authLogout } from './lib/authStore';
 import { ToastProvider } from './context/ToastContext';
 import { CallProvider } from './context/CallContext';
+import { ErrorBoundary } from './components/shared/ErrorBoundary';
 
 // Lazy load route components for code splitting and bundle optimization
-const LoginScreen = React.lazy(() => import('./components/LoginScreen'));
-const CustomerDashboard = React.lazy(() => import('./components/CustomerDashboard'));
-const RestaurantDashboard = React.lazy(() => import('./components/RestaurantDashboard'));
-const DeliveryDashboard = React.lazy(() => import('./components/DeliveryDashboard'));
-const AdminPortal = React.lazy(() => import('./components/AdminPortal'));
+const LoginScreen = React.lazy(() => import('./components/auth/LoginScreen'));
+const CustomerDashboard = React.lazy(() => import('./components/customer/CustomerDashboard'));
+const RestaurantDashboard = React.lazy(() => import('./components/restaurant/RestaurantDashboard'));
+const DeliveryDashboard = React.lazy(() => import('./components/delivery/DeliveryDashboard'));
+const AdminPortal = React.lazy(() => import('./components/admin/AdminPortal'));
 
 export default function App() {
   // Initialize auth state SYNCHRONOUSLY from localStorage.
@@ -71,11 +72,13 @@ export default function App() {
               <CinematicFoodBackground theme={m3Theme} />
               <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative">
                 <div className="flex-1 flex flex-col w-full h-full justify-center items-center overflow-hidden relative">
-                  <LoginScreen 
-                    onLoginSuccess={handleLoginSuccess} 
-                    theme={m3Theme} 
-                    onToggleTheme={handleToggleTheme}
-                  />
+                  <ErrorBoundary fallbackLabel="Login Screen">
+                    <LoginScreen 
+                      onLoginSuccess={handleLoginSuccess} 
+                      theme={m3Theme} 
+                      onToggleTheme={handleToggleTheme}
+                    />
+                  </ErrorBoundary>
                 </div>
               </div>
             </div>
@@ -85,6 +88,7 @@ export default function App() {
                 <div className="w-full h-full flex-1 flex flex-col overflow-hidden relative ">
                   <CinematicFoodBackground theme={m3Theme} />
                   <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative">
+                    <ErrorBoundary fallbackLabel="Customer Dashboard">
                     <CustomerDashboard 
                       userName={userName || 'Customer'} 
                       userPhone={phone}
@@ -92,6 +96,7 @@ export default function App() {
                       theme={m3Theme}
                       onToggleTheme={handleToggleTheme}
                     />
+                    </ErrorBoundary>
                   </div>
                 </div>
               )}
@@ -99,12 +104,14 @@ export default function App() {
                 <div className="w-full h-full flex-1 flex flex-col overflow-hidden relative ">
                   <CinematicFoodBackground theme={m3Theme} />
                   <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative">
+                    <ErrorBoundary fallbackLabel="Restaurant Dashboard">
                     <RestaurantDashboard 
                       restaurantId=""
                       onLogout={handleLogout}
                       theme={m3Theme}
                       onToggleTheme={handleToggleTheme}
                     />
+                    </ErrorBoundary>
                   </div>
                 </div>
               )}
@@ -112,12 +119,14 @@ export default function App() {
                 <div className="w-full h-full flex-1 flex flex-col overflow-hidden relative ">
                   <CinematicFoodBackground theme={m3Theme} />
                   <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative">
+                    <ErrorBoundary fallbackLabel="Delivery Dashboard">
                     <DeliveryDashboard 
                       riderPhone={phone}
                       onLogout={handleLogout}
                       theme={m3Theme}
                       onToggleTheme={handleToggleTheme}
                     />
+                    </ErrorBoundary>
                   </div>
                 </div>
               )}
@@ -125,11 +134,13 @@ export default function App() {
                 <div className="w-full h-full flex-1 flex flex-col overflow-hidden relative ">
                   <CinematicFoodBackground theme={m3Theme} />
                   <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative">
+                    <ErrorBoundary fallbackLabel="Admin Portal">
                     <AdminPortal 
                       onLogout={handleLogout}
                       theme={m3Theme}
                       onToggleTheme={handleToggleTheme}
                     />
+                    </ErrorBoundary>
                   </div>
                 </div>
               )}

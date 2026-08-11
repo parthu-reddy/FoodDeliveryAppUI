@@ -29,7 +29,8 @@ class Logger {
     try {
       const payload = JSON.stringify({ logs: logsToSend });
       if (navigator.sendBeacon) {
-        navigator.sendBeacon('/api/logs', payload);
+        const blob = new Blob([payload], { type: 'application/json' });
+        navigator.sendBeacon('/api/logs', blob);
       } else {
         fetch('/api/logs', {
           method: 'POST',

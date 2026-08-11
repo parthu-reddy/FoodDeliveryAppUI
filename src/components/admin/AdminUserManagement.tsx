@@ -1,0 +1,315 @@
+import React, { useState, useEffect } from 'react';
+import { User, Search, Plus, X, Power } from 'lucide-react';
+import { apiGet, apiPost, apiDelete, apiPut } from '../../lib/apiClient';
+import { useToast } from '../../context/ToastContext';
+import { RoleName } from '../../types';
+import { Button, Input, Select, Badge } from '../ui';
+import { z } from 'zod';
+import { useDebounce } from '../../hooks/useDebounce';
+import { usePolling } from '../../hooks/usePolling';
+import { EmptyState } from '../shared/EmptyState';
+
+const roleSchema = z.string().min(2, "Role must be at least 2 characters").max(50, "Role cannot exceed 50 characters").regex(/^[A-Z_]+$/, "Role must contain only uppercase letters and underscores");
+
+export default function AdminUserManagement() {
+  const { showSuccess, showError } = useToast();
+  const [roleFilter, setRoleFilter] = useState<RoleName | 'ALL'>('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [newRole, setNewRole] = useState('');
+  const [userActiveOrders, setUserActiveOrders] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+
+  // Polling for users by role
+  const { data: usersResponse, refetch: fetchByRole } = usePolling({
+    fetchFn: async () => {
+      let res;
+      if (roleFilter === 'ALL') {
+          res = await apiGet(`/api/v1/internal/users/admin/all?page=${page}&size=20`);
+      } else {
+          res = await apiGet(`/api/v1/internal/users/by-role?role=${roleFilter}&page=${page}&size=20`);
+      }
+      return res.data?.data || res.data || res;
+    },
+    intervalMs: 30000,
+    enabled: !debouncedSearchQuery
+  });
+
+  useEffect(() => {
+    if (!debouncedSearchQuery && usersResponse) {
+        const content = usersResponse.content || usersResponse.data?.content || (Array.isArray(usersResponse) ? usersResponse : []);
+        setUsers(Array.isArray(content) ? content : []);
+        if (usersResponse.totalPages !== undefined) {
+            setTotalPages(usersResponse.totalPages);
+        }
+    }
+  }, [usersResponse, debouncedSearchQuery]);
+
+  useEffect(() => {
+    if (!debouncedSearchQuery) return;
+    const fetchUsers = async () => {
+      try {
+        const res = await apiGet(`/api/v1/internal/users/${debouncedSearchQuery}`);
+        if (res && res.id) {
+          setUsers([res]);
+        } else {
+          setUsers([]);
+        }
+      } catch (e) {
+        console.error(e);
+        setUsers([]);
+      }
+    };
+    fetchUsers();
+  }, [debouncedSearchQuery]);
+
+  const fetchUserActiveOrders = async (userId: string) => {
+    try {
+      const res = await apiGet(`/api/v1/internal/admin/orders/user/${userId}/active`);
+      const data = res.data?.data || res.data || (Array.isArray(res) ? res : res.data);
+      setUserActiveOrders(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error(e);
+      setUserActiveOrders([]);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedUser) {
+      fetchUserActiveOrders(selectedUser.id);
+    } else {
+      setUserActiveOrders([]);
+    }
+  }, [selectedUser]);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+  };
+
+  const handleAddRole = async () => {
+    if (!selectedUser || !newRole) return;
+    const validation = roleSchema.safeParse(newRole);
+    if (!validation.success) {
+      showError(validation.error.issues[0].message);
+      return;
+    }
+    
+    // Optimistic UI Update
+    setSelectedUser({ ...selectedUser, roles: [...(selectedUser.roles || []), newRole] });
+    setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, roles: [...(u.roles || []), newRole] } : u));
+    
+    try {
+      await apiPost(`/api/v1/internal/users/${selectedUser.id}/roles`, { role: newRole });
+      setNewRole('');
+    } catch (e) {
+      console.error(e);
+      showError("Failed to add role");
+      fetchByRole(); // Revert
+      setSelectedUser(prev => prev ? { ...prev, roles: prev.roles.filter(r => r !== newRole) } : null);
+    }
+  };
+
+  const handleRemoveRole = async (role: string) => {
+    if (!selectedUser) return;
+    
+    // Optimistic UI Update
+    setSelectedUser({ ...selectedUser, roles: selectedUser.roles.filter((r: string) => r !== role) });
+    setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, roles: u.roles.filter((r: string) => r !== role) } : u));
+
+    try {
+      await apiDelete(`/api/v1/internal/users/${selectedUser.id}/roles/${role}`);
+    } catch (e) {
+      console.error(e);
+      showError("Failed to remove role");
+      fetchByRole(); // Revert
+      setSelectedUser(prev => prev ? { ...prev, roles: [...prev.roles, role] } : null);
+    }
+  };
+
+  const handleToggleStatus = async () => {
+    if (!selectedUser) return;
+    const newStatus = !selectedUser.isActive;
+    
+    // Optimistic UI update
+    setSelectedUser({ ...selectedUser, isActive: newStatus });
+    setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, isActive: newStatus } : u));
+
+    try {
+      await apiPut(`/api/v1/internal/users/admin/${selectedUser.id}/status`, { isActive: newStatus });
+      showSuccess(newStatus ? "User activated" : "User suspended");
+    } catch (e) {
+      console.error(e);
+      showError("Failed to update user status");
+      fetchByRole();
+      setSelectedUser({ ...selectedUser, isActive: !newStatus });
+    }
+  };
+
+  return (
+    <div className="flex-1 flex p-6 gap-6 h-full overflow-hidden">
+        <div className="w-1/3 flex flex-col bg-white/10 dark:bg-slate-900/20 backdrop-blur-xl rounded-3xl border border-slate-200 dark:border-slate-800 p-4 shrink-0 shadow-xl">
+        <div className="flex gap-2 mb-4 border-b border-slate-200 dark:border-slate-800 pb-4">
+            <Select 
+              value={roleFilter} 
+              onChange={(val) => { setRoleFilter(val as RoleName | 'ALL'); setPage(0); }}
+              options={[
+                { value: 'ALL', label: 'ALL ROLES' },
+                { value: RoleName.ADMIN, label: 'ADMIN' },
+                { value: RoleName.CUSTOMER, label: 'CUSTOMER' },
+                { value: RoleName.RESTAURANT, label: 'RESTAURANT' },
+                { value: RoleName.DELIVERY, label: 'DELIVERY' }
+              ]}
+            />
+            <form onSubmit={handleSearch} className="flex-1 flex gap-2">
+            <Input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="User ID / Phone" className="flex-1" />
+            <Button type="submit" variant="outline" className="!bg-indigo-500/20 !border-indigo-500/50 !text-indigo-400" icon={<Search className="w-4 h-4" />}>
+              Search
+            </Button>
+            </form>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto space-y-2">
+            {users.map(user => (
+                <button 
+                    key={user.id}
+                    onClick={() => setSelectedUser(user)}
+                    className={`w-full text-left p-4 rounded-2xl mb-2 transition-all duration-300 ${selectedUser?.id === user.id ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30' : 'bg-white/20 dark:bg-slate-800/40 hover:bg-white/40 dark:hover:bg-slate-700/50'}`}
+                >
+                    <div className="flex items-center justify-between">
+                        <p className="font-bold">{user.id.substring(0, 8)}...</p>
+                        {!user.isActive && <span className="text-xs px-2 py-1 bg-red-500 text-white rounded-full">Suspended</span>}
+                    </div>
+                    <p className={`text-sm mb-1 ${selectedUser?.id === user.id ? 'text-indigo-100' : 'text-slate-500'}`}>{user.phoneNumber}</p>
+                    <div className="flex gap-1 flex-wrap">
+                        {(user.roles || []).map((r: string) => (
+                            <span key={r} className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold">{r}</span>
+                        ))}
+                    </div>
+                </button>
+            ))}
+            {users.length === 0 && (
+                <div className="pt-10">
+                  <EmptyState 
+                    title="No Users Found"
+                    description={`Could not find any users with role ${roleFilter} or matching your search.`}
+                    icon={<User className="w-12 h-12" />}
+                  />
+                </div>
+            )}
+        </div>
+        <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center bg-white/20 dark:bg-slate-900/30">
+            <Button 
+                variant="outline"
+                onClick={() => setPage(p => Math.max(0, p - 1))}
+                disabled={page === 0}
+            >
+                Prev
+            </Button>
+            <span className="text-xs font-bold text-slate-500">Page {page + 1} of {totalPages === 0 ? 1 : totalPages}</span>
+            <Button 
+                variant="outline"
+                onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                disabled={page >= totalPages - 1}
+            >
+                Next
+            </Button>
+        </div>
+        </div>
+
+        <div className="flex-1 bg-white/10 dark:bg-slate-900/20 backdrop-blur-xl rounded-3xl border border-slate-200 dark:border-slate-800 p-8 shadow-xl overflow-y-auto">
+        {selectedUser ? (
+            <div className="max-w-2xl mx-auto space-y-8">
+                <div className="flex items-center justify-between pb-6 border-b border-slate-200 dark:border-slate-800">
+                    <div>
+                        <h2 className="text-3xl font-black mb-1">User Details</h2>
+                        <p className="text-slate-500">Manage roles, status, and view history.</p>
+                    </div>
+                    <Button
+                        variant={selectedUser.isActive ? 'danger' : 'outline'}
+                        onClick={handleToggleStatus}
+                        icon={<Power className="w-4 h-4" />}
+                        className={!selectedUser.isActive ? '!bg-emerald-500/10 !text-emerald-500 hover:!bg-emerald-500/20' : ''}
+                    >
+                        {selectedUser.isActive ? 'Suspend User' : 'Activate User'}
+                    </Button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-8">
+                    <div className="p-4 rounded-2xl bg-white/20 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700">
+                        <p className="text-sm text-slate-500 mb-1">ID</p>
+                        <p className="font-mono text-sm">{selectedUser.id}</p>
+                    </div>
+                    <div className="p-4 rounded-2xl bg-white/20 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700">
+                        <p className="text-sm text-slate-500 mb-1">Status</p>
+                        <p className="font-mono text-sm">
+                            <span className={selectedUser.isActive ? 'text-emerald-500' : 'text-rose-500'}>
+                                {selectedUser.isActive ? 'Active' : 'Suspended'}
+                            </span>
+                        </p>
+                    </div>
+                    <div className="p-4 rounded-2xl bg-white/20 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700">
+                        <p className="text-sm text-slate-500 mb-1">Phone</p>
+                        <p className="font-bold">{selectedUser.phoneNumber}</p>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 className="font-bold text-xl mb-4">Roles</h3>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                        {(selectedUser.roles || []).map((role: string) => (
+                            <div key={role} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 font-bold text-sm">
+                                {role}
+                                <Button variant="ghost" size="icon" onClick={() => handleRemoveRole(role)} className="!text-rose-500">
+                                    <X className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="flex gap-2">
+                        <Input 
+                            type="text" 
+                            value={newRole} 
+                            onChange={(e) => setNewRole(e.target.value.toUpperCase())} 
+                            placeholder="NEW_ROLE"
+                        />
+                        <Button variant="primary" onClick={handleAddRole} icon={<Plus className="w-4 h-4" />}>
+                            Add
+                        </Button>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 className="font-bold text-xl mb-4">Active Orders ({userActiveOrders.length})</h3>
+                    {userActiveOrders.length > 0 ? (
+                        <div className="space-y-3">
+                            {userActiveOrders.map(order => (
+                                <div key={order.id} className="p-4 rounded-xl bg-white/20 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <p className="font-bold text-sm">#{order.id.substring(0, 8)}</p>
+                                        <span className="text-xs font-bold px-2 py-1 bg-indigo-500/20 text-indigo-400 rounded-md">{order.status}</span>
+                                    </div>
+                                    <p className="text-sm text-slate-500">{order.restaurantName}</p>
+                                    <p className="text-xs text-slate-500 mt-2">Placed: {new Date(order.createdAt).toLocaleString()}</p>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-slate-500 text-sm">No active orders for this user.</p>
+                    )}
+                </div>
+            </div>
+        ) : (
+            <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                <User className="w-16 h-16 mb-4 opacity-30" />
+                <h2 className="text-2xl font-black mb-2 text-slate-800 dark:text-[#f0ede6]">User Management</h2>
+                <p>Select a user to view details and manage roles.</p>
+            </div>
+        )}
+        </div>
+    </div>
+  );
+}
