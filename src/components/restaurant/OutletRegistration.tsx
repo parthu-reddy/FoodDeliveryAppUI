@@ -7,6 +7,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { useToast } from '../../context/ToastContext';
 import { z } from 'zod';
 import { FormField, Input, Button, Spinner } from '../ui';
+import { useDebounce } from '../../hooks/useDebounce';
 
 const outletSchema = z.object({
   name: z.string().min(1, 'Outlet name is required.').max(100, 'Outlet name cannot exceed 100 characters.'),
@@ -42,6 +43,8 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const { showError } = useToast();
+  
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   useEffect(() => {
     if (isOpen && mapContainerRef.current && !mapRef.current) {
@@ -98,24 +101,17 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
     }
   }, [isOpen]);
 
-  const searchTimeoutRef = useRef<any>(null);
-
-  const handleSearch = async (query: string) => {
-    setSearchQuery(query);
-    if (query.length < 3) {
-      setSearchResults([]);
-      return;
-    }
-    setIsSearching(true);
-    
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-    
-    searchTimeoutRef.current = setTimeout(async () => {
+  useEffect(() => {
+    async function searchPlaces() {
+      if (debouncedSearchQuery.length < 3) {
+        setSearchResults([]);
+        setIsSearching(false);
+        return;
+      }
+      setIsSearching(true);
       try {
         const apiKey = (import.meta as any).env.VITE_OLA_MAPS_API_KEY || '';
-        const res = await fetch(`https://api.olamaps.io/places/v1/autocomplete?input=${encodeURIComponent(query)}&api_key=${apiKey}`);
+        const res = await fetch(`https://api.olamaps.io/places/v1/autocomplete?input=${encodeURIComponent(debouncedSearchQuery)}&api_key=${apiKey}`);
         const data = await res.json();
         if (data.predictions) {
           setSearchResults(data.predictions);
@@ -125,7 +121,12 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
       } finally {
         setIsSearching(false);
       }
-    }, 300);
+    }
+    searchPlaces();
+  }, [debouncedSearchQuery]);
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
   };
 
   const selectLocation = async (placeId: string, description: string) => {

@@ -7,6 +7,7 @@ import { apiPost, apiGet } from '../../lib/apiClient';
 import { useToast } from '../../context/ToastContext';
 import { z } from 'zod';
 import { Input, Button, Spinner } from '../ui';
+import { useDebounce } from '../../hooks/useDebounce';
 
 const addressSchema = z.object({
   label: z.string().min(1, 'Label is required').max(50, 'Label cannot exceed 50 characters'),
@@ -50,23 +51,20 @@ export default function CustomerAddressModal({
   const [isSearching, setIsSearching] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { showError } = useToast();
+  
+  const debouncedSearchQuery = useDebounce(addressSearchQuery, 500);
 
-  const handleSearch = (query: string) => {
-    setAddressSearchQuery(query);
-    if (query.length < 3) {
-      setSearchResults([]);
-      return;
-    }
-    setIsSearching(true);
-    
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-    
-    searchTimeoutRef.current = setTimeout(async () => {
+  useEffect(() => {
+    async function searchPlaces() {
+      if (!debouncedSearchQuery || debouncedSearchQuery.length < 3) {
+        setSearchResults([]);
+        setIsSearching(false);
+        return;
+      }
+      setIsSearching(true);
       try {
         const apiKey = (import.meta as any).env.VITE_OLA_MAPS_API_KEY || '';
-        const res = await fetch(`https://api.olamaps.io/places/v1/autocomplete?input=${encodeURIComponent(query)}&api_key=${apiKey}`);
+        const res = await fetch(`https://api.olamaps.io/places/v1/autocomplete?input=${encodeURIComponent(debouncedSearchQuery)}&api_key=${apiKey}`);
         const data = await res.json();
         if (data.predictions) {
           setSearchResults(data.predictions);
@@ -76,7 +74,12 @@ export default function CustomerAddressModal({
       } finally {
         setIsSearching(false);
       }
-    }, 500);
+    }
+    searchPlaces();
+  }, [debouncedSearchQuery]);
+
+  const handleSearch = (query: string) => {
+    setAddressSearchQuery(query);
   };
 
   const handleSelectPlace = async (placeId: string, description: string) => {
