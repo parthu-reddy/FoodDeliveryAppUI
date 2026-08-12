@@ -127,7 +127,7 @@ export default function AdminLiveOperations() {
                     <button 
                         key={order.id} 
                         onClick={() => setSelectedOrder(order)} 
-                        className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${selectedOrder?.id === order.id ? 'bg-indigo-500/10 border-indigo-500 shadow-md' : 'bg-white/20 dark:bg-slate-900/40 backdrop-blur-md border-slate-200 dark:border-slate-800 hover:border-indigo-300'}`}
+                        className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all ${selectedOrder?.id === order.id ? 'glass-card !border-indigo-500 shadow-md ring-1 ring-indigo-500' : 'glass-card hover:border-indigo-300'}`}
                     >
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isUnassigned ? 'bg-amber-500/20' : 'bg-emerald-500/20'}`}>
                             <Package className={`w-5 h-5 ${statusColor}`} />
@@ -179,7 +179,7 @@ export default function AdminLiveOperations() {
                     </React.Suspense>
                 </div>
                 {/* Assignment Panel */}
-                <div className="absolute bottom-6 left-6 right-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border border-slate-200 dark:border-slate-700 rounded-3xl p-6 shadow-2xl z-10 flex gap-6">
+                <div className="absolute bottom-6 left-6 right-6 glass-panel p-6 z-10 flex gap-6">
                     <div className="flex-1 border-r border-slate-200 dark:border-slate-700 pr-6">
                         <h2 className="text-2xl font-black mb-1">Order #{selectedOrder.id.substring(0, 8)}</h2>
                         <p className="text-slate-600 dark:text-slate-400 font-medium">Restaurant: {selectedOrder.restaurantName}</p>
@@ -220,14 +220,14 @@ export default function AdminLiveOperations() {
                         <h3 className="font-bold text-lg mb-3">Available Drivers ({availableDrivers.length})</h3>
                         <div className="max-h-32 overflow-y-auto space-y-2 pr-2">
                             {availableDrivers.map(driver => (
-                                <div key={driver.id} className="flex items-center justify-between p-3 rounded-xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-md border border-slate-200 dark:border-slate-700">
+                                <div key={driver.id} className="flex items-center justify-between p-3 glass-card">
                                     <div className="flex items-center gap-3">
                                         <Truck className="w-5 h-5 text-indigo-500" />
                                         <div>
                                             <p className="font-bold text-sm">{driver.fullName || 'Unknown Driver'}</p>
                                         </div>
                                     </div>
-                                    <Button variant="primary" onClick={() => handleAssignDriver(selectedOrder.id, driver.id)} className="!bg-emerald-500 hover:!bg-emerald-600 shadow-lg shadow-emerald-500/20">
+                                    <Button variant="success" onClick={() => handleAssignDriver(selectedOrder.id, driver.id)} className="shadow-lg shadow-emerald-500/20">
                                         Assign
                                     </Button>
                                 </div>

@@ -61,28 +61,7 @@ export const RestaurantOrderQueue = React.memo(function RestaurantOrderQueue({
       exit={{ opacity: 0, y: -10 }}
       className="p-5 space-y-5"
     >
-      {/* Quick Metrics */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-2xl p-4 flex items-center gap-3 shadow-sm">
-          <div className="p-3 bg-emerald-500/10 text-emerald-650 dark:text-emerald-400 rounded-xl">
-            <DollarSign className="w-5 h-5" />
-          </div>
-          <div>
-            <span className="text-[10px] text-slate-500 dark:text-[#f0ede6] uppercase font-mono block">Today's Sales</span>
-            <span className="text-base font-black text-slate-800 dark:text-[#f0ede6]">${totalRevenue.toFixed(2)}</span>
-          </div>
-        </div>
 
-        <div className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-2xl p-4 flex items-center gap-3 shadow-sm">
-          <div className="p-3 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl">
-            <CheckCircle className="w-5 h-5" />
-          </div>
-          <div>
-            <span className="text-[10px] text-slate-500 dark:text-[#f0ede6] uppercase font-mono block">Completed</span>
-            <span className="text-base font-black text-slate-800 dark:text-[#f0ede6]">{completedOrders.length} orders</span>
-          </div>
-        </div>
-      </div>
 
       {/* Live Orders Kanban Board */}
       <div className="space-y-4">
@@ -104,7 +83,7 @@ export const RestaurantOrderQueue = React.memo(function RestaurantOrderQueue({
         <div className="flex gap-4 pb-6 w-full overflow-x-auto touch-pan-x snap-x snap-mandatory scrollbar-thin scrollbar-thumb-rose-500/30 scrollbar-track-transparent ">
           
           {/* COLUMN 1: Placed Orders (Just Got Placed) */}
-          <div className="w-[85%] xs:w-[310px] sm:w-[350px]  shrink-0 snap-center flex flex-col bg-slate-50/50 dark:bg-slate-950/40 border border-rose-500/20 dark:border-rose-500/30 p-4 rounded-3xl min-h-[480px]">
+          <div className="w-[85%] xs:w-[310px] sm:w-[350px] shrink-0 snap-center flex flex-col glass-panel p-4 min-h-[480px]">
             <div className="flex items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 pb-3 mb-3">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
@@ -146,7 +125,7 @@ export const RestaurantOrderQueue = React.memo(function RestaurantOrderQueue({
           </div>
 
           {/* COLUMN 2: Requested Delay (On Hold) */}
-          <div className="w-[85%] xs:w-[310px] sm:w-[350px]  shrink-0 snap-center flex flex-col bg-slate-50/50 dark:bg-slate-950/40 border border-rose-500/20 dark:border-rose-500/30 p-4 rounded-3xl min-h-[480px]">
+          <div className="w-[85%] xs:w-[310px] sm:w-[350px] shrink-0 snap-center flex flex-col glass-panel p-4 min-h-[480px]">
             <div className="flex items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 pb-3 mb-3">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
@@ -187,7 +166,7 @@ export const RestaurantOrderQueue = React.memo(function RestaurantOrderQueue({
           </div>
 
           {/* COLUMN 3: Kitchen Preparing (Accepted or Preparing) */}
-          <div className="w-[85%] xs:w-[310px] sm:w-[350px]  shrink-0 snap-center flex flex-col bg-slate-50/50 dark:bg-slate-950/40 border border-rose-500/20 dark:border-rose-500/30 p-4 rounded-3xl min-h-[480px]">
+          <div className="w-[85%] xs:w-[310px] sm:w-[350px] shrink-0 snap-center flex flex-col glass-panel p-4 min-h-[480px]">
             <div className="flex items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 pb-3 mb-3">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
@@ -230,7 +209,7 @@ export const RestaurantOrderQueue = React.memo(function RestaurantOrderQueue({
           </div>
 
           {/* COLUMN 4: Prepared & Ready (Dispatched, awaiting pickup) */}
-          <div className="w-[85%] xs:w-[310px] sm:w-[350px]  shrink-0 snap-center flex flex-col bg-slate-50/50 dark:bg-slate-950/40 border border-rose-500/20 dark:border-rose-500/30 p-4 rounded-3xl min-h-[480px]">
+          <div className="w-[85%] xs:w-[310px] sm:w-[350px] shrink-0 snap-center flex flex-col glass-panel p-4 min-h-[480px]">
             <div className="flex items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 pb-3 mb-3">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -272,7 +251,7 @@ export const RestaurantOrderQueue = React.memo(function RestaurantOrderQueue({
           </div>
 
           {/* COLUMN 5: Being Delivered (Picked up) */}
-          <div className="w-[85%] xs:w-[310px] sm:w-[350px] shrink-0 snap-center flex flex-col bg-slate-50/50 dark:bg-slate-950/40 border border-purple-500/20 dark:border-purple-500/30 p-4 rounded-3xl min-h-[480px]">
+          <div className="w-[85%] xs:w-[310px] sm:w-[350px] shrink-0 snap-center flex flex-col glass-panel p-4 min-h-[480px]">
             <div className="flex items-center justify-between border-b border-purple-500/20 dark:border-purple-500/30 pb-3 mb-3">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />

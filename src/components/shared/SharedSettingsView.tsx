@@ -263,7 +263,7 @@ export default function SharedSettingsView({
       <div className="flex gap-2 mb-4 shrink-0 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md p-1.5 rounded-xl border border-rose-500/20 dark:border-rose-500/30 overflow-x-auto whitespace-nowrap">
         <button 
           onClick={() => setAccountTab('profile')}
-          className={`flex-1 min-w-[80px] px-3 py-2 rounded-lg text-xs font-bold transition-all shadow-sm ${accountTab === 'profile' ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white' : 'bg-transparent text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+          className={`flex-1 min-w-[80px] px-3 py-2 rounded-lg text-xs font-bold transition-all shadow-sm border ${accountTab === 'profile' ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white border-transparent shadow-rose-500/20 shadow-md' : 'bg-white/40 dark:bg-white/10 backdrop-blur-sm text-slate-700 dark:text-slate-200 border-white/50 dark:border-white/10 hover:bg-white/60 dark:hover:bg-white/20'}`}
         >
           Profile
         </button>
@@ -271,13 +271,13 @@ export default function SharedSettingsView({
           <>
             <button 
               onClick={() => setAccountTab('history')}
-              className={`flex-1 min-w-[100px] px-3 py-2 rounded-lg text-xs font-bold transition-all shadow-sm ${accountTab === 'history' ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white' : 'bg-transparent text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+              className={`flex-1 min-w-[100px] px-3 py-2 rounded-lg text-xs font-bold transition-all shadow-sm border ${accountTab === 'history' ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white border-transparent shadow-rose-500/20 shadow-md' : 'bg-white/40 dark:bg-white/10 backdrop-blur-sm text-slate-700 dark:text-slate-200 border-white/50 dark:border-white/10 hover:bg-white/60 dark:hover:bg-white/20'}`}
             >
               History
             </button>
             <button 
               onClick={() => setAccountTab('addresses')}
-              className={`flex-1 min-w-[100px] px-3 py-2 rounded-lg text-xs font-bold transition-all shadow-sm ${accountTab === 'addresses' ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white' : 'bg-transparent text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+              className={`flex-1 min-w-[100px] px-3 py-2 rounded-lg text-xs font-bold transition-all shadow-sm border ${accountTab === 'addresses' ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white border-transparent shadow-rose-500/20 shadow-md' : 'bg-white/40 dark:bg-white/10 backdrop-blur-sm text-slate-700 dark:text-slate-200 border-white/50 dark:border-white/10 hover:bg-white/60 dark:hover:bg-white/20'}`}
             >
               Addresses
             </button>
@@ -285,7 +285,7 @@ export default function SharedSettingsView({
         )}
         <button 
           onClick={() => setAccountTab('wallet')}
-          className={`flex-1 min-w-[100px] px-3 py-2 rounded-lg text-xs font-bold transition-all shadow-sm ${accountTab === 'wallet' ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white' : 'bg-transparent text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+          className={`flex-1 min-w-[100px] px-3 py-2 rounded-lg text-xs font-bold transition-all shadow-sm border ${accountTab === 'wallet' ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white border-transparent shadow-rose-500/20 shadow-md' : 'bg-white/40 dark:bg-white/10 backdrop-blur-sm text-slate-700 dark:text-slate-200 border-white/50 dark:border-white/10 hover:bg-white/60 dark:hover:bg-white/20'}`}
         >
           Wallet / Earnings
         </button>
@@ -294,23 +294,13 @@ export default function SharedSettingsView({
       <div className="flex-1 overflow-y-auto overscroll-none pr-1">
         {accountTab === 'profile' && (
           <div className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-500 dark:text-slate-300">Full Name</label>
-              <input 
-                type="text" 
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                disabled={!!initialName}
-                className={`w-full px-4 py-3 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md text-sm font-medium text-slate-900 dark:text-[#f0ede6] outline-none transition-colors ${!!initialName ? 'opacity-70 cursor-not-allowed' : 'focus:border-rose-500/50'}`}
-              />
-            </div>
             <FormField label="Full Name">
               <Input
                 type="text"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
                 disabled={!!initialName}
-                className={`bg-white/20 dark:bg-slate-900/20 backdrop-blur-md transition-colors ${!!initialName ? 'opacity-70 cursor-not-allowed' : 'focus:border-rose-500/50'}`}
+                className={!!initialName ? 'opacity-70 cursor-not-allowed' : 'focus:border-rose-500/50'}
               />
             </FormField>
             <FormField label="Email Address">
@@ -319,7 +309,7 @@ export default function SharedSettingsView({
                 value={editEmail}
                 onChange={(e) => setEditEmail(e.target.value)}
                 disabled={!!initialEmail}
-                className={`bg-white/20 dark:bg-slate-900/20 backdrop-blur-md transition-colors ${!!initialEmail ? 'opacity-70 cursor-not-allowed' : 'focus:border-rose-500/50'}`}
+                className={!!initialEmail ? 'opacity-70 cursor-not-allowed' : 'focus:border-rose-500/50'}
               />
             </FormField>
             <FormField label="Phone Number">
@@ -327,7 +317,7 @@ export default function SharedSettingsView({
                 type="tel"
                 value={editPhone}
                 disabled
-                className="bg-white/30 dark:bg-slate-900/30 backdrop-blur-md opacity-70 cursor-not-allowed"
+                className="opacity-70 cursor-not-allowed"
               />
             </FormField>
 
@@ -338,7 +328,6 @@ export default function SharedSettingsView({
                   disabled={isSaving || !editName || !editEmail}
                   variant="primary"
                   fullWidth
-                  className="!bg-gradient-to-r from-rose-500 to-orange-500 !border-none shadow-md shadow-rose-500/20"
                 >
                   {isSaving ? 'Saving...' : 'Save Profile Changes'}
                 </Button>
@@ -385,10 +374,9 @@ export default function SharedSettingsView({
             <div className="pt-6">
               <Button
                 onClick={handleLogout}
-                variant="secondary"
+                variant="danger"
                 fullWidth
                 icon={<LogOut className="w-4 h-4" />}
-                className="!bg-slate-200 dark:!bg-slate-800 !text-rose-600 dark:!text-rose-400 !border-none hover:!bg-slate-300 dark:hover:!bg-slate-700"
               >
                 Log Out
               </Button>
@@ -432,7 +420,7 @@ export default function SharedSettingsView({
                     variant="secondary"
                     size="sm"
                     fullWidth
-                    className="mt-3 !bg-slate-100 dark:!bg-slate-800 !text-slate-900 dark:!text-[#f0ede6] hover:!bg-slate-200 dark:hover:!bg-slate-700 !border-none"
+                    className="mt-3"
                   >
                     {[OrderStatus.HANDED_OVER, OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT].includes(order.status) ? "View Invoice" : "View Details"}
                   </Button>
@@ -442,9 +430,8 @@ export default function SharedSettingsView({
             {hasMoreOrders && !isLoadingOrders && (
               <Button
                 onClick={() => fetchOrders(currentPageOrders + 1, 'history')}
-                variant="secondary"
+                variant="outline"
                 fullWidth
-                className="!bg-transparent border border-rose-500/30 !text-rose-500 hover:!bg-rose-500/10"
               >
                 Load More History
               </Button>

@@ -12,9 +12,7 @@ import { logout } from '../../lib/authStore';
 import SessionManagementModal from '../shared/SessionManagementModal';
 import CompleteProfileModal from '../shared/CompleteProfileModal';
 import { z } from 'zod';
-
-const phoneSchema = z.string().min(8, 'Phone number must be at least 8 digits').max(20, 'Phone number cannot exceed 20 digits');
-const otpSchema = z.string().length(6, 'Please enter the 6-digit code');
+import { phoneSchema, otpSchema } from '../../lib/zod-schemas';
 
 const roleToServiceName = (role: UserRole): string => {
   switch (role) {
@@ -28,12 +26,13 @@ const roleToServiceName = (role: UserRole): string => {
 
 interface LoginScreenProps {
   onLoginSuccess: (role: UserRole, phone: string, name: string) => void;
-  theme?: 'light' | 'dark';
-  onToggleTheme?: () => void;
   onAddApiLog?: (log: any) => void;
 }
 
-export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleTheme, onAddApiLog }: LoginScreenProps) {
+import { useTheme } from '../../context/ThemeContext';
+
+export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreenProps) {
+  const { theme, toggleTheme } = useTheme();
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
   const [phone, setPhone] = useState('');
   const [otpSent, setOtpSent] = useState(false);
@@ -263,22 +262,20 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
           }}
         >
           {/* Theme Toggle inside Sticky Header */}
-          {onToggleTheme && (
-            <button
-              onClick={onToggleTheme}
-              className={`absolute right-6 sm:right-8 top-1/2 -translate-y-1/2 p-2.5 rounded-xl border backdrop-blur-xl transition-all cursor-pointer z-40 ${
-                theme === 'dark'
-                  ? 'bg-slate-900/20 border-rose-500/30/40 text-amber-400 hover:text-amber-300 shadow-[0_4px_20px_rgba(0,0,0,0.15)]'
-                  : 'bg-white/20 border-white/30 text-indigo-600 hover:text-indigo-800 shadow-sm'
-              }`}
-              style={{
-                right: 'calc(1.5rem + env(safe-area-inset-right, 0px))'
-              }}
-              title="Toggle Light/Dark Mode"
-            >
-              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
-          )}
+          <button
+            onClick={toggleTheme}
+            className={`absolute right-6 sm:right-8 top-1/2 -translate-y-1/2 p-2.5 rounded-xl border backdrop-blur-xl transition-all cursor-pointer z-40 ${
+              theme === 'dark'
+                ? 'bg-slate-900/20 border-rose-500/30/40 text-amber-400 hover:text-amber-300 shadow-[0_4px_20px_rgba(0,0,0,0.15)]'
+                : 'bg-white/20 border-white/30 text-indigo-600 hover:text-indigo-800 shadow-sm'
+            }`}
+            style={{
+              right: 'calc(1.5rem + env(safe-area-inset-right, 0px))'
+            }}
+            title="Toggle Light/Dark Mode"
+          >
+            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
 
           {/* Smoothly scaling logo wrapper */}
           <div 
@@ -348,21 +345,17 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
             <LaBouffeLogoMark className="w-6 h-6" />
             <span className={`font-bold text-sm ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>La Bouffe</span>
           </div>
-          {onToggleTheme ? (
-            <button
-              onClick={onToggleTheme}
-              className={`p-2.5 rounded-xl border transition-all cursor-pointer backdrop-blur-md ${
-                theme === 'dark'
-                  ? 'bg-slate-900 border-rose-500/30 text-amber-400 hover:text-amber-300'
-                  : 'bg-white/20 border-rose-500/20 text-indigo-600 hover:bg-white/20'
-              }`}
-              title="Toggle Light/Dark Mode"
-            >
-              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </button>
-          ) : (
-            <div className="w-10" />
-          )}
+          <button
+            onClick={toggleTheme}
+            className={`p-2.5 rounded-xl border transition-all cursor-pointer backdrop-blur-md ${
+              theme === 'dark'
+                ? 'bg-slate-900 border-rose-500/30 text-amber-400 hover:text-amber-300'
+                : 'bg-white/20 border-rose-500/20 text-indigo-600 hover:bg-white/20'
+            }`}
+            title="Toggle Light/Dark Mode"
+          >
+            {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </button>
         </div>
       )}
 
@@ -370,10 +363,9 @@ export default function LoginScreen({ onLoginSuccess, theme = 'light', onToggleT
       <div className="flex-1 flex flex-col justify-start my-3 sm:my-6 relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-8">
         <AnimatePresence mode="wait">
           {!selectedRole ? (
-            <RoleSelector theme={theme} onSelectRole={setSelectedRole} />
+            <RoleSelector onSelectRole={setSelectedRole} />
           ) : (
             <AuthForm
-              theme={theme}
               selectedRole={selectedRole}
               phone={phone}
               setPhone={setPhone}

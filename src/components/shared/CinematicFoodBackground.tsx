@@ -39,8 +39,8 @@ export default function CinematicFoodBackground({ theme = 'light' }: CinematicFo
       <div 
         className={`absolute inset-0 transition-colors duration-1000 ${
           theme === 'dark'
-            ? 'bg-gradient-to-tr from-slate-950/95 via-slate-950/85 to-slate-950/90'
-            : 'bg-gradient-to-tr from-slate-50/95 via-slate-50/85 to-slate-50/90'
+            ? 'bg-gradient-to-br from-indigo-950/80 via-purple-900/70 to-slate-950/90 mix-blend-multiply'
+            : 'bg-gradient-to-br from-blue-100/80 via-purple-100/70 to-slate-50/90'
         }`}
       />
 

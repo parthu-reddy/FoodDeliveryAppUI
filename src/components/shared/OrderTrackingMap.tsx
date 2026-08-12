@@ -11,6 +11,8 @@ import { decodePolyline } from '../../lib/polyline';
 
 (window as any).maplibregl = maplibregl;
 
+import { useConfig } from '../../contexts/ConfigContext';
+
 import { ErrorBoundary } from './ErrorBoundary';
 
 export default function OrderTrackingMap(props: { order: Order; enableLiveTracking?: boolean }) {
@@ -22,6 +24,7 @@ export default function OrderTrackingMap(props: { order: Order; enableLiveTracki
 }
 
 function _OrderTrackingMap({ order, enableLiveTracking = false }: { order: Order; enableLiveTracking?: boolean }) {
+  const { olaMapsApiKey } = useConfig();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [mapInstance, setMapInstance] = useState<any>(null);
   const { showError } = useToast();
@@ -68,11 +71,7 @@ function _OrderTrackingMap({ order, enableLiveTracking = false }: { order: Order
 
     const initMap = async () => {
       try {
-        let key = (import.meta as any).env.VITE_OLA_MAPS_API_KEY;
-        if (!key) {
-            const res = await apiGet('/api/config/maps-key');
-            key = res?.data?.key || res?.key;
-        }
+        let key = olaMapsApiKey || (import.meta as any).env.VITE_OLA_MAPS_API_KEY;
         if (!active || !mapContainerRef.current) return;
         
         // Set customer location to order delivery coordinates (if available) or fallback

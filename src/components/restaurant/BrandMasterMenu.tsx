@@ -235,10 +235,10 @@ const BrandMasterMenu = React.memo(function BrandMasterMenu({ brandId, onRefresh
           <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">Manage categories, menu items, and global availability hours.</p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => { setIsAddingItem(true); setIsAddingCategory(false); setMName(''); setMPrice(''); setMPrepTime('15'); setMDesc(''); setMCatId(''); }} variant="primary" className="!bg-orange-500 hover:!bg-orange-600 shadow-sm shadow-orange-500/20">
+          <Button onClick={() => { setIsAddingItem(true); setIsAddingCategory(false); setMName(''); setMPrice(''); setMPrepTime('15'); setMDesc(''); setMCatId(''); }} variant="warning" className="shadow-sm shadow-orange-500/20">
             <Plus className="w-3 h-3" /> Add Item
           </Button>
-          <Button onClick={() => { setIsAddingCategory(true); setIsAddingItem(false); }} variant="primary" className="!bg-rose-500 hover:!bg-rose-600 shadow-sm shadow-rose-500/20">
+          <Button onClick={() => { setIsAddingCategory(true); setIsAddingItem(false); }} variant="primary" className="shadow-sm shadow-rose-500/20">
             <Plus className="w-3 h-3" /> Add Category
           </Button>
         </div>
@@ -256,7 +256,7 @@ const BrandMasterMenu = React.memo(function BrandMasterMenu({ brandId, onRefresh
             </FormField>
             <div className="flex gap-2 pt-1">
               <Button type="button" onClick={() => setIsAddingCategory(false)} variant="outline" className="flex-1">Cancel</Button>
-              <Button type="submit" variant="primary" className="flex-1 !bg-rose-500 hover:!bg-rose-600">Save Category</Button>
+              <Button type="submit" variant="primary" className="flex-1">Save Category</Button>
             </div>
           </form>
         </div>
@@ -288,7 +288,7 @@ const BrandMasterMenu = React.memo(function BrandMasterMenu({ brandId, onRefresh
             </div>
             <div className="flex gap-2 pt-1">
               <Button type="button" onClick={() => setIsAddingItem(false)} variant="outline" className="flex-1">Cancel</Button>
-              <Button type="submit" variant="primary" className="flex-1 !bg-orange-500 hover:!bg-orange-600">Save Item</Button>
+              <Button type="submit" variant="warning" className="flex-1">Save Item</Button>
             </div>
           </form>
         </div>
@@ -342,7 +342,7 @@ const BrandMasterMenu = React.memo(function BrandMasterMenu({ brandId, onRefresh
                         </div>
                         <div className="flex gap-1">
                             <Button variant="secondary" size="xs" onClick={() => setEditingTimingCatId(null)} className="flex-1">Cancel</Button>
-                            <Button variant="primary" size="xs" onClick={() => handleSaveTimings(cat.id)} className="flex-1 !bg-emerald-500 hover:!bg-emerald-600"><Save className="w-3 h-3"/> Save</Button>
+                            <Button variant="success" size="xs" onClick={() => handleSaveTimings(cat.id)} className="flex-1" icon={<Save className="w-3 h-3"/>}>Save</Button>
                         </div>
                         <p className="text-[9px] text-slate-400 italic text-center mt-1">Set 00:00 to 23:59 for All Day</p>
                     </div>

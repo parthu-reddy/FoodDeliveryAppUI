@@ -19,12 +19,10 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <input
         ref={ref}
         className={`
-          w-full bg-slate-100 dark:bg-slate-800 
-          text-slate-800 dark:text-[#f0ede6]
-          placeholder:text-slate-400 dark:placeholder:text-slate-500
-          border ${error ? 'border-red-400 dark:border-red-500' : 'border-transparent'}
-          focus:outline-none focus:ring-2 ${error ? 'focus:ring-red-400' : 'focus:ring-rose-400 dark:focus:ring-rose-500'}
+          w-full glass-input
+          focus:outline-none focus:ring-0
           transition-colors
+          ${error ? 'border-red-400 focus:border-red-500' : 'focus:border-white/40'}
           ${sizeStyles[inputSize]}
           ${className}
         `}

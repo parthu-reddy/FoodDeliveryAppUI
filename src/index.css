@@ -278,4 +278,43 @@
   height: 0 !important;
 }
 
+@layer base {
+  body {
+    @apply bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen relative;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-slate-900 dark:text-white;
+  }
+}
+
+@layer components {
+  .app-background {
+    @apply transition-colors duration-500;
+    background: radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15), transparent 45%),
+                radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.15), transparent 45%),
+                radial-gradient(circle at 50% 80%, rgba(14, 165, 233, 0.15), transparent 45%),
+                #f8fafc;
+    background-attachment: fixed;
+  }
+  .dark .app-background {
+    background: radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.25), transparent 45%),
+                radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.25), transparent 45%),
+                radial-gradient(circle at 50% 80%, rgba(14, 165, 233, 0.25), transparent 45%),
+                #0f172a;
+  }
+
+  .glass-panel {
+    @apply bg-white/40 dark:bg-slate-900/40 backdrop-blur-2xl border border-white/60 dark:border-white/10 shadow-2xl rounded-3xl;
+  }
+  .glass-card {
+    @apply bg-white/30 dark:bg-slate-900/30 backdrop-blur-xl border border-white/50 dark:border-white/20 shadow-xl rounded-2xl;
+  }
+  .glass-input {
+    @apply bg-white/50 dark:bg-black/30 backdrop-blur-md border border-white/50 dark:border-white/10 focus:border-rose-400 dark:focus:border-rose-500/50 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 rounded-xl;
+  }
+  .glass-button {
+    @apply bg-white/60 dark:bg-white/10 backdrop-blur-md border border-white/60 dark:border-white/20 hover:bg-white/80 dark:hover:bg-white/20 transition-all text-slate-800 dark:text-white shadow-md hover:shadow-lg rounded-xl;
+  }
+}
 

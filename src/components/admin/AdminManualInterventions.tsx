@@ -180,7 +180,7 @@ export default function AdminManualInterventions() {
                     <button 
                         key={order.id} 
                         onClick={() => setSelectedIntervention(order)} 
-                        className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${selectedIntervention?.id === order.id ? 'bg-rose-500/10 border-rose-500 shadow-md' : 'bg-white/20 dark:bg-slate-900/40 backdrop-blur-md border-slate-200 dark:border-slate-800 hover:border-rose-300'}`}
+                        className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all ${selectedIntervention?.id === order.id ? 'glass-card !border-rose-500 shadow-md ring-1 ring-rose-500' : 'glass-card hover:border-rose-300'}`}
                     >
                         <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-rose-500/20">
                             <Shield className="w-5 h-5 text-rose-500" />
@@ -217,7 +217,7 @@ export default function AdminManualInterventions() {
                     <button 
                         key={refund.paymentIntentId} 
                         onClick={() => setSelectedIntervention(refund)} 
-                        className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${selectedIntervention?.paymentIntentId === refund.paymentIntentId ? 'bg-blue-500/10 border-blue-500 shadow-md' : 'bg-white/20 dark:bg-slate-900/40 backdrop-blur-md border-slate-200 dark:border-slate-800 hover:border-blue-300'}`}
+                        className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all ${selectedIntervention?.paymentIntentId === refund.paymentIntentId ? 'glass-card !border-blue-500 shadow-md ring-1 ring-blue-500' : 'glass-card hover:border-blue-300'}`}
                     >
                         <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-blue-500/20">
                             <Shield className="w-5 h-5 text-blue-500" />
@@ -257,7 +257,7 @@ export default function AdminManualInterventions() {
         {selectedIntervention ? (
             <div className="max-w-4xl mx-auto w-full">
                 {activeTab === 'DISPATCH' ? (
-                  <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl border border-rose-500/30 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+                  <div className="glass-panel border-rose-500/30 p-8 relative overflow-hidden">
                       <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-rose-500 to-orange-500" />
                       
                       <h2 className="text-3xl font-black mb-2 flex items-center gap-3">
@@ -271,12 +271,12 @@ export default function AdminManualInterventions() {
                               <h3 className="font-bold text-lg border-b border-slate-200 dark:border-slate-700 pb-2">Assign Available Driver</h3>
                               <div className="max-h-64 overflow-y-auto space-y-2 pr-2">
                                   {availableDrivers.map(driver => (
-                                      <div key={driver.id} className="flex items-center justify-between p-3 rounded-xl bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                                      <div key={driver.id} className="flex items-center justify-between p-3 glass-card">
                                           <div className="flex items-center gap-3">
                                               <Truck className="w-5 h-5 text-indigo-500" />
                                               <p className="font-bold text-sm">{driver.fullName || 'Driver'}</p>
                                           </div>
-                                          <Button variant="primary" onClick={() => handleAssignDriverToIntervention(selectedIntervention.id, driver.id)} className="!bg-emerald-500 hover:!bg-emerald-600 shadow-lg shadow-emerald-500/20">
+                                          <Button variant="success" onClick={() => handleAssignDriverToIntervention(selectedIntervention.id, driver.id)} className="shadow-lg shadow-emerald-500/20">
                                               Force Assign
                                           </Button>
                                       </div>
@@ -315,7 +315,7 @@ export default function AdminManualInterventions() {
                       </div>
                   </div>
                 ) : (
-                  <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl border border-blue-500/30 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+                  <div className="glass-panel border-blue-500/30 p-8 relative overflow-hidden">
                       <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-blue-500 to-indigo-500" />
                       
                       <h2 className="text-3xl font-black mb-2 flex items-center gap-3">

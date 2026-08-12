@@ -63,7 +63,6 @@ export default function CompleteProfileModal({ isOpen, theme, onComplete, profil
       onClose={() => {}} 
       size="md" 
       header={header}
-      className={theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'}
     >
       <div className="p-6 pt-2">
         {error && (
@@ -80,7 +79,7 @@ export default function CompleteProfileModal({ isOpen, theme, onComplete, profil
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter your full name"
-              className={theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white focus:border-rose-500' : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-rose-500'}
+              className={theme === 'dark' ? 'bg-slate-800/50 border-slate-700/50 text-white focus:border-rose-500' : 'bg-slate-50/50 border-slate-200/50 text-slate-900 focus:border-rose-500'}
             />
           </FormField>
 
@@ -90,7 +89,7 @@ export default function CompleteProfileModal({ isOpen, theme, onComplete, profil
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email address"
-              className={theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white focus:border-rose-500' : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-rose-500'}
+              className={theme === 'dark' ? 'bg-slate-800/50 border-slate-700/50 text-white focus:border-rose-500' : 'bg-slate-50/50 border-slate-200/50 text-slate-900 focus:border-rose-500'}
             />
           </FormField>
 

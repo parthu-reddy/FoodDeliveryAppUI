@@ -8,6 +8,7 @@ import { useToast } from '../../context/ToastContext';
 import { z } from 'zod';
 import { FormField, Input, Button, Spinner } from '../ui';
 import { useDebounce } from '../../hooks/useDebounce';
+import { useConfig } from '../../contexts/ConfigContext';
 
 const outletSchema = z.object({
   name: z.string().min(1, 'Outlet name is required.').max(100, 'Outlet name cannot exceed 100 characters.'),
@@ -43,12 +44,13 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const { showError } = useToast();
+  const { olaMapsApiKey } = useConfig();
   
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   useEffect(() => {
     if (isOpen && mapContainerRef.current && !mapRef.current) {
-      const apiKey = (import.meta as any).env.VITE_OLA_MAPS_API_KEY || '';
+      const apiKey = olaMapsApiKey || (import.meta as any).env.VITE_OLA_MAPS_API_KEY || '';
       
       const map = new maplibregl.Map({
         container: mapContainerRef.current,
@@ -110,7 +112,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
       }
       setIsSearching(true);
       try {
-        const apiKey = (import.meta as any).env.VITE_OLA_MAPS_API_KEY || '';
+        const apiKey = olaMapsApiKey || (import.meta as any).env.VITE_OLA_MAPS_API_KEY || '';
         const res = await fetch(`https://api.olamaps.io/places/v1/autocomplete?input=${encodeURIComponent(debouncedSearchQuery)}&api_key=${apiKey}`);
         const data = await res.json();
         if (data.predictions) {
@@ -133,7 +135,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
     setSearchQuery(description);
     setSearchResults([]);
     try {
-      const apiKey = (import.meta as any).env.VITE_OLA_MAPS_API_KEY || '';
+      const apiKey = olaMapsApiKey || (import.meta as any).env.VITE_OLA_MAPS_API_KEY || '';
       const res = await fetch(`https://api.olamaps.io/places/v1/details?place_id=${placeId}&api_key=${apiKey}`);
       const data = await res.json();
       if (data.result && data.result.geometry && data.result.geometry.location) {

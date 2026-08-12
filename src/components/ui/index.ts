@@ -11,6 +11,7 @@ export { Textarea } from './Textarea';
 export { SearchInput } from './SearchInput';
 export { Modal } from './Modal';
 export { Card } from './Card';
+export { GlassCard } from './GlassCard';
 export { StatCard } from './StatCard';
 export { SidebarNav } from './SidebarNav';
 export { AlertBanner } from './AlertBanner';

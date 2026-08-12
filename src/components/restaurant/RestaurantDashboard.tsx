@@ -43,6 +43,7 @@ const delaySchema = z.object({
   delayReason: z.string().max(255, 'Reason must be under 255 characters').optional()
 });
 import { getFriendlyStatusMessage, getFriendlyDeliveryStatusMessage } from '../../utils/statusMessaging';
+import { useTheme } from '../../context/ThemeContext';
 
 import { isActiveOrder, isFailedOrder } from '../../utils/orderStatus';
 import { 
@@ -56,8 +57,6 @@ interface RestaurantDashboardProps {
   activeOrders?: Order[];
   onUpdateOrderStatus?: (orderId: string, status: OrderStatus, payload?: any) => void;
   onLogout: () => void;
-  theme?: 'light' | 'dark';
-  onToggleTheme?: () => void;
   onAddApiLog?: (log: any) => void;
 }
 
@@ -67,10 +66,9 @@ export default function RestaurantDashboard({
   activeOrders: externalOrders,
   onUpdateOrderStatus: externalUpdateStatus,
   onLogout,
-  theme = 'light',
-  onToggleTheme,
   onAddApiLog
 }: RestaurantDashboardProps) {
+  const { theme, toggleTheme } = useTheme();
   const { showError, showSuccess, showInfo } = useToast();
 
   const { internalOrders, setInternalOrders, activeOrders, onUpdateOrderStatus } = useRestaurantOrders({
@@ -418,7 +416,7 @@ export default function RestaurantDashboard({
     <div className="flex-1 flex flex-col w-full overflow-y-auto overflow-x-hidden min-h-0 bg-transparent text-slate-800 dark:text-[#f0ede6] h-full pb-20">
       
       {/* Header Area */}
-      <header className="sticky top-0 bg-white/60 dark:bg-slate-950/60 backdrop-blur-xl px-5 py-3 flex flex-col sm:flex-row sm:items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 z-30 shrink-0 shadow-[0_2px_15px_rgba(0,0,0,0.01)] gap-3">
+      <header className="sticky top-0 bg-white/20 dark:bg-white/5 backdrop-blur-xl px-5 py-3 flex flex-col sm:flex-row sm:items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 z-30 shrink-0 shadow-[0_2px_15px_rgba(0,0,0,0.01)] gap-3">
         <RestaurantBrandSelector 
           myRestaurantName={myRestaurantName}
           hasOutlets={hasOutlets}
@@ -448,15 +446,13 @@ export default function RestaurantDashboard({
             )}
           </button>
           
-          {onToggleTheme && (
-            <button
-              onClick={onToggleTheme}
-              className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6] transition-all cursor-pointer"
-              title="Toggle Light/Dark Mode"
-            >
-              {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-550" />}
-            </button>
-          )}
+          <button
+            onClick={toggleTheme}
+            className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6] transition-all cursor-pointer"
+            title="Toggle Light/Dark Mode"
+          >
+            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-550" />}
+          </button>
 
           <button
             onClick={() => {

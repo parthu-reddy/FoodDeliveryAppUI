@@ -8,6 +8,7 @@ import { useToast } from '../../context/ToastContext';
 import { z } from 'zod';
 import { Input, Button, Spinner } from '../ui';
 import { useDebounce } from '../../hooks/useDebounce';
+import { useConfig } from '../../contexts/ConfigContext';
 
 const addressSchema = z.object({
   label: z.string().min(1, 'Label is required').max(50, 'Label cannot exceed 50 characters'),
@@ -51,6 +52,7 @@ export default function CustomerAddressModal({
   const [isSearching, setIsSearching] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { showError } = useToast();
+  const { olaMapsApiKey } = useConfig();
   
   const debouncedSearchQuery = useDebounce(addressSearchQuery, 500);
 
@@ -63,7 +65,7 @@ export default function CustomerAddressModal({
       }
       setIsSearching(true);
       try {
-        const apiKey = (import.meta as any).env.VITE_OLA_MAPS_API_KEY || '';
+        const apiKey = olaMapsApiKey || (import.meta as any).env.VITE_OLA_MAPS_API_KEY || '';
         const res = await fetch(`https://api.olamaps.io/places/v1/autocomplete?input=${encodeURIComponent(debouncedSearchQuery)}&api_key=${apiKey}`);
         const data = await res.json();
         if (data.predictions) {
@@ -84,7 +86,7 @@ export default function CustomerAddressModal({
 
   const handleSelectPlace = async (placeId: string, description: string) => {
     try {
-      const apiKey = (import.meta as any).env.VITE_OLA_MAPS_API_KEY || '';
+      const apiKey = olaMapsApiKey || (import.meta as any).env.VITE_OLA_MAPS_API_KEY || '';
       const res = await fetch(`https://api.olamaps.io/places/v1/details?place_id=${placeId}&api_key=${apiKey}`);
       const data = await res.json();
       if (data.result && data.result.geometry) {
@@ -195,7 +197,7 @@ export default function CustomerAddressModal({
 
   useEffect(() => {
     if (isAddressModalOpen && mapContainerRef.current && !mapRef.current) {
-      const apiKey = (import.meta as any).env.VITE_OLA_MAPS_API_KEY || '';
+      const apiKey = olaMapsApiKey || (import.meta as any).env.VITE_OLA_MAPS_API_KEY || '';
       
       const map = new maplibregl.Map({
         container: mapContainerRef.current,
@@ -413,10 +415,9 @@ export default function CustomerAddressModal({
                   <Button
                     onClick={handleSave}
                     disabled={isSaving || !addressForm.label || !addressForm.addressLine1 || !addressForm.city || !addressForm.state || !addressForm.zipCode}
-                    variant="primary"
+                    variant="warning"
                     fullWidth
                     icon={isSaving ? <Spinner size="sm" className="text-white" /> : undefined}
-                    className="!bg-gradient-to-r from-orange-500 to-amber-500 !border-none"
                   >
                     Save Address
                   </Button>
@@ -427,10 +428,9 @@ export default function CustomerAddressModal({
                         const addrStr = `Current Location: ${addressSearchQuery || 'Selected on Map'}`;
                         onSelectDeliveryLocation(addrStr, lat, lng);
                       }}
-                      variant="secondary"
+                      variant="outline"
                       fullWidth
                       icon={<Navigation className="w-4 h-4" />}
-                      className="!bg-indigo-50 dark:!bg-indigo-500/10 !text-indigo-600 dark:!text-indigo-400 !border-none hover:!bg-indigo-100 dark:hover:!bg-indigo-500/20"
                     >
                       Deliver to this location (Temporary)
                     </Button>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigation, MapPin } from 'lucide-react';
 import { Modal } from '../ui';
+import { useConfig } from '../../contexts/ConfigContext';
 
 interface CustomerAddressSelectorModalProps {
   isOpen: boolean;
@@ -25,6 +26,7 @@ const CustomerAddressSelectorModal: React.FC<CustomerAddressSelectorModalProps> 
   setShowLocationPrompt,
   onAddNewAddress
 }) => {
+  const { olaMapsApiKey } = useConfig();
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Select Delivery Location" size="md">
       <div className="p-4 space-y-3 pb-8">
@@ -33,7 +35,7 @@ const CustomerAddressSelectorModal: React.FC<CustomerAddressSelectorModalProps> 
             if (navigator.geolocation) {
               navigator.geolocation.getCurrentPosition(async (pos) => {
                 try {
-                  const apiKey = (import.meta as any).env.VITE_OLA_MAPS_API_KEY || '';
+                  const apiKey = olaMapsApiKey || (import.meta as any).env.VITE_OLA_MAPS_API_KEY || '';
                   const res = await fetch(`https://api.olamaps.io/places/v1/reverse-geocode?latlng=${pos.coords.latitude},${pos.coords.longitude}&api_key=${apiKey}`);
                   const data = await res.json();
                   if (data.results && data.results.length > 0) {

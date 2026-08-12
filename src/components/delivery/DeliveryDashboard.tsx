@@ -22,6 +22,7 @@ import { DeliveryHistoryPanel } from './DeliveryHistoryPanel';
 import { DeliveryActiveJob } from './DeliveryActiveJob';
 import { DeliveryOnlineToggle } from './DeliveryOnlineToggle';
 import { Button, Modal } from '../ui';
+import { useTheme } from '../../context/ThemeContext';
 
 const otpSchema = z.string().length(6, "OTP must be exactly 6 digits").regex(/^\d+$/, "OTP must contain only digits");
 
@@ -30,8 +31,6 @@ interface DeliveryDashboardProps {
   activeOrders?: Order[];
   onUpdateOrderStatus?: (orderId: string, status: OrderStatus, deliveryStatus?: DeliveryStatus, riderInfo?: { name: string }) => void;
   onLogout: () => void;
-  theme?: 'light' | 'dark';
-  onToggleTheme?: () => void;
   onAddApiLog?: (log: any) => void;
 }
 
@@ -40,10 +39,9 @@ export default function DeliveryDashboard({
   activeOrders: externalOrders,
   onUpdateOrderStatus: externalUpdateStatus,
   onLogout,
-  theme = 'light',
-  onToggleTheme,
   onAddApiLog
 }: DeliveryDashboardProps) {
+  const { theme, toggleTheme } = useTheme();
   const { showError, showSuccess, showInfo } = useToast();
   const [user, setUser] = useState(getUserProfile());
   const [isOnline, setIsOnline] = useState(false);
@@ -171,26 +169,29 @@ export default function DeliveryDashboard({
       const notifyPermission = await Notification.requestPermission();
       if (notifyPermission !== 'granted') {
         showToast("Notification permission is required. Please enable in browser settings if denied.");
+        setShowPermissionsPrompt(false);
         return;
       }
     }
 
     if (!navigator.geolocation) {
       showToast("Geolocation is not supported by your browser");
+      setShowPermissionsPrompt(false);
       return;
     }
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
+        setShowPermissionsPrompt(false);
         try {
           await apiPost(`/api/delivery/status`, { driverId: riderId, available: true });
           setIsOnline(true);
-          setShowPermissionsPrompt(false);
         } catch(e) {
           console.error("Failed to toggle status", e);
         }
       },
       (error) => {
+        setShowPermissionsPrompt(false);
         showToast("Location permission is required. Please enable in browser settings if denied.");
         console.error("Error getting location", error);
       },
@@ -471,7 +472,7 @@ export default function DeliveryDashboard({
       </AnimatePresence>
 
       {/* Header Area */}
-      <header className="sticky top-0 bg-white/20 dark:bg-slate-950/20 backdrop-blur-xl px-5 py-3 flex flex-col sm:flex-row sm:items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 z-30 shrink-0 shadow-[0_2px_15px_rgba(0,0,0,0.01)] gap-3">
+      <header className="sticky top-0 bg-white/20 dark:bg-white/5 backdrop-blur-xl px-5 py-3 flex flex-col sm:flex-row sm:items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 z-30 shrink-0 shadow-[0_2px_15px_rgba(0,0,0,0.01)] gap-3">
         <div className="flex items-center gap-3.5 flex-wrap">
           <LaBouffeLogo showText={false} iconSize="w-8 h-8" textColorClass="text-slate-800 dark:text-[#f0ede6] text-xs" subColorClass="text-rose-500 text-[8px]" />
           <div className="hidden sm:flex h-6 w-[1px] bg-slate-200 dark:bg-slate-800" />
@@ -519,15 +520,13 @@ export default function DeliveryDashboard({
             <User className="w-4 h-4 text-indigo-500" />
           </button>
 
-          {onToggleTheme && (
-            <button
-              onClick={onToggleTheme}
-              className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6] transition-all cursor-pointer"
-              title="Toggle Light/Dark Mode"
-            >
-              {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
-            </button>
-          )}
+          <button
+            onClick={toggleTheme}
+            className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6] transition-all cursor-pointer"
+            title="Toggle Light/Dark Mode"
+          >
+            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
+          </button>
         </div>
       </header>
 
@@ -579,7 +578,7 @@ export default function DeliveryDashboard({
         <>
           {/* Driver Statistics Panel */}
           <div className="p-5 grid grid-cols-2 gap-4 shrink-0">
-            <div className="bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-2xl p-4 shadow-sm flex items-center gap-3">
+            <div className="glass-card p-4 flex items-center gap-3">
               <div className="p-2.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl">
                 <DollarSign className="w-5 h-5" />
               </div>
@@ -591,7 +590,7 @@ export default function DeliveryDashboard({
 
             <button 
               onClick={() => setShowHistory(true)}
-              className={`bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-2xl p-4 shadow-sm flex items-center gap-3 text-left transition-all cursor-pointer hover:border-indigo-500/30 ${showHistory ? "ring-2 ring-indigo-500 border-transparent dark:border-transparent" : ""}`}
+              className={`glass-card p-4 flex items-center gap-3 text-left transition-all cursor-pointer hover:border-indigo-500/30 ${showHistory ? "ring-2 ring-indigo-500 border-transparent dark:border-transparent" : ""}`}
             >
               <div className="p-2.5 bg-orange-500/10 text-orange-600 dark:text-orange-400 rounded-xl">
                 <Check className="w-5 h-5" />
@@ -741,7 +740,6 @@ export default function DeliveryDashboard({
                 onClick={requestPermissionsAndGoOnline}
                 variant="primary"
                 fullWidth
-                className="!bg-slate-900 dark:!bg-emerald-500 !text-white dark:!text-slate-950"
               >
                 Enable Permissions
               </Button>
@@ -764,7 +762,6 @@ export default function DeliveryDashboard({
                 }}
                 variant="primary"
                 fullWidth
-                className="!bg-slate-900 dark:!bg-emerald-500 !text-white dark:!text-slate-950"
               >
                 Complete Profile
               </Button>

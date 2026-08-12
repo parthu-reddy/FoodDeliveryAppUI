@@ -69,7 +69,7 @@ export default function AdminPayoutsView() {
             </div>
           </div>
         ) : pendingPayouts.length === 0 ? (
-          <div className="bg-white/20 dark:bg-slate-900/40 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl p-12 text-center shadow-xl">
+          <div className="glass-panel p-12 text-center">
             <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
             <h3 className="text-xl font-bold mb-2">All Caught Up!</h3>
             <p className="text-slate-500">There are no pending payouts to settle at this time.</p>
@@ -77,7 +77,7 @@ export default function AdminPayoutsView() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {pendingPayouts.map((account) => (
-              <div key={account.ownerId} className="bg-white/20 dark:bg-slate-900/40 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xl flex flex-col">
+              <div key={account.ownerId} className="glass-panel p-6 flex flex-col">
                 <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-200 dark:border-slate-800/50">
                   <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg ${
                     account.ownerType === 'RESTAURANT' ? 'bg-orange-500 shadow-orange-500/30' : 'bg-indigo-500 shadow-indigo-500/30'

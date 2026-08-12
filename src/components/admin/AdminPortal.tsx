@@ -4,6 +4,7 @@ import LaBouffeLogo from '../shared/LaBouffeLogo';
 import { usePolling } from '../../hooks/usePolling';
 import { apiGet } from '../../lib/apiClient';
 import { SidebarNav, Button } from '../ui';
+import { useTheme } from '../../context/ThemeContext';
 
 const AdminFleetMap = React.lazy(() => import('./AdminFleetMap'));
 import AdminLedgerView from './AdminLedgerView';
@@ -15,9 +16,8 @@ import AdminCategories from './AdminCategories';
 
 export default function AdminPortal({
   onLogout,
-  theme,
-  onToggleTheme
 }: any) {
+  const { theme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<'deliveries' | 'users' | 'categories' | 'map' | 'ledger' | 'payouts' | 'interventions'>('map');
 
   // Poll for intervention count to show badge on sidebar
@@ -58,11 +58,9 @@ export default function AdminPortal({
         </div>
 
         <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-            {onToggleTheme && (
-                <Button variant="ghost" size="icon" onClick={onToggleTheme}>
-                {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
-                </Button>
-            )}
+          <Button variant="ghost" size="icon" onClick={toggleTheme}>
+          {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
+          </Button>
             {onLogout && (
                 <Button variant="danger" size="icon" onClick={onLogout}>
                   <LogOut className="w-4 h-4" />

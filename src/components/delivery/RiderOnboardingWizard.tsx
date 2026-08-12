@@ -200,7 +200,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
             <FormField label="Profile Photo" required>
               <ImageUploadField value={photo} onChange={setPhoto} folderId={userId || 'onboarding'} placeholder="Upload clear profile photo" />
             </FormField>
-            <Button onClick={submitProfile} disabled={isSubmitting} variant="primary" fullWidth className="!mt-4 !py-3.5 !bg-gradient-to-r from-rose-500 to-orange-500">
+            <Button onClick={submitProfile} disabled={isSubmitting} variant="primary" fullWidth className="!mt-4 !py-3.5 shadow-md">
               {isSubmitting ? <Spinner size="xs" /> : <ChevronRight className="w-4 h-4" />}
               Save & Continue
             </Button>
@@ -217,7 +217,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
                   <h3 className="text-lg font-bold text-slate-900 dark:text-white">Driving License Approved</h3>
                   <p className="text-sm text-slate-500">Your DL has been verified successfully.</p>
                 </div>
-                <Button onClick={handleNext} variant="primary" fullWidth className="!bg-slate-900 dark:!bg-white !text-white dark:!text-slate-900">Continue</Button>
+                <Button onClick={handleNext} variant="primary" fullWidth>Continue</Button>
              </div>
           );
         }
@@ -232,7 +232,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
             <FormField label="Upload DL Image" required>
               <DocumentUploadField value={dlDoc} onChange={setDlDoc} docType="DRIVING_LICENSE" placeholder="Upload Front of DL" />
             </FormField>
-            <Button onClick={submitDL} disabled={isSubmitting} variant="primary" fullWidth className="!mt-4 !py-3.5 !bg-gradient-to-r from-rose-500 to-orange-500">
+            <Button onClick={submitDL} disabled={isSubmitting} variant="primary" fullWidth className="!mt-4 !py-3.5 shadow-md">
               {isSubmitting ? <Spinner size="xs" /> : <ChevronRight className="w-4 h-4" />}
               Verify License
             </Button>
@@ -249,7 +249,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
                   <h3 className="text-lg font-bold text-slate-900 dark:text-white">Vehicle RC Approved</h3>
                   <p className="text-sm text-slate-500">Your vehicle registration is verified.</p>
                 </div>
-                <Button onClick={handleNext} variant="primary" fullWidth className="!bg-slate-900 dark:!bg-white !text-white dark:!text-slate-900">Continue</Button>
+                <Button onClick={handleNext} variant="primary" fullWidth>Continue</Button>
              </div>
           );
         }
@@ -261,7 +261,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
             <FormField label="Upload RC Document" required>
               <DocumentUploadField value={rcDoc} onChange={setRcDoc} docType="RC" placeholder="Upload RC PDF/Image" />
             </FormField>
-            <Button onClick={submitRC} disabled={isSubmitting} variant="primary" fullWidth className="!mt-4 !py-3.5 !bg-gradient-to-r from-rose-500 to-orange-500">
+            <Button onClick={submitRC} disabled={isSubmitting} variant="primary" fullWidth className="!mt-4 !py-3.5 shadow-md">
               {isSubmitting ? <Spinner size="xs" /> : <ChevronRight className="w-4 h-4" />}
               Verify Vehicle
             </Button>
@@ -278,7 +278,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
                   <h3 className="text-lg font-bold text-slate-900 dark:text-white">Bank Verified</h3>
                   <p className="text-sm text-slate-500">Penny drop successful. Name matches.</p>
                 </div>
-                <Button onClick={handleNext} variant="primary" fullWidth className="!bg-slate-900 dark:!bg-white !text-white dark:!text-slate-900">Continue</Button>
+                <Button onClick={handleNext} variant="primary" fullWidth>Continue</Button>
              </div>
           );
         }
@@ -290,7 +290,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
             <FormField label="IFSC Code" required>
               <Input type="text" value={ifsc} onChange={e => setIfsc(e.target.value)} />
             </FormField>
-            <Button onClick={submitBank} disabled={isSubmitting} variant="primary" fullWidth className="!mt-4 !py-3.5 !bg-gradient-to-r from-rose-500 to-orange-500">
+            <Button onClick={submitBank} disabled={isSubmitting} variant="primary" fullWidth className="!mt-4 !py-3.5 shadow-md">
               {isSubmitting ? <Spinner size="xs" /> : <ChevronRight className="w-4 h-4" />}
               Initiate Penny Drop
             </Button>
@@ -303,7 +303,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
             <FormField label="Upload Selfie" required>
               <DocumentUploadField value={selfieDoc} onChange={setSelfieDoc} docType="SELFIE" placeholder="Take a clear selfie" />
             </FormField>
-            <Button onClick={submitSelfie} disabled={isSubmitting} variant="primary" fullWidth className="!mt-4 !py-3.5 !bg-gradient-to-r from-emerald-500 to-teal-500">
+            <Button onClick={submitSelfie} disabled={isSubmitting} variant="success" fullWidth className="!mt-4 !py-3.5 shadow-md">
               {isSubmitting ? <Spinner size="xs" /> : <CheckCircle className="w-4 h-4" />}
               Complete Verification
             </Button>
@@ -328,7 +328,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
       >
         {onLogout && (
           <div className="absolute top-4 right-4 md:top-6 md:right-6 z-20">
-            <Button onClick={onLogout} variant="danger" className="!bg-rose-50 dark:!bg-rose-500/10 !text-rose-500 hover:!text-rose-600 hover:!bg-rose-100 dark:hover:!bg-rose-500/20 !border-rose-100 dark:!border-rose-500/30" title="Logout">
+            <Button onClick={onLogout} variant="danger" title="Logout">
               <LogOut className="w-4 h-4" />
               <span>Logout</span>
             </Button>

@@ -21,7 +21,7 @@ const iconBgColors: Record<StatColor, string> = {
 export function StatCard({ icon, label, value, color = 'emerald', className = '' }: StatCardProps) {
   return (
     <div
-      className={`bg-white/50 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-2xl p-4 flex items-center gap-3 shadow-sm ${className}`}
+      className={`glass-card p-4 flex items-center gap-3 ${className}`}
     >
       <div className={`p-3 rounded-xl ${iconBgColors[color]}`}>
         {icon}

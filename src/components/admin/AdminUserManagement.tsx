@@ -151,7 +151,7 @@ export default function AdminUserManagement() {
 
   return (
     <div className="flex-1 flex p-6 gap-6 h-full overflow-hidden">
-        <div className="w-1/3 flex flex-col bg-white/10 dark:bg-slate-900/20 backdrop-blur-xl rounded-3xl border border-slate-200 dark:border-slate-800 p-4 shrink-0 shadow-xl">
+        <div className="w-1/3 flex flex-col glass-panel p-4 shrink-0">
         <div className="flex gap-2 mb-4 border-b border-slate-200 dark:border-slate-800 pb-4">
             <Select 
               value={roleFilter} 
@@ -166,7 +166,7 @@ export default function AdminUserManagement() {
             />
             <form onSubmit={handleSearch} className="flex-1 flex gap-2">
             <Input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="User ID / Phone" className="flex-1" />
-            <Button type="submit" variant="outline" className="!bg-indigo-500/20 !border-indigo-500/50 !text-indigo-400" icon={<Search className="w-4 h-4" />}>
+            <Button type="submit" variant="primary" icon={<Search className="w-4 h-4" />}>
               Search
             </Button>
             </form>
@@ -177,7 +177,7 @@ export default function AdminUserManagement() {
                 <button 
                     key={user.id}
                     onClick={() => setSelectedUser(user)}
-                    className={`w-full text-left p-4 rounded-2xl mb-2 transition-all duration-300 ${selectedUser?.id === user.id ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30' : 'bg-white/20 dark:bg-slate-800/40 hover:bg-white/40 dark:hover:bg-slate-700/50'}`}
+                    className={`w-full text-left p-4 mb-2 transition-all duration-300 ${selectedUser?.id === user.id ? 'glass-card !bg-indigo-500/80 !border-indigo-500 text-white shadow-lg shadow-indigo-500/30' : 'glass-card hover:border-indigo-300/50'}`}
                 >
                     <div className="flex items-center justify-between">
                         <p className="font-bold">{user.id.substring(0, 8)}...</p>
@@ -220,7 +220,7 @@ export default function AdminUserManagement() {
         </div>
         </div>
 
-        <div className="flex-1 bg-white/10 dark:bg-slate-900/20 backdrop-blur-xl rounded-3xl border border-slate-200 dark:border-slate-800 p-8 shadow-xl overflow-y-auto">
+        <div className="flex-1 glass-panel p-8 overflow-y-auto">
         {selectedUser ? (
             <div className="max-w-2xl mx-auto space-y-8">
                 <div className="flex items-center justify-between pb-6 border-b border-slate-200 dark:border-slate-800">
@@ -239,11 +239,11 @@ export default function AdminUserManagement() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mb-8">
-                    <div className="p-4 rounded-2xl bg-white/20 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700">
+                    <div className="glass-card p-4">
                         <p className="text-sm text-slate-500 mb-1">ID</p>
                         <p className="font-mono text-sm">{selectedUser.id}</p>
                     </div>
-                    <div className="p-4 rounded-2xl bg-white/20 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700">
+                    <div className="glass-card p-4">
                         <p className="text-sm text-slate-500 mb-1">Status</p>
                         <p className="font-mono text-sm">
                             <span className={selectedUser.isActive ? 'text-emerald-500' : 'text-rose-500'}>
@@ -251,7 +251,7 @@ export default function AdminUserManagement() {
                             </span>
                         </p>
                     </div>
-                    <div className="p-4 rounded-2xl bg-white/20 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700">
+                    <div className="glass-card p-4">
                         <p className="text-sm text-slate-500 mb-1">Phone</p>
                         <p className="font-bold">{selectedUser.phoneNumber}</p>
                     </div>
@@ -287,7 +287,7 @@ export default function AdminUserManagement() {
                     {userActiveOrders.length > 0 ? (
                         <div className="space-y-3">
                             {userActiveOrders.map(order => (
-                                <div key={order.id} className="p-4 rounded-xl bg-white/20 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700">
+                                <div key={order.id} className="glass-card p-4">
                                     <div className="flex justify-between items-start mb-2">
                                         <p className="font-bold text-sm">#{order.id.substring(0, 8)}</p>
                                         <span className="text-xs font-bold px-2 py-1 bg-indigo-500/20 text-indigo-400 rounded-md">{order.status}</span>

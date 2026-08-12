@@ -51,8 +51,10 @@ const handleHttpError = async (res: Response) => {
     window.location.href = '/';
   } else if (res.status >= 500) {
     logger.error(`HTTP 5xx Server Error`, { status: res.status, url: res.url, errorMessage });
-  } else if (res.status >= 400) {
+  } else if (res.status >= 400 && res.status !== 429) {
     logger.warn(`HTTP 4xx Client Error`, { status: res.status, url: res.url, errorMessage });
+  } else if (res.status === 429) {
+    console.warn(`HTTP 429 Rate Limit Exceeded: ${res.url}`);
   }
   
   throw new ApiError(errorMessage, res.status, errorData);

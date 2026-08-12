@@ -14,13 +14,13 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantStyles: Record<ButtonVariant, string> = {
-  primary: 'bg-rose-500 text-white hover:bg-rose-600 shadow-sm shadow-rose-500/20 border-transparent',
-  secondary: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700',
-  danger: 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 border-red-200/60 dark:border-red-500/30',
-  success: 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-sm shadow-emerald-500/20 border-transparent',
-  warning: 'bg-amber-500 text-white hover:bg-amber-600 shadow-sm shadow-amber-500/20 border-transparent',
-  ghost: 'bg-transparent text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border-transparent',
-  outline: 'bg-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 border-slate-200 dark:border-slate-700',
+  primary: 'bg-rose-500/90 dark:bg-rose-500/30 backdrop-blur-md text-white hover:bg-rose-600/90 dark:hover:bg-rose-500/50 border border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.3)]',
+  secondary: 'bg-white/60 dark:bg-white/10 backdrop-blur-md text-slate-800 dark:text-white hover:bg-white/80 dark:hover:bg-white/20 border border-white/60 dark:border-white/20 shadow-lg',
+  danger: 'bg-red-500/90 dark:bg-red-500/30 backdrop-blur-md text-white hover:bg-red-600/90 dark:hover:bg-red-500/50 border border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.3)]',
+  success: 'bg-emerald-500/90 dark:bg-emerald-500/30 backdrop-blur-md text-white hover:bg-emerald-600/90 dark:hover:bg-emerald-500/50 border border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.3)]',
+  warning: 'bg-amber-500/90 dark:bg-amber-500/30 backdrop-blur-md text-white hover:bg-amber-600/90 dark:hover:bg-amber-500/50 border border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.3)]',
+  ghost: 'bg-transparent text-slate-600 dark:text-white/80 hover:bg-white/50 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white border-transparent',
+  outline: 'bg-white/40 dark:bg-transparent backdrop-blur-sm text-slate-700 dark:text-white hover:bg-white/60 dark:hover:bg-white/10 border border-slate-300 dark:border-white/30 shadow-sm',
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
@@ -71,7 +71,7 @@ export function Button({
       ) : icon ? (
         <span className="shrink-0">{icon}</span>
       ) : null}
-      {children && <span>{children}</span>}
+      {children && <span className="flex items-center gap-2">{children}</span>}
       {iconRight && !loading && <span className="shrink-0">{iconRight}</span>}
     </button>
   );

@@ -45,26 +45,37 @@ export function usePolling<T>({
   const isSubscribedRef = useRef(true);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const savedFetchFn = useRef(fetchFn);
+  const savedOnData = useRef(onData);
+  const savedOnError = useRef(onError);
+
+  // Remember the latest callback if it changes.
+  useEffect(() => {
+    savedFetchFn.current = fetchFn;
+    savedOnData.current = onData;
+    savedOnError.current = onError;
+  }, [fetchFn, onData, onError]);
+
   const executeFetch = useCallback(async () => {
     if (!isSubscribedRef.current) return;
     setIsLoading(true);
     setError(null);
     try {
-      const result = await fetchFn();
+      const result = await savedFetchFn.current();
       if (!isSubscribedRef.current) return;
       setData(result);
-      onData?.(result);
+      savedOnData.current?.(result);
     } catch (err) {
       if (!isSubscribedRef.current) return;
       const error = err instanceof Error ? err : new Error(String(err));
       setError(error);
-      onError?.(error);
+      savedOnError.current?.(error);
     } finally {
       if (isSubscribedRef.current) {
         setIsLoading(false);
       }
     }
-  }, [fetchFn, onData, onError]);
+  }, []);
 
   // Start/stop polling based on `enabled`
   useEffect(() => {

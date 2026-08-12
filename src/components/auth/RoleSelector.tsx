@@ -2,13 +2,14 @@ import React, { useState, useRef } from 'react';
 import { Shield, Utensils, Store, Bike, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import { RoleName, UserRole } from '../../types';
+import { useTheme } from '../../context/ThemeContext';
 
 interface RoleSelectorProps {
-  theme: 'light' | 'dark';
   onSelectRole: (role: UserRole) => void;
 }
 
-export function RoleSelector({ theme, onSelectRole }: RoleSelectorProps) {
+export function RoleSelector({ onSelectRole }: RoleSelectorProps) {
+  const { theme } = useTheme();
   const [activeCardIndex, setActiveCardIndex] = useState(0);
 
   return (

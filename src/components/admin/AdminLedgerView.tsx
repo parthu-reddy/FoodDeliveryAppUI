@@ -92,7 +92,7 @@ export default function AdminLedgerView() {
       </div>
 
       {/* Filters */}
-      <form onSubmit={handleFilter} className="bg-white/20 dark:bg-slate-900/40 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl p-4 mb-6 shadow-xl">
+      <form onSubmit={handleFilter} className="glass-panel p-4 mb-6">
         <div className="flex items-center gap-2 mb-4">
             <Filter className="w-5 h-5 text-indigo-500" />
             <h3 className="font-bold">Filters</h3>
@@ -154,7 +154,7 @@ export default function AdminLedgerView() {
       </form>
 
       {/* Table */}
-      <div className="flex-1 bg-white/20 dark:bg-slate-900/40 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl flex flex-col">
+      <div className="flex-1 glass-panel flex flex-col overflow-hidden">
         <div className="overflow-x-auto flex-1">
           <table className="w-full text-left border-collapse">
             <thead>

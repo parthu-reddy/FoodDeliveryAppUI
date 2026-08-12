@@ -59,6 +59,12 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
 }) => {
   // Local state for modals to avoid global record bloat in parent
   const [activeModal, setActiveModal] = useState<'none' | 'cancel' | 'delay' | 'refund'>('none');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  React.useEffect(() => {
+    setIsSubmitting(false);
+  }, [order.status]);
+
   
   // Form fields
   const [cancelReason, setCancelReason] = useState('');
@@ -100,7 +106,7 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
   return (
     <motion.div 
       layoutId={`card-${order.id}`}
-      className={`bg-white/40 dark:bg-slate-900/40 backdrop-blur-md p-4 rounded-2xl shadow-sm space-y-3.5 relative overflow-hidden transition-all border ${styles.bg} ${styles.ring}`}
+      className={`glass-card p-4 space-y-3.5 relative overflow-hidden transition-all ${styles.bg} ${styles.ring}`}
     >
       <div className="flex justify-between items-start">
         <div>
@@ -200,30 +206,40 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
             {!isBeingDelivered && (
               <Button
                 variant="danger"
-                size="sm"
-                icon={<XCircle className="w-3.5 h-3.5" />}
+                size="md"
+                className="px-3"
+                icon={<XCircle className="w-4 h-4" />}
                 onClick={() => setActiveModal(activeModal === 'cancel' ? 'none' : 'cancel')}
-              />
+              >
+                Cancel
+              </Button>
             )}
 
             {(isCooking || isPrepared || isRequestedDelay) && (
               <Button
                 variant="primary"
-                size="sm"
-                icon={<DollarSign className="w-3.5 h-3.5" />}
+                size="md"
+                className="px-3"
+                icon={<DollarSign className="w-4 h-4" />}
                 onClick={() => setActiveModal(activeModal === 'refund' ? 'none' : 'refund')}
-              />
+              >
+                Refund
+              </Button>
             )}
 
             {isNewPlaced && (
               <Button
                 variant="warning"
-                size="sm"
+                size="md"
                 className="flex-1"
-                icon={<Check className="w-3 h-3 shrink-0" />}
-                onClick={() => handleStatusTransition(order)}
+                disabled={isSubmitting}
+                icon={isSubmitting ? <RefreshCw className="w-4 h-4 shrink-0 animate-spin" /> : <Check className="w-4 h-4 shrink-0" />}
+                onClick={() => {
+                  setIsSubmitting(true);
+                  handleStatusTransition(order);
+                }}
               >
-                Accept Order
+                {isSubmitting ? 'Accepting...' : 'Accept Order'}
               </Button>
             )}
 
@@ -232,21 +248,30 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
                 {order.status === OrderStatus.ACCEPTED as any ? (
                   <Button
                     variant="warning"
-                    size="sm"
+                    size="md"
                     className="flex-1"
-                    onClick={() => handleStatusTransition(order)}
+                    disabled={isSubmitting}
+                    icon={isSubmitting ? <RefreshCw className="w-4 h-4 shrink-0 animate-spin" /> : undefined}
+                    onClick={() => {
+                      setIsSubmitting(true);
+                      handleStatusTransition(order);
+                    }}
                   >
-                    Start Cook
+                    {isSubmitting ? 'Starting...' : 'Start Cook'}
                   </Button>
                 ) : (
                   <Button
                     variant="danger"
-                    size="sm"
+                    size="md"
                     className="flex-1"
-                    icon={<CheckCircle2 className="w-3.5 h-3.5" />}
-                    onClick={() => handleStatusTransition(order)}
+                    disabled={isSubmitting}
+                    icon={isSubmitting ? <RefreshCw className="w-4 h-4 shrink-0 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                    onClick={() => {
+                      setIsSubmitting(true);
+                      handleStatusTransition(order);
+                    }}
                   >
-                    Mark Prepared
+                    {isSubmitting ? 'Marking...' : 'Mark Prepared'}
                   </Button>
                 )}
               </>

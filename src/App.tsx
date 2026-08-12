@@ -7,6 +7,8 @@ import { logout as authLogout } from './lib/authStore';
 import { ToastProvider } from './context/ToastContext';
 import { CallProvider } from './context/CallContext';
 import { ErrorBoundary } from './components/shared/ErrorBoundary';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
+import { ConfigProvider } from './contexts/ConfigContext';
 
 // Lazy load route components for code splitting and bundle optimization
 const LoginScreen = React.lazy(() => import('./components/auth/LoginScreen'));
@@ -15,7 +17,7 @@ const RestaurantDashboard = React.lazy(() => import('./components/restaurant/Res
 const DeliveryDashboard = React.lazy(() => import('./components/delivery/DeliveryDashboard'));
 const AdminPortal = React.lazy(() => import('./components/admin/AdminPortal'));
 
-export default function App() {
+function AppContent() {
   // Initialize auth state SYNCHRONOUSLY from localStorage.
   // This ensures the correct dashboard renders on the first render
   // and LoginScreen never briefly mounts when a session exists.
@@ -31,7 +33,8 @@ export default function App() {
     const profile = getUserProfile();
     return profile?.name || '';
   });
-  const [m3Theme, setM3Theme] = useState<'light' | 'dark'>('light');
+  
+  const { theme } = useTheme();
 
   const handleLoginSuccess = (selectedRole: UserRole, userPhone: string, displayName: string) => {
     setUserRole(selectedRole as RoleName);
@@ -46,110 +49,80 @@ export default function App() {
     setUserName('');
   };
 
-  const handleToggleTheme = () => {
-    setM3Theme(m3Theme === 'dark' ? 'light' : 'dark');
-  };
-
   const renderFallback = () => (
-    <div className="w-full h-full flex-1 flex flex-col overflow-hidden relative">
-      <CinematicFoodBackground theme={m3Theme} />
-      <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative items-center justify-center">
-        <div className="flex flex-col items-center gap-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-6 py-4 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800">
-          <div className="w-8 h-8 border-3 border-rose-500 border-t-transparent rounded-full animate-spin" />
-          <span className="text-xs font-bold tracking-wider uppercase text-slate-700 dark:text-slate-300">Loading Workspace...</span>
-        </div>
+    <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative items-center justify-center">
+      <div className="glass-panel px-6 py-4 rounded-2xl flex flex-col items-center gap-3">
+        <div className="w-8 h-8 border-3 border-rose-500 border-t-transparent rounded-full animate-spin" />
+        <span className="text-xs font-bold tracking-wider uppercase">Loading Workspace...</span>
       </div>
     </div>
   );
 
   return (
-    <ToastProvider>
-      <CallProvider>
-        <div className={`flex-1 flex flex-col overflow-hidden relative w-full h-[100dvh] ${m3Theme === 'dark' ? 'dark text-[#f0ede6]' : 'text-slate-900'}`}>
-          <Suspense fallback={renderFallback()}>
+    <div className={`app-background flex-1 flex flex-col overflow-hidden relative w-full h-[100dvh] ${theme === 'dark' ? 'dark text-[#f0ede6]' : 'text-slate-900'}`}>
+      <CinematicFoodBackground theme={theme} />
+      
+      <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative">
+        <Suspense fallback={renderFallback()}>
           {!userRole ? (
-            <div className="w-full h-full flex-1 flex flex-col overflow-hidden relative ">
-              <CinematicFoodBackground theme={m3Theme} />
-              <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative">
-                <div className="flex-1 flex flex-col w-full h-full justify-center items-center overflow-hidden relative">
-                  <ErrorBoundary fallbackLabel="Login Screen">
-                    <LoginScreen 
-                      onLoginSuccess={handleLoginSuccess} 
-                      theme={m3Theme} 
-                      onToggleTheme={handleToggleTheme}
-                    />
-                  </ErrorBoundary>
-                </div>
-              </div>
+            <div className="flex-1 flex flex-col w-full h-full justify-center items-center overflow-hidden relative">
+              <ErrorBoundary fallbackLabel="Login Screen">
+                <LoginScreen onLoginSuccess={handleLoginSuccess} />
+              </ErrorBoundary>
             </div>
           ) : (
             <div className="flex-1 flex flex-col w-full h-full overflow-hidden relative">
               {userRole === RoleName.CUSTOMER && (
-                <div className="w-full h-full flex-1 flex flex-col overflow-hidden relative ">
-                  <CinematicFoodBackground theme={m3Theme} />
-                  <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative">
-                    <ErrorBoundary fallbackLabel="Customer Dashboard">
-                    <CustomerDashboard 
-                      userName={userName || 'Customer'} 
-                      userPhone={phone}
-                      onLogout={handleLogout}
-                      theme={m3Theme}
-                      onToggleTheme={handleToggleTheme}
-                    />
-                    </ErrorBoundary>
-                  </div>
-                </div>
+                <ErrorBoundary fallbackLabel="Customer Dashboard">
+                  <CustomerDashboard 
+                    userName={userName || 'Customer'} 
+                    userPhone={phone}
+                    onLogout={handleLogout}
+                  />
+                </ErrorBoundary>
               )}
               {userRole === RoleName.RESTAURANT && (
-                <div className="w-full h-full flex-1 flex flex-col overflow-hidden relative ">
-                  <CinematicFoodBackground theme={m3Theme} />
-                  <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative">
-                    <ErrorBoundary fallbackLabel="Restaurant Dashboard">
-                    <RestaurantDashboard 
-                      restaurantId=""
-                      onLogout={handleLogout}
-                      theme={m3Theme}
-                      onToggleTheme={handleToggleTheme}
-                    />
-                    </ErrorBoundary>
-                  </div>
-                </div>
+                <ErrorBoundary fallbackLabel="Restaurant Dashboard">
+                  <RestaurantDashboard 
+                    restaurantId=""
+                    onLogout={handleLogout}
+                  />
+                </ErrorBoundary>
               )}
               {userRole === RoleName.DELIVERY && (
-                <div className="w-full h-full flex-1 flex flex-col overflow-hidden relative ">
-                  <CinematicFoodBackground theme={m3Theme} />
-                  <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative">
-                    <ErrorBoundary fallbackLabel="Delivery Dashboard">
-                    <DeliveryDashboard 
-                      riderPhone={phone}
-                      onLogout={handleLogout}
-                      theme={m3Theme}
-                      onToggleTheme={handleToggleTheme}
-                    />
-                    </ErrorBoundary>
-                  </div>
-                </div>
+                <ErrorBoundary fallbackLabel="Delivery Dashboard">
+                  <DeliveryDashboard 
+                    riderPhone={phone}
+                    onLogout={handleLogout}
+                  />
+                </ErrorBoundary>
               )}
               {userRole === RoleName.ADMIN && (
-                <div className="w-full h-full flex-1 flex flex-col overflow-hidden relative ">
-                  <CinematicFoodBackground theme={m3Theme} />
-                  <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative">
-                    <ErrorBoundary fallbackLabel="Admin Portal">
-                    <AdminPortal 
-                      onLogout={handleLogout}
-                      theme={m3Theme}
-                      onToggleTheme={handleToggleTheme}
-                    />
-                    </ErrorBoundary>
-                  </div>
-                </div>
+                <ErrorBoundary fallbackLabel="Admin Portal">
+                  <AdminPortal 
+                    onLogout={handleLogout}
+                  />
+                </ErrorBoundary>
               )}
             </div>
           )}
         </Suspense>
       </div>
-      </CallProvider>
-    </ToastProvider>
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <ConfigProvider>
+        <ToastProvider>
+          <CallProvider>
+            <AppContent />
+          </CallProvider>
+        </ToastProvider>
+      </ConfigProvider>
+    </ThemeProvider>
   );
 }
 

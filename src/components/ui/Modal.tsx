@@ -57,9 +57,9 @@ export function Modal({
             onClick={(e) => e.stopPropagation()}
             className={`
               w-full ${sizeClasses[size]}
-              bg-white dark:bg-slate-900 
+              bg-white/80 dark:bg-black/40 backdrop-blur-2xl
               ${sheet ? 'rounded-t-3xl sm:rounded-3xl' : 'rounded-3xl'}
-              shadow-2xl border border-slate-200 dark:border-slate-800
+              shadow-2xl border border-white/60 dark:border-white/10
               flex flex-col max-h-[85vh] overflow-hidden
               ${className}
             `}

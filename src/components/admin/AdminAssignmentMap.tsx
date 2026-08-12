@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { apiGet } from '../../lib/apiClient';
-
+import { useConfig } from '../../contexts/ConfigContext';
 import { ErrorBoundary } from '../shared/ErrorBoundary';
 
 export default function AdminAssignmentMap(props: { 
@@ -26,6 +26,7 @@ function _AdminAssignmentMap({
     availableDrivers: any[], 
     onAssign: (orderId: string, driverId: string) => void 
 }) {
+  const { olaMapsApiKey } = useConfig();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [mapInstance, setMapInstance] = useState<any>(null);
 
@@ -59,11 +60,7 @@ function _AdminAssignmentMap({
 
     const initMap = async () => {
       try {
-        let key = (import.meta as any).env.VITE_OLA_MAPS_API_KEY;
-        if (!key) {
-            const res = await apiGet('/api/config/maps-key');
-            key = res?.data?.key || res?.key;
-        }
+        let key = olaMapsApiKey || (import.meta as any).env.VITE_OLA_MAPS_API_KEY;
         if (!active || !mapContainerRef.current) return;
         
         map = new maplibregl.Map({

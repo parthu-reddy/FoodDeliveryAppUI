@@ -64,11 +64,11 @@ export default function AdminCategories() {
 
   return (
     <div className="flex-1 flex p-6 gap-6 h-full overflow-hidden">
-        <div className="w-1/3 flex flex-col bg-white/10 dark:bg-slate-900/20 backdrop-blur-xl rounded-3xl border border-slate-200 dark:border-slate-800 p-4 shrink-0 shadow-xl overflow-y-auto">
+        <div className="w-1/3 flex flex-col glass-panel p-4 shrink-0 overflow-y-auto">
             <h3 className="font-black text-xl mb-4 px-2">Existing Categories</h3>
             <div className="space-y-2">
                 {categories.map((cat: any) => (
-                    <div key={cat.id} className="p-4 rounded-xl bg-white/20 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 flex justify-between items-center group">
+                    <div key={cat.id} className="glass-card p-4 flex justify-between items-center group">
                         <div>
                             <p className="font-bold text-slate-800 dark:text-[#f0ede6]">{cat.name}</p>
                             <p className="text-sm text-slate-500 truncate max-w-[200px]">{cat.description || 'No description'}</p>
@@ -84,7 +84,7 @@ export default function AdminCategories() {
             </div>
         </div>
 
-      <div className="flex-1 bg-white/20 dark:bg-slate-900/20 backdrop-blur-xl p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-y-auto">
+      <div className="flex-1 glass-panel p-8 overflow-y-auto">
         <div className="flex items-center gap-4 mb-8 border-b border-slate-200 dark:border-slate-700 pb-6">
             <div className="w-16 h-16 rounded-2xl bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-500/30">
                 <Tags className="w-8 h-8" />

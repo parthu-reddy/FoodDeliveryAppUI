@@ -40,6 +40,7 @@ import { isActiveOrder, isFailedOrder } from '../../utils/orderStatus';
 import { calculateHaversineDistance } from '../../utils/geo';
 import { ChatWidget } from '../shared/ChatWidget';
 import { CallOverlay } from '../shared/CallOverlay';
+import { useTheme } from '../../context/ThemeContext';
 
 
 interface CustomerDashboardProps {
@@ -49,8 +50,6 @@ interface CustomerDashboardProps {
   onPlaceOrder?: (order: Order) => void;
   onUpdateOrder?: (orderId: string, status: string) => void;
   onLogout: () => void;
-  theme?: 'light' | 'dark';
-  onToggleTheme?: () => void;
   onAddApiLog?: (log: any) => void;
 }
 
@@ -63,10 +62,9 @@ export default function CustomerDashboard({
   onPlaceOrder: externalPlaceOrder,
   onUpdateOrder, 
   onLogout,
-  theme = 'light',
-  onToggleTheme,
   onAddApiLog
 }: CustomerDashboardProps) {
+  const { theme, toggleTheme } = useTheme();
   const { showError, showSuccess, showInfo } = useToast();
   // Extracted Hooks
   const { internalOrders, setInternalOrders, activeOrders: internalActiveOrders, isInitialLoad } = useCustomerOrders({
@@ -381,15 +379,13 @@ export default function CustomerDashboard({
           >
             <User className="w-4 h-4 text-indigo-500" />
           </button>
-          {onToggleTheme && (
-            <button
-              onClick={onToggleTheme}
-              className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6] transition-all cursor-pointer"
-              title="Toggle Light/Dark Mode"
-            >
-              {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
-            </button>
-          )}
+          <button
+            onClick={toggleTheme}
+            className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6] transition-all cursor-pointer"
+            title="Toggle Light/Dark Mode"
+          >
+            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
+          </button>
         </div>
       </header>
 
@@ -503,7 +499,6 @@ export default function CustomerDashboard({
                   variant="secondary"
                   fullWidth
                   icon={<Package className="w-5 h-5" />}
-                  className="!bg-slate-800 dark:!bg-white !text-white dark:!text-slate-900 hover:!bg-slate-700 dark:hover:!bg-slate-100 shadow-md"
                 >
                   Download PDF Invoice
                 </Button>
@@ -533,7 +528,7 @@ export default function CustomerDashboard({
               setSelectedRestaurant={setSelectedRestaurant}
               deliveryPricing={deliveryPricing}
               cartRestaurant={cartRestaurant}
-              getCartTotal={getCartTotal}
+              getCartTotal={getCartTotal} cart={cart} cartRestaurant={cartRestaurant || selectedRestaurant} address={address}
               isDeliveryAvailable={isDeliveryAvailable}
               brandOutlets={brandOutlets}
               setIsOutletSelectorOpen={setIsOutletSelectorOpen}
@@ -596,9 +591,9 @@ export default function CustomerDashboard({
         <div className="fixed bottom-4 left-4 right-4 z-40 max-w-[380px] mx-auto">
           <Button
             onClick={() => setIsCartOpen(true)}
-            variant="primary"
+            variant="warning"
             fullWidth
-            className="!bg-gradient-to-r from-orange-500 to-amber-500 !text-white !py-4 !rounded-2xl shadow-2xl justify-between border border-white/20 !border-solid"
+            className="justify-between !py-4 !rounded-2xl shadow-2xl border border-white/20 !border-solid"
           >
             <div className="flex items-center gap-2">
               <ShoppingBag className="w-5 h-5" />
@@ -647,7 +642,7 @@ export default function CustomerDashboard({
         cart={cart}
         removeFromCart={removeFromCart}
         addToCart={addToCart}
-        getCartTotal={getCartTotal}
+        getCartTotal={getCartTotal} cart={cart} cartRestaurant={cartRestaurant || selectedRestaurant} address={address}
         restaurantName={(cartRestaurant || selectedRestaurant)?.name || ''}
         restaurantId={(cartRestaurant || selectedRestaurant)?.id || ''}
         subtotal={getCartTotal().subtotal}
@@ -660,7 +655,7 @@ export default function CustomerDashboard({
         isPaymentModalOpen={isPaymentModalOpen}
         setIsPaymentModalOpen={setIsPaymentModalOpen}
         paymentStatus={paymentStatus}
-        getCartTotal={getCartTotal}
+        getCartTotal={getCartTotal} cart={cart} cartRestaurant={cartRestaurant || selectedRestaurant} address={address}
         processPaymentAndOrder={processPaymentAndOrder}
       />
 
@@ -689,7 +684,6 @@ export default function CustomerDashboard({
                 onClick={() => setShowLocationPrompt(false)}
                 variant="primary"
                 fullWidth
-                className="!bg-indigo-600 hover:!bg-indigo-700 !border-none"
               >
                 Understood
               </Button>

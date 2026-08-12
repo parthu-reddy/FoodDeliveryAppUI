@@ -62,7 +62,7 @@ export default function CustomerRestaurantCard({ restaurant, isLast, lastElement
         cardRef.current = node;
       }}
       onClick={handleCardClick}
-      className={`group flex flex-col rounded-3xl transition-all duration-300 border backdrop-blur-xl relative overflow-hidden cursor-pointer shadow-lg hover:-translate-y-1.5 bg-white/12 hover:bg-white/20 border-white/30 shadow-[0_15px_35px_rgba(0,0,0,0.06)] ${restaurant.isSponsored ? 'hover:shadow-[0_0_15px_rgba(234,179,8,0.5)] dark:hover:shadow-[0_0_15px_rgba(234,179,8,0.6)] border-amber-400/40 hover:border-amber-400/60' : 'hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 dark:border-rose-500/30'} transition-all dark:bg-slate-900/20 dark:hover:bg-slate-900/20 dark:shadow-[0_15px_35px_rgba(0,0,0,0.35)] text-left`}
+      className={`group flex flex-col transition-all duration-300 relative overflow-hidden cursor-pointer hover:-translate-y-1.5 glass-card ${restaurant.isSponsored ? 'hover:shadow-[0_0_15px_rgba(234,179,8,0.5)] border-amber-400/40 hover:border-amber-400/60' : 'hover:shadow-[0_0_12px_rgba(255,255,255,0.4)] hover:border-white/50'} text-left`}
     >
       <div className="h-44 w-full relative overflow-hidden bg-transparent">
         <ImageLoader

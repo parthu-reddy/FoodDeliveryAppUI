@@ -22,7 +22,7 @@ export default function ActiveDeliveryCard({
   handlePickUpFood
 }: ActiveDeliveryCardProps) {
   return (
-    <div className="bg-white/20 dark:bg-slate-900/20 backdrop-blur-xl border border-rose-500/20 rounded-3xl p-5 shadow-[0_8px_32px_rgba(251,146,60,0.05)] space-y-4">
+    <div className="glass-card rounded-3xl p-5 space-y-4">
       <div className="space-y-1">
         <h5 className="font-bold text-sm text-slate-400 font-mono tracking-wider">NAVIGATIONAL STEPS</h5>
         <p className="text-base font-bold text-slate-900 dark:text-[#f0ede6]">
@@ -65,13 +65,13 @@ export default function ActiveDeliveryCard({
               <label className="text-xs font-bold text-slate-400 tracking-wider font-mono flex items-center gap-1.5">
                 <KeyRound className="w-4 h-4 text-amber-500" /> RESTAURANT HANDOVER OTP
               </label>
-              <div className="flex bg-white/20 border border-rose-500/20 rounded-2xl overflow-hidden focus-within:border-amber-500">
+              <div className="flex rounded-2xl overflow-hidden">
                 <input
                   type="password"
                   value={enteredPickupOtp}
                   onChange={(e) => setEnteredPickupOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
                   placeholder="Enter 6-digit pickup OTP"
-                  className="flex-1 px-4 py-3 bg-transparent text-slate-800 dark:text-[#f0ede6] outline-none font-mono text-center tracking-widest text-sm"
+                  className="glass-input flex-1 px-4 py-3 outline-none font-mono text-center tracking-widest text-sm"
                   required
                 />
               </div>

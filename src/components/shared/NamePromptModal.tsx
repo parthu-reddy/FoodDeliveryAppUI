@@ -50,7 +50,6 @@ export default function NamePromptModal({ theme, onSubmit }: NamePromptModalProp
       onClose={() => {}}
       size="sm"
       header={header}
-      className={theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}
     >
       <div className="p-6 pt-2">
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -103,13 +102,7 @@ export default function NamePromptModal({ theme, onSubmit }: NamePromptModalProp
             </div>
           </FormField>
 
-          <Button
-            type="submit"
-            variant="primary"
-            fullWidth
-            className="!bg-orange-500 hover:!bg-orange-600 mt-4"
-            icon={<Check className="w-4 h-4" />}
-          >
+          <Button type="submit" variant="warning" fullWidth className="mt-4" icon={<Check className="w-4 h-4" />}>
             Continue
           </Button>
         </form>

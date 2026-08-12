@@ -70,9 +70,9 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
         initial={{ opacity: 0, y: 20, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-        className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 flex flex-col max-h-[85vh]"
+        className="w-full max-w-2xl glass-panel rounded-3xl shadow-2xl overflow-hidden border border-white/50 dark:border-white/10 flex flex-col max-h-[85vh]"
       >
-        <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md z-10">
+        <div className="p-4 sm:p-6 border-b border-white/20 dark:border-white/10 flex items-center justify-between sticky top-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md z-10">
           <div>
             <h2 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
               <Clock className="w-5 h-5 text-indigo-500" />
@@ -82,7 +82,7 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
           </div>
           <button 
             onClick={onClose}
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-white/50 dark:bg-slate-800/50 text-slate-500 hover:bg-white/80 dark:hover:bg-slate-700 transition-colors backdrop-blur-sm"
           >
             <X className="w-5 h-5" />
           </button>
@@ -92,10 +92,10 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-12">
               <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-500 rounded-full animate-spin"></div>
-              <p className="mt-4 text-sm font-medium text-slate-500">Loading your history...</p>
+              <p className="mt-4 text-sm font-medium text-slate-500 dark:text-slate-400">Loading your history...</p>
             </div>
           ) : error ? (
-            <div className="bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 p-6 rounded-2xl flex flex-col items-center text-center">
+            <div className="bg-red-50/80 dark:bg-red-500/10 text-red-600 dark:text-red-400 p-6 rounded-2xl flex flex-col items-center text-center backdrop-blur-sm border border-red-200 dark:border-red-500/20">
               <AlertCircle className="w-10 h-10 mb-2" />
               <h3 className="font-bold">Oops!</h3>
               <p className="text-sm">{error}</p>
@@ -108,11 +108,11 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
             />
           ) : (
             orders.map(order => (
-              <div key={order.id} className="border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-col gap-3 hover:border-indigo-300 dark:hover:border-indigo-500/50 transition-colors">
+              <div key={order.id} className="border border-white/40 dark:border-white/10 bg-white/20 dark:bg-black/10 backdrop-blur-sm rounded-2xl p-4 flex flex-col gap-3 hover:border-indigo-300 dark:hover:border-indigo-500/50 transition-colors shadow-sm">
                 <div className="flex justify-between items-start">
                   <div>
                     <h4 className="font-bold text-slate-800 dark:text-white">{order.restaurantName}</h4>
-                    <span className="text-[10px] text-slate-500 font-mono mt-0.5 block">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono mt-0.5 block">
                       {new Date(order.createdAt || '').toLocaleString()}
                     </span>
                   </div>
@@ -123,20 +123,20 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
                   </div>
                 </div>
 
-                <div className="text-sm text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3">
+                <div className="text-sm text-slate-700 dark:text-slate-300 bg-white/40 dark:bg-white/5 rounded-xl p-3 border border-white/20 dark:border-white/5">
                   {order.items?.map((item: any, idx: number) => (
                     <div key={idx} className="flex gap-2">
-                      <span className="font-semibold">{item.quantity || 1}x</span>
+                      <span className="font-semibold text-indigo-600 dark:text-indigo-400">{item.quantity || 1}x</span>
                       <span className="truncate">{item.item?.name || item.name || 'Item'}</span>
                     </div>
                   ))}
                 </div>
 
-                <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 mt-1">
-                  <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider uppercase ${
+                <div className="flex items-center justify-between pt-2 border-t border-white/30 dark:border-white/10 mt-1">
+                  <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider uppercase border ${
                     order.status === OrderStatus.CANCELLED || order.status === OrderStatus.CANCELLED_BY_RESTAURANT 
-                      ? 'bg-rose-50 dark:bg-rose-500/10 text-rose-600'
-                      : 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600'
+                      ? 'bg-rose-50/80 dark:bg-rose-500/10 text-rose-600 border-rose-200 dark:border-rose-500/20'
+                      : 'bg-emerald-50/80 dark:bg-emerald-500/10 text-emerald-600 border-emerald-200 dark:border-emerald-500/20'
                   }`}>
                     {getFriendlyStatusMessage(order.status, order.deliveryStatus)}
                   </span>
