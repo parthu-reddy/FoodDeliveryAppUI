@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   DollarSign, Clock, User, MapPin, Bike, XCircle, Check, Send, 
-  Flame, CheckCircle2, MessageSquare, RefreshCw
+  Flame, CheckCircle2, MessageSquare, RefreshCw, KeyRound, Receipt
 } from 'lucide-react';
 import { Order, OrderStatus } from '../../types';
 import { Button, Badge, Input, FormField } from '../ui';
+import { RestaurantOrderDetailsModal } from './RestaurantOrderDetailsModal';
 
 // Utility
 const getFriendlyDeliveryStatusMessage = (status: string | undefined): string => {
@@ -59,7 +60,9 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
 }) => {
   // Local state for modals to avoid global record bloat in parent
   const [activeModal, setActiveModal] = useState<'none' | 'cancel' | 'delay' | 'refund'>('none');
+  const [showDetails, setShowDetails] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showOtp, setShowOtp] = useState(false);
   
   React.useEffect(() => {
     setIsSubmitting(false);
@@ -105,7 +108,7 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
 
   return (
     <motion.div 
-      layoutId={`card-${order.id}`}
+      layoutId={`card-₹{order.id}`}
       className={`glass-card p-4 space-y-3.5 relative overflow-hidden transition-all ${styles.bg} ${styles.ring}`}
     >
       <div className="flex justify-between items-start">
@@ -182,7 +185,7 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
               <span className="text-slate-600 dark:text-[#f0ede6] font-medium">
                 <span className="font-mono text-orange-500 font-bold pr-1">{cartItem.quantity || 1}x</span> {cartItem.item?.name || cartItem.name || 'Item'}
               </span>
-              <span className="text-slate-400 dark:text-slate-300 font-mono">${((cartItem.item?.price || cartItem.price || 0) * (cartItem.quantity || 1)).toFixed(2)}</span>
+              <span className="text-slate-400 dark:text-slate-300 font-mono">₹{((cartItem.item?.price || cartItem.price || 0) * (cartItem.quantity || 1)).toFixed(2)}</span>
             </div>
           ))}
         </div>
@@ -195,45 +198,78 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
         </div>
       )}
 
-      <div className="pt-2.5 border-t border-rose-500/20 dark:border-rose-500/30 flex flex-col gap-2">
-        <div className="flex items-center justify-between gap-3">
-          <div>
+    <div className="pt-2.5 border-t border-rose-500/20 dark:border-rose-500/30 flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
             <span className="text-[9px] text-slate-400 dark:text-slate-300 uppercase font-mono block">Order Value</span>
-            <span className="text-xs font-bold text-slate-850 dark:text-[#f0ede6] font-mono">${order.total?.toFixed(2)}</span>
+            <span className="text-xs font-bold text-slate-850 dark:text-[#f0ede6] font-mono">₹{order.total?.toFixed(2) || '0.00'}</span>
+          </div>
+          {order.foodCost !== undefined && (
+            <div className="space-y-1">
+              <span className="text-[9px] text-slate-400 dark:text-slate-300 uppercase font-mono block">Food Cost</span>
+              <span className="text-xs font-bold text-slate-850 dark:text-[#f0ede6] font-mono">₹{order.foodCost.toFixed(2)}</span>
+            </div>
+          )}
+          {order.restaurantPlatformFee !== undefined && order.restaurantPlatformFee > 0 && (
+            <div className="space-y-1">
+              <span className="text-[9px] text-slate-400 dark:text-slate-300 uppercase font-mono block">Platform Fee</span>
+              <span className="text-xs font-bold text-rose-500 font-mono">-₹{order.restaurantPlatformFee.toFixed(2)}</span>
+            </div>
+          )}
+          <div className="space-y-1">
+            <span className="text-[9px] text-slate-400 dark:text-slate-300 uppercase font-mono block">Your Payout</span>
+            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+              ₹{order.restaurantPayout !== undefined ? order.restaurantPayout.toFixed(2) : (order.total || 0).toFixed(2)}
+            </span>
           </div>
 
           <div className="flex gap-2">
+            {isNewPlaced && (
+               <Button
+                 variant="secondary"
+                 size="sm"
+                 icon={<Clock className="w-3.5 h-3.5" />}
+                 onClick={() => setActiveModal(activeModal === 'delay' ? 'none' : 'delay')}
+               />
+            )}
+            
+            
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<MessageSquare className="w-3 h-3 text-blue-500" />}
+              onClick={() => setSelectedChatOrder(order)}
+            />
+            
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<Receipt className="w-3.5 h-3.5 text-emerald-500" />}
+              onClick={() => setShowDetails(true)}
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-1.5 pt-1.5">
             {!isBeingDelivered && (
               <Button
                 variant="danger"
-                size="md"
-                className="px-3"
-                icon={<XCircle className="w-4 h-4" />}
+                size="sm"
+                className="flex-1 shadow-none bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 border-red-500/20"
+                icon={<XCircle className="w-3.5 h-3.5" />}
                 onClick={() => setActiveModal(activeModal === 'cancel' ? 'none' : 'cancel')}
               >
                 Cancel
               </Button>
             )}
 
-            {(isCooking || isPrepared || isRequestedDelay) && (
-              <Button
-                variant="primary"
-                size="md"
-                className="px-3"
-                icon={<DollarSign className="w-4 h-4" />}
-                onClick={() => setActiveModal(activeModal === 'refund' ? 'none' : 'refund')}
-              >
-                Refund
-              </Button>
-            )}
-
             {isNewPlaced && (
               <Button
                 variant="warning"
-                size="md"
-                className="flex-1"
+                size="sm"
+                className="flex-[2] shadow-sm"
                 disabled={isSubmitting}
-                icon={isSubmitting ? <RefreshCw className="w-4 h-4 shrink-0 animate-spin" /> : <Check className="w-4 h-4 shrink-0" />}
+                icon={isSubmitting ? <RefreshCw className="w-3.5 h-3.5 shrink-0 animate-spin" /> : <Check className="w-3.5 h-3.5 shrink-0" />}
                 onClick={() => {
                   setIsSubmitting(true);
                   handleStatusTransition(order);
@@ -248,10 +284,10 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
                 {order.status === OrderStatus.ACCEPTED as any ? (
                   <Button
                     variant="warning"
-                    size="md"
-                    className="flex-1"
+                    size="sm"
+                    className="flex-[2] shadow-sm"
                     disabled={isSubmitting}
-                    icon={isSubmitting ? <RefreshCw className="w-4 h-4 shrink-0 animate-spin" /> : undefined}
+                    icon={isSubmitting ? <RefreshCw className="w-3.5 h-3.5 shrink-0 animate-spin" /> : undefined}
                     onClick={() => {
                       setIsSubmitting(true);
                       handleStatusTransition(order);
@@ -261,11 +297,11 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
                   </Button>
                 ) : (
                   <Button
-                    variant="danger"
-                    size="md"
-                    className="flex-1"
+                    variant="success"
+                    size="sm"
+                    className="flex-[2] shadow-sm bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
                     disabled={isSubmitting}
-                    icon={isSubmitting ? <RefreshCw className="w-4 h-4 shrink-0 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                    icon={isSubmitting ? <RefreshCw className="w-3.5 h-3.5 shrink-0 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
                     onClick={() => {
                       setIsSubmitting(true);
                       handleStatusTransition(order);
@@ -281,29 +317,22 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
               <Button
                 variant="primary"
                 size="sm"
-                className="flex-1"
-                onClick={() => handleStatusTransition(order)}
+                className="flex-[2] shadow-sm"
+                icon={!showOtp ? <KeyRound className="w-3.5 h-3.5" /> : undefined}
+                onClick={() => {
+                  setShowOtp(true);
+                  setTimeout(() => setShowOtp(false), 6000);
+                }}
               >
-                Handover to Courier
+                {showOtp ? (
+                  <span className="font-mono tracking-widest text-base">
+                    {order.pickupOtp || 'N/A'}
+                  </span>
+                ) : (
+                  'Show Handover OTP'
+                )}
               </Button>
             )}
-
-            {isNewPlaced && (
-               <Button
-                 variant="secondary"
-                 size="sm"
-                 icon={<Clock className="w-3.5 h-3.5" />}
-                 onClick={() => setActiveModal(activeModal === 'delay' ? 'none' : 'delay')}
-               />
-            )}
-            
-            <Button
-              variant="secondary"
-              size="sm"
-              icon={<MessageSquare className="w-3 h-3 text-blue-500" />}
-              onClick={() => setSelectedChatOrder(order)}
-            />
-          </div>
         </div>
 
         {/* Drawers */}
@@ -330,7 +359,7 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
 
         {activeModal === 'refund' && (
           <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-xl border border-blue-200 dark:border-blue-900/50 space-y-2 animate-in slide-in-from-top-2 duration-200">
-            <FormField label="Refund Amount ($)">
+            <FormField label="Refund Amount (₹)">
               <Input 
                 type="number" 
                 placeholder="0.00"
@@ -408,8 +437,13 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
             </motion.div>
           )}
         </AnimatePresence>
-
       </div>
+
+      <RestaurantOrderDetailsModal
+        order={order}
+        isOpen={showDetails}
+        onClose={() => setShowDetails(false)}
+      />
     </motion.div>
   );
 };

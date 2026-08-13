@@ -96,22 +96,22 @@ export function TransactionHistoryTable({
                             return (
                               <div className="mt-2 space-y-1 text-[11px] text-slate-600 border-t border-slate-100 pt-1">
                                 {meta.subtotal && (
-                                  <div className="flex justify-between w-40"><span>Subtotal:</span><span className="font-medium">${meta.subtotal.toFixed(2)}</span></div>
+                                  <div className="flex justify-between w-40"><span>Subtotal:</span><span className="font-medium">₹{meta.subtotal.toFixed(2)}</span></div>
                                 )}
                                 {meta.platformFee && (
-                                  <div className="flex justify-between w-40"><span>Platform Fee:</span><span className="font-medium text-rose-500">-${meta.platformFee.toFixed(2)}</span></div>
+                                  <div className="flex justify-between w-40"><span>Platform Fee:</span><span className="font-medium text-rose-500">-₹{meta.platformFee.toFixed(2)}</span></div>
                                 )}
                                 {meta.netEarnings && (
-                                  <div className="flex justify-between w-40"><span>Net Earnings:</span><span className="font-medium text-emerald-600">${meta.netEarnings.toFixed(2)}</span></div>
+                                  <div className="flex justify-between w-40"><span>Net Earnings:</span><span className="font-medium text-emerald-600">₹{meta.netEarnings.toFixed(2)}</span></div>
                                 )}
                                 {meta.distanceFee && (
-                                  <div className="flex justify-between w-40"><span>Distance Fee:</span><span className="font-medium">${meta.distanceFee.toFixed(2)}</span></div>
+                                  <div className="flex justify-between w-40"><span>Distance Fee:</span><span className="font-medium">₹{meta.distanceFee.toFixed(2)}</span></div>
                                 )}
                                 {meta.tipAmount && (
-                                  <div className="flex justify-between w-40"><span>Tips:</span><span className="font-medium text-emerald-600">+${meta.tipAmount.toFixed(2)}</span></div>
+                                  <div className="flex justify-between w-40"><span>Tips:</span><span className="font-medium text-emerald-600">+₹{meta.tipAmount.toFixed(2)}</span></div>
                                 )}
                                 {meta.totalEarnings && (
-                                  <div className="flex justify-between w-40"><span>Total Earnings:</span><span className="font-medium text-emerald-600">${meta.totalEarnings.toFixed(2)}</span></div>
+                                  <div className="flex justify-between w-40"><span>Total Earnings:</span><span className="font-medium text-emerald-600">₹{meta.totalEarnings.toFixed(2)}</span></div>
                                 )}
                               </div>
                             );

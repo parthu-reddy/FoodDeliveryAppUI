@@ -1,21 +1,15 @@
-import React from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, MapPinOff, AlertCircle } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'motion/react';
 import CustomerRestaurantCard from './CustomerRestaurantCard';
 import { EmptyState } from '../shared/EmptyState';
 import { Button } from '../ui';
+import { useDebounce } from '../../hooks/useDebounce';
 
 interface CustomerRestaurantBrowserProps {
   categories: string[];
-  selectedCategory: string | null;
-  setSelectedCategory: (cat: string | null) => void;
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
   restaurants: any[];
-  filteredRestaurants: any[];
   isRestaurantsLoading: boolean;
-  visibleCount: number;
-  lastElementRef: (node: any) => void;
   setIsAddressSelectorOpen: (isOpen: boolean) => void;
   setSelectedRestaurant: (restaurant: any) => void;
   onAddApiLog?: (log: any) => void;
@@ -23,19 +17,40 @@ interface CustomerRestaurantBrowserProps {
 
 export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps> = ({
   categories,
-  selectedCategory,
-  setSelectedCategory,
-  searchQuery,
-  setSearchQuery,
   restaurants,
-  filteredRestaurants,
   isRestaurantsLoading,
-  visibleCount,
-  lastElementRef,
   setIsAddressSelectorOpen,
   setSelectedRestaurant,
   onAddApiLog
 }) => {
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  const [visibleCount, setVisibleCount] = useState(6);
+
+  useEffect(() => {
+    setVisibleCount(6);
+  }, [debouncedSearchQuery, selectedCategory, restaurants]);
+
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const lastElementRef = useCallback((node: any) => {
+    if (observerRef.current) observerRef.current.disconnect();
+    observerRef.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) {
+        setVisibleCount(prev => prev + 6);
+      }
+    });
+    if (node) observerRef.current.observe(node);
+  }, []);
+
+  const filteredRestaurants = restaurants.filter(restaurant => {
+    const matchesSearch = (restaurant.name || '').toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+                          (restaurant.cuisine || '').toLowerCase().includes(debouncedSearchQuery.toLowerCase());
+    const matchesCategory = !selectedCategory || selectedCategory === 'All' || 
+                            (restaurant.tags || []).includes(selectedCategory);
+    return matchesSearch && matchesCategory;
+  });
+
   return (
     <motion.div
       key="feed"

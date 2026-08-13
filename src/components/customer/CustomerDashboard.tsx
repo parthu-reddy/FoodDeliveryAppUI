@@ -21,8 +21,9 @@ import { CustomerRestaurantBrowser } from './CustomerRestaurantBrowser';
 import { CustomerMenuView } from './CustomerMenuView';
 import { CustomerOrderTracker } from './CustomerOrderTracker';
 import CustomerActiveOrdersCarousel from './CustomerActiveOrdersCarousel';
-import { CustomerOrderHistory } from './CustomerOrderHistory';
+import { CustomerFreeDeliveryTracker } from './CustomerFreeDeliveryTracker';
 import { ErrorBoundary } from '../shared/ErrorBoundary';
+import { DashboardHeader } from './DashboardHeader';
 
 import CustomerCartDrawer from './CustomerCartDrawer';
 import SharedSettingsView from '../shared/SharedSettingsView';
@@ -83,7 +84,6 @@ export default function CustomerDashboard({
   const onPlaceOrder = externalPlaceOrder ?? ((order: Order) => {
     setInternalOrders(prev => [...prev, order]);
   });
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [brandOutlets, setBrandOutlets] = useState<Restaurant[]>([]);
   const [effectiveMenu, setEffectiveMenu] = useState<MenuItem[]>([]);
@@ -101,7 +101,7 @@ export default function CustomerDashboard({
   }, [address, deliveryLat, deliveryLng, deliveryAddressId]);
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
   const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
 
   // Fetch profile and addresses
@@ -181,38 +181,109 @@ export default function CustomerDashboard({
     return () => { ignore = true; };
   }, [selectedRestaurant?.brandId, deliveryLat, deliveryLng]); // Only refetch outlets when brand changes
 
+  const locationKey = deliveryAddressId || address;
+
+  const {
+    carts,
+    isCartOpen,
+    setIsCartOpen,
+    isPaymentModalOpen,
+    setIsPaymentModalOpen,
+    paymentStatus,
+    globalError,
+    setGlobalError,
+    checkoutRestaurantId,
+    addToCart: originalAddToCart,
+    removeFromCart: originalRemoveFromCart,
+    getCartTotal: originalGetCartTotal,
+    handleCheckout,
+    processPaymentAndOrder: originalProcessPaymentAndOrder
+  } = useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTrackingOrder });
+
+  const addToCart = (item: MenuItem) => originalAddToCart(item, selectedRestaurant);
+  const removeFromCart = (itemId: string, restaurantId: string) => originalRemoveFromCart(itemId, restaurantId);
+  const getCartTotal = (restaurantId?: string) => {
+    const rId = restaurantId || selectedRestaurant?.id || '';
+    return originalGetCartTotal(rId, deliveryPricingMap[rId]);
+  };
+  
+  const processPaymentAndOrder = () => originalProcessPaymentAndOrder(deliveryAddressId, deliveryLat, deliveryLng, address, () => {
+    if (checkoutRestaurantId === selectedRestaurant?.id) {
+       setSelectedRestaurant(null);
+    }
+  });
+
+  const totalCartItems = Object.values(carts).reduce((sum, cart) => sum + cart.items.reduce((s, i) => s + i.quantity, 0), 0);
+  const activeCartCount = Object.keys(carts).length;
+
   const [isDeliveryAvailable, setIsDeliveryAvailable] = useState<boolean | null>(null);
-  const [deliveryPricing, setDeliveryPricing] = useState<{ minimumOrderForFreeDelivery: number, fixedPlatformFee: number, distanceKm: number } | null>(null);
+  const [deliveryPricingMap, setDeliveryPricingMap] = useState<Record<string, any>>({});
+
+  // Clear cached delivery pricing when the location changes to prevent stale fees
+  useEffect(() => {
+    setDeliveryPricingMap({});
+  }, [locationKey]);
 
   useEffect(() => {
     let ignore = false;
     const timeoutId = setTimeout(() => {
-        if (selectedRestaurant && deliveryAddressId) {
-          setDeliveryPricing(null);
-
+        if (!selectedRestaurant) return;
+        
+        if (deliveryAddressId) {
           apiGet(`/api/v1/restaurants/${selectedRestaurant.id}/delivery-pricing?addressId=${deliveryAddressId}`)
             .then(res => {
               if (!ignore && res.data) {
-                setDeliveryPricing(res.data);
+                setDeliveryPricingMap(prev => ({ ...prev, [selectedRestaurant.id]: res.data }));
               }
             })
             .catch((err: any) => {
-              if (err?.status === 429) {
-                // Rate limited — show a graceful message, don't swallow silently
-                setDeliveryPricing({ minimumOrderForFreeDelivery: 999999, fixedPlatformFee: 5.0, distanceKm: 0 });
-              } else {
-                console.error(err);
-              }
+              console.error(err);
             });
-        } else if (selectedRestaurant && deliveryLat && deliveryLng) {
+        } else if (deliveryLat && deliveryLng) {
+          // Fallback if no addressId is selected yet, we only know Haversine distance
           const rLat = Number((selectedRestaurant as any).lat || 0);
           const rLng = Number((selectedRestaurant as any).lng || 0);
           const distanceKm = calculateHaversineDistance(Number(deliveryLat), Number(deliveryLng), rLat, rLng);
-          setDeliveryPricing({ minimumOrderForFreeDelivery: 999999, fixedPlatformFee: 5.0, distanceKm });
+          // Without an address, we can't get exact delivery pricing from the new combined API,
+          // so we'll just set distance and defaults for now.
+          setDeliveryPricingMap(prev => ({
+            ...prev,
+            [selectedRestaurant.id]: {
+              distanceKm,
+              config: {
+                basePrice: 0,
+                perKmRate: 0,
+                restMaxContributionPercent: 0,
+                fixedPlatformFee: 0,
+                platformExcessCutPercent: 0,
+                sgstPercent: 0,
+                cgstPercent: 0
+              }
+            }
+          }));
         }
     }, 500); // 500ms debounce
     return () => { ignore = true; clearTimeout(timeoutId); };
   }, [selectedRestaurant?.id, deliveryAddressId, deliveryLat, deliveryLng]);
+
+  // Fetch delivery pricing for all active carts that don't have it cached yet
+  useEffect(() => {
+    if (!deliveryAddressId) return; // Only fetch actual pricing if we have a saved address
+    
+    const activeCartIds = Object.keys(carts);
+    activeCartIds.forEach(cartId => {
+      if (!deliveryPricingMap[cartId] && cartId !== selectedRestaurant?.id) {
+        apiGet(`/api/v1/restaurants/${cartId}/delivery-pricing?addressId=${deliveryAddressId}`)
+          .then(res => {
+            if (res.data) {
+              setDeliveryPricingMap(prev => ({ ...prev, [cartId]: res.data }));
+            }
+          })
+          .catch(err => console.error(`Failed to fetch pricing for background cart ${cartId}`, err));
+      }
+    });
+  }, [carts, deliveryAddressId, deliveryPricingMap, selectedRestaurant?.id]);
+
 
   useEffect(() => {
     let ignore = false;
@@ -236,32 +307,6 @@ export default function CustomerDashboard({
     }
   }, []);
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const debouncedSearchQuery = useDebounce(searchQuery, 300);
-
-  const {
-    cart,
-    cartRestaurant,
-    isCartOpen,
-    setIsCartOpen,
-    isPaymentModalOpen,
-    setIsPaymentModalOpen,
-    paymentStatus,
-    globalError,
-    setGlobalError,
-    addToCart: originalAddToCart,
-    removeFromCart,
-    getCartTotal: originalGetCartTotal,
-    handleCheckout: originalHandleCheckout,
-    processPaymentAndOrder: originalProcessPaymentAndOrder
-  } = useCustomerCart({ onAddApiLog, onPlaceOrder, setTrackingOrder });
-
-  const addToCart = (item: MenuItem) => originalAddToCart(item, selectedRestaurant);
-  const getCartTotal = () => originalGetCartTotal(selectedRestaurant, deliveryPricing);
-  const handleCheckout = () => originalHandleCheckout(selectedRestaurant);
-  const processPaymentAndOrder = () => originalProcessPaymentAndOrder(selectedRestaurant, deliveryAddressId, deliveryLat, deliveryLng, address, () => setSelectedRestaurant(null));
-
-
 
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [isAddressSelectorOpen, setIsAddressSelectorOpen] = useState(false);
@@ -292,32 +337,6 @@ export default function CustomerDashboard({
   // Categories
   const categories = ['All', 'Burgers', 'Pizza', 'Sushi', 'Salads', 'Desserts'];
 
-  // Filter restaurants
-  const filteredRestaurants = restaurants.filter(restaurant => {
-    const matchesSearch = (restaurant.name || '').toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-                          (restaurant.cuisine || '').toLowerCase().includes(debouncedSearchQuery.toLowerCase());
-    const matchesCategory = !selectedCategory || selectedCategory === 'All' || 
-                            (restaurant.tags || []).includes(selectedCategory);
-    return matchesSearch && matchesCategory;
-  });
-
-  const [visibleCount, setVisibleCount] = useState(6);
-
-  useEffect(() => {
-    setVisibleCount(6);
-  }, [debouncedSearchQuery, selectedCategory, restaurants]);
-
-  const observerRef = React.useRef<IntersectionObserver | null>(null);
-  const lastElementRef = React.useCallback((node: any) => {
-    if (observerRef.current) observerRef.current.disconnect();
-    observerRef.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting) {
-        setVisibleCount(prev => prev + 6);
-      }
-    });
-    if (node) observerRef.current.observe(node);
-  }, []);
-
   return (
     <div className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-y-auto overflow-x-hidden min-h-0 bg-transparent text-slate-800 dark:text-[#f0ede6] h-full pb-20">
       <CallOverlay />
@@ -339,55 +358,12 @@ export default function CustomerDashboard({
         </AnimatePresence>
 
       {/* 1. Header Area */}
-      <header className="sticky top-0 bg-white/20 dark:bg-white/5 backdrop-blur-xl px-5 py-3 flex items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 z-30 shrink-0 shadow-[0_2px_15px_rgba(0,0,0,0.01)] gap-3">
-        <div className="flex items-center gap-2 sm:gap-3.5 flex-1 min-w-0">
-          <LaBouffeLogo showText={false} iconSize="w-8 h-8 shrink-0" textColorClass="text-slate-800 dark:text-[#f0ede6] text-xs" subColorClass="text-rose-500 text-[8px]" />
-          <div className="flex h-6 w-[1px] bg-slate-200 dark:bg-slate-800 shrink-0" />
-          <button 
-            onClick={() => {
-              setIsAddressSelectorOpen(true);
-            }}
-            className="flex items-center gap-2 min-w-0 flex-1 hover:bg-slate-50 dark:hover:bg-slate-900/20 p-1.5 -ml-1.5 rounded-2xl transition-colors cursor-pointer text-left"
-          >
-            <div className="w-8 h-8 shrink-0 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500">
-              <MapPin className="w-4 h-4 animate-pulse" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <span className="text-[9px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-300 block truncate">Deliver to</span>
-              <span className="text-xs font-bold truncate block w-full">{address}</span>
-            </div>
-            <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-300 shrink-0" />
-          </button>
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            onClick={() => setIsHistoryOpen(true)}
-            className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6] transition-all cursor-pointer"
-            title="Order History"
-          >
-            <Clock className="w-4 h-4 text-slate-500" />
-          </button>
-          <button
-            onClick={() => view === 'settings' ? setView('home') : setView('settings')}
-            className={`p-2.5 rounded-xl transition-all cursor-pointer ${
-              view === 'settings' 
-                ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 shadow-sm shadow-indigo-500/10' 
-                : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6]'
-            }`}
-            title="Profile Settings"
-          >
-            <User className="w-4 h-4 text-indigo-500" />
-          </button>
-          <button
-            onClick={toggleTheme}
-            className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6] transition-all cursor-pointer"
-            title="Toggle Light/Dark Mode"
-          >
-            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
-          </button>
-        </div>
-      </header>
+      <DashboardHeader 
+        address={address} 
+        view={view} 
+        setView={setView} 
+        setIsAddressSelectorOpen={setIsAddressSelectorOpen} 
+      />
 
       {view === 'settings' ? (
         <SharedSettingsView
@@ -463,28 +439,32 @@ export default function CustomerDashboard({
                   {currentTrackingOrder.items.map((item: any, idx: number) => (
                     <div key={item.item?.id || idx} className="flex justify-between text-sm text-slate-600 dark:text-slate-300">
                       <span>{item.quantity || 1}x {item.item?.name || item.name || 'Item'}</span>
-                      <span>${((item.item?.price || item.price || 0) * (item.quantity || 1)).toFixed(2)}</span>
+                      <span>₹{((item.item?.price || item.price || 0) * (item.quantity || 1)).toFixed(2)}</span>
                     </div>
                   ))}
                   <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300 pt-3 border-t border-slate-200 dark:border-slate-800">
                     <span>Subtotal</span>
-                    <span>${(currentTrackingOrder.itemTotal || currentTrackingOrder.subtotal || 0).toFixed(2)}</span>
+                    <span>₹{(currentTrackingOrder.itemTotal || currentTrackingOrder.subtotal || 0).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300">
                     <span>SGST (2.5%)</span>
-                    <span>${(currentTrackingOrder.sgst || 0).toFixed(2)}</span>
+                    <span>₹{(currentTrackingOrder.sgst || 0).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300">
                     <span>CGST (2.5%)</span>
-                    <span>${(currentTrackingOrder.cgst || 0).toFixed(2)}</span>
+                    <span>₹{(currentTrackingOrder.cgst || 0).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300">
                     <span>Delivery Fee</span>
-                    <span>${(currentTrackingOrder.deliveryFee || 0).toFixed(2)}</span>
+                    <span>₹{(currentTrackingOrder.deliveryFee || 0).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300">
+                    <span>Platform Fee</span>
+                    <span>₹{(currentTrackingOrder.customerPlatformFee || 0).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-lg font-black text-slate-900 dark:text-[#f0ede6] pt-2 border-t border-slate-200 dark:border-slate-800 mt-2">
                     <span>Total Paid</span>
-                    <span>${(currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0).toFixed(2)}</span>
+                    <span>₹{(currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mt-1">
                     <span>Payment Method</span>
@@ -502,6 +482,21 @@ export default function CustomerDashboard({
                 >
                   Download PDF Invoice
                 </Button>
+                
+                {/* Report Issue / Request Refund Button */}
+                {!currentTrackingOrder.refundedAmount && (
+                  <Button 
+                    onClick={() => {
+                      setGlobalError('Issue reported to support. Our team will contact you shortly regarding a refund.');
+                      setTimeout(() => setGlobalError(null), 3000);
+                    }}
+                    variant="outline"
+                    className="text-rose-500 border-rose-500/30 hover:bg-rose-50 dark:hover:bg-rose-500/10 mt-3"
+                    fullWidth
+                  >
+                    Report Issue / Request Refund
+                  </Button>
+                )}
               </div>
             </motion.div>
           ) : (
@@ -522,37 +517,37 @@ export default function CustomerDashboard({
           )
         ) : selectedRestaurant ? (
           /* ------------------- RESTAURANT DETAIL & MENU ------------------- */
-          <ErrorBoundary fallbackLabel="Menu View">
+          <>
+            <CustomerFreeDeliveryTracker
+              carts={carts}
+              getCartTotal={getCartTotal}
+              deliveryPricing={selectedRestaurant ? deliveryPricingMap[selectedRestaurant.id] : null}
+              selectedRestaurantId={selectedRestaurant?.id}
+            />
+            <ErrorBoundary fallbackLabel="Menu View">
             <CustomerMenuView
               selectedRestaurant={selectedRestaurant}
               setSelectedRestaurant={setSelectedRestaurant}
-              deliveryPricing={deliveryPricing}
-              cartRestaurant={cartRestaurant}
-              getCartTotal={getCartTotal} cart={cart} cartRestaurant={cartRestaurant || selectedRestaurant} address={address}
+              deliveryPricing={selectedRestaurant ? deliveryPricingMap[selectedRestaurant.id] : null}
+              carts={carts}
+              getCartTotal={getCartTotal}
               isDeliveryAvailable={isDeliveryAvailable}
               brandOutlets={brandOutlets}
               setIsOutletSelectorOpen={setIsOutletSelectorOpen}
               isMenuLoading={isMenuLoading}
               effectiveMenu={effectiveMenu}
-              cart={cart}
               addToCart={addToCart}
               removeFromCart={removeFromCart}
             />
-          </ErrorBoundary>
+            </ErrorBoundary>
+          </>
         ) : (
           /* ------------------- MAIN RESTAURANT FEED ------------------- */
           <ErrorBoundary fallbackLabel="Restaurant Feed">
             <CustomerRestaurantBrowser
               categories={categories}
-              selectedCategory={selectedCategory}
-              setSelectedCategory={setSelectedCategory}
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
               restaurants={restaurants}
-              filteredRestaurants={filteredRestaurants}
               isRestaurantsLoading={isRestaurantsLoading}
-              visibleCount={visibleCount}
-              lastElementRef={lastElementRef}
               setIsAddressSelectorOpen={setIsAddressSelectorOpen}
               setSelectedRestaurant={setSelectedRestaurant}
               onAddApiLog={onAddApiLog}
@@ -580,27 +575,27 @@ export default function CustomerDashboard({
         activeOrders={activeOrders}
         isActiveOrder={isActiveOrder}
         trackingOrder={trackingOrder}
-        cartLength={cart.length}
+        cartLength={totalCartItems}
         selectedRestaurantId={selectedRestaurant?.id}
-        cartRestaurantId={cartRestaurant?.id}
+        cartRestaurantId={selectedRestaurant?.id && carts[selectedRestaurant.id]?.items.length > 0 ? selectedRestaurant.id : Object.keys(carts).find(id => carts[id]?.items.length > 0)}
         setTrackingOrder={setTrackingOrder}
       />
 
       {/* Floating Cart bar at bottom */}
-      {cart.length > 0 && (!selectedRestaurant || cartRestaurant?.id === selectedRestaurant.id) && (
+      {totalCartItems > 0 && (
         <div className="fixed bottom-4 left-4 right-4 z-40 max-w-[380px] mx-auto">
           <Button
             onClick={() => setIsCartOpen(true)}
             variant="warning"
             fullWidth
-            className="justify-between !py-4 !rounded-2xl shadow-2xl border border-white/20 !border-solid"
+            className="justify-between !py-4 !rounded-2xl shadow-2xl border border-white/20 !border-solid bg-orange-500/90 backdrop-blur-md"
           >
             <div className="flex items-center gap-2">
               <ShoppingBag className="w-5 h-5" />
-              <span>{cart.reduce((a, b) => a + b.quantity, 0)} Items Added</span>
+              <span>{totalCartItems} Item{totalCartItems > 1 ? 's' : ''} in Cart{activeCartCount > 1 ? 's' : ''}</span>
             </div>
             <div className="flex items-center gap-1">
-              <span>View Cart (${getCartTotal().total?.toFixed(2)})</span>
+              <span>View Cart</span>
               <ChevronRight className="w-4 h-4" />
             </div>
           </Button>
@@ -630,6 +625,8 @@ export default function CustomerDashboard({
         selectedRestaurant={selectedRestaurant}
         setSelectedRestaurant={setSelectedRestaurant}
         onAddApiLog={onAddApiLog}
+        deliveryLat={String(deliveryLat)}
+        deliveryLng={String(deliveryLng)}
       />
 
       <CustomerCartDrawer
@@ -639,14 +636,10 @@ export default function CustomerDashboard({
         isCartOpen={isCartOpen}
         setIsCartOpen={setIsCartOpen}
         selectedRestaurant={selectedRestaurant}
-        cart={cart}
+        carts={carts}
         removeFromCart={removeFromCart}
-        addToCart={addToCart}
-        getCartTotal={getCartTotal} cart={cart} cartRestaurant={cartRestaurant || selectedRestaurant} address={address}
-        restaurantName={(cartRestaurant || selectedRestaurant)?.name || ''}
-        restaurantId={(cartRestaurant || selectedRestaurant)?.id || ''}
-        subtotal={getCartTotal().subtotal}
-        deliveryFee={getCartTotal().deliveryFee}
+        addToCart={originalAddToCart}
+        getCartTotal={getCartTotal}
         setIsPaymentModalOpen={setIsPaymentModalOpen}
         isSubmitting={paymentStatus !== 'idle'}
       />
@@ -655,8 +648,11 @@ export default function CustomerDashboard({
         isPaymentModalOpen={isPaymentModalOpen}
         setIsPaymentModalOpen={setIsPaymentModalOpen}
         paymentStatus={paymentStatus}
-        getCartTotal={getCartTotal} cart={cart} cartRestaurant={cartRestaurant || selectedRestaurant} address={address}
+        getCartTotal={() => getCartTotal(checkoutRestaurantId || '')} 
+        cart={checkoutRestaurantId ? (carts[checkoutRestaurantId]?.items || []) : []} 
+        cartRestaurant={checkoutRestaurantId ? carts[checkoutRestaurantId]?.restaurant : undefined}
         processPaymentAndOrder={processPaymentAndOrder}
+        address={address}
       />
 
       <AnimatePresence>
@@ -722,14 +718,6 @@ export default function CustomerDashboard({
         ) : null;
       })()}
       
-      <AnimatePresence>
-        {isHistoryOpen && (
-          <CustomerOrderHistory 
-            onClose={() => setIsHistoryOpen(false)}
-            onAddApiLog={onAddApiLog}
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 }

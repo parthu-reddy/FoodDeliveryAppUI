@@ -41,7 +41,7 @@ export const compressImageNative = async (
         canvas.toBlob((blob) => {
           if (!blob) return resolve(bestFile);
           
-          const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", {
+          const newFile = new File([blob], file.name.replace(/\.[^/.]+₹/, "") + ".jpg", {
             type: 'image/jpeg',
             lastModified: Date.now(),
           });

@@ -10,6 +10,8 @@ interface CustomerOutletSelectorModalProps {
   selectedRestaurant: Restaurant | null;
   setSelectedRestaurant: (restaurant: Restaurant) => void;
   onAddApiLog?: (log: any) => void;
+  deliveryLat?: string | null;
+  deliveryLng?: string | null;
 }
 
 const CustomerOutletSelectorModal: React.FC<CustomerOutletSelectorModalProps> = ({
@@ -18,14 +20,18 @@ const CustomerOutletSelectorModal: React.FC<CustomerOutletSelectorModalProps> = 
   brandOutlets,
   selectedRestaurant,
   setSelectedRestaurant,
-  onAddApiLog
+  onAddApiLog,
+  deliveryLat,
+  deliveryLng
 }) => {
   if (!brandOutlets) return null;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Select Outlet Location" size="md">
       <div className="p-4 space-y-3 pb-8">
-        {brandOutlets.map(outlet => (
+        {brandOutlets.map(outlet => {
+          let displayDistance = outlet.distance;
+          return (
           <button
             key={outlet.id}
             onClick={() => {
@@ -46,14 +52,14 @@ const CustomerOutletSelectorModal: React.FC<CustomerOutletSelectorModalProps> = 
                 {outlet.name}
               </p>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                {outlet.distance} km away
+                {typeof displayDistance === 'number' ? displayDistance.toFixed(1) : displayDistance} km away
               </p>
             </div>
             {selectedRestaurant?.id === outlet.id && (
               <Check className="w-5 h-5 text-rose-500" />
             )}
           </button>
-        ))}
+        )})}
       </div>
     </Modal>
   );

@@ -58,6 +58,18 @@ export interface Order {
   itemTotal?: number;
   sgst?: number;
   cgst?: number;
+  foodCost?: number;
+  customerPlatformFee?: number;
+  restaurantPlatformFee?: number;
+  platformBonus?: number;
+  restaurantDeliveryContribution?: number;
+  restaurantPayout?: number;
+  payout?: number;
+  driverCustomerContribution?: number;
+  driverRestaurantContribution?: number;
+  driverTip?: number;
+  driverTaxes?: number;
+  grossPayout?: number;
   paymentIntent?: string;
   paymentStatus?: 'CREATED' | 'INITIATED' | 'PENDING' | 'SUCCESS' | 'FAILED' | 'CAPTURED' | 'PAID' | 'PARTIALLY_REFUNDED' | 'REFUNDED' | 'REFUND_PENDING' | 'REFUND_FAILED' | string;
   refundedAmount?: number;

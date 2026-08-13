@@ -584,7 +584,7 @@ export default function DeliveryDashboard({
               </div>
               <div>
                 <span className="text-[10px] text-slate-500 dark:text-[#f0ede6] uppercase font-mono block">Today's Earnings</span>
-                <span className="text-base font-black text-slate-800 dark:text-[#f0ede6]">${todayEarnings.toFixed(2)}</span>
+                <span className="text-base font-black text-slate-800 dark:text-[#f0ede6]">₹{todayEarnings.toFixed(2)}</span>
               </div>
             </div>
 
@@ -678,7 +678,7 @@ export default function DeliveryDashboard({
                       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
                       New Dispatch
                     </h3>
-                    <p className="text-emerald-400 text-xs font-mono font-bold mt-1">Est. Payout: {(pingJob as any).payout ? `$${(pingJob as any).payout.toFixed(2)}` : 'Calculating...'}</p>
+                    <p className="text-emerald-400 text-xs font-mono font-bold mt-1">Est. Payout: {(pingJob as any).payout ? `₹${(pingJob as any).payout.toFixed(2)}` : 'Calculating...'}</p>
                   </div>
                   <div className="w-10 h-10 rounded-full border-2 border-emerald-500/50 flex items-center justify-center text-emerald-400 font-bold font-mono text-sm relative">
                     <svg className="absolute inset-0 w-full h-full -rotate-90">

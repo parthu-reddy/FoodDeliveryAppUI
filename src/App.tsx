@@ -37,6 +37,10 @@ function AppContent() {
   const { theme } = useTheme();
 
   const handleLoginSuccess = (selectedRole: UserRole, userPhone: string, displayName: string) => {
+    // Clear cart when logging in successfully to ensure previous session data is removed.
+    localStorage.removeItem('food_delivery_cart');
+    localStorage.removeItem('food_delivery_cart_restaurant');
+    
     setUserRole(selectedRole as RoleName);
     setPhone(userPhone);
     setUserName(displayName);

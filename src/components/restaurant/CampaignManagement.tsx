@@ -163,7 +163,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
           <div>
             <span className="text-[10px] text-slate-500 dark:text-[#f0ede6] uppercase font-mono block">Ad Wallet Balance</span>
             <div className="flex items-center gap-3">
-              <span className="text-base font-black text-slate-800 dark:text-[#f0ede6]">${walletBalance.toFixed(2)}</span>
+              <span className="text-base font-black text-slate-800 dark:text-[#f0ede6]">₹{walletBalance.toFixed(2)}</span>
               <Button variant="success" size="xs" onClick={() => setShowTopupModal(true)}>
                 Top Up
               </Button>
@@ -214,11 +214,11 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="bg-slate-100 dark:bg-slate-800 p-2 rounded-lg">
                   <div className="text-[10px] text-slate-400">Daily Budget</div>
-                  <div className="font-bold text-slate-800 dark:text-[#f0ede6]">${campaign.dailyBudget}</div>
+                  <div className="font-bold text-slate-800 dark:text-[#f0ede6]">₹{campaign.dailyBudget}</div>
                 </div>
                 <div className="bg-slate-100 dark:bg-slate-800 p-2 rounded-lg">
                   <div className="text-[10px] text-slate-400">Total Budget</div>
-                  <div className="font-bold text-slate-800 dark:text-[#f0ede6]">${campaign.totalBudget}</div>
+                  <div className="font-bold text-slate-800 dark:text-[#f0ede6]">₹{campaign.totalBudget}</div>
                 </div>
               </div>
 
@@ -258,10 +258,10 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
               <Input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Summer Special Boost" required />
             </FormField>
             <div className="grid grid-cols-2 gap-4">
-              <FormField label="Daily Budget ($)" required>
+              <FormField label="Daily Budget (₹)" required>
                 <Input type="number" step="0.01" value={dailyBudget} onChange={e => setDailyBudget(e.target.value)} required />
               </FormField>
-              <FormField label="Total Budget ($)" required>
+              <FormField label="Total Budget (₹)" required>
                 <Input type="number" step="0.01" value={totalBudget} onChange={e => setTotalBudget(e.target.value)} required />
               </FormField>
             </div>
@@ -274,7 +274,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
               </FormField>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <FormField label="Bid per Impression ($)" required>
+              <FormField label="Bid per Impression (₹)" required>
                 <Input type="number" step="0.01" value={bidAmount} onChange={e => setBidAmount(e.target.value)} required />
               </FormField>
               <FormField label="Targeting Radius (km)" required>
@@ -293,7 +293,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
       <Modal isOpen={showTopupModal} onClose={() => setShowTopupModal(false)} title="Top Up Wallet" size="sm">
         <div className="p-6">
           <div className="space-y-4">
-            <FormField label="Amount ($)" required>
+            <FormField label="Amount (₹)" required>
               <Input type="number" step="1" value={topupAmount} onChange={e => setTopupAmount(e.target.value)} required />
             </FormField>
             <div className="pt-4 flex gap-3 justify-end border-t border-slate-100 dark:border-slate-800 mt-2">

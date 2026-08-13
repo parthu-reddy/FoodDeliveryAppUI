@@ -154,12 +154,12 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
                       )}
                       {order.paymentStatus === 'REFUNDED' && (
                         <span className="text-[10px] bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-bold px-2 py-1 rounded-md">
-                          Refunded: ${(order.refundedAmount || order.totalAmount || order.total || 0).toFixed(2)}
+                          Refunded: ₹{(order.refundedAmount || order.totalAmount || order.total || 0).toFixed(2)}
                         </span>
                       )}
                       {order.paymentStatus === 'PARTIALLY_REFUNDED' && (
                         <span className="text-[10px] bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-bold px-2 py-1 rounded-md">
-                          Partial Refund: ${(order.refundedAmount || 0).toFixed(2)}
+                          Partial Refund: ₹{(order.refundedAmount || 0).toFixed(2)}
                         </span>
                       )}
                       {order.paymentStatus === 'REFUND_FAILED' && (

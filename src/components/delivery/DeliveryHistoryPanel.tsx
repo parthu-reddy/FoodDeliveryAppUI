@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Clock, MapPin, Check, ArrowLeft } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Order } from '../../types';
+import { DeliveryOrderDetailsModal } from './DeliveryOrderDetailsModal';
 
 interface DeliveryHistoryPanelProps {
   setShowHistory: (show: boolean) => void;
@@ -22,6 +23,8 @@ export function DeliveryHistoryPanel({
   totalHistoryPages,
   paginatedHistoryJobs
 }: DeliveryHistoryPanelProps) {
+  const [selectedJob, setSelectedJob] = useState<Order | null>(null);
+
   return (
     <motion.div
       key="history"
@@ -59,7 +62,11 @@ export function DeliveryHistoryPanel({
           </div>
         ) : (
           paginatedHistoryJobs.map(job => (
-            <div key={job.id} className="bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-3xl p-5 shadow-sm flex flex-col gap-3 transition-all hover:border-indigo-500/30 hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] transition-all">
+            <div 
+              key={job.id} 
+              onClick={() => setSelectedJob(job)}
+              className="bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-3xl p-5 shadow-sm flex flex-col gap-3 transition-all hover:border-indigo-500/30 hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] cursor-pointer"
+            >
               <div className="flex justify-between items-start">
                 <div>
                   <p className="font-mono text-xs text-slate-400 dark:text-slate-300 font-bold">ORDER #{job.id.substring(0, 8)}</p>
@@ -67,7 +74,7 @@ export function DeliveryHistoryPanel({
                   <p className="text-[10px] text-slate-500 dark:text-slate-300 mt-0.5">{job.createdAt ? new Date(job.createdAt).toLocaleString() : ""}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-black text-emerald-500 text-lg">+${(job as any).payout?.toFixed(2) || '0.00'}</p>
+                  <p className="font-black text-emerald-500 text-lg">+₹{(job as any).payout?.toFixed(2) || '0.00'}</p>
                   <p className="text-[10px] text-slate-400 dark:text-slate-300 font-mono uppercase">Payout</p>
                 </div>
               </div>
@@ -99,6 +106,11 @@ export function DeliveryHistoryPanel({
         )}
       </div>
 
+      <DeliveryOrderDetailsModal 
+        order={selectedJob} 
+        isOpen={!!selectedJob} 
+        onClose={() => setSelectedJob(null)} 
+      />
     </motion.div>
   );
 }

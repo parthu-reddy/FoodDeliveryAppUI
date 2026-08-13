@@ -350,7 +350,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
             {!isFailedOrder(currentTrackingOrder) && currentTrackingOrder.paymentStatus === 'PARTIALLY_REFUNDED' && (
               <div className="bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-sm font-bold py-3 px-4 rounded-xl flex items-center justify-between mt-4 mx-2 border border-emerald-500/20">
                 <span>Partial Refund Issued</span>
-                <span>${(currentTrackingOrder.refundedAmount || 0).toFixed(2)}</span>
+                <span>₹{(currentTrackingOrder.refundedAmount || 0).toFixed(2)}</span>
               </div>
             )}
           </div>
@@ -367,7 +367,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
               {currentTrackingOrder.items && currentTrackingOrder.items.map((item: any, idx: number) => (
                 <div key={idx} className="flex justify-between text-sm font-semibold text-slate-700 dark:text-slate-300">
                   <span>{item.quantity || 1}x {item.item?.name || item.name || 'Item'}</span>
-                  <span>${((item.item?.price || item.price || 0) * (item.quantity || 1)).toFixed(2)}</span>
+                  <span>₹{((item.item?.price || item.price || 0) * (item.quantity || 1)).toFixed(2)}</span>
                 </div>
               ))}
             </div>
@@ -375,27 +375,27 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
             <div className="pt-4 mt-4 border-t border-dashed border-slate-200 dark:border-slate-700 space-y-2">
               <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
                 <span>Items Total</span>
-                <span>${currentTrackingOrder.items ? currentTrackingOrder.items.reduce((sum: number, item: any) => sum + ((item.item?.price || item.price || 0) * (item.quantity || 1)), 0).toFixed(2) : '0.00'}</span>
+                <span>₹{currentTrackingOrder.items ? currentTrackingOrder.items.reduce((sum: number, item: any) => sum + ((item.item?.price || item.price || 0) * (item.quantity || 1)), 0).toFixed(2) : '0.00'}</span>
               </div>
               <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
                 <span>Delivery Fee</span>
-                <span>${currentTrackingOrder.deliveryFee !== undefined ? currentTrackingOrder.deliveryFee.toFixed(2) : (currentTrackingOrder.items ? ((currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0) - currentTrackingOrder.items.reduce((sum: number, item: any) => sum + ((item.item?.price || item.price || 0) * (item.quantity || 1)), 0)).toFixed(2) : '0.00')}</span>
+                <span>₹{currentTrackingOrder.deliveryFee !== undefined ? currentTrackingOrder.deliveryFee.toFixed(2) : (currentTrackingOrder.items ? ((currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0) - currentTrackingOrder.items.reduce((sum: number, item: any) => sum + ((item.item?.price || item.price || 0) * (item.quantity || 1)), 0)).toFixed(2) : '0.00')}</span>
               </div>
               {currentTrackingOrder.sgst !== undefined && (
                 <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
                   <span>SGST</span>
-                  <span>${currentTrackingOrder.sgst.toFixed(2)}</span>
+                  <span>₹{currentTrackingOrder.sgst.toFixed(2)}</span>
                 </div>
               )}
               {currentTrackingOrder.cgst !== undefined && (
                 <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
                   <span>CGST</span>
-                  <span>${currentTrackingOrder.cgst.toFixed(2)}</span>
+                  <span>₹{currentTrackingOrder.cgst.toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between text-lg font-black text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-slate-700">
                 <span>Total Paid</span>
-                <span>${(currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0).toFixed(2)}</span>
+                <span>₹{(currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0).toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -438,7 +438,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
               {currentTrackingOrder.items && currentTrackingOrder.items.map((item: any, idx: number) => (
                 <div key={idx} className="flex justify-between text-sm font-semibold text-slate-700 dark:text-slate-300">
                   <span>{item.quantity || 1}x {item.item?.name || item.name || 'Item'}</span>
-                  <span>${((item.item?.price || item.price || 0) * (item.quantity || 1)).toFixed(2)}</span>
+                  <span>₹{((item.item?.price || item.price || 0) * (item.quantity || 1)).toFixed(2)}</span>
                 </div>
               ))}
             </div>
@@ -446,27 +446,27 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
             <div className="pt-4 border-t border-dashed border-rose-500/20 dark:border-slate-700 space-y-2">
               <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
                 <span>Items Total</span>
-                <span>${currentTrackingOrder.items ? currentTrackingOrder.items.reduce((sum: number, item: any) => sum + ((item.item?.price || item.price || 0) * (item.quantity || 1)), 0).toFixed(2) : '0.00'}</span>
+                <span>₹{currentTrackingOrder.items ? currentTrackingOrder.items.reduce((sum: number, item: any) => sum + ((item.item?.price || item.price || 0) * (item.quantity || 1)), 0).toFixed(2) : '0.00'}</span>
               </div>
               <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
                 <span>Delivery Fee {(currentTrackingOrder as any).distanceKm ? `(${(currentTrackingOrder as any).distanceKm} km)` : ''}</span>
-                <span>${(currentTrackingOrder as any).charges?.find((c: any) => c.category === 'DELIVERY_FEE' && c.payerType === 'CUSTOMER')?.amount?.toFixed(2) || (currentTrackingOrder.deliveryFee !== undefined ? currentTrackingOrder.deliveryFee.toFixed(2) : (currentTrackingOrder.items ? ((currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0) - currentTrackingOrder.items.reduce((sum: number, item: any) => sum + ((item.item?.price || item.price || 0) * (item.quantity || 1)), 0)).toFixed(2) : '0.00'))}</span>
+                <span>₹{(currentTrackingOrder as any).charges?.find((c: any) => c.category === 'DELIVERY_FEE' && c.payerType === 'CUSTOMER')?.amount?.toFixed(2) || (currentTrackingOrder.deliveryFee !== undefined ? currentTrackingOrder.deliveryFee.toFixed(2) : (currentTrackingOrder.items ? ((currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0) - currentTrackingOrder.items.reduce((sum: number, item: any) => sum + ((item.item?.price || item.price || 0) * (item.quantity || 1)), 0)).toFixed(2) : '0.00'))}</span>
               </div>
               {currentTrackingOrder.sgst !== undefined && (
                 <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
                   <span>SGST</span>
-                  <span>${currentTrackingOrder.sgst.toFixed(2)}</span>
+                  <span>₹{currentTrackingOrder.sgst.toFixed(2)}</span>
                 </div>
               )}
               {currentTrackingOrder.cgst !== undefined && (
                 <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
                   <span>CGST</span>
-                  <span>${currentTrackingOrder.cgst.toFixed(2)}</span>
+                  <span>₹{currentTrackingOrder.cgst.toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between text-lg font-black text-slate-900 dark:text-white pt-2 border-t border-rose-500/20 dark:border-slate-700">
                 <span>{isFailedOrder(currentTrackingOrder) ? 'Total Refunded' : 'Total Paid'}</span>
-                <span className={isFailedOrder(currentTrackingOrder) ? 'text-red-500' : ''}>${(currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0).toFixed(2)}</span>
+                <span className={isFailedOrder(currentTrackingOrder) ? 'text-red-500' : ''}>₹{(currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0).toFixed(2)}</span>
               </div>
             </div>
           </div>

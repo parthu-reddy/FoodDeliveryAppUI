@@ -424,6 +424,20 @@ export default function SharedSettingsView({
                   >
                     {[OrderStatus.HANDED_OVER, OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT].includes(order.status) ? "View Invoice" : "View Details"}
                   </Button>
+                  {order.deliveryStatus === DeliveryStatus.DELIVERED && !order.refundedAmount && (
+                    <Button 
+                      onClick={() => {
+                        // Normally this would trigger a modal or an API call. For now, an alert via parent or direct window alert
+                        window.alert('Issue reported to support. Our team will contact you shortly regarding a refund.');
+                      }}
+                      variant="outline"
+                      size="sm"
+                      className="text-rose-500 border-rose-500/30 hover:bg-rose-50 dark:hover:bg-rose-500/10 mt-2"
+                      fullWidth
+                    >
+                      Report Issue / Request Refund
+                    </Button>
+                  )}
                 </div>
               ))
             )}

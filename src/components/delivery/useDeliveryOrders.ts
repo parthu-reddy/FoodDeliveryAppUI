@@ -64,7 +64,7 @@ export function useDeliveryOrders({
 
     let fetchedActiveJobs: any[] = [];
     let fetchedAvailableJobs: any[] = [];
-    const getArrayFromRes = (res: any) => res?.data?.data || res?.data || (Array.isArray(res) ? res : []);
+    const getArrayFromRes = (res: any) => res?.content || res?.data?.data || res?.data || (Array.isArray(res) ? res : []);
 
     try {
       const activeRes = await apiGet(`/api/v1/delivery/orders/active`);
@@ -134,7 +134,7 @@ export function useDeliveryOrders({
 
     apiGet(`/api/v1/delivery/orders/history?date=${dateToFetch}`).then(res => {
       if (res) {
-        const getArrayFromRes = (res: any) => res?.data?.data || res?.data || (Array.isArray(res) ? res : []);
+        const getArrayFromRes = (res: any) => res?.content || res?.data?.data || res?.data || (Array.isArray(res) ? res : []);
         const histData = getArrayFromRes(res);
         historyRef.current = histData.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
         setInternalOrders(prev => {

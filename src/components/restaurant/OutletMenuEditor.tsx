@@ -402,7 +402,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
                                 <div className="grid grid-cols-3 gap-3">
                                   <div>
                                     <label className="text-[10px] font-bold text-slate-500 dark:text-slate-300 uppercase block mb-1">Price</label>
-                                    <input type="number" step="0.01" min="0" placeholder={`$${item.basePrice.toFixed(2)}`} value={oPrice} onChange={e=>setOPrice(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-emerald-500/20 rounded-lg px-2 py-1.5 text-xs font-bold dark:text-[#f0ede6]" />
+                                    <input type="number" step="0.01" min="0" placeholder={`₹${item.basePrice.toFixed(2)}`} value={oPrice} onChange={e=>setOPrice(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-emerald-500/20 rounded-lg px-2 py-1.5 text-xs font-bold dark:text-[#f0ede6]" />
                                   </div>
                                   <div>
                                     <label className="text-[10px] font-bold text-slate-500 dark:text-slate-300 uppercase block mb-1">Prep</label>

@@ -96,7 +96,7 @@ export default function CustomerRestaurantCard({ restaurant, isLast, lastElement
 
         <div className="flex items-center gap-3.5 pt-2 text-xs text-slate-500 dark:text-slate-300 font-mono border-t border-rose-500/20 dark:border-rose-500/30">
           <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-amber-500" /> {restaurant.deliveryTime}m</span>
-          <span className="flex items-center gap-1"><Bike className="w-3.5 h-3.5 text-emerald-500" /> ${restaurant.deliveryFee} fee</span>
+          <span className="flex items-center gap-1"><Bike className="w-3.5 h-3.5 text-emerald-500" /> ₹{restaurant.deliveryFee} fee</span>
           <span>{restaurant.distance} km</span>
         </div>
       </div>

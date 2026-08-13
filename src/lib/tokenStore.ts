@@ -87,10 +87,12 @@ export const clearAllLocalData = () => {
   localStorage.removeItem('user_profile');
   localStorage.removeItem('device_id');
   localStorage.removeItem('deliveryAddressId');
+  localStorage.removeItem('food_delivery_cart');
+  localStorage.removeItem('food_delivery_cart_restaurant');
   const keysToRemove: string[] = [];
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
-    if (key && (key.startsWith('auth_') || key.startsWith('user_') || key.startsWith('device_') || key.startsWith('session_'))) {
+    if (key && (key.startsWith('auth_') || key.startsWith('user_') || key.startsWith('device_') || key.startsWith('session_') || key.startsWith('food_delivery_cart') || key.startsWith('restaurant_') || key.startsWith('order_'))) {
       keysToRemove.push(key);
     }
   }

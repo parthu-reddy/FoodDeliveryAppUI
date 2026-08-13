@@ -419,7 +419,7 @@ const BrandMasterMenu = React.memo(function BrandMasterMenu({ brandId, onRefresh
                               <div>
                                 <div className="flex justify-between items-start">
                                   <h6 className="font-bold text-sm text-slate-800 dark:text-[#f0ede6] truncate pr-2">{item.name}</h6>
-                                  <span className="font-mono text-xs font-bold text-orange-500 shrink-0">${item.basePrice.toFixed(2)}</span>
+                                  <span className="font-mono text-xs font-bold text-orange-500 shrink-0">₹{item.basePrice.toFixed(2)}</span>
                                 </div>
                                 <div className="mt-1 flex items-center gap-2">
                                   <Badge variant="warning" className="flex items-center gap-1">
@@ -491,7 +491,7 @@ const BrandMasterMenu = React.memo(function BrandMasterMenu({ brandId, onRefresh
                             <div className="flex-1 min-w-0 flex flex-col justify-between">
                                 <div>
                                     <h6 className="font-bold text-xs text-slate-800 dark:text-[#f0ede6] truncate">{item.name}</h6>
-                                    <span className="font-mono text-[10px] font-bold text-orange-500 shrink-0">${item.basePrice.toFixed(2)}</span>
+                                    <span className="font-mono text-[10px] font-bold text-orange-500 shrink-0">₹{item.basePrice.toFixed(2)}</span>
                                     <div className="mt-1 flex items-center gap-2">
                                         <Badge variant="warning" className="flex items-center gap-1">
                                             <Clock className="w-2.5 h-2.5" /> {item.defaultPrepTimeMinutes} min

@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { Calendar, Search, Filter, ChevronLeft, ChevronRight, Package, DollarSign, Clock } from 'lucide-react';
+import { Calendar, Search, Filter, ChevronLeft, ChevronRight, Package, DollarSign, Clock, Receipt } from 'lucide-react';
 import { OrderStatus, Order } from '../../types';
 import { getFriendlyStatusMessage } from '../../utils/statusMessaging';
 import { apiPost, apiGet } from '../../lib/apiClient';
 import { useToast } from '../../context/ToastContext';
+import { RestaurantOrderDetailsModal } from './RestaurantOrderDetailsModal';
 
 export function OrderHistory({ restaurantId, onOpenChat }: { restaurantId: string, onOpenChat?: (orderId: string) => void }) {
   const [dateFilter, setDateFilter] = useState('');
@@ -12,6 +13,7 @@ export function OrderHistory({ restaurantId, onOpenChat }: { restaurantId: strin
   const [orders, setOrders] = useState<Order[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [totalElements, setTotalElements] = useState(0);
+  const [selectedOrderForDetails, setSelectedOrderForDetails] = useState<Order | null>(null);
   const { showSuccess, showError } = useToast();
 
   React.useEffect(() => {
@@ -196,6 +198,13 @@ export function OrderHistory({ restaurantId, onOpenChat }: { restaurantId: strin
                             Chat
                           </button>
                         )}
+                        <button
+                          onClick={() => setSelectedOrderForDetails(order)}
+                          className="flex items-center gap-1 text-xs font-bold text-emerald-500 hover:text-emerald-600 text-left"
+                        >
+                          <Receipt className="w-3 h-3" />
+                          Details
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -274,6 +283,12 @@ export function OrderHistory({ restaurantId, onOpenChat }: { restaurantId: strin
           </div>
         </div>
       )}
+      
+      <RestaurantOrderDetailsModal
+        order={selectedOrderForDetails}
+        isOpen={!!selectedOrderForDetails}
+        onClose={() => setSelectedOrderForDetails(null)}
+      />
     </div>
   );
 }

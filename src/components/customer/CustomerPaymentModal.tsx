@@ -85,7 +85,7 @@ function _CustomerPaymentModal({
                             <span className="bg-slate-100 dark:bg-slate-800/50 px-2 py-0.5 rounded text-xs font-semibold">{cItem.quantity}x</span>
                             <span className="truncate max-w-[150px]">{cItem.item?.name}</span>
                           </div>
-                          <span className="font-mono font-medium text-slate-800 dark:text-white">${(cItem.item?.price * cItem.quantity).toFixed(2)}</span>
+                          <span className="font-mono font-medium text-slate-800 dark:text-white">₹{(cItem.item?.price * cItem.quantity).toFixed(2)}</span>
                         </div>
                       ))}
                     </div>
@@ -133,20 +133,20 @@ function _CustomerPaymentModal({
                     <div className="space-y-2 text-sm text-slate-300 mb-4">
                       <div className="flex justify-between">
                         <span>Subtotal</span>
-                        <span className="font-mono">${totals.subtotal?.toFixed(2)}</span>
+                        <span className="font-mono">₹{totals.subtotal?.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Delivery Fee</span>
-                        <span className="font-mono">${totals.deliveryFee?.toFixed(2)}</span>
+                        <span className="font-mono">₹{totals.deliveryFee?.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Taxes (CGST+SGST)</span>
-                        <span className="font-mono">${((totals.cgst || 0) + (totals.sgst || 0)).toFixed(2)}</span>
+                        <span className="font-mono">₹{((totals.cgst || 0) + (totals.sgst || 0)).toFixed(2)}</span>
                       </div>
                     </div>
                     <div className="border-t border-white/20 pt-3 flex justify-between items-end">
                       <span className="text-slate-200">Total to Pay</span>
-                      <span className="font-mono text-2xl font-black">${totals.total?.toFixed(2)}</span>
+                      <span className="font-mono text-2xl font-black">₹{totals.total?.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
@@ -161,7 +161,7 @@ function _CustomerPaymentModal({
                 >
                   <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
                   <div className="flex items-center justify-center gap-2 font-bold text-lg">
-                    {selectedMethod === 'cod' ? 'Confirm Cash Order' : `Pay $${totals.total?.toFixed(2)} Now`}
+                    {selectedMethod === 'cod' ? 'Confirm Cash Order' : `Pay ₹${totals.total?.toFixed(2)} Now`}
                     <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </div>
                   <div className="absolute top-1/2 -translate-y-1/2 left-4 text-white/50">

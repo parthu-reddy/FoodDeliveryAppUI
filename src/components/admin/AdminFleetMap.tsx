@@ -60,20 +60,18 @@ function _AdminFleetMap() {
 
         if (!active) return;
 
-        const outData = resOutlets?.data || resOutlets;
-        if (Array.isArray(outData)) {
-            setRestaurants(outData);
-        }
-        
-        const driverData = resDrivers?.data || resDrivers;
-        if (Array.isArray(driverData)) {
-            setRiders(driverData);
-        }
-        
-        const customerData = resCustomers?.data || resCustomers;
-        if (Array.isArray(customerData)) {
-            setCustomers(customerData);
-        }
+        const extractList = (data: any) => {
+          if (!data) return [];
+          if (Array.isArray(data)) return data;
+          if (Array.isArray(data.data)) return data.data;
+          if (data.data?.content && Array.isArray(data.data.content)) return data.data.content;
+          if (data.content && Array.isArray(data.content)) return data.content;
+          return [];
+        };
+
+        setRestaurants(extractList(resOutlets));
+        setRiders(extractList(resDrivers));
+        setCustomers(extractList(resCustomers));
       } catch (err) {
         console.error("Failed to fetch map data", err);
       }

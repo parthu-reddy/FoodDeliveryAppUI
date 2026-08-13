@@ -224,7 +224,7 @@ export default function AdminManualInterventions() {
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="font-bold text-sm truncate">#{refund.orderId.substring(0, 8)}</p>
-                            <p className="text-xs text-red-500 font-bold">${refund.amount?.toFixed(2)} Failed</p>
+                            <p className="text-xs text-red-500 font-bold">₹{refund.amount?.toFixed(2)} Failed</p>
                         </div>
                     </button>
                 ))}
@@ -328,7 +328,7 @@ export default function AdminManualInterventions() {
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <p className="text-sm text-slate-500 dark:text-slate-400">Amount</p>
-                            <p className="font-black text-xl text-slate-800 dark:text-white">${selectedIntervention.amount?.toFixed(2)}</p>
+                            <p className="font-black text-xl text-slate-800 dark:text-white">₹{selectedIntervention.amount?.toFixed(2)}</p>
                           </div>
                           <div>
                             <p className="text-sm text-slate-500 dark:text-slate-400">Retry Count</p>

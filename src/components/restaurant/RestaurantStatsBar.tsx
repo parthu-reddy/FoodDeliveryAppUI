@@ -16,7 +16,7 @@ export function RestaurantStatsBar({
       <StatCard
         icon={<DollarSign className="w-5 h-5" />}
         label="Today's Sales"
-        value={`$${totalRevenue.toFixed(2)}`}
+        value={`₹${totalRevenue.toFixed(2)}`}
         color="emerald"
       />
       <StatCard

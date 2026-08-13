@@ -68,7 +68,7 @@ export const RestaurantMenuTogglesView: React.FC<RestaurantMenuTogglesViewProps>
                       </div>
                       <div>
                         <h5 className="font-bold text-sm">{dish.name}</h5>
-                        <span className="text-xs text-amber-500 font-mono">${dish.price}</span>
+                        <span className="text-xs text-amber-500 font-mono">₹{dish.price}</span>
                       </div>
                     </div>
 

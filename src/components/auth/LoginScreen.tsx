@@ -79,6 +79,8 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
     const token = getToken();
     if (token) {
       logout().catch(console.error);
+    } else {
+      clearAllLocalData();
     }
   }, []);
 

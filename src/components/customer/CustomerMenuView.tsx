@@ -8,30 +8,28 @@ interface CustomerMenuViewProps {
   selectedRestaurant: any;
   setSelectedRestaurant: (res: any | null) => void;
   deliveryPricing: any;
-  cartRestaurant: any;
-  getCartTotal: () => { subtotal: number };
+  getCartTotal: (resId?: string) => { subtotal: number };
   isDeliveryAvailable: boolean | null;
   brandOutlets: any[];
   setIsOutletSelectorOpen: (isOpen: boolean) => void;
   isMenuLoading: boolean;
   effectiveMenu: MenuItem[];
-  cart: any[];
+  carts: any;
   addToCart: (item: any) => void;
-  removeFromCart: (itemId: string) => void;
+  removeFromCart: (itemId: string, restaurantId: string) => void;
 }
 
 export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
   selectedRestaurant,
   setSelectedRestaurant,
   deliveryPricing,
-  cartRestaurant,
   getCartTotal,
   isDeliveryAvailable,
   brandOutlets,
   setIsOutletSelectorOpen,
   isMenuLoading,
   effectiveMenu,
-  cart,
+  carts,
   addToCart,
   removeFromCart,
 }) => {
@@ -73,31 +71,7 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
           </div>
         </div>
 
-        {deliveryPricing && deliveryPricing.minimumOrderForFreeDelivery < 999999 && (
-          <div className="mt-3 p-3 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border border-emerald-500/20 shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 left-0 h-1 bg-gradient-to-r from-emerald-400 to-teal-400 transition-all duration-500 ease-out" style={{ width: `${Math.min(100, (((cartRestaurant?.id === selectedRestaurant.id ? getCartTotal().subtotal : 0) / deliveryPricing.minimumOrderForFreeDelivery) * 100))}%` }} />
-            <div className="flex items-center gap-3 mt-1">
-              <div className="p-2 bg-emerald-100 dark:bg-emerald-500/20 rounded-full text-emerald-600 dark:text-emerald-400">
-                <Bike className="w-5 h-5" />
-              </div>
-              <div className="flex-1">
-                {((cartRestaurant?.id === selectedRestaurant.id ? getCartTotal().subtotal : 0) >= deliveryPricing.minimumOrderForFreeDelivery) ? (
-                  <>
-                    <h4 className="text-sm font-bold text-emerald-700 dark:text-emerald-400 tracking-tight">Free Delivery Unlocked! 🎉</h4>
-                    <p className="text-xs text-emerald-600/80 dark:text-emerald-400/80 mt-0.5">You only pay the platform fee (${deliveryPricing.fixedPlatformFee.toFixed(2)})</p>
-                  </>
-                ) : (
-                  <>
-                    <h4 className="text-sm font-bold text-emerald-700 dark:text-emerald-400 tracking-tight">
-                      Add ${(deliveryPricing.minimumOrderForFreeDelivery - (cartRestaurant?.id === selectedRestaurant.id ? getCartTotal().subtotal : 0)).toFixed(2)} more for Free Delivery!
-                    </h4>
-                    <p className="text-xs text-emerald-600/80 dark:text-emerald-400/80 mt-0.5">Save on variable delivery fees</p>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Removed static free delivery tracker as it is now global floating */}
 
         {isDeliveryAvailable === false && (
           <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 font-bold text-sm">
@@ -106,15 +80,14 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
           </div>
         )}
 
-        {deliveryPricing && deliveryPricing.minimumOrderForFreeDelivery >= 999999 && (
-          <div className="mt-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-500/20 shadow-sm relative overflow-hidden">
-            <p className="text-xs font-bold text-amber-700 dark:text-amber-400">📍 Select a delivery address to see accurate dynamic pricing and free delivery offers.</p>
-          </div>
-        )}
-
         <div className="flex items-center gap-4 mt-3 text-xs text-slate-500 dark:text-slate-300 font-mono">
           <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-amber-500" /> {selectedRestaurant.deliveryTime} mins</span>
-          <span className="flex items-center gap-1"><Bike className="w-3.5 h-3.5 text-emerald-500" /> {deliveryPricing && deliveryPricing.minimumOrderForFreeDelivery < 999999 ? ((cartRestaurant?.id === selectedRestaurant.id ? getCartTotal().subtotal : 0) >= deliveryPricing.minimumOrderForFreeDelivery ? 'Free Delivery' : 'Dynamic Fee') : `$${selectedRestaurant.deliveryFee} Base`}</span>
+          <span className="flex items-center gap-1"><Bike className="w-3.5 h-3.5 text-emerald-500" /> {(() => {
+            const minOrder = deliveryPricing?.config 
+              ? ((deliveryPricing.config.basePrice + (deliveryPricing.config.perKmRate * Math.max(1, deliveryPricing.distanceKm || 5.0))) / (deliveryPricing.config.restMaxContributionPercent || 1))
+              : (deliveryPricing?.minimumOrderForFreeDelivery || 999999);
+            return minOrder < 999999 ? ((getCartTotal().subtotal) >= minOrder ? 'Free Delivery' : 'Dynamic Fee') : `₹${selectedRestaurant.deliveryFee} Base`;
+          })()}</span>
           <span>•</span>
           <span>{deliveryPricing ? deliveryPricing.distanceKm.toFixed(1) : selectedRestaurant.distance} km away</span>
         </div>
@@ -129,7 +102,7 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
               onClick={() => setIsOutletSelectorOpen(true)}
               className="flex w-full items-center justify-between text-sm rounded-xl border border-slate-300 bg-white/50 dark:bg-slate-900/50 dark:border-slate-700 focus:border-rose-500 focus:ring-rose-500 shadow-sm p-2 text-slate-800 dark:text-slate-200"
             >
-              <span>{selectedRestaurant.name} ({selectedRestaurant.distance} km away)</span>
+              <span>{selectedRestaurant.name} ({deliveryPricing ? deliveryPricing.distanceKm.toFixed(1) : selectedRestaurant.distance} km away)</span>
               <ChevronDown className="w-4 h-4 text-slate-500" />
             </button>
           </div>
@@ -164,7 +137,7 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
               <h5 className="font-extrabold text-sm text-slate-800 dark:text-slate-300 uppercase tracking-widest">{category}</h5>
               <div className="space-y-4">
                 {(dishes as any[]).map(dish => {
-                  const cartQty = cart.find(i => i.item.id === dish.id)?.quantity || 0;
+                  const cartQty = carts[selectedRestaurant.id]?.items.find((i: any) => i.item.id === dish.id)?.quantity || 0;
                   
                   return (
                     <div 
@@ -194,7 +167,7 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
 
                         <div className="flex justify-between items-center mt-2">
                           <div className="flex items-center gap-3">
-                            <span className="text-base font-black text-amber-500">${dish.price}</span>
+                            <span className="text-base font-black text-amber-500">₹{dish.price}</span>
                             {dish.prepTimeMinutes && (
                               <span className="flex items-center gap-1 text-[10px] font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/50 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700/50">
                                 <Clock className="w-3 h-3" />
@@ -214,7 +187,7 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
                           ) : cartQty > 0 ? (
                             <div className="flex items-center bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl overflow-hidden font-bold shadow-md shadow-orange-500/15">
                               <button 
-                                onClick={() => removeFromCart(dish.id)}
+                                onClick={() => removeFromCart(dish.id, selectedRestaurant.id)}
                                 className="px-3 py-1.5 hover:bg-orange-600 cursor-pointer"
                               >
                                 <Minus className="w-3.5 h-3.5" />

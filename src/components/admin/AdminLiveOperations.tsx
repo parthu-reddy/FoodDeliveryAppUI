@@ -191,7 +191,7 @@ export default function AdminLiveOperations() {
                         <div className="space-y-3">
                             <Input 
                                 type="number" 
-                                placeholder="Amount ($)" 
+                                placeholder="Amount (₹)" 
                                 value={refundAmount}
                                 onChange={(e) => setRefundAmount(e.target.value)}
                             />

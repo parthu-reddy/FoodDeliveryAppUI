@@ -39,11 +39,13 @@ export function useCustomerOrders({ onUpdateOrder }: UseCustomerOrdersOptions = 
 
     let isSubscribed = true;
     let timeoutId: NodeJS.Timeout;
+    let retryCount = 0;
 
     const pollOrders = () => {
       apiGet(`/api/v1/orders/active?page=0&size=50`)
         .then(res => {
           if (!isSubscribed) return;
+          retryCount = 0; // Reset on success
           if (!res.data) {
             timeoutId = setTimeout(pollOrders, 60000);
             return;
@@ -108,7 +110,9 @@ export function useCustomerOrders({ onUpdateOrder }: UseCustomerOrdersOptions = 
         .catch(err => {
           console.error(err);
           if (isSubscribed) {
-            timeoutId = setTimeout(pollOrders, 60000);
+            retryCount++;
+            const backoffDelay = Math.min(1000 * Math.pow(2, retryCount), 60000);
+            timeoutId = setTimeout(pollOrders, backoffDelay);
           }
         });
     };

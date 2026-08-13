@@ -30,7 +30,7 @@ export default function OrderQueue({ orders, onAcceptOrder, onRejectOrder }: Ord
               <p className="font-mono text-xs font-bold text-slate-500">ORDER #{order.id.substring(0, 8)}</p>
               <p className="font-black mt-1 text-slate-900 dark:text-white">{order.customerName}</p>
             </div>
-            <p className="font-black text-rose-500">${order.totalAmount?.toFixed(2)}</p>
+            <p className="font-black text-rose-500">₹{order.totalAmount?.toFixed(2)}</p>
           </div>
           <div className="flex gap-2">
             <button onClick={() => onAcceptOrder(order.id)} className="flex-1 py-2 bg-indigo-500 text-white rounded-xl font-bold flex justify-center items-center gap-2">

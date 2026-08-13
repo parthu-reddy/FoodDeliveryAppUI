@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 3.2.1263 on 2026-08-12 10:51:46.
+// Generated using typescript-generator version 3.2.1263 on 2026-08-13 07:40:00.
 
 export enum AccountType {
     CUSTOMER = "CUSTOMER",
@@ -8,6 +8,7 @@ export enum AccountType {
     RESTAURANT = "RESTAURANT",
     DRIVER = "DRIVER",
     ADVERTISER_WALLET = "ADVERTISER_WALLET",
+    GOVERNMENT = "GOVERNMENT",
 }
 
 export enum ChannelType {
@@ -48,6 +49,14 @@ export enum DeliveryStatus {
     DELIVERED = "DELIVERED",
     CANCELLED = "CANCELLED",
     FAILED = "FAILED",
+}
+
+export enum FaultType {
+    PLATFORM_FAULT = "PLATFORM_FAULT",
+    RESTAURANT_FAULT = "RESTAURANT_FAULT",
+    RIDER_FAULT = "RIDER_FAULT",
+    CUSTOMER_FAULT = "CUSTOMER_FAULT",
+    UNKNOWN = "UNKNOWN",
 }
 
 export enum OrderStatus {

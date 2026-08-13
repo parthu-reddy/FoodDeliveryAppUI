@@ -93,7 +93,7 @@ export default function AdminPayoutsView() {
                 <div className="mb-6 flex-1">
                   <p className="text-sm text-slate-500 mb-1">Unsettled Balance</p>
                   <p className="text-4xl font-black text-slate-900 dark:text-white flex items-baseline gap-1">
-                    <span className="text-2xl text-slate-400">$</span>
+                    <span className="text-2xl text-slate-400">₹</span>
                     {account.balance.toFixed(2)}
                   </p>
                 </div>
