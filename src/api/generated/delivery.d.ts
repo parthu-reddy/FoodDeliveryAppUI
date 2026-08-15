@@ -655,6 +655,30 @@ export interface components {
             /** Format: int64 */
             timeout?: number;
         };
+        DLRequest: {
+            dlNumber: string;
+            documentUrl: string;
+            /** Format: date */
+            dob: string;
+        };
+        AadharRequest: {
+            aadharNumber: string;
+        };
+        PanRequest: {
+            panNumber: string;
+        };
+        RCRequest: {
+            registrationNumber: string;
+            documentUrl: string;
+        };
+        BankRequest: {
+            accountNumber: string;
+            ifscCode: string;
+            kycFullName: string;
+        };
+        BiometricRequest: {
+            selfieUrl: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -785,9 +809,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: Record<string, never>;
-                };
+                "application/json": components["schemas"]["RCRequest"];
             };
         };
         responses: {
@@ -811,9 +833,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: Record<string, never>;
-                };
+                "application/json": components["schemas"]["DLRequest"];
             };
         };
         responses: {
@@ -837,9 +857,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: Record<string, never>;
-                };
+                "application/json": components["schemas"]["BiometricRequest"];
             };
         };
         responses: {
@@ -863,9 +881,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: Record<string, never>;
-                };
+                "application/json": components["schemas"]["BankRequest"];
             };
         };
         responses: {

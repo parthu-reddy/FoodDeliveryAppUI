@@ -35,11 +35,19 @@ export const walletApi = createWalletApi(BASE_URL, commonZodiosConfig);
 export const adminApi = new Zodios(BASE_URL, adminApiDef, commonZodiosConfig);
 
 // Register the authentication and device headers plugin for all clients
-const clients = [
+const facades = [
   campaignApi, chatApi, customerApi, deliveryApi, governmentIdApi, identityApi,
-  ledgerApi, mapsApi, paymentApi, restaurantApi, trackingApi, walletApi, adminApi
+  ledgerApi, mapsApi, paymentApi, restaurantApi, trackingApi, walletApi
 ];
 
-clients.forEach(client => {
-  client.use(authPlugin);
+facades.forEach(facade => {
+  Object.values(facade).forEach((client: any) => {
+    if (client && typeof client.use === 'function') {
+      client.use(authPlugin);
+    }
+  });
 });
+
+if (adminApi && typeof adminApi.use === 'function') {
+  adminApi.use(authPlugin);
+}

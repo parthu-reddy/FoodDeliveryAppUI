@@ -12,7 +12,7 @@ import { logout } from '../../lib/authStore';
 import SessionManagementModal from '../shared/SessionManagementModal';
 import CompleteProfileModal from '../shared/CompleteProfileModal';
 import { z } from 'zod';
-import { phoneSchema, otpSchema } from '../../lib/zod-schemas';
+import { phoneSchema as phoneNumberSchema, otpSchema } from '../../lib/zod-schemas';
 
 const roleToServiceName = (role: UserRole): string => {
   switch (role) {
@@ -25,7 +25,7 @@ const roleToServiceName = (role: UserRole): string => {
 };
 
 interface LoginScreenProps {
-  onLoginSuccess: (role: UserRole, phone: string, name: string) => void;
+  onLoginSuccess: (role: UserRole, phoneNumber: string, name: string) => void;
   onAddApiLog?: (log: any) => void;
 }
 
@@ -34,7 +34,7 @@ import { useTheme } from '../../context/ThemeContext';
 export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreenProps) {
   const { theme, toggleTheme } = useTheme();
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
-  const [phone, setPhone] = useState('');
+  const [phoneNumber, setPhone] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const [generatedOtp, setGeneratedOtp] = useState('');
@@ -93,7 +93,7 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
 
   // Auto dismiss or show SMS simulation
   useEffect(() => {
-    if (otpSent && generatedOtp && ((import.meta as any).env.DEV || (import.meta as any).env.VITE_ENABLE_DEV_OTP === 'true')) {
+    if (otpSent && generatedOtp && (import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEV_OTP === 'true')) {
       const timer = setTimeout(() => {
         setShowNotification(true);
       }, 1000);
@@ -106,7 +106,7 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
     e.preventDefault();
     setError('');
 
-    const validation = phoneSchema.safeParse(phone);
+    const validation = phoneNumberSchema.safeParse(phoneNumber);
     if (!validation.success) {
       setError(validation.error.issues[0].message);
       return;
@@ -120,16 +120,12 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
 
     try {
       const serviceName = roleToServiceName(selectedRole!);
-      await (identityApi.post as any)(
-        `/api/v1/internal/auth/initiate?phoneNumber=${encodeURIComponent(phone)}`,
-        undefined,
-        { 'X-Calling-Service': serviceName }
-      );
+      await identityApi.auth.post('/api/v1/internal/auth/initiate', undefined, { queries: { phoneNumber } });
       
       // Try to fetch the OTP via admin endpoint (dev convenience or feature flag)
-      if ((import.meta as any).env.DEV || (import.meta as any).env.VITE_ENABLE_DEV_OTP === 'true') {
+      if (import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEV_OTP === 'true') {
         try {
-          const adminResp = await (identityApi.get as any)(`/api/v1/internal/auth/admin/otp?phoneNumber=${encodeURIComponent(phone)}&serviceName=${encodeURIComponent(serviceName)}`);
+          const adminResp = await identityApi.adminOtp.get('/api/v1/internal/auth/admin/otp', { queries: { phoneNumber, serviceName } });
           if (adminResp?.data) {
             setGeneratedOtp(adminResp.data);
           } else if (typeof adminResp === 'string') {
@@ -166,11 +162,7 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
 
     try {
       const serviceName = roleToServiceName(selectedRole!);
-      const resp = await (identityApi.post as any)(
-        `/api/v1/internal/auth/verify?phoneNumber=${encodeURIComponent(phone)}&otp=${encodeURIComponent(otpCode)}`,
-        undefined,
-        { 'X-Calling-Service': serviceName }
-      );
+      const resp = await identityApi.auth.post('/api/v1/internal/auth/verify', undefined, { queries: { phoneNumber, otpCode } });
 
       // The backend returns { success: true, data: "<jwt_token>", message: "Login successful" }
       const token = resp?.data || resp;
@@ -183,28 +175,28 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
 
       // Decode user info from JWT
       const decoded = decodeJwt(token);
-      const name = decoded?.name || decoded?.phone || phone;
+      const name = decoded?.name || decoded?.phoneNumber || phoneNumber;
       const id = decoded?.sub;
 
       // Store profile for session persistence
-      setUserProfile({ id, phone, role: selectedRole!, name });
+      setUserProfile({ id, phoneNumber, role: selectedRole!, name });
 
       // Fetch profile to check if it is complete
       try {
-        const profileResp = await (identityApi.get as any)('/api/v1/users/profile');
+        const profileResp = await identityApi.user.get('/api/v1/users/profile', {});
         const p = profileResp?.data;
         if (!p?.name || !p?.email || p.name.trim() === '' || p.email.trim() === '') {
-          setPendingLoginData({ id, phone, role: selectedRole!, name });
+          setPendingLoginData({ id, phoneNumber, role: selectedRole!, name });
           setShowProfileModal(true);
           return;
         } else {
           // If profile is already complete, just proceed
-          setUserProfile({ id, phone, role: selectedRole!, name: p.name });
-          onLoginSuccess(selectedRole!, phone, p.name);
+          setUserProfile({ id, phoneNumber, role: selectedRole!, name: p.name });
+          onLoginSuccess(selectedRole!, phoneNumber, p.name);
         }
       } catch (profileErr) {
         // If there's an error fetching profile, show the modal as a fallback
-        setPendingLoginData({ id, phone, role: selectedRole!, name });
+        setPendingLoginData({ id, phoneNumber, role: selectedRole!, name });
         setShowProfileModal(true);
         return;
       }
@@ -369,7 +361,7 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
           ) : (
             <AuthForm
               selectedRole={selectedRole}
-              phone={phone}
+              phone={phoneNumber}
               setPhone={setPhone}
               otpCode={otpCode}
               setOtpCode={setOtpCode}
@@ -383,14 +375,10 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
                 setShowNotification(false);
                 try {
                   const serviceName = roleToServiceName(selectedRole!);
-                  await (identityApi.post as any)(
-                    `/api/v1/internal/auth/initiate?phoneNumber=${encodeURIComponent(phone)}`,
-                    undefined,
-                    { 'X-Calling-Service': serviceName }
-                  );
-                  if ((import.meta as any).env.DEV || (import.meta as any).env.VITE_ENABLE_DEV_OTP === 'true') {
+                  await identityApi.auth.post('/api/v1/internal/auth/initiate', undefined, { queries: { phoneNumber } });
+                  if (import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEV_OTP === 'true') {
                     try {
-                      const adminResp = await (identityApi.get as any)(`/api/v1/internal/auth/admin/otp?phoneNumber=${encodeURIComponent(phone)}&serviceName=${encodeURIComponent(serviceName)}`);
+                      const adminResp = await identityApi.adminOtp.get('/api/v1/internal/auth/admin/otp', { queries: { phoneNumber, serviceName } });
                       if (adminResp?.data) {
                         setGeneratedOtp(adminResp.data);
                       } else if (typeof adminResp === 'string') {
@@ -415,7 +403,7 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
         isOpen={showSessionModal}
         onClose={() => setShowSessionModal(false)}
         sessions={activeSessions}
-        phone={phone}
+        phoneNumber={phoneNumber}
         otpCode={otpCode}
         serviceName={selectedRole ? roleToServiceName(selectedRole) : ''}
         theme={theme}
@@ -423,23 +411,23 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
           setShowSessionModal(false);
           setToken(token);
           const decoded = decodeJwt(token);
-          const name = decoded?.name || decoded?.phone || phone;
+          const name = decoded?.name || decoded?.phoneNumber || phoneNumber;
           const id = decoded?.sub;
           const role = selectedRole!;
-          setUserProfile({ id, phone, role, name });
+          setUserProfile({ id, phoneNumber, role, name });
 
           try {
-            const profileResp = await (identityApi.get as any)('/api/v1/users/profile');
+            const profileResp = await identityApi.user.get('/api/v1/users/profile', {});
             const p = profileResp?.data;
             if (!p?.name || !p?.email || p.name.trim() === '' || p.email.trim() === '') {
-              setPendingLoginData({ id, phone, role, name });
+              setPendingLoginData({ id, phoneNumber, role, name });
               setShowProfileModal(true);
             } else {
-              setUserProfile({ id, phone, role, name: p.name });
-              onLoginSuccess(role, phone, p.name);
+              setUserProfile({ id, phoneNumber, role, name: p.name });
+              onLoginSuccess(role, phoneNumber, p.name);
             }
           } catch (err) {
-            setPendingLoginData({ id, phone, role, name });
+            setPendingLoginData({ id, phoneNumber, role, name });
             setShowProfileModal(true);
           }
         }}
@@ -454,7 +442,7 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
           const finalName = p.name || pendingLoginData?.name;
           if (pendingLoginData) {
             setUserProfile({ ...pendingLoginData, name: finalName });
-            onLoginSuccess(pendingLoginData.role, pendingLoginData.phone, finalName);
+            onLoginSuccess(pendingLoginData.role, pendingLoginData.phoneNumber, finalName);
           }
         }}
       />

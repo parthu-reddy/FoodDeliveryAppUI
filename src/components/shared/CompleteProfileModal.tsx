@@ -35,11 +35,11 @@ export default function CompleteProfileModal({ isOpen, theme, onComplete, profil
 
     setIsSubmitting(true);
     try {
-      await (identityApi.put as any)('/api/v1/users/profile', {
-        id: profileId,
-        name: name.trim(),
-        email: email.trim(),
-      });
+      await identityApi.user.put('/api/v1/users/profile', {
+              id: profileId,
+              name: name.trim(),
+              email: email.trim(),
+            });
       onComplete({ name: name.trim(), email: email.trim() });
     } catch (err: any) {
       setError(err.message || 'Failed to update profile. Please try again.');

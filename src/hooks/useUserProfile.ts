@@ -27,12 +27,10 @@ export function useUserProfile(): UseUserProfileResult {
   const localProfile = getUserProfile();
 
   useEffect(() => {
-    identityApi.get('/api/v1/users/profile')
+    identityApi.user.get('/api/v1/users/profile', undefined as unknown as Parameters<typeof identityApi.user.get>[1])
       .then(res => {
-        // @ts-expect-error Temporarily bypass for API mismatch/TS2589
-        if ((res).data) {
-          // @ts-expect-error Temporarily bypass for API mismatch/TS2589
-          const p = (res).data as UserProfileData;
+        if (res) {
+          const p = res as unknown as UserProfileData;
           setProfile(p);
           if (!p.name || !p.email || p.name.trim() === '' || p.email.trim() === '') {
             setIsProfileIncomplete(true);

@@ -26,7 +26,7 @@ export default function CustomerRestaurantCard({ restaurant, isLast, lastElement
           const trackingUrl = restaurant.adData.impressionTrackingUrl;
           if (trackingUrl) {
             const relativeUrl = trackingUrl.replace('http://event-tracking-service', '');
-            (customerApi.get as any)(relativeUrl).catch(err => console.error("Impression tracking failed", err));
+            fetch(import.meta.env.VITE_API_BASE_URL + relativeUrl).catch(err => console.error("Impression tracking failed", err));
           }
           
           observer.disconnect(); // Only track impression once per render
@@ -47,7 +47,7 @@ export default function CustomerRestaurantCard({ restaurant, isLast, lastElement
       const trackingUrl = restaurant.adData.clickTrackingUrl;
       if (trackingUrl) {
         const relativeUrl = trackingUrl.replace('http://event-tracking-service', '');
-        (customerApi.get as any)(relativeUrl).catch(err => console.error("Click tracking failed", err));
+        fetch(import.meta.env.VITE_API_BASE_URL + relativeUrl).catch(err => console.error("Click tracking failed", err));
       }
     }
     onClick(restaurant);

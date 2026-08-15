@@ -15,14 +15,14 @@ interface SessionManagementModalProps {
   isOpen: boolean;
   onClose: () => void;
   sessions: Session[];
-  phone: string;
+  phoneNumber: string;
   otpCode: string;
   serviceName: string;
   onSuccess: (token: string) => void;
   theme?: 'light' | 'dark';
 }
 
-export default function SessionManagementModal({ isOpen, onClose, sessions, phone, otpCode, serviceName, onSuccess, theme = 'light' }: SessionManagementModalProps) {
+export default function SessionManagementModal({ isOpen, onClose, sessions, phoneNumber, otpCode, serviceName, onSuccess, theme = 'light' }: SessionManagementModalProps) {
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [error, setError] = useState('');
 
@@ -32,11 +32,10 @@ export default function SessionManagementModal({ isOpen, onClose, sessions, phon
     setLoadingId(sessionId);
     setError('');
     try {
-      const resp = await (identityApi.post as any)(
-        `/api/v1/internal/auth/verify?phoneNumber=${encodeURIComponent(phone)}&otp=${encodeURIComponent(otpCode)}&removeSessionId=${encodeURIComponent(sessionId)}`,
-        undefined,
-        { 'X-Calling-Service': serviceName }
-      );
+      const resp = await identityApi.auth.post('/api/v1/internal/auth/verify', undefined, { 
+        queries: { phoneNumber, otp: otpCode, removeSessionId: sessionId },
+        headers: { "X-Calling-Service": serviceName }
+      });
       
       const token = resp?.data || resp;
       if (!token || typeof token !== 'string') {

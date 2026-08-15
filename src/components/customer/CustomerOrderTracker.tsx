@@ -5,6 +5,8 @@ import { OrderStatus, DeliveryStatus } from '../../types/backend-enums';
 // Use React.lazy for map
 const OrderTrackingMap = React.lazy(() => import('../shared/OrderTrackingMap'));
 
+import { customerApi } from '../../lib/zodiosClients';
+
 interface CustomerOrderTrackerProps {
   currentTrackingOrder: any;
   setTrackingOrder: (order: any | null) => void;
@@ -15,7 +17,6 @@ interface CustomerOrderTrackerProps {
   onUpdateOrder?: (id: string, status: string) => void;
   setInternalOrders: React.Dispatch<React.SetStateAction<any[]>>;
   showError: (msg: string) => void;
-  apiPost: (url: string, data?: any) => Promise<any>;
   getFriendlyStatusMessage: (status: string, deliveryStatus?: string) => string;
 }
 
@@ -29,7 +30,6 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
   onUpdateOrder,
   setInternalOrders,
   showError,
-  apiPost,
   getFriendlyStatusMessage,
 }) => {
   return (
@@ -119,10 +119,10 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
                     }
                     
                     try {
-                      await apiPost(`/api/v1/orders/${currentTrackingOrder.id}/delay-approval`, {
+                      await customerApi.order.post('/api/v1/orders/:orderId/delay-approval', {
                         approved: true,
                         expectedDelayMinutes: 15
-                      });
+                      }, { params: { orderId: currentTrackingOrder.id } });
                       if (onUpdateOrder) onUpdateOrder(currentTrackingOrder.id, OrderStatus.ACCEPTED);
                       setInternalOrders(prev => prev.map(o => o.id === currentTrackingOrder.id ? { ...o, status: OrderStatus.ACCEPTED } : o));
                     } catch (e) {
@@ -140,9 +140,9 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
                     }
                     
                     try {
-                      await apiPost(`/api/v1/orders/${currentTrackingOrder.id}/delay-approval`, {
+                      await customerApi.order.post('/api/v1/orders/:orderId/delay-approval', {
                         approved: false
-                      });
+                      }, { params: { orderId: currentTrackingOrder.id } });
                       if (onUpdateOrder) onUpdateOrder(currentTrackingOrder.id, OrderStatus.CANCELLED);
                       setInternalOrders(prev => prev.map(o => o.id === currentTrackingOrder.id ? { ...o, status: OrderStatus.CANCELLED } : o));
                     } catch (e) {
@@ -185,7 +185,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
                       setInternalOrders(prev => prev.map(o => o.id === currentTrackingOrder.id ? { ...o, status: OrderStatus.CANCELLED } : o));
                     }
                     try {
-                      await apiPost(`/api/v1/orders/${currentTrackingOrder.id}/cancel`);
+                      await customerApi.order.post('/api/v1/orders/:orderId/cancel', undefined, { params: { orderId: currentTrackingOrder.id } });
                     } catch (e: any) {
                       console.error("Failed to cancel order", e);
                       showError(e.response?.data?.message || "Failed to cancel order");
@@ -449,8 +449,8 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
                 <span>₹{currentTrackingOrder.items ? currentTrackingOrder.items.reduce((sum: number, item: any) => sum + ((item.item?.price || item.price || 0) * (item.quantity || 1)), 0).toFixed(2) : '0.00'}</span>
               </div>
               <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
-                <span>Delivery Fee {(currentTrackingOrder as any).distanceKm ? `(${(currentTrackingOrder as any).distanceKm} km)` : ''}</span>
-                <span>₹{(currentTrackingOrder as any).charges?.find((c: any) => c.category === 'DELIVERY_FEE' && c.payerType === 'CUSTOMER')?.amount?.toFixed(2) || (currentTrackingOrder.deliveryFee !== undefined ? currentTrackingOrder.deliveryFee.toFixed(2) : (currentTrackingOrder.items ? ((currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0) - currentTrackingOrder.items.reduce((sum: number, item: any) => sum + ((item.item?.price || item.price || 0) * (item.quantity || 1)), 0)).toFixed(2) : '0.00'))}</span>
+                <span>Delivery Fee {currentTrackingOrder.distanceKm ? `(${currentTrackingOrder.distanceKm} km)` : ''}</span>
+                <span>₹{currentTrackingOrder.charges?.find((c: any) => c.category === 'DELIVERY_FEE' && c.payerType === 'CUSTOMER')?.amount?.toFixed(2) || (currentTrackingOrder.deliveryFee !== undefined ? currentTrackingOrder.deliveryFee.toFixed(2) : (currentTrackingOrder.items ? ((currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0) - currentTrackingOrder.items.reduce((sum: number, item: any) => sum + ((item.item?.price || item.price || 0) * (item.quantity || 1)), 0)).toFixed(2) : '0.00'))}</span>
               </div>
               {currentTrackingOrder.sgst !== undefined && (
                 <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">

@@ -104,7 +104,7 @@ function _CustomerPaymentModal({
                         return (
                           <button
                             key={method.id}
-                            onClick={() => setSelectedMethod(method.id as any)}
+                            onClick={() => setSelectedMethod(method.id as "card" | "wallet" | "cod")}
                             className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all ${
                               isSelected 
                                 ? 'border-indigo-500 bg-indigo-50/80 dark:bg-indigo-500/20 shadow-md' 

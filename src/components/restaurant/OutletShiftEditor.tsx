@@ -68,7 +68,7 @@ export default function OutletShiftEditor({ outlet, onRefresh, onClose }: Outlet
         openingTime: t.openingTime.length === 5 ? t.openingTime + ":00" : t.openingTime,
         closingTime: t.closingTime.length === 5 ? t.closingTime + ":00" : t.closingTime
       }));
-      await (customerApi.put as any)(`/api/v1/outlets/${outlet.id}/timings`, { timings: formattedTimings });
+      await restaurantApi.restaurantOutlet.put('/api/v1/outlets/:outletId/timings', { timings: formattedTimings }, { params: { outletId: outlet.id } });
       onRefresh();
       onClose();
     } catch (err: any) {

@@ -24,8 +24,8 @@ export const logout = async () => {
   // Send logout to backend BEFORE clearing the token,
   // because apiPost reads the auth token from localStorage.
   try {
-    // @ts-expect-error Temporarily bypass for API mismatch/TS2589
-    await identityApi.post('/api/v1/internal/auth/logout', {});
+    //  Temporarily bypass for API mismatch/TS2589
+    await identityApi.auth.post('/api/v1/internal/auth/logout', undefined as unknown as Parameters<typeof identityApi.auth.post>[1]);
   } catch (e) {
     console.error('Logout API call failed', e);
   }

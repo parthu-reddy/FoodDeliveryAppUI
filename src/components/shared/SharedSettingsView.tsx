@@ -89,7 +89,12 @@ export default function SharedSettingsView({
     try {
       if (type === 'history') setIsLoadingOrders(true);
       
-      const res = await (customerApi.get as any)(`/api/v1/orders/${type}?page=${page}&size=10`);
+      let res: any;
+      if (type === 'history') {
+         res = await customerApi.order.get('/api/v1/orders/history', { queries: { page } });
+      } else {
+         throw new Error(`Unsupported order type: ${type}`);
+      }
       
       if (res?.data?.content) {
         if (type === 'history') {
@@ -117,7 +122,7 @@ export default function SharedSettingsView({
   const loadSessions = async () => {
     setIsLoadingSessions(true);
     try {
-      const res = await (identityApi.get as any)('/api/v1/internal/auth/sessions');
+      const res = await identityApi.auth.get('/api/v1/internal/auth/sessions', { headers: { 'X-Calling-Service': 'CustomerApplication' } });
       if (res?.data) {
         setSessions(res.data);
       }
@@ -133,10 +138,10 @@ export default function SharedSettingsView({
     if (!customerId) return;
     setTxLoading(true);
     try {
-      const balanceRes = await (walletApi.get as any)(`/api/v1/wallets/CUSTOMER/${customerId}`);
+      const balanceRes = await walletApi.wallet.get('/api/v1/wallets/:entityType/:entityId', { params: { entityType: 'CUSTOMER', entityId: customerId } });
       if (balanceRes.data) setWalletBalance(balanceRes.data.balance);
       
-      const txRes = await (walletApi.get as any)(`/api/v1/wallets/CUSTOMER/${customerId}/transactions?page=${txPage}&size=10`);
+      const txRes = await walletApi.wallet.get('/api/v1/wallets/:entityType/:entityId/transactions', { params: { entityType: 'CUSTOMER', entityId: customerId }, queries: { page: txPage } });
       if (txRes.data) {
         setTransactions(txRes.data.content || []);
         setTxTotalPages(txRes.data.totalPages || 1);
@@ -155,7 +160,7 @@ export default function SharedSettingsView({
       if (onAddApiLog) {
         onAddApiLog({ id: `revoke_${sessionId}`, label: `DELETE /api/v1/internal/auth/sessions/${sessionId}`, method: 'DELETE' });
       }
-      await (identityApi.delete as any)(`/api/v1/internal/auth/sessions/${sessionId}`);
+      await identityApi.auth.delete('/api/v1/internal/auth/sessions/:sessionId', undefined, { params: { sessionId }, headers: { 'X-Calling-Service': 'CustomerApplication' } });
       
       // If we revoked the current session, it might throw a 401 on next request. We'll reload sessions to be safe.
       await loadSessions();
@@ -193,7 +198,7 @@ export default function SharedSettingsView({
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        const res = await (identityApi.get as any)('/api/v1/users/profile');
+        const res = await identityApi.user.get('/api/v1/users/profile');
         if (res?.data) {
           setEditName(res.data.name || '');
           setInitialName(res.data.name || '');
@@ -225,12 +230,12 @@ export default function SharedSettingsView({
       onAddApiLog({ id: 'update_profile', label: `PUT /api/v1/users/profile`, method: 'PUT' });
     }
     try {
-      await (identityApi.put as any)('/api/v1/users/profile', {
-        id: userId,
-        name: editName,
-        email: editEmail,
-        phone: editPhone
-      });
+      await identityApi.user.put('/api/v1/users/profile', {
+              id: userId,
+              name: editName,
+              email: editEmail,
+              phone: editPhone
+            });
       showSuccess('Profile updated successfully');
     } catch (e) {
       console.error(e);

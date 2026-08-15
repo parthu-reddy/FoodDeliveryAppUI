@@ -35,7 +35,7 @@ export default function ImageUploadField({ value, onChange, folderId, placeholde
       formData.append('folderId', folderId);
       formData.append('imageType', imageType);
       
-      const res = await (customerApi.post as any)('/api/v1/images/upload', formData);
+      const res = await restaurantApi.imageUpload.post('/api/v1/images/upload', formData as unknown as { file: File }, { queries: { folderId, imageType } });
       if (res && res.data) {
         onChange(res.data);
       } else {

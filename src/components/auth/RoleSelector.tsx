@@ -21,7 +21,7 @@ export function RoleSelector({ onSelectRole }: RoleSelectorProps) {
       transition={{ duration: 0.3 }}
       className="pt-4 sm:pt-6 md:pt-8 w-full"
     >
-      {((import.meta as any).env.DEV || (import.meta as any).env.VITE_ENABLE_DEV_OTP === 'true') && (
+      {(import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEV_OTP === 'true') && (
         <div className="max-w-6xl mx-auto mb-8 bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 text-center">
           <h4 className="text-amber-700 dark:text-amber-400 font-bold mb-3 flex items-center justify-center gap-2">
             <AlertCircle className="w-5 h-5" /> Development Setup / Dummy Data

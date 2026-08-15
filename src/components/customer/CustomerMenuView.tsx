@@ -136,7 +136,7 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
             <div key={category} className="space-y-4">
               <h5 className="font-extrabold text-sm text-slate-800 dark:text-slate-300 uppercase tracking-widest">{category}</h5>
               <div className="space-y-4">
-                {(dishes as any[]).map(dish => {
+                {(dishes as MenuItem[]).map(dish => {
                   const cartQty = carts[selectedRestaurant.id]?.items.find((i: any) => i.item.id === dish.id)?.quantity || 0;
                   
                   return (

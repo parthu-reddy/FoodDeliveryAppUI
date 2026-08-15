@@ -855,8 +855,10 @@ export interface components {
             timings?: components["schemas"]["TimingDTO"][];
         };
         TimingDTO: {
-            openingTime?: components["schemas"]["LocalTime"];
-            closingTime?: components["schemas"]["LocalTime"];
+            /** @example 10:00:00 */
+            openingTime?: string;
+            /** @example 22:00:00 */
+            closingTime?: string;
         };
         ApiResponseListTimingDTO: {
             success?: boolean;

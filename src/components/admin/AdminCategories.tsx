@@ -17,7 +17,7 @@ export default function AdminCategories() {
 
   const { data: categories = [], refetch } = usePolling({
     fetchFn: async () => {
-      const res = await (adminApi.get as any)('/api/v1/categories');
+      const res = await restaurantApi.category.get('/api/v1/categories', {});
       return res.data?.data || res.data || [];
     },
     intervalMs: 30000,
@@ -39,11 +39,11 @@ export default function AdminCategories() {
 
     try {
       if (editingCategory) {
-        await (adminApi.put as any)(`/api/v1/categories/${editingCategory.id}`, { name: nameInput.value, description: descInput.value });
+        await restaurantApi.category.put('/api/v1/categories/:categoryId', { name: nameInput.value, description: descInput.value }, { params: { categoryId: editingCategory.id } });
         showSuccess('Category updated successfully');
         setEditingCategory(null);
       } else {
-        await (adminApi.post as any)('/api/v1/categories', { name: nameInput.value, description: descInput.value });
+        await restaurantApi.category.post('/api/v1/categories', { name: nameInput.value, description: descInput.value }, {});
         showSuccess('Category created successfully');
       }
       form.reset();

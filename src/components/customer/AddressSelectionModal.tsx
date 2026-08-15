@@ -1,6 +1,6 @@
 import React from 'react';
 import { MapPin, Navigation, Plus } from 'lucide-react';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi, mapsApi } from '../../lib/zodiosClients';
 import { useToast } from '../../context/ToastContext';
 import { Modal } from '../ui';
 
@@ -29,7 +29,7 @@ export default function AddressSelectionModal({
         async (position) => {
           const { latitude, longitude } = position.coords;
           try {
-            const res = await (customerApi.get as any)(`/api/places/reverse-geocode?lat=${latitude}&lng=${longitude}`);
+            const res = await mapsApi.integration.get('/api/places/reverse-geocode', { queries: { lat: latitude, lng: longitude } });
             if (res && res.address) {
               onUseCurrentLocation(res.address);
             } else {

@@ -20,12 +20,13 @@ export function OrderHistory({ restaurantId, onOpenChat }: { restaurantId: strin
     if (!restaurantId) return;
     const fetchHistory = async () => {
       try {
-        const queryParams = new URLSearchParams();
-        if (dateFilter) queryParams.append('date', dateFilter);
-        queryParams.append('page', (currentPage - 1).toString());
-        queryParams.append('size', itemsPerPage.toString());
+        const queries: any = {
+          page: currentPage - 1,
+          size: itemsPerPage
+        };
+        if (dateFilter) queries.date = dateFilter;
 
-        const res = await (restaurantApi.get as any)(`/api/v1/restaurants/${restaurantId}/fulfillment/orders/history?${queryParams.toString()}`);
+        const res = await restaurantApi.fulfillment.get('/api/v1/restaurants/:restaurantId/fulfillment/orders/history', { params: { restaurantId }, queries });
         if (res.data) {
           const mapped = (res.data.content || []).map((o: any) => {
             let s = (o.status || '').toUpperCase();
@@ -162,7 +163,7 @@ export function OrderHistory({ restaurantId, onOpenChat }: { restaurantId: strin
                         {order.items.map((item, idx) => (
                           <div key={idx} className="text-xs flex items-center gap-1.5 text-slate-600 dark:text-[#f0ede6]">
                             <span className="font-bold text-slate-800 dark:text-[#f0ede6]">{item.quantity || 1}x</span>
-                            <span className="truncate max-w-[120px] sm:max-w-[180px]">{item.item?.name || (item as any).name || 'Item'}</span>
+                            <span className="truncate max-w-[120px] sm:max-w-[180px]">{item.item?.name || (item).name || 'Item'}</span>
                           </div>
                         ))}
                       </div>
@@ -175,7 +176,7 @@ export function OrderHistory({ restaurantId, onOpenChat }: { restaurantId: strin
                         </div>
                         {(order.sgst !== undefined || order.cgst !== undefined) && (
                           <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-                            Incl. Tax: ${( (order.sgst || 0) + (order.cgst || 0) ).toFixed(2)}
+                            Incl. Tax: ${((order.sgst || 0) + (order.cgst || 0)).toFixed(2)}
                           </div>
                         )}
                       </div>

@@ -58,12 +58,12 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
 
   const loadStatus = async () => {
     try {
-      const verRes = await (deliveryApi.get as any)(`/api/delivery/verification/status`);
+      const verRes = await deliveryApi.deliveryVerification.get(`/api/delivery/verification/status`, {});
       if (verRes?.data) {
         setVerificationStatus(verRes.data);
       }
       
-      const deliveryRes = await (deliveryApi.get as any)(`/api/delivery/profile?phoneNumber=${encodeURIComponent(riderPhone)}`);
+      const deliveryRes = await deliveryApi.deliveryExecutive.get('/api/delivery/profile', { queries: { phoneNumber: riderPhone } });
       if (deliveryRes?.data) {
         setVehicle(deliveryRes.data.vehicleNumber || '');
         setVehicleType(deliveryRes.data.vehicleType || 'BICYCLE');
@@ -88,15 +88,15 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
     setIsSubmitting(true);
     try {
       if (!initialName && userId) {
-        await (identityApi.put as any)('/api/v1/users/profile', { id: userId, name, phone: riderPhone });
+        await identityApi.user.put('/api/v1/users/profile', { id: userId, name, phone: riderPhone }, {});
       }
-      await (deliveryApi.post as any)('/api/delivery/onboard', {
-        phoneNumber: riderPhone,
-        fullName: name,
-        vehicleNumber: vehicle,
-        vehicleType,
-        photoUrl: photo
-      });
+      await deliveryApi.deliveryExecutive.post('/api/delivery/onboard', {
+              phoneNumber: riderPhone,
+              fullName: name,
+              vehicleNumber: vehicle,
+              vehicleType: vehicleType as "BICYCLE" | "EV_TWO_WHEELER" | "MCWG" | "LMV",
+              photoUrl: photo
+            }, {});
       showSuccess('Profile saved');
       handleNext();
     } catch (e: any) {
@@ -113,7 +113,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
     }
     setIsSubmitting(true);
     try {
-      await (deliveryApi.post as any)(`/api/delivery/verification/driving-license`, { dlNumber, documentUrl: dlDoc, dateOfBirth: dob });
+      await deliveryApi.deliveryVerification.post(`/api/delivery/verification/driving-license`, { dlNumber, documentUrl: dlDoc, dob: dob });
       showSuccess('Driving License submitted');
       await loadStatus();
       handleNext();
@@ -131,7 +131,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
     }
     setIsSubmitting(true);
     try {
-      await (deliveryApi.post as any)(`/api/delivery/verification/vehicle-rc`, { registrationNumber: rcNumber, documentUrl: rcDoc });
+      await deliveryApi.deliveryVerification.post(`/api/delivery/verification/vehicle-rc`, { registrationNumber: rcNumber, documentUrl: rcDoc });
       showSuccess('Vehicle RC submitted');
       await loadStatus();
       handleNext();
@@ -149,7 +149,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
     }
     setIsSubmitting(true);
     try {
-      await (deliveryApi.post as any)(`/api/delivery/verification/bank-account`, { accountNumber: bankAccount, ifscCode: ifsc, kycFullName: name });
+      await deliveryApi.deliveryVerification.post(`/api/delivery/verification/bank-account`, { accountNumber: bankAccount, ifscCode: ifsc, kycFullName: name });
       showSuccess('Bank Verification Initiated (Penny Drop)');
       await loadStatus();
       handleNext();
@@ -167,7 +167,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
     }
     setIsSubmitting(true);
     try {
-      await (deliveryApi.post as any)(`/api/delivery/verification/biometric`, { selfieUrl: selfieDoc });
+      await deliveryApi.deliveryVerification.post(`/api/delivery/verification/biometric`, { selfieUrl: selfieDoc });
       showSuccess('Biometric check complete!');
       await loadStatus();
       onComplete(); // Done!

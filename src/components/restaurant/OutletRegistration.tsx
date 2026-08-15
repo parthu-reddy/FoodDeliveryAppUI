@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Store, MapPin, ChefHat, Upload, Clock, Save, AlertCircle, CheckCircle, Search, Loader, Plus, Trash2, Navigation } from 'lucide-react';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi, mapsApi } from '../../lib/zodiosClients';
 import ImageUploadField from '../shared/ImageUploadField';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -50,7 +50,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
 
   useEffect(() => {
     if (isOpen && mapContainerRef.current && !mapRef.current) {
-      const apiKey = olaMapsApiKey || (import.meta as any).env.VITE_OLA_MAPS_API_KEY || '';
+      const apiKey = olaMapsApiKey || import.meta.env.VITE_OLA_MAPS_API_KEY || '';
       
       const map = new maplibregl.Map({
         container: mapContainerRef.current,
@@ -112,7 +112,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
       }
       setIsSearching(true);
       try {
-        const apiKey = olaMapsApiKey || (import.meta as any).env.VITE_OLA_MAPS_API_KEY || '';
+        const apiKey = olaMapsApiKey || import.meta.env.VITE_OLA_MAPS_API_KEY || '';
         const res = await fetch(`https://api.olamaps.io/places/v1/autocomplete?input=${encodeURIComponent(debouncedSearchQuery)}&api_key=${apiKey}`);
         const data = await res.json();
         if (data.predictions) {
@@ -135,7 +135,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
     setSearchQuery(description);
     setSearchResults([]);
     try {
-      const apiKey = olaMapsApiKey || (import.meta as any).env.VITE_OLA_MAPS_API_KEY || '';
+      const apiKey = olaMapsApiKey || import.meta.env.VITE_OLA_MAPS_API_KEY || '';
       const res = await fetch(`https://api.olamaps.io/places/v1/details?place_id=${placeId}&api_key=${apiKey}`);
       const data = await res.json();
       if (data.result && data.result.geometry && data.result.geometry.location) {
@@ -175,7 +175,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
             }
             
             // Try to reverse geocode
-            const res = await (customerApi.get as any)(`/api/places/reverse-geocode?lat=${latitude}&lng=${longitude}`);
+            const res = await mapsApi.integration.get('/api/places/reverse-geocode', { queries: { lat: latitude, lng: longitude } });
             if (res && res.address) {
               setSearchQuery(res.address);
             }
@@ -232,7 +232,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
 
     try {
       setIsSaving(true);
-      await (customerApi.post as any)(`/api/v1/brands/${brandId}/outlets`, newOutlet);
+      await restaurantApi.restaurantOutlet.post('/api/v1/brands/:brandId/outlets', newOutlet, { params: { brandId } });
       setIsOpen(false);
       setName('');
       setFssai('');

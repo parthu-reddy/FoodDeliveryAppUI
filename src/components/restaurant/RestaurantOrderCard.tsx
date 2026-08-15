@@ -99,7 +99,7 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
     if (order.status === OrderStatus.AWAITING_DELAY_APPROVAL) {
       return { ring: 'ring-red-500/20 border-red-500/30', bg: 'bg-red-500/[0.01]' };
     }
-    if (order.status === OrderStatus.PREPARING as any) {
+    if (order.status === OrderStatus.PREPARING) {
       return { ring: 'ring-orange-500/20 border-orange-500/30', bg: 'bg-orange-500/[0.01]' };
     }
     return { ring: 'ring-amber-500/10', bg: 'border-rose-500/20 dark:border-rose-500/30' };
@@ -118,15 +118,15 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
         </div>
         <Badge 
           variant={order.status === OrderStatus.AWAITING_DELAY_APPROVAL ? 'danger' : 'primary'} 
-          icon={order.status === OrderStatus.PREPARING as any ? <Flame className="w-3 h-3 text-orange-500 animate-bounce" /> : undefined}
+          icon={order.status === OrderStatus.PREPARING ? <Flame className="w-3 h-3 text-orange-500 animate-bounce" /> : undefined}
           pulse={order.status === OrderStatus.AWAITING_DELAY_APPROVAL}
           className="shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:shadow-[0_0_12px_rgba(244,63,94,0.5)]"
         >
           {order.status === OrderStatus.AWAITING_DELAY_APPROVAL ? 'ON HOLD' : 
-            order.status === OrderStatus.PREPARING as any ? 'COOKING' :
-            order.status === OrderStatus.ACCEPTED as any ? 'ACCEPTED' :
-            order.status === OrderStatus.READY_FOR_PICKUP as any ? 'READY' :
-            order.status === OrderStatus.HANDED_OVER as any ? 'DISPATCHED' :
+            order.status === OrderStatus.PREPARING ? 'COOKING' :
+            order.status === OrderStatus.ACCEPTED ? 'ACCEPTED' :
+            order.status === OrderStatus.READY_FOR_PICKUP ? 'READY' :
+            order.status === OrderStatus.HANDED_OVER ? 'DISPATCHED' :
             'PLACED'}
         </Badge>
       </div>
@@ -281,7 +281,7 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
 
             {(isCooking || isRequestedDelay) && (
               <>
-                {order.status === OrderStatus.ACCEPTED as any ? (
+                {order.status === OrderStatus.ACCEPTED ? (
                   <Button
                     variant="warning"
                     size="sm"

@@ -18,7 +18,7 @@ export default function AdminLiveOperations() {
   // Polling for active orders every 15 seconds
   const { data: activeOrdersResponse, refetch: fetchActiveOrders } = usePolling({
     fetchFn: async () => {
-      const res = await (identityApi.get as any)(`/api/v1/internal/admin/orders/active-all?page=${page}&size=20`);
+      const res = await customerApi.adminOrder.get('/api/v1/internal/admin/orders/active-all', { queries: { page } });
       return res.data?.data || res.data || res;
     },
     intervalMs: 15000,
@@ -39,19 +39,19 @@ export default function AdminLiveOperations() {
   // Polling for available drivers every 15 seconds
   const { data: driversList, refetch: fetchAvailableDrivers } = usePolling({
     fetchFn: async () => {
-        let url = `/api/v1/internal/admin/delivery/drivers/available-with-location`;
+        let queries: any = {};
         if (selectedOrder) {
             try {
-                const restRes = await (restaurantApi.get as any)(`/api/v1/restaurants/${selectedOrder.restaurantId}`);
+                const restRes = await restaurantApi.restaurantOutlet.get('/api/v1/restaurants/:id', { params: { id: selectedOrder.restaurantId } });
                 const rest = restRes.data || restRes;
                 if (rest && rest.lat !== undefined && rest.lng !== undefined) {
-                    url += `?lat=${rest.lat}&lng=${rest.lng}&radiusKm=5`;
+                    queries = { lat: rest.lat, lng: rest.lng, radiusKm: 5 };
                 }
             } catch (e) {
                 console.error("Could not fetch restaurant location", e);
             }
         }
-        const res = await (customerApi.get as any)(url);
+        const res = await deliveryApi.adminDelivery.get('/api/v1/internal/admin/delivery/drivers/available-with-location', { queries });
         const content = res.data?.data || res.data || (Array.isArray(res) ? res : res.data);
         return Array.isArray(content) ? content : [];
     },
@@ -73,7 +73,7 @@ export default function AdminLiveOperations() {
     setAvailableDrivers(prev => prev.filter(d => d.id !== driverId));
     
     try {
-      await (identityApi.post as any)(`/api/v1/internal/admin/delivery/orders/${orderId}/assign?driverId=${driverId}`);
+      await deliveryApi.adminDelivery.post('/api/v1/internal/admin/delivery/orders/:orderId/assign', undefined, { params: { orderId }, queries: { driverId } });
       showSuccess("Driver assigned successfully!");
       fetchActiveOrders();
       fetchAvailableDrivers();
@@ -89,7 +89,7 @@ export default function AdminLiveOperations() {
 
   const handlePartialRefund = async (orderId: string, amount: string) => {
     try {
-      await (identityApi.post as any)(`/api/v1/internal/admin/orders/${orderId}/refund/partial`, { amount: parseFloat(amount) });
+      await customerApi.adminOrder.post('/api/v1/internal/admin/orders/:orderId/refund/partial', { amount: parseFloat(amount) }, { params: { orderId } });
       showSuccess("Partial refund initiated successfully!");
       setRefundAmount('');
       fetchActiveOrders();
@@ -101,7 +101,7 @@ export default function AdminLiveOperations() {
 
   const handlePostDeliveryRefund = async (orderId: string, amount: string) => {
     try {
-      await (identityApi.post as any)(`/api/v1/internal/admin/orders/${orderId}/refund/post-delivery`, { amount: parseFloat(amount) });
+      await customerApi.adminOrder.post('/api/v1/internal/admin/orders/:orderId/refund/post-delivery', { amount: parseFloat(amount) }, { params: { orderId } });
       showSuccess("Post-delivery refund initiated successfully!");
       setRefundAmount('');
       fetchActiveOrders();

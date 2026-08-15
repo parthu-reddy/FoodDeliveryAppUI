@@ -46,7 +46,7 @@ export function DeliveryAvailableJobs({
                 </div>
                 <div className="text-right">
                   <span className="text-xs text-slate-400 dark:text-slate-300 block font-mono">PAYOUT</span>
-                  <span className="text-lg font-black text-emerald-500">₹{(job as any).payout ? (job as any).payout.toFixed(2) : '—'}</span>
+                  <span className="text-lg font-black text-emerald-500">₹{job.payout ? job.payout.toFixed(2) : '—'}</span>
                 </div>
               </div>
 

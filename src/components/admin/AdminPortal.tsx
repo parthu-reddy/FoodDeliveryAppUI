@@ -23,7 +23,7 @@ export default function AdminPortal({
   // Poll for intervention count to show badge on sidebar
   const { data: interventionsCount = 0 } = usePolling({
     fetchFn: async () => {
-      const res = await (identityApi.get as any)('/api/v1/internal/admin/orders/intervention');
+      const res = await customerApi.adminOrderManual.get('/api/v1/internal/admin/orders/intervention', {});
       const content = res.content || res.data?.content || res.data?.data?.content || (Array.isArray(res.data) ? res.data : (Array.isArray(res) ? res : []));
       return Array.isArray(content) ? content.length : 0;
     },
@@ -44,7 +44,7 @@ export default function AdminPortal({
           <SidebarNav
             activeColor="indigo"
             activeKey={activeTab}
-            onSelect={(key) => setActiveTab(key as any)}
+            onSelect={(key) => setActiveTab(key as 'deliveries'|'interventions'|'users'|'categories'|'map'|'ledger'|'payouts')}
             items={[
               { key: 'deliveries', label: 'Live Operations', icon: <Activity className="w-5 h-5" /> },
               { key: 'interventions', label: 'Manual Interventions', icon: <Shield className="w-5 h-5" />, badge: interventionsCount },

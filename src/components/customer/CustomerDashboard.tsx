@@ -108,8 +108,8 @@ export default function CustomerDashboard({
   useEffect(() => {
     const profile = getUserProfile();
     if (profile && profile.role === RoleName.CUSTOMER) {
-      const profilePromise = (identityApi.get as any)(`/api/v1/users/profile`).catch(e => { console.error(e); return { data: null }; });
-      const addressesPromise = profile.id ? (customerApi.get as any)(`/api/v1/customers/${profile.id}/addresses`).catch(e => { console.error(e); return { data: null }; }) : Promise.resolve({ data: null });
+      const profilePromise = (identityApi.user.get(`/api/v1/users/profile`, {})).catch(e => { console.error(e); return { data: null }; });
+      const addressesPromise = profile.id ? customerApi.customerAddress.get('/api/v1/customers/:customerId/addresses', { params: { customerId: profile.id } }).catch((e: any) => { console.error(e); return { data: null }; }) : Promise.resolve({ data: null });
 
       Promise.all([profilePromise, addressesPromise]).then(([profileRes, addrRes]) => {
         // Handle Profile
@@ -170,7 +170,7 @@ export default function CustomerDashboard({
   useEffect(() => {
     let ignore = false;
     if (selectedRestaurant?.brandId) {
-      (restaurantApi.get as any)(`/api/v1/restaurants/brands/${selectedRestaurant.brandId}/outlets?lat=${deliveryLat}&lng=${deliveryLng}&radius=10.0`)
+      customerApi.customerRestaurant.get('/api/v1/restaurants/brands/:brandId/outlets', { params: { brandId: selectedRestaurant.brandId }, queries: { lat: Number(deliveryLat), lng: Number(deliveryLng) } })
         .then(res => {
           if (!ignore && res.data) setBrandOutlets(res.data);
         })
@@ -230,7 +230,7 @@ export default function CustomerDashboard({
         if (!selectedRestaurant) return;
         
         if (deliveryAddressId) {
-          (restaurantApi.get as any)(`/api/v1/restaurants/${selectedRestaurant.id}/delivery-pricing?addressId=${deliveryAddressId}`)
+          customerApi.customerRestaurant.get('/api/v1/restaurants/:id/delivery-pricing', { params: { id: selectedRestaurant.id }, queries: { addressId: deliveryAddressId } })
             .then(res => {
               if (!ignore && res.data) {
                 setDeliveryPricingMap(prev => ({ ...prev, [selectedRestaurant.id]: res.data }));
@@ -241,8 +241,8 @@ export default function CustomerDashboard({
             });
         } else if (deliveryLat && deliveryLng) {
           // Fallback if no addressId is selected yet, we only know Haversine distance
-          const rLat = Number((selectedRestaurant as any).lat || 0);
-          const rLng = Number((selectedRestaurant as any).lng || 0);
+          const rLat = Number(selectedRestaurant.lat || 0);
+          const rLng = Number(selectedRestaurant.lng || 0);
           const distanceKm = calculateHaversineDistance(Number(deliveryLat), Number(deliveryLng), rLat, rLng);
           // Without an address, we can't get exact delivery pricing from the new combined API,
           // so we'll just set distance and defaults for now.
@@ -273,7 +273,7 @@ export default function CustomerDashboard({
     const activeCartIds = Object.keys(carts);
     activeCartIds.forEach(cartId => {
       if (!deliveryPricingMap[cartId] && cartId !== selectedRestaurant?.id) {
-        (restaurantApi.get as any)(`/api/v1/restaurants/${cartId}/delivery-pricing?addressId=${deliveryAddressId}`)
+        customerApi.customerRestaurant.get('/api/v1/restaurants/:id/delivery-pricing', { params: { id: cartId }, queries: { addressId: deliveryAddressId } })
           .then(res => {
             if (res.data) {
               setDeliveryPricingMap(prev => ({ ...prev, [cartId]: res.data }));
@@ -289,7 +289,7 @@ export default function CustomerDashboard({
     let ignore = false;
     if (selectedRestaurant) {
       setIsDeliveryAvailable(null);
-      (restaurantApi.get as any)(`/api/v1/restaurants/${selectedRestaurant.id}/delivery-availability`)
+      customerApi.customerRestaurant.get('/api/v1/restaurants/:id/delivery-availability', { params: { id: selectedRestaurant.id } })
         .then(res => {
           if (!ignore && res.data && typeof res.data.available === 'boolean') {
             setIsDeliveryAvailable(res.data.available);
@@ -511,7 +511,6 @@ export default function CustomerDashboard({
               onUpdateOrder={onUpdateOrder}
               setInternalOrders={setInternalOrders}
               showError={showError}
-              apiPost={(customerApi.post as any)}
               getFriendlyStatusMessage={getFriendlyStatusMessage}
             />
           )
@@ -607,8 +606,8 @@ export default function CustomerDashboard({
         onClose={() => setIsAddressSelectorOpen(false)}
         savedAddresses={savedAddresses}
         setAddress={setAddress}
-        setDeliveryLat={setDeliveryLat as any}
-        setDeliveryLng={setDeliveryLng as any}
+        setDeliveryLat={setDeliveryLat}
+        setDeliveryLng={setDeliveryLng}
         setDeliveryAddressId={setDeliveryAddressId}
         setShowLocationPrompt={setShowLocationPrompt}
         onAddNewAddress={() => {

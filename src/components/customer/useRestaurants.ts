@@ -17,7 +17,7 @@ export function useRestaurants({ deliveryLat, deliveryLng, radiusKm = 10.0 }: Us
     let ignore = false;
     if (deliveryLat && deliveryLng) {
       setIsRestaurantsLoading(true);
-      (restaurantApi.get as any)(`/api/v1/restaurants/nearby?lat=${deliveryLat}&lng=${deliveryLng}&radius=${radiusKm}`)
+      restaurantApi.restaurantOutlet.get('/api/v1/restaurants/nearby', { queries: { lat: Number(deliveryLat), lng: Number(deliveryLng), radius: radiusKm } })
         .then(res => {
           if (!ignore && res.data) setRestaurants(res.data);
         })

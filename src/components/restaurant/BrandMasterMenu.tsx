@@ -65,12 +65,12 @@ const BrandMasterMenu = React.memo(function BrandMasterMenu({ brandId, onRefresh
 
   const fetchCategories = async () => {
     try {
-      const data = await (customerApi.get as any)(`/api/v1/brands/${brandId}/categories`);
+      const data = await restaurantApi.category.get('/api/v1/brands/:brandId/categories', { params: { brandId } });
       if (data.success && data.data) {
         const updatedCategories = await Promise.all(
           data.data.map(async (cat: any) => {
             try {
-              const tRes = await (customerApi.get as any)(`/api/v1/brands/${brandId}/categories/${cat.id}/timings`);
+              const tRes = await restaurantApi.category.get('/api/v1/brands/:brandId/categories/:categoryId/timings', { params: { brandId, categoryId: cat.id } });
               return { ...cat, timings: (tRes.success && tRes.data) ? tRes.data : [] };
             } catch (e) {
               return { ...cat, timings: [] };
@@ -85,7 +85,7 @@ const BrandMasterMenu = React.memo(function BrandMasterMenu({ brandId, onRefresh
   const fetchMasterItems = async () => {
     if (!brandId || brandId === 'undefined') return;
     try {
-      const response = await (customerApi.get as any)(`/api/v1/brands/${brandId}/master-menu`);
+      const response = await restaurantApi.catalog.get('/api/v1/brands/:brandId/master-menu', { params: { brandId } });
       setMasterItems(response.data || []);
     } catch (e) { console.error(e); }
   };
@@ -99,7 +99,7 @@ const BrandMasterMenu = React.memo(function BrandMasterMenu({ brandId, onRefresh
     }
     
     try {
-      await (customerApi.post as any)(`/api/v1/brands/${brandId}/categories`, { name: newCatName, description: newCatDesc });
+      await restaurantApi.category.post('/api/v1/brands/:brandId/categories', { name: newCatName, description: newCatDesc }, { params: { brandId } });
       setIsAddingCategory(false);
       setNewCatName('');
       setNewCatDesc('');
@@ -136,7 +136,7 @@ const BrandMasterMenu = React.memo(function BrandMasterMenu({ brandId, onRefresh
     }
 
     try {
-      await (customerApi.post as any)(`/api/v1/brands/${brandId}/master-menu`, payload);
+      await restaurantApi.catalog.post('/api/v1/brands/:brandId/master-menu', payload, { params: { brandId } });
       setAddingItemToCatId(null);
       setIsAddingItem(false);
       setMName(''); setMPrice(''); setMPrepTime('15'); setMDesc(''); setMCatId('');
@@ -175,7 +175,7 @@ const BrandMasterMenu = React.memo(function BrandMasterMenu({ brandId, onRefresh
     }
 
     try {
-      await (customerApi.put as any)(`/api/v1/brands/${brandId}/master-menu/${editingItemId}`, payload);
+      await restaurantApi.catalog.put('/api/v1/brands/:brandId/master-menu/:itemId', payload, { params: { brandId, itemId: editingItemId } });
       setEditingItemId(null);
       setMName(''); setMPrice(''); setMPrepTime('15'); setMDesc(''); setMCatId('');
       fetchMasterItems();
@@ -195,7 +195,7 @@ const BrandMasterMenu = React.memo(function BrandMasterMenu({ brandId, onRefresh
                 closingTime: `${tClosing}:00`
             }]
         };
-        await (customerApi.post as any)(`/api/v1/brands/${brandId}/categories/timings`, payload);
+        await restaurantApi.category.post('/api/v1/brands/:brandId/categories/timings', payload, { params: { brandId } });
         setEditingTimingCatId(null);
         fetchCategories();
     } catch (e) {

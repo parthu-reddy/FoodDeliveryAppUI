@@ -22,7 +22,7 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
   const [selectedOrderIdForSupport, setSelectedOrderIdForSupport] = useState<string | null>(null);
 
   const handleSupportRequest = async (orderId: string, reason: string) => {
-    await (customerApi.post as any)(`/api/v1/customer/orders/${orderId}/refund-request`, { reason });
+    await customerApi.customerOrder.post('/api/v1/customer/orders/:orderId/refund-request', { reason }, { params: { orderId } });
     setPage(p => p); // force reload history
     setSelectedOrderIdForSupport(null);
   };
@@ -38,7 +38,7 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
       onAddApiLog({ id: `fetch_history_${page}`, label: `GET /api/v1/orders/history?page=${page}&size=20`, method: 'GET' });
     }
 
-    (customerApi.get as any)(`/api/v1/orders/history?page=${page}&size=20`)
+    customerApi.order.get('/api/v1/orders/history', { queries: { page } })
       .then(res => {
         if (!ignore && res.data) {
           const content = res.data.content || (Array.isArray(res.data) ? res.data : []);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi, paymentApi, ledgerApi } from '../../lib/zodiosClients';
 import { Search, ChevronLeft, ChevronRight, Filter, ArrowRight, Copy, Check } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 import { Button, Input, Select, Badge } from '../ui';
@@ -21,16 +21,14 @@ export default function AdminLedgerView() {
   const fetchEntries = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      params.append('page', page.toString());
-      params.append('size', '20');
-      if (transactionId) params.append('transactionId', transactionId.trim());
-      if (ownerId) params.append('ownerId', ownerId.trim());
-      if (ownerType) params.append('ownerType', ownerType);
-      if (category) params.append('category', category);
-      if (direction) params.append('direction', direction);
+      const queries: Record<string, unknown> = { page, size: 20 };
+      if (transactionId) queries.transactionId = transactionId.trim();
+      if (ownerId) queries.ownerId = ownerId.trim();
+      if (ownerType) queries.ownerType = ownerType;
+      if (category) queries.category = category;
+      if (direction) queries.direction = direction;
 
-      const res = await (customerApi.get as any)(`/api/v1/ledger/admin/transactions?${params.toString()}`);
+      const res = await ledgerApi.ledger.get('/api/v1/ledger/admin/transactions', { queries: queries as unknown as Parameters<typeof ledgerApi.ledger.get>[1] extends { queries?: infer Q } ? Q : never });
       if (res) {
         const pageData = res.data || res;
         setEntries(pageData.content || []);

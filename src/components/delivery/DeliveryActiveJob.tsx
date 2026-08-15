@@ -136,7 +136,7 @@ export function DeliveryActiveJob({
               disabled={isUpdatingDelivery}
               className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black py-4 rounded-2xl shadow-lg hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-white/15 disabled:opacity-70"
             >
-              {isUpdatingDelivery ? "Confirming..." : <><CheckCircle className="w-5 h-5" /> Confirm Delivery {(currentJob as any)?.payout ? `& Credit $${(currentJob as any).payout.toFixed(2)}` : ''}</>}
+              {isUpdatingDelivery ? "Confirming..." : <><CheckCircle className="w-5 h-5" /> Confirm Delivery {currentJob?.payout ? `& Credit $${currentJob.payout.toFixed(2)}` : ''}</>}
             </button>
 
             {waitTimerSeconds > 5 && (

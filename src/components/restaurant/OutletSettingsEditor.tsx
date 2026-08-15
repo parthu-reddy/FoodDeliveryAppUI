@@ -26,9 +26,9 @@ export default function OutletSettingsEditor({ outlet, onRefresh, onClose }: Out
 
     setIsSubmitting(true);
     try {
-      await (customerApi.put as any)(`/api/v1/outlets/${outlet.id}/settings`, { 
-        defaultPrepTimeSeconds: parseInt(defaultPrepTimeSeconds.toString()) 
-      });
+      await restaurantApi.restaurantOutlet.put('/api/v1/outlets/:outletId/settings', { 
+              defaultPrepTimeSeconds: parseInt(defaultPrepTimeSeconds.toString()) 
+            }, { params: { outletId: outlet.id } });
       onRefresh();
       onClose();
     } catch (err: any) {

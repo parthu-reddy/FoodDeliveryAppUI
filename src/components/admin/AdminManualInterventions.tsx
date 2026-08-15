@@ -20,7 +20,7 @@ export default function AdminManualInterventions() {
   // Polling for interventions
   const { data: interventionsResponse, refetch: fetchInterventions } = usePolling({
     fetchFn: async () => {
-      const res = await (identityApi.get as any)(`/api/v1/internal/admin/orders/intervention?page=${interventionsPage}&size=20`);
+      const res = await customerApi.adminOrderManual.get('/api/v1/internal/admin/orders/intervention', { queries: { page: interventionsPage } });
       return res.data?.data || res.data || res;
     },
     intervalMs: 15000,
@@ -41,7 +41,7 @@ export default function AdminManualInterventions() {
   // Polling for failed refunds
   const { data: failedRefundsResponse, refetch: fetchFailedRefunds } = usePolling({
     fetchFn: async () => {
-      const res = await (identityApi.get as any)(`/api/v1/internal/admin/orders/dlq/refunds?page=${refundsPage}&size=20`);
+      const res = await customerApi.adminDlq.get('/api/v1/internal/admin/orders/dlq/refunds', { queries: { page: refundsPage } });
       return res.data?.data || res.data || res;
     },
     intervalMs: 15000,
@@ -62,7 +62,7 @@ export default function AdminManualInterventions() {
   // Polling for available drivers
   const { data: driversList, refetch: fetchAvailableDrivers } = usePolling({
     fetchFn: async () => {
-      const res = await (identityApi.get as any)('/api/v1/internal/admin/delivery/drivers/available-with-location');
+      const res = await deliveryApi.adminDelivery.get('/api/v1/internal/admin/delivery/drivers/available-with-location', {});
       const content = res.data?.data || res.data || (Array.isArray(res) ? res : res.data);
       return Array.isArray(content) ? content : [];
     },
@@ -80,7 +80,7 @@ export default function AdminManualInterventions() {
     setInterventions(prev => prev.filter(o => o.id !== orderId));
     
     try {
-      await (identityApi.post as any)(`/api/v1/internal/admin/orders/intervention/${orderId}/assign-driver`, { deliveryExecutiveId: driverId });
+      await customerApi.adminOrderManual.post('/api/v1/internal/admin/orders/intervention/:orderId/assign-driver', { deliveryExecutiveId: driverId }, { params: { orderId } });
       showSuccess("Driver manually assigned and order resumed!");
       fetchInterventions();
       setSelectedIntervention(null);
@@ -96,7 +96,7 @@ export default function AdminManualInterventions() {
     setInterventions(prev => prev.filter(o => o.id !== orderId));
     
     try {
-      await (identityApi.post as any)(`/api/v1/internal/admin/orders/intervention/${orderId}/cancel`, { reason: cancelReason || 'Cancelled by Admin' });
+      await customerApi.adminOrderManual.post('/api/v1/internal/admin/orders/intervention/:orderId/cancel', { reason: cancelReason || 'Cancelled by Admin' }, { params: { orderId } });
       showSuccess("Order cancelled successfully!");
       fetchInterventions();
       setSelectedIntervention(null);
@@ -113,7 +113,7 @@ export default function AdminManualInterventions() {
     setFailedRefunds(prev => prev.filter(o => o.orderId !== orderId));
     
     try {
-      await (identityApi.post as any)(`/api/v1/internal/admin/orders/dlq/refunds/${orderId}/retry`, {});
+      await customerApi.adminDlq.post('/api/v1/internal/admin/orders/dlq/refunds/:orderId/retry', undefined, { params: { orderId } });
       showSuccess("Refund retry initiated successfully!");
       fetchFailedRefunds();
       setSelectedIntervention(null);
@@ -126,7 +126,7 @@ export default function AdminManualInterventions() {
 
   const handleForceCancel = async (orderId: string) => {
     try {
-      await (identityApi.post as any)(`/api/v1/internal/admin/orders/intervention/${orderId}/force-cancel`, { reason: cancelReason || 'Force Cancelled by Admin' });
+      await customerApi.adminOrderManual.post('/api/v1/internal/admin/orders/intervention/:orderId/force-cancel', { reason: cancelReason || 'Force Cancelled by Admin' }, { params: { orderId } });
       showSuccess("Order forcefully cancelled!");
       fetchInterventions();
       setSelectedIntervention(null);
@@ -139,7 +139,7 @@ export default function AdminManualInterventions() {
 
   const handleForceRefund = async (orderId: string) => {
     try {
-      await (identityApi.post as any)(`/api/v1/internal/admin/orders/intervention/${orderId}/force-refund`, {});
+      await customerApi.adminOrderManual.post('/api/v1/internal/admin/orders/intervention/:orderId/force-refund', undefined, { params: { orderId } });
       showSuccess("Force refund requested!");
       fetchFailedRefunds();
       setSelectedIntervention(null);

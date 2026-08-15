@@ -9,7 +9,7 @@ import { useToast } from '../../context/ToastContext';
 import { Order, OrderStatus } from '../../types';
 import { decodePolyline } from '../../lib/polyline';
 
-(window as any).maplibregl = maplibregl;
+window.maplibregl = maplibregl;
 
 import { useConfig } from '../../contexts/ConfigContext';
 
@@ -71,7 +71,7 @@ function _OrderTrackingMap({ order, enableLiveTracking = false }: { order: Order
 
     const initMap = async () => {
       try {
-        let key = olaMapsApiKey || (import.meta as any).env.VITE_OLA_MAPS_API_KEY;
+        let key = olaMapsApiKey || import.meta.env.VITE_OLA_MAPS_API_KEY;
         if (!active || !mapContainerRef.current) return;
         
         // Set customer location to order delivery coordinates (if available) or fallback
@@ -97,7 +97,7 @@ function _OrderTrackingMap({ order, enableLiveTracking = false }: { order: Order
         let rLat = 12.98;
         let rLng = 77.58;
         try {
-            const res = await (restaurantApi.get as any)(`/api/v1/restaurants/${order.restaurantId}`);
+            const res = await restaurantApi.restaurantOutlet.get('/api/v1/restaurants/:id', { params: { id: order.restaurantId } });
             if (res?.data?.lat) rLat = res.data.lat;
             if (res?.data?.lng) rLng = res.data.lng;
         } catch (err) {
@@ -168,9 +168,10 @@ function _OrderTrackingMap({ order, enableLiveTracking = false }: { order: Order
 
         const drawRoute = async (sourceLat: number, sourceLng: number, destLat: number, destLng: number) => {
           try {
-            const res = await (customerApi.get as any)(`/api/v1/logistics/route?sourceLat=${sourceLat}&sourceLng=${sourceLng}&destLat=${destLat}&destLng=${destLng}`);
-            if (res?.data?.polyline) {
-               const decodedCoords = decodePolyline(res.data.polyline).map(p => [p.lng, p.lat]);
+            const res = await deliveryApi.logistics.get('/api/v1/logistics/route', { queries: { sourceLat, sourceLng, destLat, destLng } });
+            const anyRes = res as unknown as { polyline?: string };
+            if (anyRes?.polyline) {
+               const decodedCoords = decodePolyline(anyRes.polyline).map(p => [p.lng, p.lat]);
                if (map && map.isStyleLoaded()) {
                  map.addSource('route', {
                    type: 'geojson',
@@ -254,7 +255,7 @@ function _OrderTrackingMap({ order, enableLiveTracking = false }: { order: Order
 
         try {
             const token = getToken();
-            fetchEventSource(`${(import.meta as any).env.VITE_API_BASE_URL || ''}/api/v1/orders/${order.id}/live-tracking`, {
+            fetchEventSource(`${import.meta.env.VITE_API_BASE_URL || ''}/api/v1/orders/${order.id}/live-tracking`, {
                 method: 'GET',
                 headers: token ? {
                     'Authorization': `Bearer ${token}`

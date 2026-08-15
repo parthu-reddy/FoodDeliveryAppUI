@@ -23,12 +23,10 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     const fetchConfig = async () => {
       try {
-        // @ts-expect-error Temporarily bypass for API mismatch/TS2589
-        const response = await identityApi.get('/api/config/ui-config');
-        // @ts-expect-error Temporarily bypass for API mismatch/TS2589
-        if (response && (response).mapsApiKey) {
-          // @ts-expect-error Temporarily bypass for API mismatch/TS2589
-          setOlaMapsApiKey((response).mapsApiKey);
+                const res = await fetch(import.meta.env.VITE_API_BASE_URL + '/api/config/ui-config');
+                const response = await res.json();
+                if (response && (response).mapsApiKey) {
+                    setOlaMapsApiKey((response).mapsApiKey);
         } else {
           setError('Failed to load Maps API Key from server');
         }

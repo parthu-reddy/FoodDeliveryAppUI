@@ -252,6 +252,10 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        TopupWalletRequest: {
+            /** Format: double */
+            amount: number;
+        };
     };
     responses: never;
     parameters: never;

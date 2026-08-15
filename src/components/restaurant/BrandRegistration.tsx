@@ -96,7 +96,7 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
     
     try {
       setIsSaving(true);
-      await (customerApi.post as any)(`/api/v1/brands`, newBrand);
+      await restaurantApi.restaurantOnboarding.post(`/api/v1/brands`, newBrand, {});
       setIsOpen(false);
       resetForm();
       onRefresh();

@@ -21,7 +21,7 @@ export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalPr
       setLoading(true);
       setError(null);
       // Fetch transparent invoice details
-      (restaurantApi.get as any)(`/api/v1/restaurants/${order.restaurantId}/fulfillment/orders/${order.id}/invoice`)
+      restaurantApi.fulfillment.get('/api/v1/restaurants/:restaurantId/fulfillment/orders/:orderId/invoice', { params: { restaurantId: order.restaurantId, orderid: order.id } })
         .then((res: any) => {
           setInvoice(res);
         })

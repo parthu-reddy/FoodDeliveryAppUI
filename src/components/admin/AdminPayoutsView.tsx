@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi, paymentApi, ledgerApi } from '../../lib/zodiosClients';
 import { useToast } from '../../context/ToastContext';
 import { Search, Shield, User, Store, Bike, CheckCircle, Clock } from 'lucide-react';
 import { Button, Spinner } from '../ui';
@@ -13,7 +13,7 @@ export default function AdminPayoutsView() {
   const fetchPayouts = async () => {
     setLoading(true);
     try {
-      const res = await (customerApi.get as any)('/api/v1/ledger/payouts/pending');
+      const res = await ledgerApi.ledger.get('/api/v1/ledger/payouts/pending');
       const data = res?.data || res || [];
       setPendingPayouts(Array.isArray(data) ? data : []);
     } catch (e) {
@@ -31,11 +31,11 @@ export default function AdminPayoutsView() {
   const handleSettle = async (ownerId: string, ownerType: string, amount: number) => {
     setSettling(ownerId);
     try {
-      await (customerApi.post as any)('/api/v1/ledger/payouts/settle', {
-        ownerId,
-        ownerType,
-        amount
-      });
+      await ledgerApi.ledger.post('/api/v1/ledger/payouts/settle', {
+              ownerId,
+              ownerType: ownerType as "CUSTOMER" | "PLATFORM" | "RESTAURANT" | "DRIVER" | "ADVERTISER_WALLET" | "GOVERNMENT",
+              amount
+            });
       showSuccess(`Payout of $${amount.toFixed(2)} for ${ownerType} settled successfully`);
       fetchPayouts();
     } catch (e) {

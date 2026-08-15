@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi, campaignApi } from '../../lib/zodiosClients';
 import { Plus, Play, Pause, DollarSign, TrendingUp, Calendar } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 import { AdPerformanceDashboard, CampaignPerformance } from './AdPerformanceDashboard';
@@ -67,7 +67,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
     if (!restaurantId) return;
     setTxLoading(true);
     try {
-      const balanceRes = await (walletApi.get as any)(`/api/v1/wallets/ADVERTISER/${restaurantId}`);
+      const balanceRes = await walletApi.wallet.get('/api/v1/wallets/:entityType/:entityId', { params: { entityType: 'ADVERTISER', entityId: restaurantId } });
       if (balanceRes.data) setWalletBalance(balanceRes.data.balance);
     } catch (e) {
       console.error(e);
@@ -80,7 +80,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
   const loadTransactions = async (page: number) => {
     setTxLoading(true);
     try {
-      const res = await (walletApi.get as any)(`/api/v1/wallets/ADVERTISER/${restaurantId}/transactions?page=${page}&size=5`);
+      const res = await walletApi.wallet.get('/api/v1/wallets/:entityType/:entityId/transactions', { params: { entityType: 'ADVERTISER', entityId: restaurantId }, queries: { page } });
       if (res.data) {
         setTransactions(res.data.content || []);
         setTxTotalPages(res.data.totalPages || 1);
@@ -96,7 +96,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
     if (!restaurantId) return;
     setPerfLoading(true);
     try {
-      const res = await (customerApi.get as any)(`/api/v1/advertisers/${restaurantId}/campaigns/performance`);
+      const res = await campaignApi.campaign.get('/api/v1/advertisers/:advertiserId/campaigns/performance', { params: { advertiserId: restaurantId } });
       if (res.data) setPerformanceData(res.data);
     } catch (e) {
       console.error(e);
@@ -109,7 +109,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
   const loadCampaigns = async () => {
     setLoading(true);
     try {
-      const res = await (customerApi.get as any)(`/api/v1/advertisers/${restaurantId}/campaigns`);
+      const res = await campaignApi.campaign.get('/api/v1/advertisers/:advertiserId/campaigns', { params: { advertiserId: restaurantId } });
       if (res.data && res.data.content) {
         setCampaigns(res.data.content);
       } else if (Array.isArray(res.data)) {
@@ -125,15 +125,15 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await (customerApi.post as any)(`/api/v1/advertisers/${restaurantId}/campaigns`, {
-        advertiserId: restaurantId,
-        name,
-        dailyBudget: parseFloat(dailyBudget),
-        lifetimeBudget: parseFloat(totalBudget),
-        maxBid: parseFloat(bidAmount),
-        startDate: new Date(startDate).toISOString(),
-        endDate: new Date(endDate).toISOString()
-      });
+      await campaignApi.campaign.post('/api/v1/advertisers/:advertiserId/campaigns', {
+              advertiserId: restaurantId,
+              name,
+              dailyBudget: parseFloat(dailyBudget),
+              lifetimeBudget: parseFloat(totalBudget),
+              maxBid: parseFloat(bidAmount),
+              startDate: new Date(startDate).toISOString(),
+              endDate: new Date(endDate).toISOString()
+            }, { params: { advertiserId: restaurantId } });
       showSuccess('Campaign created successfully');
       setShowCreateModal(false);
       loadCampaigns();
@@ -144,7 +144,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
 
   const handlePause = async (id: string) => {
     try {
-      await (customerApi.post as any)(`/api/v1/advertisers/${restaurantId}/campaigns/${id}/pause`);
+      await campaignApi.campaign.post('/api/v1/advertisers/:advertiserId/campaigns/:id/pause', undefined, { params: { advertiserId: restaurantId, id } });
       showSuccess('Campaign paused');
       loadCampaigns();
     } catch (err: any) {
@@ -300,7 +300,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
               <Button variant="ghost" type="button" onClick={() => setShowTopupModal(false)}>Cancel</Button>
               <Button variant="success" type="button" onClick={async () => {
                 try {
-                  await (customerApi.post as any)(`/api/v1/advertisers/${restaurantId}/campaigns/wallet/topup`, { amount: parseFloat(topupAmount) });
+                  await campaignApi.campaign.post('/api/v1/advertisers/:advertiserId/campaigns/wallet/topup', { amount: parseFloat(topupAmount) }, { params: { advertiserId: restaurantId } });
                   showSuccess('Top-up order created! (Webhook will process payment)');
                   setShowTopupModal(false);
                   // Reload wallet data after a short delay for webhook

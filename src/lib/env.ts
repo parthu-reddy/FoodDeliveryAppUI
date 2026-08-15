@@ -16,7 +16,6 @@ const envSchema = z.object({
 
 // Parse and export the env vars safely
 // We use import.meta.env, which is injected by Vite
-// @ts-expect-error - Vite handles import.meta.env
 const rawEnv = import.meta.env || {};
 
 // Pre-process env vars to treat empty strings as undefined so catch/default can kick in if needed

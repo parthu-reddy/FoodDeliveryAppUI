@@ -180,7 +180,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
     setCheckoutRestaurantId(restaurantId);
 
     try {
-      const availRes = await (restaurantApi.get as any)(`/api/v1/restaurants/${restaurantId}/delivery-availability`);
+      const availRes = await customerApi.customerRestaurant.get('/api/v1/restaurants/:id/delivery-availability', { params: { id: restaurantId } });
       if (availRes.data && availRes.data.available === false) {
         setGlobalError("This restaurant is currently out of your delivery zone.");
         setTimeout(() => setGlobalError(null), 3000);
@@ -237,11 +237,11 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
           city: "Unknown",
           state: "Unknown",
           zipCode: "000000",
-          latitude: parseFloat(deliveryLat as any),
-          longitude: parseFloat(deliveryLng as any)
+          latitude: parseFloat(deliveryLat as string),
+          longitude: parseFloat(deliveryLng as string)
         };
         try {
-          const addrRes = await (customerApi.post as any)(`/api/v1/customers/${profile?.id}/addresses`, payload);
+          const addrRes = await customerApi.customerAddress.post('/api/v1/customers/:customerId/addresses', payload, { params: { customerId: profile?.id } });
           if (addrRes.data?.id) finalAddressId = addrRes.data.id;
         } catch (e) {
           console.error("Failed to save temporary address", e);
@@ -262,7 +262,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
         items
       };
       
-      const res = await (customerApi.post as any)('/api/v1/orders', orderPayload);
+      const res = await customerApi.order.post('/api/v1/orders', orderPayload, {});
       
       setPaymentStatus('success');
       setTimeout(() => {

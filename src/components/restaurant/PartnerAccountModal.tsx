@@ -45,7 +45,7 @@ export default function PartnerAccountModal({
   }, [userName]);
 
   const fetchDevices = () => {
-    (identityApi.get as any)('/api/v1/internal/auth/sessions', { 'X-Calling-Service': portalRole || RoleName.RESTAURANT })
+    identityApi.auth.get('/api/v1/internal/auth/sessions', { headers: { 'X-Calling-Service': portalRole || RoleName.RESTAURANT } })
       .then(res => setDevices(res.data || []))
       .catch(err => console.error('Failed to fetch devices', err));
   };
@@ -62,16 +62,16 @@ export default function PartnerAccountModal({
 
   const handleRemoveDevice = async (sessionId: string) => {
     try {
-      await (identityApi.delete as any)(`/api/v1/internal/auth/sessions/${sessionId}`, { 'X-Calling-Service': portalRole || RoleName.RESTAURANT });
+      await identityApi.auth.delete('/api/v1/internal/auth/sessions/:sessionId', { params: { sessionId }, headers: { 'X-Calling-Service': portalRole || RoleName.RESTAURANT } } as unknown as Parameters<typeof identityApi.auth.delete>[1]);
       fetchDevices();
-    } catch (e) {
-      console.error('Failed to remove device', e);
+    } catch (err) {
+      console.error("Failed to invalidate session", err);
     }
   };
 
   const handleRemoveAllDevices = async () => {
     try {
-      await (identityApi.delete as any)(`/api/v1/internal/auth/sessions`, { 'X-Calling-Service': portalRole || RoleName.RESTAURANT });
+      await identityApi.auth.delete(`/api/v1/internal/auth/sessions`, { headers: { 'X-Calling-Service': portalRole || RoleName.RESTAURANT } } as unknown as Parameters<typeof identityApi.auth.delete>[1]);
       if (onLogout) onLogout();
     } catch (e) {
       console.error('Failed to remove all devices', e);
@@ -85,7 +85,7 @@ export default function PartnerAccountModal({
       return;
     }
     try {
-      await (identityApi.put as any)('/api/v1/users/profile', { name: editName });
+      await identityApi.user.put('/api/v1/users/profile', { name: editName }, {});
       onNameUpdate(editName);
       if (onSaveExtra) {
         await onSaveExtra(editName);

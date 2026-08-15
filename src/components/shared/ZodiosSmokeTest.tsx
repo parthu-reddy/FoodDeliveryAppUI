@@ -6,7 +6,7 @@ export default function ZodiosSmokeTest() {
   const [error, setError] = useState<any>(null);
 
   useEffect(() => {
-    customerApi.get('/api/v1/customers/profile')
+    customerApi.customerProfile.get('/api/v1/customers/profile')
       .then(res => {
         // Because of Zodios, 'res' is fully typed based on the OpenAPI schema!
         // It validates the runtime response against the schema.

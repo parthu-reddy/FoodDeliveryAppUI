@@ -72,7 +72,7 @@ export default function RestaurantDashboard({
   const { showError, showSuccess, showInfo } = useToast();
 
   const { internalOrders, setInternalOrders, activeOrders, onUpdateOrderStatus } = useRestaurantOrders({
-    selectedOutletId: localStorage.getItem('restaurant_selectedOutletId') || '',
+    restaurantId: localStorage.getItem('restaurant_selectedOutletId') || '',
     onAddApiLog,
     showError,
     externalOrders,
@@ -199,7 +199,7 @@ export default function RestaurantDashboard({
     if (hasPendingVerifications) {
       const startSse = async () => {
         try {
-          const url = `${(import.meta as any).env.VITE_API_BASE_URL || ''}/api/v1/brands/stream`;
+          const url = `${import.meta.env.VITE_API_BASE_URL || ''}/api/v1/brands/stream`;
           await fetchEventSource(url, {
             method: 'GET',
             headers: {
@@ -254,7 +254,7 @@ export default function RestaurantDashboard({
     // Optimistic UI update
     setIsAcceptingOrders(prev => ({ ...prev, [selectedOutletId]: newStatus }));
     try {
-        await (customerApi.put as any)(`/api/v1/outlets/${selectedOutletId}/status`, { isActive: newStatus });
+        await restaurantApi.restaurantOutlet.put('/api/v1/outlets/:outletId/status', { isActive: newStatus }, { params: { outletId: selectedOutletId } });
     } catch (err: any) {
         // Revert on error
         setIsAcceptingOrders(prev => ({ ...prev, [selectedOutletId]: !newStatus }));
@@ -286,10 +286,9 @@ export default function RestaurantDashboard({
     }));
 
     try {
-      const endpoint = `/api/v1/outlets/${selectedOutletId}/menu-overrides/${dishId}`;
-      await (customerApi.post as any)(endpoint, {
-        isAvailable: newStockStatus
-      });
+      await restaurantApi.catalog.post('/api/v1/outlets/:outletId/menu-overrides/:masterMenuItemId', {
+              isAvailable: newStockStatus
+            }, { params: { outletId: selectedOutletId, masterMenuItemId: dishId } });
     } catch (e) {
       console.error('Failed to update stock', e);
       setStockStatus(prev => ({
@@ -308,9 +307,9 @@ export default function RestaurantDashboard({
   const handleStatusTransition = useCallback((order: Order) => {
     if (order.status === OrderStatus.PENDING_ACCEPTANCE || order.status === OrderStatus.AWAITING_DELAY_APPROVAL || order.status === OrderStatus.CREATED) {
       onUpdateOrderStatus(order.id, OrderStatus.ACCEPTED);
-    } else if (order.status as any === OrderStatus.ACCEPTED) {
+    } else if (order.status === OrderStatus.ACCEPTED) {
       onUpdateOrderStatus(order.id, OrderStatus.PREPARING);
-    } else if (order.status as any === OrderStatus.PREPARING) {
+    } else if (order.status === OrderStatus.PREPARING) {
       onUpdateOrderStatus(order.id, OrderStatus.READY_FOR_PICKUP);
     }
   }, [onUpdateOrderStatus]);
@@ -323,7 +322,7 @@ export default function RestaurantDashboard({
     
     try {
       // cleared locally in card component
-      await onUpdateOrderStatus(orderId, targetStatus as any, { reason });
+      await onUpdateOrderStatus(orderId, targetStatus, { reason });
     } catch (e: any) {
       console.error('Failed to cancel order', e);
       showError('Failed to cancel order: ' + (e.response?.data?.message || e.message || 'Unknown error'));
@@ -340,10 +339,10 @@ export default function RestaurantDashboard({
     
     try {
       // cleared locally in card component
-      await (restaurantApi.post as any)(`/api/v1/restaurants/orders/${orderId}/refund/partial`, {
-        partialAmount: amount,
-        reason: reason
-      });
+      await restaurantApi.fulfillment.post('/api/v1/restaurants/:restaurantId/fulfillment/orders/:orderId/refund/partial', {
+              partialAmount: amount.toString(),
+              reason: reason
+            }, { params: { restaurantId: selectedOutletId, orderId } });
       showSuccess(`Partial refund of $${amount.toFixed(2)} initiated successfully`);
       // Let polling refresh the order, or manually trigger refresh if available.
     } catch (e: any) {
@@ -357,7 +356,7 @@ export default function RestaurantDashboard({
     const minutes = parseInt(minutesStr || '15', 10);
     const seconds = minutes * 60;
 
-    const endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/accept`;
+    const endpoint = `/api/v1/restaurants/:restaurantId/fulfillment/orders/:orderId/accept`;
     const body = {
       additionalPrepTime: minutes,
       delayReason: reason
@@ -386,7 +385,7 @@ export default function RestaurantDashboard({
         if (externalUpdateStatus) externalUpdateStatus(orderId, OrderStatus.ACCEPTED);
       }
 
-      await (customerApi.post as any)(endpoint, body);
+      await restaurantApi.fulfillment.post('/api/v1/restaurants/:restaurantId/fulfillment/orders/:orderId/accept', body, { params: { restaurantId: selectedOutletId, orderId } });
       
       if (onAddApiLog) {
         onAddApiLog({

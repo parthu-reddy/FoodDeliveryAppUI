@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Client, IMessage } from '@stomp/stompjs';
 import { getToken, getUserProfile } from '../lib/tokenStore';
-import { identityApi } from '../lib/zodiosClients';
+import { identityApi, chatApi } from '../lib/zodiosClients';
 import { saveChunk, getChunks, savePendingUpload, getPendingUploads, clearSessionData, cleanOrphanedChunks } from '../lib/offlineStorage';
 
 export interface WebRtcSignal {
@@ -86,12 +86,9 @@ export const useWebRTC = () => {
   useEffect(() => {
     const fetchIceServers = async () => {
       try {
-        // @ts-expect-error Temporarily bypass for API mismatch/TS2589
-        const response = await identityApi.get('/api/v1/chat/webrtc/ice-servers');
-        // @ts-expect-error Temporarily bypass for API mismatch/TS2589
-        if (response && (response).iceServers) {
-          // @ts-expect-error Temporarily bypass for API mismatch/TS2589
-          iceServersRef.current = { iceServers: (response).iceServers };
+                const response = await chatApi.turnCredential.get('/api/v1/chat/webrtc/ice-servers', undefined as unknown as Parameters<typeof chatApi.turnCredential.get>[1]);
+                if (response && (response).iceServers) {
+                    iceServersRef.current = { iceServers: (response).iceServers };
         }
       } catch (error) {
         console.error("Failed to fetch ICE servers, falling back to STUN", error);
@@ -326,8 +323,7 @@ export const useWebRTC = () => {
         });
       }
 
-      // @ts-expect-error Temporarily bypass for API mismatch/TS2589
-      await identityApi.post(`/api/v1/chat/sessions/${sessionId}/upload-audio`, formData);
+            await chatApi.chatAudioUpload.post('/api/v1/chat/sessions/:sessionId/upload-audio', formData as unknown as Parameters<typeof chatApi.chatAudioUpload.post>[1], { params: { sessionId } } as unknown as { params: { sessionId: string } });
       console.log("Audio recording uploaded successfully.");
       
       // Clear local storage if successful

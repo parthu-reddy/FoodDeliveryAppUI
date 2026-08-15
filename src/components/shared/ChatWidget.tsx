@@ -3,7 +3,7 @@ import { Send, X, MessageSquare, Loader2, ImagePlus, PhoneCall, PhoneOff } from 
 import { getToken, getUserProfile } from '../../lib/tokenStore';
 import { useChatWebSocket } from '../../hooks/useChatWebSocket';
 import { type ChatMessage, type TypingIndicator } from '../../types';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi, chatApi } from '../../lib/zodiosClients';
 import { useCallContext } from '../../context/CallContext';
 
 export interface ChatParticipant {
@@ -112,17 +112,17 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
         setIsLoading(true);
         try {
           // 1. Create or get session
-          const data = await (customerApi.post as any)(`/api/v1/chat/sessions`, {
-            orderId,
-            participants: [
-              {
-                userId: user.id,
-                entityType: currentUserType,
-                displayName: user.name || user.email || user.id
-              },
-              ...(otherParticipants || [])
-            ]
-          });
+          const data = await chatApi.chatSession.post(`/api/v1/chat/sessions`, {
+                      orderId,
+                      participants: [
+                        {
+                          userId: user.id,
+                          entityType: currentUserType,
+                          displayName: user.name || user.email || user.id
+                        },
+                        ...(otherParticipants || [])
+                      ]
+                    });
           
           if (!data || !data.success) throw new Error('Failed to init chat session');
           const sid = data.data.sessionId;
@@ -136,7 +136,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
           }
 
           // 2. Load history
-          const histData = await (customerApi.get as any)(`/api/v1/chat/sessions/${sid}/messages?size=50`);
+          const histData = await chatApi.chatSession.get('/api/v1/chat/sessions/:sessionId/messages', { params: { sessionId: sid } });
           if (histData && histData.success) {
             setMessages(histData.data || []);
           }

@@ -60,7 +60,7 @@ function _AdminAssignmentMap({
 
     const initMap = async () => {
       try {
-        let key = olaMapsApiKey || (import.meta as any).env.VITE_OLA_MAPS_API_KEY;
+        let key = olaMapsApiKey || import.meta.env.VITE_OLA_MAPS_API_KEY;
         if (!active || !mapContainerRef.current) return;
         
         map = new maplibregl.Map({
@@ -81,7 +81,7 @@ function _AdminAssignmentMap({
         let rLat = 12.98;
         let rLng = 77.58;
         try {
-            const res = await (restaurantApi.get as any)(`/api/v1/restaurants/${order.restaurantId}`);
+            const res = await restaurantApi.restaurantOutlet.get('/api/v1/restaurants/:id', { params: { id: order.restaurantId } });
             if (res?.data?.lat) rLat = res.data.lat;
             if (res?.data?.lng) rLng = res.data.lng;
         } catch (err) {

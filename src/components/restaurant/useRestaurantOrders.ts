@@ -4,7 +4,7 @@ import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminA
 import { usePolling } from '../../hooks/usePolling';
 
 interface UseRestaurantOrdersOptions {
-  selectedOutletId: string;
+  restaurantId: string;
   onAddApiLog?: (log: any) => void;
   showError?: (msg: string) => void;
   externalOrders?: Order[];
@@ -12,7 +12,7 @@ interface UseRestaurantOrdersOptions {
 }
 
 export function useRestaurantOrders({
-  selectedOutletId,
+  restaurantId: selectedOutletId,
   onAddApiLog,
   showError,
   externalOrders,
@@ -27,24 +27,23 @@ export function useRestaurantOrders({
     
     // API call
     try {
-      let endpoint = '';
-      if (status === OrderStatus.ACCEPTED) endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/accept`;
-      else if (status === OrderStatus.PREPARING) {
-        endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/prepare`;
+      if (status === OrderStatus.ACCEPTED) {
+        await restaurantApi.fulfillment.post('/api/v1/restaurants/:restaurantId/fulfillment/orders/:orderId/accept', payload, { params: { restaurantId: selectedOutletId, orderId } });
+        if (onAddApiLog) onAddApiLog({ id: `update_${orderId}`, label: `POST /api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/accept`, method: 'POST' });
+      } else if (status === OrderStatus.PREPARING) {
         localStorage.setItem(`order_preparing_${orderId}`, 'true');
-      }
-      else if (status === OrderStatus.CANCELLED_BY_RESTAURANT) endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/reject`;
-      else if (status === OrderStatus.READY_FOR_PICKUP) {
-        endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/ready`;
+        await restaurantApi.fulfillment.post('/api/v1/restaurants/:restaurantId/fulfillment/orders/:orderId/prepare', payload, { params: { restaurantId: selectedOutletId, orderId } });
+        if (onAddApiLog) onAddApiLog({ id: `update_${orderId}`, label: `POST /api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/prepare`, method: 'POST' });
+      } else if (status === OrderStatus.CANCELLED_BY_RESTAURANT) {
+        await restaurantApi.fulfillment.post('/api/v1/restaurants/:restaurantId/fulfillment/orders/:orderId/reject', payload, { params: { restaurantId: selectedOutletId, orderId } });
+        if (onAddApiLog) onAddApiLog({ id: `update_${orderId}`, label: `POST /api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/reject`, method: 'POST' });
+      } else if (status === OrderStatus.READY_FOR_PICKUP) {
         localStorage.removeItem(`order_preparing_${orderId}`);
-      }
-      else if (status === OrderStatus.CANCELLED) endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/cancel`;
-
-      if (endpoint) {
-        await (customerApi.post as any)(endpoint, payload);
-        if (onAddApiLog) {
-          onAddApiLog({ id: `update_${orderId}`, label: `POST ${endpoint}`, method: 'POST' });
-        }
+        await restaurantApi.fulfillment.post('/api/v1/restaurants/:restaurantId/fulfillment/orders/:orderId/ready', payload, { params: { restaurantId: selectedOutletId, orderId } });
+        if (onAddApiLog) onAddApiLog({ id: `update_${orderId}`, label: `POST /api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/ready`, method: 'POST' });
+      } else if (status === OrderStatus.CANCELLED) {
+        await restaurantApi.fulfillment.post('/api/v1/restaurants/:restaurantId/fulfillment/orders/:orderId/cancel', payload, { params: { restaurantId: selectedOutletId, orderId } });
+        if (onAddApiLog) onAddApiLog({ id: `update_${orderId}`, label: `POST /api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/cancel`, method: 'POST' });
       }
     } catch (error: any) {
       console.error('Failed to update order status:', error);
@@ -55,7 +54,7 @@ export function useRestaurantOrders({
 
   const fetchOrders = useCallback(async () => {
     if (!selectedOutletId) return [];
-    const res = await (restaurantApi.get as any)(`/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/active`);
+    const res = await restaurantApi.fulfillment.get('/api/v1/restaurants/:restaurantId/fulfillment/orders/active', { params: { restaurantId: selectedOutletId } });
     if (res.data) {
       const activeOrdersData = res.data.data || res.data;
       const mapped = activeOrdersData.map((o: any) => {

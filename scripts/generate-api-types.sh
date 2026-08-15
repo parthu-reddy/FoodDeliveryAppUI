@@ -28,7 +28,7 @@ for entry in "${SERVICES[@]}"; do
   spec="$SPECS_DIR$path"
   echo "Generating types and schemas for $name from $spec..."
   npx openapi-typescript "$spec" -o "$OUT_DIR/${name}.d.ts"
-  npx openapi-zod-client "$spec" -o "$SCHEMA_DIR/${name}.ts" --export-schemas
+  npx openapi-zod-client "$spec" -o "$SCHEMA_DIR/${name}" --export-schemas --group-strategy tag-file
 done
 
 echo "Done! Generated types in $OUT_DIR and schemas in $SCHEMA_DIR"

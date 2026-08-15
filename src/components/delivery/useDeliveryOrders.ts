@@ -67,14 +67,14 @@ export function useDeliveryOrders({
     const getArrayFromRes = (res: any) => res?.content || res?.data?.data || res?.data || (Array.isArray(res) ? res : []);
 
     try {
-      const activeRes = await (deliveryApi.get as any)(`/api/v1/delivery/orders/active`);
+      const activeRes = await deliveryApi.deliveryOrder.get(`/api/v1/delivery/orders/active`, {});
       if (activeRes) {
          const activeData = getArrayFromRes(activeRes);
          fetchedActiveJobs = activeData.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
       }
 
       if (fetchedActiveJobs.length === 0) {
-         const availableRes = await (deliveryApi.get as any)(`/api/v1/delivery/orders/available`);
+         const availableRes = await deliveryApi.deliveryOrder.get(`/api/v1/delivery/orders/available`, {});
          if (availableRes) {
             const availableData = getArrayFromRes(availableRes);
             fetchedAvailableJobs = availableData.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
@@ -101,7 +101,7 @@ export function useDeliveryOrders({
       );
 
       if ((lastActiveCountRef.current > 0 && fetchedActiveJobs.length === 0) || hasStaleActiveJobInHistory) {
-         const histRes = await (deliveryApi.get as any)(`/api/v1/delivery/orders/history?date=${todayDateString}`);
+         const histRes = await deliveryApi.deliveryOrder.get('/api/v1/delivery/orders/history', { queries: { date: todayDateString } });
          if (histRes) {
             const histData = getArrayFromRes(histRes);
             historyRef.current = histData.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
@@ -132,7 +132,7 @@ export function useDeliveryOrders({
     const dateToFetch = showHistory ? historyDateFilter : todayDateString;
     if (!dateToFetch) return;
 
-    (deliveryApi.get as any)(`/api/v1/delivery/orders/history?date=${dateToFetch}`).then(res => {
+    deliveryApi.deliveryOrder.get('/api/v1/delivery/orders/history', { queries: { date: dateToFetch } }).then(res => {
       if (res) {
         const getArrayFromRes = (res: any) => res?.content || res?.data?.data || res?.data || (Array.isArray(res) ? res : []);
         const histData = getArrayFromRes(res);
@@ -154,10 +154,10 @@ export function useDeliveryOrders({
       const jobs = activeOrders.filter(o => !o.riderId && !rejectedIds.has(o.id));
       if (jobs.length > 0) {
         setPingJob(jobs[0]);
-        if ((jobs[0] as any).remainingPingSeconds !== undefined) {
-          setPingTimer((jobs[0] as any).remainingPingSeconds);
-        } else if ((jobs[0] as any).expiresAt) {
-          const remainingSecs = Math.max(0, Math.floor(((jobs[0] as any).expiresAt - Date.now()) / 1000));
+        if ((jobs[0]).remainingPingSeconds !== undefined) {
+          setPingTimer((jobs[0]).remainingPingSeconds);
+        } else if ((jobs[0]).expiresAt) {
+          const remainingSecs = Math.max(0, Math.floor(((jobs[0]).expiresAt - Date.now()) / 1000));
           setPingTimer(remainingSecs);
         } else {
           setPingTimer(60);
@@ -196,7 +196,7 @@ export function useDeliveryOrders({
   useEffect(() => {
     if (pingJob) {
       try {
-        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
         if (AudioContext) {
           const ctx = new AudioContext();
           const osc = ctx.createOscillator();
@@ -251,7 +251,7 @@ export function useDeliveryOrders({
         (err) => {
           console.error("Location error:", err);
           if (riderId) {
-            (deliveryApi.post as any)(`/api/delivery/status`, { driverId: riderId, available: false })
+            (deliveryApi.deliveryExecutive.post(`/api/delivery/status`, { driverId: riderId, available: false }, {}))
               .catch(e => console.error(e));
           }
           setIsOnline(false);
@@ -289,7 +289,7 @@ export function useDeliveryOrders({
         try {
           const data = JSON.parse(event.data);
           if (data.type === "NEW_ORDER_DISPATCH" && data.orderId) {
-            const pingRes = await (deliveryApi.get as any)(`/api/v1/delivery/orders/available`);
+            const pingRes = await deliveryApi.deliveryOrder.get(`/api/v1/delivery/orders/available`, {});
             const pingData = pingRes?.data?.data || pingRes?.data || pingRes;
             if (pingData && pingData.length > 0) {
               const jobs = pingData.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
@@ -365,7 +365,7 @@ export function useDeliveryOrders({
 
     const connectSSE = async () => {
       const token = getToken();
-      const url = `${(import.meta as any).env?.VITE_API_BASE_URL || ''}/api/delivery/drivers/${riderId}/orders/${currentJob.id}/restaurant-status-stream`;
+      const url = `${import.meta.env?.VITE_API_BASE_URL || ''}/api/delivery/drivers/${riderId}/orders/${currentJob.id}/restaurant-status-stream`;
       
       try {
         await fetchEventSource(url, {

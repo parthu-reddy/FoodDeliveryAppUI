@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Search, MapPin, Loader, Navigation } from 'lucide-react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi, mapsApi } from '../../lib/zodiosClients';
 import { useToast } from '../../context/ToastContext';
 import { z } from 'zod';
 import { Input, Button, Spinner } from '../ui';
@@ -65,7 +65,7 @@ export default function CustomerAddressModal({
       }
       setIsSearching(true);
       try {
-        const apiKey = olaMapsApiKey || (import.meta as any).env.VITE_OLA_MAPS_API_KEY || '';
+        const apiKey = olaMapsApiKey || import.meta.env.VITE_OLA_MAPS_API_KEY || '';
         const res = await fetch(`https://api.olamaps.io/places/v1/autocomplete?input=${encodeURIComponent(debouncedSearchQuery)}&api_key=${apiKey}`);
         const data = await res.json();
         if (data.predictions) {
@@ -86,7 +86,7 @@ export default function CustomerAddressModal({
 
   const handleSelectPlace = async (placeId: string, description: string) => {
     try {
-      const apiKey = olaMapsApiKey || (import.meta as any).env.VITE_OLA_MAPS_API_KEY || '';
+      const apiKey = olaMapsApiKey || import.meta.env.VITE_OLA_MAPS_API_KEY || '';
       const res = await fetch(`https://api.olamaps.io/places/v1/details?place_id=${placeId}&api_key=${apiKey}`);
       const data = await res.json();
       if (data.result && data.result.geometry) {
@@ -137,7 +137,7 @@ export default function CustomerAddressModal({
             }
             
             // Try to reverse geocode
-            const res = await (customerApi.get as any)(`/api/places/reverse-geocode?lat=${latitude}&lng=${longitude}`);
+            const res = await mapsApi.integration.get('/api/places/reverse-geocode', { queries: { lat: latitude, lng: longitude } });
             if (res && res.address) {
               const description = res.address;
               setAddressSearchQuery(description);
@@ -185,7 +185,7 @@ export default function CustomerAddressModal({
 
       setIsSaving(true);
       if (!customerId) throw new Error("Customer ID missing");
-      await (customerApi.post as any)(`/api/v1/customers/${customerId}/addresses`, payload);
+      await customerApi.customerAddress.post('/api/v1/customers/:customerId/addresses', payload, { params: { customerId } });
       setIsAddressModalOpen(false);
       window.location.reload();
     } catch (err) {
@@ -197,7 +197,7 @@ export default function CustomerAddressModal({
 
   useEffect(() => {
     if (isAddressModalOpen && mapContainerRef.current && !mapRef.current) {
-      const apiKey = olaMapsApiKey || (import.meta as any).env.VITE_OLA_MAPS_API_KEY || '';
+      const apiKey = olaMapsApiKey || import.meta.env.VITE_OLA_MAPS_API_KEY || '';
       
       const map = new maplibregl.Map({
         container: mapContainerRef.current,

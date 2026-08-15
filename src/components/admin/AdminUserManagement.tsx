@@ -29,9 +29,9 @@ export default function AdminUserManagement() {
     fetchFn: async () => {
       let res;
       if (roleFilter === 'ALL') {
-          res = await (identityApi.get as any)(`/api/v1/internal/users/admin/all?page=${page}&size=20`);
+          res = await identityApi.internalUser.get('/api/v1/internal/users/admin/all', { queries: { page } });
       } else {
-          res = await (identityApi.get as any)(`/api/v1/internal/users/by-role?role=${roleFilter}&page=${page}&size=20`);
+          res = await identityApi.internalUser.get('/api/v1/internal/users/by-role', { queries: { roleFilter, page } });
       }
       return res.data?.data || res.data || res;
     },
@@ -53,7 +53,7 @@ export default function AdminUserManagement() {
     if (!debouncedSearchQuery) return;
     const fetchUsers = async () => {
       try {
-        const res = await (identityApi.get as any)(`/api/v1/internal/users/${debouncedSearchQuery}`);
+        const res = await identityApi.internalUser.get('/api/v1/internal/users/:id', { params: { id: debouncedSearchQuery } });
         if (res && res.id) {
           setUsers([res]);
         } else {
@@ -69,7 +69,7 @@ export default function AdminUserManagement() {
 
   const fetchUserActiveOrders = async (userId: string) => {
     try {
-      const res = await (identityApi.get as any)(`/api/v1/internal/admin/orders/user/${userId}/active`);
+      const res = await customerApi.adminOrder.get('/api/v1/internal/admin/orders/user/:userId/active', { params: { userId } });
       const data = res.data?.data || res.data || (Array.isArray(res) ? res : res.data);
       setUserActiveOrders(Array.isArray(data) ? data : []);
     } catch (e) {
@@ -103,7 +103,7 @@ export default function AdminUserManagement() {
     setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, roles: [...(u.roles || []), newRole] } : u));
     
     try {
-      await (identityApi.post as any)(`/api/v1/internal/users/${selectedUser.id}/roles`, { role: newRole });
+      await identityApi.internalUser.post('/api/v1/internal/users/:id/roles', { roleName: newRole as "CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN" }, { params: { id: selectedUser.id }, headers: { 'X-Calling-Service': RoleName.ADMIN } } as unknown as { params: { id: string }, headers: Record<string, string> });
       setNewRole('');
     } catch (e) {
       console.error(e);
@@ -121,7 +121,7 @@ export default function AdminUserManagement() {
     setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, roles: u.roles.filter((r: string) => r !== role) } : u));
 
     try {
-      await (identityApi.delete as any)(`/api/v1/internal/users/${selectedUser.id}/roles/${role}`);
+      await identityApi.internalUser.delete('/api/v1/internal/users/:id/roles/:roleName', { params: { id: selectedUser.id, roleName: role as "CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN" }, headers: { 'X-Calling-Service': RoleName.ADMIN } } as unknown as Parameters<typeof identityApi.internalUser.delete>[1]);
     } catch (e) {
       console.error(e);
       showError("Failed to remove role");
@@ -139,7 +139,7 @@ export default function AdminUserManagement() {
     setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, isActive: newStatus } : u));
 
     try {
-      await (identityApi.put as any)(`/api/v1/internal/users/admin/${selectedUser.id}/status`, { isActive: newStatus });
+      await identityApi.internalUser.put('/api/v1/internal/users/admin/:userId/status', { isActive: newStatus }, { params: { userId: selectedUser.id } });
       showSuccess(newStatus ? "User activated" : "User suspended");
     } catch (e) {
       console.error(e);
