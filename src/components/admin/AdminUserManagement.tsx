@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User, Search, Plus, X, Power } from 'lucide-react';
-import { apiGet, apiPost, apiDelete, apiPut } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import { useToast } from '../../context/ToastContext';
 import { RoleName } from '../../types';
 import { Button, Input, Select, Badge } from '../ui';
@@ -29,9 +29,9 @@ export default function AdminUserManagement() {
     fetchFn: async () => {
       let res;
       if (roleFilter === 'ALL') {
-          res = await apiGet(`/api/v1/internal/users/admin/all?page=${page}&size=20`);
+          res = await (identityApi.get as any)(`/api/v1/internal/users/admin/all?page=${page}&size=20`);
       } else {
-          res = await apiGet(`/api/v1/internal/users/by-role?role=${roleFilter}&page=${page}&size=20`);
+          res = await (identityApi.get as any)(`/api/v1/internal/users/by-role?role=${roleFilter}&page=${page}&size=20`);
       }
       return res.data?.data || res.data || res;
     },
@@ -53,7 +53,7 @@ export default function AdminUserManagement() {
     if (!debouncedSearchQuery) return;
     const fetchUsers = async () => {
       try {
-        const res = await apiGet(`/api/v1/internal/users/${debouncedSearchQuery}`);
+        const res = await (identityApi.get as any)(`/api/v1/internal/users/${debouncedSearchQuery}`);
         if (res && res.id) {
           setUsers([res]);
         } else {
@@ -69,7 +69,7 @@ export default function AdminUserManagement() {
 
   const fetchUserActiveOrders = async (userId: string) => {
     try {
-      const res = await apiGet(`/api/v1/internal/admin/orders/user/${userId}/active`);
+      const res = await (identityApi.get as any)(`/api/v1/internal/admin/orders/user/${userId}/active`);
       const data = res.data?.data || res.data || (Array.isArray(res) ? res : res.data);
       setUserActiveOrders(Array.isArray(data) ? data : []);
     } catch (e) {
@@ -103,7 +103,7 @@ export default function AdminUserManagement() {
     setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, roles: [...(u.roles || []), newRole] } : u));
     
     try {
-      await apiPost(`/api/v1/internal/users/${selectedUser.id}/roles`, { role: newRole });
+      await (identityApi.post as any)(`/api/v1/internal/users/${selectedUser.id}/roles`, { role: newRole });
       setNewRole('');
     } catch (e) {
       console.error(e);
@@ -121,7 +121,7 @@ export default function AdminUserManagement() {
     setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, roles: u.roles.filter((r: string) => r !== role) } : u));
 
     try {
-      await apiDelete(`/api/v1/internal/users/${selectedUser.id}/roles/${role}`);
+      await (identityApi.delete as any)(`/api/v1/internal/users/${selectedUser.id}/roles/${role}`);
     } catch (e) {
       console.error(e);
       showError("Failed to remove role");
@@ -139,7 +139,7 @@ export default function AdminUserManagement() {
     setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, isActive: newStatus } : u));
 
     try {
-      await apiPut(`/api/v1/internal/users/admin/${selectedUser.id}/status`, { isActive: newStatus });
+      await (identityApi.put as any)(`/api/v1/internal/users/admin/${selectedUser.id}/status`, { isActive: newStatus });
       showSuccess(newStatus ? "User activated" : "User suspended");
     } catch (e) {
       console.error(e);

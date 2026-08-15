@@ -3,7 +3,7 @@ import { getFriendlyStatusMessage } from '../../utils/statusMessaging';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, User, Package, LogOut, MapPin, Check } from 'lucide-react';
-import { apiGet, apiPut, apiDelete } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import { useToast } from '../../context/ToastContext';
 import CustomerAddressModal from '../customer/CustomerAddressModal';
 import { TransactionHistoryTable, WalletTransaction } from './TransactionHistoryTable';
@@ -89,7 +89,7 @@ export default function SharedSettingsView({
     try {
       if (type === 'history') setIsLoadingOrders(true);
       
-      const res = await apiGet(`/api/v1/orders/${type}?page=${page}&size=10`);
+      const res = await (customerApi.get as any)(`/api/v1/orders/${type}?page=${page}&size=10`);
       
       if (res?.data?.content) {
         if (type === 'history') {
@@ -117,7 +117,7 @@ export default function SharedSettingsView({
   const loadSessions = async () => {
     setIsLoadingSessions(true);
     try {
-      const res = await apiGet('/api/v1/internal/auth/sessions');
+      const res = await (identityApi.get as any)('/api/v1/internal/auth/sessions');
       if (res?.data) {
         setSessions(res.data);
       }
@@ -133,10 +133,10 @@ export default function SharedSettingsView({
     if (!customerId) return;
     setTxLoading(true);
     try {
-      const balanceRes = await apiGet(`/api/v1/wallets/CUSTOMER/${customerId}`);
+      const balanceRes = await (walletApi.get as any)(`/api/v1/wallets/CUSTOMER/${customerId}`);
       if (balanceRes.data) setWalletBalance(balanceRes.data.balance);
       
-      const txRes = await apiGet(`/api/v1/wallets/CUSTOMER/${customerId}/transactions?page=${txPage}&size=10`);
+      const txRes = await (walletApi.get as any)(`/api/v1/wallets/CUSTOMER/${customerId}/transactions?page=${txPage}&size=10`);
       if (txRes.data) {
         setTransactions(txRes.data.content || []);
         setTxTotalPages(txRes.data.totalPages || 1);
@@ -155,7 +155,7 @@ export default function SharedSettingsView({
       if (onAddApiLog) {
         onAddApiLog({ id: `revoke_${sessionId}`, label: `DELETE /api/v1/internal/auth/sessions/${sessionId}`, method: 'DELETE' });
       }
-      await apiDelete(`/api/v1/internal/auth/sessions/${sessionId}`);
+      await (identityApi.delete as any)(`/api/v1/internal/auth/sessions/${sessionId}`);
       
       // If we revoked the current session, it might throw a 401 on next request. We'll reload sessions to be safe.
       await loadSessions();
@@ -193,7 +193,7 @@ export default function SharedSettingsView({
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        const res = await apiGet('/api/v1/users/profile');
+        const res = await (identityApi.get as any)('/api/v1/users/profile');
         if (res?.data) {
           setEditName(res.data.name || '');
           setInitialName(res.data.name || '');
@@ -225,7 +225,7 @@ export default function SharedSettingsView({
       onAddApiLog({ id: 'update_profile', label: `PUT /api/v1/users/profile`, method: 'PUT' });
     }
     try {
-      await apiPut('/api/v1/users/profile', {
+      await (identityApi.put as any)('/api/v1/users/profile', {
         id: userId,
         name: editName,
         email: editEmail,

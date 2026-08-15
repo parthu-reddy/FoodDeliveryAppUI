@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Upload, Image as ImageIcon, Loader2 } from 'lucide-react';
-import { apiPostFormData } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import { compressImageNative } from '../../utils/imageCompression';
 
 interface ImageUploadFieldProps {
@@ -35,7 +35,7 @@ export default function ImageUploadField({ value, onChange, folderId, placeholde
       formData.append('folderId', folderId);
       formData.append('imageType', imageType);
       
-      const res = await apiPostFormData('/api/v1/images/upload', formData);
+      const res = await (customerApi.post as any)('/api/v1/images/upload', formData);
       if (res && res.data) {
         onChange(res.data);
       } else {

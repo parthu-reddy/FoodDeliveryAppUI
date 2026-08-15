@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Laptop, Smartphone, Monitor, Trash2, AlertTriangle } from 'lucide-react';
-import { apiPost } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import { Modal, Button, Spinner } from '../ui';
 
 interface Session {
@@ -32,7 +32,7 @@ export default function SessionManagementModal({ isOpen, onClose, sessions, phon
     setLoadingId(sessionId);
     setError('');
     try {
-      const resp = await apiPost(
+      const resp = await (identityApi.post as any)(
         `/api/v1/internal/auth/verify?phoneNumber=${encodeURIComponent(phone)}&otp=${encodeURIComponent(otpCode)}&removeSessionId=${encodeURIComponent(sessionId)}`,
         undefined,
         { 'X-Calling-Service': serviceName }

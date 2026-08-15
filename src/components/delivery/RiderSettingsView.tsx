@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { X, User, Phone, Mail, Car, Image as ImageIcon, AlertCircle, LogOut, ShieldCheck, FileText, CreditCard, CheckCircle } from 'lucide-react';
-import { apiGet, apiPut, apiDelete, apiPost } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import { useToast } from '../../context/ToastContext';
 import ImageUploadField from '../shared/ImageUploadField';
 import DocumentUploadField from '../shared/DocumentUploadField';
@@ -74,7 +74,7 @@ export default function RiderSettingsView({
   const loadSessions = async () => {
     setIsLoadingSessions(true);
     try {
-      const res = await apiGet('/api/v1/internal/auth/sessions');
+      const res = await (identityApi.get as any)('/api/v1/internal/auth/sessions');
       if (res?.data) {
         setSessions(res.data);
       }
@@ -87,7 +87,7 @@ export default function RiderSettingsView({
 
   const revokeSession = async (sessionId: string) => {
     try {
-      await apiDelete(`/api/v1/internal/auth/sessions/${sessionId}`);
+      await (identityApi.delete as any)(`/api/v1/internal/auth/sessions/${sessionId}`);
       await loadSessions();
     } catch (e: any) {
       if (e.status === 401) {
@@ -103,7 +103,7 @@ export default function RiderSettingsView({
     const loadData = async () => {
       try {
         // Load Identity Profile
-        const identityRes = await apiGet('/api/v1/users/profile');
+        const identityRes = await (identityApi.get as any)('/api/v1/users/profile');
         if (identityRes?.data) {
           setEditName(identityRes.data.name || '');
           setInitialName(identityRes.data.name || '');
@@ -113,7 +113,7 @@ export default function RiderSettingsView({
         }
 
         // Load Delivery Profile
-        const deliveryRes = await apiGet(`/api/delivery/profile?phoneNumber=${encodeURIComponent(riderPhone)}`);
+        const deliveryRes = await (deliveryApi.get as any)(`/api/delivery/profile?phoneNumber=${encodeURIComponent(riderPhone)}`);
         if (deliveryRes && deliveryRes.data) {
           const profile = deliveryRes.data;
           setEditVehicle(profile.vehicleNumber || '');
@@ -127,7 +127,7 @@ export default function RiderSettingsView({
 
         // Load Verification Status
         try {
-          const verRes = await apiGet(`/api/delivery/verification/status`);
+          const verRes = await (deliveryApi.get as any)(`/api/delivery/verification/status`);
           if (verRes?.data) {
             setVerificationStatus(verRes.data);
           }
@@ -155,10 +155,10 @@ export default function RiderSettingsView({
     if (!userId) return;
     setTxLoading(true);
     try {
-      const balanceRes = await apiGet(`/api/v1/wallets/DRIVER/${userId}`);
+      const balanceRes = await (walletApi.get as any)(`/api/v1/wallets/DRIVER/${userId}`);
       if (balanceRes.data) setWalletBalance(balanceRes.data.balance);
       
-      const txRes = await apiGet(`/api/v1/wallets/DRIVER/${userId}/transactions?page=${page}&size=5`);
+      const txRes = await (walletApi.get as any)(`/api/v1/wallets/DRIVER/${userId}/transactions?page=${page}&size=5`);
       if (txRes.data) {
         setTransactions(txRes.data.content || []);
         setTxTotalPages(txRes.data.totalPages || 1);
@@ -192,7 +192,7 @@ export default function RiderSettingsView({
     try {
       // 1. Update Identity Profile if not set
       if (!initialName || !initialEmail) {
-         await apiPut('/api/v1/users/profile', {
+         await (identityApi.put as any)('/api/v1/users/profile', {
            id: userId,
            name: editName,
            email: editEmail,
@@ -201,7 +201,7 @@ export default function RiderSettingsView({
       }
 
       // 2. Onboard/Update Delivery Profile
-      await apiPost('/api/delivery/onboard', {
+      await (deliveryApi.post as any)('/api/delivery/onboard', {
         phoneNumber: riderPhone,
         fullName: editName,
         vehicleNumber: editVehicle,
@@ -224,10 +224,10 @@ export default function RiderSettingsView({
   const submitVerificationDoc = async (type: string, payload: any) => {
     setIsSubmittingDoc(type);
     try {
-      const res = await apiPost(`/api/delivery/verification/${type}`, payload);
+      const res = await (deliveryApi.post as any)(`/api/delivery/verification/${type}`, payload);
       showSuccess(res.message || 'Document submitted for verification');
       // Reload status
-      const verRes = await apiGet(`/api/delivery/verification/status`);
+      const verRes = await (deliveryApi.get as any)(`/api/delivery/verification/status`);
       if (verRes?.data) setVerificationStatus(verRes.data);
     } catch (e: any) {
       showError(e.response?.data?.error || 'Failed to submit document');

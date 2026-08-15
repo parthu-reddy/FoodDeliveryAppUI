@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, X, MessageSquare, Loader2, ImagePlus, PhoneCall, PhoneOff } from 'lucide-react';
 import { getToken, getUserProfile } from '../../lib/tokenStore';
-import { useChatWebSocket, ChatMessage, TypingIndicator } from '../../hooks/useChatWebSocket';
-import { apiGet, apiPost } from '../../lib/apiClient';
+import { useChatWebSocket } from '../../hooks/useChatWebSocket';
+import { type ChatMessage, type TypingIndicator } from '../../types';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import { useCallContext } from '../../context/CallContext';
 
 export interface ChatParticipant {
@@ -111,7 +112,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
         setIsLoading(true);
         try {
           // 1. Create or get session
-          const data = await apiPost(`/api/v1/chat/sessions`, {
+          const data = await (customerApi.post as any)(`/api/v1/chat/sessions`, {
             orderId,
             participants: [
               {
@@ -135,7 +136,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
           }
 
           // 2. Load history
-          const histData = await apiGet(`/api/v1/chat/sessions/${sid}/messages?size=50`);
+          const histData = await (customerApi.get as any)(`/api/v1/chat/sessions/${sid}/messages?size=50`);
           if (histData && histData.success) {
             setMessages(histData.data || []);
           }

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AlertCircle } from 'lucide-react';
-import { apiPut } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import { z } from 'zod';
 import { Modal, Button, FormField, Input, Spinner } from '../ui';
 
@@ -35,7 +35,7 @@ export default function CompleteProfileModal({ isOpen, theme, onComplete, profil
 
     setIsSubmitting(true);
     try {
-      await apiPut('/api/v1/users/profile', {
+      await (identityApi.put as any)('/api/v1/users/profile', {
         id: profileId,
         name: name.trim(),
         email: email.trim(),

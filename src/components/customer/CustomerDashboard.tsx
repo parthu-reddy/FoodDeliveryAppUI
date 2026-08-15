@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { RoleName, Restaurant, MenuItem, CartItem } from '../../types';
 import { OrderStatus, DeliveryStatus, Order } from '../../types';
 import { getFriendlyStatusMessage } from '../../utils/statusMessaging';
-import { apiGet, apiPost } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import { getUserProfile } from '../../lib/tokenStore';
 import LaBouffeLogo from '../shared/LaBouffeLogo';
 import { getEffectiveMenu } from '../../lib/menuStore';
@@ -108,8 +108,8 @@ export default function CustomerDashboard({
   useEffect(() => {
     const profile = getUserProfile();
     if (profile && profile.role === RoleName.CUSTOMER) {
-      const profilePromise = apiGet(`/api/v1/users/profile`).catch(e => { console.error(e); return { data: null }; });
-      const addressesPromise = profile.id ? apiGet(`/api/v1/customers/${profile.id}/addresses`).catch(e => { console.error(e); return { data: null }; }) : Promise.resolve({ data: null });
+      const profilePromise = (identityApi.get as any)(`/api/v1/users/profile`).catch(e => { console.error(e); return { data: null }; });
+      const addressesPromise = profile.id ? (customerApi.get as any)(`/api/v1/customers/${profile.id}/addresses`).catch(e => { console.error(e); return { data: null }; }) : Promise.resolve({ data: null });
 
       Promise.all([profilePromise, addressesPromise]).then(([profileRes, addrRes]) => {
         // Handle Profile
@@ -170,7 +170,7 @@ export default function CustomerDashboard({
   useEffect(() => {
     let ignore = false;
     if (selectedRestaurant?.brandId) {
-      apiGet(`/api/v1/restaurants/brands/${selectedRestaurant.brandId}/outlets?lat=${deliveryLat}&lng=${deliveryLng}&radius=10.0`)
+      (restaurantApi.get as any)(`/api/v1/restaurants/brands/${selectedRestaurant.brandId}/outlets?lat=${deliveryLat}&lng=${deliveryLng}&radius=10.0`)
         .then(res => {
           if (!ignore && res.data) setBrandOutlets(res.data);
         })
@@ -230,7 +230,7 @@ export default function CustomerDashboard({
         if (!selectedRestaurant) return;
         
         if (deliveryAddressId) {
-          apiGet(`/api/v1/restaurants/${selectedRestaurant.id}/delivery-pricing?addressId=${deliveryAddressId}`)
+          (restaurantApi.get as any)(`/api/v1/restaurants/${selectedRestaurant.id}/delivery-pricing?addressId=${deliveryAddressId}`)
             .then(res => {
               if (!ignore && res.data) {
                 setDeliveryPricingMap(prev => ({ ...prev, [selectedRestaurant.id]: res.data }));
@@ -273,7 +273,7 @@ export default function CustomerDashboard({
     const activeCartIds = Object.keys(carts);
     activeCartIds.forEach(cartId => {
       if (!deliveryPricingMap[cartId] && cartId !== selectedRestaurant?.id) {
-        apiGet(`/api/v1/restaurants/${cartId}/delivery-pricing?addressId=${deliveryAddressId}`)
+        (restaurantApi.get as any)(`/api/v1/restaurants/${cartId}/delivery-pricing?addressId=${deliveryAddressId}`)
           .then(res => {
             if (res.data) {
               setDeliveryPricingMap(prev => ({ ...prev, [cartId]: res.data }));
@@ -289,7 +289,7 @@ export default function CustomerDashboard({
     let ignore = false;
     if (selectedRestaurant) {
       setIsDeliveryAvailable(null);
-      apiGet(`/api/v1/restaurants/${selectedRestaurant.id}/delivery-availability`)
+      (restaurantApi.get as any)(`/api/v1/restaurants/${selectedRestaurant.id}/delivery-availability`)
         .then(res => {
           if (!ignore && res.data && typeof res.data.available === 'boolean') {
             setIsDeliveryAvailable(res.data.available);
@@ -511,7 +511,7 @@ export default function CustomerDashboard({
               onUpdateOrder={onUpdateOrder}
               setInternalOrders={setInternalOrders}
               showError={showError}
-              apiPost={apiPost}
+              apiPost={(customerApi.post as any)}
               getFriendlyStatusMessage={getFriendlyStatusMessage}
             />
           )

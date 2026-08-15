@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useToast } from '../../context/ToastContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, LogOut } from 'lucide-react';
-import { apiDelete, apiPut, apiGet, apiPost } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import { z } from 'zod';
 import { FormField, Input, Button, Badge } from '../ui';
 
@@ -45,7 +45,7 @@ export default function PartnerAccountModal({
   }, [userName]);
 
   const fetchDevices = () => {
-    apiGet('/api/v1/internal/auth/sessions', { 'X-Calling-Service': portalRole || RoleName.RESTAURANT })
+    (identityApi.get as any)('/api/v1/internal/auth/sessions', { 'X-Calling-Service': portalRole || RoleName.RESTAURANT })
       .then(res => setDevices(res.data || []))
       .catch(err => console.error('Failed to fetch devices', err));
   };
@@ -62,7 +62,7 @@ export default function PartnerAccountModal({
 
   const handleRemoveDevice = async (sessionId: string) => {
     try {
-      await apiDelete(`/api/v1/internal/auth/sessions/${sessionId}`, { 'X-Calling-Service': portalRole || RoleName.RESTAURANT });
+      await (identityApi.delete as any)(`/api/v1/internal/auth/sessions/${sessionId}`, { 'X-Calling-Service': portalRole || RoleName.RESTAURANT });
       fetchDevices();
     } catch (e) {
       console.error('Failed to remove device', e);
@@ -71,7 +71,7 @@ export default function PartnerAccountModal({
 
   const handleRemoveAllDevices = async () => {
     try {
-      await apiDelete(`/api/v1/internal/auth/sessions`, { 'X-Calling-Service': portalRole || RoleName.RESTAURANT });
+      await (identityApi.delete as any)(`/api/v1/internal/auth/sessions`, { 'X-Calling-Service': portalRole || RoleName.RESTAURANT });
       if (onLogout) onLogout();
     } catch (e) {
       console.error('Failed to remove all devices', e);
@@ -85,7 +85,7 @@ export default function PartnerAccountModal({
       return;
     }
     try {
-      await apiPut('/api/v1/users/profile', { name: editName });
+      await (identityApi.put as any)('/api/v1/users/profile', { name: editName });
       onNameUpdate(editName);
       if (onSaveExtra) {
         await onSaveExtra(editName);

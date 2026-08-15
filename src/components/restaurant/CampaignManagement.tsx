@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { apiGet, apiPost } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import { Plus, Play, Pause, DollarSign, TrendingUp, Calendar } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 import { AdPerformanceDashboard, CampaignPerformance } from './AdPerformanceDashboard';
@@ -67,7 +67,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
     if (!restaurantId) return;
     setTxLoading(true);
     try {
-      const balanceRes = await apiGet(`/api/v1/wallets/ADVERTISER/${restaurantId}`);
+      const balanceRes = await (walletApi.get as any)(`/api/v1/wallets/ADVERTISER/${restaurantId}`);
       if (balanceRes.data) setWalletBalance(balanceRes.data.balance);
     } catch (e) {
       console.error(e);
@@ -80,7 +80,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
   const loadTransactions = async (page: number) => {
     setTxLoading(true);
     try {
-      const res = await apiGet(`/api/v1/wallets/ADVERTISER/${restaurantId}/transactions?page=${page}&size=5`);
+      const res = await (walletApi.get as any)(`/api/v1/wallets/ADVERTISER/${restaurantId}/transactions?page=${page}&size=5`);
       if (res.data) {
         setTransactions(res.data.content || []);
         setTxTotalPages(res.data.totalPages || 1);
@@ -96,7 +96,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
     if (!restaurantId) return;
     setPerfLoading(true);
     try {
-      const res = await apiGet(`/api/v1/advertisers/${restaurantId}/campaigns/performance`);
+      const res = await (customerApi.get as any)(`/api/v1/advertisers/${restaurantId}/campaigns/performance`);
       if (res.data) setPerformanceData(res.data);
     } catch (e) {
       console.error(e);
@@ -109,7 +109,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
   const loadCampaigns = async () => {
     setLoading(true);
     try {
-      const res = await apiGet(`/api/v1/advertisers/${restaurantId}/campaigns`);
+      const res = await (customerApi.get as any)(`/api/v1/advertisers/${restaurantId}/campaigns`);
       if (res.data && res.data.content) {
         setCampaigns(res.data.content);
       } else if (Array.isArray(res.data)) {
@@ -125,7 +125,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await apiPost(`/api/v1/advertisers/${restaurantId}/campaigns`, {
+      await (customerApi.post as any)(`/api/v1/advertisers/${restaurantId}/campaigns`, {
         advertiserId: restaurantId,
         name,
         dailyBudget: parseFloat(dailyBudget),
@@ -144,7 +144,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
 
   const handlePause = async (id: string) => {
     try {
-      await apiPost(`/api/v1/advertisers/${restaurantId}/campaigns/${id}/pause`);
+      await (customerApi.post as any)(`/api/v1/advertisers/${restaurantId}/campaigns/${id}/pause`);
       showSuccess('Campaign paused');
       loadCampaigns();
     } catch (err: any) {
@@ -300,7 +300,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
               <Button variant="ghost" type="button" onClick={() => setShowTopupModal(false)}>Cancel</Button>
               <Button variant="success" type="button" onClick={async () => {
                 try {
-                  await apiPost(`/api/v1/advertisers/${restaurantId}/campaigns/wallet/topup`, { amount: parseFloat(topupAmount) });
+                  await (customerApi.post as any)(`/api/v1/advertisers/${restaurantId}/campaigns/wallet/topup`, { amount: parseFloat(topupAmount) });
                   showSuccess('Top-up order created! (Webhook will process payment)');
                   setShowTopupModal(false);
                   // Reload wallet data after a short delay for webhook

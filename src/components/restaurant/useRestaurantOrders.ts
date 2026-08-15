@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Order, OrderStatus } from '../../types';
-import { apiGet, apiPost } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import { usePolling } from '../../hooks/usePolling';
 
 interface UseRestaurantOrdersOptions {
@@ -41,7 +41,7 @@ export function useRestaurantOrders({
       else if (status === OrderStatus.CANCELLED) endpoint = `/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/${orderId}/cancel`;
 
       if (endpoint) {
-        await apiPost(endpoint, payload);
+        await (customerApi.post as any)(endpoint, payload);
         if (onAddApiLog) {
           onAddApiLog({ id: `update_${orderId}`, label: `POST ${endpoint}`, method: 'POST' });
         }
@@ -55,7 +55,7 @@ export function useRestaurantOrders({
 
   const fetchOrders = useCallback(async () => {
     if (!selectedOutletId) return [];
-    const res = await apiGet(`/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/active`);
+    const res = await (restaurantApi.get as any)(`/api/v1/restaurants/${selectedOutletId}/fulfillment/orders/active`);
     if (res.data) {
       const activeOrdersData = res.data.data || res.data;
       const mapped = activeOrdersData.map((o: any) => {

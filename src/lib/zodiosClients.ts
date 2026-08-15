@@ -14,6 +14,8 @@ import { createApiClient as createPaymentApi } from '../api/generated/schemas/pa
 import { createApiClient as createRestaurantApi } from '../api/generated/schemas/restaurant';
 import { createApiClient as createTrackingApi } from '../api/generated/schemas/tracking';
 import { createApiClient as createWalletApi } from '../api/generated/schemas/wallet';
+import { adminApiDef } from '../api/manual-schemas/admin';
+import { Zodios } from '@zodios/core';
 
 const BASE_URL = env.VITE_API_BASE_URL || '';
 
@@ -30,11 +32,12 @@ export const paymentApi = createPaymentApi(BASE_URL, commonZodiosConfig);
 export const restaurantApi = createRestaurantApi(BASE_URL, commonZodiosConfig);
 export const trackingApi = createTrackingApi(BASE_URL, commonZodiosConfig);
 export const walletApi = createWalletApi(BASE_URL, commonZodiosConfig);
+export const adminApi = new Zodios(BASE_URL, adminApiDef, commonZodiosConfig);
 
 // Register the authentication and device headers plugin for all clients
 const clients = [
   campaignApi, chatApi, customerApi, deliveryApi, governmentIdApi, identityApi,
-  ledgerApi, mapsApi, paymentApi, restaurantApi, trackingApi, walletApi
+  ledgerApi, mapsApi, paymentApi, restaurantApi, trackingApi, walletApi, adminApi
 ];
 
 clients.forEach(client => {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { apiGet } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import { Search, ChevronLeft, ChevronRight, Filter, ArrowRight, Copy, Check } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 import { Button, Input, Select, Badge } from '../ui';
@@ -30,7 +30,7 @@ export default function AdminLedgerView() {
       if (category) params.append('category', category);
       if (direction) params.append('direction', direction);
 
-      const res = await apiGet(`/api/v1/ledger/admin/transactions?${params.toString()}`);
+      const res = await (customerApi.get as any)(`/api/v1/ledger/admin/transactions?${params.toString()}`);
       if (res) {
         const pageData = res.data || res;
         setEntries(pageData.content || []);

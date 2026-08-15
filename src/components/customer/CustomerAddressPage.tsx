@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { ChevronLeft, Search, MapPin, X } from 'lucide-react';
-import { apiGet, apiPost } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { z } from 'zod';
@@ -44,7 +44,7 @@ export default function CustomerAddressPage({
         if (onAddApiLog) {
             onAddApiLog({ id: 'reverse_geocode', label: `GET /api/places/reverse-geocode?lat=${lat.toFixed(4)}&lng=${lng.toFixed(4)}`, method: 'GET' });
         }
-        const res = await apiGet(`/api/places/reverse-geocode?lat=${lat}&lng=${lng}`);
+        const res = await (customerApi.get as any)(`/api/places/reverse-geocode?lat=${lat}&lng=${lng}`);
         if (res.address) {
             setAddress(res.address);
         }
@@ -62,7 +62,7 @@ export default function CustomerAddressPage({
         if (onAddApiLog) {
            onAddApiLog({ id: 'fetch_maps_key', label: 'GET /api/config/maps-key', method: 'GET' });
         }
-        const { key } = await apiGet('/api/config/maps-key');
+        const { key } = await (customerApi.get as any)('/api/config/maps-key');
         if (!active || !mapContainerRef.current) return;
         
         map = new maplibregl.Map({
@@ -89,7 +89,7 @@ export default function CustomerAddressPage({
                 if (onAddApiLog) {
                    onAddApiLog({ id: 'reverse_geocode', label: `GET /api/places/reverse-geocode?lat=${center.lat.toFixed(4)}&lng=${center.lng.toFixed(4)}`, method: 'GET' });
                 }
-                const res = await apiGet(`/api/places/reverse-geocode?lat=${center.lat}&lng=${center.lng}`);
+                const res = await (customerApi.get as any)(`/api/places/reverse-geocode?lat=${center.lat}&lng=${center.lng}`);
                 if (active && res.address) {
                    setAddress(res.address);
                    const parts = res.address.split(',').map((p: string) => p.trim());
@@ -168,7 +168,7 @@ export default function CustomerAddressPage({
          if (onAddApiLog) {
             onAddApiLog({ id: 'autocomplete', label: `GET /api/places/autocomplete?input=${encodeURIComponent(addressSearchQuery)}`, method: 'GET' });
          }
-         const res = await apiGet(`/api/places/autocomplete?input=${encodeURIComponent(addressSearchQuery)}`);
+         const res = await (customerApi.get as any)(`/api/places/autocomplete?input=${encodeURIComponent(addressSearchQuery)}`);
          setSuggestions(res || []);
        } catch (e) {
          console.error(e);
@@ -188,7 +188,7 @@ export default function CustomerAddressPage({
       } else {
           try {
               if (onAddApiLog) onAddApiLog({ id: 'geocode', label: `GET /api/places/geocode?address=${encodeURIComponent(suggestion.description)}`, method: 'GET' });
-              const res = await apiGet(`/api/places/geocode?address=${encodeURIComponent(suggestion.description)}`);
+              const res = await (customerApi.get as any)(`/api/places/geocode?address=${encodeURIComponent(suggestion.description)}`);
               if (res && res.lat && res.lng) {
                   loc = res;
               }
@@ -383,7 +383,7 @@ export default function CustomerAddressPage({
 
                    if (setSavedAddresses && userId) {
                      try {
-                       const res = await apiPost(`/api/v1/customers/${userId}/addresses`, payload);
+                       const res = await (customerApi.post as any)(`/api/v1/customers/${userId}/addresses`, payload);
                        const data = res?.data || res;
                        if (data && data.id) {
                          setSavedAddresses((prev: any[]) => [...prev, data]);

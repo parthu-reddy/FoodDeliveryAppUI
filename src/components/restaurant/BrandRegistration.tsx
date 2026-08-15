@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, CheckCircle, Sparkles, AlertCircle, ArrowRight, ArrowLeft, Store, CreditCard } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { apiPost } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import ImageUploadField from '../shared/ImageUploadField';
 import { z } from 'zod';
 
@@ -96,7 +96,7 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
     
     try {
       setIsSaving(true);
-      await apiPost(`/api/v1/brands`, newBrand);
+      await (customerApi.post as any)(`/api/v1/brands`, newBrand);
       setIsOpen(false);
       resetForm();
       onRefresh();

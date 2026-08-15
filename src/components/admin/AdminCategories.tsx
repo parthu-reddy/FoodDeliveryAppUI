@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Tags, Plus, Pencil, X } from 'lucide-react';
-import { apiPost, apiGet, apiPut } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import { useToast } from '../../context/ToastContext';
 import { z } from 'zod';
 import { usePolling } from '../../hooks/usePolling';
@@ -17,7 +17,7 @@ export default function AdminCategories() {
 
   const { data: categories = [], refetch } = usePolling({
     fetchFn: async () => {
-      const res = await apiGet('/api/v1/categories');
+      const res = await (adminApi.get as any)('/api/v1/categories');
       return res.data?.data || res.data || [];
     },
     intervalMs: 30000,
@@ -39,11 +39,11 @@ export default function AdminCategories() {
 
     try {
       if (editingCategory) {
-        await apiPut(`/api/v1/categories/${editingCategory.id}`, { name: nameInput.value, description: descInput.value });
+        await (adminApi.put as any)(`/api/v1/categories/${editingCategory.id}`, { name: nameInput.value, description: descInput.value });
         showSuccess('Category updated successfully');
         setEditingCategory(null);
       } else {
-        await apiPost('/api/v1/categories', { name: nameInput.value, description: descInput.value });
+        await (adminApi.post as any)('/api/v1/categories', { name: nameInput.value, description: descInput.value });
         showSuccess('Category created successfully');
       }
       form.reset();

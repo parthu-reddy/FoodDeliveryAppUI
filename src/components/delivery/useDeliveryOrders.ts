@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Order, OrderStatus, DeliveryStatus } from '../../types';
-import { apiGet, apiPost } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import { getToken } from '../../lib/tokenStore';
 import { isActiveOrder } from '../../utils/orderStatus';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
@@ -67,14 +67,14 @@ export function useDeliveryOrders({
     const getArrayFromRes = (res: any) => res?.content || res?.data?.data || res?.data || (Array.isArray(res) ? res : []);
 
     try {
-      const activeRes = await apiGet(`/api/v1/delivery/orders/active`);
+      const activeRes = await (deliveryApi.get as any)(`/api/v1/delivery/orders/active`);
       if (activeRes) {
          const activeData = getArrayFromRes(activeRes);
          fetchedActiveJobs = activeData.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
       }
 
       if (fetchedActiveJobs.length === 0) {
-         const availableRes = await apiGet(`/api/v1/delivery/orders/available`);
+         const availableRes = await (deliveryApi.get as any)(`/api/v1/delivery/orders/available`);
          if (availableRes) {
             const availableData = getArrayFromRes(availableRes);
             fetchedAvailableJobs = availableData.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
@@ -101,7 +101,7 @@ export function useDeliveryOrders({
       );
 
       if ((lastActiveCountRef.current > 0 && fetchedActiveJobs.length === 0) || hasStaleActiveJobInHistory) {
-         const histRes = await apiGet(`/api/v1/delivery/orders/history?date=${todayDateString}`);
+         const histRes = await (deliveryApi.get as any)(`/api/v1/delivery/orders/history?date=${todayDateString}`);
          if (histRes) {
             const histData = getArrayFromRes(histRes);
             historyRef.current = histData.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
@@ -132,7 +132,7 @@ export function useDeliveryOrders({
     const dateToFetch = showHistory ? historyDateFilter : todayDateString;
     if (!dateToFetch) return;
 
-    apiGet(`/api/v1/delivery/orders/history?date=${dateToFetch}`).then(res => {
+    (deliveryApi.get as any)(`/api/v1/delivery/orders/history?date=${dateToFetch}`).then(res => {
       if (res) {
         const getArrayFromRes = (res: any) => res?.content || res?.data?.data || res?.data || (Array.isArray(res) ? res : []);
         const histData = getArrayFromRes(res);
@@ -251,7 +251,7 @@ export function useDeliveryOrders({
         (err) => {
           console.error("Location error:", err);
           if (riderId) {
-            apiPost(`/api/delivery/status`, { driverId: riderId, available: false })
+            (deliveryApi.post as any)(`/api/delivery/status`, { driverId: riderId, available: false })
               .catch(e => console.error(e));
           }
           setIsOnline(false);
@@ -289,7 +289,7 @@ export function useDeliveryOrders({
         try {
           const data = JSON.parse(event.data);
           if (data.type === "NEW_ORDER_DISPATCH" && data.orderId) {
-            const pingRes = await apiGet(`/api/v1/delivery/orders/available`);
+            const pingRes = await (deliveryApi.get as any)(`/api/v1/delivery/orders/available`);
             const pingData = pingRes?.data?.data || pingRes?.data || pingRes;
             if (pingData && pingData.length > 0) {
               const jobs = pingData.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));

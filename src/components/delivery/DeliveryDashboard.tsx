@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { z } from 'zod';
 import { Order, OrderStatus, DeliveryStatus } from '../../types';
 import LaBouffeLogo from '../shared/LaBouffeLogo';
-import { apiGet, apiPost } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import { getUserProfile } from '../../lib/tokenStore';
 import RiderSettingsView from './RiderSettingsView';
 import RiderOnboardingWizard from './RiderOnboardingWizard';
@@ -117,13 +117,13 @@ export default function DeliveryDashboard({
 
   useEffect(() => {
     // Fetch unified profile first
-    apiGet(`/api/v1/users/profile`)
+    (identityApi.get as any)(`/api/v1/users/profile`)
       .catch(err => {
         if (err?.status !== 404) console.warn("Failed to fetch unified profile:", err);
       });
 
     // Fetch delivery-specific profile details
-    apiGet(`/api/delivery/profile?phoneNumber=${encodeURIComponent(riderPhone)}`)
+    (deliveryApi.get as any)(`/api/delivery/profile?phoneNumber=${encodeURIComponent(riderPhone)}`)
       .then(data => {
         if (data.success) {
           const profile = data.data;
@@ -156,7 +156,7 @@ export default function DeliveryDashboard({
       .finally(() => setIsLoadingProfile(false));
 
     // Fetch verification status
-    apiGet('/api/delivery/verification/status')
+    (deliveryApi.get as any)('/api/delivery/verification/status')
       .then(res => {
         if (res?.data) setVerificationStatus(res.data);
       })
@@ -184,7 +184,7 @@ export default function DeliveryDashboard({
       async (position) => {
         setShowPermissionsPrompt(false);
         try {
-          await apiPost(`/api/delivery/status`, { driverId: riderId, available: true });
+          await (deliveryApi.post as any)(`/api/delivery/status`, { driverId: riderId, available: true });
           setIsOnline(true);
         } catch(e) {
           console.error("Failed to toggle status", e);
@@ -226,7 +226,7 @@ export default function DeliveryDashboard({
         navigator.geolocation.getCurrentPosition(
           async (position) => {
             try {
-              await apiPost(`/api/delivery/status`, { driverId: riderId, available: true });
+              await (deliveryApi.post as any)(`/api/delivery/status`, { driverId: riderId, available: true });
               setIsOnline(true);
             } catch(e) {
               console.error("Failed to toggle status", e);
@@ -243,7 +243,7 @@ export default function DeliveryDashboard({
       }
     } else {
       try {
-        await apiPost(`/api/delivery/status`, { driverId: riderId, available: false });
+        await (deliveryApi.post as any)(`/api/delivery/status`, { driverId: riderId, available: false });
         setIsOnline(false);
       } catch(e) {
         console.error("Failed to toggle status", e);
@@ -256,7 +256,7 @@ export default function DeliveryDashboard({
     setActiveJobId(job.id);
     onUpdateOrderStatus(job.id, job.status, DeliveryStatus.ASSIGNED, { name: riderName });
     try {
-      await apiPost(`/api/delivery/drivers/${riderId}/orders/${job.id}/accept`);
+      await (deliveryApi.post as any)(`/api/delivery/drivers/${riderId}/orders/${job.id}/accept`);
     } catch(e: any) {
       // Revert on error
       setActiveJobId(null);
@@ -272,7 +272,7 @@ export default function DeliveryDashboard({
     setRejectedIds(prev => new Set(prev).add(jobId));
     setPingJob(null);
     try {
-      await apiPost(`/api/delivery/drivers/${riderId}/orders/${jobId}/reject`);
+      await (deliveryApi.post as any)(`/api/delivery/drivers/${riderId}/orders/${jobId}/reject`);
     } catch(e) {
       // Revert on error (optional, mostly fire and forget)
       setRejectedIds(prev => { const n = new Set(prev); n.delete(jobId); return n; });
@@ -284,7 +284,7 @@ export default function DeliveryDashboard({
     setActiveJobId(order.id);
     onUpdateOrderStatus(order.id, order.status, DeliveryStatus.ASSIGNED, { name: riderName });
     try {
-      await apiPost(`/api/delivery/drivers/${riderId}/orders/${order.id}/accept`, {});
+      await (deliveryApi.post as any)(`/api/delivery/drivers/${riderId}/orders/${order.id}/accept`, {});
     } catch (e: any) {
       console.error("Failed to accept job", e);
       // Revert on error
@@ -298,7 +298,7 @@ export default function DeliveryDashboard({
     const previousStatus = currentJob.status;
     onUpdateOrderStatus(currentJob.id, currentJob.status, DeliveryStatus.AT_RESTAURANT);
     try {
-      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, { status: DeliveryStatus.AT_RESTAURANT });
+      await (deliveryApi.post as any)(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, { status: DeliveryStatus.AT_RESTAURANT });
     } catch(e: any) {
       onUpdateOrderStatus(currentJob.id, previousStatus, currentJob.deliveryStatus);
       showToast(e.response?.data?.message || "Failed to update status.");
@@ -310,7 +310,7 @@ export default function DeliveryDashboard({
     if (!confirm("Are you sure you want to abort this delivery? This will impact your rating.")) return;
     
     try {
-      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/abort`, {});
+      await (deliveryApi.post as any)(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/abort`, {});
       setActiveJobId(null);
       showToast("Delivery aborted. You will be placed back in the pool.");
     } catch (e: any) {
@@ -325,7 +325,7 @@ export default function DeliveryDashboard({
     const previousStatus = currentJob.status;
     onUpdateOrderStatus(currentJob.id, currentJob.status, DeliveryStatus.FAILED);
     try {
-      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, { status: DeliveryStatus.FAILED, goOfflineAfter });
+      await (deliveryApi.post as any)(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, { status: DeliveryStatus.FAILED, goOfflineAfter });
       setActiveJobId(null);
       
       if (goOfflineAfter) {
@@ -353,7 +353,7 @@ export default function DeliveryDashboard({
     setIsUpdatingPickup(true);
     
     try {
-      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, { status: DeliveryStatus.OUT_FOR_DELIVERY, pickupOtp: enteredPickupOtp });
+      await (deliveryApi.post as any)(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, { status: DeliveryStatus.OUT_FOR_DELIVERY, pickupOtp: enteredPickupOtp });
       setIsUpdatingPickup(false);
       setEnteredPickupOtp("");
     } catch(e: any) {
@@ -378,7 +378,7 @@ export default function DeliveryDashboard({
     setIsUpdatingDelivery(true);
     
     try {
-      await apiPost(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, { status: DeliveryStatus.DELIVERED, deliveryOtp: enteredOtp, goOfflineAfter });
+      await (deliveryApi.post as any)(`/api/delivery/drivers/${riderId}/orders/${currentJob.id}/status`, { status: DeliveryStatus.DELIVERED, deliveryOtp: enteredOtp, goOfflineAfter });
       setIsUpdatingDelivery(false);
       
       historyRef.current = [{...currentJob, deliveryStatus: DeliveryStatus.DELIVERED}, ...historyRef.current];
@@ -554,7 +554,7 @@ export default function DeliveryDashboard({
             isProfileMandatory={isProfileMandatory}
             riderPhone={riderPhone}
             onProfileUpdated={() => {
-              apiGet(`/api/delivery/profile?phoneNumber=${encodeURIComponent(riderPhone)}`)
+              (deliveryApi.get as any)(`/api/delivery/profile?phoneNumber=${encodeURIComponent(riderPhone)}`)
                 .then(data => {
                   if (data.success) {
                     const profile = data.data;

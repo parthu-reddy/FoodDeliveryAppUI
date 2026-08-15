@@ -15,3 +15,19 @@ export const adminMetricSchema = z.object({
 }).passthrough();
 
 export type AdminMetric = z.infer<typeof adminMetricSchema>;
+
+import { makeApi } from '@zodios/core';
+export const adminApiDef = makeApi([
+  {
+    method: 'get',
+    path: '/api/v1/admin/users',
+    alias: 'getUsers',
+    response: z.any()
+  },
+  {
+    method: 'get',
+    path: '/api/v1/admin/dashboard',
+    alias: 'getDashboard',
+    response: z.any()
+  }
+]);

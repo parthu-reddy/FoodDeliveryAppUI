@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Package, Navigation, Truck } from 'lucide-react';
-import { apiGet, apiPost } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import { useToast } from '../../context/ToastContext';
 import { getFriendlyStatusMessage } from '../../utils/statusMessaging';
 import { usePolling } from '../../hooks/usePolling';
@@ -18,7 +18,7 @@ export default function AdminLiveOperations() {
   // Polling for active orders every 15 seconds
   const { data: activeOrdersResponse, refetch: fetchActiveOrders } = usePolling({
     fetchFn: async () => {
-      const res = await apiGet(`/api/v1/internal/admin/orders/active-all?page=${page}&size=20`);
+      const res = await (identityApi.get as any)(`/api/v1/internal/admin/orders/active-all?page=${page}&size=20`);
       return res.data?.data || res.data || res;
     },
     intervalMs: 15000,
@@ -42,7 +42,7 @@ export default function AdminLiveOperations() {
         let url = `/api/v1/internal/admin/delivery/drivers/available-with-location`;
         if (selectedOrder) {
             try {
-                const restRes = await apiGet(`/api/v1/restaurants/${selectedOrder.restaurantId}`);
+                const restRes = await (restaurantApi.get as any)(`/api/v1/restaurants/${selectedOrder.restaurantId}`);
                 const rest = restRes.data || restRes;
                 if (rest && rest.lat !== undefined && rest.lng !== undefined) {
                     url += `?lat=${rest.lat}&lng=${rest.lng}&radiusKm=5`;
@@ -51,7 +51,7 @@ export default function AdminLiveOperations() {
                 console.error("Could not fetch restaurant location", e);
             }
         }
-        const res = await apiGet(url);
+        const res = await (customerApi.get as any)(url);
         const content = res.data?.data || res.data || (Array.isArray(res) ? res : res.data);
         return Array.isArray(content) ? content : [];
     },
@@ -73,7 +73,7 @@ export default function AdminLiveOperations() {
     setAvailableDrivers(prev => prev.filter(d => d.id !== driverId));
     
     try {
-      await apiPost(`/api/v1/internal/admin/delivery/orders/${orderId}/assign?driverId=${driverId}`);
+      await (identityApi.post as any)(`/api/v1/internal/admin/delivery/orders/${orderId}/assign?driverId=${driverId}`);
       showSuccess("Driver assigned successfully!");
       fetchActiveOrders();
       fetchAvailableDrivers();
@@ -89,7 +89,7 @@ export default function AdminLiveOperations() {
 
   const handlePartialRefund = async (orderId: string, amount: string) => {
     try {
-      await apiPost(`/api/v1/internal/admin/orders/${orderId}/refund/partial`, { amount: parseFloat(amount) });
+      await (identityApi.post as any)(`/api/v1/internal/admin/orders/${orderId}/refund/partial`, { amount: parseFloat(amount) });
       showSuccess("Partial refund initiated successfully!");
       setRefundAmount('');
       fetchActiveOrders();
@@ -101,7 +101,7 @@ export default function AdminLiveOperations() {
 
   const handlePostDeliveryRefund = async (orderId: string, amount: string) => {
     try {
-      await apiPost(`/api/v1/internal/admin/orders/${orderId}/refund/post-delivery`, { amount: parseFloat(amount) });
+      await (identityApi.post as any)(`/api/v1/internal/admin/orders/${orderId}/refund/post-delivery`, { amount: parseFloat(amount) });
       showSuccess("Post-delivery refund initiated successfully!");
       setRefundAmount('');
       fetchActiveOrders();

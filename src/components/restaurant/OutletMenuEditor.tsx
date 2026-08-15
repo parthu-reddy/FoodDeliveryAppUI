@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useToast } from '../../context/ToastContext';
 import { Plus, Edit3, X, Clock, Save, Layers } from 'lucide-react';
-import { apiGet, apiPost } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import { MenuItem } from '../../types';
 import CategorySelector from './CategorySelector';
 import ImageUploadField from '../shared/ImageUploadField';
@@ -79,14 +79,14 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
 
   const fetchCategories = async () => {
     try {
-      const data = await apiGet(`/api/v1/brands/${brandId}/categories`);
+      const data = await (customerApi.get as any)(`/api/v1/brands/${brandId}/categories`);
       if (data.success && data.data) {
         const updatedCategories = await Promise.all(
           data.data.map(async (cat: any) => {
             let catData = { ...cat };
             try {
                 // Fetch outlet timings
-                const oRes = await apiGet(`/api/v1/outlets/${selectedOutlet}/categories/${cat.id}/timings`);
+                const oRes = await (customerApi.get as any)(`/api/v1/outlets/${selectedOutlet}/categories/${cat.id}/timings`);
                 if (oRes.success && oRes.data && oRes.data.length > 0) {
                     catData.timings = oRes.data;
                 } else {
@@ -96,7 +96,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
             
             try {
                 // Fetch brand timings as fallback
-                const bRes = await apiGet(`/api/v1/brands/${brandId}/categories/${cat.id}/timings`);
+                const bRes = await (customerApi.get as any)(`/api/v1/brands/${brandId}/categories/${cat.id}/timings`);
                 if (bRes.success && bRes.data && bRes.data.length > 0) {
                     catData.brandTimings = bRes.data;
                 } else {
@@ -115,7 +115,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
   const fetchMasterItems = async () => {
     if (!brandId || brandId === 'undefined') return;
     try {
-      const response = await apiGet(`/api/v1/brands/${brandId}/master-menu`);
+      const response = await (customerApi.get as any)(`/api/v1/brands/${brandId}/master-menu`);
       setMasterItems(response.data || []);
     } catch (e) { console.error(e); }
   };
@@ -123,7 +123,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
   const fetchOverrides = async (targetOutlet: string) => {
     if (!targetOutlet) return;
     try {
-      const response = await apiGet(`/api/v1/outlets/${targetOutlet}/menu-overrides`);
+      const response = await (customerApi.get as any)(`/api/v1/outlets/${targetOutlet}/menu-overrides`);
       setOverrides(response.data || []);
     } catch (e) { console.error(e); }
   };
@@ -137,7 +137,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
                 closingTime: `${tClosing}:00`
             }]
         };
-        await apiPost(`/api/v1/outlets/${selectedOutlet}/categories/timings`, payload);
+        await (customerApi.post as any)(`/api/v1/outlets/${selectedOutlet}/categories/timings`, payload);
         setEditingTimingCatId(null);
         fetchCategories();
     } catch (e) {
@@ -160,7 +160,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
       return;
     }
 
-    await apiPost(`/api/v1/outlets/${selectedOutlet}/menu-overrides/${masterItemId}`, payload);
+    await (customerApi.post as any)(`/api/v1/outlets/${selectedOutlet}/menu-overrides/${masterItemId}`, payload);
     setIsAddingOverride(null);
     setOPrice("");
     setOPrepTime("");
@@ -194,7 +194,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
       return;
     }
 
-    const newMaster = await apiPost(`/api/v1/brands/${brandId}/master-menu`, payload);
+    const newMaster = await (customerApi.post as any)(`/api/v1/brands/${brandId}/master-menu`, payload);
     const overridePayload = {
       overriddenPrice: oPrice ? parseFloat(oPrice) : null,
       isAvailable: oActive,
@@ -210,7 +210,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
       return;
     }
 
-    await apiPost(`/api/v1/outlets/${selectedOutlet}/menu-overrides/${newMaster.data.id}`, overridePayload);
+    await (customerApi.post as any)(`/api/v1/outlets/${selectedOutlet}/menu-overrides/${newMaster.data.id}`, overridePayload);
     setAddingItemToCatId(null);
     setIsAddingItem(false);
     setMName(""); setMPrice(""); setMPackingCharge("0"); setMPrepTime("15"); setMDesc(""); setMCatId('');

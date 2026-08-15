@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Upload, File as FileIcon, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
-import { apiGet } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 
 interface DocumentUploadFieldProps {
   value: string;
@@ -35,7 +35,7 @@ export default function DocumentUploadField({
 
     try {
       // 1. Get Presigned URL through the Service proxy
-      const res = await apiGet(`${uploadEndpoint}?docType=${docType}&contentType=${encodeURIComponent(file.type)}`);
+      const res = await (customerApi.get as any)(`${uploadEndpoint}?docType=${docType}&contentType=${encodeURIComponent(file.type)}`);
       
       if (!res?.data?.uploadUrl || !res?.data?.objectKey) {
         throw new Error("Failed to get secure upload link.");

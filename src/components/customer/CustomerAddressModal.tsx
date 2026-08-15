@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Search, MapPin, Loader, Navigation } from 'lucide-react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { apiPost, apiGet } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import { useToast } from '../../context/ToastContext';
 import { z } from 'zod';
 import { Input, Button, Spinner } from '../ui';
@@ -137,7 +137,7 @@ export default function CustomerAddressModal({
             }
             
             // Try to reverse geocode
-            const res = await apiGet(`/api/places/reverse-geocode?lat=${latitude}&lng=${longitude}`);
+            const res = await (customerApi.get as any)(`/api/places/reverse-geocode?lat=${latitude}&lng=${longitude}`);
             if (res && res.address) {
               const description = res.address;
               setAddressSearchQuery(description);
@@ -185,7 +185,7 @@ export default function CustomerAddressModal({
 
       setIsSaving(true);
       if (!customerId) throw new Error("Customer ID missing");
-      await apiPost(`/api/v1/customers/${customerId}/addresses`, payload);
+      await (customerApi.post as any)(`/api/v1/customers/${customerId}/addresses`, payload);
       setIsAddressModalOpen(false);
       window.location.reload();
     } catch (err) {

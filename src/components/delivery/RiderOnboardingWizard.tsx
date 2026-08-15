@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AlertCircle, CheckCircle, ChevronRight, FileText, Car, Landmark, UserSquare, Loader2, LogOut } from 'lucide-react';
-import { apiGet, apiPost, apiPut } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import DocumentUploadField from '../shared/DocumentUploadField';
 import ImageUploadField from '../shared/ImageUploadField';
 import { z } from 'zod';
@@ -58,12 +58,12 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
 
   const loadStatus = async () => {
     try {
-      const verRes = await apiGet(`/api/delivery/verification/status`);
+      const verRes = await (deliveryApi.get as any)(`/api/delivery/verification/status`);
       if (verRes?.data) {
         setVerificationStatus(verRes.data);
       }
       
-      const deliveryRes = await apiGet(`/api/delivery/profile?phoneNumber=${encodeURIComponent(riderPhone)}`);
+      const deliveryRes = await (deliveryApi.get as any)(`/api/delivery/profile?phoneNumber=${encodeURIComponent(riderPhone)}`);
       if (deliveryRes?.data) {
         setVehicle(deliveryRes.data.vehicleNumber || '');
         setVehicleType(deliveryRes.data.vehicleType || 'BICYCLE');
@@ -88,9 +88,9 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
     setIsSubmitting(true);
     try {
       if (!initialName && userId) {
-        await apiPut('/api/v1/users/profile', { id: userId, name, phone: riderPhone });
+        await (identityApi.put as any)('/api/v1/users/profile', { id: userId, name, phone: riderPhone });
       }
-      await apiPost('/api/delivery/onboard', {
+      await (deliveryApi.post as any)('/api/delivery/onboard', {
         phoneNumber: riderPhone,
         fullName: name,
         vehicleNumber: vehicle,
@@ -113,7 +113,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
     }
     setIsSubmitting(true);
     try {
-      await apiPost(`/api/delivery/verification/driving-license`, { dlNumber, documentUrl: dlDoc, dateOfBirth: dob });
+      await (deliveryApi.post as any)(`/api/delivery/verification/driving-license`, { dlNumber, documentUrl: dlDoc, dateOfBirth: dob });
       showSuccess('Driving License submitted');
       await loadStatus();
       handleNext();
@@ -131,7 +131,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
     }
     setIsSubmitting(true);
     try {
-      await apiPost(`/api/delivery/verification/vehicle-rc`, { registrationNumber: rcNumber, documentUrl: rcDoc });
+      await (deliveryApi.post as any)(`/api/delivery/verification/vehicle-rc`, { registrationNumber: rcNumber, documentUrl: rcDoc });
       showSuccess('Vehicle RC submitted');
       await loadStatus();
       handleNext();
@@ -149,7 +149,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
     }
     setIsSubmitting(true);
     try {
-      await apiPost(`/api/delivery/verification/bank-account`, { accountNumber: bankAccount, ifscCode: ifsc, kycFullName: name });
+      await (deliveryApi.post as any)(`/api/delivery/verification/bank-account`, { accountNumber: bankAccount, ifscCode: ifsc, kycFullName: name });
       showSuccess('Bank Verification Initiated (Penny Drop)');
       await loadStatus();
       handleNext();
@@ -167,7 +167,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
     }
     setIsSubmitting(true);
     try {
-      await apiPost(`/api/delivery/verification/biometric`, { selfieUrl: selfieDoc });
+      await (deliveryApi.post as any)(`/api/delivery/verification/biometric`, { selfieUrl: selfieDoc });
       showSuccess('Biometric check complete!');
       await loadStatus();
       onComplete(); // Done!

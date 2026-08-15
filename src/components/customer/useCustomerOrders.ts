@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Order, OrderStatus } from '../../types';
-import { apiGet } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import { isActiveOrder, isFailedOrder } from '../../utils/orderStatus';
 
 interface UseCustomerOrdersOptions {
@@ -14,7 +14,7 @@ export function useCustomerOrders({ onUpdateOrder }: UseCustomerOrdersOptions = 
   // Fetch initial active orders
   useEffect(() => {
     let ignore = false;
-    apiGet('/api/v1/orders/active?page=0&size=50')
+    (customerApi.get as any)('/api/v1/orders/active?page=0&size=50')
       .then(res => {
         if (!ignore && res.data) {
           const content = res.data.content || (Array.isArray(res.data) ? res.data : []);
@@ -42,7 +42,7 @@ export function useCustomerOrders({ onUpdateOrder }: UseCustomerOrdersOptions = 
     let retryCount = 0;
 
     const pollOrders = () => {
-      apiGet(`/api/v1/orders/active?page=0&size=50`)
+      (customerApi.get as any)(`/api/v1/orders/active?page=0&size=50`)
         .then(res => {
           if (!isSubscribed) return;
           retryCount = 0; // Reset on success
@@ -74,7 +74,7 @@ export function useCustomerOrders({ onUpdateOrder }: UseCustomerOrdersOptions = 
             const missingIds = activePrevIds.filter(id => !updatedOrders.find((u: any) => u.id === id));
             
             if (missingIds.length > 0) {
-               apiGet(`/api/v1/orders/batch?ids=${missingIds.join(',')}`).then(res => {
+               (customerApi.get as any)(`/api/v1/orders/batch?ids=${missingIds.join(',')}`).then(res => {
                   if (res.data) {
                      setInternalOrders(curr => {
                         const currentList = [...curr];

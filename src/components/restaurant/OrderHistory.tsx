@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Calendar, Search, Filter, ChevronLeft, ChevronRight, Package, DollarSign, Clock, Receipt } from 'lucide-react';
 import { OrderStatus, Order } from '../../types';
 import { getFriendlyStatusMessage } from '../../utils/statusMessaging';
-import { apiPost, apiGet } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import { useToast } from '../../context/ToastContext';
 import { RestaurantOrderDetailsModal } from './RestaurantOrderDetailsModal';
 
@@ -25,7 +25,7 @@ export function OrderHistory({ restaurantId, onOpenChat }: { restaurantId: strin
         queryParams.append('page', (currentPage - 1).toString());
         queryParams.append('size', itemsPerPage.toString());
 
-        const res = await apiGet(`/api/v1/restaurants/${restaurantId}/fulfillment/orders/history?${queryParams.toString()}`);
+        const res = await (restaurantApi.get as any)(`/api/v1/restaurants/${restaurantId}/fulfillment/orders/history?${queryParams.toString()}`);
         if (res.data) {
           const mapped = (res.data.content || []).map((o: any) => {
             let s = (o.status || '').toUpperCase();

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Clock, Plus, Trash2, CheckCircle, X, AlertCircle } from 'lucide-react';
-import { apiPut } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import { z } from 'zod';
 
 const shiftSchema = z.object({
@@ -68,7 +68,7 @@ export default function OutletShiftEditor({ outlet, onRefresh, onClose }: Outlet
         openingTime: t.openingTime.length === 5 ? t.openingTime + ":00" : t.openingTime,
         closingTime: t.closingTime.length === 5 ? t.closingTime + ":00" : t.closingTime
       }));
-      await apiPut(`/api/v1/outlets/${outlet.id}/timings`, { timings: formattedTimings });
+      await (customerApi.put as any)(`/api/v1/outlets/${outlet.id}/timings`, { timings: formattedTimings });
       onRefresh();
       onClose();
     } catch (err: any) {

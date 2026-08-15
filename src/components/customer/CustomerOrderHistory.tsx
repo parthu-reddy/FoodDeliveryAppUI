@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { apiGet, apiPost } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import { Order, OrderStatus } from '../../types';
 import { Package, X, Clock, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -22,7 +22,7 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
   const [selectedOrderIdForSupport, setSelectedOrderIdForSupport] = useState<string | null>(null);
 
   const handleSupportRequest = async (orderId: string, reason: string) => {
-    await apiPost(`/api/v1/customer/orders/${orderId}/refund-request`, { reason });
+    await (customerApi.post as any)(`/api/v1/customer/orders/${orderId}/refund-request`, { reason });
     setPage(p => p); // force reload history
     setSelectedOrderIdForSupport(null);
   };
@@ -38,7 +38,7 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
       onAddApiLog({ id: `fetch_history_${page}`, label: `GET /api/v1/orders/history?page=${page}&size=20`, method: 'GET' });
     }
 
-    apiGet(`/api/v1/orders/history?page=${page}&size=20`)
+    (customerApi.get as any)(`/api/v1/orders/history?page=${page}&size=20`)
       .then(res => {
         if (!ignore && res.data) {
           const content = res.data.content || (Array.isArray(res.data) ? res.data : []);

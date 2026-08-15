@@ -28,7 +28,7 @@ const RestaurantSettingsShell = lazy(() =>
   import('./RestaurantSettingsShell').then(module => ({ default: module.RestaurantSettingsShell }))
 );
 
-import { apiGet, apiPost, apiPut } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { useToast } from '../../context/ToastContext';
 import ImageLoader from '../shared/ImageLoader';
@@ -254,7 +254,7 @@ export default function RestaurantDashboard({
     // Optimistic UI update
     setIsAcceptingOrders(prev => ({ ...prev, [selectedOutletId]: newStatus }));
     try {
-        await apiPut(`/api/v1/outlets/${selectedOutletId}/status`, { isActive: newStatus });
+        await (customerApi.put as any)(`/api/v1/outlets/${selectedOutletId}/status`, { isActive: newStatus });
     } catch (err: any) {
         // Revert on error
         setIsAcceptingOrders(prev => ({ ...prev, [selectedOutletId]: !newStatus }));
@@ -287,7 +287,7 @@ export default function RestaurantDashboard({
 
     try {
       const endpoint = `/api/v1/outlets/${selectedOutletId}/menu-overrides/${dishId}`;
-      await apiPost(endpoint, {
+      await (customerApi.post as any)(endpoint, {
         isAvailable: newStockStatus
       });
     } catch (e) {
@@ -340,7 +340,7 @@ export default function RestaurantDashboard({
     
     try {
       // cleared locally in card component
-      await apiPost(`/api/v1/restaurants/orders/${orderId}/refund/partial`, {
+      await (restaurantApi.post as any)(`/api/v1/restaurants/orders/${orderId}/refund/partial`, {
         partialAmount: amount,
         reason: reason
       });
@@ -386,7 +386,7 @@ export default function RestaurantDashboard({
         if (externalUpdateStatus) externalUpdateStatus(orderId, OrderStatus.ACCEPTED);
       }
 
-      await apiPost(endpoint, body);
+      await (customerApi.post as any)(endpoint, body);
       
       if (onAddApiLog) {
         onAddApiLog({

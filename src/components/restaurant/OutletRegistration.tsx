@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Store, MapPin, ChefHat, Upload, Clock, Save, AlertCircle, CheckCircle, Search, Loader, Plus, Trash2, Navigation } from 'lucide-react';
-import { apiPost, apiGet } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import ImageUploadField from '../shared/ImageUploadField';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -175,7 +175,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
             }
             
             // Try to reverse geocode
-            const res = await apiGet(`/api/places/reverse-geocode?lat=${latitude}&lng=${longitude}`);
+            const res = await (customerApi.get as any)(`/api/places/reverse-geocode?lat=${latitude}&lng=${longitude}`);
             if (res && res.address) {
               setSearchQuery(res.address);
             }
@@ -232,7 +232,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
 
     try {
       setIsSaving(true);
-      await apiPost(`/api/v1/brands/${brandId}/outlets`, newOutlet);
+      await (customerApi.post as any)(`/api/v1/brands/${brandId}/outlets`, newOutlet);
       setIsOpen(false);
       setName('');
       setFssai('');

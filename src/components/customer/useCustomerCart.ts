@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { MenuItem, CartItem, Order, Restaurant } from '../../types';
-import { apiGet, apiPost } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import { getUserProfile } from '../../lib/tokenStore';
 
 interface UseCustomerCartOptions {
@@ -180,7 +180,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
     setCheckoutRestaurantId(restaurantId);
 
     try {
-      const availRes = await apiGet(`/api/v1/restaurants/${restaurantId}/delivery-availability`);
+      const availRes = await (restaurantApi.get as any)(`/api/v1/restaurants/${restaurantId}/delivery-availability`);
       if (availRes.data && availRes.data.available === false) {
         setGlobalError("This restaurant is currently out of your delivery zone.");
         setTimeout(() => setGlobalError(null), 3000);
@@ -241,7 +241,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
           longitude: parseFloat(deliveryLng as any)
         };
         try {
-          const addrRes = await apiPost(`/api/v1/customers/${profile?.id}/addresses`, payload);
+          const addrRes = await (customerApi.post as any)(`/api/v1/customers/${profile?.id}/addresses`, payload);
           if (addrRes.data?.id) finalAddressId = addrRes.data.id;
         } catch (e) {
           console.error("Failed to save temporary address", e);
@@ -262,7 +262,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
         items
       };
       
-      const res = await apiPost('/api/v1/orders', orderPayload);
+      const res = await (customerApi.post as any)('/api/v1/orders', orderPayload);
       
       setPaymentStatus('success');
       setTimeout(() => {

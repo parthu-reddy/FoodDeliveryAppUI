@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Receipt, CheckCircle2 } from 'lucide-react';
 import { Order } from '../../types';
 import { Button } from '../ui';
-import { apiGet } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 
 interface RestaurantOrderDetailsModalProps {
   order: Order | null;
@@ -21,7 +21,7 @@ export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalPr
       setLoading(true);
       setError(null);
       // Fetch transparent invoice details
-      apiGet(`/api/v1/restaurants/${order.restaurantId}/fulfillment/orders/${order.id}/invoice`)
+      (restaurantApi.get as any)(`/api/v1/restaurants/${order.restaurantId}/fulfillment/orders/${order.id}/invoice`)
         .then((res: any) => {
           setInvoice(res);
         })

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { apiGet } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import { useConfig } from '../../contexts/ConfigContext';
 import { ErrorBoundary } from '../shared/ErrorBoundary';
 
@@ -81,7 +81,7 @@ function _AdminAssignmentMap({
         let rLat = 12.98;
         let rLng = 77.58;
         try {
-            const res = await apiGet(`/api/v1/restaurants/${order.restaurantId}`);
+            const res = await (restaurantApi.get as any)(`/api/v1/restaurants/${order.restaurantId}`);
             if (res?.data?.lat) rLat = res.data.lat;
             if (res?.data?.lng) rLng = res.data.lng;
         } catch (err) {

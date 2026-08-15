@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Shield, LogOut, Sun, Moon, MapPin, Users, Activity, Tags, Database } from 'lucide-react';
 import LaBouffeLogo from '../shared/LaBouffeLogo';
 import { usePolling } from '../../hooks/usePolling';
-import { apiGet } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import { SidebarNav, Button } from '../ui';
 import { useTheme } from '../../context/ThemeContext';
 
@@ -23,7 +23,7 @@ export default function AdminPortal({
   // Poll for intervention count to show badge on sidebar
   const { data: interventionsCount = 0 } = usePolling({
     fetchFn: async () => {
-      const res = await apiGet('/api/v1/internal/admin/orders/intervention');
+      const res = await (identityApi.get as any)('/api/v1/internal/admin/orders/intervention');
       const content = res.content || res.data?.content || res.data?.data?.content || (Array.isArray(res.data) ? res.data : (Array.isArray(res) ? res : []));
       return Array.isArray(content) ? content.length : 0;
     },

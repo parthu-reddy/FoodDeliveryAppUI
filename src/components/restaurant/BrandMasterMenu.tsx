@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useToast } from '../../context/ToastContext';
 import { Plus, Edit3, X, Clock, Save, Layers } from 'lucide-react';
-import { apiGet, apiPost, apiPut } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import CategorySelector from './CategorySelector';
 import ImageUploadField from '../shared/ImageUploadField';
 import ImageLoader from '../shared/ImageLoader';
@@ -65,12 +65,12 @@ const BrandMasterMenu = React.memo(function BrandMasterMenu({ brandId, onRefresh
 
   const fetchCategories = async () => {
     try {
-      const data = await apiGet(`/api/v1/brands/${brandId}/categories`);
+      const data = await (customerApi.get as any)(`/api/v1/brands/${brandId}/categories`);
       if (data.success && data.data) {
         const updatedCategories = await Promise.all(
           data.data.map(async (cat: any) => {
             try {
-              const tRes = await apiGet(`/api/v1/brands/${brandId}/categories/${cat.id}/timings`);
+              const tRes = await (customerApi.get as any)(`/api/v1/brands/${brandId}/categories/${cat.id}/timings`);
               return { ...cat, timings: (tRes.success && tRes.data) ? tRes.data : [] };
             } catch (e) {
               return { ...cat, timings: [] };
@@ -85,7 +85,7 @@ const BrandMasterMenu = React.memo(function BrandMasterMenu({ brandId, onRefresh
   const fetchMasterItems = async () => {
     if (!brandId || brandId === 'undefined') return;
     try {
-      const response = await apiGet(`/api/v1/brands/${brandId}/master-menu`);
+      const response = await (customerApi.get as any)(`/api/v1/brands/${brandId}/master-menu`);
       setMasterItems(response.data || []);
     } catch (e) { console.error(e); }
   };
@@ -99,7 +99,7 @@ const BrandMasterMenu = React.memo(function BrandMasterMenu({ brandId, onRefresh
     }
     
     try {
-      await apiPost(`/api/v1/brands/${brandId}/categories`, { name: newCatName, description: newCatDesc });
+      await (customerApi.post as any)(`/api/v1/brands/${brandId}/categories`, { name: newCatName, description: newCatDesc });
       setIsAddingCategory(false);
       setNewCatName('');
       setNewCatDesc('');
@@ -136,7 +136,7 @@ const BrandMasterMenu = React.memo(function BrandMasterMenu({ brandId, onRefresh
     }
 
     try {
-      await apiPost(`/api/v1/brands/${brandId}/master-menu`, payload);
+      await (customerApi.post as any)(`/api/v1/brands/${brandId}/master-menu`, payload);
       setAddingItemToCatId(null);
       setIsAddingItem(false);
       setMName(''); setMPrice(''); setMPrepTime('15'); setMDesc(''); setMCatId('');
@@ -175,7 +175,7 @@ const BrandMasterMenu = React.memo(function BrandMasterMenu({ brandId, onRefresh
     }
 
     try {
-      await apiPut(`/api/v1/brands/${brandId}/master-menu/${editingItemId}`, payload);
+      await (customerApi.put as any)(`/api/v1/brands/${brandId}/master-menu/${editingItemId}`, payload);
       setEditingItemId(null);
       setMName(''); setMPrice(''); setMPrepTime('15'); setMDesc(''); setMCatId('');
       fetchMasterItems();
@@ -195,7 +195,7 @@ const BrandMasterMenu = React.memo(function BrandMasterMenu({ brandId, onRefresh
                 closingTime: `${tClosing}:00`
             }]
         };
-        await apiPost(`/api/v1/brands/${brandId}/categories/timings`, payload);
+        await (customerApi.post as any)(`/api/v1/brands/${brandId}/categories/timings`, payload);
         setEditingTimingCatId(null);
         fetchCategories();
     } catch (e) {

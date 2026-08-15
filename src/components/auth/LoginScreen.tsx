@@ -6,7 +6,7 @@ import { RoleSelector } from './RoleSelector';
 import { AuthForm } from './AuthForm';
 import LaBouffeLogo from '../shared/LaBouffeLogo';
 import { LaBouffeLogoMark } from '../shared/LaBouffeLogoMark';
-import { apiPost, apiGet } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import { setToken, setUserProfile, decodeJwt, getToken, clearAllLocalData } from '../../lib/tokenStore';
 import { logout } from '../../lib/authStore';
 import SessionManagementModal from '../shared/SessionManagementModal';
@@ -120,7 +120,7 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
 
     try {
       const serviceName = roleToServiceName(selectedRole!);
-      await apiPost(
+      await (identityApi.post as any)(
         `/api/v1/internal/auth/initiate?phoneNumber=${encodeURIComponent(phone)}`,
         undefined,
         { 'X-Calling-Service': serviceName }
@@ -129,7 +129,7 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
       // Try to fetch the OTP via admin endpoint (dev convenience or feature flag)
       if ((import.meta as any).env.DEV || (import.meta as any).env.VITE_ENABLE_DEV_OTP === 'true') {
         try {
-          const adminResp = await apiGet(`/api/v1/internal/auth/admin/otp?phoneNumber=${encodeURIComponent(phone)}&serviceName=${encodeURIComponent(serviceName)}`);
+          const adminResp = await (identityApi.get as any)(`/api/v1/internal/auth/admin/otp?phoneNumber=${encodeURIComponent(phone)}&serviceName=${encodeURIComponent(serviceName)}`);
           if (adminResp?.data) {
             setGeneratedOtp(adminResp.data);
           } else if (typeof adminResp === 'string') {
@@ -166,7 +166,7 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
 
     try {
       const serviceName = roleToServiceName(selectedRole!);
-      const resp = await apiPost(
+      const resp = await (identityApi.post as any)(
         `/api/v1/internal/auth/verify?phoneNumber=${encodeURIComponent(phone)}&otp=${encodeURIComponent(otpCode)}`,
         undefined,
         { 'X-Calling-Service': serviceName }
@@ -191,7 +191,7 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
 
       // Fetch profile to check if it is complete
       try {
-        const profileResp = await apiGet('/api/v1/users/profile');
+        const profileResp = await (identityApi.get as any)('/api/v1/users/profile');
         const p = profileResp?.data;
         if (!p?.name || !p?.email || p.name.trim() === '' || p.email.trim() === '') {
           setPendingLoginData({ id, phone, role: selectedRole!, name });
@@ -383,14 +383,14 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
                 setShowNotification(false);
                 try {
                   const serviceName = roleToServiceName(selectedRole!);
-                  await apiPost(
+                  await (identityApi.post as any)(
                     `/api/v1/internal/auth/initiate?phoneNumber=${encodeURIComponent(phone)}`,
                     undefined,
                     { 'X-Calling-Service': serviceName }
                   );
                   if ((import.meta as any).env.DEV || (import.meta as any).env.VITE_ENABLE_DEV_OTP === 'true') {
                     try {
-                      const adminResp = await apiGet(`/api/v1/internal/auth/admin/otp?phoneNumber=${encodeURIComponent(phone)}&serviceName=${encodeURIComponent(serviceName)}`);
+                      const adminResp = await (identityApi.get as any)(`/api/v1/internal/auth/admin/otp?phoneNumber=${encodeURIComponent(phone)}&serviceName=${encodeURIComponent(serviceName)}`);
                       if (adminResp?.data) {
                         setGeneratedOtp(adminResp.data);
                       } else if (typeof adminResp === 'string') {
@@ -429,7 +429,7 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
           setUserProfile({ id, phone, role, name });
 
           try {
-            const profileResp = await apiGet('/api/v1/users/profile');
+            const profileResp = await (identityApi.get as any)('/api/v1/users/profile');
             const p = profileResp?.data;
             if (!p?.name || !p?.email || p.name.trim() === '' || p.email.trim() === '') {
               setPendingLoginData({ id, phone, role, name });

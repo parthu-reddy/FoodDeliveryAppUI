@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Settings, CheckCircle, X, AlertCircle } from 'lucide-react';
-import { apiPut } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 
 interface OutletSettingsEditorProps {
   outlet: any;
@@ -26,7 +26,7 @@ export default function OutletSettingsEditor({ outlet, onRefresh, onClose }: Out
 
     setIsSubmitting(true);
     try {
-      await apiPut(`/api/v1/outlets/${outlet.id}/settings`, { 
+      await (customerApi.put as any)(`/api/v1/outlets/${outlet.id}/settings`, { 
         defaultPrepTimeSeconds: parseInt(defaultPrepTimeSeconds.toString()) 
       });
       onRefresh();

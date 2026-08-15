@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Restaurant } from '../../types';
-import { apiGet } from '../../lib/apiClient';
+import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 
 interface UseRestaurantsOptions {
   deliveryLat: string | number;
@@ -17,7 +17,7 @@ export function useRestaurants({ deliveryLat, deliveryLng, radiusKm = 10.0 }: Us
     let ignore = false;
     if (deliveryLat && deliveryLng) {
       setIsRestaurantsLoading(true);
-      apiGet(`/api/v1/restaurants/nearby?lat=${deliveryLat}&lng=${deliveryLng}&radius=${radiusKm}`)
+      (restaurantApi.get as any)(`/api/v1/restaurants/nearby?lat=${deliveryLat}&lng=${deliveryLng}&radius=${radiusKm}`)
         .then(res => {
           if (!ignore && res.data) setRestaurants(res.data);
         })
