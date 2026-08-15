@@ -1,3 +1,5 @@
+import { env } from './env';
+
 export type LogLevel = 'DEBUG' | 'INFO' | 'WARN' | 'ERROR';
 
 interface LogPayload {
@@ -8,7 +10,7 @@ interface LogPayload {
 }
 
 class Logger {
-  private isDev = (import.meta as any).env?.MODE === 'development';
+  private isDev = env.MODE === 'development';
   private batchedLogs: LogPayload[] = [];
   private readonly MAX_BATCH_SIZE = 10;
   private flushTimeout: NodeJS.Timeout | null = null;

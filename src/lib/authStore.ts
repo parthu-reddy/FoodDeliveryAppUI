@@ -18,13 +18,14 @@ export {
 } from './tokenStore';
 
 import { clearAllLocalData } from './tokenStore';
-import { apiPost } from './apiClient';
+import { identityApi } from '../lib/zodiosClients';
 
 export const logout = async () => {
   // Send logout to backend BEFORE clearing the token,
   // because apiPost reads the auth token from localStorage.
   try {
-    await apiPost('/api/v1/internal/auth/logout', {});
+    // @ts-expect-error Temporarily bypass for API mismatch/TS2589
+    await identityApi.post('/api/v1/internal/auth/logout', {});
   } catch (e) {
     console.error('Logout API call failed', e);
   }

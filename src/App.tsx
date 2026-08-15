@@ -1,12 +1,12 @@
 import React, { useState, Suspense } from 'react';
-import { RoleName } from './types/backend-enums';
-import { UserRole } from './types';
+import { RoleName, UserRole } from './types';
 import CinematicFoodBackground from './components/shared/CinematicFoodBackground';
 import { getUserProfile } from './lib/tokenStore';
 import { logout as authLogout } from './lib/authStore';
 import { ToastProvider } from './context/ToastContext';
 import { CallProvider } from './context/CallContext';
 import { ErrorBoundary } from './components/shared/ErrorBoundary';
+import { ZodErrorBoundary } from './components/shared/ZodErrorBoundary';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { ConfigProvider } from './contexts/ConfigContext';
 
@@ -70,43 +70,43 @@ function AppContent() {
         <Suspense fallback={renderFallback()}>
           {!userRole ? (
             <div className="flex-1 flex flex-col w-full h-full justify-center items-center overflow-hidden relative">
-              <ErrorBoundary fallbackLabel="Login Screen">
+              <ZodErrorBoundary contextName="Login Screen">
                 <LoginScreen onLoginSuccess={handleLoginSuccess} />
-              </ErrorBoundary>
+              </ZodErrorBoundary>
             </div>
           ) : (
             <div className="flex-1 flex flex-col w-full h-full overflow-hidden relative">
               {userRole === RoleName.CUSTOMER && (
-                <ErrorBoundary fallbackLabel="Customer Dashboard">
+                <ZodErrorBoundary contextName="Customer Dashboard">
                   <CustomerDashboard 
                     userName={userName || 'Customer'} 
                     userPhone={phone}
                     onLogout={handleLogout}
                   />
-                </ErrorBoundary>
+                </ZodErrorBoundary>
               )}
               {userRole === RoleName.RESTAURANT && (
-                <ErrorBoundary fallbackLabel="Restaurant Dashboard">
+                <ZodErrorBoundary contextName="Restaurant Dashboard">
                   <RestaurantDashboard 
                     restaurantId=""
                     onLogout={handleLogout}
                   />
-                </ErrorBoundary>
+                </ZodErrorBoundary>
               )}
               {userRole === RoleName.DELIVERY && (
-                <ErrorBoundary fallbackLabel="Delivery Dashboard">
+                <ZodErrorBoundary contextName="Delivery Dashboard">
                   <DeliveryDashboard 
                     riderPhone={phone}
                     onLogout={handleLogout}
                   />
-                </ErrorBoundary>
+                </ZodErrorBoundary>
               )}
               {userRole === RoleName.ADMIN && (
-                <ErrorBoundary fallbackLabel="Admin Portal">
+                <ZodErrorBoundary contextName="Admin Portal">
                   <AdminPortal 
                     onLogout={handleLogout}
                   />
-                </ErrorBoundary>
+                </ZodErrorBoundary>
               )}
             </div>
           )}

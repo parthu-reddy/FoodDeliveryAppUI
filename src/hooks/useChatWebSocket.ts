@@ -2,34 +2,22 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
 import { getToken } from '../lib/tokenStore';
 
-export interface ChatMessage {
-  id?: string;
-  sessionId: string;
-  senderId: string;
-  senderName: string;
-  senderType: 'CUSTOMER' | 'RESTAURANT' | 'DELIVERY';
-  messageType: 'TEXT' | 'IMAGE' | 'AUDIO' | 'SYSTEM';
-  content: string;
-  timestamp: string;
-}
-
-export interface TypingIndicator {
-  userId: string;
-  typing: boolean;
-}
+import { ChatMessage, TypingIndicator } from '../types';
 
 interface UseChatWebSocketProps {
   sessionId: string | null;
   onMessageReceived: (msg: ChatMessage) => void;
   onTypingIndicator: (indicator: TypingIndicator) => void;
+  onReconnect?: () => void;
 }
 
-export const useChatWebSocket = ({ sessionId, onMessageReceived, onTypingIndicator }: UseChatWebSocketProps) => {
+export const useChatWebSocket = ({ sessionId, onMessageReceived, onTypingIndicator, onReconnect }: UseChatWebSocketProps) => {
   const token = getToken();
   const [isConnected, setIsConnected] = useState(false);
   const clientRef = useRef<Client | null>(null);
   const subscriptionRef = useRef<StompSubscription | null>(null);
   const typingSubscriptionRef = useRef<StompSubscription | null>(null);
+  const isFirstConnectionRef = useRef(true);
 
   useEffect(() => {
     if (!sessionId || !token) {
@@ -51,6 +39,11 @@ export const useChatWebSocket = ({ sessionId, onMessageReceived, onTypingIndicat
 
     client.onConnect = () => {
       setIsConnected(true);
+      
+      if (!isFirstConnectionRef.current && onReconnect) {
+        onReconnect();
+      }
+      isFirstConnectionRef.current = false;
       
       // Subscribe to messages
       subscriptionRef.current = client.subscribe(
@@ -96,8 +89,9 @@ export const useChatWebSocket = ({ sessionId, onMessageReceived, onTypingIndicat
       }
       client.deactivate();
       setIsConnected(false);
+      isFirstConnectionRef.current = true;
     };
-  }, [sessionId, token, onMessageReceived, onTypingIndicator]);
+  }, [sessionId, token, onMessageReceived, onTypingIndicator, onReconnect]);
 
   const sendMessage = useCallback((content: string, messageType: string = 'TEXT') => {
     if (clientRef.current && clientRef.current.connected && sessionId) {
