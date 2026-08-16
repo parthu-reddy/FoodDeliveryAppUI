@@ -28,7 +28,7 @@ export default defineConfig(() => {
       },
     },
     esbuild: {
-      drop: ['console', 'debugger'] as any,
+      drop: ['console', 'debugger'] as ('console' | 'debugger')[],
     },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.

@@ -36,21 +36,21 @@ app.use(
   createProxyMiddleware({
     target: API_GATEWAY_URL,
     changeOrigin: true,
-    on: {
-      proxyReq: (proxyReq, req) => {
-        // Forward original host for CORS
-        if ((req as any).headers.authorization) {
-          proxyReq.setHeader('Authorization', (req as any).headers.authorization);
-        }
+      on: {
+        proxyReq: (proxyReq, req: express.Request) => {
+          // Forward original host for CORS
+          if (req.headers.authorization) {
+            proxyReq.setHeader('Authorization', req.headers.authorization);
+          }
+        },
+        error: (err, req: express.Request, res: express.Response) => {
+          console.error(`[proxy] Error forwarding ${req.method} ${req.url}:`, err.message);
+          if (res && res.writeHead) {
+            res.writeHead(502, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, message: 'API Gateway unreachable: ' + err.message }));
+          }
+        },
       },
-      error: (err, req, res) => {
-        console.error(`[proxy] Error forwarding ${(req as any).method} ${(req as any).url}:`, err.message);
-        if (res && 'writeHead' in res) {
-          (res as any).writeHead(502, { 'Content-Type': 'application/json' });
-          (res as any).end(JSON.stringify({ success: false, message: 'API Gateway unreachable: ' + err.message }));
-        }
-      },
-    },
   })
 );
 
