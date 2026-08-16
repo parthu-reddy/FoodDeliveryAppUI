@@ -137,8 +137,14 @@ function _PaymentModal({
                         </div>
                         <div className="flex justify-between">
                           <span>Delivery Fee</span>
-                          <span className="font-mono">₹{totals.deliveryFee?.toFixed(2)}</span>
+                          <span className="font-mono">{totals.deliveryFee === 0 ? 'FREE' : `₹${totals.deliveryFee?.toFixed(2)}`}</span>
                         </div>
+                        {(totals as any).platformFee !== undefined && (totals as any).platformFee > 0 && (
+                          <div className="flex justify-between">
+                            <span>Platform Fee</span>
+                            <span className="font-mono">₹{(totals as any).platformFee?.toFixed(2)}</span>
+                          </div>
+                        )}
                         <div className="flex justify-between">
                           <span>Taxes</span>
                           <span className="font-mono">₹{totals.tax?.toFixed(2)}</span>

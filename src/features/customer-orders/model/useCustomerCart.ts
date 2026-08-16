@@ -141,6 +141,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
     let deliveryFee = 0;
     let driverPayout = 0;
     let restaurantDeliveryShare = 0;
+    let platformFee = 0;
     
     if (deliveryPricing && deliveryPricing.config) {
       const config = deliveryPricing.config;
@@ -151,7 +152,8 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
       restaurantDeliveryShare = Math.min(driverPayout, maxRestContribution);
       const custPaysDe = Math.max(0, driverPayout - restaurantDeliveryShare);
       
-      deliveryFee = custPaysDe + config.fixedPlatformFee;
+      deliveryFee = custPaysDe;
+      platformFee = config.fixedPlatformFee;
       sgst = subtotal * config.sgstPercent;
       cgst = subtotal * config.cgstPercent;
     } else if (deliveryPricing && deliveryPricing.totalCustomerDeliveryFee !== undefined) {
@@ -167,9 +169,10 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
       sgst,
       cgst,
       deliveryFee,
+      platformFee,
       driverPayout,
       restaurantDeliveryShare,
-      total: subtotal + sgst + cgst + deliveryFee
+      total: subtotal + sgst + cgst + deliveryFee + platformFee
     };
   };
 

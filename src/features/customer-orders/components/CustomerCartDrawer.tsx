@@ -138,19 +138,16 @@ export default function CustomerCartDrawer({
                           <span>Subtotal</span>
                           <span>₹{total.subtotal.toFixed(2)}</span>
                         </div>
-                        {total.driverPayout !== undefined ? (
-                          <>
-                            <div className="flex justify-between text-slate-500 dark:text-slate-400">
-                              <span>Customer Delivery Fee</span>
-                              <span>₹{total.deliveryFee.toFixed(2)}</span>
-                            </div>
-                          </>
-                        ) : (
+                        {(total.platformFee !== undefined && total.platformFee > 0) && (
                           <div className="flex justify-between text-slate-500 dark:text-slate-400">
-                            <span>Delivery fee</span>
-                            <span>₹{total.deliveryFee.toFixed(2)}</span>
+                            <span>Platform Fee</span>
+                            <span>₹{total.platformFee.toFixed(2)}</span>
                           </div>
                         )}
+                        <div className="flex justify-between text-slate-500 dark:text-slate-400">
+                          <span>Delivery Fee</span>
+                          <span>{total.deliveryFee === 0 ? <span className="text-emerald-500 font-bold">FREE</span> : `₹${total.deliveryFee.toFixed(2)}`}</span>
+                        </div>
                         <div className="flex justify-between text-slate-500 dark:text-slate-400">
                           <span>SGST (2.5%)</span>
                           <span>₹{total.sgst.toFixed(2)}</span>
