@@ -24,14 +24,14 @@ const endpoints = makeApi([
         schema: z.number().int().optional().default(20),
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
   {
     method: "get",
     path: "/api/v1/delivery/orders/available",
     alias: "getAvailableOrders",
     requestFormat: "json",
-    response: z.any(),
+    response: z.void(),
   },
   {
     method: "get",
@@ -50,7 +50,7 @@ const endpoints = makeApi([
         schema: z.number().int().optional().default(20),
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
 ]);
 

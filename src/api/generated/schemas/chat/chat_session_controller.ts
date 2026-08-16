@@ -30,7 +30,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
   {
     method: "post",
@@ -44,7 +44,7 @@ const endpoints = makeApi([
         schema: CreateSessionRequest,
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
   {
     method: "post",
@@ -63,7 +63,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
   {
     method: "get",
@@ -87,7 +87,7 @@ const endpoints = makeApi([
         schema: z.number().int().optional().default(50),
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
 ]);
 

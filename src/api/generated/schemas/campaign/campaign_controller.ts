@@ -59,7 +59,7 @@ const endpoints = makeApi([
         schema: z.number().int().optional(),
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
   {
     method: "get",
@@ -83,7 +83,7 @@ const endpoints = makeApi([
         schema: pageable,
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
   {
     method: "post",
@@ -107,7 +107,7 @@ const endpoints = makeApi([
         schema: z.string().optional(),
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
   {
     method: "post",
@@ -131,7 +131,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
   {
     method: "post",
@@ -142,7 +142,7 @@ const endpoints = makeApi([
       {
         name: "body",
         type: "Body",
-        schema: z.object({ amount: z.number(), gatewayName: z.string().optional() }),
+        schema: z.record(z.object({}).partial().passthrough()),
       },
       {
         name: "advertiserId",
@@ -155,7 +155,7 @@ const endpoints = makeApi([
         schema: z.string().optional(),
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
   {
     method: "get",
@@ -179,7 +179,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
   {
     method: "get",
@@ -198,7 +198,7 @@ const endpoints = makeApi([
         schema: z.string().optional(),
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
 ]);
 

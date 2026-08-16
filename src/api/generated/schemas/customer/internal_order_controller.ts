@@ -21,7 +21,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
   {
     method: "get",
@@ -35,7 +35,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
   {
     method: "get",
@@ -49,14 +49,14 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
   {
     method: "get",
     path: "/api/v1/internal/orders/unassigned",
     alias: "getUnassignedOrders",
     requestFormat: "json",
-    response: z.any(),
+    response: z.void(),
   },
   {
     method: "get",
@@ -80,7 +80,7 @@ const endpoints = makeApi([
         schema: pageable,
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
   {
     method: "get",
@@ -99,7 +99,7 @@ const endpoints = makeApi([
         schema: pageable,
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
 ]);
 

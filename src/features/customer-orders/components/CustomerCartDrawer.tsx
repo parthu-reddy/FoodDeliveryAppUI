@@ -21,7 +21,8 @@ export default function CustomerCartDrawer({
   addToCart,
   getCartTotal,
   setIsPaymentModalOpen,
-  isSubmitting
+  isSubmitting,
+  isQuoting
 }: any) {
   const [error, setError] = React.useState<string | null>(null);
   const [localAddress, setLocalAddress] = React.useState(address);
@@ -164,11 +165,11 @@ export default function CustomerCartDrawer({
 
                       <button
                         onClick={() => onCheckoutClick(restaurantId)}
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || isQuoting}
                         className="w-full mt-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white py-3 rounded-xl font-bold shadow-md shadow-orange-500/20 hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <ShieldCheck className="w-4 h-4" />
-                        {isSubmitting ? 'Processing...' : `Checkout ${cartState.restaurant?.name}`}
+                        {isSubmitting ? 'Processing...' : isQuoting ? 'Calculating Quote...' : `Checkout ${cartState.restaurant?.name}`}
                       </button>
                     </div>
                   )})

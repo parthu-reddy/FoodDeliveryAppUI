@@ -16,7 +16,7 @@ const endpoints = makeApi([
         schema: pageable,
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
 ]);
 

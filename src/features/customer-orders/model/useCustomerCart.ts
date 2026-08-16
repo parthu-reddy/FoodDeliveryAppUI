@@ -8,6 +8,7 @@ interface UseCustomerCartOptions {
   onAddApiLog?: (log: any) => void;
   onPlaceOrder?: (order: Order) => void;
   setTrackingOrder?: (order: Order) => void;
+  selectedRestaurantId?: string | null;
 }
 
 export interface CartState {
@@ -17,7 +18,7 @@ export interface CartState {
 
 const EMPTY_CARTS: Record<string, CartState> = {};
 
-export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTrackingOrder }: UseCustomerCartOptions) {
+export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTrackingOrder, selectedRestaurantId }: UseCustomerCartOptions) {
   const [globalCarts, setGlobalCarts] = useState<Record<string, Record<string, CartState>>>({});
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -55,6 +56,9 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'failed'>('idle');
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [checkoutRestaurantId, setCheckoutRestaurantId] = useState<string | null>(null);
+  const [quotes, setQuotes] = useState<Record<string, any>>({});
+  const [isQuoting, setIsQuoting] = useState<boolean>(false);
+  const [deliveryAddressId, setDeliveryAddressId] = useState<string | null>(null);
   
   const cartUpdateRef = useRef<number>(0);
   const isSubmittingOrderRef = useRef<boolean>(false);
@@ -128,53 +132,86 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
     });
   };
 
-  const getCartTotal = (restaurantId: string, deliveryPricing: any) => {
+  const getCartTotal = (restaurantId: string, legacyPricingFallback?: any) => {
+    const quote = quotes[restaurantId];
+    if (quote) {
+      return quote;
+    }
+    // Fallback if quote not yet loaded
     const cartState = carts[restaurantId];
     if (!cartState) {
-      return { subtotal: 0, sgst: 0, cgst: 0, deliveryFee: 0, driverPayout: 0, restaurantDeliveryShare: 0, total: 0 };
+      return { subtotal: 0, sgst: 0, cgst: 0, deliveryFee: 0, driverPayout: 0, restaurantDeliveryShare: 0, total: 0, platformFee: 0, minAmountForFreeDelivery: 0, distanceKm: 0 };
     }
-    
     const subtotal = cartState.items.reduce((sum, item) => sum + (item.item.price * item.quantity), 0);
-    
-    let sgst = 0;
-    let cgst = 0;
     let deliveryFee = 0;
-    let driverPayout = 0;
-    let restaurantDeliveryShare = 0;
-    let platformFee = 0;
-    
-    if (deliveryPricing && deliveryPricing.config) {
-      const config = deliveryPricing.config;
-      const distanceKm = deliveryPricing.distanceKm || 5.0;
-      
-      driverPayout = config.basePrice + (config.perKmRate * Math.max(1, distanceKm));
-      const maxRestContribution = subtotal * config.restMaxContributionPercent;
-      restaurantDeliveryShare = Math.min(driverPayout, maxRestContribution);
-      const custPaysDe = Math.max(0, driverPayout - restaurantDeliveryShare);
-      
-      deliveryFee = custPaysDe;
-      platformFee = config.fixedPlatformFee;
-      sgst = subtotal * config.sgstPercent;
-      cgst = subtotal * config.cgstPercent;
-    } else if (deliveryPricing && deliveryPricing.totalCustomerDeliveryFee !== undefined) {
-      sgst = deliveryPricing.sgst || 0;
-      cgst = deliveryPricing.cgst || 0;
-      deliveryFee = deliveryPricing.totalCustomerDeliveryFee || 0;
+    if (legacyPricingFallback && legacyPricingFallback.totalCustomerDeliveryFee !== undefined) {
+       deliveryFee = legacyPricingFallback.totalCustomerDeliveryFee || 0;
     } else if (cartState.restaurant) {
-      deliveryFee = Number(cartState.restaurant.deliveryFee || 0);
+       deliveryFee = Number(cartState.restaurant.deliveryFee || 0);
     }
-    
     return {
       subtotal,
-      sgst,
-      cgst,
+      sgst: 0,
+      cgst: 0,
       deliveryFee,
-      platformFee,
-      driverPayout,
-      restaurantDeliveryShare,
-      total: subtotal + sgst + cgst + deliveryFee + platformFee
+      platformFee: 0,
+      driverPayout: 0,
+      restaurantDeliveryShare: 0,
+      total: subtotal + deliveryFee,
+      minAmountForFreeDelivery: 0,
+      distanceKm: 0
     };
   };
+
+
+  // Sync address ID to cart hook for quoting
+  useEffect(() => {
+    // If not supplied directly via options, we might rely on the dashboard setting it.
+    // Or we expose setDeliveryAddressId from the hook.
+  }, []);
+
+  // Debounced quote API call
+  useEffect(() => {
+    if (!isInitialized || !deliveryAddressId) return;
+    
+    const activeRestaurantIds = new Set(Object.keys(carts).filter(rId => carts[rId].items.length > 0));
+    if (selectedRestaurantId) {
+      activeRestaurantIds.add(selectedRestaurantId);
+    }
+    if (activeRestaurantIds.size === 0) return;
+
+    setIsQuoting(true);
+    const timeout = setTimeout(() => {
+      Promise.all(Array.from(activeRestaurantIds).map(async (rId) => {
+        const cartState = carts[rId];
+        try {
+          const res = await customerApi.order.post('/api/v1/orders/quote', {
+            restaurantId: rId,
+            deliveryAddressId: deliveryAddressId,
+            items: cartState ? cartState.items.map(item => ({
+              menuItemId: item.item.id,
+              quantity: item.quantity
+            })) : []
+          });
+          return { restaurantId: rId, quote: res };
+        } catch (error) {
+          console.error('Failed to fetch quote for restaurant', rId, error);
+          return { restaurantId: rId, quote: null };
+        }
+      })).then((results) => {
+         const newQuotes = { ...quotes };
+         results.forEach(result => {
+           if (result.quote) {
+             newQuotes[result.restaurantId] = result.quote;
+           }
+         });
+         setQuotes(newQuotes);
+         setIsQuoting(false);
+      });
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [carts, deliveryAddressId, isInitialized]);
 
   const handleCheckout = async (restaurantId: string) => {
     const activeCart = carts[restaurantId];
@@ -350,7 +387,10 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
     removeFromCart,
     getCartTotal,
     handleCheckout,
-    processPaymentAndOrder
+    processPaymentAndOrder,
+    setDeliveryAddressId,
+    isQuoting,
+    quotes
   };
 }
 

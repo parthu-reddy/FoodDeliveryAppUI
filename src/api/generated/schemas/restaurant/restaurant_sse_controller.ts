@@ -7,7 +7,7 @@ const endpoints = makeApi([
     path: "/api/v1/brands/stream",
     alias: "streamBrands",
     requestFormat: "json",
-    response: z.any(),
+    response: z.void(),
   },
 ]);
 

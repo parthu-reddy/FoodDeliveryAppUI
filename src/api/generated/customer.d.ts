@@ -68,6 +68,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orders/quote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["quoteOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/internal/orders/{orderId}/partial-refund": {
         parameters: {
             query?: never;
@@ -966,6 +982,32 @@ export interface components {
             /** Format: date-time */
             timestamp?: string;
         };
+        QuoteRequest: {
+            /** Format: uuid */
+            restaurantId: string;
+            /** Format: uuid */
+            deliveryAddressId: string;
+            items?: components["schemas"]["OrderItemRequest"][];
+        };
+        ApiResponseQuoteResponse: {
+            success?: boolean;
+            message?: string;
+            data?: components["schemas"]["QuoteResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+        };
+        QuoteResponse: {
+            subtotal?: number;
+            deliveryFee?: number;
+            platformFee?: number;
+            sgst?: number;
+            cgst?: number;
+            total?: number;
+            minAmountForFreeDelivery?: number;
+            distanceKm?: number;
+            driverPayout?: number;
+            restaurantDeliveryContribution?: number;
+        };
         ApiResponseString: {
             success?: boolean;
             message?: string;
@@ -1395,6 +1437,30 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
+    quoteOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuoteRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseQuoteResponse"];
                 };
             };
         };

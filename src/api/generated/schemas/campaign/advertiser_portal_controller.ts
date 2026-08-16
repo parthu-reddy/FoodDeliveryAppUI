@@ -7,7 +7,7 @@ const endpoints = makeApi([
     path: "/api/v1/advertiser/register",
     alias: "registerAdvertiser",
     requestFormat: "json",
-    response: z.any(),
+    response: z.void(),
   },
   {
     method: "get",
@@ -26,7 +26,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
 ]);
 

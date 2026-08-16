@@ -29,7 +29,7 @@ const endpoints = makeApi([
         schema: LocationPayload,
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
   {
     method: "post",
@@ -40,10 +40,10 @@ const endpoints = makeApi([
       {
         name: "body",
         type: "Body",
-        schema: z.array(z.any()),
+        schema: z.array(TelemetryEventRequest),
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
 ]);
 

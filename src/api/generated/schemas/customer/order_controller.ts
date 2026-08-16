@@ -13,10 +13,18 @@ const OrderRequest = z
     items: z.array(OrderItemRequest),
   })
   .passthrough();
+const QuoteRequest = z
+  .object({
+    restaurantId: z.string().uuid(),
+    deliveryAddressId: z.string().uuid(),
+    items: z.array(OrderItemRequest).optional(),
+  })
+  .passthrough();
 
 export const schemas = {
   OrderItemRequest,
   OrderRequest,
+  QuoteRequest,
 };
 
 const endpoints = makeApi([
@@ -32,7 +40,7 @@ const endpoints = makeApi([
         schema: OrderRequest,
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
   {
     method: "post",
@@ -51,7 +59,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
   {
     method: "post",
@@ -65,7 +73,21 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: z.void(),
+  },
+  {
+    method: "post",
+    path: "/api/v1/orders/quote",
+    alias: "quoteOrder",
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "body",
+        type: "Body",
+        schema: QuoteRequest,
+      },
+    ],
+    response: z.void(),
   },
   {
     method: "get",
@@ -79,7 +101,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
   {
     method: "get",
@@ -98,7 +120,7 @@ const endpoints = makeApi([
         schema: z.number().int().optional().default(10),
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
   {
     method: "get",
@@ -117,7 +139,7 @@ const endpoints = makeApi([
         schema: z.number().int().optional().default(10),
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
   {
     method: "get",
@@ -131,7 +153,7 @@ const endpoints = makeApi([
         schema: z.array(z.string().uuid()),
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
   {
     method: "get",
@@ -150,7 +172,7 @@ const endpoints = makeApi([
         schema: z.number().int().optional().default(10),
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
 ]);
 

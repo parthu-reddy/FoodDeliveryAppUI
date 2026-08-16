@@ -5,5 +5,3 @@ export { Delivery_verification_controllerApi } from "./delivery_verification_con
 export { Delivery_executive_controllerApi } from "./delivery_executive_controller";
 export { Logistics_controllerApi } from "./logistics_controller";
 export { Delivery_order_controllerApi } from "./delivery_order_controller";
-
-export { createDeliveryFacade as createApiClient } from './facade';

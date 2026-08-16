@@ -13,5 +13,3 @@ export { Places_controllerApi } from "./places_controller";
 export { Customer_tracking_controllerApi } from "./customer_tracking_controller";
 export { Admin_customer_controllerApi } from "./admin_customer_controller";
 export { Driver_order_controllerApi } from "./driver_order_controller";
-
-export { createCustomerFacade as createApiClient } from './facade';

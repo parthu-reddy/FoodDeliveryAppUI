@@ -10,5 +10,3 @@ export { Restaurant_onboarding_controllerApi } from "./restaurant_onboarding_con
 export { Internal_restaurant_controllerApi } from "./internal_restaurant_controller";
 export { Internal_order_controllerApi } from "./internal_order_controller";
 export { Restaurant_sse_controllerApi } from "./restaurant_sse_controller";
-
-export { createRestaurantFacade as createApiClient } from './facade';

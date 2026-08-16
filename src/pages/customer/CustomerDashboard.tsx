@@ -197,14 +197,22 @@ export default function CustomerDashboard({
     removeFromCart: originalRemoveFromCart,
     getCartTotal: originalGetCartTotal,
     handleCheckout,
-    processPaymentAndOrder: originalProcessPaymentAndOrder
-  } = useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTrackingOrder });
+    processPaymentAndOrder: originalProcessPaymentAndOrder,
+    setDeliveryAddressId: setGlobalDeliveryAddressId,
+    isQuoting,
+    quotes
+  } = useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTrackingOrder, selectedRestaurantId: selectedRestaurant?.id || null });
 
   const addToCart = (item: MenuItem) => originalAddToCart(item, selectedRestaurant);
   const removeFromCart = (itemId: string, restaurantId: string) => originalRemoveFromCart(itemId, restaurantId);
+
+  useEffect(() => {
+    setGlobalDeliveryAddressId(deliveryAddressId || null);
+  }, [deliveryAddressId, setGlobalDeliveryAddressId]);
+
   const getCartTotal = (restaurantId?: string) => {
     const rId = restaurantId || selectedRestaurant?.id || '';
-    return originalGetCartTotal(rId, deliveryPricingMap[rId]);
+    return originalGetCartTotal(rId);
   };
   
   const processPaymentAndOrder = () => originalProcessPaymentAndOrder(deliveryAddressId, deliveryLat, deliveryLng, address, () => {
@@ -230,8 +238,12 @@ export default function CustomerDashboard({
         if (!selectedRestaurant) return;
         
         if (deliveryAddressId) {
-          customerApi.customerRestaurant.get('/api/v1/restaurants/:id/delivery-pricing', { params: { id: selectedRestaurant.id }, queries: { addressId: deliveryAddressId } })
-            .then(res => {
+          customerApi.order.post('/api/v1/orders/quote', {
+            restaurantId: selectedRestaurant.id,
+            deliveryAddressId: deliveryAddressId,
+            items: carts[selectedRestaurant.id]?.items.map(i => ({ menuItemId: i.item.id || i.id, quantity: i.quantity })) || []
+          })
+            .then((res: any) => {
               if (!ignore && res.data) {
                 setDeliveryPricingMap(prev => ({ ...prev, [selectedRestaurant.id]: res.data }));
               }
@@ -273,13 +285,17 @@ export default function CustomerDashboard({
     const activeCartIds = Object.keys(carts);
     activeCartIds.forEach(cartId => {
       if (!deliveryPricingMap[cartId] && cartId !== selectedRestaurant?.id) {
-        customerApi.customerRestaurant.get('/api/v1/restaurants/:id/delivery-pricing', { params: { id: cartId }, queries: { addressId: deliveryAddressId } })
-          .then(res => {
+        customerApi.order.post('/api/v1/orders/quote', {
+          restaurantId: cartId,
+          deliveryAddressId: deliveryAddressId,
+          items: carts[cartId]?.items.map(i => ({ menuItemId: i.item.id || i.id, quantity: i.quantity })) || []
+        })
+          .then((res: any) => {
             if (res.data) {
               setDeliveryPricingMap(prev => ({ ...prev, [cartId]: res.data }));
             }
           })
-          .catch(err => console.error(`Failed to fetch pricing for background cart ${cartId}`, err));
+          .catch((err: any) => console.error(`Failed to fetch pricing for background cart ${cartId}`, err));
       }
     });
   }, [carts, deliveryAddressId, deliveryPricingMap, selectedRestaurant?.id]);
@@ -520,14 +536,14 @@ export default function CustomerDashboard({
             <CustomerFreeDeliveryTracker
               carts={carts}
               getCartTotal={getCartTotal}
-              deliveryPricing={selectedRestaurant ? deliveryPricingMap[selectedRestaurant.id] : null}
+              deliveryPricing={selectedRestaurant ? quotes[selectedRestaurant.id] : null}
               selectedRestaurantId={selectedRestaurant?.id}
             />
             <ErrorBoundary fallbackLabel="Menu View">
             <CustomerMenuView
               selectedRestaurant={selectedRestaurant}
               setSelectedRestaurant={setSelectedRestaurant}
-              deliveryPricing={selectedRestaurant ? deliveryPricingMap[selectedRestaurant.id] : null}
+              deliveryPricing={selectedRestaurant ? quotes[selectedRestaurant.id] : null}
               carts={carts}
               getCartTotal={getCartTotal}
               isDeliveryAvailable={isDeliveryAvailable}

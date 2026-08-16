@@ -11,7 +11,7 @@ const endpoints = makeApi([
       {
         name: "body",
         type: "Body",
-        schema: z.array(z.any()),
+        schema: z.array(MasterMenuItem),
       },
       {
         name: "restaurantId",
@@ -19,7 +19,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
 ]);
 

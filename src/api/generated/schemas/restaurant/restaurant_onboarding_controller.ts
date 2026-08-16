@@ -23,7 +23,7 @@ const endpoints = makeApi([
     path: "/api/v1/brands",
     alias: "getBrands",
     requestFormat: "json",
-    response: z.any(),
+    response: z.void(),
   },
   {
     method: "post",
@@ -37,7 +37,7 @@ const endpoints = makeApi([
         schema: BrandOnboardRequest,
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
 ]);
 
