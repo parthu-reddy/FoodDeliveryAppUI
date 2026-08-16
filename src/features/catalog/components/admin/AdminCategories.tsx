@@ -16,14 +16,16 @@ export default function AdminCategories() {
   const { showSuccess, showError } = useToast();
   const [editingCategory, setEditingCategory] = useState<any>(null);
 
-  const { data: categories = [], refetch } = usePolling({
+  const { data: categoriesData, refetch } = usePolling({
     fetchFn: async () => {
       const res = await restaurantApi.category.get('/api/v1/categories', {});
-      return res.data?.data || res.data || [];
+      return (res as any)?.data?.data || (res as any)?.data || res || [];
     },
     intervalMs: 30000,
     enabled: true
   });
+
+  const categories = categoriesData || [];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
