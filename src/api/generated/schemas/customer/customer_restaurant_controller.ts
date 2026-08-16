@@ -19,7 +19,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
   {
     method: "get",
@@ -33,7 +33,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
   {
     method: "get",
@@ -57,7 +57,7 @@ const endpoints = makeApi([
         schema: z.number().optional().default(5),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
   {
     method: "get",
@@ -86,7 +86,7 @@ const endpoints = makeApi([
         schema: z.number().optional().default(5),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
 ]);
 

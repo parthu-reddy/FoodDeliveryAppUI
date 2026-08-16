@@ -232,7 +232,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
 
     try {
       setIsSaving(true);
-      await restaurantApi.restaurantOutlet.post('/api/v1/brands/:brandId/outlets', newOutlet, { params: { brandId } });
+      await restaurantApi.restaurantOutlet.post('/api/v1/brands/:brandId/outlets', newOutlet as any, { params: { brandId } });
       setIsOpen(false);
       setName('');
       setFssai('');

@@ -34,14 +34,14 @@ const endpoints = makeApi([
         schema: PayoutSettlementRequest,
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
   {
     method: "get",
     path: "/api/v1/ledger/payouts/pending",
     alias: "getPendingPayouts",
     requestFormat: "json",
-    response: z.void(),
+    response: z.any(),
   },
   {
     method: "get",
@@ -115,7 +115,7 @@ const endpoints = makeApi([
         schema: z.enum(["CREDIT", "DEBIT"]).optional(),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
   {
     method: "get",
@@ -189,7 +189,7 @@ const endpoints = makeApi([
         schema: z.enum(["CREDIT", "DEBIT"]).optional(),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
   {
     method: "get",
@@ -215,7 +215,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
 ]);
 

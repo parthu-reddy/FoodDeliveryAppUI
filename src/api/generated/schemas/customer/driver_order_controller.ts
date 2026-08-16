@@ -21,14 +21,14 @@ const endpoints = makeApi([
         schema: pageable,
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
   {
     method: "get",
     path: "/api/v1/delivery/orders/available",
     alias: "getAvailableOrders",
     requestFormat: "json",
-    response: z.void(),
+    response: z.any(),
   },
   {
     method: "get",
@@ -42,7 +42,7 @@ const endpoints = makeApi([
         schema: pageable,
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
 ]);
 

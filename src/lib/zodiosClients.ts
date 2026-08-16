@@ -2,18 +2,18 @@ import { env } from './env';
 import { commonZodiosConfig, authPlugin } from './zodiosConfig';
 
 // Import the generated client creators
-import { createApiClient as createCampaignApi } from '../api/generated/schemas/campaign';
-import { createApiClient as createChatApi } from '../api/generated/schemas/chat';
-import { createApiClient as createCustomerApi } from '../api/generated/schemas/customer';
-import { createApiClient as createDeliveryApi } from '../api/generated/schemas/delivery';
-import { createApiClient as createGovernmentIdApi } from '../api/generated/schemas/governmentId';
-import { createApiClient as createIdentityApi } from '../api/generated/schemas/identity';
-import { createApiClient as createLedgerApi } from '../api/generated/schemas/ledger';
-import { createApiClient as createMapsApi } from '../api/generated/schemas/maps';
-import { createApiClient as createPaymentApi } from '../api/generated/schemas/payment';
-import { createApiClient as createRestaurantApi } from '../api/generated/schemas/restaurant';
-import { createApiClient as createTrackingApi } from '../api/generated/schemas/tracking';
-import { createApiClient as createWalletApi } from '../api/generated/schemas/wallet';
+import { createCampaignFacade as createCampaignApi } from '../api/generated/schemas/campaign/facade';
+import { createChatFacade as createChatApi } from '../api/generated/schemas/chat/facade';
+import { createCustomerFacade as createCustomerApi } from '../api/generated/schemas/customer/facade';
+import { createDeliveryFacade as createDeliveryApi } from '../api/generated/schemas/delivery/facade';
+import { createGovernmentIdFacade as createGovernmentIdApi } from '../api/generated/schemas/governmentId/facade';
+import { createIdentityFacade as createIdentityApi } from '../api/generated/schemas/identity/facade';
+import { createLedgerFacade as createLedgerApi } from '../api/generated/schemas/ledger/facade';
+import { createMapsFacade as createMapsApi } from '../api/generated/schemas/maps/facade';
+import { createPaymentFacade as createPaymentApi } from '../api/generated/schemas/payment/facade';
+import { createRestaurantFacade as createRestaurantApi } from '../api/generated/schemas/restaurant/facade';
+import { createTrackingFacade as createTrackingApi } from '../api/generated/schemas/tracking/facade';
+import { createWalletFacade as createWalletApi } from '../api/generated/schemas/wallet/facade';
 import { adminApiDef } from '../api/manual-schemas/admin';
 import { Zodios } from '@zodios/core';
 

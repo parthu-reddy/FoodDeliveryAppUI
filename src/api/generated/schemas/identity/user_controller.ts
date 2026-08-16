@@ -31,7 +31,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
   {
     method: "put",
@@ -50,7 +50,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
 ]);
 

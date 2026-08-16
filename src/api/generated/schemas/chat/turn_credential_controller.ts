@@ -7,7 +7,7 @@ const endpoints = makeApi([
     path: "/api/v1/chat/webrtc/ice-servers",
     alias: "getIceServers",
     requestFormat: "json",
-    response: z.void(),
+    response: z.any(),
   },
 ]);
 

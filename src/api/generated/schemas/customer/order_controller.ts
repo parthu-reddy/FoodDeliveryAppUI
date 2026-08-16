@@ -40,7 +40,7 @@ const endpoints = makeApi([
         schema: OrderRequest,
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
   {
     method: "post",
@@ -59,7 +59,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
   {
     method: "post",
@@ -73,7 +73,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
   {
     method: "post",
@@ -87,7 +87,7 @@ const endpoints = makeApi([
         schema: QuoteRequest,
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
   {
     method: "get",
@@ -101,7 +101,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
   {
     method: "get",
@@ -120,7 +120,7 @@ const endpoints = makeApi([
         schema: z.number().int().optional().default(10),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
   {
     method: "get",
@@ -139,7 +139,7 @@ const endpoints = makeApi([
         schema: z.number().int().optional().default(10),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
   {
     method: "get",
@@ -153,7 +153,7 @@ const endpoints = makeApi([
         schema: z.array(z.string().uuid()),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
   {
     method: "get",
@@ -172,7 +172,7 @@ const endpoints = makeApi([
         schema: z.number().int().optional().default(10),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
 ]);
 

@@ -1,6 +1,8 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+const MasterMenuItem = z.any();
+
 const endpoints = makeApi([
   {
     method: "post",
@@ -19,7 +21,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
 ]);
 

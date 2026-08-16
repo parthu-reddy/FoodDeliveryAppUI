@@ -44,7 +44,7 @@ const endpoints = makeApi([
         schema: z.string().optional(),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
   {
     method: "post",
@@ -68,7 +68,7 @@ const endpoints = makeApi([
         schema: z.string().optional(),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
   {
     method: "post",
@@ -87,7 +87,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
   {
     method: "get",
@@ -101,7 +101,7 @@ const endpoints = makeApi([
         schema: z.string().optional(),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
   {
     method: "delete",
@@ -115,7 +115,7 @@ const endpoints = makeApi([
         schema: z.string().optional(),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
   {
     method: "delete",
@@ -134,7 +134,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
 ]);
 

@@ -165,7 +165,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
       
       await campaignApi.campaign.post(
         '/api/v1/advertisers/:advertiserId/campaigns/wallet/topup', 
-        { amount: parseFloat(topupAmount), gatewayName: gateway }, 
+        { amount: parseFloat(topupAmount), gatewayName: gateway } as any, 
         { params: { advertiserId: restaurantId } }
       );
       

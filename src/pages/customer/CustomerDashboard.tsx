@@ -241,7 +241,7 @@ export default function CustomerDashboard({
           customerApi.order.post('/api/v1/orders/quote', {
             restaurantId: selectedRestaurant.id,
             deliveryAddressId: deliveryAddressId,
-            items: carts[selectedRestaurant.id]?.items.map(i => ({ menuItemId: i.item.id || i.id, quantity: i.quantity })) || []
+            items: carts[selectedRestaurant.id]?.items.map(i => ({ menuItemId: i.item.id || i.id, quantity: i.quantity })) as any
           })
             .then((res: any) => {
               if (!ignore && res.data) {
@@ -288,7 +288,7 @@ export default function CustomerDashboard({
         customerApi.order.post('/api/v1/orders/quote', {
           restaurantId: cartId,
           deliveryAddressId: deliveryAddressId,
-          items: carts[cartId]?.items.map(i => ({ menuItemId: i.item.id || i.id, quantity: i.quantity })) || []
+          items: carts[cartId]?.items.map(i => ({ menuItemId: i.item.id || i.id, quantity: i.quantity })) as any || []
         })
           .then((res: any) => {
             if (res.data) {

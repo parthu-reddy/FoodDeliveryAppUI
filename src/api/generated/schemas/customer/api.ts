@@ -54,7 +54,7 @@ const endpoints = makeApi([
           .regex(/^[0-9]+$/),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
 ]);
 

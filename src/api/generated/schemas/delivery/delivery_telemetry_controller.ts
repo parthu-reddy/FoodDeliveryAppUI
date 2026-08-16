@@ -12,6 +12,9 @@ const LocationPayload = z
   .partial()
   .passthrough();
 
+const TelemetryEventRequest = z.any();
+
+
 export const schemas = {
   LocationPayload,
 };
@@ -29,7 +32,7 @@ const endpoints = makeApi([
         schema: LocationPayload,
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
   {
     method: "post",
@@ -43,7 +46,7 @@ const endpoints = makeApi([
         schema: z.array(TelemetryEventRequest),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
 ]);
 

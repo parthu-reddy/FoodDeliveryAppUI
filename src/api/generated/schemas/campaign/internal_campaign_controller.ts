@@ -14,7 +14,7 @@ const endpoints = makeApi([
         schema: z.array(z.string()),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
 ]);
 

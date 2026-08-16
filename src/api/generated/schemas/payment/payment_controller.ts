@@ -43,7 +43,7 @@ const endpoints = makeApi([
         schema: z.enum(["RAZORPAY", "CASHFREE", "VYAPAR"]),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
   {
     method: "post",
@@ -62,7 +62,7 @@ const endpoints = makeApi([
         schema: z.enum(["RAZORPAY", "CASHFREE", "VYAPAR"]),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
 ]);
 

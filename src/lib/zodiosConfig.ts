@@ -63,6 +63,12 @@ export const authPlugin: ZodiosPlugin = {
     }
     
     throw error;
+  },
+  response: async (api, config, response) => {
+    // Note: Do NOT unwrap the ApiResponse here. 
+    // Zodios returns the response body directly, and the UI code correctly 
+    // expects it to be an ApiResponse wrapper and accesses `.data` on it.
+    return response;
   }
 };
 
@@ -70,8 +76,7 @@ export const authPlugin: ZodiosPlugin = {
  * Common Zodios configuration to apply to all our client instances.
  */
 export const commonZodiosConfig: ZodiosOptions = {
-  // If we want validation errors to NOT throw in production, we could set validate: false
-  // However, we want to know about drift. In Phase 7G, we will handle validation errors gracefully
-  // using our parseApiError and ZodErrorBoundary.
-  validate: true,
+  // Disable validation because the current OpenAPI generation produced `z.void()` for all responses, 
+  // which causes valid responses to fail validation and crash the app.
+  validate: false,
 };

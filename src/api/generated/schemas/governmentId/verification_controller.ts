@@ -41,7 +41,7 @@ const endpoints = makeApi([
         schema: RCRequest,
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
   {
     method: "post",
@@ -55,7 +55,7 @@ const endpoints = makeApi([
         schema: DLRequest,
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
   {
     method: "post",
@@ -69,7 +69,7 @@ const endpoints = makeApi([
         schema: z.object({ selfieUrl: z.string() }).passthrough(),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
   {
     method: "post",
@@ -83,7 +83,7 @@ const endpoints = makeApi([
         schema: BankRequest,
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
   {
     method: "get",
@@ -110,7 +110,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
   {
     method: "get",
@@ -124,7 +124,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
   {
     method: "get",
@@ -138,7 +138,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.void(),
+    response: z.any(),
   },
 ]);
 
