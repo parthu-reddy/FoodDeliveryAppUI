@@ -17,7 +17,7 @@ import { createApiClient as createWalletApi } from '../api/generated/schemas/wal
 import { adminApiDef } from '../api/manual-schemas/admin';
 import { Zodios } from '@zodios/core';
 
-const BASE_URL = env.VITE_API_BASE_URL || '';
+const BASE_URL = env.VITE_API_BASE_URL || window.location.origin;
 
 // Create all 12 API clients
 export const campaignApi = createCampaignApi(BASE_URL, commonZodiosConfig);

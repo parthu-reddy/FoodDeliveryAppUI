@@ -1,21 +1,21 @@
 import React, { useState, Suspense } from 'react';
 import { RoleName, UserRole } from './types';
-import CinematicFoodBackground from './components/shared/CinematicFoodBackground';
+import { CinematicFoodBackground } from "@shared/ui";
 import { getUserProfile } from './lib/tokenStore';
 import { logout as authLogout } from './lib/authStore';
 import { ToastProvider } from './context/ToastContext';
 import { CallProvider } from './context/CallContext';
-import { ErrorBoundary } from './components/shared/ErrorBoundary';
-import { ZodErrorBoundary } from './components/shared/ZodErrorBoundary';
+import { ErrorBoundary } from "@shared/ui";
+import { ZodErrorBoundary } from "@shared/ui";
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { ConfigProvider } from './contexts/ConfigContext';
 
 // Lazy load route components for code splitting and bundle optimization
-const LoginScreen = React.lazy(() => import('./components/auth/LoginScreen'));
-const CustomerDashboard = React.lazy(() => import('./components/customer/CustomerDashboard'));
-const RestaurantDashboard = React.lazy(() => import('./components/restaurant/RestaurantDashboard'));
-const DeliveryDashboard = React.lazy(() => import('./components/delivery/DeliveryDashboard'));
-const AdminPortal = React.lazy(() => import('./components/admin/AdminPortal'));
+const LoginScreen = React.lazy(() => import("@features/identity/components/LoginScreen"));
+const CustomerDashboard = React.lazy(() => import("@/pages/customer/CustomerDashboard"));
+const RestaurantDashboard = React.lazy(() => import('@/pages/restaurant/RestaurantDashboard'));
+const DeliveryDashboard = React.lazy(() => import("@/pages/delivery/DeliveryDashboard"));
+const AdminPortal = React.lazy(() => import("@/pages/admin/AdminPortal"));
 
 function AppContent() {
   // Initialize auth state SYNCHRONOUSLY from localStorage.

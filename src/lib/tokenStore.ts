@@ -45,6 +45,10 @@ export const getUserProfile = (): any | null => {
           }
         }
       }
+      if (!memoryProfile.phone && memoryProfile.phoneNumber) {
+        memoryProfile.phone = memoryProfile.phoneNumber;
+      }
+      
       return memoryProfile;
     } catch {}
   }

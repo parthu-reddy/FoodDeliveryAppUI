@@ -1,7 +1,7 @@
 import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
-import { ErrorBoundary } from './components/shared/ErrorBoundary.tsx';
+import { ErrorBoundary } from "@shared/ui";
 import { logger } from './lib/logger.ts';
 import './index.css';
 
@@ -14,10 +14,21 @@ window.onunhandledrejection = (event) => {
   logger.error('Unhandled Promise Rejection', { reason: event.reason });
 };
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <ErrorBoundary>
-      <App />
-    </ErrorBoundary>
-  </StrictMode>,
-);
+async function enableMocking() {
+  if (import.meta.env.DEV) {
+    const { worker } = await import('./mocks/browser');
+    return worker.start({
+      onUnhandledRequest: 'bypass', // Don't warn on unhandled requests (like static assets)
+    });
+  }
+}
+
+enableMocking().then(() => {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
+    </StrictMode>,
+  );
+});

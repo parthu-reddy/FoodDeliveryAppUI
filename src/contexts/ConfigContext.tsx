@@ -23,7 +23,8 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     const fetchConfig = async () => {
       try {
-                const res = await fetch(import.meta.env.VITE_API_BASE_URL + '/api/config/ui-config');
+                const res = await fetch(import.meta.env.VITE_API_BASE_URL + '/api/config/ui-config', { headers: { 'X-Calling-Service': 'CustomerApplication' } });
+                if (!res.ok) throw new Error('API Error');
                 const response = await res.json();
                 if (response && (response).mapsApiKey) {
                     setOlaMapsApiKey((response).mapsApiKey);

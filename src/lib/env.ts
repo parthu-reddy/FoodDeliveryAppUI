@@ -1,9 +1,9 @@
 import { z } from 'zod';
 
 const envSchema = z.object({
-  VITE_API_BASE_URL: z.string().url().catch('http://localhost:8080'),
-  VITE_API_GATEWAY_URL: z.string().url().catch('http://localhost:8080'),
-  VITE_WS_GATEWAY_URL: z.string().url().catch('ws://localhost:8080/ws'),
+  VITE_API_BASE_URL: z.string().catch(''),
+  VITE_API_GATEWAY_URL: z.string().catch(''),
+  VITE_WS_GATEWAY_URL: z.string().catch(''),
   VITE_OLA_MAPS_API_KEY: z.string().optional(),
   VITE_STRIPE_PUBLIC_KEY: z.string().optional(),
   VITE_ENABLE_MOCK_PAYMENT: z.string().optional().transform(v => v === 'true'),

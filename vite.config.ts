@@ -8,7 +8,10 @@ export default defineConfig(() => {
     plugins: [tailwindcss(), react()],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve(__dirname, 'src'),
+        '@shared': path.resolve(__dirname, 'src/shared'),
+        '@features': path.resolve(__dirname, 'src/features'),
+        '@apps': path.resolve(__dirname, 'src/apps'),
       },
     },
     build: {

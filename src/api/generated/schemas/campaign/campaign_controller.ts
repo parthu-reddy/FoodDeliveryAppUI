@@ -142,7 +142,7 @@ const endpoints = makeApi([
       {
         name: "body",
         type: "Body",
-        schema: z.object({ amount: z.number() }),
+        schema: z.object({ amount: z.number(), gatewayName: z.string().optional() }),
       },
       {
         name: "advertiserId",

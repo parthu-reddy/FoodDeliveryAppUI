@@ -1,5 +1,5 @@
 import React, { createContext, useContext, ReactNode } from 'react';
-import { useWebRTC, CallState, CallEndReason } from '../hooks/useWebRTC';
+import { useWebRTC, CallState, CallEndReason } from "@features/communication/models/useWebRTC";
 
 interface CallContextType {
   callState: CallState;
