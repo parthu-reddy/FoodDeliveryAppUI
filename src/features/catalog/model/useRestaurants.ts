@@ -3,8 +3,8 @@ import { Restaurant } from '@/types';
 import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '@/lib/zodiosClients';
 
 interface UseRestaurantsOptions {
-  deliveryLat: string | number;
-  deliveryLng: string | number;
+  deliveryLat: number | null;
+  deliveryLng: number | null;
   radiusKm?: number;
 }
 
@@ -14,22 +14,32 @@ export function useRestaurants({ deliveryLat, deliveryLng, radiusKm = 10.0 }: Us
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    let ignore = false;
-    if (deliveryLat && deliveryLng) {
+    const controller = new AbortController();
+    
+    if (deliveryLat !== null && deliveryLng !== null) {
       setIsRestaurantsLoading(true);
-      restaurantApi.restaurantOutlet.get('/api/v1/restaurants/nearby', { queries: { lat: Number(deliveryLat), lng: Number(deliveryLng), radius: radiusKm } })
+      restaurantApi.restaurantOutlet.get('/api/v1/restaurants/nearby', { 
+        queries: { lat: deliveryLat, lng: deliveryLng, radius: radiusKm },
+        signal: controller.signal 
+      })
         .then(res => {
-          if (!ignore && res.data) setRestaurants(res.data);
+          if (res.data) setRestaurants(res.data);
         })
         .catch(err => {
-          console.error(err);
-          if (!ignore) setError(err);
+          if (err.name === 'AbortError' || err.code === 'ERR_CANCELED') {
+            console.log('Request cancelled due to rapid address change');
+          } else {
+            console.error(err);
+            setError(err);
+          }
         })
         .finally(() => {
-          if (!ignore) setIsRestaurantsLoading(false);
+          if (!controller.signal.aborted) setIsRestaurantsLoading(false);
         });
+    } else {
+      setRestaurants([]);
     }
-    return () => { ignore = true; };
+    return () => { controller.abort(); };
   }, [deliveryLat, deliveryLng, radiusKm]);
 
   return { restaurants, isRestaurantsLoading, error };

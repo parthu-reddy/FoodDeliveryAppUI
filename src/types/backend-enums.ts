@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 3.2.1263 on 2026-08-14 22:00:59.
+// Generated using typescript-generator version 3.2.1263 on 2026-08-17 10:24:11.
 
 export enum AccountType {
     CUSTOMER = "CUSTOMER",
@@ -83,6 +83,13 @@ export enum PaymentGateway {
     RAZORPAY = "RAZORPAY",
     CASHFREE = "CASHFREE",
     VYAPAR = "VYAPAR",
+}
+
+export enum PaymentMethod {
+    CARD = "CARD",
+    UPI = "UPI",
+    WALLET = "WALLET",
+    COD = "COD",
 }
 
 export enum RefundDestination {

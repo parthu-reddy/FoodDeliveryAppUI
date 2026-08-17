@@ -25,10 +25,10 @@ export default function CustomerActiveOrdersCarousel({
     return null;
   }
 
-  const isCartActiveForSelectedRestaurant = cartLength > 0 && (!selectedRestaurantId || cartRestaurantId === selectedRestaurantId);
+  const isCartActive = cartLength > 0;
 
   return (
-    <div className={`fixed left-0 right-0 max-w-3xl mx-auto z-30 pointer-events-none transition-all duration-300 ${isCartActiveForSelectedRestaurant ? 'bottom-24' : 'bottom-4'}`}>
+    <div className={`fixed left-0 right-0 max-w-3xl mx-auto z-30 pointer-events-none transition-all duration-300 ${isCartActive ? 'bottom-24' : 'bottom-4'}`}>
       <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-none px-5 gap-4 pb-2 pointer-events-auto">
         {activeOrders.filter(o => isActiveOrder(o)).slice().reverse().map((order) => (
           <button 

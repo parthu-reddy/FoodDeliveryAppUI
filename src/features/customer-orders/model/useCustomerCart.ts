@@ -14,6 +14,7 @@ interface UseCustomerCartOptions {
 export interface CartState {
   items: CartItem[];
   restaurant: Restaurant;
+  lastUpdated?: number;
 }
 
 const EMPTY_CARTS: Record<string, CartState> = {};
@@ -29,7 +30,29 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
     try {
       const savedGlobalCarts = localStorage.getItem('food_delivery_carts_v2');
       if (savedGlobalCarts) {
-        setGlobalCarts(JSON.parse(savedGlobalCarts));
+        const parsedCarts = JSON.parse(savedGlobalCarts);
+        // Expiry logic: remove carts older than 24 hours
+        const EXPIRY_MS = 24 * 60 * 60 * 1000;
+        const now = Date.now();
+        const validGlobalCarts: Record<string, Record<string, CartState>> = {};
+        
+        for (const [locKey, locationCarts] of Object.entries(parsedCarts)) {
+          const locObj = locationCarts as Record<string, CartState>;
+          const validLocCarts: Record<string, CartState> = {};
+          let hasValidCarts = false;
+          for (const [resId, cart] of Object.entries(locObj)) {
+            // Default to Date.now() if missing to give it a 24h grace period
+            const lastUpdated = cart.lastUpdated || now;
+            if (now - lastUpdated < EXPIRY_MS) {
+              validLocCarts[resId] = cart;
+              hasValidCarts = true;
+            }
+          }
+          if (hasValidCarts) {
+            validGlobalCarts[locKey] = validLocCarts;
+          }
+        }
+        setGlobalCarts(validGlobalCarts);
       } else {
         // Migration logic from V1 to V2
         const oldCarts = localStorage.getItem('food_delivery_carts');
@@ -64,7 +87,11 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
   const isSubmittingOrderRef = useRef<boolean>(false);
 
   const addToCart = (item: MenuItem, selectedRestaurant: Restaurant | null) => {
-    if (!selectedRestaurant) return;
+    if (!selectedRestaurant) {
+      setGlobalError('Please select a restaurant location first');
+      setTimeout(() => setGlobalError(null), 3000);
+      return;
+    }
     const now = Date.now();
     if (now - cartUpdateRef.current < 50) return;
     cartUpdateRef.current = now;
@@ -89,7 +116,8 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
           [resId]: {
             ...existingCart,
             restaurant: selectedRestaurant, // Ensure restaurant data is up to date
-            items: newItems
+            items: newItems,
+            lastUpdated: Date.now()
           }
         }
       };
@@ -121,7 +149,8 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
       } else {
         newLocationCarts[restaurantId] = {
           ...existingCart,
-          items: newItems
+          items: newItems,
+          lastUpdated: Date.now()
         };
       }
 
@@ -132,10 +161,25 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
     });
   };
 
+  const clearCart = (restaurantId: string) => {
+    setGlobalCarts(prevGlobal => {
+      const prevLocationCarts = prevGlobal[locationKey];
+      if (!prevLocationCarts || !prevLocationCarts[restaurantId]) return prevGlobal;
+      
+      const newLocationCarts = { ...prevLocationCarts };
+      delete newLocationCarts[restaurantId];
+      
+      return {
+        ...prevGlobal,
+        [locationKey]: newLocationCarts
+      };
+    });
+  };
+
   const getCartTotal = (restaurantId: string, legacyPricingFallback?: any) => {
     const quote = quotes[restaurantId];
     if (quote) {
-      return quote;
+      return quote.data ? quote.data : quote;
     }
     // Fallback if quote not yet loaded
     const cartState = carts[restaurantId];
@@ -159,7 +203,8 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
       restaurantDeliveryShare: 0,
       total: subtotal + deliveryFee,
       minAmountForFreeDelivery: 0,
-      distanceKm: 0
+      distanceKm: 0,
+      isEstimated: true
     };
   };
 
@@ -172,15 +217,29 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
 
   // Debounced quote API call
   useEffect(() => {
-    if (!isInitialized || !deliveryAddressId) return;
+    if (!isInitialized) return;
     
     const activeRestaurantIds = new Set(Object.keys(carts).filter(rId => carts[rId].items.length > 0));
     if (selectedRestaurantId) {
       activeRestaurantIds.add(selectedRestaurantId);
     }
     if (activeRestaurantIds.size === 0) return;
+    
+    // We only fetch quotes from the backend if we have a valid deliveryAddressId
+    if (!deliveryAddressId) {
+      setQuotes({});
+      return;
+    }
 
     setIsQuoting(true);
+    // Optimistically clear quotes if they are for a different address (or just let it fallback to estimated)
+    // Actually, setting quotes to {} might cause layout shift, but it's better than showing wrong delivery fee
+    setQuotes(prev => {
+      // If we are quoting for a new address, clear the quotes.
+      // But we don't have the previous address ID here. Let's just clear them to be safe.
+      return {};
+    });
+    
     const timeout = setTimeout(() => {
       Promise.all(Array.from(activeRestaurantIds).map(async (rId) => {
         const cartState = carts[rId];
@@ -211,7 +270,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
     }, 500);
 
     return () => clearTimeout(timeout);
-  }, [carts, deliveryAddressId, isInitialized]);
+  }, [carts, deliveryAddressId, isInitialized, selectedRestaurantId]);
 
   const handleCheckout = async (restaurantId: string) => {
     const activeCart = carts[restaurantId];
@@ -246,6 +305,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
   };
 
   const processPaymentAndOrder = async (
+    paymentMethod: string,
     deliveryAddressId: string,
     deliveryLat: string | number,
     deliveryLng: string | number,
@@ -269,28 +329,11 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
       const items = activeCart.items.map(i => ({ menuItemId: i.item.id, quantity: i.quantity }));
       const profile = getUserProfile();
       
-      let finalAddressId = deliveryAddressId;
-      if (!finalAddressId) {
-        const payload = {
-          label: "Current Location",
-          addressLine1: address,
-          city: "Unknown",
-          state: "Unknown",
-          zipCode: "000000",
-          latitude: parseFloat(deliveryLat as string),
-          longitude: parseFloat(deliveryLng as string)
-        };
-        try {
-          const addrRes = await customerApi.customerAddress.post('/api/v1/customers/:customerId/addresses', payload, { params: { customerId: profile?.id } });
-          if (addrRes.data?.id) finalAddressId = addrRes.data.id;
-        } catch (e) {
-          console.error("Failed to save temporary address", e);
-        }
-      }
-
+      const finalAddressId = deliveryAddressId;
       if (!finalAddressId) {
         setPaymentStatus('failed');
         setGlobalError('Could not determine your delivery address. Please select a saved address and try again.');
+        isSubmittingOrderRef.current = false;
         return;
       }
 
@@ -299,7 +342,8 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
         customerName: profile?.fullName || profile?.name || 'Customer',
         restaurantId: activeCart.restaurant.id,
         deliveryAddressId: finalAddressId,
-        items
+        items,
+        paymentMethod: paymentMethod || 'WALLET'
       };
       
       const res = await customerApi.order.post('/api/v1/orders', orderPayload, {});
@@ -326,7 +370,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
           onSuccessCb();
         }
         isSubmittingOrderRef.current = false;
-      }, 800);
+      }, 3000);
     } catch (err: any) {
       console.error(err);
       isSubmittingOrderRef.current = false;
@@ -385,6 +429,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
     checkoutRestaurantId,
     addToCart,
     removeFromCart,
+    clearCart,
     getCartTotal,
     handleCheckout,
     processPaymentAndOrder,

@@ -2,7 +2,7 @@ import { OrderStatus, DeliveryStatus, Order } from '../../types';
 import { getFriendlyStatusMessage } from '@features/customer-orders/model/statusMessaging';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, User, Package, LogOut, MapPin, Check } from 'lucide-react';
+import { X, User, Package, LogOut, MapPin, Check, Trash2 } from 'lucide-react';
 import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
 import { useToast } from '../../context/ToastContext';
 import CustomerAddressModal from "@features/customer-orders/components/CustomerAddressModal";
@@ -33,6 +33,10 @@ interface SharedSettingsViewProps {
   onLogout: () => void;
   customerId?: string;
   onSelectDeliveryLocation?: (addr: string) => void;
+  deliveryLat?: number | string;
+  deliveryLng?: number | string;
+  onAddressAdded?: () => void;
+  onDeleteAddress?: (addressId: string) => void;
 }
 
 export default function SharedSettingsView({
@@ -51,7 +55,11 @@ export default function SharedSettingsView({
   onAddApiLog,
   onLogout,
   customerId,
-  onSelectDeliveryLocation
+  onSelectDeliveryLocation,
+  deliveryLat,
+  deliveryLng,
+  onAddressAdded,
+  onDeleteAddress
 }: SharedSettingsViewProps) {
   const [accountTab, setAccountTab] = useState<'profile' | 'history' | 'addresses' | 'wallet'>(initialTab);
   const { showSuccess, showError } = useToast();
@@ -479,6 +487,15 @@ export default function SharedSettingsView({
                         {addr.city}, {addr.state} {addr.zipCode}
                       </p>
                     </div>
+                    {onDeleteAddress && (
+                      <button
+                        onClick={() => onDeleteAddress(addr.id)}
+                        className="w-10 h-10 rounded-full hover:bg-rose-100 dark:hover:bg-rose-900/50 flex items-center justify-center shrink-0 transition-colors duration-200"
+                        title="Delete Address"
+                      >
+                        <Trash2 className="w-5 h-5 text-rose-500 hover:text-rose-600 dark:text-rose-400 dark:hover:text-rose-300 transition-colors" />
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -514,6 +531,9 @@ export default function SharedSettingsView({
                   onAddApiLog={onAddApiLog}
                   customerId={customerId}
                   onSelectDeliveryLocation={onSelectDeliveryLocation}
+                  initialLat={deliveryLat}
+                  initialLng={deliveryLng}
+                  onAddressAdded={onAddressAdded}
                 />
               </div>
             )}

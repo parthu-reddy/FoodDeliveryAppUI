@@ -10,8 +10,10 @@ interface CustomerOutletSelectorModalProps {
   selectedRestaurant: Restaurant | null;
   setSelectedRestaurant: (restaurant: Restaurant) => void;
   onAddApiLog?: (log: any) => void;
-  deliveryLat?: string | null;
-  deliveryLng?: string | null;
+  deliveryLat?: number | null;
+  deliveryLng?: number | null;
+  carts?: any;
+  clearCart?: (restaurantId: string) => void;
 }
 
 const CustomerOutletSelectorModal: React.FC<CustomerOutletSelectorModalProps> = ({
@@ -22,8 +24,12 @@ const CustomerOutletSelectorModal: React.FC<CustomerOutletSelectorModalProps> = 
   setSelectedRestaurant,
   onAddApiLog,
   deliveryLat,
-  deliveryLng
+  deliveryLng,
+  carts,
+  clearCart
 }) => {
+  const [pendingOutlet, setPendingOutlet] = React.useState<Restaurant | null>(null);
+
   if (!brandOutlets) return null;
 
   return (
@@ -35,11 +41,23 @@ const CustomerOutletSelectorModal: React.FC<CustomerOutletSelectorModalProps> = 
           <button
             key={outlet.id}
             onClick={() => {
-              setSelectedRestaurant(outlet);
-              if (onAddApiLog) {
-                onAddApiLog({ id: 'catalog', label: `GET /api/v1/restaurants/${outlet.id}/catalog/items`, method: 'GET' });
+              const hasActiveCart = selectedRestaurant && carts?.[selectedRestaurant.id]?.items?.length > 0;
+              if (hasActiveCart && selectedRestaurant.id !== outlet.id) {
+                if (window.confirm(`You have items in your cart from ${selectedRestaurant.name}. Switching outlets will clear your active cart. Continue?`)) {
+                  if (clearCart) clearCart(selectedRestaurant.id);
+                  setSelectedRestaurant(outlet);
+                  if (onAddApiLog) {
+                    onAddApiLog({ id: 'catalog', label: `GET /api/v1/restaurants/${outlet.id}/catalog/items`, method: 'GET' });
+                  }
+                  onClose();
+                }
+              } else {
+                setSelectedRestaurant(outlet);
+                if (onAddApiLog) {
+                  onAddApiLog({ id: 'catalog', label: `GET /api/v1/restaurants/${outlet.id}/catalog/items`, method: 'GET' });
+                }
+                onClose();
               }
-              onClose();
             }}
             className={`w-full flex items-center justify-between p-3 rounded-xl border transition-colors text-left cursor-pointer ${
               selectedRestaurant?.id === outlet.id

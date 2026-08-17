@@ -52,6 +52,25 @@ const endpoints = makeApi([
     ],
     response: z.any(),
   },
+  {
+    method: "delete",
+    path: "/api/v1/customers/:customerId/addresses/:addressId",
+    alias: "deleteAddress",
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "customerId",
+        type: "Path",
+        schema: z.string().uuid(),
+      },
+      {
+        name: "addressId",
+        type: "Path",
+        schema: z.string().uuid(),
+      },
+    ],
+    response: z.any(),
+  },
 ]);
 
 export const Customer_address_controllerApi = new Zodios(endpoints);

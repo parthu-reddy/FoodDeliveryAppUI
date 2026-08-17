@@ -4,7 +4,7 @@ import { ErrorBoundary } from './ErrorBoundary';
 import { Modal, Button } from '@shared/ui';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export type PaymentMethodType = 'card' | 'wallet' | 'cod' | 'upi';
+export type PaymentMethodType = 'CARD' | 'WALLET' | 'COD' | 'UPI';
 
 export interface PaymentModalProps {
   isOpen: boolean;
@@ -36,7 +36,7 @@ function _PaymentModal({
   onClose,
   status,
   onProcessPayment,
-  availableMethods = ['card', 'wallet', 'cod'],
+  availableMethods = ['CARD', 'WALLET', 'COD'],
   amount,
   totals,
   title = "Complete Your Payment",
@@ -44,16 +44,16 @@ function _PaymentModal({
   successSubtitle = "Your transaction was successful.",
   processingTitle = "Processing Payment...",
   processingSubtitle = "Please wait while we securely process your payment",
-  buttonText = (method, amt) => method === 'cod' ? 'Confirm Cash Order' : `Pay ₹${amt.toFixed(2)} Now`,
+  buttonText = (method, amt) => method === 'COD' ? 'Confirm Cash Order' : `Pay ₹${amt.toFixed(2)} Now`,
   leftPanelContent
 }: PaymentModalProps) {
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethodType>(availableMethods[0] || 'card');
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethodType>(availableMethods[0] || 'CARD');
 
   const allMethods = [
-    { id: 'card', icon: CreditCard, label: 'Credit Card', color: 'indigo' },
-    { id: 'upi', icon: Phone, label: 'UPI / Netbanking', color: 'indigo' },
-    { id: 'wallet', icon: Wallet, label: 'Wallet', color: 'sky' },
-    { id: 'cod', icon: Banknote, label: 'Cash on Delivery', color: 'emerald' },
+    { id: 'CARD', icon: CreditCard, label: 'Credit Card', color: 'indigo' },
+    { id: 'UPI', icon: Phone, label: 'UPI / Netbanking', color: 'indigo' },
+    { id: 'WALLET', icon: Wallet, label: 'Wallet', color: 'sky' },
+    { id: 'COD', icon: Banknote, label: 'Cash on Delivery', color: 'emerald' },
   ];
 
   const methods = allMethods.filter(m => availableMethods.includes(m.id as PaymentMethodType));

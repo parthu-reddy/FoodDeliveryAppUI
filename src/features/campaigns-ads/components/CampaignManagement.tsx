@@ -161,7 +161,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
     try {
       // Map frontend payment method to gateway name
       let gateway = 'RAZORPAY'; // default
-      if (method === 'upi' || method === 'card') gateway = 'VYAPAR';
+      if (method === 'UPI' || method === 'CARD') gateway = 'VYAPAR';
       
       await campaignApi.campaign.post(
         '/api/v1/advertisers/:advertiserId/campaigns/wallet/topup', 
@@ -366,7 +366,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
         onClose={() => setIsPaymentModalOpen(false)}
         status={paymentStatus}
         onProcessPayment={processTopupPayment}
-        availableMethods={['card', 'upi']}
+        availableMethods={['CARD', 'UPI']}
         amount={parseFloat(topupAmount || '0')}
         leftPanelContent={paymentLeftContent}
         title="Wallet Top Up"

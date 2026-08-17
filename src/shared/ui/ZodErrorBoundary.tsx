@@ -39,12 +39,14 @@ export class ZodErrorBoundary extends Component<Props, State> {
     }
 
     if (isZodError) {
+      console.error(`[ZodErrorBoundary] Zod Render Validation Failed [${context}]:`, issues, error);
       logger.error(`Zod Render Validation Failed [${context}]`, {
         issues,
         componentStack: errorInfo.componentStack,
         originalError: error
       });
     } else {
+      console.error(`[ZodErrorBoundary] React Render Error [${context}]:`, error, errorInfo.componentStack);
       logger.error(`React Render Error [${context}]`, {
         error: error.message,
         componentStack: errorInfo.componentStack,

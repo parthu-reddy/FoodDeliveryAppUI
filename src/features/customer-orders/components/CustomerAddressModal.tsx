@@ -31,13 +31,16 @@ export default function CustomerAddressModal({
   savedAddresses = [],
   onAddApiLog,
   customerId,
-  onSelectDeliveryLocation
+  onSelectDeliveryLocation,
+  initialLat,
+  initialLng,
+  onAddressAdded
 }: any) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markerRef = useRef<maplibregl.Marker | null>(null);
-  const [lat, setLat] = useState('12.9716');
-  const [lng, setLng] = useState('77.5946');
+  const [lat, setLat] = useState(initialLat ? String(initialLat) : '12.9716');
+  const [lng, setLng] = useState(initialLng ? String(initialLng) : '77.5946');
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [addressForm, setAddressForm] = useState({
@@ -185,9 +188,15 @@ export default function CustomerAddressModal({
 
       setIsSaving(true);
       if (!customerId) throw new Error("Customer ID missing");
-      await customerApi.customerAddress.post('/api/v1/customers/:customerId/addresses', payload, { params: { customerId } });
+      const addrRes: any = await customerApi.customerAddress.post('/api/v1/customers/:customerId/addresses', payload, { params: { customerId } });
+      const savedAddr = addrRes.data;
       setIsAddressModalOpen(false);
-      window.location.reload();
+      onAddressAdded?.();
+      
+      if (onSelectDeliveryLocation && savedAddr) {
+        const formatted = `${savedAddr.label || 'Address'}: ${savedAddr.addressLine1 || ''}, ${savedAddr.city || ''}`;
+        onSelectDeliveryLocation(formatted, savedAddr.latitude, savedAddr.longitude);
+      }
     } catch (err) {
       console.error(err);
     } finally {

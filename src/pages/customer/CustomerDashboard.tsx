@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { usePolling } from '../../hooks/usePolling';
 import { useDebounce } from '../../hooks/useDebounce';
 import { useToast } from "@/context/ToastContext";
@@ -73,8 +73,14 @@ export default function CustomerDashboard({
   });
   const activeOrders = externalOrders ?? internalActiveOrders;
 
-  const [deliveryLat, setDeliveryLat] = useState<string | number>(() => localStorage.getItem('deliveryLat') || '12.97');
-  const [deliveryLng, setDeliveryLng] = useState<string | number>(() => localStorage.getItem('deliveryLng') || '77.59');
+  const [deliveryLat, setDeliveryLat] = useState<number | null>(() => {
+    const lat = localStorage.getItem('deliveryLat');
+    return lat && !isNaN(Number(lat)) ? Number(lat) : null;
+  });
+  const [deliveryLng, setDeliveryLng] = useState<number | null>(() => {
+    const lng = localStorage.getItem('deliveryLng');
+    return lng && !isNaN(Number(lng)) ? Number(lng) : null;
+  });
 
   const { restaurants, isRestaurantsLoading } = useRestaurants({
     deliveryLat,
@@ -85,6 +91,17 @@ export default function CustomerDashboard({
     setInternalOrders(prev => [...prev, order]);
   });
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
+  
+  // Sync to localStorage whenever delivery location changes and new restaurants are fetched
+  useEffect(() => {
+    if (selectedRestaurant && restaurants && restaurants.length > 0) {
+      const updated = restaurants.find(r => r.id === selectedRestaurant.id);
+      if (updated) {
+        setSelectedRestaurant(updated);
+      }
+    }
+  }, [restaurants]);
+
   const [brandOutlets, setBrandOutlets] = useState<Restaurant[]>([]);
   const [effectiveMenu, setEffectiveMenu] = useState<MenuItem[]>([]);
   const [isMenuLoading, setIsMenuLoading] = useState<boolean>(false);
@@ -93,14 +110,58 @@ export default function CustomerDashboard({
   const [address, setAddress] = useState(() => localStorage.getItem('deliveryAddress') || 'Please add an address');
   const [deliveryAddressId, setDeliveryAddressId] = useState<string>(() => localStorage.getItem('deliveryAddressId') || '');
 
+  const refreshAddresses = useCallback(() => {
+    const profile = getUserProfile();
+    if (!profile?.id) return;
+    
+    customerApi.customerAddress.get('/api/v1/customers/:customerId/addresses', {
+      params: { customerId: profile.id }
+    })
+      .then((addrRes: any) => {
+        if (addrRes.data) {
+          setSavedAddresses(addrRes.data);
+        }
+      })
+      .catch((err: any) => console.error(err));
+  }, []);
+
+  const handleDeleteAddress = useCallback(async (addressId: string) => {
+    const profile = getUserProfile();
+    if (!profile?.id) return;
+    try {
+      await customerApi.customerAddress.deleteAddress(undefined, {
+        params: { customerId: profile.id, addressId }
+      });
+      showSuccess('Address deleted successfully');
+      refreshAddresses();
+      if (deliveryAddressId === addressId) {
+        setDeliveryAddressId('');
+        setAddress('Please select an address');
+        setDeliveryLat(null);
+        setDeliveryLng(null);
+        localStorage.removeItem('deliveryAddress');
+        localStorage.removeItem('deliveryAddressId');
+        localStorage.removeItem('deliveryLat');
+        localStorage.removeItem('deliveryLng');
+        setIsAddressSelectorOpen(true);
+      }
+    } catch (error) {
+      console.error(error);
+      showError('Failed to delete address');
+    }
+  }, [refreshAddresses, showSuccess, showError, deliveryAddressId]);
+
   useEffect(() => {
     localStorage.setItem('deliveryAddress', address);
-    localStorage.setItem('deliveryLat', String(deliveryLat));
-    localStorage.setItem('deliveryLng', String(deliveryLng));
+    if (deliveryLat !== null) localStorage.setItem('deliveryLat', String(deliveryLat));
+    else localStorage.removeItem('deliveryLat');
+    if (deliveryLng !== null) localStorage.setItem('deliveryLng', String(deliveryLng));
+    else localStorage.removeItem('deliveryLng');
     localStorage.setItem('deliveryAddressId', deliveryAddressId);
   }, [address, deliveryLat, deliveryLng, deliveryAddressId]);
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
   const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
+  const [orderSuccessToast, setOrderSuccessToast] = useState<Order | null>(null);
 
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
 
@@ -170,7 +231,7 @@ export default function CustomerDashboard({
   useEffect(() => {
     let ignore = false;
     if (selectedRestaurant?.brandId) {
-      customerApi.customerRestaurant.get('/api/v1/restaurants/brands/:brandId/outlets', { params: { brandId: selectedRestaurant.brandId }, queries: { lat: Number(deliveryLat), lng: Number(deliveryLng) } })
+      customerApi.customerRestaurant.get('/api/v1/restaurants/brands/:brandId/outlets', { params: { brandId: selectedRestaurant.brandId }, queries: { lat: deliveryLat ?? 0, lng: deliveryLng ?? 0 } })
         .then(res => {
           if (!ignore && res.data) setBrandOutlets(res.data);
         })
@@ -181,7 +242,7 @@ export default function CustomerDashboard({
     return () => { ignore = true; };
   }, [selectedRestaurant?.brandId, deliveryLat, deliveryLng]); // Only refetch outlets when brand changes
 
-  const locationKey = deliveryAddressId || address;
+  const locationKey = deliveryAddressId || (deliveryLat !== null && deliveryLng !== null ? `gps:${deliveryLat.toFixed(3)}:${deliveryLng.toFixed(3)}` : address);
 
   const {
     carts,
@@ -195,13 +256,26 @@ export default function CustomerDashboard({
     checkoutRestaurantId,
     addToCart: originalAddToCart,
     removeFromCart: originalRemoveFromCart,
+    clearCart,
     getCartTotal: originalGetCartTotal,
     handleCheckout,
     processPaymentAndOrder: originalProcessPaymentAndOrder,
     setDeliveryAddressId: setGlobalDeliveryAddressId,
     isQuoting,
     quotes
-  } = useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTrackingOrder, selectedRestaurantId: selectedRestaurant?.id || null });
+  } = useCustomerCart({ 
+    locationKey, 
+    onAddApiLog, 
+    onPlaceOrder, 
+    setTrackingOrder: (order) => {
+      if (!selectedRestaurant || selectedRestaurant.id === order.restaurantId) {
+        setTrackingOrder(order);
+      } else {
+        setOrderSuccessToast(order);
+      }
+    }, 
+    selectedRestaurantId: selectedRestaurant?.id || null 
+  });
 
   const addToCart = (item: MenuItem) => originalAddToCart(item, selectedRestaurant);
   const removeFromCart = (itemId: string, restaurantId: string) => originalRemoveFromCart(itemId, restaurantId);
@@ -215,90 +289,36 @@ export default function CustomerDashboard({
     return originalGetCartTotal(rId);
   };
   
-  const processPaymentAndOrder = () => originalProcessPaymentAndOrder(deliveryAddressId, deliveryLat, deliveryLng, address, () => {
+  const processPaymentAndOrder = (method: string) => originalProcessPaymentAndOrder(method, deliveryAddressId, deliveryLat, deliveryLng, address, () => {
     if (checkoutRestaurantId === selectedRestaurant?.id) {
        setSelectedRestaurant(null);
     }
   });
 
   const totalCartItems = Object.values(carts).reduce((sum, cart) => sum + cart.items.reduce((s, i) => s + i.quantity, 0), 0);
+
+  const prevLocationKeyRef = useRef(locationKey);
+  const prevCartItemsRef = useRef(totalCartItems);
+
+  useEffect(() => {
+    prevCartItemsRef.current = totalCartItems;
+  }, [totalCartItems]);
+
+  useEffect(() => {
+    if (prevLocationKeyRef.current !== locationKey) {
+      if (prevCartItemsRef.current > 0) {
+        showInfo("Address changed. Your cart items from the previous address are saved.");
+      }
+      prevLocationKeyRef.current = locationKey;
+    }
+  }, [locationKey, showInfo]);
+
   const activeCartCount = Object.keys(carts).length;
 
   const [isDeliveryAvailable, setIsDeliveryAvailable] = useState<boolean | null>(null);
-  const [deliveryPricingMap, setDeliveryPricingMap] = useState<Record<string, any>>({});
 
-  // Clear cached delivery pricing when the location changes to prevent stale fees
-  useEffect(() => {
-    setDeliveryPricingMap({});
-  }, [locationKey]);
 
-  useEffect(() => {
-    let ignore = false;
-    const timeoutId = setTimeout(() => {
-        if (!selectedRestaurant) return;
-        
-        if (deliveryAddressId) {
-          customerApi.order.post('/api/v1/orders/quote', {
-            restaurantId: selectedRestaurant.id,
-            deliveryAddressId: deliveryAddressId,
-            items: carts[selectedRestaurant.id]?.items.map(i => ({ menuItemId: i.item.id || i.id, quantity: i.quantity })) as any
-          })
-            .then((res: any) => {
-              if (!ignore && res.data) {
-                setDeliveryPricingMap(prev => ({ ...prev, [selectedRestaurant.id]: res.data }));
-              }
-            })
-            .catch((err: any) => {
-              console.error(err);
-            });
-        } else if (deliveryLat && deliveryLng) {
-          // Fallback if no addressId is selected yet, we only know Haversine distance
-          const rLat = Number(selectedRestaurant.lat || 0);
-          const rLng = Number(selectedRestaurant.lng || 0);
-          const distanceKm = calculateHaversineDistance(Number(deliveryLat), Number(deliveryLng), rLat, rLng);
-          // Without an address, we can't get exact delivery pricing from the new combined API,
-          // so we'll just set distance and defaults for now.
-          setDeliveryPricingMap(prev => ({
-            ...prev,
-            [selectedRestaurant.id]: {
-              distanceKm,
-              config: {
-                basePrice: 0,
-                perKmRate: 0,
-                restMaxContributionPercent: 0,
-                fixedPlatformFee: 0,
-                platformExcessCutPercent: 0,
-                sgstPercent: 0,
-                cgstPercent: 0
-              }
-            }
-          }));
-        }
-    }, 500); // 500ms debounce
-    return () => { ignore = true; clearTimeout(timeoutId); };
-  }, [selectedRestaurant?.id, deliveryAddressId, deliveryLat, deliveryLng]);
 
-  // Fetch delivery pricing for all active carts that don't have it cached yet
-  useEffect(() => {
-    if (!deliveryAddressId) return; // Only fetch actual pricing if we have a saved address
-    
-    const activeCartIds = Object.keys(carts);
-    activeCartIds.forEach(cartId => {
-      if (!deliveryPricingMap[cartId] && cartId !== selectedRestaurant?.id) {
-        customerApi.order.post('/api/v1/orders/quote', {
-          restaurantId: cartId,
-          deliveryAddressId: deliveryAddressId,
-          items: carts[cartId]?.items.map(i => ({ menuItemId: i.item.id || i.id, quantity: i.quantity })) as any || []
-        })
-          .then((res: any) => {
-            if (res.data) {
-              setDeliveryPricingMap(prev => ({ ...prev, [cartId]: res.data }));
-            }
-          })
-          .catch((err: any) => console.error(`Failed to fetch pricing for background cart ${cartId}`, err));
-      }
-    });
-  }, [carts, deliveryAddressId, deliveryPricingMap, selectedRestaurant?.id]);
 
 
   useEffect(() => {
@@ -311,7 +331,12 @@ export default function CustomerDashboard({
             setIsDeliveryAvailable(res.data.available);
           }
         })
-        .catch(console.error);
+        .catch(err => {
+          console.error(err);
+          if (!ignore && err.response && (err.response.status === 409 || err.response.status === 400)) {
+            setIsDeliveryAvailable(false);
+          }
+        });
     }
     return () => { ignore = true; };
   }, [selectedRestaurant?.id]);
@@ -325,7 +350,7 @@ export default function CustomerDashboard({
   const [showProfileModal, setShowProfileModal] = useState(false);
 
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
-  const [isAddressSelectorOpen, setIsAddressSelectorOpen] = useState(false);
+  const [isAddressSelectorOpen, setIsAddressSelectorOpen] = useState(() => !localStorage.getItem('deliveryLat'));
   const [isOutletSelectorOpen, setIsOutletSelectorOpen] = useState(false);
   const [view, setView] = useState<'home' | 'settings'>('home');
   const [settingsTab, setSettingsTab] = useState<'profile' | 'history' | 'addresses'>('profile');
@@ -373,6 +398,45 @@ export default function CustomerDashboard({
           )}
         </AnimatePresence>
 
+        <AnimatePresence>
+          {orderSuccessToast && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+              className="fixed top-12 left-0 right-0 mx-auto max-w-sm z-[100] px-4"
+            >
+              <div className="bg-emerald-500/95 backdrop-blur-xl border border-emerald-500/50 shadow-2xl rounded-2xl p-4 flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                      <Check className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-white font-bold text-sm">Order Placed Successfully!</p>
+                      <p className="text-emerald-100 text-[10px] mt-0.5">{orderSuccessToast.restaurantName}</p>
+                    </div>
+                  </div>
+                  <button onClick={() => setOrderSuccessToast(null)} className="text-white/70 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="flex justify-end mt-1">
+                  <button
+                    onClick={() => {
+                       setTrackingOrder(orderSuccessToast);
+                       setOrderSuccessToast(null);
+                    }}
+                    className="px-4 py-2 bg-white text-emerald-600 rounded-lg text-xs font-bold shadow-sm hover:shadow transition-all hover:bg-emerald-50 w-full"
+                  >
+                    Track Order
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
       {/* 1. Header Area */}
       <DashboardHeader 
         address={address} 
@@ -401,11 +465,28 @@ export default function CustomerDashboard({
             onAddApiLog={onAddApiLog}
             onLogout={onLogout}
             customerId={getUserProfile()?.id}
+            onAddressAdded={refreshAddresses}
+            onDeleteAddress={handleDeleteAddress}
+            deliveryLat={deliveryLat}
+            deliveryLng={deliveryLng}
             onSelectDeliveryLocation={(addr: string, lat?: string | number, lng?: string | number) => {
+              if (addr !== address) {
+                const hasItems = Object.values(carts || {}).some((cart: any) => cart.items && cart.items.length > 0);
+                if (hasItems) {
+                  if (!window.confirm("Changing your address will clear your active cart. Do you want to continue?")) {
+                    return;
+                  }
+                  Object.keys(carts).forEach(restaurantId => {
+                    if (carts[restaurantId]?.items?.length > 0) {
+                      clearCart(restaurantId);
+                    }
+                  });
+                }
+              }
               setAddress(addr);
               if (lat !== undefined && lng !== undefined) {
-                setDeliveryLat(lat);
-                setDeliveryLng(lng);
+                setDeliveryLat(Number(lat));
+                setDeliveryLng(Number(lng));
               }
               setIsAddressSelectorOpen(false);
               setView('home');
@@ -553,6 +634,9 @@ export default function CustomerDashboard({
               effectiveMenu={effectiveMenu}
               addToCart={addToCart}
               removeFromCart={removeFromCart}
+              isQuoting={isQuoting}
+              deliveryAddressId={deliveryAddressId}
+              setIsAddressSelectorOpen={setIsAddressSelectorOpen}
             />
             </ErrorBoundary>
           </>
@@ -607,7 +691,12 @@ export default function CustomerDashboard({
           >
             <div className="flex items-center gap-2">
               <ShoppingBag className="w-5 h-5" />
-              <span>{totalCartItems} Item{totalCartItems > 1 ? 's' : ''} in Cart{activeCartCount > 1 ? 's' : ''}</span>
+              <div className="flex flex-col items-start text-left leading-tight">
+                <span className="font-bold">{totalCartItems} Item{totalCartItems > 1 ? 's' : ''} in Cart</span>
+                {activeCartCount > 1 && (
+                  <span className="text-xs text-orange-100/90 font-medium">{activeCartCount} restaurants</span>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-1">
               <span>View Cart</span>
@@ -621,11 +710,15 @@ export default function CustomerDashboard({
         isOpen={isAddressSelectorOpen}
         onClose={() => setIsAddressSelectorOpen(false)}
         savedAddresses={savedAddresses}
+        address={address}
         setAddress={setAddress}
         setDeliveryLat={setDeliveryLat}
         setDeliveryLng={setDeliveryLng}
         setDeliveryAddressId={setDeliveryAddressId}
+        currentAddressId={deliveryAddressId}
         setShowLocationPrompt={setShowLocationPrompt}
+        carts={carts}
+        clearCart={clearCart}
         onAddNewAddress={() => {
           setView('settings');
           setSettingsTab('addresses');
@@ -640,8 +733,10 @@ export default function CustomerDashboard({
         selectedRestaurant={selectedRestaurant}
         setSelectedRestaurant={setSelectedRestaurant}
         onAddApiLog={onAddApiLog}
-        deliveryLat={String(deliveryLat)}
-        deliveryLng={String(deliveryLng)}
+        deliveryLat={deliveryLat}
+        deliveryLng={deliveryLng}
+        carts={carts}
+        clearCart={clearCart}
       />
 
       <CustomerCartDrawer
@@ -657,6 +752,8 @@ export default function CustomerDashboard({
         getCartTotal={getCartTotal}
         setIsPaymentModalOpen={setIsPaymentModalOpen}
         isSubmitting={paymentStatus !== 'idle'}
+        setIsAddressModalOpen={setIsAddressModalOpen}
+        deliveryAddressId={deliveryAddressId}
       />
 
       <CustomerPaymentModal
@@ -668,6 +765,8 @@ export default function CustomerDashboard({
         cartRestaurant={checkoutRestaurantId ? carts[checkoutRestaurantId]?.restaurant : undefined}
         processPaymentAndOrder={processPaymentAndOrder}
         address={address}
+        deliveryLat={deliveryLat}
+        deliveryLng={deliveryLng}
       />
 
       <AnimatePresence>

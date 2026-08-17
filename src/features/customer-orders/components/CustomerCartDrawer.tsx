@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { EmptyState } from "@shared/ui";
 
 const checkoutSchema = z.object({
-  address: z.string().min(5, "Please enter a valid delivery address").max(200, "Address is too long")
+  deliveryAddressId: z.string().min(1, "Please select a valid delivery address before checking out.")
 });
 
 export default function CustomerCartDrawer({
@@ -22,33 +22,24 @@ export default function CustomerCartDrawer({
   getCartTotal,
   setIsPaymentModalOpen,
   isSubmitting,
-  isQuoting
+  isQuoting,
+  setIsAddressModalOpen,
+  deliveryAddressId
 }: any) {
   const [error, setError] = React.useState<string | null>(null);
-  const [localAddress, setLocalAddress] = React.useState(address);
-
-  React.useEffect(() => {
-    setLocalAddress(address);
-  }, [address]);
-
-  React.useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (localAddress !== address) {
-        setAddress(localAddress);
-      }
-    }, 500);
-    return () => clearTimeout(timeoutId);
-  }, [localAddress, address, setAddress]);
 
   const onCheckoutClick = (restaurantId: string) => {
     if (isSubmitting) return;
-    const validation = checkoutSchema.safeParse({ address: localAddress.trim() });
+    const validation = checkoutSchema.safeParse({ deliveryAddressId: deliveryAddressId || '' });
     if (!validation.success) {
       setError(validation.error.issues[0].message);
       return;
     }
+    if (address.includes("Please add an address")) {
+      setError("Please select a delivery address before checking out.");
+      return;
+    }
     setError(null);
-    setAddress(localAddress); // ensure parent has latest
     setTimeout(() => {
       handleCheckout(restaurantId);
     }, 0);
@@ -123,7 +114,7 @@ export default function CustomerCartDrawer({
                               </button>
                               <span className="px-1 text-xs">{cartItem.quantity}</span>
                               <button 
-                                onClick={() => addToCart(cartItem.item, cartState.restaurant)}
+                                onClick={() => addToCart(cartItem.item, selectedRestaurant?.id === restaurantId ? selectedRestaurant : cartState.restaurant)}
                                 className="p-1 px-2.5 text-xs hover:text-emerald-500 cursor-pointer"
                               >
                                 +
@@ -151,15 +142,15 @@ export default function CustomerCartDrawer({
                         </div>
                         <div className="flex justify-between text-slate-500 dark:text-slate-400">
                           <span>SGST (2.5%)</span>
-                          <span>₹{total.sgst.toFixed(2)}</span>
+                          <span>{(total as any).isEstimated ? 'Calculating...' : `₹${total.sgst.toFixed(2)}`}</span>
                         </div>
                         <div className="flex justify-between text-slate-500 dark:text-slate-400">
                           <span>CGST (2.5%)</span>
-                          <span>₹{total.cgst.toFixed(2)}</span>
+                          <span>{(total as any).isEstimated ? 'Calculating...' : `₹${total.cgst.toFixed(2)}`}</span>
                         </div>
                         <div className="flex justify-between text-slate-900 dark:text-[#f0ede6] font-bold text-sm pt-1 border-t border-rose-500/10">
                           <span>Total</span>
-                          <span>₹{total.total?.toFixed(2)}</span>
+                          <span>{(total as any).isEstimated ? `Estimate: ₹${total.total?.toFixed(2)}` : `₹${total.total?.toFixed(2)}`}</span>
                         </div>
                       </div>
 
@@ -177,14 +168,22 @@ export default function CustomerCartDrawer({
               </div>
 
               {/* Address indicator */}
-              <div className="p-3 bg-white/20 dark:bg-slate-900/45 backdrop-blur-sm border border-rose-500/20 dark:border-rose-500/30 rounded-xl space-y-1">
-                <span className="text-[10px] text-slate-500 dark:text-[#f0ede6] font-bold block uppercase font-mono">Delivering To</span>
-                <input 
-                  type="text" 
-                  value={localAddress}
-                  onChange={(e) => setLocalAddress(e.target.value)}
-                  className="bg-transparent border-none text-xs w-full font-semibold text-slate-800 dark:text-[#f0ede6] focus:outline-none"
-                />
+              <div 
+                onClick={() => {
+                  if (setIsAddressModalOpen) {
+                    setIsAddressModalOpen(true);
+                    setIsCartOpen(false);
+                  }
+                }}
+                className="p-3 bg-white/20 dark:bg-slate-900/45 backdrop-blur-sm border border-rose-500/20 dark:border-rose-500/30 rounded-xl space-y-1 cursor-pointer hover:bg-white/30 dark:hover:bg-slate-900/60 transition-colors flex justify-between items-center"
+              >
+                <div>
+                  <span className="text-[10px] text-slate-500 dark:text-[#f0ede6] font-bold block uppercase font-mono">Delivering To</span>
+                  <div className="text-xs font-semibold text-slate-800 dark:text-[#f0ede6] truncate pr-2">
+                    {address}
+                  </div>
+                </div>
+                <div className="text-[10px] font-bold text-rose-500 bg-rose-500/10 px-2 py-1 rounded-md shrink-0">Change</div>
               </div>
               {error && (
                 <div className="flex items-center gap-2 p-2 rounded-xl bg-red-500/10 text-red-500 text-xs font-bold">

@@ -5,30 +5,54 @@ import { CartState, useCustomerCart } from '../model/useCustomerCart';
 
 interface CustomerFreeDeliveryTrackerProps {
   carts: Record<string, CartState>;
-  getCartTotal: (restaurantId: string) => { subtotal: number };
+  getCartTotal: (restaurantId: string) => { subtotal: number; minAmountForFreeDelivery?: number };
   deliveryPricing: any;
   selectedRestaurantId?: string;
+  isQuoting?: boolean;
 }
 
 export const CustomerFreeDeliveryTracker: React.FC<CustomerFreeDeliveryTrackerProps> = ({
   carts,
   getCartTotal,
   deliveryPricing,
-  selectedRestaurantId
+  selectedRestaurantId,
+  isQuoting
 }) => {
   // We can track the selected restaurant's cart or the first active cart if none selected
   const activeRestaurantId = selectedRestaurantId || Object.keys(carts).find(id => carts[id]?.items.length > 0);
   const activeCart = activeRestaurantId ? carts[activeRestaurantId] : null;
 
+  if (!activeCart || activeCart.items.length === 0) return null;
+
+  if (isQuoting) {
+    return (
+      <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="sticky top-[88px] z-40 mb-2 max-w-[380px] mx-auto pointer-events-none"
+        >
+          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-800/50 shadow-2xl rounded-2xl p-3 pointer-events-auto h-16 animate-pulse flex items-center gap-3">
+             <div className="p-2 rounded-full bg-slate-200 dark:bg-slate-800 w-9 h-9" />
+             <div className="flex-1 space-y-2">
+               <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-1/2" />
+               <div className="h-2 bg-slate-200 dark:bg-slate-800 rounded w-1/3" />
+             </div>
+          </div>
+        </motion.div>
+      </AnimatePresence>
+    );
+  }
+
   if (!activeRestaurantId || !deliveryPricing) return null;
 
-  const minOrder = deliveryPricing?.config 
-    ? ((deliveryPricing.config.basePrice + (deliveryPricing.config.perKmRate * Math.max(1, deliveryPricing.distanceKm || 5.0))) / (deliveryPricing.config.restMaxContributionPercent || 1))
-    : (deliveryPricing?.minimumOrderForFreeDelivery || 999999);
+  const cartTotal = getCartTotal(activeRestaurantId!);
+  const minOrder = cartTotal?.minAmountForFreeDelivery ?? 999999;
 
   if (minOrder >= 999999) return null;
 
-  const subtotal = getCartTotal(activeRestaurantId!).subtotal;
+  const subtotal = cartTotal?.subtotal ?? 0;
   const progress = Math.min(100, (subtotal / minOrder) * 100);
   const isFreeDelivery = subtotal >= minOrder;
 
@@ -38,7 +62,7 @@ export const CustomerFreeDeliveryTracker: React.FC<CustomerFreeDeliveryTrackerPr
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
-        className="fixed top-20 left-4 right-4 z-40 max-w-[380px] mx-auto pointer-events-none"
+        className="sticky top-[88px] z-40 mb-2 max-w-[380px] mx-auto pointer-events-none"
       >
         <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-800/50 shadow-2xl rounded-2xl p-3 pointer-events-auto">
           <div className="flex items-center gap-3">
