@@ -71,6 +71,12 @@ export const orderSchema = z.object({
 
 export type Order = z.infer<typeof orderSchema>;
 
-export const normalizeOrder = (raw: any): Order => {
-  return orderSchema.parse(raw);
+export const normalizeOrder = (raw: any): Order | undefined => {
+  const result = orderSchema.safeParse(raw);
+  if (result.success) {
+    return result.data;
+  } else {
+    console.error("Order validation failed:", result.error);
+    return undefined;
+  }
 };
