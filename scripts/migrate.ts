@@ -29,7 +29,7 @@ for (const service of services) {
     const regex = /path: "(.*?)",/g;
     let match;
     while ((match = regex.exec(content)) !== null) {
-      let urlPath = match[1];
+      const urlPath = match[1];
       // Convert /api/v1/customers/:id/something to ^/api/v1/customers/[^/]+/something
       let regexStr = urlPath.replace(/:[a-zA-Z0-9_]+/g, '([^/?]+)');
       regexStr = `^${regexStr}`; // Don't end with $ to allow ?queryparams
@@ -59,7 +59,7 @@ for (const sourceFile of project.getSourceFiles()) {
     let apiName = '';
     let method = '';
     let isAsAny = false;
-    let expressionNodeToReplace = expression;
+    const expressionNodeToReplace = expression;
 
     // Pattern 1: customerApi.get('/path')
     if (expression.isKind(SyntaxKind.PropertyAccessExpression)) {

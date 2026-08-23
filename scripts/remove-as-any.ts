@@ -22,7 +22,7 @@ for (const sourceFile of project.getSourceFiles()) {
            if (callExpr && callExpr.isKind(SyntaxKind.CallExpression)) {
                const args = callExpr.getArguments();
                if (args.length > 0) {
-                   let newArgs = [];
+                   const newArgs = [];
                    if (text.endsWith('.get') || text.endsWith('.delete')) {
                        newArgs.push(`${args[0].getText()} as any`);
                        if (args.length > 1) {

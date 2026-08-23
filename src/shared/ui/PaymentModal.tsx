@@ -26,12 +26,12 @@ export interface PaymentModalProps {
 export function PaymentModal(props: PaymentModalProps) {
   return (
     <ErrorBoundary>
-      <_PaymentModal {...props} />
+      <PaymentModalInner {...props} />
     </ErrorBoundary>
   );
 }
 
-function _PaymentModal({
+function PaymentModalInner({
   isOpen,
   onClose,
   status,

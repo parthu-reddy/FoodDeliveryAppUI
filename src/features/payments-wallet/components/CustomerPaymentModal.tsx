@@ -5,12 +5,12 @@ import { MapPin, Store } from 'lucide-react';
 export default function CustomerPaymentModal(props: any) {
   return (
     <ErrorBoundary>
-      <_CustomerPaymentModal {...props} />
+      <CustomerPaymentModalInner {...props} />
     </ErrorBoundary>
   );
 }
 
-function _CustomerPaymentModal({
+function CustomerPaymentModalInner({
   isPaymentModalOpen,
   setIsPaymentModalOpen,
   paymentStatus,

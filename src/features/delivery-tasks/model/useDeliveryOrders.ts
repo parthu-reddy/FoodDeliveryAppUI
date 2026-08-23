@@ -216,7 +216,9 @@ export function useDeliveryOrders({
           osc.start(ctx.currentTime);
           osc.stop(ctx.currentTime + 0.5);
         }
-      } catch (e) {}
+      } catch {
+        // best effort: WebAudio is unavailable in some browsers/contexts
+      }
 
       const timer = setInterval(() => {
         setPingTimer(prev => {
@@ -397,7 +399,9 @@ export function useDeliveryOrders({
             return Math.min(1000 * Math.pow(2, retryCount - 1), 16000);
           }
         });
-      } catch (err) {}
+      } catch {
+        // best effort cleanup on unmount; nothing to recover
+      }
     };
 
     connectSSE();

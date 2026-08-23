@@ -95,7 +95,7 @@ for (const sourceFile of sourceFiles) {
           const hasParams = Object.keys(params).length > 0;
           const hasQueries = Object.keys(queries).length > 0;
           
-          let configParts = [];
+          const configParts = [];
           if (hasParams) {
              configParts.push(`params: { ${Object.entries(params).map(([k, v]) => `${k === v ? k : `${k}: ${v}`}`).join(', ')} }`);
           }
@@ -108,7 +108,7 @@ for (const sourceFile of sourceFiles) {
           }
 
           const method = callee.getName();
-          let newCallArgs = [];
+          const newCallArgs = [];
           newCallArgs.push(`'${cleanPath}'`);
 
           if (method === 'post' || method === 'put' || method === 'patch') {

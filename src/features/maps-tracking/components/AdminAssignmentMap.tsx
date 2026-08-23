@@ -12,12 +12,12 @@ export default function AdminAssignmentMap(props: {
 }) {
   return (
     <ErrorBoundary>
-      <_AdminAssignmentMap {...props} />
+      <AdminAssignmentMapInner {...props} />
     </ErrorBoundary>
   );
 }
 
-function _AdminAssignmentMap({ 
+function AdminAssignmentMapInner({ 
     order, 
     availableDrivers, 
     onAssign 
@@ -26,7 +26,7 @@ function _AdminAssignmentMap({
     availableDrivers: any[], 
     onAssign: (orderId: string, driverId: string) => void 
 }) {
-  const { } = useConfig();
+  useConfig();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [mapInstance, setMapInstance] = useState<any>(null);
 

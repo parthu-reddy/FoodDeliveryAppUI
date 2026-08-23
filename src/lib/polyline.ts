@@ -3,7 +3,8 @@ export function decodePolyline(encoded: string) {
         return [];
     }
     const poly = [];
-    let index = 0, len = encoded.length;
+    let index = 0;
+    const len = encoded.length;
     let lat = 0, lng = 0;
 
     while (index < len) {

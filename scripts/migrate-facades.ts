@@ -28,7 +28,7 @@ for (const service of services) {
     const regex = /path: "(.*?)",/g;
     let match;
     while ((match = regex.exec(content)) !== null) {
-      let urlPath = match[1];
+      const urlPath = match[1];
       let regexStr = urlPath.replace(/:[a-zA-Z0-9_]+/g, '([^/?]+)');
       regexStr = `^${regexStr}`;
       apiMap[serviceName].push({ regex: new RegExp(regexStr), namespace, original: urlPath });

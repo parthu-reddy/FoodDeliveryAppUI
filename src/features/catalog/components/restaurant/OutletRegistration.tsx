@@ -44,7 +44,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const { showError } = useToast();
-  const { } = useConfig();
+  useConfig();
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   useEffect(() => {

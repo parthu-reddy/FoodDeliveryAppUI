@@ -84,7 +84,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
       if (data.success && data.data) {
         const updatedCategories = await Promise.all(
           data.data.map(async (cat: any) => {
-            let catData = { ...cat };
+            const catData = { ...cat };
             try {
                 // Fetch outlet timings
                 const oRes = await restaurantApi.category.get('/api/v1/outlets/:outletId/categories/:categoryId/timings', { params: { outletId: selectedOutlet, categoryId: cat.id } });

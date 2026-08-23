@@ -57,7 +57,6 @@ export default function CustomerRestaurantCard({ restaurant, isLast, lastElement
       ref={(node) => {
         // Handle both the infinite scroll ref and our local intersection observer ref
         if (isLast && lastElementRef) lastElementRef(node);
-        // @ts-ignore
         cardRef.current = node;
       }}
       onClick={handleCardClick}

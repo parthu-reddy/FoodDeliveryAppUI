@@ -5,12 +5,12 @@ import { useState } from 'react';
 export default function PostDeliverySupportModal(props: any) {
   return (
     <ErrorBoundary>
-      <_PostDeliverySupportModal {...props} />
+      <PostDeliverySupportModalInner {...props} />
     </ErrorBoundary>
   );
 }
 
-function _PostDeliverySupportModal({
+function PostDeliverySupportModalInner({
   isOpen,
   onClose,
   orderId,

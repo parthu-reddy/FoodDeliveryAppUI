@@ -140,7 +140,7 @@ export const useWebRTC = () => {
     if (signal.senderId === user?.id) return; // Ignore signals from ourselves
     
     switch (signal.type) {
-      case 'OFFER':
+      case 'OFFER': {
         if (callStateRef.current !== 'IDLE') {
           // If already in a call, reject it with HANGUP
           sendSignal({ targetUserId: signal.senderId, type: 'HANGUP', sessionId: signal.sessionId });
@@ -169,6 +169,7 @@ export const useWebRTC = () => {
           processPendingCandidates();
         }
         break;
+      }
 
       case 'ANSWER':
         if (signal.sdp && peerConnectionRef.current) {
@@ -254,7 +255,6 @@ export const useWebRTC = () => {
 
   const startRecording = (localMediaStream: MediaStream, remoteMediaStream: MediaStream) => {
     try {
-      // @ts-ignore
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       const audioContext = new AudioContext();
       const dest = audioContext.createMediaStreamDestination();
@@ -268,7 +268,7 @@ export const useWebRTC = () => {
       const mixedStream = dest.stream;
       
       // Compress audio by setting a low bitrate suitable for voice (16 kbps)
-      let options: MediaRecorderOptions = { audioBitsPerSecond: 16000 };
+      const options: MediaRecorderOptions = { audioBitsPerSecond: 16000 };
       if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
         options.mimeType = 'audio/webm;codecs=opus';
       } else if (MediaRecorder.isTypeSupported('audio/webm')) {

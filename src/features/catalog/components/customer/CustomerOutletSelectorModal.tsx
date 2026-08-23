@@ -36,7 +36,7 @@ const CustomerOutletSelectorModal: React.FC<CustomerOutletSelectorModalProps> = 
     <Modal isOpen={isOpen} onClose={onClose} title="Select Outlet Location" size="md">
       <div className="p-4 space-y-3 pb-8">
         {brandOutlets.map(outlet => {
-          let displayDistance = outlet.distance;
+          const displayDistance = outlet.distance;
           return (
           <button
             key={outlet.id}

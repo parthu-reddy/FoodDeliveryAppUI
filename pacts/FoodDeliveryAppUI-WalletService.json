@@ -4,14 +4,14 @@
   },
   "interactions": [
     {
-      "description": "a request to get wallet balance",
+      "description": "a request to get a wallet by entity",
       "request": {
         "headers": {
-          "Authorization": "Bearer VALID_TOKEN"
+          "X-User-Id": "123e4567-e89b-12d3-a456-426614174000"
         },
         "matchingRules": {
           "header": {
-            "Authorization": {
+            "X-User-Id": {
               "combine": "AND",
               "matchers": [
                 {
@@ -22,32 +22,31 @@
           }
         },
         "method": "GET",
-        "path": "/api/v1/wallets/balance"
+        "path": "/api/v1/wallets/CUSTOMER/123e4567-e89b-12d3-a456-426614174000"
       },
       "response": {
         "body": {
-          "data": {
-            "balance": 1000.5,
-            "currency": "INR",
-            "walletId": "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "message": "Balance retrieved successfully",
-          "success": true
+          "balance": 1000.5,
+          "currency": "INR",
+          "entityId": "123e4567-e89b-12d3-a456-426614174000",
+          "entityType": "CUSTOMER",
+          "id": "7a1d5e90-3c22-4b6f-8a11-9d4c2e77b501",
+          "status": "ACTIVE"
         },
         "headers": {
           "Content-Type": "application/json"
         },
         "matchingRules": {
           "body": {
-            "$.data.balance": {
+            "$.balance": {
               "combine": "AND",
               "matchers": [
                 {
-                  "match": "number"
+                  "match": "decimal"
                 }
               ]
             },
-            "$.data.currency": {
+            "$.currency": {
               "combine": "AND",
               "matchers": [
                 {
@@ -55,7 +54,7 @@
                 }
               ]
             },
-            "$.data.walletId": {
+            "$.entityId": {
               "combine": "AND",
               "matchers": [
                 {
@@ -64,7 +63,7 @@
                 }
               ]
             },
-            "$.message": {
+            "$.entityType": {
               "combine": "AND",
               "matchers": [
                 {
@@ -72,7 +71,16 @@
                 }
               ]
             },
-            "$.success": {
+            "$.id": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "regex",
+                  "regex": "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+                }
+              ]
+            },
+            "$.status": {
               "combine": "AND",
               "matchers": [
                 {

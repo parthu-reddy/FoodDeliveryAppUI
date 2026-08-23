@@ -183,12 +183,14 @@ export default function RestaurantDashboard({
           setMasterItems([]);
         }
       }
-    } catch(e) {}
+    } catch {
+      // best effort: failure here must not break the dashboard render
+    }
   };
 
   // Listen for brand updates (KYC status) via SSE
   useEffect(() => {
-    let abortController = new AbortController();
+    const abortController = new AbortController();
     const hasPendingVerifications = brands.some(
       b => b.kycStatus === VerificationStatus.PENDING || b.pennyDropStatus === VerificationStatus.PENDING
     );

@@ -74,7 +74,9 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
         try {
           const audio = new Audio('/sounds/beep_short.wav');
           audio.play().catch(e => console.warn('Audio play blocked:', e));
-        } catch (e) {}
+        } catch {
+          // best effort: a notification sound is not worth surfacing
+        }
       }
     }
   }, [user?.id]);

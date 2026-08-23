@@ -312,7 +312,7 @@ export default function SharedSettingsView({
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
                 disabled={!!initialName}
-                className={!!initialName ? 'opacity-70 cursor-not-allowed' : 'focus:border-rose-500/50'}
+                className={initialName ? 'opacity-70 cursor-not-allowed' : 'focus:border-rose-500/50'}
               />
             </FormField>
             <FormField label="Email Address">
@@ -321,7 +321,7 @@ export default function SharedSettingsView({
                 value={editEmail}
                 onChange={(e) => setEditEmail(e.target.value)}
                 disabled={!!initialEmail}
-                className={!!initialEmail ? 'opacity-70 cursor-not-allowed' : 'focus:border-rose-500/50'}
+                className={initialEmail ? 'opacity-70 cursor-not-allowed' : 'focus:border-rose-500/50'}
               />
             </FormField>
             <FormField label="Phone Number">

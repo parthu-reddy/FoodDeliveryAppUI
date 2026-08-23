@@ -33,12 +33,12 @@ import { ErrorBoundary } from "@shared/ui";
 export default function AdminFleetMap() {
   return (
     <ErrorBoundary>
-      <_AdminFleetMap />
+      <AdminFleetMapInner />
     </ErrorBoundary>
   );
 }
 
-function _AdminFleetMap() {
+function AdminFleetMapInner() {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [mapInstance, setMapInstance] = useState<maplibregl.Map | null>(null);
 

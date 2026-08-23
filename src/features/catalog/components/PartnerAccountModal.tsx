@@ -139,7 +139,7 @@ export default function PartnerAccountModal({
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
                       disabled={!!initialName}
-                      className={!!initialName ? 'cursor-not-allowed bg-slate-100 dark:bg-slate-800' : 'bg-slate-50 dark:bg-slate-900'}
+                      className={initialName ? 'cursor-not-allowed bg-slate-100 dark:bg-slate-800' : 'bg-slate-50 dark:bg-slate-900'}
                     />
                   </FormField>
                   <FormField label="Phone Number">

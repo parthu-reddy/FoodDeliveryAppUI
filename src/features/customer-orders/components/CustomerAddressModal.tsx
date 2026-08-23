@@ -55,7 +55,7 @@ export default function CustomerAddressModal({
   const [isSearching, setIsSearching] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { showError } = useToast();
-  const { } = useConfig();
+  useConfig();
   const debouncedSearchQuery = useDebounce(addressSearchQuery, 500);
 
   useEffect(() => {

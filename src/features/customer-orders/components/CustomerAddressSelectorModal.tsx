@@ -34,7 +34,7 @@ const CustomerAddressSelectorModal: React.FC<CustomerAddressSelectorModalProps> 
   carts,
   clearCart
 }) => {
-  const { } = useConfig();
+  useConfig();
   const handleAddressSelect = (addr: string, lat?: number, lng?: number, id?: string) => {
     // If id is provided (saved address), check if it's different from current
     // If no id (GPS), check if the address string is different

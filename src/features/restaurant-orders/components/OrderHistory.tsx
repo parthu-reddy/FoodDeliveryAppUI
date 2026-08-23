@@ -35,9 +35,10 @@ export function OrderHistory({ restaurantId, onOpenChat }: { restaurantId: strin
             
             let parsedItems = o.items || [];
             if (o.itemsJson) {
-                try { parsedItems = JSON.parse(o.itemsJson); } catch (e) {}
+                // malformed itemsJson falls back to o.items rather than failing the row
+                try { parsedItems = JSON.parse(o.itemsJson); } catch { /* keep fallback */ }
             }
-            let calculatedTotal = parsedItems.reduce((acc: number, item: any) => acc + (item.item?.price || item.price || 0) * (item.quantity || 1), 0);
+            const calculatedTotal = parsedItems.reduce((acc: number, item: any) => acc + (item.item?.price || item.price || 0) * (item.quantity || 1), 0);
             
             return {
               ...o, 

@@ -50,7 +50,9 @@ export const getUserProfile = (): any | null => {
       }
       
       return memoryProfile;
-    } catch {}
+    } catch {
+      // a corrupt/absent stored profile is expected; fall through to the null return
+    }
   }
 
   // Fallback: decode from JWT
@@ -73,9 +75,9 @@ export const getUserProfile = (): any | null => {
 
 export const decodeJwt = (token: string) => {
   try {
-    let base64Url = token.split('.')[1];
-    let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    let jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
         return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
     }).join(''));
     return JSON.parse(jsonPayload);

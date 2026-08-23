@@ -32,16 +32,17 @@ export const orderSchema = z.object({
   payout: z.number().optional(),
   itemsJson: z.string().optional(),
 }).passthrough().transform((raw: any) => {
-  let s = raw.status?.toUpperCase() || '';
-  let d = raw.deliveryStatus?.toUpperCase() || '';
+  const s = raw.status?.toUpperCase() || '';
+  const d = raw.deliveryStatus?.toUpperCase() || '';
   
   let parsedItems = raw.items || [];
   if (raw.itemsJson) {
-      try { parsedItems = JSON.parse(raw.itemsJson); } catch (e) {}
+      // malformed itemsJson falls back to raw.items rather than failing the parse
+      try { parsedItems = JSON.parse(raw.itemsJson); } catch { /* keep fallback */ }
   }
 
   // Calculate totals if missing
-  let calculatedTotal = parsedItems.reduce((acc: number, item: any) => acc + (item.item?.price || item.price || 0) * (item.quantity || 1), 0);
+  const calculatedTotal = parsedItems.reduce((acc: number, item: any) => acc + (item.item?.price || item.price || 0) * (item.quantity || 1), 0);
 
   return {
     ...raw,

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { X, User, Phone, Mail, Car, Image as ImageIcon, AlertCircle, LogOut, ShieldCheck, FileText, CreditCard, CheckCircle } from 'lucide-react';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from "@/lib/zodiosClients";
+import { X, User, Phone, Mail, Car, Image as ImageIcon, AlertCircle, LogOut, ShieldCheck, CheckCircle } from 'lucide-react';
+import { deliveryApi, identityApi, walletApi } from "@/lib/zodiosClients";
 import { useToast } from '@/contexts/ToastContext';
 import ImageUploadField from "@features/kyc/components/ImageUploadField";
 import DocumentUploadField from "@features/kyc/components/DocumentUploadField";
@@ -298,7 +298,7 @@ export default function RiderSettingsView({
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
               disabled={!!initialName}
-              className={`w-full px-4 py-3 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md text-sm font-medium text-slate-900 dark:text-[#f0ede6] outline-none transition-colors ${!!initialName ? 'opacity-70 cursor-not-allowed' : 'focus:border-rose-500/50 focus:bg-white/40 dark:focus:bg-slate-900/40'}`}
+              className={`w-full px-4 py-3 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md text-sm font-medium text-slate-900 dark:text-[#f0ede6] outline-none transition-colors ${initialName ? 'opacity-70 cursor-not-allowed' : 'focus:border-rose-500/50 focus:bg-white/40 dark:focus:bg-slate-900/40'}`}
             />
           </div>
 
@@ -313,7 +313,7 @@ export default function RiderSettingsView({
               value={editEmail}
               onChange={(e) => setEditEmail(e.target.value)}
               disabled={!!initialEmail}
-              className={`w-full px-4 py-3 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md text-sm font-medium text-slate-900 dark:text-[#f0ede6] outline-none transition-colors ${!!initialEmail ? 'opacity-70 cursor-not-allowed' : 'focus:border-rose-500/50 focus:bg-white/40 dark:focus:bg-slate-900/40'}`}
+              className={`w-full px-4 py-3 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md text-sm font-medium text-slate-900 dark:text-[#f0ede6] outline-none transition-colors ${initialEmail ? 'opacity-70 cursor-not-allowed' : 'focus:border-rose-500/50 focus:bg-white/40 dark:focus:bg-slate-900/40'}`}
             />
           </div>
 

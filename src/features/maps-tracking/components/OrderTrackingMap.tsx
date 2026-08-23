@@ -18,13 +18,13 @@ import { ErrorBoundary } from "@shared/ui/ErrorBoundary";
 export default function OrderTrackingMap(props: { order: Order; enableLiveTracking?: boolean }) {
   return (
     <ErrorBoundary>
-      <_OrderTrackingMap {...props} />
+      <OrderTrackingMapInner {...props} />
     </ErrorBoundary>
   );
 }
 
-function _OrderTrackingMap({ order, enableLiveTracking = false }: { order: Order; enableLiveTracking?: boolean }) {
-  const { } = useConfig();
+function OrderTrackingMapInner({ order, enableLiveTracking = false }: { order: Order; enableLiveTracking?: boolean }) {
+  useConfig();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [mapInstance, setMapInstance] = useState<any>(null);
   const { showError } = useToast();

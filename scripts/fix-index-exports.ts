@@ -7,7 +7,7 @@ const services = fs.readdirSync(schemasDir).filter(f => fs.statSync(path.join(sc
 for (const service of services) {
   const indexFile = path.join(schemasDir, service, 'index.ts');
   if (fs.existsSync(indexFile)) {
-    let content = fs.readFileSync(indexFile, 'utf8');
+    const content = fs.readFileSync(indexFile, 'utf8');
     const facadeName = `create${service.charAt(0).toUpperCase() + service.slice(1)}Facade`;
     const exportLine = `export { ${facadeName} as createApiClient } from './facade';\n`;
     if (!content.includes(exportLine)) {
