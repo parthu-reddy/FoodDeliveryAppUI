@@ -1,7 +1,14 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { ApiResponsePageOrderResponse } from "./common";
 import { pageable } from "./common";
+import { PageOrderResponse } from "./common";
+import { OrderResponse } from "./common";
+import { OrderItemResponse } from "./common";
+import { SortObject } from "./common";
+import { PageableObject } from "./common";
+import { ApiResponseListOrderResponse } from "./common";
 
 const endpoints = makeApi([
   {
@@ -21,14 +28,14 @@ const endpoints = makeApi([
         schema: pageable,
       },
     ],
-    response: z.any(),
+    response: ApiResponsePageOrderResponse,
   },
   {
     method: "get",
     path: "/api/v1/delivery/orders/available",
     alias: "getAvailableOrders",
     requestFormat: "json",
-    response: z.any(),
+    response: ApiResponseListOrderResponse,
   },
   {
     method: "get",
@@ -42,7 +49,7 @@ const endpoints = makeApi([
         schema: pageable,
       },
     ],
-    response: z.any(),
+    response: ApiResponsePageOrderResponse,
   },
 ]);
 

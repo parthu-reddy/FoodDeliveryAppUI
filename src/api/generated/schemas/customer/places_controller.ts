@@ -1,6 +1,22 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { ApiResponseMapStringObject } from "./common";
+
+const ApiResponseListMapStringObject = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: z.array(z.record(z.object({}).partial().passthrough())),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+
+export const schemas = {
+  ApiResponseListMapStringObject,
+};
+
 const endpoints = makeApi([
   {
     method: "get",
@@ -19,7 +35,7 @@ const endpoints = makeApi([
         schema: z.number(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseMapStringObject,
   },
   {
     method: "get",
@@ -33,7 +49,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseListMapStringObject,
   },
 ]);
 

@@ -1,6 +1,8 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { ApiResponseObject } from "./common";
+
 const RCRequest = z
   .object({ registrationNumber: z.string(), documentUrl: z.string() })
   .passthrough();
@@ -14,11 +16,21 @@ const BankRequest = z
     kycFullName: z.string(),
   })
   .passthrough();
+const ApiResponseMapStringString = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: z.record(z.string()),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
 
 export const schemas = {
   RCRequest,
   DLRequest,
   BankRequest,
+  ApiResponseMapStringString,
 };
 
 const endpoints = makeApi([
@@ -34,7 +46,7 @@ const endpoints = makeApi([
         schema: RCRequest,
       },
     ],
-    response: z.any(),
+    response: ApiResponseObject,
   },
   {
     method: "post",
@@ -48,7 +60,7 @@ const endpoints = makeApi([
         schema: DLRequest,
       },
     ],
-    response: z.any(),
+    response: ApiResponseObject,
   },
   {
     method: "post",
@@ -62,7 +74,7 @@ const endpoints = makeApi([
         schema: z.object({ selfieUrl: z.string() }).passthrough(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseObject,
   },
   {
     method: "post",
@@ -76,7 +88,7 @@ const endpoints = makeApi([
         schema: BankRequest,
       },
     ],
-    response: z.any(),
+    response: ApiResponseObject,
   },
   {
     method: "get",
@@ -95,14 +107,14 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseMapStringString,
   },
   {
     method: "get",
     path: "/api/delivery/verification/status",
     alias: "getVerificationStatus",
     requestFormat: "json",
-    response: z.any(),
+    response: ApiResponseObject,
   },
   {
     method: "get",
@@ -116,7 +128,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseMapStringString,
   },
 ]);
 

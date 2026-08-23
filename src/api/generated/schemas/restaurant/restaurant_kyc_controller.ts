@@ -1,6 +1,8 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { ApiResponseVoid } from "./common";
+
 const GstinRequest = z
   .object({
     brandId: z.string().uuid(),
@@ -28,11 +30,21 @@ const VerificationCallbackRequest = z
   })
   .partial()
   .passthrough();
+const ApiResponseMapStringString = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: z.record(z.string()),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
 
 export const schemas = {
   GstinRequest,
   BankAccountRequest,
   VerificationCallbackRequest,
+  ApiResponseMapStringString,
 };
 
 const endpoints = makeApi([
@@ -48,7 +60,7 @@ const endpoints = makeApi([
         schema: GstinRequest,
       },
     ],
-    response: z.any(),
+    response: ApiResponseVoid,
   },
   {
     method: "post",
@@ -62,7 +74,7 @@ const endpoints = makeApi([
         schema: BankAccountRequest,
       },
     ],
-    response: z.any(),
+    response: ApiResponseVoid,
   },
   {
     method: "post",
@@ -81,7 +93,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
   {
     method: "get",
@@ -100,7 +112,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseMapStringString,
   },
 ]);
 

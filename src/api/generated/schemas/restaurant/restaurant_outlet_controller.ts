@@ -1,7 +1,11 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { ApiResponseVoid } from "./common";
 import { LocalTime } from "./common";
+import { ApiResponseMapStringObject } from "./common";
+import { SortObject } from "./common";
+import { PageableObject } from "./common";
 
 const TimingRequest = z
   .object({ openingTime: LocalTime, closingTime: LocalTime })
@@ -25,11 +29,103 @@ const OutletOnboardRequest = z
     tags: z.string().optional(),
   })
   .passthrough();
+const OutletTiming = z
+  .object({
+    id: z.string().uuid(),
+    openingTime: LocalTime,
+    closingTime: LocalTime,
+    createdAt: z.string().datetime({ offset: true }),
+    updatedAt: z.string().datetime({ offset: true }),
+    version: z.number().int(),
+  })
+  .partial()
+  .passthrough();
+const Outlet = z
+  .object({
+    id: z.string().uuid(),
+    brandId: z.string().uuid(),
+    name: z.string(),
+    fssaiLicenseNumber: z.string(),
+    bannerUrl: z.string(),
+    timings: z.array(OutletTiming),
+    isActive: z.boolean(),
+    defaultPrepTimeSeconds: z.number().int(),
+    cuisine: z.string(),
+    rating: z.number(),
+    reviewsCount: z.number().int(),
+    deliveryTime: z.number().int(),
+    deliveryFee: z.number(),
+    tags: z.string(),
+    createdAt: z.string().datetime({ offset: true }),
+    updatedAt: z.string().datetime({ offset: true }),
+    version: z.number().int(),
+  })
+  .partial()
+  .passthrough();
+const ApiResponseOutlet = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: Outlet,
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+const ApiResponseListOutlet = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: z.array(Outlet),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+const PageMapStringObject = z
+  .object({
+    totalPages: z.number().int(),
+    totalElements: z.number().int(),
+    size: z.number().int(),
+    content: z.array(z.record(z.object({}).partial().passthrough())),
+    number: z.number().int(),
+    sort: z.array(SortObject),
+    first: z.boolean(),
+    pageable: PageableObject,
+    last: z.boolean(),
+    numberOfElements: z.number().int(),
+    empty: z.boolean(),
+  })
+  .partial()
+  .passthrough();
+const ApiResponsePageMapStringObject = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: PageMapStringObject,
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+const ApiResponseListMapStringObject = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: z.array(z.record(z.object({}).partial().passthrough())),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
 
 export const schemas = {
   TimingRequest,
   OutletTimingsUpdateRequest,
   OutletOnboardRequest,
+  OutletTiming,
+  Outlet,
+  ApiResponseOutlet,
+  ApiResponseListOutlet,
+  PageMapStringObject,
+  ApiResponsePageMapStringObject,
+  ApiResponseListMapStringObject,
 };
 
 const endpoints = makeApi([
@@ -50,7 +146,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseVoid,
   },
   {
     method: "put",
@@ -69,7 +165,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseVoid,
   },
   {
     method: "put",
@@ -90,7 +186,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseVoid,
   },
   {
     method: "get",
@@ -104,7 +200,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseListOutlet,
   },
   {
     method: "post",
@@ -123,7 +219,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseOutlet,
   },
   {
     method: "get",
@@ -137,7 +233,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseMapStringObject,
   },
   {
     method: "get",
@@ -161,7 +257,7 @@ const endpoints = makeApi([
         schema: z.number().optional().default(5),
       },
     ],
-    response: z.any(),
+    response: ApiResponseListMapStringObject,
   },
   {
     method: "get",
@@ -190,14 +286,14 @@ const endpoints = makeApi([
         schema: z.number().optional().default(5),
       },
     ],
-    response: z.any(),
+    response: ApiResponseListMapStringObject,
   },
   {
     method: "get",
     path: "/api/v1/outlets",
     alias: "getOutlets",
     requestFormat: "json",
-    response: z.any(),
+    response: ApiResponseListOutlet,
   },
   {
     method: "get",
@@ -216,7 +312,7 @@ const endpoints = makeApi([
         schema: z.number().int().optional().default(100),
       },
     ],
-    response: z.any(),
+    response: ApiResponsePageMapStringObject,
   },
 ]);
 

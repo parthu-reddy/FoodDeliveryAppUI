@@ -1,7 +1,11 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { PageOrder } from "./common";
 import { pageable } from "./common";
+import { Order } from "./common";
+import { SortObject } from "./common";
+import { PageableObject } from "./common";
 
 const PartialRefundRequest = z
   .object({
@@ -40,7 +44,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: z.record(z.string()),
   },
   {
     method: "post",
@@ -59,7 +63,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: z.record(z.string()),
   },
   {
     method: "post",
@@ -73,7 +77,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: z.record(z.string()),
   },
   {
     method: "post",
@@ -92,7 +96,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: z.record(z.string()),
   },
   {
     method: "get",
@@ -111,7 +115,7 @@ const endpoints = makeApi([
         schema: pageable,
       },
     ],
-    response: z.any(),
+    response: PageOrder,
   },
   {
     method: "get",
@@ -125,7 +129,7 @@ const endpoints = makeApi([
         schema: pageable,
       },
     ],
-    response: z.any(),
+    response: PageOrder,
   },
   {
     method: "get",
@@ -144,7 +148,7 @@ const endpoints = makeApi([
         schema: z.number().int().optional().default(50),
       },
     ],
-    response: z.any(),
+    response: PageOrder,
   },
 ]);
 

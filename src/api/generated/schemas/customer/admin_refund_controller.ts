@@ -1,6 +1,11 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { SupportTicket } from "./common";
+import { PageSupportTicket } from "./common";
+import { SortObject } from "./common";
+import { PageableObject } from "./common";
+
 const ResolveRequest = z
   .object({ approved: z.boolean(), notes: z.string(), faultType: z.string() })
   .partial()
@@ -28,7 +33,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: SupportTicket,
   },
   {
     method: "post",
@@ -52,7 +57,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: SupportTicket,
   },
   {
     method: "get",
@@ -76,7 +81,7 @@ const endpoints = makeApi([
         schema: z.string().optional(),
       },
     ],
-    response: z.any(),
+    response: PageSupportTicket,
   },
 ]);
 

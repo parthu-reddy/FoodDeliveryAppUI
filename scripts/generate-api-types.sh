@@ -31,4 +31,7 @@ for entry in "${SERVICES[@]}"; do
   npx openapi-zod-client "$spec" -o "$SCHEMA_DIR/${name}" --export-schemas --group-strategy tag-file
 done
 
+# tag-file grouping drops schemas shared between tags; restore them before anything imports these
+node scripts/fix-missing-schemas.mjs
+
 echo "Done! Generated types in $OUT_DIR and schemas in $SCHEMA_DIR"

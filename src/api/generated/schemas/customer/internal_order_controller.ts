@@ -1,7 +1,14 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { ApiResponseString } from "./common";
+import { OrderResponse } from "./common";
+import { OrderItemResponse } from "./common";
+import { PageOrder } from "./common";
 import { pageable } from "./common";
+import { Order } from "./common";
+import { SortObject } from "./common";
+import { PageableObject } from "./common";
 
 const endpoints = makeApi([
   {
@@ -21,7 +28,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseString,
   },
   {
     method: "get",
@@ -35,7 +42,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: z.array(z.string()),
   },
   {
     method: "get",
@@ -49,14 +56,14 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: OrderResponse,
   },
   {
     method: "get",
     path: "/api/v1/internal/orders/unassigned",
     alias: "getUnassignedOrders",
     requestFormat: "json",
-    response: z.any(),
+    response: z.array(Order),
   },
   {
     method: "get",
@@ -80,7 +87,7 @@ const endpoints = makeApi([
         schema: pageable,
       },
     ],
-    response: z.any(),
+    response: PageOrder,
   },
   {
     method: "get",
@@ -99,7 +106,7 @@ const endpoints = makeApi([
         schema: pageable,
       },
     ],
-    response: z.any(),
+    response: PageOrder,
   },
 ]);
 

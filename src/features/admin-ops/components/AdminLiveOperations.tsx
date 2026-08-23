@@ -6,6 +6,7 @@ import { getFriendlyStatusMessage } from '@features/customer-orders/model/status
 import { Button, Input } from '@shared/ui';
 import { Navigation, Package, Truck } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { asUntyped, WirePage } from '../../../lib/untypedResponse';
 
 const AdminAssignmentMap = React.lazy(() => import("@features/maps-tracking/components/AdminAssignmentMap"));
 
@@ -20,7 +21,7 @@ export default function AdminLiveOperations() {
   const { data: activeOrdersResponse, refetch: fetchActiveOrders } = usePolling({
     fetchFn: async () => {
       const res = await customerApi.adminOrder.get('/api/v1/internal/admin/orders/active-all', { queries: { page } });
-      return res.data?.data || res.data || res;
+      return res;
     },
     intervalMs: 15000,
     enabled: true
@@ -29,10 +30,11 @@ export default function AdminLiveOperations() {
   const [activeOrders, setActiveOrders] = useState<any[]>([]);
   useEffect(() => {
       if (activeOrdersResponse) {
-          const content = activeOrdersResponse.content || activeOrdersResponse.data?.content || (Array.isArray(activeOrdersResponse) ? activeOrdersResponse : []);
+          const page = asUntyped<WirePage<unknown>>(activeOrdersResponse);
+          const content = page.content ?? (Array.isArray(activeOrdersResponse) ? activeOrdersResponse : []);
           setActiveOrders(Array.isArray(content) ? content : []);
-          if (activeOrdersResponse.totalPages !== undefined) {
-              setTotalPages(activeOrdersResponse.totalPages);
+          if (page.totalPages !== undefined) {
+              setTotalPages(page.totalPages);
           }
       }
   }, [activeOrdersResponse]);
@@ -53,7 +55,7 @@ export default function AdminLiveOperations() {
             }
         }
         const res = await deliveryApi.adminDelivery.get('/api/v1/internal/admin/delivery/drivers/available-with-location', { queries });
-        const content = res.data?.data || res.data || (Array.isArray(res) ? res : res.data);
+        const content = res;
         return Array.isArray(content) ? content : [];
     },
     intervalMs: 15000,

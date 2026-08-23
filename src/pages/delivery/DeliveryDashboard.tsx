@@ -145,17 +145,15 @@ export default function DeliveryDashboard({
     deliveryApi.deliveryExecutive
       .get("/api/delivery/profile", { queries: { phoneNumber: "" }, headers: { "X-User-Id": "" } })
       .then((data) => {
-        if (data.success) {
+        if (data.success && data.data) {
           const profile = data.data;
-          if (!riderName) setRiderName(profile.fullName || profile.name || "");
+          if (!riderName) setRiderName(profile.fullName || "");
           setVehicleNumber(profile.vehicleNumber || "");
           setPhotoUrl(profile.photoUrl || "");
           setIsOnline(
-            profile.isOnline ||
-              profile.status === "ONLINE" ||
-              profile.status === "ON_DELIVERY"
+            profile.status === "ONLINE" || profile.status === "ON_DELIVERY"
           );
-          setRiderId(profile.id);
+          setRiderId(profile.id ?? "");
 
           if (!profile.vehicleNumber || !profile.fullName) {
             setIsProfileMandatory(true);
@@ -735,9 +733,9 @@ export default function DeliveryDashboard({
                 deliveryApi.deliveryExecutive
                   .get("/api/delivery/profile", { queries: { phoneNumber: "" }, headers: { "X-User-Id": "" } })
                   .then((data) => {
-                    if (data.success) {
+                    if (data.success && data.data) {
                       const profile = data.data;
-                      setRiderName(profile.fullName || profile.name || "");
+                      setRiderName(profile.fullName || "");
                       setVehicleNumber(profile.vehicleNumber || "");
                       setPhotoUrl(profile.photoUrl || "");
 

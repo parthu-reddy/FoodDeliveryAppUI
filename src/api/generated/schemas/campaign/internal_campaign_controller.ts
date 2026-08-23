@@ -1,5 +1,6 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
+import { CampaignPacingDTO } from "./common";
 
 const endpoints = makeApi([
   {
@@ -14,7 +15,7 @@ const endpoints = makeApi([
         schema: z.array(z.string()),
       },
     ],
-    response: z.any(),
+    response: z.record(CampaignPacingDTO),
   },
 ]);
 

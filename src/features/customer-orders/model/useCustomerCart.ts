@@ -2,6 +2,7 @@ import { getUserProfile } from '@/lib/tokenStore';
 import { customerApi } from '@/lib/zodiosClients';
 import { CartItem, MenuItem, Order, Restaurant } from '@/types';
 import { useEffect, useRef, useState } from 'react';
+import { asUntyped } from '../../../lib/untypedResponse';
 
 interface UseCustomerCartOptions {
   locationKey: string;
@@ -280,7 +281,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
 
     try {
       const availRes = await customerApi.customerRestaurant.get('/api/v1/restaurants/:id/delivery-availability', { params: { id: restaurantId } });
-      if (availRes.data && availRes.data.available === false) {
+      if (asUntyped<boolean>(availRes) === false) {
         setGlobalError("This restaurant is currently out of your delivery zone.");
         setTimeout(() => setGlobalError(null), 3000);
         return;

@@ -1,6 +1,8 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { ApiResponseString } from "./common";
+
 const endpoints = makeApi([
   {
     method: "get",
@@ -19,7 +21,7 @@ const endpoints = makeApi([
         schema: z.string().optional().default("CUSTOMER"),
       },
     ],
-    response: z.any(),
+    response: ApiResponseString,
   },
 ]);
 

@@ -1,6 +1,67 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+const WalletTransaction = z
+  .object({
+    id: z.string().uuid(),
+    walletId: z.string().uuid(),
+    amount: z.number(),
+    transactionType: z.enum(["CREDIT", "DEBIT", "HOLD", "RELEASE", "REFUND"]),
+    referenceId: z.string(),
+    description: z.string(),
+    createdAt: z.string().datetime({ offset: true }),
+    metadata: z.string(),
+  })
+  .partial()
+  .passthrough();
+const SortObject = z
+  .object({
+    direction: z.string(),
+    nullHandling: z.string(),
+    ascending: z.boolean(),
+    property: z.string(),
+    ignoreCase: z.boolean(),
+  })
+  .partial()
+  .passthrough();
+const PageableObject = z
+  .object({
+    offset: z.number().int(),
+    sort: z.array(SortObject),
+    paged: z.boolean(),
+    pageNumber: z.number().int(),
+    pageSize: z.number().int(),
+    unpaged: z.boolean(),
+  })
+  .partial()
+  .passthrough();
+const PageWalletTransaction = z
+  .object({
+    totalPages: z.number().int(),
+    totalElements: z.number().int(),
+    size: z.number().int(),
+    content: z.array(WalletTransaction),
+    number: z.number().int(),
+    sort: z.array(SortObject),
+    pageable: PageableObject,
+    first: z.boolean(),
+    last: z.boolean(),
+    numberOfElements: z.number().int(),
+    empty: z.boolean(),
+  })
+  .partial()
+  .passthrough();
+const WalletDto = z
+  .object({
+    id: z.string().uuid(),
+    entityId: z.string().uuid(),
+    entityType: z.enum(["CUSTOMER", "ADVERTISER", "RESTAURANT", "DRIVER"]),
+    balance: z.number(),
+    currency: z.string(),
+    status: z.enum(["ACTIVE", "SUSPENDED", "CLOSED"]),
+  })
+  .partial()
+  .passthrough();
 const CreateWalletRequest = z
   .object({
     entityId: z.string().uuid(),
@@ -19,6 +80,11 @@ const TransactionRequest = z
   .passthrough();
 
 export const schemas = {
+  WalletTransaction,
+  SortObject,
+  PageableObject,
+  PageWalletTransaction,
+  WalletDto,
   CreateWalletRequest,
   TransactionRequest,
 };
@@ -36,7 +102,7 @@ const endpoints = makeApi([
         schema: CreateWalletRequest,
       },
     ],
-    response: z.any(),
+    response: WalletDto,
   },
   {
     method: "post",
@@ -60,7 +126,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: WalletDto,
   },
   {
     method: "post",
@@ -84,7 +150,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: WalletDto,
   },
   {
     method: "get",
@@ -108,7 +174,7 @@ const endpoints = makeApi([
         schema: z.string().optional(),
       },
     ],
-    response: z.any(),
+    response: WalletDto,
   },
   {
     method: "get",
@@ -142,7 +208,7 @@ const endpoints = makeApi([
         schema: z.number().int().optional().default(20),
       },
     ],
-    response: z.any(),
+    response: PageWalletTransaction,
   },
 ]);
 

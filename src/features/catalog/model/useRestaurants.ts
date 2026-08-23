@@ -1,6 +1,7 @@
 import { restaurantApi } from '@/lib/zodiosClients';
 import { Restaurant } from '@/types';
 import { useEffect, useState } from 'react';
+import { fromContract } from '../../../lib/untypedResponse';
 
 interface UseRestaurantsOptions {
   deliveryLat: number | null;
@@ -23,7 +24,7 @@ export function useRestaurants({ deliveryLat, deliveryLng, radiusKm = 10.0 }: Us
         signal: controller.signal 
       })
         .then(res => {
-          if (res.data) setRestaurants(res.data);
+          if (res) setRestaurants(fromContract(res));
         })
         .catch(err => {
           if (err.name === 'AbortError' || err.code === 'ERR_CANCELED') {

@@ -5,6 +5,7 @@ import { customerApi, deliveryApi } from "@/lib/zodiosClients";
 import { Button, Textarea } from '@shared/ui';
 import { Shield, Truck } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { asUntyped, WirePage } from '../../../lib/untypedResponse';
 
 export default function AdminManualInterventions() {
   const { showSuccess, showError } = useToast();
@@ -22,7 +23,7 @@ export default function AdminManualInterventions() {
   const { data: interventionsResponse, refetch: fetchInterventions } = usePolling({
     fetchFn: async () => {
       const res = await customerApi.adminOrderManual.get('/api/v1/internal/admin/orders/intervention', { queries: { page: interventionsPage } });
-      return res.data?.data || res.data || res;
+      return res;
     },
     intervalMs: 15000,
     enabled: true
@@ -31,7 +32,7 @@ export default function AdminManualInterventions() {
   const [interventions, setInterventions] = useState<any[]>([]);
   useEffect(() => {
       if (interventionsResponse) {
-          const content = interventionsResponse.content || interventionsResponse.data?.content || (Array.isArray(interventionsResponse) ? interventionsResponse : []);
+          const content = asUntyped<WirePage<unknown>>(interventionsResponse).content ?? (Array.isArray(interventionsResponse) ? interventionsResponse : []);
           setInterventions(Array.isArray(content) ? content : []);
           if (interventionsResponse.totalPages !== undefined) {
               setInterventionsTotalPages(interventionsResponse.totalPages);
@@ -43,7 +44,7 @@ export default function AdminManualInterventions() {
   const { data: failedRefundsResponse, refetch: fetchFailedRefunds } = usePolling({
     fetchFn: async () => {
       const res = await customerApi.adminDlq.get('/api/v1/internal/admin/orders/dlq/refunds', { queries: { page: refundsPage } });
-      return res.data?.data || res.data || res;
+      return res;
     },
     intervalMs: 15000,
     enabled: true
@@ -52,7 +53,7 @@ export default function AdminManualInterventions() {
   const [failedRefunds, setFailedRefunds] = useState<any[]>([]);
   useEffect(() => {
       if (failedRefundsResponse) {
-          const content = failedRefundsResponse.content || failedRefundsResponse.data?.content || (Array.isArray(failedRefundsResponse) ? failedRefundsResponse : []);
+          const content = asUntyped<WirePage<unknown>>(failedRefundsResponse).content ?? (Array.isArray(failedRefundsResponse) ? failedRefundsResponse : []);
           setFailedRefunds(Array.isArray(content) ? content : []);
           if (failedRefundsResponse.totalPages !== undefined) {
               setRefundsTotalPages(failedRefundsResponse.totalPages);
@@ -64,7 +65,7 @@ export default function AdminManualInterventions() {
   const { data: driversList, refetch: fetchAvailableDrivers } = usePolling({
     fetchFn: async () => {
       const res = await deliveryApi.adminDelivery.get('/api/v1/internal/admin/delivery/drivers/available-with-location', {});
-      const content = res.data?.data || res.data || (Array.isArray(res) ? res : res.data);
+      const content = res;
       return Array.isArray(content) ? content : [];
     },
     intervalMs: 15000,

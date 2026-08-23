@@ -68,7 +68,7 @@ const endpoints = makeApi([
         schema: DispatchOrderRequest,
       },
     ],
-    response: z.any(),
+    response: z.object({}).partial().passthrough(),
   },
   {
     method: "post",
@@ -82,7 +82,7 @@ const endpoints = makeApi([
         schema: SetAvailabilityRequest,
       },
     ],
-    response: z.any(),
+    response: z.object({}).partial().passthrough(),
   },
   {
     method: "get",
@@ -101,7 +101,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.any(),
+    response: z.object({}).partial().passthrough(),
   },
   {
     method: "post",
@@ -115,7 +115,7 @@ const endpoints = makeApi([
         schema: UpdateLocationRequest,
       },
     ],
-    response: z.any(),
+    response: z.object({}).partial().passthrough(),
   },
   {
     method: "post",
@@ -129,7 +129,7 @@ const endpoints = makeApi([
         schema: SetAvailabilityRequest,
       },
     ],
-    response: z.any(),
+    response: z.object({}).partial().passthrough(),
   },
   {
     method: "get",
@@ -148,7 +148,7 @@ const endpoints = makeApi([
         schema: z.number(),
       },
     ],
-    response: z.any(),
+    response: z.object({}).partial().passthrough(),
   },
   {
     method: "get",
@@ -172,7 +172,7 @@ const endpoints = makeApi([
         schema: z.number().optional(),
       },
     ],
-    response: z.any(),
+    response: z.object({}).partial().passthrough(),
   },
   {
     method: "get",
@@ -191,7 +191,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.any(),
+    response: z.object({}).partial().passthrough(),
   },
   {
     method: "get",
@@ -210,7 +210,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.any(),
+    response: z.object({}).partial().passthrough(),
   },
   {
     method: "get",
@@ -239,7 +239,7 @@ const endpoints = makeApi([
         schema: z.number().optional().default(5),
       },
     ],
-    response: z.any(),
+    response: z.object({}).partial().passthrough(),
   },
   {
     method: "get",
@@ -253,7 +253,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.any(),
+    response: z.object({}).partial().passthrough(),
   },
   {
     method: "get",
@@ -282,14 +282,14 @@ const endpoints = makeApi([
         schema: z.number().optional().default(5),
       },
     ],
-    response: z.any(),
+    response: z.object({}).partial().passthrough(),
   },
   {
     method: "get",
     path: "/api/config/maps-key",
     alias: "getMapsKey",
     requestFormat: "json",
-    response: z.any(),
+    response: z.object({}).partial().passthrough(),
   },
   {
     method: "delete",
@@ -308,7 +308,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.any(),
+    response: z.object({}).partial().passthrough(),
   },
 ]);
 

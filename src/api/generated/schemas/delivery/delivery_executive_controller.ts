@@ -1,6 +1,27 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { DeliveryExecutive } from "./common";
+import { ApiResponseObject } from "./common";
+
+const ApiResponseDeliveryExecutive = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: DeliveryExecutive,
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+const ApiResponseVoid = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: z.object({}).partial().passthrough(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
 const ToggleStatusRequest = z
   .object({
     driverId: z
@@ -44,11 +65,23 @@ const UpdateOrderStatusRequest = z
     goOfflineAfter: z.boolean().optional(),
   })
   .passthrough();
+const ApiResponseListMapStringObject = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: z.array(z.record(z.object({}).partial().passthrough())),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
 
 export const schemas = {
+  ApiResponseDeliveryExecutive,
+  ApiResponseVoid,
   ToggleStatusRequest,
   DeliveryOnboardRequest,
   UpdateOrderStatusRequest,
+  ApiResponseListMapStringObject,
 };
 
 const endpoints = makeApi([
@@ -64,7 +97,7 @@ const endpoints = makeApi([
         schema: ToggleStatusRequest,
       },
     ],
-    response: z.any(),
+    response: ApiResponseVoid,
   },
   {
     method: "post",
@@ -78,7 +111,7 @@ const endpoints = makeApi([
         schema: DeliveryOnboardRequest,
       },
     ],
-    response: z.any(),
+    response: ApiResponseDeliveryExecutive,
   },
   {
     method: "post",
@@ -102,7 +135,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseObject,
   },
   {
     method: "post",
@@ -121,7 +154,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseVoid,
   },
   {
     method: "post",
@@ -140,7 +173,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseVoid,
   },
   {
     method: "post",
@@ -159,7 +192,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseVoid,
   },
   {
     method: "get",
@@ -173,7 +206,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseDeliveryExecutive,
   },
   {
     method: "get",
@@ -187,7 +220,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseListMapStringObject,
   },
   {
     method: "get",
@@ -206,7 +239,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
 ]);
 

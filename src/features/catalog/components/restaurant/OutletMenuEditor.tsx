@@ -210,7 +210,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
       return;
     }
 
-    await restaurantApi.catalog.post('/api/v1/outlets/:outletId/menu-overrides/:masterMenuItemId', overridePayload, { params: { outletId: selectedOutlet, masterMenuItemId: newMaster.data.id } });
+    await restaurantApi.catalog.post('/api/v1/outlets/:outletId/menu-overrides/:masterMenuItemId', overridePayload, { params: { outletId: selectedOutlet, masterMenuItemId: newMaster.data?.id ?? '' } });
     setAddingItemToCatId(null);
     setIsAddingItem(false);
     setMName(""); setMPrice(""); setMPackingCharge("0"); setMPrepTime("15"); setMDesc(""); setMCatId('');

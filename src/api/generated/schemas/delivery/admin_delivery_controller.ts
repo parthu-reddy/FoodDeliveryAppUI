@@ -1,6 +1,72 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { DeliveryExecutive } from "./common";
+
+const SortObject = z
+  .object({
+    direction: z.string(),
+    nullHandling: z.string(),
+    ascending: z.boolean(),
+    property: z.string(),
+    ignoreCase: z.boolean(),
+  })
+  .partial()
+  .passthrough();
+const PageableObject = z
+  .object({
+    offset: z.number().int(),
+    sort: z.array(SortObject),
+    paged: z.boolean(),
+    pageNumber: z.number().int(),
+    pageSize: z.number().int(),
+    unpaged: z.boolean(),
+  })
+  .partial()
+  .passthrough();
+const PageDeliveryExecutive = z
+  .object({
+    totalElements: z.number().int(),
+    totalPages: z.number().int(),
+    size: z.number().int(),
+    content: z.array(DeliveryExecutive),
+    number: z.number().int(),
+    sort: z.array(SortObject),
+    first: z.boolean(),
+    pageable: PageableObject,
+    last: z.boolean(),
+    numberOfElements: z.number().int(),
+    empty: z.boolean(),
+  })
+  .partial()
+  .passthrough();
+const DriverLocationDTO = z
+  .object({
+    id: z.string().uuid(),
+    fullName: z.string(),
+    phoneNumber: z.string(),
+    lat: z.number(),
+    lng: z.number(),
+    status: z.string(),
+  })
+  .partial()
+  .passthrough();
+const PageDriverLocationDTO = z
+  .object({
+    totalElements: z.number().int(),
+    totalPages: z.number().int(),
+    size: z.number().int(),
+    content: z.array(DriverLocationDTO),
+    number: z.number().int(),
+    sort: z.array(SortObject),
+    first: z.boolean(),
+    pageable: PageableObject,
+    last: z.boolean(),
+    numberOfElements: z.number().int(),
+    empty: z.boolean(),
+  })
+  .partial()
+  .passthrough();
 const pageable = z
   .object({
     page: z.number().int().gte(0),
@@ -11,6 +77,11 @@ const pageable = z
   .passthrough();
 
 export const schemas = {
+  SortObject,
+  PageableObject,
+  PageDeliveryExecutive,
+  DriverLocationDTO,
+  PageDriverLocationDTO,
   pageable,
 };
 
@@ -32,7 +103,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
   {
     method: "post",
@@ -46,7 +117,7 @@ const endpoints = makeApi([
         schema: z.array(z.string().uuid()),
       },
     ],
-    response: z.any(),
+    response: z.array(DeliveryExecutive),
   },
   {
     method: "get",
@@ -60,7 +131,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: DeliveryExecutive,
   },
   {
     method: "get",
@@ -74,7 +145,7 @@ const endpoints = makeApi([
         schema: pageable,
       },
     ],
-    response: z.any(),
+    response: PageDeliveryExecutive,
   },
   {
     method: "get",
@@ -98,7 +169,7 @@ const endpoints = makeApi([
         schema: z.number().optional().default(50),
       },
     ],
-    response: z.any(),
+    response: z.array(DriverLocationDTO),
   },
   {
     method: "get",
@@ -112,7 +183,7 @@ const endpoints = makeApi([
         schema: pageable,
       },
     ],
-    response: z.any(),
+    response: PageDriverLocationDTO,
   },
 ]);
 

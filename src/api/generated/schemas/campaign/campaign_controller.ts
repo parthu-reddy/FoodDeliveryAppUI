@@ -1,6 +1,59 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
+import { CampaignPerformance } from "./common";
 
+const CampaignResponse = z
+  .object({
+    id: z.string().uuid(),
+    advertiserId: z.string().uuid(),
+    name: z.string(),
+    status: z.enum(["DRAFT", "ACTIVE", "PAUSED", "COMPLETED", "ARCHIVED"]),
+    dailyBudget: z.number(),
+    lifetimeBudget: z.number(),
+    maxBid: z.number(),
+    startDate: z.string().datetime({ offset: true }),
+    endDate: z.string().datetime({ offset: true }),
+    version: z.number().int(),
+  })
+  .partial()
+  .passthrough();
+const SortObject = z
+  .object({
+    direction: z.string(),
+    nullHandling: z.string(),
+    ascending: z.boolean(),
+    property: z.string(),
+    ignoreCase: z.boolean(),
+  })
+  .partial()
+  .passthrough();
+const PageableObject = z
+  .object({
+    offset: z.number().int(),
+    sort: z.array(SortObject),
+    paged: z.boolean(),
+    pageNumber: z.number().int(),
+    pageSize: z.number().int(),
+    unpaged: z.boolean(),
+  })
+  .partial()
+  .passthrough();
+const PageCampaignResponse = z
+  .object({
+    totalPages: z.number().int(),
+    totalElements: z.number().int(),
+    size: z.number().int(),
+    content: z.array(CampaignResponse),
+    number: z.number().int(),
+    sort: z.array(SortObject),
+    pageable: PageableObject,
+    last: z.boolean(),
+    first: z.boolean(),
+    numberOfElements: z.number().int(),
+    empty: z.boolean(),
+  })
+  .partial()
+  .passthrough();
 const CampaignRequest = z
   .object({
     advertiserId: z.string().uuid(),
@@ -22,6 +75,10 @@ const pageable = z
   .passthrough();
 
 export const schemas = {
+  CampaignResponse,
+  SortObject,
+  PageableObject,
+  PageCampaignResponse,
   CampaignRequest,
   pageable,
 };
@@ -59,7 +116,7 @@ const endpoints = makeApi([
         schema: z.number().int().optional(),
       },
     ],
-    response: z.any(),
+    response: CampaignResponse,
   },
   {
     method: "get",
@@ -83,7 +140,7 @@ const endpoints = makeApi([
         schema: pageable,
       },
     ],
-    response: z.any(),
+    response: PageCampaignResponse,
   },
   {
     method: "post",
@@ -107,7 +164,7 @@ const endpoints = makeApi([
         schema: z.string().optional(),
       },
     ],
-    response: z.any(),
+    response: CampaignResponse,
   },
   {
     method: "post",
@@ -131,7 +188,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
   {
     method: "post",
@@ -155,7 +212,7 @@ const endpoints = makeApi([
         schema: z.string().optional(),
       },
     ],
-    response: z.any(),
+    response: z.record(z.string()),
   },
   {
     method: "get",
@@ -179,7 +236,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: z.array(CampaignPerformance),
   },
   {
     method: "get",
@@ -198,7 +255,7 @@ const endpoints = makeApi([
         schema: z.string().optional(),
       },
     ],
-    response: z.any(),
+    response: z.array(CampaignPerformance),
   },
 ]);
 

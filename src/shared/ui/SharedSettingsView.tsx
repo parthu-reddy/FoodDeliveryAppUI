@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { useToast } from '../../contexts/ToastContext';
 import { customerApi, identityApi, walletApi } from '../../lib/zodiosClients';
 import { DeliveryStatus, OrderStatus } from '../../types';
+import { fromContract } from '../../lib/untypedResponse';
 
 const sharedProfileSchema = z.object({
   name: z.string().min(1, 'Please enter your full name.').max(100, 'Name cannot exceed 100 characters.'),
@@ -146,12 +147,12 @@ export default function SharedSettingsView({
     setTxLoading(true);
     try {
       const balanceRes = await walletApi.wallet.get('/api/v1/wallets/:entityType/:entityId', { params: { entityType: 'CUSTOMER', entityId: customerId } });
-      if (balanceRes.data) setWalletBalance(balanceRes.data.balance);
+      if (balanceRes) setWalletBalance(balanceRes.balance ?? 0);
       
       const txRes = await walletApi.wallet.get('/api/v1/wallets/:entityType/:entityId/transactions', { params: { entityType: 'CUSTOMER', entityId: customerId }, queries: { page: txPage } });
       if (txRes.data) {
-        setTransactions(txRes.data.content || []);
-        setTxTotalPages(txRes.data.totalPages || 1);
+        setTransactions(fromContract(txRes.content ?? []));
+        setTxTotalPages(txRes.totalPages || 1);
       }
     } catch (e) {
       console.error(e);

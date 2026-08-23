@@ -2,6 +2,40 @@ import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
 import { pageable } from "./common";
+import { CustomerAddressDto } from "./common";
+import { SortObject } from "./common";
+import { PageableObject } from "./common";
+
+const PageCustomerAddressDto = z
+  .object({
+    totalPages: z.number().int(),
+    totalElements: z.number().int(),
+    size: z.number().int(),
+    content: z.array(CustomerAddressDto),
+    number: z.number().int(),
+    sort: z.array(SortObject),
+    first: z.boolean(),
+    pageable: PageableObject,
+    numberOfElements: z.number().int(),
+    last: z.boolean(),
+    empty: z.boolean(),
+  })
+  .partial()
+  .passthrough();
+const ApiResponsePageCustomerAddressDto = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: PageCustomerAddressDto,
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+
+export const schemas = {
+  PageCustomerAddressDto,
+  ApiResponsePageCustomerAddressDto,
+};
 
 const endpoints = makeApi([
   {
@@ -16,7 +50,7 @@ const endpoints = makeApi([
         schema: pageable,
       },
     ],
-    response: z.any(),
+    response: ApiResponsePageCustomerAddressDto,
   },
 ]);
 

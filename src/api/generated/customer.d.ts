@@ -870,6 +870,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/customers/{customerId}/addresses/{addressId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["deleteAddress"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1364,7 +1380,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseCustomer"];
+                    "application/json": components["schemas"]["ApiResponseCustomer"];
                 };
             };
         };
@@ -1388,7 +1404,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseOrderResponse"];
+                    "application/json": components["schemas"]["ApiResponseOrderResponse"];
                 };
             };
         };
@@ -1414,7 +1430,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseVoid"];
+                    "application/json": components["schemas"]["ApiResponseVoid"];
                 };
             };
         };
@@ -1436,7 +1452,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseVoid"];
+                    "application/json": components["schemas"]["ApiResponseVoid"];
                 };
             };
         };
@@ -1460,7 +1476,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseQuoteResponse"];
+                    "application/json": components["schemas"]["ApiResponseQuoteResponse"];
                 };
             };
         };
@@ -1488,7 +1504,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseString"];
+                    "application/json": components["schemas"]["ApiResponseString"];
                 };
             };
         };
@@ -1557,7 +1573,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": {
+                    "application/json": {
                         [key: string]: string;
                     };
                 };
@@ -1585,7 +1601,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": {
+                    "application/json": {
                         [key: string]: string;
                     };
                 };
@@ -1609,7 +1625,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": {
+                    "application/json": {
                         [key: string]: string;
                     };
                 };
@@ -1639,7 +1655,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": {
+                    "application/json": {
                         [key: string]: string;
                     };
                 };
@@ -1669,7 +1685,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseString"];
+                    "application/json": components["schemas"]["ApiResponseString"];
                 };
             };
         };
@@ -1697,7 +1713,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseString"];
+                    "application/json": components["schemas"]["ApiResponseString"];
                 };
             };
         };
@@ -1719,7 +1735,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseString"];
+                    "application/json": components["schemas"]["ApiResponseString"];
                 };
             };
         };
@@ -1747,7 +1763,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseString"];
+                    "application/json": components["schemas"]["ApiResponseString"];
                 };
             };
         };
@@ -1775,7 +1791,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseString"];
+                    "application/json": components["schemas"]["ApiResponseString"];
                 };
             };
         };
@@ -1803,7 +1819,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseString"];
+                    "application/json": components["schemas"]["ApiResponseString"];
                 };
             };
         };
@@ -1831,7 +1847,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseString"];
+                    "application/json": components["schemas"]["ApiResponseString"];
                 };
             };
         };
@@ -1859,7 +1875,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseString"];
+                    "application/json": components["schemas"]["ApiResponseString"];
                 };
             };
         };
@@ -1881,7 +1897,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseString"];
+                    "application/json": components["schemas"]["ApiResponseString"];
                 };
             };
         };
@@ -1903,7 +1919,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseListCustomerAddressDto"];
+                    "application/json": components["schemas"]["ApiResponseListCustomerAddressDto"];
                 };
             };
         };
@@ -1929,7 +1945,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseCustomerAddressDto"];
+                    "application/json": components["schemas"]["ApiResponseCustomerAddressDto"];
                 };
             };
         };
@@ -1951,7 +1967,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseMapStringObject"];
+                    "application/json": components["schemas"]["ApiResponseMapStringObject"];
                 };
             };
         };
@@ -1977,7 +1993,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseCustomer"];
+                    "application/json": components["schemas"]["ApiResponseCustomer"];
                 };
             };
         };
@@ -2005,7 +2021,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseString"];
+                    "application/json": components["schemas"]["ApiResponseString"];
                 };
             };
         };
@@ -2031,7 +2047,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["SupportTicket"];
+                    "application/json": components["schemas"]["SupportTicket"];
                 };
             };
         };
@@ -2059,7 +2075,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["SupportTicket"];
+                    "application/json": components["schemas"]["SupportTicket"];
                 };
             };
         };
@@ -2083,7 +2099,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseMapStringObject"];
+                    "application/json": components["schemas"]["ApiResponseMapStringObject"];
                 };
             };
         };
@@ -2105,7 +2121,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseBoolean"];
+                    "application/json": components["schemas"]["ApiResponseBoolean"];
                 };
             };
         };
@@ -2129,7 +2145,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseListObject"];
+                    "application/json": components["schemas"]["ApiResponseListObject"];
                 };
             };
         };
@@ -2155,7 +2171,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseListObject"];
+                    "application/json": components["schemas"]["ApiResponseListObject"];
                 };
             };
         };
@@ -2178,7 +2194,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseMapStringObject"];
+                    "application/json": components["schemas"]["ApiResponseMapStringObject"];
                 };
             };
         };
@@ -2200,7 +2216,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseListMapStringObject"];
+                    "application/json": components["schemas"]["ApiResponseListMapStringObject"];
                 };
             };
         };
@@ -2222,7 +2238,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseOrderResponse"];
+                    "application/json": components["schemas"]["ApiResponseOrderResponse"];
                 };
             };
         };
@@ -2267,7 +2283,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponsePageOrderResponse"];
+                    "application/json": components["schemas"]["ApiResponsePageOrderResponse"];
                 };
             };
         };
@@ -2290,7 +2306,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponsePageOrderResponse"];
+                    "application/json": components["schemas"]["ApiResponsePageOrderResponse"];
                 };
             };
         };
@@ -2312,7 +2328,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseListOrderResponse"];
+                    "application/json": components["schemas"]["ApiResponseListOrderResponse"];
                 };
             };
         };
@@ -2335,7 +2351,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponsePageOrderResponse"];
+                    "application/json": components["schemas"]["ApiResponsePageOrderResponse"];
                 };
             };
         };
@@ -2357,7 +2373,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": string[];
+                    "application/json": string[];
                 };
             };
         };
@@ -2379,7 +2395,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["OrderResponse"];
+                    "application/json": components["schemas"]["OrderResponse"];
                 };
             };
         };
@@ -2399,7 +2415,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["Order"][];
+                    "application/json": components["schemas"]["Order"][];
                 };
             };
         };
@@ -2424,7 +2440,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["PageOrder"];
+                    "application/json": components["schemas"]["PageOrder"];
                 };
             };
         };
@@ -2448,7 +2464,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["PageOrder"];
+                    "application/json": components["schemas"]["PageOrder"];
                 };
             };
         };
@@ -2472,7 +2488,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["PageOrder"];
+                    "application/json": components["schemas"]["PageOrder"];
                 };
             };
         };
@@ -2494,7 +2510,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["PageOrder"];
+                    "application/json": components["schemas"]["PageOrder"];
                 };
             };
         };
@@ -2517,7 +2533,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["PageOrder"];
+                    "application/json": components["schemas"]["PageOrder"];
                 };
             };
         };
@@ -2541,7 +2557,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["PageSupportTicket"];
+                    "application/json": components["schemas"]["PageSupportTicket"];
                 };
             };
         };
@@ -2564,7 +2580,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["PageMapStringObject"];
+                    "application/json": components["schemas"]["PageMapStringObject"];
                 };
             };
         };
@@ -2587,7 +2603,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["PageOrder"];
+                    "application/json": components["schemas"]["PageOrder"];
                 };
             };
         };
@@ -2609,7 +2625,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponsePageCustomerAddressDto"];
+                    "application/json": components["schemas"]["ApiResponsePageCustomerAddressDto"];
                 };
             };
         };
@@ -2632,7 +2648,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponsePageOrderResponse"];
+                    "application/json": components["schemas"]["ApiResponsePageOrderResponse"];
                 };
             };
         };
@@ -2652,7 +2668,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseListOrderResponse"];
+                    "application/json": components["schemas"]["ApiResponseListOrderResponse"];
                 };
             };
         };
@@ -2674,7 +2690,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponsePageOrderResponse"];
+                    "application/json": components["schemas"]["ApiResponsePageOrderResponse"];
                 };
             };
         };
@@ -2698,7 +2714,30 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["PageSupportTicket"];
+                    "application/json": components["schemas"]["PageSupportTicket"];
+                };
+            };
+        };
+    };
+    deleteAddress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                customerId: string;
+                addressId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseVoid"];
                 };
             };
         };

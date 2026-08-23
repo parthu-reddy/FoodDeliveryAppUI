@@ -6,6 +6,7 @@ import { Badge, Button, FormField, Input, Modal, TransactionHistoryTable, Wallet
 import { PaymentModal, type PaymentMethodType } from "@shared/ui/PaymentModal";
 import { Calendar, DollarSign, Pause, Plus, TrendingUp, Wallet } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { fromContract } from '../../../lib/untypedResponse';
 
 interface Campaign {
   id: string;
@@ -71,7 +72,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
     setTxLoading(true);
     try {
       const balanceRes = await walletApi.wallet.get('/api/v1/wallets/:entityType/:entityId', { params: { entityType: 'ADVERTISER', entityId: restaurantId } });
-      if (balanceRes.data) setWalletBalance(balanceRes.data.balance);
+      if (balanceRes) setWalletBalance(balanceRes.balance ?? 0);
     } catch (e) {
       console.error(e);
       showError('Failed to fetch wallet balance');
@@ -84,10 +85,8 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
     setTxLoading(true);
     try {
       const res = await walletApi.wallet.get('/api/v1/wallets/:entityType/:entityId/transactions', { params: { entityType: 'ADVERTISER', entityId: restaurantId }, queries: { page } });
-      if (res.data) {
-        setTransactions(res.data.content || []);
-        setTxTotalPages(res.data.totalPages || 1);
-      }
+      setTransactions(fromContract<WalletTransaction[]>(res.content ?? []));
+      setTxTotalPages(res.totalPages ?? 1);
     } catch (err: any) {
       console.warn("Could not load transactions", err);
     } finally {
@@ -100,7 +99,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
     setPerfLoading(true);
     try {
       const res = await campaignApi.campaign.get('/api/v1/advertisers/:advertiserId/campaigns/performance', { params: { advertiserId: restaurantId }, queries: { pageable: {} } as any });
-      if (res.data) setPerformanceData(res.data);
+      setPerformanceData(fromContract<CampaignPerformance[]>(res));
     } catch (e) {
       console.error(e);
       showError('Failed to load performance data');
@@ -113,11 +112,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
     setLoading(true);
     try {
       const res = await campaignApi.campaign.get('/api/v1/advertisers/:advertiserId/campaigns', { params: { advertiserId: restaurantId }, queries: { pageable: {} } as any });
-      if (res.data && res.data.content) {
-        setCampaigns(res.data.content);
-      } else if (Array.isArray(res.data)) {
-        setCampaigns(res.data);
-      }
+      setCampaigns(fromContract<Campaign[]>(res.content ?? []));
     } catch (err: any) {
       showError(parseApiError(err, 'Failed to load campaigns').message);
     } finally {

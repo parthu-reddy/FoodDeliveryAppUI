@@ -1,6 +1,20 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+const ApiResponseString = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: z.string(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+
+export const schemas = {
+  ApiResponseString,
+};
+
 const endpoints = makeApi([
   {
     method: "post",
@@ -24,7 +38,7 @@ const endpoints = makeApi([
         schema: z.string().optional().default("default"),
       },
     ],
-    response: z.any(),
+    response: ApiResponseString,
   },
 ]);
 

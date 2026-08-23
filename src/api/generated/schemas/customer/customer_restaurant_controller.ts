@@ -1,6 +1,32 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { ApiResponseMapStringObject } from "./common";
+
+const ApiResponseBoolean = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: z.boolean(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+const ApiResponseListObject = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: z.array(z.object({}).partial().passthrough()),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+
+export const schemas = {
+  ApiResponseBoolean,
+  ApiResponseListObject,
+};
+
 const endpoints = makeApi([
   {
     method: "get",
@@ -19,7 +45,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseMapStringObject,
   },
   {
     method: "get",
@@ -33,7 +59,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseBoolean,
   },
   {
     method: "get",
@@ -57,7 +83,7 @@ const endpoints = makeApi([
         schema: z.number().optional().default(5),
       },
     ],
-    response: z.any(),
+    response: ApiResponseListObject,
   },
   {
     method: "get",
@@ -86,7 +112,7 @@ const endpoints = makeApi([
         schema: z.number().optional().default(5),
       },
     ],
-    response: z.any(),
+    response: ApiResponseListObject,
   },
 ]);
 

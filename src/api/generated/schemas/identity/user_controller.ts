@@ -1,6 +1,17 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { ApiResponseString } from "./common";
+
+const ApiResponseMapStringString = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: z.record(z.string()),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
 const UpdateProfileRequest = z
   .object({
     name: z.string().min(0).max(100),
@@ -15,6 +26,7 @@ const UpdateProfileRequest = z
   .passthrough();
 
 export const schemas = {
+  ApiResponseMapStringString,
   UpdateProfileRequest,
 };
 
@@ -31,7 +43,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseMapStringString,
   },
   {
     method: "put",
@@ -50,7 +62,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseString,
   },
 ]);
 

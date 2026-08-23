@@ -292,7 +292,7 @@ export function useDeliveryOrders({
           const data = JSON.parse(event.data);
           if (data.type === "NEW_ORDER_DISPATCH" && data.orderId) {
             const pingRes = await deliveryApi.deliveryOrder.get(`/api/v1/delivery/orders/available`, {});
-            const pingData = pingRes?.data?.data || pingRes?.data || pingRes;
+            const pingData = pingRes;
             if (pingData && pingData.length > 0) {
               const jobs = pingData.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
               setRejectedIds(prev => {

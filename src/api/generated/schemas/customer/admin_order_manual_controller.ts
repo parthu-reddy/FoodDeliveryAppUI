@@ -1,6 +1,14 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { ApiResponseString } from "./common";
+import { PageOrder } from "./common";
+import { Order } from "./common";
+import { SortObject } from "./common";
+import { PageableObject } from "./common";
+import { PageSupportTicket } from "./common";
+import { SupportTicket } from "./common";
+
 const endpoints = makeApi([
   {
     method: "post",
@@ -19,7 +27,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseString,
   },
   {
     method: "post",
@@ -38,7 +46,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseString,
   },
   {
     method: "post",
@@ -52,7 +60,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseString,
   },
   {
     method: "post",
@@ -71,7 +79,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseString,
   },
   {
     method: "post",
@@ -90,7 +98,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseString,
   },
   {
     method: "post",
@@ -109,7 +117,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseString,
   },
   {
     method: "post",
@@ -128,7 +136,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseString,
   },
   {
     method: "get",
@@ -147,7 +155,7 @@ const endpoints = makeApi([
         schema: z.number().int().optional().default(20),
       },
     ],
-    response: z.any(),
+    response: PageOrder,
   },
   {
     method: "get",
@@ -171,7 +179,7 @@ const endpoints = makeApi([
         schema: z.string().optional().default("OPEN"),
       },
     ],
-    response: z.any(),
+    response: PageSupportTicket,
   },
 ]);
 

@@ -1,6 +1,121 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+const LedgerTransactionDto = z
+  .object({
+    transactionId: z.string().uuid(),
+    category: z.enum([
+      "DELIVERY_FEE",
+      "PLATFORM_FIXED_FEE",
+      "PLATFORM_BONUS",
+      "FOOD_COST",
+      "TIP",
+      "PACKAGING_FEE",
+      "SURGE_PRICING",
+      "TAX",
+      "SGST",
+      "CGST",
+      "REFUND",
+      "ORDER_TOTAL",
+      "PAYOUT",
+      "AD_IMPRESSION",
+      "AD_CLICK",
+      "AD_CONVERSION",
+      "AD_WALLET_TOPUP",
+      "AD_REVENUE",
+    ]),
+    fromAccountId: z.string().uuid(),
+    toAccountId: z.string().uuid(),
+    amount: z.number(),
+    date: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+const SortObject = z
+  .object({
+    direction: z.string(),
+    nullHandling: z.string(),
+    ascending: z.boolean(),
+    property: z.string(),
+    ignoreCase: z.boolean(),
+  })
+  .partial()
+  .passthrough();
+const PageableObject = z
+  .object({
+    offset: z.number().int(),
+    sort: z.array(SortObject),
+    paged: z.boolean(),
+    pageNumber: z.number().int(),
+    pageSize: z.number().int(),
+    unpaged: z.boolean(),
+  })
+  .partial()
+  .passthrough();
+const PageLedgerTransactionDto = z
+  .object({
+    totalPages: z.number().int(),
+    totalElements: z.number().int(),
+    size: z.number().int(),
+    content: z.array(LedgerTransactionDto),
+    number: z.number().int(),
+    sort: z.array(SortObject),
+    first: z.boolean(),
+    pageable: PageableObject,
+    numberOfElements: z.number().int(),
+    last: z.boolean(),
+    empty: z.boolean(),
+  })
+  .partial()
+  .passthrough();
+const LedgerEntry = z
+  .object({
+    id: z.string().uuid(),
+    transactionId: z.string().uuid(),
+    referenceId: z.string().uuid(),
+    accountId: z.string().uuid(),
+    direction: z.enum(["CREDIT", "DEBIT"]),
+    category: z.enum([
+      "DELIVERY_FEE",
+      "PLATFORM_FIXED_FEE",
+      "PLATFORM_BONUS",
+      "FOOD_COST",
+      "TIP",
+      "PACKAGING_FEE",
+      "SURGE_PRICING",
+      "TAX",
+      "SGST",
+      "CGST",
+      "REFUND",
+      "ORDER_TOTAL",
+      "PAYOUT",
+      "AD_IMPRESSION",
+      "AD_CLICK",
+      "AD_CONVERSION",
+      "AD_WALLET_TOPUP",
+      "AD_REVENUE",
+    ]),
+    amount: z.number(),
+    createdAt: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+const PageLedgerEntry = z
+  .object({
+    totalPages: z.number().int(),
+    totalElements: z.number().int(),
+    size: z.number().int(),
+    content: z.array(LedgerEntry),
+    number: z.number().int(),
+    sort: z.array(SortObject),
+    first: z.boolean(),
+    pageable: PageableObject,
+    numberOfElements: z.number().int(),
+    last: z.boolean(),
+    empty: z.boolean(),
+  })
+  .partial()
+  .passthrough();
 const PayoutSettlementRequest = z
   .object({
     ownerId: z.string().uuid(),
@@ -16,9 +131,33 @@ const PayoutSettlementRequest = z
   })
   .partial()
   .passthrough();
+const LedgerAccount = z
+  .object({
+    id: z.string().uuid(),
+    ownerType: z.enum([
+      "CUSTOMER",
+      "PLATFORM",
+      "RESTAURANT",
+      "DRIVER",
+      "ADVERTISER_WALLET",
+      "GOVERNMENT",
+    ]),
+    ownerId: z.string().uuid(),
+    balance: z.number(),
+    lockVersion: z.number().int(),
+  })
+  .partial()
+  .passthrough();
 
 export const schemas = {
+  LedgerTransactionDto,
+  SortObject,
+  PageableObject,
+  PageLedgerTransactionDto,
+  LedgerEntry,
+  PageLedgerEntry,
   PayoutSettlementRequest,
+  LedgerAccount,
 };
 
 const endpoints = makeApi([
@@ -34,14 +173,14 @@ const endpoints = makeApi([
         schema: PayoutSettlementRequest,
       },
     ],
-    response: z.any(),
+    response: z.record(z.string()),
   },
   {
     method: "get",
     path: "/api/v1/ledger/payouts/pending",
     alias: "getPendingPayouts",
     requestFormat: "json",
-    response: z.any(),
+    response: z.array(LedgerAccount),
   },
   {
     method: "get",
@@ -115,7 +254,7 @@ const endpoints = makeApi([
         schema: z.enum(["CREDIT", "DEBIT"]).optional(),
       },
     ],
-    response: z.any(),
+    response: PageLedgerTransactionDto,
   },
   {
     method: "get",
@@ -189,7 +328,7 @@ const endpoints = makeApi([
         schema: z.enum(["CREDIT", "DEBIT"]).optional(),
       },
     ],
-    response: z.any(),
+    response: PageLedgerEntry,
   },
   {
     method: "get",
@@ -215,7 +354,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: LedgerAccount,
   },
 ]);
 

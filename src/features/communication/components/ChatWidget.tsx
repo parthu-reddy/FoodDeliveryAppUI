@@ -5,6 +5,7 @@ import { type ChatMessage, type TypingIndicator } from "@/types";
 import { useChatWebSocket } from "@features/communication/models/useChatWebSocket";
 import { ImagePlus, Loader2, MessageSquare, PhoneCall, PhoneOff, Send, X } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { asUntyped } from '../../../lib/untypedResponse';
 
 export interface ChatParticipant {
   userId: string;
@@ -126,12 +127,13 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
                       ]
                     });
           
-          if (!data || !data.success) throw new Error('Failed to init chat session');
-          const sid = data.data.sessionId;
+          if (!data || !data.success || !data.data) throw new Error('Failed to init chat session');
+          const session = asUntyped<{ sessionId: string; participants?: { userId: string }[] }>(data.data);
+          const sid = session.sessionId;
           setSessionId(sid);
           
-          if (data.data.participants) {
-            const otherParticipant = data.data.participants.find((p: any) => p.userId !== user.id);
+          if (session.participants) {
+            const otherParticipant = session.participants.find((p: any) => p.userId !== user.id);
             if (otherParticipant) {
               setTargetUserId(otherParticipant.userId);
             }
@@ -140,7 +142,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
           // 2. Load history
           const histData = await chatApi.chatSession.get('/api/v1/chat/sessions/:sessionId/messages', { params: { sessionId: sid } });
           if (histData && histData.success) {
-            setMessages(histData.data || []);
+            setMessages(asUntyped<ChatMessage[]>(histData.data ?? []));
           }
         } catch (error) {
           console.error("Error initializing chat:", error);

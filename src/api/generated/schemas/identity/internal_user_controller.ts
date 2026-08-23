@@ -1,11 +1,83 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { ApiResponseString } from "./common";
+
+const UserDTO = z
+  .object({
+    id: z.string().uuid(),
+    phoneNumber: z.string(),
+    roles: z.array(z.enum(["CUSTOMER", "DELIVERY", "RESTAURANT", "ADMIN"])),
+    active: z.boolean(),
+  })
+  .partial()
+  .passthrough();
+const ApiResponseUserDTO = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: UserDTO,
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+const SortObject = z
+  .object({
+    direction: z.string(),
+    nullHandling: z.string(),
+    ascending: z.boolean(),
+    property: z.string(),
+    ignoreCase: z.boolean(),
+  })
+  .partial()
+  .passthrough();
+const PageableObject = z
+  .object({
+    offset: z.number().int(),
+    sort: z.array(SortObject),
+    paged: z.boolean(),
+    pageNumber: z.number().int(),
+    pageSize: z.number().int(),
+    unpaged: z.boolean(),
+  })
+  .partial()
+  .passthrough();
+const PageUserDTO = z
+  .object({
+    totalPages: z.number().int(),
+    totalElements: z.number().int(),
+    size: z.number().int(),
+    content: z.array(UserDTO),
+    number: z.number().int(),
+    sort: z.array(SortObject),
+    pageable: PageableObject,
+    last: z.boolean(),
+    first: z.boolean(),
+    numberOfElements: z.number().int(),
+    empty: z.boolean(),
+  })
+  .partial()
+  .passthrough();
+const ApiResponsePageUserDTO = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: PageUserDTO,
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
 const RoleRequestDTO = z
   .object({ roleName: z.enum(["CUSTOMER", "DELIVERY", "RESTAURANT", "ADMIN"]) })
   .passthrough();
 
 export const schemas = {
+  UserDTO,
+  ApiResponseUserDTO,
+  SortObject,
+  PageableObject,
+  PageUserDTO,
+  ApiResponsePageUserDTO,
   RoleRequestDTO,
 };
 
@@ -27,7 +99,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseString,
   },
   {
     method: "post",
@@ -51,7 +123,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseString,
   },
   {
     method: "get",
@@ -70,7 +142,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseUserDTO,
   },
   {
     method: "get",
@@ -99,7 +171,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.any(),
+    response: ApiResponsePageUserDTO,
   },
   {
     method: "get",
@@ -118,7 +190,7 @@ const endpoints = makeApi([
         schema: z.number().int().optional().default(50),
       },
     ],
-    response: z.any(),
+    response: ApiResponsePageUserDTO,
   },
   {
     method: "delete",
@@ -142,7 +214,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseString,
   },
 ]);
 

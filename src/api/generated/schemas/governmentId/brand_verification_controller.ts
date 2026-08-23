@@ -45,7 +45,7 @@ const endpoints = makeApi([
         schema: PennyDropWebhook,
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
   {
     method: "post",
@@ -59,7 +59,7 @@ const endpoints = makeApi([
         schema: GstinRequest,
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
   {
     method: "post",
@@ -73,7 +73,7 @@ const endpoints = makeApi([
         schema: BankAccountRequest,
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
 ]);
 

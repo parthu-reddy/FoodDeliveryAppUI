@@ -1,7 +1,8 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-const MasterMenuItem = z.any();
+import { ApiResponseListMasterMenuItem } from "./common";
+import { MasterMenuItem } from "./common";
 
 const endpoints = makeApi([
   {
@@ -21,7 +22,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseListMasterMenuItem,
   },
 ]);
 

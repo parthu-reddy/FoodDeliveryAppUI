@@ -1,6 +1,44 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { ApiResponseString } from "./common";
+
+const SessionInfo = z
+  .object({
+    sessionId: z.string(),
+    deviceInfo: z.string(),
+    os: z.string(),
+    browser: z.string(),
+    lastActive: z.number().int(),
+    serviceName: z.string(),
+  })
+  .partial()
+  .passthrough();
+const ApiResponseListSessionInfo = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: z.array(SessionInfo),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+const ApiResponseVoid = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: z.object({}).partial().passthrough(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+
+export const schemas = {
+  SessionInfo,
+  ApiResponseListSessionInfo,
+  ApiResponseVoid,
+};
+
 const endpoints = makeApi([
   {
     method: "post",
@@ -44,7 +82,7 @@ const endpoints = makeApi([
         schema: z.string().optional(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseString,
   },
   {
     method: "post",
@@ -68,7 +106,7 @@ const endpoints = makeApi([
         schema: z.string().optional(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseVoid,
   },
   {
     method: "post",
@@ -87,7 +125,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseString,
   },
   {
     method: "get",
@@ -101,7 +139,7 @@ const endpoints = makeApi([
         schema: z.string().optional(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseListSessionInfo,
   },
   {
     method: "delete",
@@ -115,7 +153,7 @@ const endpoints = makeApi([
         schema: z.string().optional(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseVoid,
   },
   {
     method: "delete",
@@ -134,7 +172,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseVoid,
   },
 ]);
 

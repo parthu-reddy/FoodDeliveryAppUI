@@ -1,6 +1,15 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { OrderResponse } from "./common";
+import { OrderItemResponse } from "./common";
+import { ApiResponseVoid } from "./common";
+import { ApiResponsePageOrderResponse } from "./common";
+import { PageOrderResponse } from "./common";
+import { SortObject } from "./common";
+import { PageableObject } from "./common";
+import { ApiResponseListOrderResponse } from "./common";
+
 const OrderItemRequest = z
   .object({ menuItemId: z.string().uuid(), quantity: z.number().int().gte(1) })
   .passthrough();
@@ -13,6 +22,15 @@ const OrderRequest = z
     items: z.array(OrderItemRequest),
   })
   .passthrough();
+const ApiResponseOrderResponse = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: OrderResponse,
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
 const QuoteRequest = z
   .object({
     restaurantId: z.string().uuid(),
@@ -20,11 +38,38 @@ const QuoteRequest = z
     items: z.array(OrderItemRequest).optional(),
   })
   .passthrough();
+const QuoteResponse = z
+  .object({
+    subtotal: z.number(),
+    deliveryFee: z.number(),
+    platformFee: z.number(),
+    sgst: z.number(),
+    cgst: z.number(),
+    total: z.number(),
+    minAmountForFreeDelivery: z.number(),
+    distanceKm: z.number(),
+    driverPayout: z.number(),
+    restaurantDeliveryContribution: z.number(),
+  })
+  .partial()
+  .passthrough();
+const ApiResponseQuoteResponse = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: QuoteResponse,
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
 
 export const schemas = {
   OrderItemRequest,
   OrderRequest,
+  ApiResponseOrderResponse,
   QuoteRequest,
+  QuoteResponse,
+  ApiResponseQuoteResponse,
 };
 
 const endpoints = makeApi([
@@ -40,7 +85,7 @@ const endpoints = makeApi([
         schema: OrderRequest,
       },
     ],
-    response: z.any(),
+    response: ApiResponseOrderResponse,
   },
   {
     method: "post",
@@ -59,7 +104,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseVoid,
   },
   {
     method: "post",
@@ -73,7 +118,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseVoid,
   },
   {
     method: "post",
@@ -87,7 +132,7 @@ const endpoints = makeApi([
         schema: QuoteRequest,
       },
     ],
-    response: z.any(),
+    response: ApiResponseQuoteResponse,
   },
   {
     method: "get",
@@ -101,7 +146,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseOrderResponse,
   },
   {
     method: "get",
@@ -120,7 +165,7 @@ const endpoints = makeApi([
         schema: z.number().int().optional().default(10),
       },
     ],
-    response: z.any(),
+    response: ApiResponsePageOrderResponse,
   },
   {
     method: "get",
@@ -139,7 +184,7 @@ const endpoints = makeApi([
         schema: z.number().int().optional().default(10),
       },
     ],
-    response: z.any(),
+    response: ApiResponsePageOrderResponse,
   },
   {
     method: "get",
@@ -153,7 +198,7 @@ const endpoints = makeApi([
         schema: z.array(z.string().uuid()),
       },
     ],
-    response: z.any(),
+    response: ApiResponseListOrderResponse,
   },
   {
     method: "get",
@@ -172,7 +217,7 @@ const endpoints = makeApi([
         schema: z.number().int().optional().default(10),
       },
     ],
-    response: z.any(),
+    response: ApiResponsePageOrderResponse,
   },
 ]);
 

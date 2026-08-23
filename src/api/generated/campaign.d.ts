@@ -290,7 +290,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["CampaignResponse"];
+                    "application/json": components["schemas"]["CampaignResponse"];
                 };
             };
         };
@@ -314,7 +314,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": {
+                    "application/json": {
                         [key: string]: components["schemas"]["CampaignPacingDTO"];
                     };
                 };
@@ -342,7 +342,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["PageCampaignResponse"];
+                    "application/json": components["schemas"]["PageCampaignResponse"];
                 };
             };
         };
@@ -370,7 +370,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["CampaignResponse"];
+                    "application/json": components["schemas"]["CampaignResponse"];
                 };
             };
         };
@@ -423,7 +423,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": {
+                    "application/json": {
                         [key: string]: string;
                     };
                 };
@@ -470,7 +470,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["CampaignPerformance"][];
+                    "application/json": components["schemas"]["CampaignPerformance"][];
                 };
             };
         };
@@ -494,7 +494,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["CampaignPerformance"][];
+                    "application/json": components["schemas"]["CampaignPerformance"][];
                 };
             };
         };

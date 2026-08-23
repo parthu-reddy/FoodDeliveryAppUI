@@ -8,6 +8,7 @@ import DocumentUploadField from "@features/kyc/components/DocumentUploadField";
 import { TransactionHistoryTable, WalletTransaction } from "@shared/ui";
 import { z } from 'zod';
 import { parseApiError } from '@/lib/parseApiError';
+import { fromContract } from '../../../lib/untypedResponse';
 
 const riderProfileSchema = z.object({
   name: z.string().min(1, 'Please enter your full name.').max(100, 'Name cannot exceed 100 characters.'),
@@ -157,12 +158,12 @@ export default function RiderSettingsView({
     setTxLoading(true);
     try {
       const balanceRes = await walletApi.wallet.get('/api/v1/wallets/:entityType/:entityId', { params: { entityType: 'DRIVER', entityId: userId } });
-      if (balanceRes.data) setWalletBalance(balanceRes.data.balance);
+      if (balanceRes) setWalletBalance(balanceRes.balance ?? 0);
       
       const txRes = await walletApi.wallet.get('/api/v1/wallets/:entityType/:entityId/transactions', { params: { entityType: 'DRIVER', entityId: userId }, queries: { page } });
       if (txRes.data) {
-        setTransactions(txRes.data.content || []);
-        setTxTotalPages(txRes.data.totalPages || 1);
+        setTransactions(fromContract(txRes.content ?? []));
+        setTxTotalPages(txRes.totalPages || 1);
       }
     } catch (e) {
       console.warn("Error loading wallet data:", e);

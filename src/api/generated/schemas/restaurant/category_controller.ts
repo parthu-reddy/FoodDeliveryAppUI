@@ -16,6 +16,15 @@ const CategoryDTO = z
     timings: z.array(CategoryTimingDTO).optional(),
   })
   .passthrough();
+const ApiResponseCategoryDTO = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: CategoryDTO,
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
 const TimingDTO = z
   .object({ openingTime: z.string(), closingTime: z.string() })
   .partial()
@@ -24,19 +33,40 @@ const SetOutletCategoryTimingRequest = z
   .object({ categoryId: z.string().uuid(), timings: z.array(TimingDTO) })
   .partial()
   .passthrough();
+const ApiResponseListTimingDTO = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: z.array(TimingDTO),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
 const SetBrandCategoryTimingRequest = z
   .object({
     categoryId: z.string().uuid(),
     timings: z.array(TimingDTO).optional(),
   })
   .passthrough();
+const ApiResponseListCategoryDTO = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: z.array(CategoryDTO),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
 
 export const schemas = {
   CategoryTimingDTO,
   CategoryDTO,
+  ApiResponseCategoryDTO,
   TimingDTO,
   SetOutletCategoryTimingRequest,
+  ApiResponseListTimingDTO,
   SetBrandCategoryTimingRequest,
+  ApiResponseListCategoryDTO,
 };
 
 const endpoints = makeApi([
@@ -57,7 +87,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseCategoryDTO,
   },
   {
     method: "post",
@@ -76,14 +106,14 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseListTimingDTO,
   },
   {
     method: "get",
     path: "/api/v1/categories",
     alias: "getCategories",
     requestFormat: "json",
-    response: z.any(),
+    response: ApiResponseListCategoryDTO,
   },
   {
     method: "post",
@@ -97,7 +127,7 @@ const endpoints = makeApi([
         schema: CategoryDTO,
       },
     ],
-    response: z.any(),
+    response: ApiResponseCategoryDTO,
   },
   {
     method: "get",
@@ -111,7 +141,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseListCategoryDTO,
   },
   {
     method: "post",
@@ -130,7 +160,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseCategoryDTO,
   },
   {
     method: "post",
@@ -149,7 +179,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseListTimingDTO,
   },
   {
     method: "get",
@@ -168,7 +198,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseListTimingDTO,
   },
   {
     method: "get",
@@ -187,7 +217,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseListTimingDTO,
   },
 ]);
 

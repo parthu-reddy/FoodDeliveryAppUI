@@ -1,6 +1,31 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { ApiResponseString } from "./common";
+import { SortObject } from "./common";
+import { PageableObject } from "./common";
+
+const PageMapStringObject = z
+  .object({
+    totalPages: z.number().int(),
+    totalElements: z.number().int(),
+    size: z.number().int(),
+    content: z.array(z.record(z.object({}).partial().passthrough())),
+    number: z.number().int(),
+    sort: z.array(SortObject),
+    first: z.boolean(),
+    pageable: PageableObject,
+    numberOfElements: z.number().int(),
+    last: z.boolean(),
+    empty: z.boolean(),
+  })
+  .partial()
+  .passthrough();
+
+export const schemas = {
+  PageMapStringObject,
+};
+
 const endpoints = makeApi([
   {
     method: "post",
@@ -19,7 +44,7 @@ const endpoints = makeApi([
         schema: z.string().optional(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseString,
   },
   {
     method: "post",
@@ -33,7 +58,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseString,
   },
   {
     method: "get",
@@ -52,7 +77,7 @@ const endpoints = makeApi([
         schema: z.number().int().optional().default(20),
       },
     ],
-    response: z.any(),
+    response: PageMapStringObject,
   },
 ]);
 

@@ -8,6 +8,7 @@ import { Button, EmptyState, Input, Select } from '@shared/ui';
 import { Plus, Power, Search, User, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
+import { asUntyped, WirePage } from '../../../lib/untypedResponse';
 
 const roleSchema = z.string().min(2, "Role must be at least 2 characters").max(50, "Role cannot exceed 50 characters").regex(/^[A-Z_]+$/, "Role must contain only uppercase letters and underscores");
 
@@ -41,10 +42,11 @@ export default function AdminUserManagement() {
 
   useEffect(() => {
     if (!debouncedSearchQuery && usersResponse) {
-        const content = usersResponse.content || usersResponse.data?.content || (Array.isArray(usersResponse) ? usersResponse : []);
+        const page = asUntyped<WirePage<unknown>>(usersResponse);
+        const content = page.content ?? (Array.isArray(usersResponse) ? usersResponse : []);
         setUsers(Array.isArray(content) ? content : []);
-        if (usersResponse.totalPages !== undefined) {
-            setTotalPages(usersResponse.totalPages);
+        if (page.totalPages !== undefined) {
+            setTotalPages(page.totalPages);
         }
     }
   }, [usersResponse, debouncedSearchQuery]);
@@ -70,7 +72,7 @@ export default function AdminUserManagement() {
   const fetchUserActiveOrders = async (userId: string) => {
     try {
       const res = await customerApi.adminOrder.get('/api/v1/internal/admin/orders/user/:userId/active', { params: { userId }, queries: { pageable: { page: 0, size: 20 } } as any, headers: { 'X-Calling-Service': 'ADMIN' } as any });
-      const data = res.data?.data || res.data || (Array.isArray(res) ? res : res.data);
+      const data = asUntyped<WirePage<unknown>>(res).content ?? res;
       setUserActiveOrders(Array.isArray(data) ? data : []);
     } catch (e) {
       console.error(e);

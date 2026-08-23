@@ -218,7 +218,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": {
+                    "application/json": {
                         [key: string]: string;
                     };
                 };
@@ -240,7 +240,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["LedgerAccount"][];
+                    "application/json": components["schemas"]["LedgerAccount"][];
                 };
             };
         };
@@ -268,7 +268,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["PageLedgerTransactionDto"];
+                    "application/json": components["schemas"]["PageLedgerTransactionDto"];
                 };
             };
         };
@@ -296,7 +296,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["PageLedgerEntry"];
+                    "application/json": components["schemas"]["PageLedgerEntry"];
                 };
             };
         };
@@ -319,7 +319,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["LedgerAccount"];
+                    "application/json": components["schemas"]["LedgerAccount"];
                 };
             };
         };

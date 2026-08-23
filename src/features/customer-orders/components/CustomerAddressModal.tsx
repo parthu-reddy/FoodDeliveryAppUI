@@ -141,7 +141,7 @@ export default function CustomerAddressModal({
             if (res && res.address) {
               const description = res.address;
               setAddressSearchQuery(description);
-              const parts = description.split(',').map((p: string) => p.trim());
+              const parts = String(description ?? '').split(',').map((p: string) => p.trim());
               setAddressForm(prev => ({
                 ...prev,
                 addressLine1: parts[0] || '',

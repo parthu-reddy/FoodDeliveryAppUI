@@ -3,6 +3,7 @@ import { getToken, getUserProfile } from "@/lib/tokenStore";
 import { chatApi } from "@/lib/zodiosClients";
 import { Client, IMessage } from '@stomp/stompjs';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { asUntyped } from '../../../lib/untypedResponse';
 
 export interface WebRtcSignal {
   sessionId?: string;
@@ -88,7 +89,7 @@ export const useWebRTC = () => {
       try {
                 const response = await chatApi.turnCredential.get('/api/v1/chat/webrtc/ice-servers', undefined as unknown as Parameters<typeof chatApi.turnCredential.get>[1]);
                 if (response && (response).iceServers) {
-                    iceServersRef.current = { iceServers: (response).iceServers };
+                    iceServersRef.current = { iceServers: asUntyped<RTCIceServer[]>((response as { iceServers?: unknown }).iceServers) };
         }
       } catch (error) {
         console.error("Failed to fetch ICE servers, falling back to STUN", error);

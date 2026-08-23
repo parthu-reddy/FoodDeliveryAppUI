@@ -2,6 +2,7 @@ import { useToast } from "@/contexts/ToastContext";
 import { mapsApi } from "@/lib/zodiosClients";
 import { Modal } from '@shared/ui';
 import { MapPin, Navigation, Plus } from 'lucide-react';
+import { asUntyped } from '../../../lib/untypedResponse';
 
 interface AddressSelectionModalProps {
   isOpen: boolean;
@@ -30,7 +31,7 @@ export default function AddressSelectionModal({
           try {
             const res = await mapsApi.integration.get('/api/places/reverse-geocode', { queries: { lat: latitude, lng: longitude } });
             if (res && res.address) {
-              onUseCurrentLocation(res.address);
+              onUseCurrentLocation(asUntyped<{ address?: string }>(res).address ?? '');
             } else {
               onUseCurrentLocation("Current Location");
             }

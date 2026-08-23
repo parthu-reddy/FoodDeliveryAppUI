@@ -1,6 +1,8 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { ApiResponseMapStringObject } from "./common";
+
 const Customer = z
   .object({
     id: z.string().uuid(),
@@ -10,9 +12,19 @@ const Customer = z
   })
   .partial()
   .passthrough();
+const ApiResponseCustomer = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: Customer,
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
 
 export const schemas = {
   Customer,
+  ApiResponseCustomer,
 };
 
 const endpoints = makeApi([
@@ -33,7 +45,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseCustomer,
   },
   {
     method: "get",
@@ -47,7 +59,7 @@ const endpoints = makeApi([
         schema: z.string().optional(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseMapStringObject,
   },
   {
     method: "post",
@@ -66,7 +78,7 @@ const endpoints = makeApi([
         schema: z.string().optional(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseCustomer,
   },
 ]);
 

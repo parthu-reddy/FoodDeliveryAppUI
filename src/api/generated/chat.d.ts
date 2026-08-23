@@ -147,7 +147,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": {
+                    "application/json": {
                         [key: string]: Record<string, never>;
                     };
                 };
@@ -173,7 +173,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": {
+                    "application/json": {
                         [key: string]: Record<string, never>;
                     };
                 };
@@ -204,7 +204,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": {
+                    "application/json": {
                         [key: string]: Record<string, never>;
                     };
                 };
@@ -235,7 +235,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": {
+                    "application/json": {
                         [key: string]: Record<string, never>;
                     };
                 };
@@ -263,7 +263,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": {
+                    "application/json": {
                         [key: string]: Record<string, never>;
                     };
                 };
@@ -285,7 +285,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["TurnCredentialsResponse"];
+                    "application/json": components["schemas"]["TurnCredentialsResponse"];
                 };
             };
         };
@@ -310,7 +310,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": {
+                    "application/json": {
                         [key: string]: Record<string, never>;
                     };
                 };

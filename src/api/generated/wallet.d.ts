@@ -213,7 +213,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["WalletDto"];
+                    "application/json": components["schemas"]["WalletDto"];
                 };
             };
         };
@@ -240,7 +240,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["WalletDto"];
+                    "application/json": components["schemas"]["WalletDto"];
                 };
             };
         };
@@ -267,7 +267,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["WalletDto"];
+                    "application/json": components["schemas"]["WalletDto"];
                 };
             };
         };
@@ -295,7 +295,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseString"];
+                    "application/json": components["schemas"]["ApiResponseString"];
                 };
             };
         };
@@ -320,7 +320,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["WalletDto"];
+                    "application/json": components["schemas"]["WalletDto"];
                 };
             };
         };
@@ -348,7 +348,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["PageWalletTransaction"];
+                    "application/json": components["schemas"]["PageWalletTransaction"];
                 };
             };
         };

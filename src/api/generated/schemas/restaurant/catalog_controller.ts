@@ -1,19 +1,17 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-const MasterMenuItem = z
+import { MasterMenuItem } from "./common";
+import { ApiResponseListMasterMenuItem } from "./common";
+
+const ApiResponseMasterMenuItem = z
   .object({
-    id: z.string().uuid().optional(),
-    brandId: z.string().uuid().optional(),
-    categoryId: z.string().uuid().optional(),
-    name: z.string(),
-    description: z.string().optional(),
-    imageUrl: z.string().optional(),
-    basePrice: z.number(),
-    packingCharge: z.number().gte(0).lt(10),
-    defaultPrepTimeMinutes: z.number().int().optional(),
-    version: z.number().int().optional(),
+    success: z.boolean(),
+    message: z.string(),
+    data: MasterMenuItem,
+    timestamp: z.string().datetime({ offset: true }),
   })
+  .partial()
   .passthrough();
 const OutletMenuOverride = z
   .object({
@@ -26,10 +24,56 @@ const OutletMenuOverride = z
     version: z.number().int().optional(),
   })
   .passthrough();
+const ApiResponseOutletMenuOverride = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: OutletMenuOverride,
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+const MenuItemDTO = z
+  .object({
+    id: z.string().uuid(),
+    restaurantId: z.string().uuid(),
+    name: z.string(),
+    description: z.string(),
+    price: z.number(),
+    isAvailable: z.boolean(),
+    prepTimeMinutes: z.number().int(),
+    imageUrl: z.string(),
+    categoryId: z.string().uuid(),
+    categoryName: z.string(),
+  })
+  .partial()
+  .passthrough();
+const ApiResponseListMenuItemDTO = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: z.array(MenuItemDTO),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+const ApiResponseListOutletMenuOverride = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: z.array(OutletMenuOverride),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
 
 export const schemas = {
-  MasterMenuItem,
+  ApiResponseMasterMenuItem,
   OutletMenuOverride,
+  ApiResponseOutletMenuOverride,
+  MenuItemDTO,
+  ApiResponseListMenuItemDTO,
+  ApiResponseListOutletMenuOverride,
 };
 
 const endpoints = makeApi([
@@ -55,7 +99,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseMasterMenuItem,
   },
   {
     method: "post",
@@ -79,7 +123,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseOutletMenuOverride,
   },
   {
     method: "get",
@@ -93,7 +137,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseListMasterMenuItem,
   },
   {
     method: "post",
@@ -112,7 +156,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseMasterMenuItem,
   },
   {
     method: "get",
@@ -131,7 +175,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.any(),
+    response: z.array(MenuItemDTO),
   },
   {
     method: "get",
@@ -145,7 +189,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseListMenuItemDTO,
   },
   {
     method: "get",
@@ -159,7 +203,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseListOutletMenuOverride,
   },
 ]);
 

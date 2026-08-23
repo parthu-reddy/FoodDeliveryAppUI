@@ -9,6 +9,7 @@ import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import React, { useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
+import { asUntyped } from '../../../../lib/untypedResponse';
 
 const outletSchema = z.object({
   name: z.string().min(1, 'Outlet name is required.').max(100, 'Outlet name cannot exceed 100 characters.'),
@@ -170,7 +171,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
             // Try to reverse geocode
             const res = await mapsApi.integration.get('/api/places/reverse-geocode', { queries: { lat: latitude, lng: longitude } });
             if (res && res.address) {
-              setSearchQuery(res.address);
+              setSearchQuery(asUntyped<{ address?: string }>(res).address ?? '');
             }
           } catch (e) {
             console.error("Reverse geocoding failed", e);

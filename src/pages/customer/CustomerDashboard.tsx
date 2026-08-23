@@ -36,6 +36,7 @@ import { useCustomerCart } from '@features/customer-orders/model/useCustomerCart
 import { useCustomerOrders } from '@features/customer-orders/model/useCustomerOrders';
 import CustomerPaymentModal from "@features/payments-wallet/components/CustomerPaymentModal";
 import { Button, CompleteProfileModal, SharedSettingsView } from "@shared/ui";
+import { fromContract } from '../../lib/untypedResponse';
 const OrderTrackingMap = React.lazy(() => import("@features/maps-tracking/components/OrderTrackingMap"));
 
 
@@ -192,7 +193,7 @@ export default function CustomerDashboard({
             if (!exists && addrRes.data.length > 0) {
               const first = addrRes.data[0];
               setAddress(`${first.label || 'Address'}: ${first.addressLine1 || ''}, ${first.city || ''}`);
-              setDeliveryAddressId(first.id);
+              setDeliveryAddressId(first.id ?? '');
             }
           }
         }
@@ -228,7 +229,7 @@ export default function CustomerDashboard({
     if (selectedRestaurant?.brandId) {
       customerApi.customerRestaurant.get('/api/v1/restaurants/brands/:brandId/outlets', { params: { brandId: selectedRestaurant.brandId }, queries: { lat: deliveryLat ?? 0, lng: deliveryLng ?? 0 } })
         .then(res => {
-          if (!ignore && res.data) setBrandOutlets(res.data);
+          if (!ignore && res) setBrandOutlets(fromContract(res));
         })
         .catch(console.error);
     } else {
@@ -322,8 +323,8 @@ export default function CustomerDashboard({
       setIsDeliveryAvailable(null);
       customerApi.customerRestaurant.get('/api/v1/restaurants/:id/delivery-availability', { params: { id: selectedRestaurant.id } })
         .then(res => {
-          if (!ignore && res.data && typeof res.data.available === 'boolean') {
-            setIsDeliveryAvailable(res.data.available);
+          if (!ignore && typeof res === 'boolean') {
+            setIsDeliveryAvailable(res);
           }
         })
         .catch(err => {

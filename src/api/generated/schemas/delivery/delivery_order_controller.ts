@@ -1,5 +1,6 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
+import { JsonNode } from "./common";
 
 const endpoints = makeApi([
   {
@@ -24,14 +25,14 @@ const endpoints = makeApi([
         schema: z.number().int().optional().default(20),
       },
     ],
-    response: z.any(),
+    response: z.object({}).partial().passthrough(),
   },
   {
     method: "get",
     path: "/api/v1/delivery/orders/available",
     alias: "getAvailableOrders",
     requestFormat: "json",
-    response: z.any(),
+    response: z.array(JsonNode),
   },
   {
     method: "get",
@@ -50,7 +51,7 @@ const endpoints = makeApi([
         schema: z.number().int().optional().default(20),
       },
     ],
-    response: z.any(),
+    response: z.object({}).partial().passthrough(),
   },
 ]);
 

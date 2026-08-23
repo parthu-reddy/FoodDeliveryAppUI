@@ -1,12 +1,112 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { ApiResponseVoid } from "./common";
+import { ApiResponseMapStringObject } from "./common";
+import { SortObject } from "./common";
+import { PageableObject } from "./common";
+
+const RestaurantOrder = z
+  .object({
+    orderId: z.string().uuid(),
+    restaurantId: z.string().uuid(),
+    status: z.enum([
+      "CREATED",
+      "PENDING_ACCEPTANCE",
+      "AWAITING_DELAY_APPROVAL",
+      "ACCEPTED",
+      "PREPARING",
+      "READY_FOR_PICKUP",
+      "HANDED_OVER",
+      "CANCELLED",
+      "CANCELLED_BY_RESTAURANT",
+    ]),
+    deliveryStatus: z.enum([
+      "PENDING",
+      "SEARCHING_FOR_DRIVER",
+      "MANUAL_INTERVENTION_REQUIRED",
+      "ASSIGNED",
+      "AT_RESTAURANT",
+      "OUT_FOR_DELIVERY",
+      "DELIVERED",
+      "CANCELLED",
+      "FAILED",
+    ]),
+    paymentStatus: z.enum([
+      "CREATED",
+      "INITIATED",
+      "PENDING",
+      "SUCCESS",
+      "FAILED",
+      "CAPTURED",
+      "PAID",
+      "PARTIALLY_REFUNDED",
+      "REFUNDED",
+      "REFUND_PENDING",
+      "REFUND_FAILED",
+    ]),
+    version: z.number().int(),
+    prepTime: z.number().int(),
+    additionalPrepTime: z.number().int(),
+    estimatedCompletionTime: z.number().int(),
+    deliveryLat: z.number(),
+    deliveryLng: z.number(),
+    deliveryAddress: z.string(),
+    pickupOtp: z.string(),
+    deliveryOtp: z.string(),
+    deliveryExecutiveId: z.string().uuid(),
+    customerName: z.string(),
+    riderName: z.string(),
+    itemsJson: z.string(),
+    createdAt: z.string().datetime({ offset: true }),
+    updatedAt: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+const ApiResponseListRestaurantOrder = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: z.array(RestaurantOrder),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+const PageRestaurantOrder = z
+  .object({
+    totalPages: z.number().int(),
+    totalElements: z.number().int(),
+    size: z.number().int(),
+    content: z.array(RestaurantOrder),
+    number: z.number().int(),
+    sort: z.array(SortObject),
+    first: z.boolean(),
+    pageable: PageableObject,
+    last: z.boolean(),
+    numberOfElements: z.number().int(),
+    empty: z.boolean(),
+  })
+  .partial()
+  .passthrough();
+const ApiResponsePageRestaurantOrder = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: PageRestaurantOrder,
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
 const AcceptOrderRequest = z
   .object({ additionalPrepTime: z.number().int(), delayReason: z.string() })
   .partial()
   .passthrough();
 
 export const schemas = {
+  RestaurantOrder,
+  ApiResponseListRestaurantOrder,
+  PageRestaurantOrder,
+  ApiResponsePageRestaurantOrder,
   AcceptOrderRequest,
 };
 
@@ -28,7 +128,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseVoid,
   },
   {
     method: "post",
@@ -52,7 +152,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseVoid,
   },
   {
     method: "post",
@@ -71,7 +171,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseVoid,
   },
   {
     method: "post",
@@ -90,7 +190,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseVoid,
   },
   {
     method: "post",
@@ -109,7 +209,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseVoid,
   },
   {
     method: "post",
@@ -133,7 +233,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseVoid,
   },
   {
     method: "get",
@@ -147,7 +247,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseListRestaurantOrder,
   },
   {
     method: "get",
@@ -166,7 +266,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseMapStringObject,
   },
   {
     method: "get",
@@ -195,7 +295,7 @@ const endpoints = makeApi([
         schema: z.number().int().optional().default(10),
       },
     ],
-    response: z.any(),
+    response: ApiResponsePageRestaurantOrder,
   },
   {
     method: "get",
@@ -209,7 +309,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseListRestaurantOrder,
   },
 ]);
 

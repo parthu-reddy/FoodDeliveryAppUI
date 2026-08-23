@@ -1,6 +1,27 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { CustomerAddressDto } from "./common";
+import { ApiResponseVoid } from "./common";
+
+const ApiResponseCustomerAddressDto = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: CustomerAddressDto,
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+const ApiResponseListCustomerAddressDto = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: z.array(CustomerAddressDto),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
 const AddressRequest = z
   .object({
     label: z.string(),
@@ -15,6 +36,8 @@ const AddressRequest = z
   .passthrough();
 
 export const schemas = {
+  ApiResponseCustomerAddressDto,
+  ApiResponseListCustomerAddressDto,
   AddressRequest,
 };
 
@@ -31,7 +54,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseListCustomerAddressDto,
   },
   {
     method: "post",
@@ -50,7 +73,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseCustomerAddressDto,
   },
   {
     method: "delete",
@@ -69,7 +92,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.any(),
+    response: ApiResponseVoid,
   },
 ]);
 

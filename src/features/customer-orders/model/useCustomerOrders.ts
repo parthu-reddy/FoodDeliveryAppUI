@@ -2,6 +2,7 @@ import { customerApi } from '@/lib/zodiosClients';
 import { Order, OrderStatus } from '@/types';
 import { isActiveOrder, isFailedOrder } from '@features/customer-orders/model/orderStatus';
 import { useEffect, useState } from 'react';
+import { fromContract } from '../../../lib/untypedResponse';
 
 interface UseCustomerOrdersOptions {
   onUpdateOrder?: (orderId: string, status: string) => void;
@@ -79,7 +80,7 @@ export function useCustomerOrders({ onUpdateOrder }: UseCustomerOrdersOptions = 
                      setInternalOrders(curr => {
                         const currentList = [...curr];
                         let batchChanged = false;
-                        res.data.forEach((batchOrder: any) => {
+                        fromContract<unknown[]>(res).forEach((batchOrder: any) => {
                             const idx = currentList.findIndex(o => o.id === batchOrder.id);
                             if (idx !== -1 && JSON.stringify(currentList[idx]) !== JSON.stringify(batchOrder)) {
                                currentList[idx] = batchOrder;

@@ -1,5 +1,6 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
+import { TelemetryEventRequest } from "./common";
 
 const LocationPayload = z
   .object({
@@ -11,9 +12,6 @@ const LocationPayload = z
   })
   .partial()
   .passthrough();
-
-const TelemetryEventRequest = z.any();
-
 
 export const schemas = {
   LocationPayload,
@@ -32,7 +30,7 @@ const endpoints = makeApi([
         schema: LocationPayload,
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
   {
     method: "post",
@@ -46,7 +44,7 @@ const endpoints = makeApi([
         schema: z.array(TelemetryEventRequest),
       },
     ],
-    response: z.any(),
+    response: z.void(),
   },
 ]);
 

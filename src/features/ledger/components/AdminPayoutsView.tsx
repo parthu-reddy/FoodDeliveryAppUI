@@ -15,7 +15,7 @@ export default function AdminPayoutsView() {
     setLoading(true);
     try {
       const res = await ledgerApi.ledger.get('/api/v1/ledger/payouts/pending');
-      const data = res?.data || res || [];
+      const data = res ?? [];
       setPendingPayouts(Array.isArray(data) ? data : []);
     } catch (e) {
       console.error(e);
