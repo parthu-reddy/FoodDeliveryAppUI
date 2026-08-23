@@ -1,47 +1,38 @@
-import React, { useState, useEffect } from "react";
-import { useToast } from "@/context/ToastContext";
-import {
-  Bike,
-  DollarSign,
-  Check,
-  ShieldAlert,
-  Store,
-  Sun,
-  Moon,
-  AlertCircle,
-  User,
-  ArrowLeft,
-  X,
-  MapPinOff,
-} from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
-import { z } from "zod";
-import { Order, OrderStatus, DeliveryStatus } from "@/types";
-import LaBouffeLogo from '@shared/ui/LaBouffeLogo';
-import {
-  customerApi,
-  deliveryApi,
-  identityApi,
-  restaurantApi,
-  walletApi,
-  adminApi,
-  trackingApi,
-} from "@/lib/zodiosClients";
+import { useTheme } from "@/contexts/ThemeContext";
+import { useToast } from "@/contexts/ToastContext";
 import { getUserProfile } from "@/lib/tokenStore";
-import RiderSettingsView from "@features/delivery-tasks/components/RiderSettingsView";
-import RiderOnboardingWizard from "@features/delivery-tasks/components/RiderOnboardingWizard";
-import ImageLoader from '@shared/ui/ImageLoader';
-import { ChatWidget } from "@features/communication/components/ChatWidget";
+import {
+    deliveryApi,
+    identityApi
+} from "@/lib/zodiosClients";
+import { DeliveryStatus, Order, OrderStatus } from "@/types";
 import { CallOverlay } from "@features/communication/components/CallOverlay";
-import { ErrorBoundary } from "@shared/ui";
-import { useDeliveryOrders } from "@features/delivery-tasks/model/useDeliveryOrders";
+import { ChatWidget } from "@features/communication/components/ChatWidget";
+import { DeliveryActiveJob } from "@features/delivery-tasks/components/DeliveryActiveJob";
 import { DeliveryAvailableJobs } from "@features/delivery-tasks/components/DeliveryAvailableJobs";
 import { DeliveryHistoryPanel } from "@features/delivery-tasks/components/DeliveryHistoryPanel";
-import { DeliveryActiveJob } from "@features/delivery-tasks/components/DeliveryActiveJob";
 import { DeliveryOnlineToggle } from "@features/delivery-tasks/components/DeliveryOnlineToggle";
-import { Button, Modal } from '@shared/ui';
-import { useTheme } from "@/context/ThemeContext";
-import { parseApiError } from '@/lib/parseApiError';
+import RiderOnboardingWizard from "@features/delivery-tasks/components/RiderOnboardingWizard";
+import RiderSettingsView from "@features/delivery-tasks/components/RiderSettingsView";
+import { useDeliveryOrders } from "@features/delivery-tasks/model/useDeliveryOrders";
+import { Button, ErrorBoundary, Modal } from "@shared/ui";
+import ImageLoader from '@shared/ui/ImageLoader';
+import LaBouffeLogo from '@shared/ui/LaBouffeLogo';
+import {
+    AlertCircle,
+    Bike,
+    Check,
+    DollarSign,
+    MapPinOff,
+    Moon,
+    ShieldAlert,
+    Store,
+    Sun,
+    User
+} from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import React, { useEffect, useState } from "react";
+import { z } from "zod";
 
 const otpSchema = z
   .string()
@@ -145,14 +136,14 @@ export default function DeliveryDashboard({
 
   useEffect(() => {
     // Fetch unified profile first
-    identityApi.user.get(`/api/v1/users/profile`, {}).catch((err) => {
+    identityApi.user.get(`/api/v1/users/profile`, { headers: { "X-User-Id": "" } }).catch((err) => {
       if (err?.status !== 404)
         console.warn("Failed to fetch unified profile:", err);
     });
 
     // Fetch delivery-specific profile details
     deliveryApi.deliveryExecutive
-      .get("/api/delivery/profile")
+      .get("/api/delivery/profile", { queries: { phoneNumber: "" }, headers: { "X-User-Id": "" } })
       .then((data) => {
         if (data.success) {
           const profile = data.data;
@@ -742,7 +733,7 @@ export default function DeliveryDashboard({
               riderPhone={riderPhone}
               onProfileUpdated={() => {
                 deliveryApi.deliveryExecutive
-                  .get("/api/delivery/profile")
+                  .get("/api/delivery/profile", { queries: { phoneNumber: "" }, headers: { "X-User-Id": "" } })
                   .then((data) => {
                     if (data.success) {
                       const profile = data.data;

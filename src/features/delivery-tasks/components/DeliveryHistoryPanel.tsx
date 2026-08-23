@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { Clock, MapPin, Check, ArrowLeft } from 'lucide-react';
-import { motion } from 'motion/react';
 import { Order } from "@/types";
 import { DeliveryOrderDetailsModal } from "@features/delivery-tasks/components/DeliveryOrderDetailsModal";
+import { ArrowLeft, Check, Clock, MapPin } from 'lucide-react';
+import { motion } from 'motion/react';
+import React, { useState } from 'react';
 
 interface DeliveryHistoryPanelProps {
   setShowHistory: (show: boolean) => void;

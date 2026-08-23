@@ -1,7 +1,8 @@
 import { env } from './env';
-import { commonZodiosConfig, authPlugin } from './zodiosConfig';
+import { authPlugin, commonZodiosConfig } from './zodiosConfig';
 
 // Import the generated client creators
+import { Zodios } from '@zodios/core';
 import { createCampaignFacade as createCampaignApi } from '../api/generated/schemas/campaign/facade';
 import { createChatFacade as createChatApi } from '../api/generated/schemas/chat/facade';
 import { createCustomerFacade as createCustomerApi } from '../api/generated/schemas/customer/facade';
@@ -15,7 +16,6 @@ import { createRestaurantFacade as createRestaurantApi } from '../api/generated/
 import { createTrackingFacade as createTrackingApi } from '../api/generated/schemas/tracking/facade';
 import { createWalletFacade as createWalletApi } from '../api/generated/schemas/wallet/facade';
 import { adminApiDef } from '../api/manual-schemas/admin';
-import { Zodios } from '@zodios/core';
 
 const BASE_URL = env.VITE_API_BASE_URL || window.location.origin;
 

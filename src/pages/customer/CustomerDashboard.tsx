@@ -1,47 +1,42 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { usePolling } from '../../hooks/usePolling';
-import { useDebounce } from '../../hooks/useDebounce';
-import { useToast } from "@/context/ToastContext";
-import { 
-  Search, MapPin, ShoppingBag, LogOut, ChevronRight, Star, Clock, 
-  Bike, Plus, Minus, X, Check, Timer, ArrowLeft, ShieldCheck, Heart, Store, Sun, Moon,
-  Terminal, Sliders, Code, Send, RefreshCw, Package, User, Navigation, AlertCircle, MapPinOff, XCircle, ChevronDown
-} from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
-import { RoleName, Restaurant, MenuItem, CartItem } from "@/types";
-import { OrderStatus, DeliveryStatus, Order } from "@/types";
-import { getFriendlyStatusMessage } from '@features/customer-orders/model/statusMessaging';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from "@/lib/zodiosClients";
+import { useToast } from "@/contexts/ToastContext";
 import { getUserProfile } from "@/lib/tokenStore";
-import LaBouffeLogo from '@shared/ui/LaBouffeLogo';
-import { getEffectiveMenu } from '@features/catalog/model/menuStore';
-import ImageLoader from '@shared/ui/ImageLoader';
-import CustomerRestaurantCard from '@features/catalog/components/customer/CustomerRestaurantCard';
-import { CustomerRestaurantBrowser } from '@features/catalog/components/customer/CustomerRestaurantBrowser';
+import { customerApi, identityApi } from "@/lib/zodiosClients";
+import { DashboardHeader } from "@/pages/customer/DashboardHeader";
+import { DeliveryStatus, MenuItem, Order, OrderStatus, Restaurant, RoleName } from "@/types";
 import { CustomerMenuView } from '@features/catalog/components/customer/CustomerMenuView';
-import { CustomerOrderTracker } from '@features/customer-orders/components/CustomerOrderTracker';
+import { CustomerRestaurantBrowser } from '@features/catalog/components/customer/CustomerRestaurantBrowser';
+import { getEffectiveMenu } from '@features/catalog/model/menuStore';
 import CustomerActiveOrdersCarousel from '@features/customer-orders/components/CustomerActiveOrdersCarousel';
 import { CustomerFreeDeliveryTracker } from '@features/customer-orders/components/CustomerFreeDeliveryTracker';
+import { CustomerOrderTracker } from '@features/customer-orders/components/CustomerOrderTracker';
+import { getFriendlyStatusMessage } from '@features/customer-orders/model/statusMessaging';
 import { ErrorBoundary } from "@shared/ui";
-import { DashboardHeader } from "@/pages/customer/DashboardHeader";
+import {
+    AlertCircle,
+    ArrowLeft,
+    Check,
+    ChevronRight,
+    MapPinOff,
+    Package,
+    ShoppingBag,
+    X
+} from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import CustomerCartDrawer from '@features/customer-orders/components/CustomerCartDrawer';
-import { SharedSettingsView } from "@shared/ui";
-import CustomerAddressModal from "@features/customer-orders/components/CustomerAddressModal";
-import CustomerAddressSelectorModal from "@features/customer-orders/components/CustomerAddressSelectorModal";
+import { useTheme } from "@/contexts/ThemeContext";
 import CustomerOutletSelectorModal from '@features/catalog/components/customer/CustomerOutletSelectorModal';
-import CustomerPaymentModal from "@features/payments-wallet/components/CustomerPaymentModal";
-import { CompleteProfileModal } from "@shared/ui";
-import { Button } from '@shared/ui';
-const OrderTrackingMap = React.lazy(() => import("@features/maps-tracking/components/OrderTrackingMap"));
-import { useCustomerOrders } from '@features/customer-orders/model/useCustomerOrders';
 import { useRestaurants } from '@features/catalog/model/useRestaurants';
-import { useCustomerCart } from '@features/customer-orders/model/useCustomerCart';
-import { isActiveOrder, isFailedOrder } from '@features/customer-orders/model/orderStatus';
-import { calculateHaversineDistance } from "@/utils/geo";
-import { ChatWidget } from "@features/communication/components/ChatWidget";
 import { CallOverlay } from "@features/communication/components/CallOverlay";
-import { useTheme } from "@/context/ThemeContext";
+import { ChatWidget } from "@features/communication/components/ChatWidget";
+import CustomerAddressSelectorModal from "@features/customer-orders/components/CustomerAddressSelectorModal";
+import CustomerCartDrawer from '@features/customer-orders/components/CustomerCartDrawer';
+import { isActiveOrder, isFailedOrder } from '@features/customer-orders/model/orderStatus';
+import { useCustomerCart } from '@features/customer-orders/model/useCustomerCart';
+import { useCustomerOrders } from '@features/customer-orders/model/useCustomerOrders';
+import CustomerPaymentModal from "@features/payments-wallet/components/CustomerPaymentModal";
+import { Button, CompleteProfileModal, SharedSettingsView } from "@shared/ui";
+const OrderTrackingMap = React.lazy(() => import("@features/maps-tracking/components/OrderTrackingMap"));
 
 
 interface CustomerDashboardProps {
@@ -169,7 +164,7 @@ export default function CustomerDashboard({
   useEffect(() => {
     const profile = getUserProfile();
     if (profile && profile.role === RoleName.CUSTOMER) {
-      const profilePromise = (identityApi.user.get(`/api/v1/users/profile`, {})).catch(e => { console.error(e); return { data: null }; });
+      const profilePromise = (identityApi.user.get(`/api/v1/users/profile`, { headers: { "X-User-Id": "" } })).catch(e => { console.error(e); return { data: null }; });
       const addressesPromise = profile.id ? customerApi.customerAddress.get('/api/v1/customers/:customerId/addresses', { params: { customerId: profile.id } }).catch((e: any) => { console.error(e); return { data: null }; }) : Promise.resolve({ data: null });
 
       Promise.all([profilePromise, addressesPromise]).then(([profileRes, addrRes]) => {
@@ -289,7 +284,7 @@ export default function CustomerDashboard({
     return originalGetCartTotal(rId);
   };
   
-  const processPaymentAndOrder = (method: string) => originalProcessPaymentAndOrder(method, deliveryAddressId, deliveryLat, deliveryLng, address, () => {
+  const processPaymentAndOrder = (method: string) => originalProcessPaymentAndOrder(method, deliveryAddressId as string, () => {
     if (checkoutRestaurantId === selectedRestaurant?.id) {
        setSelectedRestaurant(null);
     }
@@ -467,8 +462,8 @@ export default function CustomerDashboard({
             customerId={getUserProfile()?.id}
             onAddressAdded={refreshAddresses}
             onDeleteAddress={handleDeleteAddress}
-            deliveryLat={deliveryLat}
-            deliveryLng={deliveryLng}
+            deliveryLat={deliveryLat ?? undefined}
+            deliveryLng={deliveryLng ?? undefined}
             onSelectDeliveryLocation={(addr: string, lat?: string | number, lng?: string | number) => {
               if (addr !== address) {
                 const hasItems = Object.values(carts || {}).some((cart: any) => cart.items && cart.items.length > 0);
@@ -733,8 +728,8 @@ export default function CustomerDashboard({
         selectedRestaurant={selectedRestaurant}
         setSelectedRestaurant={setSelectedRestaurant}
         onAddApiLog={onAddApiLog}
-        deliveryLat={deliveryLat}
-        deliveryLng={deliveryLng}
+        deliveryLat={deliveryLat ?? undefined}
+        deliveryLng={deliveryLng ?? undefined}
         carts={carts}
         clearCart={clearCart}
       />
@@ -765,8 +760,8 @@ export default function CustomerDashboard({
         cartRestaurant={checkoutRestaurantId ? carts[checkoutRestaurantId]?.restaurant : undefined}
         processPaymentAndOrder={processPaymentAndOrder}
         address={address}
-        deliveryLat={deliveryLat}
-        deliveryLng={deliveryLng}
+        deliveryLat={deliveryLat ?? undefined}
+        deliveryLng={deliveryLng ?? undefined}
       />
 
       <AnimatePresence>

@@ -1,6 +1,6 @@
+import { useCallContext } from "@/contexts/CallContext";
+import { Mic, MicOff, PhoneCall, PhoneOff } from 'lucide-react';
 import React, { useEffect, useRef } from 'react';
-import { useCallContext } from "@/context/CallContext";
-import { PhoneCall, PhoneOff, Mic, MicOff } from 'lucide-react';
 
 export const CallOverlay: React.FC = () => {
   const { 

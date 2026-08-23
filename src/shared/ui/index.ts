@@ -1,28 +1,28 @@
 // UI Primitives — single import point for all shared components
 // Usage: import { Button, Input, Modal, Badge } from '@shared/ui';
 
-export { Spinner } from './Spinner';
+export { AlertBanner } from './AlertBanner';
 export { Badge } from './Badge';
 export { Button } from './Button';
-export { Input } from './Input';
-export { FormField } from './FormField';
-export { Select } from './Select';
-export { Textarea } from './Textarea';
-export { SearchInput } from './SearchInput';
-export { Modal } from './Modal';
 export { Card } from './Card';
-export { GlassCard } from './GlassCard';
-export { StatCard } from './StatCard';
-export { SidebarNav } from './SidebarNav';
-export { AlertBanner } from './AlertBanner';
 export { ConfirmDialog } from './ConfirmDialog';
+export { FormField } from './FormField';
+export { GlassCard } from './GlassCard';
+export { Input } from './Input';
+export { Modal } from './Modal';
+export { SearchInput } from './SearchInput';
+export { Select } from './Select';
+export { SidebarNav } from './SidebarNav';
+export { Spinner } from './Spinner';
+export { StatCard } from './StatCard';
+export { Textarea } from './Textarea';
 
 // Re-exported from shared/ (presentation primitives)
-export { Skeleton, LoadingSkeleton, RestaurantCardSkeleton, MenuCategorySkeleton } from './Skeleton';
+export { default as CinematicFoodBackground } from './CinematicFoodBackground';
 export { EmptyState } from './EmptyState';
+export { LoadingSkeleton, MenuCategorySkeleton, RestaurantCardSkeleton, Skeleton } from './Skeleton';
 export { TransactionHistoryTable } from "./TransactionHistoryTable";
 export type { WalletTransaction } from "./TransactionHistoryTable";
-export { default as CinematicFoodBackground } from './CinematicFoodBackground';
 
 // Auto-added remaining shared components
 export { default as CompleteProfileModal } from "./CompleteProfileModal";

@@ -1,7 +1,7 @@
-import React from 'react';
-import { MapPin, ChevronRight, Clock, User, Sun, Moon } from 'lucide-react';
+import { useTheme } from "@/contexts/ThemeContext";
 import LaBouffeLogo from '@shared/ui/LaBouffeLogo';
-import { useTheme } from "@/context/ThemeContext";
+import { ChevronRight, MapPin, Moon, Sun, User } from 'lucide-react';
+import React from 'react';
 
 interface DashboardHeaderProps {
   address: string;

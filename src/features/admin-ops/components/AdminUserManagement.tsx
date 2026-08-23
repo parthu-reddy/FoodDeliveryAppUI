@@ -1,14 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { User, Search, Plus, X, Power } from 'lucide-react';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from "@/lib/zodiosClients";
-import { useToast } from "@/context/ToastContext";
-import { RoleName } from "@/types";
-import { Button, Input, Select, Badge } from '@shared/ui';
-import { z } from 'zod';
+import { useToast } from "@/contexts/ToastContext";
 import { useDebounce } from "@/hooks/useDebounce";
 import { usePolling } from "@/hooks/usePolling";
-import { EmptyState } from "@shared/ui";
 import { parseApiError } from '@/lib/parseApiError';
+import { customerApi, identityApi } from "@/lib/zodiosClients";
+import { RoleName } from "@/types";
+import { Button, EmptyState, Input, Select } from '@shared/ui';
+import { Plus, Power, Search, User, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { z } from 'zod';
 
 const roleSchema = z.string().min(2, "Role must be at least 2 characters").max(50, "Role cannot exceed 50 characters").regex(/^[A-Z_]+$/, "Role must contain only uppercase letters and underscores");
 
@@ -32,7 +31,7 @@ export default function AdminUserManagement() {
       if (roleFilter === 'ALL') {
           res = await identityApi.internalUser.get('/api/v1/internal/users/admin/all', { queries: { page } });
       } else {
-          res = await identityApi.internalUser.get('/api/v1/internal/users/by-role', { queries: { roleFilter, page }, headers: { 'X-Calling-Service': RoleName.ADMIN } });
+          res = await identityApi.internalUser.get('/api/v1/internal/users/by-role', { queries: { role: roleFilter, page } as any, headers: { 'X-Calling-Service': RoleName.ADMIN } });
       }
       return res.data?.data || res.data || res;
     },
@@ -70,7 +69,7 @@ export default function AdminUserManagement() {
 
   const fetchUserActiveOrders = async (userId: string) => {
     try {
-      const res = await customerApi.adminOrder.get('/api/v1/internal/admin/orders/user/:userId/active', { params: { userId } });
+      const res = await customerApi.adminOrder.get('/api/v1/internal/admin/orders/user/:userId/active', { params: { userId }, queries: { pageable: { page: 0, size: 20 } } as any, headers: { 'X-Calling-Service': 'ADMIN' } as any });
       const data = res.data?.data || res.data || (Array.isArray(res) ? res : res.data);
       setUserActiveOrders(Array.isArray(data) ? data : []);
     } catch (e) {
@@ -104,13 +103,13 @@ export default function AdminUserManagement() {
     setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, roles: [...(u.roles || []), newRole] } : u));
     
     try {
-      await identityApi.internalUser.post('/api/v1/internal/users/:id/roles', { roleName: newRole as "CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN" }, { params: { id: selectedUser.id }, headers: { 'X-Calling-Service': RoleName.ADMIN } } as unknown as { params: { id: string }, headers: Record<string, string> });
+      await identityApi.internalUser.post('/api/v1/internal/users/:id/roles', { roleName: newRole as "CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN" }, { params: { id: selectedUser.id }, headers: { 'X-Calling-Service': RoleName.ADMIN } } as any);
       setNewRole('');
     } catch (e) {
       console.error(e);
       showError(parseApiError(e, "Failed to add role").message);
       fetchByRole(); // Revert
-      setSelectedUser(prev => prev ? { ...prev, roles: prev.roles.filter(r => r !== newRole) } : null);
+      setSelectedUser((prev: any) => prev ? { ...prev, roles: prev.roles.filter((r: any) => r !== newRole) } : null);
     }
   };
 
@@ -122,12 +121,12 @@ export default function AdminUserManagement() {
     setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, roles: u.roles.filter((r: string) => r !== role) } : u));
 
     try {
-      await identityApi.internalUser.delete('/api/v1/internal/users/:id/roles/:roleName', { params: { id: selectedUser.id, roleName: role as "CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN" }, headers: { 'X-Calling-Service': RoleName.ADMIN } } as unknown as Parameters<typeof identityApi.internalUser.delete>[1]);
+      await identityApi.internalUser.delete('/api/v1/internal/users/:id/roles/:roleName', undefined, { params: { id: selectedUser.id, roleName: role as "CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN" }, headers: { 'X-Calling-Service': RoleName.ADMIN } as any });
     } catch (e) {
       console.error(e);
       showError(parseApiError(e, "Failed to remove role").message);
       fetchByRole(); // Revert
-      setSelectedUser(prev => prev ? { ...prev, roles: [...prev.roles, role] } : null);
+      setSelectedUser((prev: any) => prev ? { ...prev, roles: [...prev.roles, role] } : null);
     }
   };
 

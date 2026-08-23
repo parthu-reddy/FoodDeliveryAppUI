@@ -1,15 +1,15 @@
 import type { ZodiosOptions } from "@zodios/core";
-import { createApiClient as create_restaurantOutlet } from './restaurant_outlet_controller';
-import { createApiClient as create_category } from './category_controller';
 import { createApiClient as create_campaign } from './campaign_controller';
-import { createApiClient as create_catalog } from './catalog_controller';
-import { createApiClient as create_fulfillment } from './fulfillment_controller';
-import { createApiClient as create_restaurantKyc } from './restaurant_kyc_controller';
 import { createApiClient as create_catalogAdmin } from './catalog_admin_controller';
+import { createApiClient as create_catalog } from './catalog_controller';
+import { createApiClient as create_category } from './category_controller';
+import { createApiClient as create_fulfillment } from './fulfillment_controller';
 import { createApiClient as create_imageUpload } from './image_upload_controller';
-import { createApiClient as create_restaurantOnboarding } from './restaurant_onboarding_controller';
-import { createApiClient as create_internalRestaurant } from './internal_restaurant_controller';
 import { createApiClient as create_internalOrder } from './internal_order_controller';
+import { createApiClient as create_internalRestaurant } from './internal_restaurant_controller';
+import { createApiClient as create_restaurantKyc } from './restaurant_kyc_controller';
+import { createApiClient as create_restaurantOnboarding } from './restaurant_onboarding_controller';
+import { createApiClient as create_restaurantOutlet } from './restaurant_outlet_controller';
 import { createApiClient as create_restaurantSse } from './restaurant_sse_controller';
 
 export function createRestaurantFacade(baseUrl: string, options?: ZodiosOptions) {

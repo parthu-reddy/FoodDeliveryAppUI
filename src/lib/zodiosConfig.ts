@@ -1,7 +1,7 @@
 import { ZodiosOptions, ZodiosPlugin } from '@zodios/core';
 import { isAxiosError } from 'axios';
-import { getToken, clearAllLocalData } from './tokenStore';
 import { logger } from './logger';
+import { clearAllLocalData, getToken } from './tokenStore';
 
 export const getDeviceHeaders = () => {
   const userAgent = navigator.userAgent;

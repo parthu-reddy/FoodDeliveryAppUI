@@ -1,9 +1,8 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { X, Plus, Minus, Package, Timer, ShieldCheck, AlertCircle, ShoppingBag } from 'lucide-react';
-import { Restaurant, CartItem, MenuItem } from '@/types';
-import { z } from 'zod';
 import { EmptyState } from "@shared/ui";
+import { AlertCircle, ShieldCheck, ShoppingBag, X } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import React from 'react';
+import { z } from 'zod';
 
 const checkoutSchema = z.object({
   deliveryAddressId: z.string().min(1, "Please select a valid delivery address before checking out.")

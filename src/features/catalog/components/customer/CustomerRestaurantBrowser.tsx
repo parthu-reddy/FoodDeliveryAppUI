@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, MapPinOff, AlertCircle } from 'lucide-react';
-import { motion } from 'motion/react';
-import CustomerRestaurantCard from './CustomerRestaurantCard';
-import { EmptyState } from '@shared/ui';
-import { Button } from '@shared/ui';
 import { useDebounce } from '@/hooks/useDebounce';
+import { Button, EmptyState } from '@shared/ui';
+import { AlertCircle, MapPinOff, Search } from 'lucide-react';
+import { motion } from 'motion/react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import CustomerRestaurantCard from './CustomerRestaurantCard';
 
 interface CustomerRestaurantBrowserProps {
   categories: string[];

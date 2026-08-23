@@ -1,4 +1,3 @@
-import React from 'react';
 
 type SpinnerSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 

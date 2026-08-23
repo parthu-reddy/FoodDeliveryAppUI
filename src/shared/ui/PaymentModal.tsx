@@ -1,8 +1,8 @@
+import { Button, Modal } from '@shared/ui';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Banknote, Check, ChevronRight, CreditCard, Lock, Phone, ShieldCheck, Store, Wallet } from 'lucide-react';
 import React, { useState } from 'react';
-import { ShieldCheck, Check, CreditCard, Wallet, Banknote, Store, ChevronRight, Lock, Phone } from 'lucide-react';
 import { ErrorBoundary } from './ErrorBoundary';
-import { Modal, Button } from '@shared/ui';
-import { motion, AnimatePresence } from 'framer-motion';
 
 export type PaymentMethodType = 'CARD' | 'WALLET' | 'COD' | 'UPI';
 

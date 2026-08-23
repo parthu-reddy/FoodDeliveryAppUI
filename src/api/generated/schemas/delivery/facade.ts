@@ -1,11 +1,11 @@
 import type { ZodiosOptions } from "@zodios/core";
-import { createApiClient as create_internalDelivery } from './internal_delivery_controller';
 import { createApiClient as create_adminDelivery } from './admin_delivery_controller';
+import { createApiClient as create_deliveryExecutive } from './delivery_executive_controller';
+import { createApiClient as create_deliveryOrder } from './delivery_order_controller';
 import { createApiClient as create_deliveryTelemetry } from './delivery_telemetry_controller';
 import { createApiClient as create_deliveryVerification } from './delivery_verification_controller';
-import { createApiClient as create_deliveryExecutive } from './delivery_executive_controller';
+import { createApiClient as create_internalDelivery } from './internal_delivery_controller';
 import { createApiClient as create_logistics } from './logistics_controller';
-import { createApiClient as create_deliveryOrder } from './delivery_order_controller';
 
 export function createDeliveryFacade(baseUrl: string, options?: ZodiosOptions) {
   return {

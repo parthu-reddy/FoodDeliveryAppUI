@@ -1,6 +1,5 @@
-import React from 'react';
-import { getFriendlyStatusMessage } from '@features/customer-orders/model/statusMessaging';
 import { Order } from '@/types';
+import { getFriendlyStatusMessage } from '@features/customer-orders/model/statusMessaging';
 
 interface CustomerActiveOrdersCarouselProps {
   activeOrders: Order[];

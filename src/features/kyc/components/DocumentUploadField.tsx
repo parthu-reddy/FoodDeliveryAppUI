@@ -1,6 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { Upload, File as FileIcon, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from "@/lib/zodiosClients";
+import { AlertCircle, CheckCircle, Loader2, Upload } from 'lucide-react';
+import React, { useRef, useState } from 'react';
 
 interface DocumentUploadFieldProps {
   value: string;
@@ -36,7 +35,7 @@ export default function DocumentUploadField({
     try {
       const token = localStorage.getItem('token');
       const uploadUrlQuery = new URLSearchParams({ docType, filetype: file.type }).toString();
-      const resData = await fetch(import.meta.env.VITE_API_BASE_URL + uploadEndpoint + '?' + uploadUrlQuery, {
+      const resData = await window.fetch(import.meta.env.VITE_API_BASE_URL + uploadEndpoint + '?' + uploadUrlQuery, {
         headers: {
           'Authorization': token ? `Bearer ${token}` : '',
           'Accept': 'application/json'
@@ -59,7 +58,7 @@ export default function DocumentUploadField({
       }
 
       // 2. Upload file directly to Cloudflare R2 / S3
-      const uploadRes = await fetch(uploadUrl, {
+      const uploadRes = await window.fetch(uploadUrl, {
         method: 'PUT',
         headers: {
           'Content-Type': file.type

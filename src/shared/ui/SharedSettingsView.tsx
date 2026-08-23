@@ -1,14 +1,13 @@
-import { OrderStatus, DeliveryStatus, Order } from '../../types';
-import { getFriendlyStatusMessage } from '@features/customer-orders/model/statusMessaging';
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { X, User, Package, LogOut, MapPin, Check, Trash2 } from 'lucide-react';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
-import { useToast } from '../../context/ToastContext';
 import CustomerAddressModal from "@features/customer-orders/components/CustomerAddressModal";
-import { TransactionHistoryTable, WalletTransaction } from "@shared/ui";
+import { getFriendlyStatusMessage } from '@features/customer-orders/model/statusMessaging';
+import { Badge, Button, FormField, Input, Spinner, TransactionHistoryTable, WalletTransaction } from "@shared/ui";
+import { LogOut, MapPin, Trash2, X } from 'lucide-react';
+import { motion } from 'motion/react';
+import { useEffect, useState } from 'react';
 import { z } from 'zod';
-import { Input, Button, FormField, Badge, Spinner } from '@shared/ui';
+import { useToast } from '../../contexts/ToastContext';
+import { customerApi, identityApi, walletApi } from '../../lib/zodiosClients';
+import { DeliveryStatus, OrderStatus } from '../../types';
 
 const sharedProfileSchema = z.object({
   name: z.string().min(1, 'Please enter your full name.').max(100, 'Name cannot exceed 100 characters.'),
@@ -206,7 +205,7 @@ export default function SharedSettingsView({
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        const res = await identityApi.user.get('/api/v1/users/profile');
+        const res = await identityApi.user.get('/api/v1/users/profile', { headers: { "X-User-Id": "" } });
         if (res?.data) {
           setEditName(res.data.name || '');
           setInitialName(res.data.name || '');
@@ -243,7 +242,7 @@ export default function SharedSettingsView({
               name: editName,
               email: editEmail,
               phone: editPhone
-            });
+            }, { headers: { 'X-User-Id': '' } });
       showSuccess('Profile updated successfully');
     } catch (e) {
       console.error(e);

@@ -1,8 +1,8 @@
-import React from 'react';
-import { ArrowLeft, Star, Bike, MapPinOff, Clock, ChevronDown, Minus, Plus, Check, AlertCircle } from 'lucide-react';
-import { motion } from 'framer-motion';
-import ImageLoader from '@shared/ui/ImageLoader';
 import { MenuItem } from '@/types';
+import ImageLoader from '@shared/ui/ImageLoader';
+import { motion } from 'framer-motion';
+import { AlertCircle, ArrowLeft, Bike, ChevronDown, Clock, MapPinOff, Minus, Plus, Star } from 'lucide-react';
+import React from 'react';
 
 interface CustomerMenuViewProps {
   selectedRestaurant: any;
@@ -112,8 +112,8 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
         <div className="flex items-center gap-4 mt-3 text-xs text-slate-500 dark:text-slate-300 font-mono">
           <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-amber-500" /> {selectedRestaurant.deliveryTime} mins</span>
           <span className="flex items-center gap-1"><Bike className="w-3.5 h-3.5 text-emerald-500" /> {isQuoting ? '...' : (() => {
-            const minOrder = deliveryPricing?.minAmountForFreeDelivery ?? 999999;
-            return minOrder < 999999 ? ((getCartTotal().subtotal) >= minOrder ? 'Free Delivery' : 'Dynamic Fee') : `₹${selectedRestaurant.deliveryFee} Base`;
+            const minOrder = deliveryPricing?.minAmountForFreeDelivery;
+            return minOrder != null ? ((getCartTotal().subtotal) >= minOrder ? 'Free Delivery' : 'Dynamic Fee') : `₹${selectedRestaurant.deliveryFee} Base`;
           })()}</span>
           <span>•</span>
           <span>{deliveryPricing?.distanceKm?.toFixed(1) ?? selectedRestaurant.distance} km away</span>
@@ -214,7 +214,7 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
                           ) : cartQty > 0 ? (
                             <div className="flex items-center bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl overflow-hidden font-bold shadow-md shadow-orange-500/15">
                               <button 
-                                onClick={() => removeFromCart(dish.id, selectedRestaurant.id)}
+                                onClick={() => removeFromCart(dish.id as string, selectedRestaurant.id)}
                                 className="px-3 py-1.5 hover:bg-orange-600 cursor-pointer"
                               >
                                 <Minus className="w-3.5 h-3.5" />

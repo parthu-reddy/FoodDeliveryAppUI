@@ -1,7 +1,6 @@
-import React from 'react';
-import { Leaf, Flame, Sparkles, Trophy } from 'lucide-react';
-import { motion } from 'motion/react';
 import ImageLoader from '@shared/ui/ImageLoader';
+import { Flame, Leaf, Sparkles, Trophy } from 'lucide-react';
+import { motion } from 'motion/react';
 
 const PREMIUM_FOOD_SHOT = {
   url: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1600&q=80',

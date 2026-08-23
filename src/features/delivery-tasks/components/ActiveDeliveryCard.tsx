@@ -1,6 +1,6 @@
+import { DeliveryStatus, Order } from "@/types";
+import { KeyRound } from 'lucide-react';
 import React from 'react';
-import { Order, DeliveryStatus } from "@/types";
-import { MapPin, KeyRound } from 'lucide-react';
 
 interface ActiveDeliveryCardProps {
   currentJob: Order;

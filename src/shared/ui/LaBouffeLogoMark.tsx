@@ -1,4 +1,3 @@
-import React from 'react';
 
 export function LaBouffeLogoMark({ className = "w-12 h-12" }: { className?: string }) {
   return (

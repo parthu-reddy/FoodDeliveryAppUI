@@ -1,9 +1,9 @@
-import {StrictMode} from 'react';
-import {createRoot} from 'react-dom/client';
-import App from './App.tsx';
 import { ErrorBoundary } from "@shared/ui";
-import { logger } from './lib/logger.ts';
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App.tsx';
 import './index.css';
+import { logger } from './lib/logger.ts';
 
 // Global error handlers
 window.onerror = (message, source, lineno, colno, error) => {

@@ -1,8 +1,8 @@
-import React from 'react';
-import { ToggleLeft, ToggleRight } from 'lucide-react';
 import { MenuItem } from '@/types';
 import ImageLoader from '@shared/ui/ImageLoader';
+import { ToggleLeft, ToggleRight } from 'lucide-react';
 import { motion } from 'motion/react';
+import React from 'react';
 
 interface RestaurantMenuTogglesViewProps {
   menuList: MenuItem[];
@@ -73,7 +73,7 @@ export const RestaurantMenuTogglesView: React.FC<RestaurantMenuTogglesViewProps>
                     </div>
 
                     <button 
-                      onClick={() => toggleStock(dish.id, available)}
+                      onClick={() => toggleStock(dish.id as string, available)}
                       className="cursor-pointer transition-colors p-1"
                     >
                       {available ? (

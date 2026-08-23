@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 3.2.1263 on 2026-08-22 14:46:42.
+// Generated using typescript-generator version 3.2.1263 on 2026-08-23 09:07:44.
 
 export enum AccountType {
     CUSTOMER = "CUSTOMER",

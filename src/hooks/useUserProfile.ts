@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { identityApi } from '../lib/zodiosClients';
+import { useEffect, useState } from 'react';
 import { getUserProfile } from '../lib/tokenStore';
+import { identityApi } from '../lib/zodiosClients';
 
 interface UserProfileData {
   name: string;

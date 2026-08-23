@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import { Button, FormField, Input, Modal, Spinner } from '@shared/ui';
 import { AlertCircle } from 'lucide-react';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '../../lib/zodiosClients';
+import React, { useState } from 'react';
 import { z } from 'zod';
-import { Modal, Button, FormField, Input, Spinner } from '@shared/ui';
+import { identityApi } from '../../lib/zodiosClients';
 
 const profileSchema = z.object({
   name: z.string().min(1, 'Please enter your full name.').max(100, 'Name cannot exceed 100 characters.'),
@@ -39,7 +39,7 @@ export default function CompleteProfileModal({ isOpen, theme, onComplete, profil
               id: profileId,
               name: name.trim(),
               email: email.trim(),
-            });
+            }, { headers: { 'X-User-Id': '' } });
       onComplete({ name: name.trim(), email: email.trim() });
     } catch (err: any) {
       setError(err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to update profile. Please try again.');

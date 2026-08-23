@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { useToast } from '@/context/ToastContext';
-import { Plus, Edit3, X, Clock, Save, Layers } from 'lucide-react';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '@/lib/zodiosClients';
-import { MenuItem } from '@/types';
-import CategorySelector from './CategorySelector';
-import ImageUploadField from "@features/kyc/components/ImageUploadField";
-import { z } from 'zod';
+import { useToast } from '@/contexts/ToastContext';
 import { parseApiError } from '@/lib/parseApiError';
+import { restaurantApi } from '@/lib/zodiosClients';
+import { MenuItem } from '@/types';
+import ImageUploadField from "@features/kyc/components/ImageUploadField";
+import { Clock, Edit3, Layers, Plus, Save, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { z } from 'zod';
+import CategorySelector from './CategorySelector';
 
 const masterItemSchema = z.object({
   name: z.string().min(1, 'Item name is required').max(100, 'Item name cannot exceed 100 characters'),
@@ -149,9 +149,9 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
   const handleCreateOverride = async (e: React.FormEvent, masterItemId: string) => {
     e.preventDefault();
     const payload = {
-      overriddenPrice: oPrice ? parseFloat(oPrice) : null,
+      overriddenPrice: oPrice ? parseFloat(oPrice) : undefined,
       isAvailable: oActive,
-      overriddenPrepTimeMinutes: oPrepTime ? parseInt(oPrepTime) : null
+      overriddenPrepTimeMinutes: oPrepTime ? parseInt(oPrepTime) : undefined
     };
 
     const validation = overrideSchema.safeParse({ overriddenPrice: payload.overriddenPrice });
@@ -176,7 +176,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
       basePrice: parseFloat(mPrice) || 0,
       packingCharge: parseFloat(mPackingCharge) || 0,
       description: mDesc,
-      categoryId: catId || null,
+      categoryId: catId || undefined,
       imageUrl: mImg,
       isVeg: mVeg,
       defaultPrepTimeMinutes: parseInt(mPrepTime) || 15
@@ -196,9 +196,9 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
 
     const newMaster = await restaurantApi.catalog.post('/api/v1/brands/:brandId/master-menu', payload, { params: { brandId } });
     const overridePayload = {
-      overriddenPrice: oPrice ? parseFloat(oPrice) : null,
+      overriddenPrice: oPrice ? parseFloat(oPrice) : undefined,
       isAvailable: oActive,
-      overriddenPrepTimeMinutes: oPrepTime ? parseInt(oPrepTime) : null
+      overriddenPrepTimeMinutes: oPrepTime ? parseInt(oPrepTime) : undefined
     };
     
     const overrideValidation = overrideSchema.safeParse({ 
@@ -210,7 +210,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
       return;
     }
 
-    await restaurantApi.catalog.post('/api/v1/outlets/:outletId/menu-overrides/:masterMenuItemId', overridePayload, { params: { selectedOutlet, masterMenuItemId: newMaster.data.id } });
+    await restaurantApi.catalog.post('/api/v1/outlets/:outletId/menu-overrides/:masterMenuItemId', overridePayload, { params: { outletId: selectedOutlet, masterMenuItemId: newMaster.data.id } });
     setAddingItemToCatId(null);
     setIsAddingItem(false);
     setMName(""); setMPrice(""); setMPackingCharge("0"); setMPrepTime("15"); setMDesc(""); setMCatId('');

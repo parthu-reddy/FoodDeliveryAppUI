@@ -1,12 +1,23 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  DollarSign, Clock, User, MapPin, Bike, XCircle, Check, Send, 
-  Flame, CheckCircle2, MessageSquare, RefreshCw, KeyRound, Receipt
-} from 'lucide-react';
 import { Order, OrderStatus } from '@/types';
-import { Button, Badge, Input, FormField } from '@shared/ui';
 import { RestaurantOrderDetailsModal } from '@features/restaurant-orders/components/RestaurantOrderDetailsModal';
+import { Badge, Button, FormField, Input } from '@shared/ui';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+    Bike,
+    Check,
+    CheckCircle2,
+    Clock,
+    Flame,
+    KeyRound,
+    MapPin,
+    MessageSquare,
+    Receipt,
+    RefreshCw,
+    Send,
+    User,
+    XCircle
+} from 'lucide-react';
+import React, { useState } from 'react';
 
 // Utility
 const getFriendlyDeliveryStatusMessage = (status: string | undefined): string => {

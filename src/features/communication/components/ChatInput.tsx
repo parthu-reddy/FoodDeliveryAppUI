@@ -1,6 +1,5 @@
-import React, { useState, useRef, useCallback } from 'react';
-import { Send, ImagePlus } from 'lucide-react';
-import _ from 'lodash'; // Assuming lodash is available for debounce, or we can write our own
+import { ImagePlus, Send } from 'lucide-react';
+import React, { useCallback, useRef, useState } from 'react';
 
 interface ChatInputProps {
   isConnected: boolean;

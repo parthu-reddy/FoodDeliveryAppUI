@@ -1,6 +1,6 @@
+import { restaurantApi } from '@/lib/zodiosClients';
+import { AlertCircle, CheckCircle, Clock, Plus, Trash2, X } from 'lucide-react';
 import React, { useState } from 'react';
-import { Clock, Plus, Trash2, CheckCircle, X, AlertCircle } from 'lucide-react';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '@/lib/zodiosClients';
 import { z } from 'zod';
 
 const shiftSchema = z.object({

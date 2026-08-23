@@ -1,8 +1,8 @@
-import React, { useState, useRef } from 'react';
-import { Shield, Utensils, Store, Bike, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
-import { motion } from 'motion/react';
+import { useTheme } from "@/contexts/ThemeContext";
 import { RoleName, UserRole } from "@/types";
-import { useTheme } from "@/context/ThemeContext";
+import { AlertCircle, Bike, ChevronLeft, ChevronRight, Shield, Store, Utensils } from 'lucide-react';
+import { motion } from 'motion/react';
+import { useState } from 'react';
 
 interface RoleSelectorProps {
   onSelectRole: (role: UserRole) => void;

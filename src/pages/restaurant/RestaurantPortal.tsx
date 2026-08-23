@@ -1,14 +1,13 @@
-import { RoleName } from "@/types";
-import React, { useState, useEffect } from 'react';
-import { getBrands, getOutletsByBrand, Brand, Outlet } from '@features/catalog/model/menuStore';
+import { Order, OrderStatus, RoleName } from "@/types";
 import BrandRegistration from '@features/catalog/components/restaurant/BrandRegistration';
 import OutletRegistration from '@features/catalog/components/restaurant/OutletRegistration';
+import { Brand, getBrands, getOutletsByBrand, Outlet } from '@features/catalog/model/menuStore';
+import React, { useEffect, useState } from 'react';
 import RestaurantDashboard from './RestaurantDashboard';
-import { Order, OrderStatus } from "@/types";
 
-import { Store, Moon, Sun, User } from 'lucide-react';
-import LaBouffeLogo from '@shared/ui/LaBouffeLogo';
 import PartnerAccountModal from "@features/catalog/components/PartnerAccountModal";
+import LaBouffeLogo from '@shared/ui/LaBouffeLogo';
+import { Moon, Store, Sun, User } from 'lucide-react';
 
 interface Props {
   userName: string;

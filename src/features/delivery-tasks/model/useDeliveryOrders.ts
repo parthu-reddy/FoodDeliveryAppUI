@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
-import { Order, OrderStatus, DeliveryStatus } from "@/types";
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from "@/lib/zodiosClients";
+import { usePolling } from "@/hooks/usePolling";
 import { getToken } from "@/lib/tokenStore";
+import { deliveryApi } from "@/lib/zodiosClients";
+import { DeliveryStatus, Order, OrderStatus } from "@/types";
 import { isActiveOrder } from '@features/customer-orders/model/orderStatus';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
-import { usePolling } from "@/hooks/usePolling";
+import { useEffect, useRef, useState } from 'react';
 
 export interface UseDeliveryOrdersProps {
   riderId: string;
@@ -301,7 +301,7 @@ export function useDeliveryOrders({
               setInternalOrders(prev => {
                 const mergedMap = new Map();
                 prev.forEach(j => mergedMap.set(j.id, j));
-                jobs.forEach(j => mergedMap.set(j.id, j));
+                jobs.forEach((j: any) => mergedMap.set(j.id, j));
                 return Array.from(mergedMap.values());
               });
               setPingJob(jobs[0]);

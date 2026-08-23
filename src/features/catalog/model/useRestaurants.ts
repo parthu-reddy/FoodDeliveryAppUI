@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { restaurantApi } from '@/lib/zodiosClients';
 import { Restaurant } from '@/types';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '@/lib/zodiosClients';
+import { useEffect, useState } from 'react';
 
 interface UseRestaurantsOptions {
   deliveryLat: number | null;

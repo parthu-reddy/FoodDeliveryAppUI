@@ -1,6 +1,5 @@
-import React from 'react';
-import { ArrowDownLeft, ArrowUpRight, CheckCircle2, CircleDollarSign, Loader2, ArrowLeftRight } from 'lucide-react';
 import { format } from 'date-fns';
+import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, CircleDollarSign, Loader2 } from 'lucide-react';
 
 export interface WalletTransaction {
   id: string;

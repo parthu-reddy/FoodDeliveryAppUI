@@ -1,7 +1,7 @@
+import { Button, FormField, Input, Modal } from '@shared/ui';
+import { Check, User } from 'lucide-react';
 import React, { useState } from 'react';
-import { User, Check } from 'lucide-react';
 import { z } from 'zod';
-import { Modal, Button, FormField, Input } from '@shared/ui';
 
 const namePromptSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(100, 'Name cannot exceed 100 characters'),

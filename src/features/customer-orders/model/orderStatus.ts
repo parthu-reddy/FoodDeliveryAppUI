@@ -1,4 +1,4 @@
-import { OrderStatus, DeliveryStatus } from '@/types/backend-enums';
+import { DeliveryStatus, OrderStatus } from '@/types/backend-enums';
 
 export const isActiveOrder = (order: any): boolean => {
   if (!order) return false;

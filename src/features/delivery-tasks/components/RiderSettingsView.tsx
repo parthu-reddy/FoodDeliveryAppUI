@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { X, User, Phone, Mail, Car, Image as ImageIcon, AlertCircle, LogOut, ShieldCheck, FileText, CreditCard, CheckCircle } from 'lucide-react';
 import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from "@/lib/zodiosClients";
-import { useToast } from "@/context/ToastContext";
+import { useToast } from '@/contexts/ToastContext';
 import ImageUploadField from "@features/kyc/components/ImageUploadField";
 import DocumentUploadField from "@features/kyc/components/DocumentUploadField";
 import { TransactionHistoryTable, WalletTransaction } from "@shared/ui";
@@ -104,7 +104,7 @@ export default function RiderSettingsView({
     const loadData = async () => {
       try {
         // Load Identity Profile
-        const identityRes = await identityApi.user.get('/api/v1/users/profile');
+        const identityRes = await identityApi.user.get('/api/v1/users/profile', { headers: { "X-User-Id": riderPhone || "" } });
         if (identityRes?.data) {
           setEditName(identityRes.data.name || '');
           setInitialName(identityRes.data.name || '');
@@ -114,7 +114,7 @@ export default function RiderSettingsView({
         }
 
         // Load Delivery Profile
-        const deliveryRes = await deliveryApi.deliveryExecutive.get('/api/delivery/profile');
+        const deliveryRes = await deliveryApi.deliveryExecutive.get('/api/delivery/profile', { queries: { phoneNumber: riderPhone || "" }, headers: { "X-User-Id": riderPhone || "" } });
         if (deliveryRes && deliveryRes.data) {
           const profile = deliveryRes.data;
           setEditVehicle(profile.vehicleNumber || '');
@@ -198,7 +198,7 @@ export default function RiderSettingsView({
                     name: editName,
                     email: editEmail,
                     phone: riderPhone
-                  });
+                  }, { headers: { "X-User-Id": userId || riderPhone || "" } });
       }
 
       // 2. Onboard/Update Delivery Profile

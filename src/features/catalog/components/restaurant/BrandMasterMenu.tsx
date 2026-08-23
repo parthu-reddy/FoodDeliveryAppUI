@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { useToast } from '@/context/ToastContext';
-import { Plus, Edit3, X, Clock, Save, Layers } from 'lucide-react';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '@/lib/zodiosClients';
-import CategorySelector from './CategorySelector';
-import ImageUploadField from "@features/kyc/components/ImageUploadField";
-import ImageLoader from '@shared/ui/ImageLoader';
-import { z } from 'zod';
-import { Button, Input, FormField, Badge } from '@shared/ui';
+import { useToast } from '@/contexts/ToastContext';
 import { parseApiError } from '@/lib/parseApiError';
+import { restaurantApi } from '@/lib/zodiosClients';
+import ImageUploadField from "@features/kyc/components/ImageUploadField";
+import { Badge, Button, FormField, Input } from '@shared/ui';
+import ImageLoader from '@shared/ui/ImageLoader';
+import { Clock, Edit3, Layers, Plus, Save, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { z } from 'zod';
+import CategorySelector from './CategorySelector';
 
 const masterItemSchema = z.object({
   name: z.string().min(1, 'Item name is required').max(100, 'Item name cannot exceed 100 characters'),
@@ -113,11 +113,11 @@ const BrandMasterMenu = React.memo(function BrandMasterMenu({ brandId, onRefresh
 
   const handleCreateMaster = async (e: React.FormEvent, catId: string) => {
     e.preventDefault();
-    const payload = {
+    const payload = { packingCharge: 0,
       name: mName,
       basePrice: parseFloat(mPrice) || 0,
       description: mDesc,
-      categoryId: catId || null,
+      categoryId: catId || undefined,
       imageUrl: mImg,
       isVeg: mVeg,
       defaultPrepTimeMinutes: parseInt(mPrepTime) || 15
@@ -152,11 +152,11 @@ const BrandMasterMenu = React.memo(function BrandMasterMenu({ brandId, onRefresh
   const handleEditMaster = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingItemId) return;
-    const payload = {
+    const payload = { packingCharge: 0,
       name: mName,
       basePrice: parseFloat(mPrice) || 0,
       description: mDesc,
-      categoryId: mCatId || null,
+      categoryId: mCatId || undefined,
       imageUrl: mImg,
       isVeg: mVeg,
       defaultPrepTimeMinutes: parseInt(mPrepTime) || 15
@@ -189,7 +189,7 @@ const BrandMasterMenu = React.memo(function BrandMasterMenu({ brandId, onRefresh
 
   const handleSaveTimings = async (catId: string) => {
     try {
-        const payload = {
+        const payload = { packingCharge: 0,
             categoryId: catId,
             timings: [{
                 openingTime: `${tOpening}:00`,

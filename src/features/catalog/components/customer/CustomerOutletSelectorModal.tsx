@@ -1,7 +1,7 @@
-import React from 'react';
-import { Check } from 'lucide-react';
 import { Restaurant } from '@/types';
 import { Modal } from '@shared/ui';
+import { Check } from 'lucide-react';
+import React from 'react';
 
 interface CustomerOutletSelectorModalProps {
   isOpen: boolean;

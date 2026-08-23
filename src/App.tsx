@@ -1,14 +1,12 @@
-import React, { useState, Suspense } from 'react';
-import { RoleName, UserRole } from './types';
-import { CinematicFoodBackground } from "@shared/ui";
-import { getUserProfile } from './lib/tokenStore';
-import { logout as authLogout } from './lib/authStore';
-import { ToastProvider } from './context/ToastContext';
-import { CallProvider } from './context/CallContext';
-import { ErrorBoundary } from "@shared/ui";
-import { ZodErrorBoundary } from "@shared/ui";
-import { ThemeProvider, useTheme } from './context/ThemeContext';
+import { CinematicFoodBackground, ZodErrorBoundary } from "@shared/ui";
+import React, { Suspense, useState } from 'react';
+import { CallProvider } from './contexts/CallContext';
 import { ConfigProvider } from './contexts/ConfigContext';
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+import { ToastProvider } from './contexts/ToastContext';
+import { logout as authLogout } from './lib/authStore';
+import { getUserProfile } from './lib/tokenStore';
+import { RoleName, UserRole } from './types';
 
 // Lazy load route components for code splitting and bundle optimization
 const LoginScreen = React.lazy(() => import("@features/identity/components/LoginScreen"));

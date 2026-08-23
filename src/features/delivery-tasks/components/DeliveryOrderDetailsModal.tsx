@@ -1,8 +1,8 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Receipt, CheckCircle2, MapPin } from 'lucide-react';
 import { Order } from "@/types";
 import { Button } from '@shared/ui';
+import { AnimatePresence, motion } from 'framer-motion';
+import { CheckCircle2, MapPin, Receipt, X } from 'lucide-react';
+import React from 'react';
 
 interface DeliveryOrderDetailsModalProps {
   order: Order | null;

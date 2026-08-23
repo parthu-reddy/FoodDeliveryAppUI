@@ -1,26 +1,23 @@
-import React, { useState, useEffect, Suspense, lazy, useCallback } from 'react';
-import { 
-  Store, TrendingUp, CheckCircle, Package, RefreshCw, LogOut, 
-  ToggleLeft, ToggleRight, DollarSign, Calendar, Eye, MapPin, Sun, Moon,
-  Terminal, Sliders, Code, Send, CheckCircle2, AlertCircle,
-  ChefHat, Flame, Clock, Info, Shield, HelpCircle, User, Bike, Play, ArrowRight, Sparkles,
-  Check, Truck, Settings, Plus, Trash2, Edit3, ChevronLeft, Layers, Utensils, History, ChevronDown, ChevronUp, XCircle, MessageSquare, X
+import { MenuItem, Order, OrderStatus, VerificationStatus } from "@/types";
+import {
+    MessageSquare,
+    Moon,
+    Settings,
+    Sun,
+    ToggleLeft, ToggleRight,
+    User,
+    X
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Order, OrderStatus, MenuItem, VerificationStatus } from "@/types";
+import { AnimatePresence, motion } from 'motion/react';
+import { Suspense, lazy, useCallback, useEffect, useState } from 'react';
 
-import LaBouffeLogo from '@shared/ui/LaBouffeLogo';
-import { ChatWidget } from "@features/communication/components/ChatWidget";
-import { ErrorBoundary } from "@shared/ui";
-import { EmptyState } from "@shared/ui";
 import { CallOverlay } from "@features/communication/components/CallOverlay";
-import { CompleteProfileModal } from "@shared/ui";
-import { getUserProfile } from "@/lib/tokenStore";
+import { ChatWidget } from "@features/communication/components/ChatWidget";
+import { CompleteProfileModal, EmptyState, ErrorBoundary } from "@shared/ui";
 import { useUserProfile } from '../../hooks/useUserProfile';
 
-import { LoadingSkeleton } from "@shared/ui";
 import { RestaurantMenuTogglesView } from '@features/catalog/components/restaurant/RestaurantMenuTogglesView';
-import { Button, Badge } from '@shared/ui';
+import { Badge, Button, LoadingSkeleton } from "@shared/ui";
 
 const CampaignManagement = lazy(() => import("@features/campaigns-ads/components/CampaignManagement"));
 const SharedSettingsView = lazy(() => import("@shared/ui/SharedSettingsView"));
@@ -28,30 +25,29 @@ const RestaurantSettingsShell = lazy(() =>
   import('./RestaurantSettingsShell').then(module => ({ default: module.RestaurantSettingsShell }))
 );
 
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from "@/lib/zodiosClients";
-import { fetchEventSource } from '@microsoft/fetch-event-source';
-import { useToast } from "@/context/ToastContext";
-import ImageLoader from '@shared/ui/ImageLoader';
-import { useRestaurantOrders } from '@features/restaurant-orders/model/useRestaurantOrders';
-import { RestaurantOrderQueue } from '@features/restaurant-orders/components/RestaurantOrderQueue';
+import { useTheme } from "@/contexts/ThemeContext";
+import { useToast } from "@/contexts/ToastContext";
+import { restaurantApi } from "@/lib/zodiosClients";
 import { RestaurantStatsBar } from "@features/catalog/components/RestaurantStatsBar";
 import { RestaurantBrandSelector } from '@features/catalog/components/restaurant/RestaurantBrandSelector';
+import { RestaurantOrderQueue } from '@features/restaurant-orders/components/RestaurantOrderQueue';
+import { useRestaurantOrders } from '@features/restaurant-orders/model/useRestaurantOrders';
+import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { z } from 'zod';
 
 const delaySchema = z.object({
   additionalPrepTime: z.number().int().positive().max(120, 'Delay cannot exceed 120 minutes'),
   delayReason: z.string().max(255, 'Reason must be under 255 characters').optional()
 });
-import { getFriendlyStatusMessage, getFriendlyDeliveryStatusMessage } from '@features/customer-orders/model/statusMessaging';
-import { useTheme } from "@/context/ThemeContext";
 
-import { isActiveOrder, isFailedOrder } from '@features/customer-orders/model/orderStatus';
-import { parseApiError } from '@/lib/parseApiError';
-import { 
-  getBrands, getOutlets, 
-  getMasterMenuItems, 
-  getOutletOverrides, getEffectiveMenu 
+import {
+    getBrands,
+    getEffectiveMenu,
+    getMasterMenuItems,
+    getOutletOverrides,
+    getOutlets
 } from '@features/catalog/model/menuStore';
+import { isActiveOrder } from '@features/customer-orders/model/orderStatus';
 
 interface RestaurantDashboardProps {
   restaurantId: string;

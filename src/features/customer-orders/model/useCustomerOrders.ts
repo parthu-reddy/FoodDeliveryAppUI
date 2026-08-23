@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { customerApi } from '@/lib/zodiosClients';
 import { Order, OrderStatus } from '@/types';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '@/lib/zodiosClients';
 import { isActiveOrder, isFailedOrder } from '@features/customer-orders/model/orderStatus';
+import { useEffect, useState } from 'react';
 
 interface UseCustomerOrdersOptions {
   onUpdateOrder?: (orderId: string, status: string) => void;

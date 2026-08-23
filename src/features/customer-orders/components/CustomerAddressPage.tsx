@@ -1,10 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { motion } from 'motion/react';
-import { ChevronLeft, Search, MapPin, X } from 'lucide-react';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi, mapsApi } from "@/lib/zodiosClients";
 import { getToken } from "@/lib/tokenStore";
+import { customerApi, mapsApi } from "@/lib/zodiosClients";
+import { MapPin, Search, X } from 'lucide-react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { motion } from 'motion/react';
+import { useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
 
 const addressSchema = z.object({
@@ -63,19 +63,18 @@ export default function CustomerAddressPage({
         if (onAddApiLog) {
            onAddApiLog({ id: 'fetch_maps_key', label: 'GET /api/config/maps-key', method: 'GET' });
         }
-        const { key } = await mapsApi.integration.get('/api/config/maps-key', {});
         if (!active || !mapContainerRef.current) return;
         
         map = new maplibregl.Map({
              container: mapContainerRef.current!,
-             style: 'https://api.olamaps.io/styleEditor/v1/styleEdit/styles/53575843-c000-4b22-ac12-5818a67991bd/LowCost',
+             style: '/olamaps/styleEditor/v1/styleEdit/styles/53575843-c000-4b22-ac12-5818a67991bd/LowCost',
              minZoom: 10,
              maxZoom: 17,
              interactive: false,
              transformRequest: (url, resourceType) => {
                  if (url.includes('api.olamaps.io')) {
                      return {
-                         url: `${url}${url.includes('?') ? '&' : '?'}api_key=${key}`
+                         url: url.replace('https://api.olamaps.io', '/olamaps')
                      };
                  }
                  return { url };
@@ -190,7 +189,7 @@ export default function CustomerAddressPage({
       } else {
           try {
               if (onAddApiLog) onAddApiLog({ id: 'geocode', label: `GET /api/places/geocode?address=${encodeURIComponent(suggestion.description)}`, method: 'GET' });
-              const rawRes = await fetch(`/api/places/geocode?address=${encodeURIComponent(suggestion.description)}`, { headers: { Authorization: `Bearer ${token}`, 'X-Calling-Service': 'CustomerApplication' } });
+              const rawRes = await window.fetch(`/api/places/geocode?address=${encodeURIComponent(suggestion.description)}`, { headers: { Authorization: `Bearer ${token}`, 'X-Calling-Service': 'CustomerApplication' } });
               if (!rawRes.ok) throw new Error('API Error');
               const res = await rawRes.json();
               if (res && res.lat && res.lng) {

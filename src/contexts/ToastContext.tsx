@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import React, { createContext, ReactNode, useCallback, useContext, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 
 type ToastType = 'success' | 'error' | 'info';
 

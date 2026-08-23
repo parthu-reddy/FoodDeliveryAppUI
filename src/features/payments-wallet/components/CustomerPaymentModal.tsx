@@ -1,7 +1,6 @@
-import React from 'react';
-import { MapPin, Store } from 'lucide-react';
 import { ErrorBoundary } from "@shared/ui";
-import { PaymentModal, type PaymentMethodType } from "@shared/ui/PaymentModal";
+import { PaymentModal } from "@shared/ui/PaymentModal";
+import { MapPin, Store } from 'lucide-react';
 
 export default function CustomerPaymentModal(props: any) {
   return (

@@ -1,11 +1,11 @@
+import { useToast } from "@/contexts/ToastContext";
+import { identityApi } from "@/lib/zodiosClients";
 import { RoleName } from "@/types";
-import React, { useState, useEffect } from 'react';
-import { useToast } from "@/context/ToastContext";
-import { motion, AnimatePresence } from 'motion/react';
-import { X, LogOut } from 'lucide-react';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from "@/lib/zodiosClients";
+import { Badge, Button, FormField, Input } from '@shared/ui';
+import { LogOut, X } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
-import { FormField, Input, Button, Badge } from '@shared/ui';
 
 const nameSchema = z.string().min(1, 'Name is required').max(100, 'Name cannot exceed 100 characters');
 
@@ -62,7 +62,7 @@ export default function PartnerAccountModal({
 
   const handleRemoveDevice = async (sessionId: string) => {
     try {
-      await identityApi.auth.delete('/api/v1/internal/auth/sessions/:sessionId', { params: { sessionId }, headers: { 'X-Calling-Service': portalRole || RoleName.RESTAURANT } } as unknown as Parameters<typeof identityApi.auth.delete>[1]);
+      await identityApi.auth.delete('/api/v1/internal/auth/sessions/:sessionId', undefined, { params: { sessionId }, headers: { 'X-Calling-Service': portalRole || RoleName.RESTAURANT } as any });
       fetchDevices();
     } catch (err) {
       console.error("Failed to invalidate session", err);
@@ -71,7 +71,7 @@ export default function PartnerAccountModal({
 
   const handleRemoveAllDevices = async () => {
     try {
-      await identityApi.auth.delete(`/api/v1/internal/auth/sessions`, { headers: { 'X-Calling-Service': portalRole || RoleName.RESTAURANT } } as unknown as Parameters<typeof identityApi.auth.delete>[1]);
+      await identityApi.auth.delete(`/api/v1/internal/auth/sessions`, undefined, { headers: { 'X-Calling-Service': portalRole || RoleName.RESTAURANT } as any });
       if (onLogout) onLogout();
     } catch (e) {
       console.error('Failed to remove all devices', e);
@@ -85,7 +85,7 @@ export default function PartnerAccountModal({
       return;
     }
     try {
-      await identityApi.user.put('/api/v1/users/profile', { name: editName }, {});
+      await identityApi.user.put('/api/v1/users/profile', { name: editName }, { headers: { "X-User-Id": "" } });
       onNameUpdate(editName);
       if (onSaveExtra) {
         await onSaveExtra(editName);

@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Client, IMessage } from '@stomp/stompjs';
+import { cleanOrphanedChunks, clearSessionData, getChunks, getPendingUploads, saveChunk, savePendingUpload } from "@/lib/offlineStorage";
 import { getToken, getUserProfile } from "@/lib/tokenStore";
-import { identityApi, chatApi } from "@/lib/zodiosClients";
-import { saveChunk, getChunks, savePendingUpload, getPendingUploads, clearSessionData, cleanOrphanedChunks } from "@/lib/offlineStorage";
+import { chatApi } from "@/lib/zodiosClients";
+import { Client, IMessage } from '@stomp/stompjs';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export interface WebRtcSignal {
   sessionId?: string;
@@ -361,7 +361,7 @@ export const useWebRTC = () => {
             const freshToken = getToken();
             const uploadToken = freshToken || upload.token;
             
-            const response = await fetch(`/api/v1/chat/sessions/${upload.sessionId}/upload-audio`, {
+            const response = await window.fetch(`/api/v1/chat/sessions/${upload.sessionId}/upload-audio`, {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${uploadToken}`,
@@ -390,7 +390,7 @@ export const useWebRTC = () => {
     syncOfflineUploads(); // Try on mount
     
     // Clean up any orphaned chunks left behind by browser crashes
-    cleanOrphanedChunks(activeSessionIdRef.current).catch(e => console.error("Failed to clean orphaned chunks", e));
+    cleanOrphanedChunks(activeSessionIdRef.current as string | undefined).catch(e => console.error("Failed to clean orphaned chunks", e));
 
     return () => window.removeEventListener('online', syncOfflineUploads);
   }, []);

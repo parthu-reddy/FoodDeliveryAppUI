@@ -1,6 +1,5 @@
-import React from 'react';
-import { DollarSign, CheckCircle } from 'lucide-react';
 import { StatCard } from '@shared/ui';
+import { CheckCircle, DollarSign } from 'lucide-react';
 
 interface RestaurantStatsBarProps {
   totalRevenue: number;

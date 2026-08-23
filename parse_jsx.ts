@@ -1,4 +1,4 @@
-import { Project, SyntaxKind, JsxElement, JsxSelfClosingElement } from 'ts-morph';
+import { Project, SyntaxKind } from 'ts-morph';
 
 const project = new Project();
 const sourceFile = project.addSourceFileAtPath('src/components/CustomerDashboard.tsx');

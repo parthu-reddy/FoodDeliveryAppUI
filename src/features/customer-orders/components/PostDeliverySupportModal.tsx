@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
-import { HelpCircle, Send, Check, AlertCircle } from 'lucide-react';
-import { ErrorBoundary } from "@shared/ui";
-import { Modal, Button, Spinner } from '@shared/ui';
+import { Button, ErrorBoundary, Modal, Spinner } from "@shared/ui";
+import { AlertCircle, Check, HelpCircle, Send } from 'lucide-react';
+import { useState } from 'react';
 
 export default function PostDeliverySupportModal(props: any) {
   return (

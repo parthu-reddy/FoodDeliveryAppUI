@@ -1,12 +1,11 @@
-import React from 'react';
-import { ArrowLeft, Clock, Timer, X, XCircle, Check } from 'lucide-react';
+import { DeliveryStatus, OrderStatus } from '@/types/backend-enums';
 import { motion } from 'framer-motion';
-import { OrderStatus, DeliveryStatus } from '@/types/backend-enums';
+import { ArrowLeft, Check, Clock, Timer, X, XCircle } from 'lucide-react';
+import React from 'react';
 // Use React.lazy for map
 const OrderTrackingMap = React.lazy(() => import("@features/maps-tracking/components/OrderTrackingMap"));
 
 import { customerApi } from '@/lib/zodiosClients';
-import { parseApiError } from '@/lib/parseApiError';
 
 interface CustomerOrderTrackerProps {
   currentTrackingOrder: any;

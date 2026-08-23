@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Upload, Image as ImageIcon, Loader2 } from 'lucide-react';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from "@/lib/zodiosClients";
+import { restaurantApi } from "@/lib/zodiosClients";
 import { compressImageNative } from "@/utils/imageCompression";
+import { Image as ImageIcon, Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
 
 interface ImageUploadFieldProps {
   value: string;

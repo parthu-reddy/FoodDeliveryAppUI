@@ -1,17 +1,22 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { 
-  Store, Utensils, History, ChevronLeft, Sparkles, 
-  CheckCircle, Settings, Edit3
-} from 'lucide-react';
 import { MenuItem, Order, VerificationStatus } from "@/types";
+import {
+    CheckCircle,
+    ChevronLeft,
+    Edit3,
+    History,
+    Settings,
+    Sparkles,
+    Store, Utensils
+} from 'lucide-react';
+import { motion } from 'motion/react';
+import React, { useState } from 'react';
 
-import OutletRegistration from '@features/catalog/components/restaurant/OutletRegistration';
-import BrandRegistration from '@features/catalog/components/restaurant/BrandRegistration';
-import OutletShiftEditor from '@features/catalog/components/restaurant/OutletShiftEditor';
-import OutletSettingsEditor from '@features/catalog/components/restaurant/OutletSettingsEditor';
 import BrandMasterMenu from '@features/catalog/components/restaurant/BrandMasterMenu';
+import BrandRegistration from '@features/catalog/components/restaurant/BrandRegistration';
 import OutletMenuEditor from '@features/catalog/components/restaurant/OutletMenuEditor';
+import OutletRegistration from '@features/catalog/components/restaurant/OutletRegistration';
+import OutletSettingsEditor from '@features/catalog/components/restaurant/OutletSettingsEditor';
+import OutletShiftEditor from '@features/catalog/components/restaurant/OutletShiftEditor';
 import { OrderHistory } from '@features/restaurant-orders/components/OrderHistory';
 
 interface RestaurantSettingsShellProps {

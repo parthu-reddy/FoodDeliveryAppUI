@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi, campaignApi } from "@/lib/zodiosClients";
-import { Plus, Play, Pause, DollarSign, TrendingUp, Calendar, Wallet } from 'lucide-react';
-import { useToast } from "@/context/ToastContext";
-import { AdPerformanceDashboard, CampaignPerformance } from "@features/campaigns-ads/components/AdPerformanceDashboard";
-import { TransactionHistoryTable, WalletTransaction } from "@shared/ui";
-import { Button, Modal, FormField, Input, Badge } from '@shared/ui';
-import { PaymentModal, type PaymentMethodType } from "@shared/ui/PaymentModal";
+import { useToast } from "@/contexts/ToastContext";
 import { parseApiError } from "@/lib/parseApiError";
+import { campaignApi, walletApi } from "@/lib/zodiosClients";
+import { AdPerformanceDashboard, CampaignPerformance } from "@features/campaigns-ads/components/AdPerformanceDashboard";
+import { Badge, Button, FormField, Input, Modal, TransactionHistoryTable, WalletTransaction } from "@shared/ui";
+import { PaymentModal, type PaymentMethodType } from "@shared/ui/PaymentModal";
+import { Calendar, DollarSign, Pause, Plus, TrendingUp, Wallet } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 
 interface Campaign {
   id: string;
@@ -100,7 +99,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
     if (!restaurantId) return;
     setPerfLoading(true);
     try {
-      const res = await campaignApi.campaign.get('/api/v1/advertisers/:advertiserId/campaigns/performance', { params: { advertiserId: restaurantId } });
+      const res = await campaignApi.campaign.get('/api/v1/advertisers/:advertiserId/campaigns/performance', { params: { advertiserId: restaurantId }, queries: { pageable: {} } as any });
       if (res.data) setPerformanceData(res.data);
     } catch (e) {
       console.error(e);
@@ -113,7 +112,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
   const loadCampaigns = async () => {
     setLoading(true);
     try {
-      const res = await campaignApi.campaign.get('/api/v1/advertisers/:advertiserId/campaigns', { params: { advertiserId: restaurantId } });
+      const res = await campaignApi.campaign.get('/api/v1/advertisers/:advertiserId/campaigns', { params: { advertiserId: restaurantId }, queries: { pageable: {} } as any });
       if (res.data && res.data.content) {
         setCampaigns(res.data.content);
       } else if (Array.isArray(res.data)) {
@@ -137,7 +136,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
               maxBid: parseFloat(bidAmount),
               startDate: new Date(startDate).toISOString(),
               endDate: new Date(endDate).toISOString()
-            }, { params: { advertiserId: restaurantId } });
+            }, { params: { advertiserId: restaurantId }, queries: { pageable: {} } as any });
       showSuccess('Campaign created successfully');
       setShowCreateModal(false);
       loadCampaigns();
@@ -166,7 +165,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
       await campaignApi.campaign.post(
         '/api/v1/advertisers/:advertiserId/campaigns/wallet/topup', 
         { amount: parseFloat(topupAmount), gatewayName: gateway } as any, 
-        { params: { advertiserId: restaurantId } }
+        { params: { advertiserId: restaurantId }, queries: { pageable: {} } as any }
       );
       
       setPaymentStatus('success');

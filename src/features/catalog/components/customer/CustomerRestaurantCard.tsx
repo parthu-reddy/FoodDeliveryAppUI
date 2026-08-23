@@ -1,8 +1,7 @@
-import React, { useEffect, useRef } from 'react';
-import { Heart, Star, Clock, Bike, Megaphone } from 'lucide-react';
 import { Restaurant } from '@/types';
 import ImageLoader from '@shared/ui/ImageLoader';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '@/lib/zodiosClients';
+import { Bike, Clock, Heart, Megaphone, Star } from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
 
 interface CustomerRestaurantCardProps {
   key?: React.Key;
@@ -26,7 +25,7 @@ export default function CustomerRestaurantCard({ restaurant, isLast, lastElement
           const trackingUrl = restaurant.adData.impressionTrackingUrl;
           if (trackingUrl) {
             const relativeUrl = trackingUrl.replace('http://event-tracking-service', '');
-            fetch(import.meta.env.VITE_API_BASE_URL + relativeUrl, { headers: { 'X-Calling-Service': 'CustomerApplication' } }).catch(err => console.error("Tracking failed", err));
+            window.fetch(import.meta.env.VITE_API_BASE_URL + relativeUrl, { headers: { 'X-Calling-Service': 'CustomerApplication' } }).catch(err => console.error("Tracking failed", err));
           }
           
           observer.disconnect(); // Only track impression once per render
@@ -47,7 +46,7 @@ export default function CustomerRestaurantCard({ restaurant, isLast, lastElement
       const trackingUrl = restaurant.adData.clickTrackingUrl;
       if (trackingUrl) {
         const relativeUrl = trackingUrl.replace('http://event-tracking-service', '');
-        fetch(import.meta.env.VITE_API_BASE_URL + relativeUrl, { headers: { 'X-Calling-Service': 'CustomerApplication' } }).catch(err => console.error("Click tracking failed", err));
+        window.fetch(import.meta.env.VITE_API_BASE_URL + relativeUrl, { headers: { 'X-Calling-Service': 'CustomerApplication' } }).catch(err => console.error("Click tracking failed", err));
       }
     }
     onClick(restaurant);

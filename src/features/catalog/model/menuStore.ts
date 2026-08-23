@@ -1,5 +1,5 @@
-import { MenuItem, MasterMenuItem, OutletOverride } from '@/types';
 import { getToken } from '@/lib/tokenStore';
+import { MasterMenuItem, MenuItem, OutletOverride } from '@/types';
 
 function getHeaders() {
   const headers: Record<string, string> = {
@@ -11,10 +11,10 @@ function getHeaders() {
   return headers;
 }
 
-async function apiGet(url: string) { const res = await fetch(url, { headers: getHeaders() }); const json = await res.json(); if (!res.ok) throw new Error('API Error'); return { data: json?.success !== undefined ? json.data : json }; }
-async function apiPost(url: string, body: any) { const res = await fetch(url, { method: 'POST', headers: getHeaders(), body: JSON.stringify(body) }); const json = await res.json(); if (!res.ok) throw new Error('API Error'); return { data: json?.success !== undefined ? json.data : json }; }
-async function apiPut(url: string, body: any) { const res = await fetch(url, { method: 'PUT', headers: getHeaders(), body: JSON.stringify(body) }); const json = await res.json(); if (!res.ok) throw new Error('API Error'); return { data: json?.success !== undefined ? json.data : json }; }
-async function apiDelete(url: string) { const res = await fetch(url, { method: 'DELETE', headers: getHeaders() }); if (!res.ok) throw new Error('API Error'); }
+async function apiGet(url: string) { const res = await window.fetch(url, { headers: getHeaders() }); const json = await res.json(); if (!res.ok) throw new Error('API Error'); return { data: json?.success !== undefined ? json.data : json }; }
+async function apiPost(url: string, body: any) { const res = await window.fetch(url, { method: 'POST', headers: getHeaders(), body: JSON.stringify(body) }); const json = await res.json(); if (!res.ok) throw new Error('API Error'); return { data: json?.success !== undefined ? json.data : json }; }
+async function apiPut(url: string, body: any) { const res = await window.fetch(url, { method: 'PUT', headers: getHeaders(), body: JSON.stringify(body) }); const json = await res.json(); if (!res.ok) throw new Error('API Error'); return { data: json?.success !== undefined ? json.data : json }; }
+async function apiDelete(url: string) { const res = await window.fetch(url, { method: 'DELETE', headers: getHeaders() }); if (!res.ok) throw new Error('API Error'); }
 
 export interface Brand {
   id: string;

@@ -1,12 +1,15 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  DollarSign, CheckCircle, Sliders, RefreshCw, Clock, 
-  User, MapPin, Bike, XCircle, Check, Send, 
-  ChefHat, Flame, Play, CheckCircle2, MessageSquare, Truck, Shield 
-} from 'lucide-react';
 import { Order, OrderStatus } from '@/types';
 import { RestaurantOrderCard } from '@features/restaurant-orders/components/RestaurantOrderCard';
+import { motion } from 'framer-motion';
+import {
+    Bike,
+    ChefHat,
+    Clock,
+    RefreshCw,
+    Sliders,
+    Truck
+} from 'lucide-react';
+import React from 'react';
 
 // Utility
 const getFriendlyDeliveryStatusMessage = (status: string | undefined): string => {

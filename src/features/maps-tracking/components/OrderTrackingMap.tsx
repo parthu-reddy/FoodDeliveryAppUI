@@ -1,13 +1,13 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useToast } from "@/contexts/ToastContext";
+import { getToken } from "@/lib/tokenStore";
+import { deliveryApi, restaurantApi } from "@/lib/zodiosClients";
+import { fetchEventSource } from '@microsoft/fetch-event-source';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { fetchEventSource } from '@microsoft/fetch-event-source';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from "@/lib/zodiosClients";
-import { getToken } from "@/lib/tokenStore";
-import { useToast } from "@/context/ToastContext";
+import { useEffect, useRef, useState } from 'react';
 
-import { Order, OrderStatus } from "@/types";
 import { decodePolyline } from "@/lib/polyline";
+import { Order, OrderStatus } from "@/types";
 
 window.maplibregl = maplibregl;
 
@@ -24,7 +24,7 @@ export default function OrderTrackingMap(props: { order: Order; enableLiveTracki
 }
 
 function _OrderTrackingMap({ order, enableLiveTracking = false }: { order: Order; enableLiveTracking?: boolean }) {
-  const { olaMapsApiKey } = useConfig();
+  const { } = useConfig();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [mapInstance, setMapInstance] = useState<any>(null);
   const { showError } = useToast();
@@ -71,7 +71,6 @@ function _OrderTrackingMap({ order, enableLiveTracking = false }: { order: Order
 
     const initMap = async () => {
       try {
-        let key = olaMapsApiKey || import.meta.env.VITE_OLA_MAPS_API_KEY;
         if (!active || !mapContainerRef.current) return;
         
         // Set customer location to order delivery coordinates (if available) or fallback
@@ -80,7 +79,7 @@ function _OrderTrackingMap({ order, enableLiveTracking = false }: { order: Order
 
         map = new maplibregl.Map({
              container: mapContainerRef.current!,
-             style: 'https://api.olamaps.io/styleEditor/v1/styleEdit/styles/53575843-c000-4b22-ac12-5818a67991bd/LowCost',
+             style: '/olamaps/styleEditor/v1/styleEdit/styles/53575843-c000-4b22-ac12-5818a67991bd/LowCost',
              center: [cLng, cLat], // Center on delivery location initially
              zoom: 12,
              minZoom: 10, // Prevent zooming out too far
@@ -88,7 +87,7 @@ function _OrderTrackingMap({ order, enableLiveTracking = false }: { order: Order
              interactive: false, // Block user interaction with the map itself
              transformRequest: (url, resourceType) => {
                  if (url.includes('api.olamaps.io')) {
-                     return { url: `${url}${url.includes('?') ? '&' : '?'}api_key=${key}` };
+                     return { url: url.replace('https://api.olamaps.io', '/olamaps') };
                  }
                  return { url };
              }

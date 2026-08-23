@@ -1,7 +1,7 @@
-import { useState, useCallback, useEffect } from 'react';
-import { Order, OrderStatus } from '@/types';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '@/lib/zodiosClients';
 import { usePolling } from '@/hooks/usePolling';
+import { restaurantApi } from '@/lib/zodiosClients';
+import { Order, OrderStatus } from '@/types';
+import { useCallback, useState } from 'react';
 
 interface UseRestaurantOrdersOptions {
   restaurantId: string;

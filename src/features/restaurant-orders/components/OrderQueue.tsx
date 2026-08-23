@@ -1,6 +1,5 @@
-import React from 'react';
 import { Order, OrderStatus } from '@/types';
-import { Clock, Check } from 'lucide-react';
+import { Check, Clock } from 'lucide-react';
 
 interface OrderQueueProps {
   orders: Order[];

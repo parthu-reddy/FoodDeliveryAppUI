@@ -1,9 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useConfig } from "@/contexts/ConfigContext";
+import { restaurantApi } from "@/lib/zodiosClients";
+import { ErrorBoundary } from "@shared/ui";
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from "@/lib/zodiosClients";
-import { useConfig } from "@/contexts/ConfigContext";
-import { ErrorBoundary } from "@shared/ui";
+import { useEffect, useRef, useState } from 'react';
 
 export default function AdminAssignmentMap(props: { 
     order: any, 
@@ -26,7 +26,7 @@ function _AdminAssignmentMap({
     availableDrivers: any[], 
     onAssign: (orderId: string, driverId: string) => void 
 }) {
-  const { olaMapsApiKey } = useConfig();
+  const { } = useConfig();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [mapInstance, setMapInstance] = useState<any>(null);
 
@@ -60,19 +60,18 @@ function _AdminAssignmentMap({
 
     const initMap = async () => {
       try {
-        let key = olaMapsApiKey || import.meta.env.VITE_OLA_MAPS_API_KEY;
         if (!active || !mapContainerRef.current) return;
         
         map = new maplibregl.Map({
              container: mapContainerRef.current!,
-             style: 'https://api.olamaps.io/styleEditor/v1/styleEdit/styles/53575843-c000-4b22-ac12-5818a67991bd/LowCost',
+             style: '/olamaps/styleEditor/v1/styleEdit/styles/53575843-c000-4b22-ac12-5818a67991bd/LowCost',
              center: [77.5946, 12.9716], // Default Bangalore
              zoom: 12,
              minZoom: 10,
              maxZoom: 17,
              transformRequest: (url, resourceType) => {
                  if (url.includes('api.olamaps.io')) {
-                     return { url: `${url}${url.includes('?') ? '&' : '?'}api_key=${key}` };
+                     return { url: url.replace('https://api.olamaps.io', '/olamaps') };
                  }
                  return { url };
              }

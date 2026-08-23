@@ -1,8 +1,7 @@
-import React from 'react';
-import { Map as MapIcon, Play } from 'lucide-react';
-import { motion } from 'motion/react';
 import { Order } from "@/types";
 import { EmptyState } from "@shared/ui";
+import { Map as MapIcon, Play } from 'lucide-react';
+import { motion } from 'motion/react';
 
 interface DeliveryAvailableJobsProps {
   availableJobs: Order[];

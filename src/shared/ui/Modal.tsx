@@ -1,6 +1,6 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import { X } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import React from 'react';
 
 type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
 

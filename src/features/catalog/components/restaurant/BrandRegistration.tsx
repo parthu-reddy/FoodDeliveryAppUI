@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { Plus, CheckCircle, Sparkles, AlertCircle, ArrowRight, ArrowLeft, Store, CreditCard } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '@/lib/zodiosClients';
+import { restaurantApi } from '@/lib/zodiosClients';
 import ImageUploadField from "@features/kyc/components/ImageUploadField";
+import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, CreditCard, Plus, Sparkles, Store } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import React, { useState } from 'react';
 import { z } from 'zod';
 
 const brandSchema = z.object({

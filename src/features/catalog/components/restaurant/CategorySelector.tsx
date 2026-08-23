@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Search, Check } from 'lucide-react';
+import { Check, ChevronDown, Search } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 interface Category {
   id: string;

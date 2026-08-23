@@ -1,6 +1,6 @@
+import { restaurantApi } from '@/lib/zodiosClients';
+import { AlertCircle, CheckCircle, Settings, X } from 'lucide-react';
 import React, { useState } from 'react';
-import { Settings, CheckCircle, X, AlertCircle } from 'lucide-react';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '@/lib/zodiosClients';
 
 interface OutletSettingsEditorProps {
   outlet: any;

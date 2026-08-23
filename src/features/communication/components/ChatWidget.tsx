@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, X, MessageSquare, Loader2, ImagePlus, PhoneCall, PhoneOff } from 'lucide-react';
+import { useCallContext } from "@/contexts/CallContext";
 import { getToken, getUserProfile } from "@/lib/tokenStore";
-import { useChatWebSocket } from "@features/communication/models/useChatWebSocket";
+import { chatApi } from "@/lib/zodiosClients";
 import { type ChatMessage, type TypingIndicator } from "@/types";
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi, chatApi } from "@/lib/zodiosClients";
-import { useCallContext } from "@/context/CallContext";
+import { useChatWebSocket } from "@features/communication/models/useChatWebSocket";
+import { ImagePlus, Loader2, MessageSquare, PhoneCall, PhoneOff, Send, X } from 'lucide-react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 export interface ChatParticipant {
   userId: string;

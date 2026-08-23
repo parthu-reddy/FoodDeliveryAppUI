@@ -1,10 +1,10 @@
-import React, { useState, useMemo } from 'react';
-import { Calendar, Search, Filter, ChevronLeft, ChevronRight, Package, DollarSign, Clock, Receipt } from 'lucide-react';
-import { OrderStatus, Order } from '@/types';
+import { useToast } from '@/contexts/ToastContext';
+import { restaurantApi } from '@/lib/zodiosClients';
+import { Order, OrderStatus } from '@/types';
 import { getFriendlyStatusMessage } from '@features/customer-orders/model/statusMessaging';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '@/lib/zodiosClients';
-import { useToast } from '@/context/ToastContext';
 import { RestaurantOrderDetailsModal } from '@features/restaurant-orders/components/RestaurantOrderDetailsModal';
+import { Calendar, ChevronLeft, ChevronRight, DollarSign, Package, Receipt } from 'lucide-react';
+import React, { useState } from 'react';
 
 export function OrderHistory({ restaurantId, onOpenChat }: { restaurantId: string, onOpenChat?: (orderId: string) => void }) {
   const [dateFilter, setDateFilter] = useState('');
@@ -160,7 +160,7 @@ export function OrderHistory({ restaurantId, onOpenChat }: { restaurantId: strin
                     </td>
                     <td className="p-4">
                       <div className="flex flex-col gap-1">
-                        {order.items.map((item, idx) => (
+                        {order.items.map((item: any, idx: number) => (
                           <div key={idx} className="text-xs flex items-center gap-1.5 text-slate-600 dark:text-[#f0ede6]">
                             <span className="font-bold text-slate-800 dark:text-[#f0ede6]">{item.quantity || 1}x</span>
                             <span className="truncate max-w-[120px] sm:max-w-[180px]">{item.item?.name || (item).name || 'Item'}</span>

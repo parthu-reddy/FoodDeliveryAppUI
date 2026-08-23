@@ -1,9 +1,9 @@
-import React from 'react';
-import { Navigation, MapPin, KeyRound, CheckCircle } from 'lucide-react';
-import { motion } from 'motion/react';
-import { Order, DeliveryStatus } from "@/types";
-import OrderTrackingMap from "@features/maps-tracking/components/OrderTrackingMap";
+import { DeliveryStatus, Order } from "@/types";
 import ActiveDeliveryCard from "@features/delivery-tasks/components/ActiveDeliveryCard";
+import OrderTrackingMap from "@features/maps-tracking/components/OrderTrackingMap";
+import { CheckCircle, KeyRound, MapPin, Navigation } from 'lucide-react';
+import { motion } from 'motion/react';
+import React from 'react';
 
 interface DeliveryActiveJobProps {
   currentJob: Order;

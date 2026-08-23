@@ -1,6 +1,5 @@
-import React from 'react';
-import { Eye, MousePointerClick, CheckCircle, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
+import { CheckCircle, Eye, MousePointerClick, TrendingUp } from 'lucide-react';
 
 export interface CampaignPerformance {
   id: string;

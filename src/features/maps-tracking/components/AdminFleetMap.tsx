@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { customerApi, deliveryApi, restaurantApi } from "@/lib/zodiosClients";
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from "@/lib/zodiosClients";
+import { useEffect, useRef, useState } from 'react';
 
 interface Restaurant {
   id: string;
@@ -54,8 +54,8 @@ function _AdminFleetMap() {
       try {
         const [resOutlets, resDrivers, resCustomers] = await Promise.all([
           (restaurantApi.restaurantOutlet.get('/api/v1/internal/admin/restaurants/all-with-location', {})),
-          (deliveryApi.adminDelivery.get('/api/v1/internal/admin/delivery/drivers/all-with-location', {})),
-          (customerApi.adminCustomer.get('/api/v1/internal/admin/customers/addresses', {}))
+          (deliveryApi.adminDelivery.get('/api/v1/internal/admin/delivery/drivers/all-with-location', { queries: { pageable: {} } })),
+          (customerApi.adminCustomer.get('/api/v1/internal/admin/customers/addresses', { queries: { pageable: {} } }))
         ]);
 
         if (!active) return;

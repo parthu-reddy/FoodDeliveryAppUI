@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
-import { MenuItem, CartItem, Order, Restaurant } from '@/types';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '@/lib/zodiosClients';
 import { getUserProfile } from '@/lib/tokenStore';
+import { customerApi } from '@/lib/zodiosClients';
+import { CartItem, MenuItem, Order, Restaurant } from '@/types';
+import { useEffect, useRef, useState } from 'react';
 
 interface UseCustomerCartOptions {
   locationKey: string;
@@ -186,7 +186,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
     if (!cartState) {
       return { subtotal: 0, sgst: 0, cgst: 0, deliveryFee: 0, driverPayout: 0, restaurantDeliveryShare: 0, total: 0, platformFee: 0, minAmountForFreeDelivery: 0, distanceKm: 0 };
     }
-    const subtotal = cartState.items.reduce((sum, item) => sum + (item.item.price * item.quantity), 0);
+    const subtotal = cartState.items.reduce((sum, item) => sum + ((item.item.price || 0) * item.quantity), 0);
     let deliveryFee = 0;
     if (legacyPricingFallback && legacyPricingFallback.totalCustomerDeliveryFee !== undefined) {
        deliveryFee = legacyPricingFallback.totalCustomerDeliveryFee || 0;
@@ -248,7 +248,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
             restaurantId: rId,
             deliveryAddressId: deliveryAddressId,
             items: cartState ? cartState.items.map(item => ({
-              menuItemId: item.item.id,
+              menuItemId: item.item.id as string,
               quantity: item.quantity
             })) : []
           });
@@ -307,9 +307,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
   const processPaymentAndOrder = async (
     paymentMethod: string,
     deliveryAddressId: string,
-    deliveryLat: string | number,
-    deliveryLng: string | number,
-    address: string,
+    
     onSuccessCb: () => void
   ) => {
     if (!checkoutRestaurantId) return;
@@ -346,7 +344,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
         paymentMethod: paymentMethod || 'WALLET'
       };
       
-      const res = await customerApi.order.post('/api/v1/orders', orderPayload, {});
+      const res = await customerApi.order.post('/api/v1/orders', orderPayload as any, {});
       
       setPaymentStatus('success');
       setTimeout(() => {
@@ -380,7 +378,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
       if (err?.data?.data && Array.isArray(err.data.data) && err.data.data.length > 0) {
         const unavailableIds = err.data.data as string[];
         const removedItemNames = activeCart.items
-          .filter(i => unavailableIds.includes(i.item.id))
+          .filter(i => unavailableIds.includes(i.item.id as string))
           .map(i => i.item.name)
           .join(', ');
           
@@ -389,7 +387,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
           const existingCart = prevLocationCarts[checkoutRestaurantId];
           if (!existingCart) return prevGlobal;
           
-          const newItems = existingCart.items.filter(i => !unavailableIds.includes(i.item.id));
+          const newItems = existingCart.items.filter(i => !unavailableIds.includes(i.item.id as string));
           const newLocationCarts = { ...prevLocationCarts };
           
           if (newItems.length === 0) {

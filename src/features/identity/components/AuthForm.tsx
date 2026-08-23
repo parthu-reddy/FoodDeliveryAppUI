@@ -1,9 +1,9 @@
-import React from 'react';
-import { Smartphone, Shield, KeyRound, AlertCircle, Utensils, Store, Bike } from 'lucide-react';
-import { motion } from 'motion/react';
+import { useTheme } from "@/contexts/ThemeContext";
 import { RoleName, UserRole } from "@/types";
-import { Button, Input, Spinner } from '@shared/ui';
-import { useTheme } from "@/context/ThemeContext";
+import { Button, Input } from '@shared/ui';
+import { AlertCircle, Bike, KeyRound, Shield, Smartphone, Store, Utensils } from 'lucide-react';
+import { motion } from 'motion/react';
+import React from 'react';
 
 interface AuthFormProps {
   selectedRole: UserRole;

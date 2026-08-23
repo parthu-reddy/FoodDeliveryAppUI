@@ -1,18 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, MessageSquare, Sun, Moon } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { logout } from "@/lib/authStore";
+import { clearAllLocalData, decodeJwt, getToken, setToken, setUserProfile } from "@/lib/tokenStore";
+import { otpSchema, phoneSchema as phoneNumberSchema } from "@/lib/zod-schemas";
+import { identityApi } from "@/lib/zodiosClients";
 import { RoleName, UserRole } from "@/types";
 import { RoleSelector } from "@features/identity/components/RoleSelector";
-import { AuthForm } from './AuthForm';
-import LaBouffeLogo from '@shared/ui/LaBouffeLogo';
-import { LaBouffeLogoMark } from '@shared/ui/LaBouffeLogoMark';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from "@/lib/zodiosClients";
-import { setToken, setUserProfile, decodeJwt, getToken, clearAllLocalData } from "@/lib/tokenStore";
-import { logout } from "@/lib/authStore";
 import SessionManagementModal from "@features/identity/components/SessionManagementModal";
 import { CompleteProfileModal } from "@shared/ui";
-import { z } from 'zod';
-import { phoneSchema as phoneNumberSchema, otpSchema } from "@/lib/zod-schemas";
+import LaBouffeLogo from '@shared/ui/LaBouffeLogo';
+import { LaBouffeLogoMark } from '@shared/ui/LaBouffeLogoMark';
+import { ArrowLeft, MessageSquare, Moon, Sun } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import React, { useEffect, useRef, useState } from 'react';
+import { AuthForm } from './AuthForm';
 
 const roleToServiceName = (role: UserRole): string => {
   switch (role) {
@@ -29,7 +28,7 @@ interface LoginScreenProps {
   onAddApiLog?: (log: any) => void;
 }
 
-import { useTheme } from "@/context/ThemeContext";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreenProps) {
   const { theme, toggleTheme } = useTheme();
@@ -183,7 +182,7 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
 
       // Fetch profile to check if it is complete
       try {
-        const profileResp = await identityApi.user.get('/api/v1/users/profile', {});
+        const profileResp = await identityApi.user.get('/api/v1/users/profile', { headers: { "X-User-Id": "" } });
         const p = profileResp?.data;
         if (!p?.name || !p?.email || p.name.trim() === '' || p.email.trim() === '') {
           setPendingLoginData({ id, phone: phoneNumber, role: selectedRole!, name });
@@ -417,7 +416,7 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
           setUserProfile({ id, phone: phoneNumber, role, name });
 
           try {
-            const profileResp = await identityApi.user.get('/api/v1/users/profile', {});
+            const profileResp = await identityApi.user.get('/api/v1/users/profile', { headers: { "X-User-Id": "" } });
             const p = profileResp?.data;
             if (!p?.name || !p?.email || p.name.trim() === '' || p.email.trim() === '') {
               setPendingLoginData({ id, phone: phoneNumber, role, name });

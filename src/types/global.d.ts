@@ -7,4 +7,4 @@ declare global {
 }
 
 // This export is necessary to make the file a module
-export {};
+export { };

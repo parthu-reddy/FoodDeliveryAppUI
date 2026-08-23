@@ -27,20 +27,18 @@ class Logger {
     const logsToSend = [...this.batchedLogs];
     this.batchedLogs = [];
 
-    // Use sendBeacon for best-effort delivery even if page unloads
     try {
       const payload = JSON.stringify({ logs: logsToSend });
-      if (navigator.sendBeacon) {
-        const blob = new Blob([payload], { type: 'application/json' });
-        navigator.sendBeacon('/api/logs', blob);
-      } else {
-        fetch('/api/logs', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: payload,
-          keepalive: true
-        }).catch(() => {});
-      }
+      const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
+      window.fetch('/api/logs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: payload,
+        keepalive: true
+      }).catch(() => {});
     } catch (e) {
       console.error('Failed to send logs to backend', e);
     }

@@ -8,17 +8,11 @@
 
 // Re-export everything from tokenStore so existing imports still work
 export {
-  setToken,
-  getToken,
-  clearToken,
-  setUserProfile,
-  getUserProfile,
-  decodeJwt,
-  clearAllLocalData
+    clearAllLocalData, clearToken, decodeJwt, getToken, getUserProfile, setToken, setUserProfile
 } from './tokenStore';
 
-import { clearAllLocalData } from './tokenStore';
 import { identityApi } from '../lib/zodiosClients';
+import { clearAllLocalData } from './tokenStore';
 
 export const logout = async () => {
   // Send logout to backend BEFORE clearing the token,

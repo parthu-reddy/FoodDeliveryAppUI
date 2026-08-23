@@ -1,18 +1,18 @@
-import React, { useState } from 'react';
-import { Shield, LogOut, Sun, Moon, MapPin, Users, Activity, Tags, Database } from 'lucide-react';
-import LaBouffeLogo from '@shared/ui/LaBouffeLogo';
-import { usePolling } from '../../hooks/usePolling';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from "@/lib/zodiosClients";
-import { SidebarNav, Button } from '@shared/ui';
-import { useTheme } from "@/context/ThemeContext";
-
-const AdminFleetMap = React.lazy(() => import("@features/maps-tracking/components/AdminFleetMap"));
-import AdminLedgerView from "@features/ledger/components/AdminLedgerView";
-import AdminPayoutsView from "@features/ledger/components/AdminPayoutsView";
+import { useTheme } from "@/contexts/ThemeContext";
+import { customerApi } from "@/lib/zodiosClients";
 import AdminLiveOperations from "@features/admin-ops/components/AdminLiveOperations";
 import AdminManualInterventions from "@features/admin-ops/components/AdminManualInterventions";
 import AdminUserManagement from "@features/admin-ops/components/AdminUserManagement";
 import AdminCategories from '@features/catalog/components/admin/AdminCategories';
+import AdminLedgerView from "@features/ledger/components/AdminLedgerView";
+import AdminPayoutsView from "@features/ledger/components/AdminPayoutsView";
+import { Button, SidebarNav } from '@shared/ui';
+import LaBouffeLogo from '@shared/ui/LaBouffeLogo';
+import { Activity, Database, LogOut, MapPin, Moon, Shield, Sun, Tags, Users } from 'lucide-react';
+import React, { useState } from 'react';
+import { usePolling } from '../../hooks/usePolling';
+
+const AdminFleetMap = React.lazy(() => import("@features/maps-tracking/components/AdminFleetMap"));
 
 export default function AdminPortal({
   onLogout,
@@ -47,7 +47,7 @@ export default function AdminPortal({
             onSelect={(key) => setActiveTab(key as 'deliveries'|'interventions'|'users'|'categories'|'map'|'ledger'|'payouts')}
             items={[
               { key: 'deliveries', label: 'Live Operations', icon: <Activity className="w-5 h-5" /> },
-              { key: 'interventions', label: 'Manual Interventions', icon: <Shield className="w-5 h-5" />, badge: interventionsCount },
+              { key: 'interventions', label: 'Manual Interventions', icon: <Shield className="w-5 h-5" />, badge: interventionsCount || undefined },
               { key: 'users', label: 'User Management', icon: <Users className="w-5 h-5" /> },
               { key: 'categories', label: 'Categories', icon: <Tags className="w-5 h-5" /> },
               { key: 'map', label: 'Fleet Map', icon: <MapPin className="w-5 h-5" /> },

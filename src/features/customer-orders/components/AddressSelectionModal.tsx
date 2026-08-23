@@ -1,8 +1,7 @@
-import React from 'react';
-import { MapPin, Navigation, Plus } from 'lucide-react';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi, mapsApi } from "@/lib/zodiosClients";
-import { useToast } from "@/context/ToastContext";
+import { useToast } from "@/contexts/ToastContext";
+import { mapsApi } from "@/lib/zodiosClients";
 import { Modal } from '@shared/ui';
+import { MapPin, Navigation, Plus } from 'lucide-react';
 
 interface AddressSelectionModalProps {
   isOpen: boolean;

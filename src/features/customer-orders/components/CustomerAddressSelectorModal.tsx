@@ -1,7 +1,7 @@
-import React from 'react';
-import { Navigation, MapPin, Check } from 'lucide-react';
-import { Modal } from '@shared/ui';
 import { useConfig } from "@/contexts/ConfigContext";
+import { Modal } from '@shared/ui';
+import { Check, MapPin, Navigation } from 'lucide-react';
+import React from 'react';
 
 interface CustomerAddressSelectorModalProps {
   isOpen: boolean;
@@ -34,8 +34,7 @@ const CustomerAddressSelectorModal: React.FC<CustomerAddressSelectorModalProps> 
   carts,
   clearCart
 }) => {
-  const { olaMapsApiKey } = useConfig();
-  
+  const { } = useConfig();
   const handleAddressSelect = (addr: string, lat?: number, lng?: number, id?: string) => {
     // If id is provided (saved address), check if it's different from current
     // If no id (GPS), check if the address string is different
@@ -71,8 +70,7 @@ const CustomerAddressSelectorModal: React.FC<CustomerAddressSelectorModalProps> 
             if (navigator.geolocation) {
               navigator.geolocation.getCurrentPosition(async (pos) => {
                 try {
-                  const apiKey = olaMapsApiKey || import.meta.env.VITE_OLA_MAPS_API_KEY || '';
-                  const res = await fetch(`https://api.olamaps.io/places/v1/reverse-geocode?latlng=${pos.coords.latitude},${pos.coords.longitude}&api_key=${apiKey}`);
+                  const res = await window.fetch(`/olamaps/places/v1/reverse-geocode?latlng=${pos.coords.latitude},${pos.coords.longitude}`);
                   const data = await res.json();
                   if (data.results && data.results.length > 0) {
                     handleAddressSelect(`Current Location: ${data.results[0].formatted_address}`, pos.coords.latitude, pos.coords.longitude, '');

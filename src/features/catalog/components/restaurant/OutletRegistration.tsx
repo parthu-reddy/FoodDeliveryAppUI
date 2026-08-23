@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Store, MapPin, ChefHat, Upload, Clock, Save, AlertCircle, CheckCircle, Search, Loader, Plus, Trash2, Navigation } from 'lucide-react';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi, mapsApi } from '@/lib/zodiosClients';
+import { useConfig } from '@/contexts/ConfigContext';
+import { useToast } from '@/contexts/ToastContext';
+import { useDebounce } from '@/hooks/useDebounce';
+import { mapsApi, restaurantApi } from '@/lib/zodiosClients';
 import ImageUploadField from "@features/kyc/components/ImageUploadField";
+import { Button, FormField, Input, Spinner } from '@shared/ui';
+import { AlertCircle, CheckCircle, Clock, Loader, MapPin, Navigation, Plus, Search, Store, Trash2 } from 'lucide-react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { useToast } from '@/context/ToastContext';
+import React, { useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
-import { FormField, Input, Button, Spinner } from '@shared/ui';
-import { useDebounce } from '@/hooks/useDebounce';
-import { useConfig } from '@/contexts/ConfigContext';
 
 const outletSchema = z.object({
   name: z.string().min(1, 'Outlet name is required.').max(100, 'Outlet name cannot exceed 100 characters.'),
@@ -44,17 +44,15 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const { showError } = useToast();
-  const { olaMapsApiKey } = useConfig();
-  
+  const { } = useConfig();
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   useEffect(() => {
     if (isOpen && mapContainerRef.current && !mapRef.current) {
-      const apiKey = olaMapsApiKey || import.meta.env.VITE_OLA_MAPS_API_KEY || '';
       
       const map = new maplibregl.Map({
         container: mapContainerRef.current,
-        style: `https://api.olamaps.io/styleEditor/v1/styleEdit/styles/53575843-c000-4b22-ac12-5818a67991bd/LowCost?api_key=${apiKey}`,
+        style: `/olamaps/styleEditor/v1/styleEdit/styles/53575843-c000-4b22-ac12-5818a67991bd/LowCost`,
         center: [parseFloat(lng), parseFloat(lat)],
         zoom: 12,
         minZoom: 10,
@@ -63,10 +61,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
         attributionControl: false,
         transformRequest: (url, resourceType) => {
           if (url.includes('api.olamaps.io')) {
-            if (!url.includes('api_key=')) {
-              const separator = url.includes('?') ? '&' : '?';
-              return { url: `${url}${separator}api_key=${apiKey}` };
-            }
+            return { url: url.replace('https://api.olamaps.io', '/olamaps') };
           }
           return { url };
         }
@@ -112,8 +107,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
       }
       setIsSearching(true);
       try {
-        const apiKey = olaMapsApiKey || import.meta.env.VITE_OLA_MAPS_API_KEY || '';
-        const res = await fetch(`https://api.olamaps.io/places/v1/autocomplete?input=${encodeURIComponent(debouncedSearchQuery)}&api_key=${apiKey}`);
+        const res = await window.fetch(`/olamaps/places/v1/autocomplete?input=${encodeURIComponent(debouncedSearchQuery)}`);
         const data = await res.json();
         if (data.predictions) {
           setSearchResults(data.predictions);
@@ -135,8 +129,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
     setSearchQuery(description);
     setSearchResults([]);
     try {
-      const apiKey = olaMapsApiKey || import.meta.env.VITE_OLA_MAPS_API_KEY || '';
-      const res = await fetch(`https://api.olamaps.io/places/v1/details?place_id=${placeId}&api_key=${apiKey}`);
+      const res = await window.fetch(`/olamaps/places/v1/details?place_id=${placeId}`);
       const data = await res.json();
       if (data.result && data.result.geometry && data.result.geometry.location) {
         const location = data.result.geometry.location;

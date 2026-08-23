@@ -1,7 +1,7 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Bike, CheckCircle2 } from 'lucide-react';
-import { CartState, useCustomerCart } from '../model/useCustomerCart';
+import React from 'react';
+import { CartState } from '../model/useCustomerCart';
 
 interface CustomerFreeDeliveryTrackerProps {
   carts: Record<string, CartState>;
@@ -48,9 +48,9 @@ export const CustomerFreeDeliveryTracker: React.FC<CustomerFreeDeliveryTrackerPr
   if (!activeRestaurantId || !deliveryPricing) return null;
 
   const cartTotal = getCartTotal(activeRestaurantId!);
-  const minOrder = cartTotal?.minAmountForFreeDelivery ?? 999999;
+  const minOrder = cartTotal?.minAmountForFreeDelivery;
 
-  if (minOrder >= 999999) return null;
+  if (minOrder == null) return null;
 
   const subtotal = cartTotal?.subtotal ?? 0;
   const progress = Math.min(100, (subtotal / minOrder) * 100);

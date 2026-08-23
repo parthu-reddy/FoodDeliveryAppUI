@@ -1,6 +1,6 @@
-import { PactV3, MatchersV3 } from '@pact-foundation/pact';
-import { describe, it, expect } from 'vitest';
+import { MatchersV3, PactV3 } from '@pact-foundation/pact';
 import axios from 'axios';
+import { describe, expect, it } from 'vitest';
 
 const { string, boolean, eachLike, number, uuid } = MatchersV3;
 

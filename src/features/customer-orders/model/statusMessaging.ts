@@ -1,4 +1,4 @@
-import { OrderStatus, DeliveryStatus } from '@/types/backend-enums';
+import { DeliveryStatus, OrderStatus } from '@/types/backend-enums';
 
 export const getFriendlyStatusMessage = (status?: OrderStatus | string, deliveryStatus?: DeliveryStatus | string): string => {
   if (deliveryStatus === DeliveryStatus.FAILED) return 'Delivery Delayed / Failed';

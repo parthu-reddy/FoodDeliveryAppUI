@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
 import { getToken } from "@/lib/tokenStore";
+import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { ChatMessage, TypingIndicator } from "@/types";
 
@@ -113,7 +113,7 @@ export const useChatWebSocket = ({ sessionId, onMessageReceived, onTypingIndicat
     const formData = new FormData();
     formData.append('file', file);
     try {
-      const response = await fetch(`/api/v1/chat/sessions/${sessionId}/upload-image`, {
+      const response = await window.fetch(`/api/v1/chat/sessions/${sessionId}/upload-image`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

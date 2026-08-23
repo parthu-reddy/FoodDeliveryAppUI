@@ -1,6 +1,5 @@
-import React from 'react';
-import { Store } from 'lucide-react';
 import LaBouffeLogo from '@shared/ui/LaBouffeLogo';
+import { Store } from 'lucide-react';
 
 interface RestaurantBrandSelectorProps {
   myRestaurantName: string;

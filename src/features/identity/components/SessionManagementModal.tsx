@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Laptop, Smartphone, Monitor, Trash2, AlertTriangle } from 'lucide-react';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from "@/lib/zodiosClients";
-import { Modal, Button, Spinner } from '@shared/ui';
+import { identityApi } from "@/lib/zodiosClients";
+import { Button, Modal, Spinner } from '@shared/ui';
+import { AlertTriangle, Monitor, Smartphone, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 
 interface Session {
   sessionId: string;

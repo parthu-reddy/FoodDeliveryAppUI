@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { phoneSchema, otpSchema } from '../src/lib/zod-schemas';
+import { describe, expect, it } from 'vitest';
+import { otpSchema, phoneSchema } from '../src/lib/zod-schemas';
 
 describe('Auto-generated Zod Schemas from OpenAPI', () => {
   

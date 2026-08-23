@@ -1,13 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { AlertCircle, CheckCircle, ChevronRight, FileText, Car, Landmark, UserSquare, Loader2, LogOut } from 'lucide-react';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from "@/lib/zodiosClients";
+import { useToast } from "@/contexts/ToastContext";
+import { deliveryApi, identityApi } from "@/lib/zodiosClients";
 import DocumentUploadField from "@features/kyc/components/DocumentUploadField";
 import ImageUploadField from "@features/kyc/components/ImageUploadField";
-import { z } from 'zod';
-import { CinematicFoodBackground } from "@shared/ui";
-import { useToast } from "@/context/ToastContext";
-import { FormField, Input, Button, Spinner } from '@shared/ui';
+import { Button, CinematicFoodBackground, FormField, Input, Spinner } from "@shared/ui";
+import { AlertCircle, Car, CheckCircle, ChevronRight, FileText, Landmark, LogOut, UserSquare } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import { useEffect, useState } from 'react';
 
 interface RiderOnboardingWizardProps {
   riderPhone: string;
@@ -63,7 +61,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
         setVerificationStatus(verRes.data);
       }
       
-      const deliveryRes = await deliveryApi.deliveryExecutive.get('/api/delivery/profile');
+      const deliveryRes = await deliveryApi.deliveryExecutive.get('/api/delivery/profile', { queries: { phoneNumber: "" }, headers: { "X-User-Id": userId } });
       if (deliveryRes?.data) {
         setVehicle(deliveryRes.data.vehicleNumber || '');
         setVehicleType(deliveryRes.data.vehicleType || 'BICYCLE');
@@ -88,7 +86,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
     setIsSubmitting(true);
     try {
       if (!initialName && userId) {
-        await identityApi.user.put('/api/v1/users/profile', { id: userId, name, phone: riderPhone }, {});
+        await identityApi.user.put('/api/v1/users/profile', { id: userId, name, phone: riderPhone }, { headers: { "X-User-Id": userId } });
       }
       await deliveryApi.deliveryExecutive.post('/api/delivery/onboard', {
               phoneNumber: riderPhone,

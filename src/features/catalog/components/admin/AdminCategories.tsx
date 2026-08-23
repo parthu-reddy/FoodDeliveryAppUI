@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
-import { Tags, Plus, Pencil, X } from 'lucide-react';
-import { customerApi, deliveryApi, identityApi, restaurantApi, walletApi, adminApi, trackingApi } from '@/lib/zodiosClients';
-import { useToast } from '@/context/ToastContext';
-import { z } from 'zod';
+import { useToast } from '@/contexts/ToastContext';
 import { usePolling } from '@/hooks/usePolling';
+import { restaurantApi } from '@/lib/zodiosClients';
 import { Button, Input, Textarea } from '@shared/ui';
-import { parseApiError } from '@/lib/parseApiError';
+import { Pencil, Plus, Tags, X } from 'lucide-react';
+import React, { useState } from 'react';
+import { z } from 'zod';
 
 const categorySchema = z.object({
   name: z.string().min(2, "Category name is required").max(100, "Category name cannot exceed 100 characters"),
