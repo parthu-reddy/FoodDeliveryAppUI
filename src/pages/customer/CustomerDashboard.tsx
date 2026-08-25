@@ -250,7 +250,7 @@ export default function CustomerDashboard({
     if (selectedRestaurant?.brandId) {
       customerApi.customerRestaurant.get('/api/v1/restaurants/brands/:brandId/outlets', { params: { brandId: selectedRestaurant.brandId }, queries: { lat: deliveryLat ?? 0, lng: deliveryLng ?? 0 } })
         .then(res => {
-          if (!ignore && res) setBrandOutlets(fromContract(res));
+          if (!ignore && res && res.data) setBrandOutlets(fromContract(res.data));
         })
         .catch(console.error);
     } else {

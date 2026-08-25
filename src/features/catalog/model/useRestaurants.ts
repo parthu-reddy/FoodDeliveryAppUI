@@ -25,7 +25,7 @@ export function useRestaurants({ deliveryLat, deliveryLng, radiusKm = 10.0 }: Us
         signal: controller.signal 
       })
         .then(res => {
-          if (res) setRestaurants(fromContract(res));
+          if (res && res.data) setRestaurants(fromContract(res.data));
         })
         .catch(err => {
           if (err.name === 'AbortError' || err.code === 'ERR_CANCELED') {
