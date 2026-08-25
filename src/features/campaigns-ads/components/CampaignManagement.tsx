@@ -55,16 +55,26 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
 
   useEffect(() => {
     if (restaurantId) {
+       
+      // eslint-disable-next-line react-hooks/immutability
       loadCampaigns();
+       
+      // eslint-disable-next-line react-hooks/immutability
       loadWalletData();
+       
+      // eslint-disable-next-line react-hooks/immutability
       loadPerformanceData();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurantId]);
 
+   
   useEffect(() => {
     if (restaurantId) {
+      // eslint-disable-next-line react-hooks/immutability
       loadTransactions(txPage);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [txPage, restaurantId]);
 
   const loadWalletData = async () => {

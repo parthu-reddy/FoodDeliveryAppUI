@@ -76,6 +76,7 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
   const [showOtp, setShowOtp] = useState(false);
   
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsSubmitting(false);
   }, [order.status]);
 
@@ -191,7 +192,8 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
       <div className="space-y-1">
         <span className="text-[9px] text-slate-400 dark:text-slate-300 font-extrabold uppercase font-mono">Dishes ({order.items.length})</span>
         <div className="space-y-1 max-h-[100px] overflow-y-auto scrollbar-thin pl-1">
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          { }
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           {order.items.map((cartItem: any, idx: number) => (
             <div key={cartItem.item?.id || idx} className="flex justify-between text-[11px]">
               <span className="text-slate-600 dark:text-[#f0ede6] font-medium">

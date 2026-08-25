@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { logger } from './logger';
 
 // Schema for backend error response format (e.g., { message: "...", code: "..." })
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const apiErrorSchema = z.object({
   message: z.string().optional(),
   code: z.string().optional(),
@@ -21,7 +22,7 @@ export function parseApiError(error: unknown, defaultMessage = 'An unexpected er
   const extractMessageFromData = (data: any): string | undefined => {
     if (!data) return undefined;
     if (typeof data === 'string') return data;
-    
+
     // Array of errors (e.g., validation errors)
     if (Array.isArray(data.errors) && data.errors.length > 0) {
       if (typeof data.errors[0] === 'string') return data.errors[0];
@@ -38,6 +39,7 @@ export function parseApiError(error: unknown, defaultMessage = 'An unexpected er
             .map(([field, err]) => `${field}: ${err}`)
             .join(', ');
           return `${data.message}: ${detailedErrors}`;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (e: unknown) {
           // fallback to just the message
         }
@@ -48,17 +50,17 @@ export function parseApiError(error: unknown, defaultMessage = 'An unexpected er
     if (data.error && typeof data.error === 'string') return data.error;
     if (data.details && typeof data.details === 'string') return data.details;
     if (data.reason && typeof data.reason === 'string') return data.reason;
-    
+
     return undefined;
   };
 
   // If it's an Axios error (which Zodios uses under the hood for API errors)
   if (isAxiosError(error)) {
     logger.error('API Error (Axios)', error);
-    
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const extractedMessage = extractMessageFromData((error as any).response?.data);
-    
+
     if (extractedMessage) {
       return {
         message: extractedMessage,
@@ -67,7 +69,7 @@ export function parseApiError(error: unknown, defaultMessage = 'An unexpected er
         originalError: error,
       };
     }
-    
+
     return {
       message: error.message || defaultMessage,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -79,16 +81,16 @@ export function parseApiError(error: unknown, defaultMessage = 'An unexpected er
   // If it's a Zodios validation error
   if (error instanceof ZodiosError) {
     logger.error('API Validation Error (Zodios)', error);
-    
+
     const extractedMessage = extractMessageFromData(error.data);
-    
+
     if (extractedMessage) {
       return {
         message: extractedMessage,
         originalError: error,
       };
     }
-    
+
     // Sometimes Zodios exposes the underlying axios error in .cause
     // @ts-expect-error auto-migration type suppression
     if (error.causee && isAxiosError(error.causee)) {
@@ -102,13 +104,13 @@ export function parseApiError(error: unknown, defaultMessage = 'An unexpected er
         };
       }
     }
-    
+
     return {
       message: error.message || defaultMessage,
       originalError: error,
     };
   }
-  
+
   // Standard Error
   if (error instanceof Error) {
     logger.error('Application Error', error);

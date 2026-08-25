@@ -121,7 +121,6 @@ function PostDeliverySupportModalInner({
             </div>
             <h3 className="text-lg font-bold text-slate-900 dark:text-[#f0ede6]">Request Submitted!</h3>
             <p className="text-sm text-slate-500 dark:text-slate-300 mt-2 mb-6">
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               Our support team will review your request shortly. You will be notified of any refunds.
             </p>
             <Button

@@ -8,18 +8,16 @@ const UserDTO = z
     id: z.string().uuid(),
     phoneNumber: z.string(),
     roles: z.array(z.enum(["CUSTOMER", "DELIVERY", "RESTAURANT", "ADMIN"])),
-    active: z.boolean(),
+    active: z.boolean().optional(),
   })
-  .partial()
   .passthrough();
 const ApiResponseUserDTO = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: UserDTO,
+    data: UserDTO.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const SortObject = z
   .object({
@@ -50,9 +48,9 @@ const PageUserDTO = z
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(UserDTO),
-    sort: z.array(SortObject),
     first: z.boolean(),
     last: z.boolean(),
+    sort: z.array(SortObject),
     pageable: PageableObject,
     empty: z.boolean(),
   })
@@ -62,10 +60,9 @@ const ApiResponsePageUserDTO = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: PageUserDTO,
+    data: PageUserDTO.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const RoleRequestDTO = z
   .object({ roleName: z.enum(["CUSTOMER", "DELIVERY", "RESTAURANT", "ADMIN"]) })

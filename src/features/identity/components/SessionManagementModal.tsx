@@ -32,11 +32,11 @@ export default function SessionManagementModal({ isOpen, onClose, sessions, phon
     setLoadingId(sessionId);
     setError('');
     try {
-      const resp = await identityApi.auth.post('/api/v1/internal/auth/verify', undefined, { 
+      const resp = await identityApi.auth.post('/api/v1/internal/auth/verify', undefined, {
         queries: { phoneNumber, otp: otpCode, removeSessionId: sessionId },
         headers: { "X-Calling-Service": serviceName }
       });
-      
+
       const token = resp?.data || resp;
       if (!token || typeof token !== 'string') {
         throw new Error('No token received from server');
@@ -74,10 +74,10 @@ export default function SessionManagementModal({ isOpen, onClose, sessions, phon
   );
 
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onClose={onClose} 
-      size="lg" 
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="lg"
       header={header}
       className={theme === 'dark' ? 'bg-slate-900 border-rose-500/30' : 'bg-white border-slate-200'}
     >
@@ -89,12 +89,12 @@ export default function SessionManagementModal({ isOpen, onClose, sessions, phon
         )}
 
         <div className="space-y-3">
-          {sessions.map((session, _idx) => (
-            <div 
+          {/* eslint-disable-next-line @typescript-eslint/no-unused-vars */}
+          {sessions.map((session, idx) => (
+            <div
               key={session.sessionId}
-              className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${
-                theme === 'dark' ? 'bg-slate-800/20 border-slate-700 hover:border-slate-600' : 'bg-slate-50 border-slate-200 hover:border-slate-300'
-              }`}
+              className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${theme === 'dark' ? 'bg-slate-800/20 border-slate-700 hover:border-slate-600' : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                }`}
             >
               <div className="flex items-center gap-4">
                 <div className={`p-2.5 rounded-xl ${theme === 'dark' ? 'bg-slate-700' : 'bg-white shadow-sm'}`}>
@@ -109,7 +109,7 @@ export default function SessionManagementModal({ isOpen, onClose, sessions, phon
                   </p>
                 </div>
               </div>
-              
+
               <Button
                 onClick={() => handleRemoveDevice(session.sessionId)}
                 disabled={loadingId !== null}
@@ -126,7 +126,7 @@ export default function SessionManagementModal({ isOpen, onClose, sessions, phon
             </div>
           ))}
         </div>
-        
+
         <div className="mt-6 text-center">
           <p className={`text-xs ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>
             Logging out of a device will immediately invalidate its active session.

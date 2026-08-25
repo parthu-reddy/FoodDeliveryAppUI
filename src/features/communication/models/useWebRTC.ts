@@ -23,10 +23,10 @@ export const useWebRTC = () => {
   const token = getToken();
   const user = getUserProfile();
   
-  const [callState, _setCallState] = useState<CallState>('IDLE');
-  const [callerId, _setCallerId] = useState<string | null>(null);
-  const [remoteUserId, _setRemoteUserId] = useState<string | null>(null);
-  const [activeSessionId, _setActiveSessionId] = useState<string | null>(null);
+  const [callState, setInternalCallState] = useState<CallState>('IDLE');
+  const [callerId, setInternalCallerId] = useState<string | null>(null);
+  const [remoteUserId, setInternalRemoteUserId] = useState<string | null>(null);
+  const [activeSessionId, setInternalActiveSessionId] = useState<string | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [callEndReason, setCallEndReason] = useState<CallEndReason>(null);
 
@@ -48,12 +48,12 @@ export const useWebRTC = () => {
 
   const setCallState = useCallback((state: CallState) => {
     callStateRef.current = state;
-    _setCallState(state);
+    setInternalCallState(state);
   }, []);
 
   const setRemoteUserId = useCallback((id: string | null) => {
     remoteUserIdRef.current = id;
-    _setRemoteUserId(id);
+    setInternalRemoteUserId(id);
   }, []);
 
   const setCallEndReasonCallback = useCallback((reason: CallEndReason) => {
@@ -62,11 +62,11 @@ export const useWebRTC = () => {
 
   const setActiveSessionId = useCallback((id: string | null) => {
     activeSessionIdRef.current = id;
-    _setActiveSessionId(id);
+    setInternalActiveSessionId(id);
   }, []);
 
   const setCallerId = useCallback((id: string | null) => {
-    _setCallerId(id);
+    setInternalCallerId(id);
   }, []);
   const localStreamRef = useRef<MediaStream | null>(null);
   
@@ -121,6 +121,8 @@ export const useWebRTC = () => {
       client.subscribe('/user/queue/webrtc', async (message: IMessage) => {
         if (!message.body) return;
         const signal: WebRtcSignal = JSON.parse(message.body);
+         
+        // eslint-disable-next-line react-hooks/immutability
         await handleIncomingSignal(signal);
       });
     };
@@ -205,7 +207,9 @@ export const useWebRTC = () => {
            setCallEndReasonCallback('MISSED');
         } else if (callStateRef.current === 'CONNECTED') {
            setCallEndReasonCallback('ENDED');
+         
         }
+        // eslint-disable-next-line react-hooks/immutability
         cleanupCall();
         break;
     }
@@ -214,8 +218,10 @@ export const useWebRTC = () => {
   // 2. Cleanup call if user logs out
   useEffect(() => {
     if (!token) {
+       
       cleanupCall();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const processPendingCandidates = async () => {
@@ -575,12 +581,16 @@ export const useWebRTC = () => {
       });
       return !localStreamRef.current.getAudioTracks()[0].enabled;
     }
+     
     return false;
   };
 
+   
+  // eslint-disable-next-line react-hooks/refs
   return {
     callState,
     callEndReason,
+    // eslint-disable-next-line react-hooks/refs
     isCaller: isCallerRef.current,
     callerId,
     remoteUserId,

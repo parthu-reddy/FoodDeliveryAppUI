@@ -27,10 +27,9 @@ const ApiResponseOrderResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: OrderResponse,
+    data: OrderResponse.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const QuoteRequest = z
   .object({
@@ -52,16 +51,14 @@ const QuoteResponse = z
     driverPayout: z.number(),
     restaurantDeliveryContribution: z.number(),
   })
-  .partial()
   .passthrough();
 const ApiResponseQuoteResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: QuoteResponse,
+    data: QuoteResponse.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 
 export const schemas = {

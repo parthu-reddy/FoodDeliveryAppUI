@@ -28,7 +28,7 @@ export default function CompleteProfileModal({ isOpen, theme, onComplete, profil
     setError('');
 
     const validation = profileSchema.safeParse({ name: name.trim(), email: email.trim() });
-    
+
     if (!validation.success) {
       setError(validation.error.issues[0].message);
       return;
@@ -37,10 +37,10 @@ export default function CompleteProfileModal({ isOpen, theme, onComplete, profil
     setIsSubmitting(true);
     try {
       await identityApi.user.put('/api/v1/users/profile', {
-              id: profileId,
-              name: name.trim(),
-              email: email.trim(),
-            }, { headers: { 'X-User-Id': '' } });
+        id: profileId,
+        name: name.trim(),
+        email: email.trim(),
+      }, { headers: { 'X-User-Id': '' } });
       onComplete({ name: name.trim(), email: email.trim() });
     } catch (err: unknown) {
       // @ts-expect-error auto-migration type suppression
@@ -61,10 +61,10 @@ export default function CompleteProfileModal({ isOpen, theme, onComplete, profil
   );
 
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onClose={() => {}} 
-      size="md" 
+    <Modal
+      isOpen={isOpen}
+      onClose={() => { }}
+      size="md"
       header={header}
     >
       <div className="p-6 pt-2">
@@ -77,8 +77,8 @@ export default function CompleteProfileModal({ isOpen, theme, onComplete, profil
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <FormField label="Full Name" required>
-            <Input 
-              type="text" 
+            <Input
+              type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter your full name"
@@ -87,8 +87,8 @@ export default function CompleteProfileModal({ isOpen, theme, onComplete, profil
           </FormField>
 
           <FormField label="Email Address" required>
-            <Input 
-              type="email" 
+            <Input
+              type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email address"
@@ -96,7 +96,7 @@ export default function CompleteProfileModal({ isOpen, theme, onComplete, profil
             />
           </FormField>
 
-          <Button 
+          <Button
             type="submit"
             disabled={isSubmitting}
             variant="primary"

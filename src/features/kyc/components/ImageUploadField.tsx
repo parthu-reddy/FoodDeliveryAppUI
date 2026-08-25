@@ -34,7 +34,7 @@ export default function ImageUploadField({ value, onChange, folderId, placeholde
       formData.append('file', compressedFile);
       formData.append('folderId', folderId);
       formData.append('imageType', imageType);
-      
+
       const res = await restaurantApi.imageUpload.post('/api/v1/images/upload', formData as unknown as { file: File }, { queries: { folderId, imageType } });
       if (res && res.data) {
         onChange(res.data);
@@ -78,7 +78,7 @@ export default function ImageUploadField({ value, onChange, folderId, placeholde
   return (
     <div className="w-full">
       <div className="flex items-center space-x-3">
-        <div 
+        <div
           onClick={() => {
             if (!loading) {
               setError('');
@@ -88,12 +88,11 @@ export default function ImageUploadField({ value, onChange, folderId, placeholde
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          className={`flex-1 flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed ${
-            isDragging ? 'border-rose-500 bg-rose-500/10' :
-            error ? 'border-red-500/50 bg-red-500/5' 
-            : value ? 'border-emerald-500/30 bg-emerald-500/10' 
-            : 'border-rose-500/30 bg-white/10 dark:bg-slate-900/10'
-          } backdrop-blur-md cursor-pointer hover:bg-white/20 dark:hover:bg-slate-900/20 transition-all`}
+          className={`flex-1 flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed ${isDragging ? 'border-rose-500 bg-rose-500/10' :
+              error ? 'border-red-500/50 bg-red-500/5'
+                : value ? 'border-emerald-500/30 bg-emerald-500/10'
+                  : 'border-rose-500/30 bg-white/10 dark:bg-slate-900/10'
+            } backdrop-blur-md cursor-pointer hover:bg-white/20 dark:hover:bg-slate-900/20 transition-all`}
         >
           {loading ? (
             <div className="flex flex-col items-center space-y-2">

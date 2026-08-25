@@ -15,7 +15,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // We don't apply the 'dark' class here because it's applied in App.tsx
   // based on this context. Or better, we can move the application of the class here.
   // Actually, we can just leave the class application in App.tsx using this context.
-  
+
   const toggleTheme = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   };
@@ -27,6 +27,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+ 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useTheme() {
   const context = useContext(ThemeContext);
   if (context === undefined) {

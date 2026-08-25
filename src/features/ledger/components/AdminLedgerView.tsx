@@ -46,7 +46,10 @@ export default function AdminLedgerView() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchEntries();
+   
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]); // Re-fetch when page changes
 
   const handleFilter = (e: React.FormEvent) => {

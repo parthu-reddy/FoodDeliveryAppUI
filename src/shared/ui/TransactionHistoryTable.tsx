@@ -114,7 +114,7 @@ export function TransactionHistoryTable({
                                 )}
                               </div>
                             );
-                          } catch (_e: unknown) {
+                          } catch {
                             return null;
                           }
                         })()}

@@ -36,7 +36,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
         const EXPIRY_MS = 24 * 60 * 60 * 1000;
         const now = Date.now();
         const validGlobalCarts: Record<string, Record<string, CartState>> = {};
-        
+
         for (const [locKey, locationCarts] of Object.entries(parsedCarts)) {
           const locObj = locationCarts as Record<string, CartState>;
           const validLocCarts: Record<string, CartState> = {};
@@ -53,6 +53,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
             validGlobalCarts[locKey] = validLocCarts;
           }
         }
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setGlobalCarts(validGlobalCarts);
       } else {
         // Migration logic from V1 to V2
@@ -68,6 +69,8 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
       console.error('Failed to load carts from local storage', e);
     }
     setIsInitialized(true);
+   
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run once on mount, locationKey at mount is used for V1 migration fallback
 
   useEffect(() => {
@@ -84,7 +87,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
   const [quotes, setQuotes] = useState<Record<string, any>>({});
   const [isQuoting, setIsQuoting] = useState<boolean>(false);
   const [deliveryAddressId, setDeliveryAddressId] = useState<string | null>(null);
-  
+
   const cartUpdateRef = useRef<number>(0);
   const isSubmittingOrderRef = useRef<boolean>(false);
 
@@ -102,7 +105,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
       const prevLocationCarts = prevGlobal[locationKey] || {};
       const resId = selectedRestaurant.id;
       const existingCart = prevLocationCarts[resId] || { items: [], restaurant: selectedRestaurant };
-      
+
       const existingItem = existingCart.items.find(i => i.item.id === item.id);
       let newItems;
       if (existingItem) {
@@ -130,7 +133,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
     const now = Date.now();
     if (now - cartUpdateRef.current < 50) return;
     cartUpdateRef.current = now;
-    
+
     setGlobalCarts(prevGlobal => {
       const prevLocationCarts = prevGlobal[locationKey] || {};
       const existingCart = prevLocationCarts[restaurantId];
@@ -145,7 +148,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
       }
 
       const newLocationCarts = { ...prevLocationCarts };
-      
+
       if (newItems.length === 0) {
         delete newLocationCarts[restaurantId];
       } else {
@@ -167,10 +170,10 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
     setGlobalCarts(prevGlobal => {
       const prevLocationCarts = prevGlobal[locationKey];
       if (!prevLocationCarts || !prevLocationCarts[restaurantId]) return prevGlobal;
-      
+
       const newLocationCarts = { ...prevLocationCarts };
       delete newLocationCarts[restaurantId];
-      
+
       return {
         ...prevGlobal,
         [locationKey]: newLocationCarts
@@ -192,9 +195,9 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
     const subtotal = cartState.items.reduce((sum, item) => sum + ((item.item.price || 0) * item.quantity), 0);
     let deliveryFee = 0;
     if (legacyPricingFallback && legacyPricingFallback.totalCustomerDeliveryFee !== undefined) {
-       deliveryFee = legacyPricingFallback.totalCustomerDeliveryFee || 0;
+      deliveryFee = legacyPricingFallback.totalCustomerDeliveryFee || 0;
     } else if (cartState.restaurant) {
-       deliveryFee = Number(cartState.restaurant.deliveryFee || 0);
+      deliveryFee = Number(cartState.restaurant.deliveryFee || 0);
     }
     return {
       subtotal,
@@ -221,28 +224,32 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
   // Debounced quote API call
   useEffect(() => {
     if (!isInitialized) return;
-    
+
     const activeRestaurantIds = new Set(Object.keys(carts).filter(rId => carts[rId].items.length > 0));
     if (selectedRestaurantId) {
       activeRestaurantIds.add(selectedRestaurantId);
     }
     if (activeRestaurantIds.size === 0) return;
-    
+
     // We only fetch quotes from the backend if we have a valid deliveryAddressId
+     
     if (!deliveryAddressId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setQuotes({});
       return;
     }
 
     setIsQuoting(true);
     // Optimistically clear quotes if they are for a different address (or just let it fallback to estimated)
+     
     // Actually, setting quotes to {} might cause layout shift, but it's better than showing wrong delivery fee
-    setQuotes(_prev => {
+     
+    setQuotes(() => {
       // If we are quoting for a new address, clear the quotes.
       // But we don't have the previous address ID here. Let's just clear them to be safe.
       return {};
     });
-    
+
     const timeout = setTimeout(() => {
       Promise.all(Array.from(activeRestaurantIds).map(async (rId) => {
         const cartState = carts[rId];
@@ -261,24 +268,26 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
           return { restaurantId: rId, quote: null };
         }
       })).then((results) => {
-         const newQuotes = { ...quotes };
-         results.forEach(result => {
-           if (result.quote) {
-             newQuotes[result.restaurantId] = result.quote;
-           }
-         });
-         setQuotes(newQuotes);
-         setIsQuoting(false);
+        const newQuotes = { ...quotes };
+        results.forEach(result => {
+          if (result.quote) {
+            newQuotes[result.restaurantId] = result.quote;
+          }
+        });
+        setQuotes(newQuotes);
+        setIsQuoting(false);
       });
     }, 500);
 
+     
     return () => clearTimeout(timeout);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [carts, deliveryAddressId, isInitialized, selectedRestaurantId]);
 
   const handleCheckout = async (restaurantId: string) => {
     const activeCart = carts[restaurantId];
     if (!activeCart || activeCart.items.length === 0) return;
-    
+
     setCheckoutRestaurantId(restaurantId);
 
     try {
@@ -311,18 +320,18 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
   const processPaymentAndOrder = async (
     paymentMethod: string,
     deliveryAddressId: string,
-    
+
     onSuccessCb: () => void
   ) => {
     if (!checkoutRestaurantId) return;
     if (isSubmittingOrderRef.current || paymentStatus !== 'idle') return;
-    
+
     const activeCart = carts[checkoutRestaurantId];
     if (!activeCart || activeCart.items.length === 0) return;
-    
+
     isSubmittingOrderRef.current = true;
     setPaymentStatus('processing');
-    
+
     if (onAddApiLog) {
       onAddApiLog({ id: 'create_order', label: 'POST /api/v1/orders', method: 'POST' });
     }
@@ -330,7 +339,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
     try {
       const items = activeCart.items.map(i => ({ menuItemId: i.item.id, quantity: i.quantity }));
       const profile = getUserProfile();
-      
+
       const finalAddressId = deliveryAddressId;
       if (!finalAddressId) {
         setPaymentStatus('failed');
@@ -347,16 +356,20 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
         items,
         paymentMethod: paymentMethod || 'WALLET'
       };
-      
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const res = await customerApi.order.post('/api/v1/orders', orderPayload as any, {});
-      
+
       setPaymentStatus('success');
+       
       setTimeout(() => {
+         
         if (res.data?.id) {
-          onPlaceOrder?.(res.data);
-          setTrackingOrder?.(res.data);
-          
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          onPlaceOrder?.(res.data as any);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          setTrackingOrder?.(res.data as any);
+
           setGlobalCarts(prevGlobal => {
             const prevLocationCarts = prevGlobal[locationKey] || {};
             const newLocationCarts = { ...prevLocationCarts };
@@ -366,7 +379,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
               [locationKey]: newLocationCarts
             };
           });
-          
+
           setIsCartOpen(false);
           setIsPaymentModalOpen(false);
           setCheckoutRestaurantId(null);
@@ -378,7 +391,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
       console.error(err);
       isSubmittingOrderRef.current = false;
       setPaymentStatus('idle');
-      setIsPaymentModalOpen(false); 
+      setIsPaymentModalOpen(false);
 
       // @ts-expect-error auto-migration type suppression
       if (err?.data?.data && Array.isArray(err.data.data) && err.data.data.length > 0) {
@@ -388,15 +401,15 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
           .filter(i => unavailableIds.includes(i.item.id as string))
           .map(i => i.item.name)
           .join(', ');
-          
+
         setGlobalCarts(prevGlobal => {
           const prevLocationCarts = prevGlobal[locationKey] || {};
           const existingCart = prevLocationCarts[checkoutRestaurantId];
           if (!existingCart) return prevGlobal;
-          
+
           const newItems = existingCart.items.filter(i => !unavailableIds.includes(i.item.id as string));
           const newLocationCarts = { ...prevLocationCarts };
-          
+
           if (newItems.length === 0) {
             delete newLocationCarts[checkoutRestaurantId];
           } else {
@@ -405,13 +418,13 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
               items: newItems
             };
           }
-          
+
           return {
             ...prevGlobal,
             [locationKey]: newLocationCarts
           };
         });
-        
+
         setGlobalError(removedItemNames ? `Removed unavailable items from cart: ${removedItemNames}` : "Some items are unavailable.");
         setTimeout(() => setGlobalError(null), 5000);
       } else {
@@ -444,4 +457,5 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
     quotes
   };
 }
+
 

@@ -8,19 +8,17 @@ const ApiResponseCustomerAddressDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: CustomerAddressDto,
+    data: CustomerAddressDto.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const ApiResponseListCustomerAddressDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: z.array(CustomerAddressDto),
+    data: z.array(CustomerAddressDto).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const AddressRequest = z
   .object({

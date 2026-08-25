@@ -20,10 +20,9 @@ const ApiResponseCategoryDTO = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: CategoryDTO,
+    data: CategoryDTO.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const TimingDTO = z
   .object({ openingTime: z.string(), closingTime: z.string() })
@@ -37,10 +36,9 @@ const ApiResponseListTimingDTO = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: z.array(TimingDTO),
+    data: z.array(TimingDTO).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const SetBrandCategoryTimingRequest = z
   .object({
@@ -52,10 +50,9 @@ const ApiResponseListCategoryDTO = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: z.array(CategoryDTO),
+    data: z.array(CategoryDTO).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 
 export const schemas = {

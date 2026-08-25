@@ -46,10 +46,10 @@ interface DeviceSession {
   const [editName, setEditName] = useState(userName || '');
   const [initialName, setInitialName] = useState(userName || '');
 
-  useEffect(() => {
-    setEditName(userName || '');
-    setInitialName(userName || '');
-  }, [userName]);
+  if (userName !== initialName && userName) {
+      setInitialName(userName);
+      setEditName(userName);
+  }
 
   const fetchDevices = () => {
     identityApi.auth.get('/api/v1/internal/auth/sessions', { headers: { 'X-Calling-Service': portalRole || RoleName.RESTAURANT } })
@@ -62,6 +62,8 @@ interface DeviceSession {
     if (isOpen) {
       fetchDevices();
     }
+   
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   const handleLogout = () => {

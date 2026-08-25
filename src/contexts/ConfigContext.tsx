@@ -12,6 +12,8 @@ const ConfigContext = createContext<ConfigContextType>({
   error: null,
 });
 
+ 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useConfig = () => useContext(ConfigContext);
 
 export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -22,11 +24,11 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     const fetchConfig = async () => {
       try {
-                const res = await window.fetch(import.meta.env.VITE_API_BASE_URL + '/api/config/ui-config', { headers: { 'X-Calling-Service': 'CustomerApplication' } });
-                if (!res.ok) throw new Error('API Error');
-                const response = await res.json();
-                if (response && (response).mapsApiKey) {
-                    setOlaMapsApiKey((response).mapsApiKey);
+        const res = await window.fetch(import.meta.env.VITE_API_BASE_URL + '/api/config/ui-config', { headers: { 'X-Calling-Service': 'CustomerApplication' } });
+        if (!res.ok) throw new Error('API Error');
+        const response = await res.json();
+        if (response && (response).mapsApiKey) {
+          setOlaMapsApiKey((response).mapsApiKey);
         } else {
           setError('Failed to load Maps API Key from server');
         }

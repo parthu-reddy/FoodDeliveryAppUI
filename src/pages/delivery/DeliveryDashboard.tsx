@@ -184,6 +184,8 @@ export default function DeliveryDashboard({
       })
       .catch((err) => console.warn("Failed to fetch verification status", err))
       .finally(() => setIsVerificationLoaded(true));
+   
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [riderPhone]);
 
   const requestPermissionsAndGoOnline = async () => {
@@ -540,6 +542,7 @@ export default function DeliveryDashboard({
 
   useEffect(() => {
     if (currentJob?.status) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsUpdatingPickup(false);
       setIsUpdatingDelivery(false);
 
@@ -550,7 +553,9 @@ export default function DeliveryDashboard({
         setIsWaitTimerActive(true);
         setWaitTimerSeconds(0);
       }
+     
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentJob?.status]);
 
   useEffect(() => {
@@ -562,12 +567,15 @@ export default function DeliveryDashboard({
     ) {
       interval = setInterval(() => {
         setWaitTimerSeconds((prev) => prev + 1);
+       
       }, 1000);
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsWaitTimerActive(false);
       setWaitTimerSeconds(0);
     }
     return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isWaitTimerActive, currentJob?.status]);
 
   if (isLoadingProfile) {

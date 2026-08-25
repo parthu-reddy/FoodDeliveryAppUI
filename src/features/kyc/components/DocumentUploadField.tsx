@@ -10,10 +10,10 @@ interface DocumentUploadFieldProps {
   uploadEndpoint?: string;
 }
 
-export default function DocumentUploadField({ 
-  value, 
-  onChange, 
-  docType, 
+export default function DocumentUploadField({
+  value,
+  onChange,
+  docType,
   placeholder = "Upload Document",
   accept = "image/*,application/pdf",
   uploadEndpoint = "/api/delivery/verification/upload-url"
@@ -42,7 +42,7 @@ export default function DocumentUploadField({
         }
       });
       const res = await resData.json();
-      
+
       if (!res?.uploadUrl || !res?.objectKey) {
         throw new Error("Failed to get secure upload link.");
       }
@@ -111,7 +111,7 @@ export default function DocumentUploadField({
   return (
     <div className="w-full">
       <div className="flex items-center space-x-3">
-        <div 
+        <div
           onClick={() => {
             if (!isUploading) {
               setError('');
@@ -121,12 +121,11 @@ export default function DocumentUploadField({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          className={`flex-1 flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed ${
-            isDragging ? 'border-rose-500 bg-rose-500/10' :
-            error ? 'border-red-500/50 bg-red-500/5' 
-            : value ? 'border-emerald-500/30 bg-emerald-500/10' 
-            : 'border-rose-500/30 bg-white/10 dark:bg-slate-900/10'
-          } backdrop-blur-md cursor-pointer hover:bg-white/20 dark:hover:bg-slate-900/20 transition-all`}
+          className={`flex-1 flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed ${isDragging ? 'border-rose-500 bg-rose-500/10' :
+              error ? 'border-red-500/50 bg-red-500/5'
+                : value ? 'border-emerald-500/30 bg-emerald-500/10'
+                  : 'border-rose-500/30 bg-white/10 dark:bg-slate-900/10'
+            } backdrop-blur-md cursor-pointer hover:bg-white/20 dark:hover:bg-slate-900/20 transition-all`}
         >
           {isUploading ? (
             <div className="flex flex-col items-center space-y-2">

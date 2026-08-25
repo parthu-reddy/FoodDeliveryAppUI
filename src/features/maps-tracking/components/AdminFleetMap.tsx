@@ -88,7 +88,7 @@ function AdminFleetMapInner() {
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
-    
+
     // Initialize map if not exists
     let map = mapInstance;
     if (!map) {
@@ -120,7 +120,7 @@ function AdminFleetMapInner() {
           const el = document.createElement('div');
           el.className = 'fleet-marker w-8 h-8 bg-red-600 rounded-full flex items-center justify-center shadow-lg border-2 border-white text-white shadow-red-600/50 cursor-pointer pointer-events-auto';
           el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7"/></svg>';
-          
+
           const restaurantUnknown = r as unknown as { phone?: string, phoneNumber?: string };
           if (restaurantUnknown.phone || restaurantUnknown.phoneNumber) {
             el.title = `Phone: ${restaurantUnknown.phone || restaurantUnknown.phoneNumber}`;
@@ -145,7 +145,7 @@ function AdminFleetMapInner() {
         if (r.lat && r.lng && r.lat !== 0 && r.lng !== 0) {
           hasPoints = true;
           bounds.extend([r.lng, r.lat]);
-          
+
           const isOnline = r.status === 'ONLINE';
           const bgClass = isOnline ? 'bg-blue-600' : 'bg-slate-400';
           const shadowClass = isOnline ? 'shadow-blue-500/50' : 'shadow-slate-400/50';
@@ -153,7 +153,7 @@ function AdminFleetMapInner() {
           const el = document.createElement('div');
           el.className = `fleet-marker w-10 h-10 ${bgClass} rounded-full border-2 border-white shadow-xl flex items-center justify-center ${shadowClass} cursor-pointer pointer-events-auto`;
           el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 5.5h5l-4-5h-3L8 12M5.5 17.5 8 12M18.5 17.5 15 11.5"/></svg>';
-          
+
           const riderUnknown = r as unknown as { phone?: string, phoneNumber?: string };
           if (riderUnknown.phone || riderUnknown.phoneNumber) {
             el.title = `Phone: ${riderUnknown.phone || riderUnknown.phoneNumber}`;
@@ -178,11 +178,11 @@ function AdminFleetMapInner() {
         if (c.latitude && c.longitude && c.latitude !== 0 && c.longitude !== 0) {
           hasPoints = true;
           bounds.extend([c.longitude, c.latitude]);
-          
+
           const el = document.createElement('div');
           el.className = 'fleet-marker w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center shadow-lg border-2 border-white text-white shadow-orange-500/50 cursor-pointer pointer-events-auto';
           el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
-          
+
           const customerUnknown = c as unknown as { phone?: string, phoneNumber?: string };
           if (customerUnknown.phone || customerUnknown.phoneNumber) {
             el.title = `Phone: ${customerUnknown.phone || customerUnknown.phoneNumber}`;

@@ -32,58 +32,58 @@ const RestaurantOrder = z
       "CANCELLED",
       "FAILED",
     ]),
-    paymentStatus: z.enum([
-      "CREATED",
-      "INITIATED",
-      "PENDING",
-      "SUCCESS",
-      "FAILED",
-      "CAPTURED",
-      "PAID",
-      "PARTIALLY_REFUNDED",
-      "REFUNDED",
-      "REFUND_PENDING",
-      "REFUND_FAILED",
-    ]),
-    version: z.number().int(),
-    prepTime: z.number().int(),
-    additionalPrepTime: z.number().int(),
-    estimatedCompletionTime: z.number().int(),
-    deliveryLat: z.number(),
-    deliveryLng: z.number(),
-    deliveryAddress: z.string(),
-    pickupOtp: z.string(),
-    deliveryOtp: z.string(),
-    deliveryExecutiveId: z.string().uuid(),
-    customerName: z.string(),
-    riderName: z.string(),
-    itemsJson: z.string(),
+    paymentStatus: z
+      .enum([
+        "CREATED",
+        "INITIATED",
+        "PENDING",
+        "SUCCESS",
+        "FAILED",
+        "CAPTURED",
+        "PAID",
+        "PARTIALLY_REFUNDED",
+        "REFUNDED",
+        "REFUND_PENDING",
+        "REFUND_FAILED",
+      ])
+      .optional(),
+    version: z.number().int().optional(),
+    prepTime: z.number().int().optional(),
+    additionalPrepTime: z.number().int().optional(),
+    estimatedCompletionTime: z.number().int().optional(),
+    deliveryLat: z.number().optional(),
+    deliveryLng: z.number().optional(),
+    deliveryAddress: z.string().optional(),
+    pickupOtp: z.string().optional(),
+    deliveryOtp: z.string().optional(),
+    deliveryExecutiveId: z.string().uuid().optional(),
+    customerName: z.string().optional(),
+    riderName: z.string().optional(),
+    itemsJson: z.string().optional(),
     createdAt: z.string().datetime({ offset: true }),
-    updatedAt: z.string().datetime({ offset: true }),
+    updatedAt: z.string().datetime({ offset: true }).optional(),
   })
-  .partial()
   .passthrough();
 const ApiResponseListRestaurantOrder = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: z.array(RestaurantOrder),
+    data: z.array(RestaurantOrder).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const PageRestaurantOrder = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    numberOfElements: z.number().int(),
-    number: z.number().int(),
     sort: z.array(SortObject),
+    pageable: PageableObject,
+    number: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
     size: z.number().int(),
     content: z.array(RestaurantOrder),
-    pageable: PageableObject,
-    last: z.boolean(),
-    first: z.boolean(),
+    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .partial()
@@ -92,10 +92,9 @@ const ApiResponsePageRestaurantOrder = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: PageRestaurantOrder,
+    data: PageRestaurantOrder.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const AcceptOrderRequest = z
   .object({ additionalPrepTime: z.number().int(), delayReason: z.string() })

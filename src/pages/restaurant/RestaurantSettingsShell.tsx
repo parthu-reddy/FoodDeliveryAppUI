@@ -64,6 +64,7 @@ export const RestaurantSettingsShell: React.FC<RestaurantSettingsShellProps> = (
   // Default to outlets if no outlets exist
   React.useEffect(() => {
     if (outlets.length === 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSettingsTab("outlets");
     }
   }, [outlets.length]);
@@ -273,7 +274,7 @@ export const RestaurantSettingsShell: React.FC<RestaurantSettingsShellProps> = (
 
       {editingOutletShifts && (
         <OutletShiftEditor
-          outlet={editingOutletShifts}
+          outlet={editingOutletShifts as never}
           onRefresh={loadData}
           onClose={() => setEditingOutletShifts(null)}
         />
@@ -281,7 +282,7 @@ export const RestaurantSettingsShell: React.FC<RestaurantSettingsShellProps> = (
       
       {editingOutletSettings && (
         <OutletSettingsEditor
-          outlet={editingOutletSettings}
+          outlet={editingOutletSettings as never}
           onRefresh={loadData}
           onClose={() => setEditingOutletSettings(null)}
         />

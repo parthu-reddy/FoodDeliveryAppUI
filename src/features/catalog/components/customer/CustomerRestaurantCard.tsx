@@ -28,7 +28,7 @@ export default function CustomerRestaurantCard({ restaurant, isLast, lastElement
             const relativeUrl = trackingUrl.replace('http://event-tracking-service', '');
             window.fetch(import.meta.env.VITE_API_BASE_URL + relativeUrl, { headers: { 'X-Calling-Service': 'CustomerApplication' } }).catch(err => console.error("Tracking failed", err));
           }
-          
+
           observer.disconnect(); // Only track impression once per render
         }
       },

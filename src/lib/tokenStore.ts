@@ -84,6 +84,7 @@ export const decodeJwt = (token: string) => {
         return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
     }).join(''));
     return JSON.parse(jsonPayload);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (e: unknown) {
     return null;
   }

@@ -12,7 +12,7 @@ export const isActiveOrder = (order: any): boolean => {
   if (ds === DeliveryStatus.CANCELLED || ds === DeliveryStatus.FAILED || ds === DeliveryStatus.DELIVERED) {
     return false;
   }
-  
+
   if (s === OrderStatus.HANDED_OVER && !ds) {
     return false;
   }

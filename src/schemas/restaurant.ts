@@ -14,7 +14,7 @@ export const restaurantSchema = z.object({
   brandId: z.string().optional(),
   brandName: z.string().optional(),
   isSponsored: z.boolean().optional(),
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   adData: z.any().optional(),
 }).passthrough();
 

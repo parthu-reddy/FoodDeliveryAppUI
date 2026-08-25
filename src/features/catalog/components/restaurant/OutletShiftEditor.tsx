@@ -20,9 +20,9 @@ export default function OutletShiftEditor({ outlet, onRefresh, onClose }: Outlet
     outlet.timings && outlet.timings.length > 0
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ? outlet.timings.map((t: any) => ({
-          openingTime: t.openingTime.substring(0, 5),
-          closingTime: t.closingTime.substring(0, 5),
-        }))
+        openingTime: t.openingTime.substring(0, 5),
+        closingTime: t.closingTime.substring(0, 5),
+      }))
       : [{ openingTime: '09:00', closingTime: '22:00' }]
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -45,13 +45,13 @@ export default function OutletShiftEditor({ outlet, onRefresh, onClose }: Outlet
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
+
     // Validation
     if (timings.length === 0) {
       setError('At least one shift is required.');
       return;
     }
-    
+
     for (const t of timings) {
       if (!t.openingTime || !t.closingTime) {
         setError('Please fill all timing fields.');
@@ -75,9 +75,8 @@ export default function OutletShiftEditor({ outlet, onRefresh, onClose }: Outlet
       onRefresh();
       onClose();
     } catch (err: unknown) {
-      // @ts-expect-error auto-migration type suppression
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setError((err as any).response?.data?.message || (err as any).response?.data?.error || err.message || 'Failed to update timings.');
+      setError((err as any).response?.data?.message || (err as any).response?.data?.error || (err as any).message || 'Failed to update timings.');
     } finally {
       setIsSubmitting(false);
     }
@@ -96,7 +95,7 @@ export default function OutletShiftEditor({ outlet, onRefresh, onClose }: Outlet
           </button>
         </div>
         <form onSubmit={handleSave} className="p-4 space-y-4">
-          
+
           {error && (
             <div className="bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 p-3 rounded-xl text-xs font-bold flex items-center gap-2 border border-rose-200 dark:border-rose-800">
               <AlertCircle className="w-4 h-4 shrink-0" />
@@ -114,7 +113,7 @@ export default function OutletShiftEditor({ outlet, onRefresh, onClose }: Outlet
               <Plus className="w-3 h-3" /> Add Shift
             </button>
           </div>
-          
+
           <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
             {timings.map((timing, index) => (
               <div key={index} className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950/20 p-3 rounded-xl border border-slate-100 dark:border-slate-800">

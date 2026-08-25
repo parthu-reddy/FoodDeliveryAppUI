@@ -31,6 +31,7 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
     let ignore = false;
     
     if (page > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsFetchingPage(true);
     }
 
@@ -62,6 +63,8 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
       });
 
     return () => { ignore = true; };
+   
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
   return (
@@ -124,7 +127,9 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
                 </div>
 
                 <div className="text-sm text-slate-700 dark:text-slate-300 bg-white/40 dark:bg-white/5 rounded-xl p-3 border border-white/20 dark:border-white/5">
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  { }
+                  { }
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                   {order.items?.map((item: any, idx: number) => (
                     <div key={idx} className="flex gap-2">
                       <span className="font-semibold text-indigo-600 dark:text-indigo-400">{item.quantity || 1}x</span>

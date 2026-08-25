@@ -30,6 +30,7 @@ export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps>
   const [visibleCount, setVisibleCount] = useState(6);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setVisibleCount(6);
   }, [debouncedSearchQuery, selectedCategory, restaurants]);
 
@@ -47,9 +48,9 @@ export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps>
 
   const filteredRestaurants = restaurants.filter(restaurant => {
     const matchesSearch = (restaurant.name || '').toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-                          (restaurant.cuisine || '').toLowerCase().includes(debouncedSearchQuery.toLowerCase());
-    const matchesCategory = !selectedCategory || selectedCategory === 'All' || 
-                            (restaurant.tags || []).includes(selectedCategory);
+      (restaurant.cuisine || '').toLowerCase().includes(debouncedSearchQuery.toLowerCase());
+    const matchesCategory = !selectedCategory || selectedCategory === 'All' ||
+      (restaurant.tags || []).includes(selectedCategory);
     return matchesSearch && matchesCategory;
   });
 
@@ -79,11 +80,10 @@ export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps>
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat === 'All' ? null : cat)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer border ${
-                (cat === 'All' && !selectedCategory) || selectedCategory === cat
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer border ${(cat === 'All' && !selectedCategory) || selectedCategory === cat
                   ? 'bg-gradient-to-r from-orange-500 to-amber-500 border-transparent text-white shadow-md shadow-orange-500/15'
                   : 'bg-white/20 dark:bg-white/5 backdrop-blur-sm border-rose-500/20 dark:border-rose-500/30 text-slate-500 dark:text-[#f0ede6] hover:border-orange-500/30 dark:hover:border-orange-500/50 hover:bg-white/20 dark:hover:bg-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)]'
-              }`}
+                }`}
             >
               {cat}
             </button>
@@ -116,7 +116,7 @@ export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps>
               <MapPinOff className="w-12 h-12 text-rose-500/50" />
             </div>
             <h3 className="text-lg font-bold text-slate-800 dark:text-[#f0ede6] mb-2">Out of Range</h3>
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            { }
             <p className="text-sm mb-4">We don't have any partner kitchens in your delivery area yet.</p>
             <Button
               onClick={() => setIsAddressSelectorOpen(true)}
@@ -136,13 +136,13 @@ export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps>
             ))}
           </div>
         ) : filteredRestaurants.length === 0 ? (
-          <EmptyState 
+          <EmptyState
             title="No Kitchens Found"
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             description="We couldn't find any kitchens matching your search criteria."
             icon={<AlertCircle className="w-12 h-12 text-rose-500/50" />}
             action={
-              <button 
+              <button
                 onClick={() => { setSearchQuery(''); setSelectedCategory(null); }}
                 className="mt-4 px-4 py-2 bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold rounded-xl hover:bg-rose-500/20 transition-colors cursor-pointer"
               >

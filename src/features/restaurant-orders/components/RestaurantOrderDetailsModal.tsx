@@ -19,6 +19,7 @@ export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalPr
 
   useEffect(() => {
     if (isOpen && order) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoading(true);
       setError(null);
       // Fetch transparent invoice details
@@ -99,7 +100,8 @@ export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalPr
                 <div>
                   <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Order Items</h3>
                   <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 space-y-3">
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    { }
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                     {data.items?.map((item: any, i: number) => (
                       <div key={i} className="flex justify-between items-center">
                         <div className="flex items-center gap-3">

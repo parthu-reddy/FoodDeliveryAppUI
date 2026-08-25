@@ -96,16 +96,13 @@ export function useRestaurantOrders({
     intervalMs: 5000,
     enabled: !!selectedOutletId,
     onData: (mapped: Order[]) => {
-      setInternalOrders(prev => {
-        return mapped.map((newOrder: Order) => {
-          const oldOrder = prev.find(p => p.id === newOrder.id);
-          const isLocallyPreparing = localStorage.getItem(`order_preparing_${newOrder.id}`) === 'true';
-          if (isLocallyPreparing && newOrder.status === OrderStatus.ACCEPTED) {
-            return { ...newOrder, status: OrderStatus.PREPARING };
-          }
-          return newOrder;
-        });
-      });
+      setInternalOrders(mapped.map((newOrder: Order) => {
+        const isLocallyPreparing = localStorage.getItem(`order_preparing_${newOrder.id}`) === 'true';
+        if (isLocallyPreparing && newOrder.status === OrderStatus.ACCEPTED) {
+          return { ...newOrder, status: OrderStatus.PREPARING };
+        }
+        return newOrder;
+      }));
     },
     onError: (err) => console.error("Failed to poll orders", err)
   });

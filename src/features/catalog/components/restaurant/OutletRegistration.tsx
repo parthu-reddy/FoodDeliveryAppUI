@@ -87,6 +87,8 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
     return () => {
       // Cleanup happens when modal closes
     };
+   
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   // Clean map instance when closing
@@ -345,7 +347,9 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
             </div>
             {searchResults.length > 0 && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg max-h-48 overflow-y-auto z-20">
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                { }
+                { }
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                 {searchResults.map((result: any) => (
                   <button
                     key={result.place_id}
@@ -369,7 +373,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
             <FormField label="Latitude" required>
               <Input
                 type="number"
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                 
                 step="any"
                 required
                 value={lat}
@@ -387,7 +391,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
             <FormField label="Longitude" required>
               <Input
                 type="number"
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                 
                 step="any"
                 required
                 value={lng}

@@ -29,7 +29,6 @@ interface RiderSettingsViewProps {
 
 export default function RiderSettingsView({
   onBack,
-  _theme,
   onLogout,
   isProfileMandatory,
   riderPhone,
@@ -153,8 +152,8 @@ export default function RiderSettingsView({
       
       const txRes = await walletApi.wallet.get('/api/v1/wallets/:entityType/:entityId/transactions', { params: { entityType: 'DRIVER', entityId: userId }, queries: { page } });
       if (txRes.data) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setTransactions(fromContract(txRes.content ?? []) as any);
+        const typedTxRes = txRes as { content?: unknown[], totalPages?: number };
+        setTransactions(fromContract(typedTxRes.content ?? []) as WalletTransaction[]);
         setTxTotalPages(txRes.totalPages || 1);
       }
     } catch (e: unknown) {
@@ -166,6 +165,7 @@ export default function RiderSettingsView({
 
   useEffect(() => {
     if (userId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       loadWalletData(txPage);
     }
   }, [userId, txPage, loadWalletData]);
@@ -215,8 +215,8 @@ export default function RiderSettingsView({
 
     } catch (e: unknown) {
       console.error(e);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setErrorMsg((e as any).response?.data?.error || (e as any).message || 'Failed to update profile');
+      const typedErr = e as { response?: { data?: { error?: string } }, message?: string };
+      setErrorMsg(typedErr.response?.data?.error || typedErr.message || 'Failed to update profile');
     } finally {
       setIsSaving(false);
     }

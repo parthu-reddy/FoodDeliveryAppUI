@@ -17,8 +17,10 @@ export default function CustomerActiveOrdersCarousel({
   isActiveOrder,
   trackingOrder,
   cartLength,
-  _selectedRestaurantId,
-  _cartRestaurantId,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  selectedRestaurantId,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  cartRestaurantId,
   setTrackingOrder
 }: CustomerActiveOrdersCarouselProps) {
   if (activeOrders.filter(o => isActiveOrder(o)).length === 0 || trackingOrder) {
@@ -31,8 +33,8 @@ export default function CustomerActiveOrdersCarousel({
     <div className={`fixed left-0 right-0 max-w-3xl mx-auto z-30 pointer-events-none transition-all duration-300 ${isCartActive ? 'bottom-24' : 'bottom-4'}`}>
       <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-none px-5 gap-4 pb-2 pointer-events-auto">
         {activeOrders.filter(o => isActiveOrder(o)).slice().reverse().map((order) => (
-          <button 
-            key={order.id} 
+          <button
+            key={order.id}
             onClick={() => setTrackingOrder(order)}
             className="shrink-0 w-[85%] sm:w-[340px] snap-center bg-white/20 dark:bg-slate-900/20 backdrop-blur-xl rounded-[20px] shadow-2xl shadow-slate-900/10 dark:shadow-black/40 border border-rose-500/20 dark:border-rose-500/30 p-3.5 text-left cursor-pointer transition-all active:scale-[0.98] hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all"
           >

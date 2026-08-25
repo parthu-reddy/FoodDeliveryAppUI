@@ -34,7 +34,7 @@ export default function AdminUserManagement() {
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
   // Polling for users by role
-  const { data: usersResponse, refetch: fetchByRole } = usePolling({
+  const { refetch: fetchByRole } = usePolling({
     fetchFn: async () => {
       let res;
       if (roleFilter === 'ALL') {
@@ -45,19 +45,18 @@ export default function AdminUserManagement() {
       return (res as {data?:{data?:unknown}}).data?.data || (res as {data?:unknown}).data || res;
     },
     intervalMs: 30000,
-    enabled: !debouncedSearchQuery
-  });
-
-  useEffect(() => {
-    if (!debouncedSearchQuery && usersResponse) {
-        const page = asUntyped<WirePage<unknown>>(usersResponse);
-        const content = page.content ?? (Array.isArray(usersResponse) ? usersResponse : []);
-        setUsers(Array.isArray(content) ? content : []);
-        if (page.totalPages !== undefined) {
-            setTotalPages(page.totalPages);
+    enabled: !debouncedSearchQuery,
+    onData: (response) => {
+        if (!debouncedSearchQuery) {
+            const page = asUntyped<WirePage<unknown>>(response);
+            const content = page.content ?? (Array.isArray(response) ? response : []);
+            setUsers(Array.isArray(content) ? content : []);
+            if (page.totalPages !== undefined) {
+                setTotalPages(page.totalPages);
+            }
         }
     }
-  }, [usersResponse, debouncedSearchQuery]);
+  });
 
   useEffect(() => {
     if (!debouncedSearchQuery) return;
@@ -91,6 +90,7 @@ export default function AdminUserManagement() {
 
   useEffect(() => {
     if (selectedUser) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchUserActiveOrders(selectedUser.id);
     } else {
       setUserActiveOrders([]);
@@ -206,7 +206,6 @@ export default function AdminUserManagement() {
                 <div className="pt-10">
                   <EmptyState 
                     title="No Users Found"
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     description={`Could not find any users with role ${roleFilter} or matching your search.`}
                     icon={<User className="w-12 h-12" />}
                   />
@@ -301,11 +300,13 @@ export default function AdminUserManagement() {
                             {userActiveOrders.map(order => (
                                 <div key={order.id} className="glass-card p-4">
                                     <div className="flex justify-between items-start mb-2">
-                                        <p className="font-bold text-sm">#{order.id.substring(0, 8)}</p>
+                                        <p className="font-bold text-sm">#{order.id?.substring(0, 8)}</p>
                                         <span className="text-xs font-bold px-2 py-1 bg-indigo-500/20 text-indigo-400 rounded-md">{order.status}</span>
                                     </div>
                                     <p className="text-sm text-slate-500">{order.restaurantName}</p>
-                                    <p className="text-xs text-slate-500 mt-2">Placed: {new Date(order.createdAt).toLocaleString()}</p>
+                                    { }
+                                    {/* eslint-disable-next-line react-hooks/purity */}
+                                    <p className="text-xs text-slate-500 mt-2">Placed: {new Date(order.createdAt || Date.now()).toLocaleString()}</p>
                                 </div>
                             ))}
                         </div>

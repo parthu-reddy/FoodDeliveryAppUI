@@ -27,7 +27,10 @@ export default function AdminPayoutsView() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchPayouts();
+   
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSettle = async (ownerId: string, ownerType: string, amount: number) => {

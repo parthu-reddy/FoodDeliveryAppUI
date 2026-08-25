@@ -190,8 +190,8 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
                       await customerApi.order.post('/api/v1/orders/:orderId/cancel', undefined, { params: { orderId: currentTrackingOrder.id } });
                     } catch (e: unknown) {
                       console.error("Failed to cancel order", e);
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      showError((e as any).response?.data?.message || "Failed to cancel order");
+                      const typedErr = e as { response?: { data?: { message?: string } } };
+                      showError(typedErr.response?.data?.message || "Failed to cancel order");
                       // Revert optimistic update
                       if (onUpdateOrder) onUpdateOrder(currentTrackingOrder.id, oldStatus);
                       else {
@@ -222,7 +222,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
                   <span className="text-sm font-semibold">Share OTP with Rider at delivery</span>
                 </div>
                 <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white font-mono text-xl font-black px-4 py-2 rounded-xl tracking-wider shadow-md">
-                  {currentTrackingOrder.otp}
+                  {(currentTrackingOrder as {otp?: string, distanceKm?: number}).otp}
                 </div>
               </div>
             )}
@@ -456,7 +456,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
                 <span>₹{currentTrackingOrder.items ? currentTrackingOrder.items.reduce((sum: number, item: unknown) => { const i = asUntyped<unknown>(item) as { item?: { price?: number }, price?: number, quantity?: number }; return sum + ((i.item?.price || i.price || 0) * (i.quantity || 1)) }, 0).toFixed(2) : '0.00'}</span>
               </div>
               <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
-                <span>Delivery Fee {currentTrackingOrder.distanceKm ? `(${currentTrackingOrder.distanceKm} km)` : ''}</span>
+                <span>Delivery Fee {(currentTrackingOrder as {otp?: string, distanceKm?: number}).distanceKm ? `(${(currentTrackingOrder as {otp?: string, distanceKm?: number}).distanceKm} km)` : ''}</span>
                 <span>₹{((currentTrackingOrder as {charges?: { category?: string, payerType?: string, amount?: number }[]}).charges || [])?.find((c: unknown) => { const charge = c as { category?: string, payerType?: string, amount?: number }; return charge.category === 'DELIVERY_FEE' && charge.payerType === 'CUSTOMER'; })?.amount?.toFixed(2) || (currentTrackingOrder.deliveryFee !== undefined ? currentTrackingOrder.deliveryFee.toFixed(2) : (currentTrackingOrder.items ? ((currentTrackingOrder.totalAmount || (currentTrackingOrder as {total?:number}).total || 0) - currentTrackingOrder.items.reduce((sum: number, item: unknown) => { const i = asUntyped<unknown>(item) as { item?: { price?: number }, price?: number, quantity?: number }; return sum + ((i.item?.price || i.price || 0) * (i.quantity || 1)) }, 0)).toFixed(2) : '0.00'))}</span>
               </div>
               {currentTrackingOrder.sgst !== undefined && (

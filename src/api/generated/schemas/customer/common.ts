@@ -8,7 +8,6 @@ export const OrderItemResponse = z
     quantity: z.number().int(),
     price: z.number(),
   })
-  .partial()
   .passthrough();
 export const OrderResponse = z
   .object({
@@ -42,50 +41,47 @@ export const OrderResponse = z
     itemTotal: z.number(),
     foodCost: z.number(),
     customerPlatformFee: z.number(),
-    restaurantPlatformFee: z.number(),
-    platformBonus: z.number(),
-    restaurantDeliveryContribution: z.number(),
-    restaurantPayout: z.number(),
+    restaurantPlatformFee: z.number().optional(),
+    platformBonus: z.number().optional(),
+    restaurantDeliveryContribution: z.number().optional(),
+    restaurantPayout: z.number().optional(),
     sgst: z.number(),
     cgst: z.number(),
     deliveryFee: z.number(),
-    driverGrossPayout: z.number(),
-    driverTaxes: z.number(),
-    driverNetPayout: z.number(),
+    driverGrossPayout: z.number().optional(),
+    driverTaxes: z.number().optional(),
+    driverNetPayout: z.number().optional(),
     deliveryAddress: z.string(),
-    deliveryLat: z.number(),
-    deliveryLng: z.number(),
+    deliveryLat: z.number().optional(),
+    deliveryLng: z.number().optional(),
     items: z.array(OrderItemResponse),
     createdAt: z.string().datetime({ offset: true }),
-    updatedAt: z.string().datetime({ offset: true }),
-    riderId: z.string().uuid(),
-    paymentIntent: z.string(),
-    pickupOtp: z.string(),
-    otp: z.string(),
-    estimatedCompletionTime: z.number().int(),
-    remainingPingSeconds: z.number().int(),
-    distanceKm: z.number(),
-    expiresAt: z.number().int(),
+    updatedAt: z.string().datetime({ offset: true }).optional(),
+    riderId: z.string().uuid().optional(),
+    paymentIntent: z.string().optional(),
+    pickupOtp: z.string().optional(),
+    otp: z.string().optional(),
+    estimatedCompletionTime: z.number().int().optional(),
+    remainingPingSeconds: z.number().int().optional(),
+    distanceKm: z.number().optional(),
+    expiresAt: z.number().int().optional(),
   })
-  .partial()
   .passthrough();
 export const ApiResponseVoid = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: z.object({}).partial().passthrough(),
+    data: z.object({}).partial().passthrough().optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 export const ApiResponseString = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: z.string(),
+    data: z.string().optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 export const SupportTicket = z
   .object({
@@ -113,24 +109,22 @@ export const CustomerAddressDto = z
     customerId: z.string().uuid(),
     label: z.string(),
     addressLine1: z.string(),
-    addressLine2: z.string(),
+    addressLine2: z.string().optional(),
     city: z.string(),
     state: z.string(),
     zipCode: z.string(),
     latitude: z.number(),
     longitude: z.number(),
-    isDefault: z.boolean(),
+    isDefault: z.boolean().optional(),
   })
-  .partial()
   .passthrough();
 export const ApiResponseMapStringObject = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: z.record(z.object({}).partial().passthrough()),
+    data: z.record(z.object({}).partial().passthrough()).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 export const SortObject = z
   .object({
@@ -145,24 +139,24 @@ export const SortObject = z
 export const PageableObject = z
   .object({
     offset: z.number().int(),
-    unpaged: z.boolean(),
     sort: z.array(SortObject),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
+    unpaged: z.boolean(),
   })
   .partial()
   .passthrough();
 export const PageOrderResponse = z
   .object({
-    totalPages: z.number().int(),
     totalElements: z.number().int(),
+    totalPages: z.number().int(),
     numberOfElements: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(OrderResponse),
+    first: z.boolean(),
+    last: z.boolean(),
     sort: z.array(SortObject),
     pageable: PageableObject,
     empty: z.boolean(),
@@ -173,19 +167,17 @@ export const ApiResponsePageOrderResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: PageOrderResponse,
+    data: PageOrderResponse.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 export const ApiResponseListOrderResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: z.array(OrderResponse),
+    data: z.array(OrderResponse).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 export const Order = z
   .object({
@@ -271,14 +263,14 @@ export const pageable = z
   .passthrough();
 export const PageOrder = z
   .object({
-    totalPages: z.number().int(),
     totalElements: z.number().int(),
+    totalPages: z.number().int(),
     numberOfElements: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(Order),
+    first: z.boolean(),
+    last: z.boolean(),
     sort: z.array(SortObject),
     pageable: PageableObject,
     empty: z.boolean(),
@@ -287,14 +279,14 @@ export const PageOrder = z
   .passthrough();
 export const PageSupportTicket = z
   .object({
-    totalPages: z.number().int(),
     totalElements: z.number().int(),
+    totalPages: z.number().int(),
     numberOfElements: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(SupportTicket),
+    first: z.boolean(),
+    last: z.boolean(),
     sort: z.array(SortObject),
     pageable: PageableObject,
     empty: z.boolean(),

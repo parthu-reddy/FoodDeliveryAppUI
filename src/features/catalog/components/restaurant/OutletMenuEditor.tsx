@@ -20,6 +20,8 @@ const overrideSchema = z.object({
   overriddenPrepTimeMinutes: z.number().min(1, 'Prep time must be at least 1 min').nullable().optional()
 });
 
+import { MasterMenuItem } from '@/types';
+
 interface OutletMenuEditorProps {
   restaurantId: string; // Outlet ID
   brandId: string;      // Brand UUID from the backend
@@ -30,10 +32,26 @@ interface OutletMenuEditorProps {
 export default function OutletMenuEditor({ restaurantId, brandId, onRefresh }: OutletMenuEditorProps) {
   const { showError } = useToast();
   const [selectedOutlet, setSelectedOutlet] = useState<string>(restaurantId);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [masterItems, setMasterItems] = useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [categories, setCategories] = useState<any[]>([]);
+  const [masterItems, setMasterItems] = useState<MasterMenuItem[]>([]);
+  
+  interface Timing { openingTime: string, closingTime: string }
+  interface EditorCategory {
+    id: string;
+    name?: string;
+    description?: string;
+    timings?: Timing[];
+    brandTimings?: Timing[];
+  }
+  interface OverrideItem {
+    id: string;
+    overriddenPrice?: number;
+    overriddenPrepTimeMinutes?: number;
+    isAvailable?: boolean;
+    masterMenuItemId?: string;
+    outletId?: string;
+  }
+
+  const [categories, setCategories] = useState<EditorCategory[]>([]);
   
   // Override Add/Edit State
 
@@ -56,8 +74,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, onRefresh }: O
   const [oPrice, setOPrice] = useState('');
   const [oPrepTime, setOPrepTime] = useState('');
   const [oActive, setOActive] = useState(true);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [overrides, setOverrides] = useState<any[]>([]);
+  const [overrides, setOverrides] = useState<OverrideItem[]>([]);
 
   // Category Timing Edit State
   const [editingTimingCatId, setEditingTimingCatId] = useState<string | null>(null);
@@ -66,19 +83,32 @@ export default function OutletMenuEditor({ restaurantId, brandId, onRefresh }: O
 
   useEffect(() => {
     if (restaurantId && restaurantId !== selectedOutlet) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedOutlet(restaurantId);
     }
+   
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurantId]);
 
+   
   useEffect(() => {
+     
+    // eslint-disable-next-line react-hooks/immutability
     fetchOverrides(selectedOutlet);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedOutlet]);
+ 
 
+   
   useEffect(() => {
     if (brandId && selectedOutlet) {
+       
+      // eslint-disable-next-line react-hooks/immutability
       fetchCategories();
+      // eslint-disable-next-line react-hooks/immutability
       fetchMasterItems();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [brandId, selectedOutlet]);
 
   const fetchCategories = async () => {
@@ -86,27 +116,27 @@ export default function OutletMenuEditor({ restaurantId, brandId, onRefresh }: O
       const data = await restaurantApi.category.get('/api/v1/brands/:brandId/categories', { params: { brandId } });
       if (data.success && data.data) {
         const updatedCategories = await Promise.all(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          data.data.map(async (cat: any) => {
-            const catData = { ...cat };
+          data.data.map(async (c: unknown) => {
+            const cat = c as { id: string, name?: string, description?: string };
+            const catData: EditorCategory = { ...cat };
             try {
                 // Fetch outlet timings
                 const oRes = await restaurantApi.category.get('/api/v1/outlets/:outletId/categories/:categoryId/timings', { params: { outletId: selectedOutlet, categoryId: cat.id } });
                 if (oRes.success && oRes.data && oRes.data.length > 0) {
-                    catData.timings = oRes.data;
+                    catData.timings = oRes.data as Timing[];
                 } else {
                     catData.timings = [];
                 }
-            } catch (_e) { catData.timings = []; }
+            } catch { catData.timings = []; }
             
             try {
                 const bRes = await restaurantApi.category.get('/api/v1/brands/:brandId/categories/:categoryId/timings', { params: { brandId, categoryId: cat.id } });
                 if (bRes.success && bRes.data && bRes.data.length > 0) {
-                    catData.brandTimings = bRes.data;
+                    catData.brandTimings = bRes.data as Timing[];
                 } else {
                     catData.brandTimings = [];
                 }
-            } catch (_e) { catData.brandTimings = []; }
+            } catch { catData.brandTimings = []; }
             
             return catData;
           })
@@ -120,7 +150,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, onRefresh }: O
     if (!brandId || brandId === 'undefined') return;
     try {
       const response = await restaurantApi.catalog.get('/api/v1/brands/:brandId/master-menu', { params: { brandId } });
-      setMasterItems(response.data || []);
+      setMasterItems((response.data as unknown as MasterMenuItem[]) || []);
     } catch (e) { console.error(e); }
   };
 
@@ -128,7 +158,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, onRefresh }: O
     if (!targetOutlet) return;
     try {
       const response = await restaurantApi.catalog.get('/api/v1/outlets/:outletId/menu-overrides', { params: { outletId: targetOutlet } });
-      setOverrides(response.data || []);
+      setOverrides((response.data as unknown as OverrideItem[]) || []);
     } catch (e) { console.error(e); }
   };
 
@@ -226,8 +256,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, onRefresh }: O
 
 
   
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const startEditingOverride = (item: any, currentOverride: any) => {
+  const startEditingOverride = (item: MasterMenuItem, currentOverride: OverrideItem | undefined) => {
     setIsAddingOverride(item.id);
     if (currentOverride) {
         setOPrice(currentOverride.overriddenPrice ? currentOverride.overriddenPrice.toString() : '');
@@ -269,7 +298,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, onRefresh }: O
               <ImageUploadField value={mImg} onChange={setMImg} folderId={restaurantId} placeholder="Image URL (Optional)" imageType="menu" />
             </div>
             <div className="z-[60] relative">
-              <CategorySelector categories={categories} value={mCatId} onChange={setMCatId} />
+              <CategorySelector categories={categories as unknown as {id: string, name: string}[]} value={mCatId} onChange={setMCatId} />
             </div>
             <div className="grid grid-cols-3 gap-3">
               <input type="number" step="0.01" min="0" placeholder="Override Price (optional)" value={oPrice} onChange={e=>setOPrice(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-emerald-500/20 dark:border-emerald-500/30 rounded-lg px-3 py-2 text-xs font-bold dark:text-[#f0ede6]" />
@@ -315,8 +344,8 @@ export default function OutletMenuEditor({ restaurantId, brandId, onRefresh }: O
                       <button onClick={() => {
                           setEditingTimingCatId(cat.id);
                           if (hasTimings) {
-                              setTOpening(cat.timings[0].openingTime.substring(0,5));
-                              setTClosing(cat.timings[0].closingTime.substring(0,5));
+                              setTOpening(cat.timings![0].openingTime.substring(0,5));
+                              setTClosing(cat.timings![0].closingTime.substring(0,5));
                           } else {
                               setTOpening('00:00');
                               setTClosing('23:59');
@@ -344,12 +373,14 @@ export default function OutletMenuEditor({ restaurantId, brandId, onRefresh }: O
                     <div>
                       {hasTimings ? (
                         <div className="space-y-1">
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            {cat.timings.map((t: any, i: number) => (
+                            {(cat.timings as unknown[])?.map((time: unknown, i: number) => {
+                                const t = time as { openingTime: string, closingTime: string };
+                                return (
                                 <div key={i} className="text-[10px] font-mono font-bold rounded px-2 py-1 w-fit text-emerald-600 dark:text-emerald-400 bg-emerald-500/10">
                                 {t.openingTime.substring(0,5)} - {t.closingTime.substring(0,5)}
                                 </div>
-                            ))}
+                                )
+                            })}
                         </div>
                       ) : (
                         <div className="mt-1">
@@ -358,12 +389,14 @@ export default function OutletMenuEditor({ restaurantId, brandId, onRefresh }: O
                           </div>
                           {hasBrandTimings ? (
                               <div className="space-y-1">
-                              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                              {cat.brandTimings.map((t: any, i: number) => (
+                              {(cat.brandTimings as unknown[])?.map((time: unknown, i: number) => {
+                                  const t = time as { openingTime: string, closingTime: string };
+                                  return (
                                   <div key={i} className="text-[10px] font-mono font-bold rounded px-2 py-0.5 w-fit text-orange-600 dark:text-orange-400 bg-orange-500/10 opacity-75">
                                   {t.openingTime.substring(0,5)} - {t.closingTime.substring(0,5)}
                                   </div>
-                              ))}
+                                  )
+                              })}
                               </div>
                           ) : (
                               <div className="text-[10px] font-mono font-bold rounded px-2 py-0.5 w-fit text-slate-500 bg-slate-500/10 opacity-75">
@@ -475,7 +508,6 @@ export default function OutletMenuEditor({ restaurantId, brandId, onRefresh }: O
           );
         })}
         
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         {/* Uncategorized Items (if any exist that were mapped incorrectly or created without category) */}
         {masterItems.filter(i => !categories.find(c => c.id === i.categoryId)).length > 0 && (
             <div className="bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl">

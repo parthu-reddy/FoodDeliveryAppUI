@@ -80,6 +80,8 @@ const BrandMasterMenu = React.memo(function BrandMasterMenu({ brandId, onRefresh
       fetchCategories();
       fetchMasterItems();
     }
+   
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [brandId]);
 
   const fetchCategories = async () => {
@@ -92,7 +94,7 @@ const BrandMasterMenu = React.memo(function BrandMasterMenu({ brandId, onRefresh
             try {
               const tRes = await restaurantApi.category.get('/api/v1/brands/:brandId/categories/:categoryId/timings', { params: { brandId, categoryId: cat.id } });
               return { ...cat, timings: (tRes.success && tRes.data) ? tRes.data : [] };
-            } catch (_e: unknown) {
+            } catch {
               return { ...cat, timings: [] };
             }
           })
@@ -464,7 +466,6 @@ const BrandMasterMenu = React.memo(function BrandMasterMenu({ brandId, onRefresh
           );
         })}
         
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         {/* Uncategorized Items (if any exist that were mapped incorrectly or created without category) */}
         {masterItems.filter(i => !categories.find(c => c.id === i.categoryId)).length > 0 && (
             <div className="bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl">

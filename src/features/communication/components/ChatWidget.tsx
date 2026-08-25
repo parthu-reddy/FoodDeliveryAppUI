@@ -34,9 +34,10 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState<Record<string, boolean>>({});
   const [targetUserId, setTargetUserId] = useState<string | null>(null);
-  
-  const { startCall } = useCallContext();
-  
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { startCall, callState, callEndReason, isCaller } = useCallContext();
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -70,7 +71,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
         // Play small blip when message is received while chat is open
         const audio = new Audio('/sounds/beep_short.wav');
         audio.volume = 0.5;
-        audio.play().catch(() => {});
+        audio.play().catch(() => { });
       } else {
         setUnreadCount(prev => prev + 1);
         try {
@@ -88,7 +89,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
     if (indicator.userId === user?.id) return; // ignore our own typing
 
     setIsTyping(prev => ({ ...prev, [indicator.userId]: true }));
-    
+
     // Clear typing status after 3 seconds of silence
     if (typingTimeoutRef.current[indicator.userId]) {
       clearTimeout(typingTimeoutRef.current[indicator.userId]);
@@ -117,22 +118,22 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
         try {
           // 1. Create or get session
           const data = await chatApi.chatSession.post(`/api/v1/chat/sessions`, {
-                      orderId,
-                      participants: [
-                        {
-                          userId: user.id,
-                          entityType: currentUserType,
-                          displayName: user.name || user.email || user.id
-                        },
-                        ...(otherParticipants || [])
-                      ]
-                    });
-          
+            orderId,
+            participants: [
+              {
+                userId: user.id,
+                entityType: currentUserType,
+                displayName: user.name || user.email || user.id
+              },
+              ...(otherParticipants || [])
+            ]
+          });
+
           if (!data || !data.success || !data.data) throw new Error('Failed to init chat session');
           const session = asUntyped<{ sessionId: string; participants?: { userId: string }[] }>(data.data);
           const sid = session.sessionId;
           setSessionId(sid);
-          
+
           if (session.participants) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const otherParticipant = session.participants.find((p: any) => p.userId !== user.id);
@@ -155,6 +156,8 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
 
       initChat();
     }
+   
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, sessionId, orderId, token, user, currentUserType]);
 
   const handleSend = (e?: React.FormEvent) => {
@@ -168,10 +171,10 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !sendImage) return;
-    
+
     // Clear the input
     if (fileInputRef.current) fileInputRef.current.value = '';
-    
+
     if (uploadedImageCount >= 4) {
       alert("You have reached the maximum limit of 4 images for this chat session.");
       return;
@@ -184,6 +187,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
     }
     setIsLoading(false);
   };
+ 
 
 
 
@@ -216,7 +220,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
         <div className="flex items-center gap-2">
           {onBack && (
             <button onClick={onBack} className="hover:bg-orange-700 p-1.5 rounded-full transition-colors mr-1">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
             </button>
           )}
           <div>
@@ -224,13 +228,13 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
               {otherParticipants?.length ? otherParticipants.map(p => p.displayName).join(', ') : 'Order Chat'}
             </h3>
             <div className="flex flex-col text-orange-100 text-sm">
-              <span>Order #{orderId.substring(0,8)}</span>
-            {order && order.items && Array.isArray(order.items) && order.items.length > 0 && (
-              <span className="text-xs opacity-90 truncate max-w-[200px]">
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                {order.items.length} items ({order.items.map((i: any) => i?.item?.name || i?.name || 'Item').join(', ')})
-              </span>
-            )}
+              <span>Order #{orderId.substring(0, 8)}</span>
+              {order && order.items && Array.isArray(order.items) && order.items.length > 0 && (
+                <span className="text-xs opacity-90 truncate max-w-[200px]">
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                  {order.items.length} items ({order.items.map((i: any) => i?.item?.name || i?.name || 'Item').join(', ')})
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -243,7 +247,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
               title={`Call ${p.displayName}`}
             >
               <PhoneCall className="w-4 h-4" />
-              <span className="text-[10px] uppercase font-bold tracking-wider">{p.entityType.substring(0,4)}</span>
+              <span className="text-[10px] uppercase font-bold tracking-wider">{p.entityType.substring(0, 4)}</span>
             </button>
           )) : (
             targetUserId && sessionId && (
@@ -257,7 +261,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
               </button>
             )
           )}
-          <button 
+          <button
             onClick={() => {
               setIsOpen(false);
               if (onClose) onClose();
@@ -292,14 +296,14 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
         ) : (
           messages.map((msg, idx) => {
             const isMe = msg.senderId === user?.id;
-            
+
             // Format sender label: "Name (Type)"
             let typeLabel = '';
             if (msg.senderType === 'CUSTOMER') typeLabel = 'Customer';
             else if (msg.senderType === 'RESTAURANT') typeLabel = 'Restaurant';
             else if (msg.senderType === 'DELIVERY') typeLabel = 'Rider';
-            
-            const showHeader = idx === 0 || messages[idx-1].senderId !== msg.senderId;
+
+            const showHeader = idx === 0 || messages[idx - 1].senderId !== msg.senderId;
 
             return (
               <div key={msg.id || idx} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
@@ -308,12 +312,11 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
                     {isMe ? 'You' : `${msg.senderName} (${typeLabel})`}
                   </span>
                 )}
-                <div 
-                  className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${
-                    isMe 
-                      ? 'bg-orange-600 text-white rounded-tr-sm' 
+                <div
+                  className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${isMe
+                      ? 'bg-orange-600 text-white rounded-tr-sm'
                       : 'bg-white border border-gray-200 text-gray-800 rounded-tl-sm shadow-sm'
-                  }`}
+                    }`}
                 >
                   {msg.content === '[SYSTEM_MISSED_CALL]' ? (
                     <div className="flex items-center space-x-2 font-semibold text-red-500">
@@ -340,7 +343,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
             );
           })
         )}
-        
+
         {/* Typing indicators */}
         {Object.entries(isTyping).filter(([_, isT]) => isT).length > 0 && (
           <div className="flex items-center text-xs text-gray-500 space-x-1">
@@ -352,22 +355,22 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
             <span>Someone is typing...</span>
           </div>
         )}
-        
+
         <div ref={messagesEndRef} />
       </div>
 
       {/* Input Area */}
       <form onSubmit={handleSend} className="p-3 bg-white border-t border-gray-200 shrink-0">
         <div className="flex items-center space-x-2 bg-gray-100 rounded-full px-4 py-2">
-          <input 
-            type="file" 
-            accept="image/*" 
-            className="hidden" 
-            ref={fileInputRef} 
-            onChange={handleImageUpload} 
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            ref={fileInputRef}
+            onChange={handleImageUpload}
           />
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isImageUploadDisabled}
             title={uploadedImageCount >= 4 ? "Maximum 4 images allowed per session" : "Upload Image"}
@@ -375,12 +378,12 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
           >
             <ImagePlus className="w-5 h-5" />
           </button>
-          
+
           <textarea
             value={inputText}
-            onChange={(e) => { 
-              setInputText(e.target.value); 
-              sendTypingIndicator(); 
+            onChange={(e) => {
+              setInputText(e.target.value);
+              sendTypingIndicator();
             }}
             onInput={(e) => {
               const target = e.target as HTMLTextAreaElement;
@@ -402,14 +405,13 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
             disabled={!isConnected || isLoading}
             style={{ overflowY: inputText.split('\n').length > 4 ? 'auto' : 'hidden' }}
           />
-          <button 
+          <button
             type="submit"
             disabled={!inputText.trim() || !isConnected}
-            className={`p-1.5 rounded-full transition-colors ${
-              inputText.trim() && isConnected
-                ? 'bg-orange-600 text-white hover:bg-orange-700' 
+            className={`p-1.5 rounded-full transition-colors ${inputText.trim() && isConnected
+                ? 'bg-orange-600 text-white hover:bg-orange-700'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
+              }`}
           >
             <Send className="w-4 h-4" />
           </button>

@@ -37,8 +37,9 @@ export default function AddressSelectionModal({
             } else {
               onUseCurrentLocation("Current Location");
             }
-          } catch (_e: unknown) {
-             onUseCurrentLocation("Current Location");
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          } catch (e: unknown) {
+            onUseCurrentLocation("Current Location");
           }
         },
         (error) => {

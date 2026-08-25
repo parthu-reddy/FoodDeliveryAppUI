@@ -29,7 +29,8 @@ export const useChatWebSocket = ({ sessionId, onMessageReceived, onTypingIndicat
       connectHeaders: {
         Authorization: `Bearer ${token}`
       },
-      debug: (_str) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      debug: (str) => {
         // console.log('STOMP: ' + str);
       },
       reconnectDelay: 5000,
@@ -39,12 +40,12 @@ export const useChatWebSocket = ({ sessionId, onMessageReceived, onTypingIndicat
 
     client.onConnect = () => {
       setIsConnected(true);
-      
+
       if (!isFirstConnectionRef.current && onReconnect) {
         onReconnect();
       }
       isFirstConnectionRef.current = false;
-      
+
       // Subscribe to messages
       subscriptionRef.current = client.subscribe(
         `/topic/chat/${sessionId}`,

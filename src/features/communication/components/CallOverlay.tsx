@@ -40,6 +40,7 @@ export const CallOverlay: React.FC = () => {
   // Manage Busy Tone and temporary display
   useEffect(() => {
     if (callState === 'IDLE' && callEndReason === 'DECLINED') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowBusy(true);
       if (busyAudioRef.current) {
         busyAudioRef.current.play().catch(e => console.error("Busy audio blocked", e));

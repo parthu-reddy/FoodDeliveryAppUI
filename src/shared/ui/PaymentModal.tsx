@@ -59,9 +59,9 @@ function PaymentModalInner({
   const methods = allMethods.filter(m => availableMethods.includes(m.id as PaymentMethodType));
 
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onClose={() => status === 'idle' && onClose()} 
+    <Modal
+      isOpen={isOpen}
+      onClose={() => status === 'idle' && onClose()}
       size="lg"
       title={status === 'idle' ? title : status === 'processing' ? "Processing..." : "Success"}
     >
@@ -76,7 +76,7 @@ function PaymentModalInner({
 
         <AnimatePresence mode="wait">
           {status === 'idle' && (
-            <motion.div 
+            <motion.div
               key="checkout"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -104,11 +104,10 @@ function PaymentModalInner({
                           <button
                             key={method.id}
                             onClick={() => setSelectedMethod(method.id as PaymentMethodType)}
-                            className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all ${
-                              isSelected 
-                                ? 'border-indigo-500 bg-indigo-50/80 dark:bg-indigo-500/20 shadow-md' 
+                            className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all ${isSelected
+                                ? 'border-indigo-500 bg-indigo-50/80 dark:bg-indigo-500/20 shadow-md'
                                 : 'border-white/40 dark:border-white/10 bg-white/20 dark:bg-white/5 hover:bg-white/40 dark:hover:bg-white/10'
-                            }`}
+                              }`}
                           >
                             <div className="flex items-center gap-3">
                               <div className={`p-2 rounded-lg ${isSelected ? 'bg-indigo-100 dark:bg-indigo-500/30 text-indigo-600 dark:text-indigo-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
@@ -139,7 +138,7 @@ function PaymentModalInner({
                           <span>Delivery Fee</span>
                           <span className="font-mono">{totals.deliveryFee === 0 ? 'FREE' : `₹${totals.deliveryFee?.toFixed(2)}`}</span>
                         </div>
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                         {(totals as any).platformFee !== undefined && (totals as any).platformFee > 0 && (
                           <div className="flex justify-between">
                             <span>Platform Fee</span>
@@ -197,7 +196,7 @@ function PaymentModalInner({
           )}
 
           {status === 'processing' && (
-            <motion.div 
+            <motion.div
               key="processing"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -215,16 +214,16 @@ function PaymentModalInner({
           )}
 
           {status === 'success' && (
-            <motion.div 
+            <motion.div
               key="success"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               className="py-16 flex flex-col items-center justify-center text-center"
             >
               <div className="w-24 h-24 rounded-full bg-emerald-500/20 flex items-center justify-center mb-6 relative">
-                <motion.div 
-                  initial={{ scale: 0 }} 
-                  animate={{ scale: 1 }} 
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
                   transition={{ type: "spring", bounce: 0.5 }}
                   className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-xl shadow-emerald-500/30"
                 >

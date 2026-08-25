@@ -12,25 +12,22 @@ const SessionInfo = z
     lastActive: z.number().int(),
     serviceName: z.string(),
   })
-  .partial()
   .passthrough();
 const ApiResponseListSessionInfo = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: z.array(SessionInfo),
+    data: z.array(SessionInfo).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const ApiResponseVoid = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: z.object({}).partial().passthrough(),
+    data: z.object({}).partial().passthrough().optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 
 export const schemas = {

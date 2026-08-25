@@ -45,52 +45,49 @@ const Outlet = z
     id: z.string().uuid(),
     brandId: z.string().uuid(),
     name: z.string(),
-    fssaiLicenseNumber: z.string(),
-    bannerUrl: z.string(),
-    timings: z.array(OutletTiming),
-    defaultPrepTimeSeconds: z.number().int(),
-    cuisine: z.string(),
-    rating: z.number(),
-    reviewsCount: z.number().int(),
-    deliveryTime: z.number().int(),
-    deliveryFee: z.number(),
-    tags: z.string(),
-    createdAt: z.string().datetime({ offset: true }),
-    updatedAt: z.string().datetime({ offset: true }),
-    version: z.number().int(),
+    fssaiLicenseNumber: z.string().optional(),
+    bannerUrl: z.string().optional(),
+    timings: z.array(OutletTiming).optional(),
+    defaultPrepTimeSeconds: z.number().int().optional(),
+    cuisine: z.string().optional(),
+    rating: z.number().optional(),
+    reviewsCount: z.number().int().optional(),
+    deliveryTime: z.number().int().optional(),
+    deliveryFee: z.number().optional(),
+    tags: z.string().optional(),
+    createdAt: z.string().datetime({ offset: true }).optional(),
+    updatedAt: z.string().datetime({ offset: true }).optional(),
+    version: z.number().int().optional(),
   })
-  .partial()
   .passthrough();
 const ApiResponseOutlet = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: Outlet,
+    data: Outlet.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const ApiResponseListOutlet = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: z.array(Outlet),
+    data: z.array(Outlet).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const PageMapStringObject = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    numberOfElements: z.number().int(),
-    number: z.number().int(),
     sort: z.array(SortObject),
+    pageable: PageableObject,
+    number: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
     size: z.number().int(),
     content: z.array(z.record(z.object({}).partial().passthrough())),
-    pageable: PageableObject,
-    last: z.boolean(),
-    first: z.boolean(),
+    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .partial()
@@ -99,19 +96,17 @@ const ApiResponsePageMapStringObject = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: PageMapStringObject,
+    data: PageMapStringObject.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const ApiResponseListMapStringObject = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: z.array(z.record(z.object({}).partial().passthrough())),
+    data: z.array(z.record(z.object({}).partial().passthrough())).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 
 export const schemas = {

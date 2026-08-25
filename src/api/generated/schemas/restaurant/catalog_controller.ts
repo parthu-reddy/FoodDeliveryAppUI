@@ -8,10 +8,9 @@ const ApiResponseMasterMenuItem = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: MasterMenuItem,
+    data: MasterMenuItem.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const OutletMenuOverride = z
   .object({
@@ -28,43 +27,39 @@ const ApiResponseOutletMenuOverride = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: OutletMenuOverride,
+    data: OutletMenuOverride.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const MenuItemDTO = z
   .object({
     id: z.string().uuid(),
     restaurantId: z.string().uuid(),
     name: z.string(),
-    description: z.string(),
+    description: z.string().optional(),
     price: z.number(),
     isAvailable: z.boolean(),
-    prepTimeMinutes: z.number().int(),
-    imageUrl: z.string(),
-    categoryId: z.string().uuid(),
-    categoryName: z.string(),
+    prepTimeMinutes: z.number().int().optional(),
+    imageUrl: z.string().optional(),
+    categoryId: z.string().uuid().optional(),
+    categoryName: z.string().optional(),
   })
-  .partial()
   .passthrough();
 const ApiResponseListMenuItemDTO = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: z.array(MenuItemDTO),
+    data: z.array(MenuItemDTO).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const ApiResponseListOutletMenuOverride = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: z.array(OutletMenuOverride),
+    data: z.array(OutletMenuOverride).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 
 export const schemas = {

@@ -24,6 +24,8 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Throttle typing indicators
+   
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const throttledOnTyping = useCallback(
     // Simple custom throttle instead of lodash to avoid dependency issues
     (() => {

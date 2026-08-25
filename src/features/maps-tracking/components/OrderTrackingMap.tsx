@@ -28,7 +28,7 @@ function OrderTrackingMapInner({ order, enableLiveTracking = false }: { order: O
   useConfig();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-
+  const [, setMapInstance] = useState<any>(null);
   const { showError } = useToast();
 
   useEffect(() => {
@@ -74,36 +74,37 @@ function OrderTrackingMapInner({ order, enableLiveTracking = false }: { order: O
     const initMap = async () => {
       try {
         if (!active || !mapContainerRef.current) return;
-        
+
         // Set customer location to order delivery coordinates (if available) or fallback
         const cLat = order.deliveryLat || 12.96;
         const cLng = order.deliveryLng || 77.61;
 
         map = new maplibregl.Map({
-             container: mapContainerRef.current!,
-             style: '/olamaps/styleEditor/v1/styleEdit/styles/53575843-c000-4b22-ac12-5818a67991bd/LowCost',
-             center: [cLng, cLat], // Center on delivery location initially
-             zoom: 12,
-             minZoom: 10, // Prevent zooming out too far
-             maxZoom: 17, // Prevent over-zooming to reduce tile fetch
-             interactive: false, // Block user interaction with the map itself
-             transformRequest: (url, _resourceType) => {
-                 if (url.includes('api.olamaps.io')) {
-                     return { url: url.replace('https://api.olamaps.io', '/olamaps') };
-                 }
-                 return { url };
-             }
+          container: mapContainerRef.current!,
+          style: '/olamaps/styleEditor/v1/styleEdit/styles/53575843-c000-4b22-ac12-5818a67991bd/LowCost',
+          center: [cLng, cLat], // Center on delivery location initially
+          zoom: 12,
+          minZoom: 10, // Prevent zooming out too far
+          maxZoom: 17, // Prevent over-zooming to reduce tile fetch
+          interactive: false, // Block user interaction with the map itself
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          transformRequest: (url, resourceType) => {
+            if (url.includes('api.olamaps.io')) {
+              return { url: url.replace('https://api.olamaps.io', '/olamaps') };
+            }
+            return { url };
+          }
         });
-        
+
         let rLat = 12.98;
         let rLng = 77.58;
         try {
-            const res = await restaurantApi.restaurantOutlet.get('/api/v1/restaurants/:id', { params: { id: order.restaurantId } });
-            const geo = asUntyped<{ data?: { lat?: number; lng?: number } }>(res);
-                     if (geo?.data?.lat) rLat = geo.data.lat;
-            if (geo?.data?.lng) rLng = geo.data.lng;
+          const res = await restaurantApi.restaurantOutlet.get('/api/v1/restaurants/:id', { params: { id: order.restaurantId } });
+          const geo = asUntyped<{ data?: { lat?: number; lng?: number } }>(res);
+          if (geo?.data?.lat) rLat = geo.data.lat;
+          if (geo?.data?.lng) rLng = geo.data.lng;
         } catch (err: unknown) {
-            console.warn('Could not fetch restaurant location, using defaults', err);
+          console.warn('Could not fetch restaurant location, using defaults', err);
         }
 
         setMapInstance(map);
@@ -112,7 +113,7 @@ function OrderTrackingMapInner({ order, enableLiveTracking = false }: { order: O
 
         const addMarkers = (riderLat: number | null, riderLng: number | null) => {
           if (!map || !active) return;
-          
+
           if (riderLat !== null && riderLng !== null) {
             // @ts-expect-error auto-migration type suppression
             map.flyTo({ center: [riderLng, riderLat], zoom: 13 });
@@ -125,16 +126,16 @@ function OrderTrackingMapInner({ order, enableLiveTracking = false }: { order: O
           // Customer delivery location
           const homePopup = new maplibregl.Popup({ offset: 25, closeButton: false, closeOnClick: false })
             .setHTML('<div class="text-xs font-semibold text-center cursor-pointer text-blue-600">Customer<br/><span class="text-gray-500 font-normal">Click for Google Maps</span></div>');
-            
+
           const homeMarker = new maplibregl.Marker({ element: createHomeMarker(cLat, cLng) })
             .setLngLat([cLng, cLat])
             .setPopup(homePopup)
             // @ts-expect-error auto-migration type suppression
             .addTo(map);
-            
+
           // Add click to popup as well
           homePopup.on('open', () => {
-             const content = homePopup.getElement();
+            const content = homePopup.getElement();
             if (content) {
               content.onclick = () => {
                 try {
@@ -156,9 +157,9 @@ function OrderTrackingMapInner({ order, enableLiveTracking = false }: { order: O
             .setPopup(restPopup)
             // @ts-expect-error auto-migration type suppression
             .addTo(map);
-            
+
           restPopup.on('open', () => {
-             const content = restPopup.getElement();
+            const content = restPopup.getElement();
             if (content) {
               content.onclick = () => {
                 try {
@@ -177,40 +178,40 @@ function OrderTrackingMapInner({ order, enableLiveTracking = false }: { order: O
             const res = await deliveryApi.logistics.get('/api/v1/logistics/route', { queries: { sourceLat, sourceLng, destLat, destLng } });
             const anyRes = res as unknown as { polyline?: string };
             if (anyRes?.polyline) {
-               const decodedCoords = decodePolyline(anyRes.polyline).map(p => [p.lng, p.lat]);
-               // @ts-expect-error auto-migration type suppression
-               if (map && map.isStyleLoaded()) {
-                 // @ts-expect-error auto-migration type suppression
-                 map.addSource('route', {
-                   type: 'geojson',
-                   data: {
-                     type: 'Feature',
-                     properties: {},
-                     geometry: {
-                       type: 'LineString',
-                       coordinates: decodedCoords
-                     }
-                   }
-                 });
-                 // @ts-expect-error auto-migration type suppression
-                 map.addLayer({
-                   id: 'route',
-                   type: 'line',
-                   source: 'route',
-                   layout: { 'line-join': 'round', 'line-cap': 'round' },
-                   paint: { 'line-color': '#4f46e5', 'line-width': 4 }
-                 });
-                 
-                 // Fit bounds to show the whole route
-                 const bounds = decodedCoords.reduce((bounds, coord) => {
-                   return bounds.extend(coord as [number, number]);
-                 }, new maplibregl.LngLatBounds(decodedCoords[0] as [number, number], decodedCoords[0] as [number, number]));
-                 // @ts-expect-error auto-migration type suppression
-                 map.fitBounds(bounds, { padding: 40 });
-               } else if (map) {
-                 // @ts-expect-error auto-migration type suppression
-                 map.on('style.load', () => drawRoute(sourceLat, sourceLng, destLat, destLng));
-               }
+              const decodedCoords = decodePolyline(anyRes.polyline).map(p => [p.lng, p.lat]);
+              // @ts-expect-error auto-migration type suppression
+              if (map && map.isStyleLoaded()) {
+                // @ts-expect-error auto-migration type suppression
+                map.addSource('route', {
+                  type: 'geojson',
+                  data: {
+                    type: 'Feature',
+                    properties: {},
+                    geometry: {
+                      type: 'LineString',
+                      coordinates: decodedCoords
+                    }
+                  }
+                });
+                // @ts-expect-error auto-migration type suppression
+                map.addLayer({
+                  id: 'route',
+                  type: 'line',
+                  source: 'route',
+                  layout: { 'line-join': 'round', 'line-cap': 'round' },
+                  paint: { 'line-color': '#4f46e5', 'line-width': 4 }
+                });
+
+                // Fit bounds to show the whole route
+                const bounds = decodedCoords.reduce((bounds, coord) => {
+                  return bounds.extend(coord as [number, number]);
+                }, new maplibregl.LngLatBounds(decodedCoords[0] as [number, number], decodedCoords[0] as [number, number]));
+                // @ts-expect-error auto-migration type suppression
+                map.fitBounds(bounds, { padding: 40 });
+              } else if (map) {
+                // @ts-expect-error auto-migration type suppression
+                map.on('style.load', () => drawRoute(sourceLat, sourceLng, destLat, destLng));
+              }
             }
           } catch (err: unknown) {
             console.warn('Could not fetch optimized route, relying on static markers', err);
@@ -219,110 +220,112 @@ function OrderTrackingMapInner({ order, enableLiveTracking = false }: { order: O
 
         // Try geolocation to center map if we want to show rider's current location too
         if (navigator.geolocation) {
-             navigator.geolocation.getCurrentPosition(
-               (position) => {
-                 const { latitude, longitude } = position.coords;
-                 if (order.riderId || order.status === OrderStatus.HANDED_OVER) {
-                   addMarkers(latitude, longitude);
-                   
-                   // Draw route from rider to destination (restaurant or customer depending on status)
-                   if (order.deliveryStatus === 'ASSIGNED' || !order.deliveryStatus) {
-                       drawRoute(latitude, longitude, rLat, rLng);
-                   } else {
-                       drawRoute(latitude, longitude, cLat, cLng);
-                   }
-                 } else {
-                   addMarkers(null, null);
-                   drawRoute(rLat, rLng, cLat, cLng);
-                 }
-               },
-               () => {
-                 // Fallback if location fails
-                 addMarkers(null, null);
-                 drawRoute(rLat, rLng, cLat, cLng);
-               },
-               { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
-             );
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const { latitude, longitude } = position.coords;
+              if (order.riderId || order.status === OrderStatus.HANDED_OVER) {
+                addMarkers(latitude, longitude);
+
+                // Draw route from rider to destination (restaurant or customer depending on status)
+                if (order.deliveryStatus === 'ASSIGNED' || !order.deliveryStatus) {
+                  drawRoute(latitude, longitude, rLat, rLng);
+                } else {
+                  drawRoute(latitude, longitude, cLat, cLng);
+                }
+              } else {
+                addMarkers(null, null);
+                drawRoute(rLat, rLng, cLat, cLng);
+              }
+            },
+            () => {
+              // Fallback if location fails
+              addMarkers(null, null);
+              drawRoute(rLat, rLng, cLat, cLng);
+            },
+            { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
+          );
         } else {
-             // Fallback if geolocation unavailable
-             addMarkers(null, null);
-             drawRoute(rLat, rLng, cLat, cLng);
+          // Fallback if geolocation unavailable
+          addMarkers(null, null);
+          drawRoute(rLat, rLng, cLat, cLng);
         }
 
       } catch (e: unknown) {
-         console.error('Map init failed', e);
+        console.error('Map init failed', e);
       }
     };
-    
+
     initMap();
-    
+
     // Set up SSE for live tracking ONLY if enabled
     let riderMarker: maplibregl.Marker | null = null;
     const ctrl = new AbortController();
-    
-    if (enableLiveTracking) {
-        let retryCount = 0;
-        let lastToastTime = 0;
 
-        try {
-            const token = getToken();
-            fetchEventSource(`${import.meta.env.VITE_API_BASE_URL || ''}/api/v1/orders/${order.id}/live-tracking`, {
-                method: 'GET',
-                headers: token ? {
-                    'Authorization': `Bearer ${token}`
-                } : {},
-                signal: ctrl.signal,
-                async onopen(res) {
-                    if (res.ok && res.status === 200) {
-                        retryCount = 0;
-                    } else if (res.status >= 400 && res.status < 500 && res.status !== 429) {
-                        showError('Live tracking unauthorized or unavailable.');
-                        throw new Error(`Fatal SSE error: ${res.status}`);
-                    }
-                },
-                onmessage(event) {
-                    if (!active || !map) return;
-                    retryCount = 0;
-                    try {
-                        const data = JSON.parse(event.data);
-                        if (data.lat && data.lng) {
-                            if (!riderMarker) {
-                                riderMarker = new maplibregl.Marker({ element: createRiderMarker() })
-                                    .setLngLat([data.lng, data.lat])
-                                    // @ts-expect-error auto-migration type suppression
-                                    .addTo(map);
-                            } else {
-                                riderMarker.setLngLat([data.lng, data.lat]);
-                            }
-                        }
-                    } catch (e: unknown) {
-                        console.warn('Error parsing SSE data', e);
-                    }
-                },
-                onerror(err) {
-                    console.warn('Could not connect to SSE stream', err);
-                    retryCount++;
-                    const now = Date.now();
-                    if (now - lastToastTime > 15000) {
-                        showError(`Connection lost. Reconnecting (attempt ${retryCount})...`);
-                        lastToastTime = now;
-                    }
-                    const backoffDelay = Math.min(1000 * Math.pow(2, retryCount - 1), 16000);
-                    return backoffDelay;
+    if (enableLiveTracking) {
+      let retryCount = 0;
+      let lastToastTime = 0;
+
+      try {
+        const token = getToken();
+        fetchEventSource(`${import.meta.env.VITE_API_BASE_URL || ''}/api/v1/orders/${order.id}/live-tracking`, {
+          method: 'GET',
+          headers: token ? {
+            'Authorization': `Bearer ${token}`
+          } : {},
+          signal: ctrl.signal,
+          async onopen(res) {
+            if (res.ok && res.status === 200) {
+              retryCount = 0;
+            } else if (res.status >= 400 && res.status < 500 && res.status !== 429) {
+              showError('Live tracking unauthorized or unavailable.');
+              throw new Error(`Fatal SSE error: ${res.status}`);
+            }
+          },
+          onmessage(event) {
+            if (!active || !map) return;
+            retryCount = 0;
+            try {
+              const data = JSON.parse(event.data);
+              if (data.lat && data.lng) {
+                if (!riderMarker) {
+                  riderMarker = new maplibregl.Marker({ element: createRiderMarker() })
+                    .setLngLat([data.lng, data.lat])
+                    // @ts-expect-error auto-migration type suppression
+                    .addTo(map);
+                } else {
+                  riderMarker.setLngLat([data.lng, data.lat]);
                 }
-            });
-        } catch (e: unknown) {
-            console.warn('Could not connect to SSE stream', e);
-        }
+              }
+            } catch (e: unknown) {
+              console.warn('Error parsing SSE data', e);
+            }
+          },
+          onerror(err) {
+            console.warn('Could not connect to SSE stream', err);
+            retryCount++;
+            const now = Date.now();
+            if (now - lastToastTime > 15000) {
+              showError(`Connection lost. Reconnecting (attempt ${retryCount})...`);
+              lastToastTime = now;
+            }
+            const backoffDelay = Math.min(1000 * Math.pow(2, retryCount - 1), 16000);
+            return backoffDelay;
+          }
+        });
+      } catch (e: unknown) {
+        console.warn('Could not connect to SSE stream', e);
+      }
     }
-    
+
     return () => {
       active = false;
       // @ts-expect-error auto-migration type suppression
       if (map) map.remove();
       ctrl.abort();
     };
-  }, [order.id, order.restaurantId, enableLiveTracking, order.deliveryLat, order.deliveryLng, order.deliveryStatus, order.riderId, order.status, showError]);
+   
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [order.id, order.restaurantId]);
 
   return (
     <div className="absolute inset-0 w-full h-full">

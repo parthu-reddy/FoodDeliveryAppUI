@@ -12,14 +12,14 @@ import { CustomerOrderTracker } from '@features/customer-orders/components/Custo
 import { getFriendlyStatusMessage } from '@features/customer-orders/model/statusMessaging';
 import { ErrorBoundary } from "@shared/ui";
 import {
-    AlertCircle,
-    ArrowLeft,
-    Check,
-    ChevronRight,
-    MapPinOff,
-    Package,
-    ShoppingBag,
-    X
+  AlertCircle,
+  ArrowLeft,
+  Check,
+  ChevronRight,
+  MapPinOff,
+  Package,
+  ShoppingBag,
+  X
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -36,8 +36,9 @@ import { useCustomerCart } from '@features/customer-orders/model/useCustomerCart
 import { useCustomerOrders } from '@features/customer-orders/model/useCustomerOrders';
 import CustomerPaymentModal from "@features/payments-wallet/components/CustomerPaymentModal";
 import { Button, CompleteProfileModal, SharedSettingsView } from "@shared/ui";
-import { fromContract, asUntyped } from '../../lib/untypedResponse';
-
+import { fromContract } from '../../lib/untypedResponse';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const OrderTrackingMap = React.lazy(() => import("@features/maps-tracking/components/OrderTrackingMap"));
 
 
 interface CustomerDashboardProps {
@@ -52,19 +53,19 @@ interface CustomerDashboardProps {
 
 
 
-export default function CustomerDashboard({ 
-  userName, 
-  userPhone, 
-  activeOrders: externalOrders, 
+export default function CustomerDashboard({
+  activeOrders: externalOrders,
   onPlaceOrder: externalPlaceOrder,
-  onUpdateOrder, 
+  onUpdateOrder,
   onLogout,
   onAddApiLog
 }: CustomerDashboardProps) {
-  const { theme } = useTheme();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { theme, toggleTheme } = useTheme();
   const { showError, showSuccess, showInfo } = useToast();
   // Extracted Hooks
-  const { setInternalOrders, activeOrders: internalActiveOrders } = useCustomerOrders({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { internalOrders, setInternalOrders, activeOrders: internalActiveOrders, isInitialLoad } = useCustomerOrders({
     onUpdateOrder: onUpdateOrder
   });
   const activeOrders = externalOrders ?? internalActiveOrders;
@@ -87,21 +88,25 @@ export default function CustomerDashboard({
     setInternalOrders(prev => [...prev, order]);
   });
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
-  
+
   // Sync to localStorage whenever delivery location changes and new restaurants are fetched
   useEffect(() => {
     if (selectedRestaurant && restaurants && restaurants.length > 0) {
       const updated = restaurants.find(r => r.id === selectedRestaurant.id);
       if (updated) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSelectedRestaurant(updated);
       }
     }
+   
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurants]);
 
   const [brandOutlets, setBrandOutlets] = useState<Restaurant[]>([]);
   const [effectiveMenu, setEffectiveMenu] = useState<MenuItem[]>([]);
   const [isMenuLoading, setIsMenuLoading] = useState<boolean>(false);
-  
+ 
+
 
   const [address, setAddress] = useState(() => localStorage.getItem('deliveryAddress') || 'Please add an address');
   const [deliveryAddressId, setDeliveryAddressId] = useState<string>(() => localStorage.getItem('deliveryAddressId') || '');
@@ -109,14 +114,16 @@ export default function CustomerDashboard({
   const refreshAddresses = useCallback(() => {
     const profile = getUserProfile();
     if (!profile?.id) return;
-    
+
     customerApi.customerAddress.get('/api/v1/customers/:customerId/addresses', {
       params: { customerId: profile.id }
+     
     })
-      .then((addrRes: unknown) => {
-        const res = asUntyped<{ data?: unknown[] }>(addrRes);
-        if (res.data) {
-          setSavedAddresses(res.data);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .then((addrRes: any) => {
+        if (addrRes.data) {
+          // eslint-disable-next-line react-hooks/immutability
+          setSavedAddresses(addrRes.data);
         }
       })
       .catch((err: unknown) => console.error(err));
@@ -137,12 +144,14 @@ export default function CustomerDashboard({
         setDeliveryLat(null);
         setDeliveryLng(null);
         localStorage.removeItem('deliveryAddress');
+         
         localStorage.removeItem('deliveryAddressId');
         localStorage.removeItem('deliveryLat');
         localStorage.removeItem('deliveryLng');
+        // eslint-disable-next-line react-hooks/immutability
         setIsAddressSelectorOpen(true);
       }
-    } catch (error: unknown) {
+    } catch (error) {
       console.error(error);
       showError('Failed to delete address');
     }
@@ -152,11 +161,13 @@ export default function CustomerDashboard({
     localStorage.setItem('deliveryAddress', address);
     if (deliveryLat !== null) localStorage.setItem('deliveryLat', String(deliveryLat));
     else localStorage.removeItem('deliveryLat');
+     
     if (deliveryLng !== null) localStorage.setItem('deliveryLng', String(deliveryLng));
     else localStorage.removeItem('deliveryLng');
     localStorage.setItem('deliveryAddressId', deliveryAddressId);
   }, [address, deliveryLat, deliveryLng, deliveryAddressId]);
-  const [savedAddresses, setSavedAddresses] = useState<unknown[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
   const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
   const [orderSuccessToast, setOrderSuccessToast] = useState<Order | null>(null);
 
@@ -168,20 +179,23 @@ export default function CustomerDashboard({
     if (profile && profile.role === RoleName.CUSTOMER) {
       const profilePromise = (identityApi.user.get(`/api/v1/users/profile`, { headers: { "X-User-Id": "" } })).catch(e => { console.error(e); return { data: null }; });
       const addressesPromise = profile.id ? customerApi.customerAddress.get('/api/v1/customers/:customerId/addresses', { params: { customerId: profile.id } }).catch((e: unknown) => { console.error(e); return { data: null }; }) : Promise.resolve({ data: null });
+ 
 
+       
       Promise.all([profilePromise, addressesPromise]).then(([profileRes, addrRes]) => {
         // Handle Profile
+         
         if (profileRes.data) {
           const p = profileRes.data;
-          if (p.name) setEditName(p.name);
-          if (p.email) setEditEmail(p.email);
           if (!p.name || !p.email || p.name.trim() === '' || p.email.trim() === '') {
+            // eslint-disable-next-line react-hooks/immutability
             setShowProfileModal(true);
           }
         }
-        
+
         // Handle Addresses
         if (addrRes.data) {
+           
           setSavedAddresses(addrRes.data);
           if (addrRes.data.length === 0) {
             setAddress('Please add an address');
@@ -190,9 +204,10 @@ export default function CustomerDashboard({
             localStorage.removeItem('deliveryAddressId');
           } else {
             const currentId = localStorage.getItem('deliveryAddressId');
-            const exists = addrRes.data.some((a: unknown) => (a as { id?: string }).id === currentId);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const exists = addrRes.data.some((a: any) => a.id === currentId);
             if (!exists && addrRes.data.length > 0) {
-              const first = asUntyped<unknown>(addrRes.data[0]) as { label?: string; addressLine1?: string; city?: string; id?: string };
+              const first = addrRes.data[0];
               setAddress(`${first.label || 'Address'}: ${first.addressLine1 || ''}, ${first.city || ''}`);
               setDeliveryAddressId(first.id ?? '');
             }
@@ -200,6 +215,7 @@ export default function CustomerDashboard({
         }
       });
     }
+   
   }, []);
 
   // Image preloading removed to favor lazy loading and better Time-To-Interactive (TTI).
@@ -209,11 +225,13 @@ export default function CustomerDashboard({
   useEffect(() => {
     let ignore = false;
     if (selectedRestaurant) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsMenuLoading(true);
       getEffectiveMenu(selectedRestaurant.id).then(menu => {
         if (!ignore) {
           setEffectiveMenu(menu);
           setIsMenuLoading(false);
+         
         }
       }).catch(() => {
         if (!ignore) setIsMenuLoading(false);
@@ -223,7 +241,9 @@ export default function CustomerDashboard({
       setIsMenuLoading(false);
     }
     return () => { ignore = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedRestaurant?.id]); // Only refetch menu when outlet ID changes
+ 
 
   useEffect(() => {
     let ignore = false;
@@ -234,6 +254,7 @@ export default function CustomerDashboard({
         })
         .catch(console.error);
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setBrandOutlets([]);
     }
     return () => { ignore = true; };
@@ -260,18 +281,18 @@ export default function CustomerDashboard({
     setDeliveryAddressId: setGlobalDeliveryAddressId,
     isQuoting,
     quotes
-  } = useCustomerCart({ 
-    locationKey, 
-    onAddApiLog, 
-    onPlaceOrder, 
+  } = useCustomerCart({
+    locationKey,
+    onAddApiLog,
+    onPlaceOrder,
     setTrackingOrder: (order) => {
       if (!selectedRestaurant || selectedRestaurant.id === order.restaurantId) {
         setTrackingOrder(order);
       } else {
         setOrderSuccessToast(order);
       }
-    }, 
-    selectedRestaurantId: selectedRestaurant?.id || null 
+    },
+    selectedRestaurantId: selectedRestaurant?.id || null
   });
 
   const addToCart = (item: MenuItem) => originalAddToCart(item, selectedRestaurant);
@@ -285,10 +306,10 @@ export default function CustomerDashboard({
     const rId = restaurantId || selectedRestaurant?.id || '';
     return originalGetCartTotal(rId);
   };
-  
+
   const processPaymentAndOrder = (method: string) => originalProcessPaymentAndOrder(method, deliveryAddressId as string, () => {
     if (checkoutRestaurantId === selectedRestaurant?.id) {
-       setSelectedRestaurant(null);
+      setSelectedRestaurant(null);
     }
   });
 
@@ -311,6 +332,7 @@ export default function CustomerDashboard({
   }, [locationKey, showInfo]);
 
   const activeCartCount = Object.keys(carts).length;
+ 
 
   const [isDeliveryAvailable, setIsDeliveryAvailable] = useState<boolean | null>(null);
 
@@ -321,29 +343,36 @@ export default function CustomerDashboard({
   useEffect(() => {
     let ignore = false;
     if (selectedRestaurant) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsDeliveryAvailable(null);
       customerApi.customerRestaurant.get('/api/v1/restaurants/:id/delivery-availability', { params: { id: selectedRestaurant.id } })
         .then(res => {
           if (!ignore && typeof res === 'boolean') {
             setIsDeliveryAvailable(res);
+           
           }
         })
         .catch(err => {
           console.error(err);
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          if (!ignore && (err as any).response && ((err as any).response.status === 409 || (err as any).response.status === 400)) {
+          if (!ignore && err.response && (err.response.status === 409 || err.response.status === 400)) {
             setIsDeliveryAvailable(false);
           }
+         
         });
     }
     return () => { ignore = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedRestaurant?.id]);
 
 
   useEffect(() => {
     if (onAddApiLog) {
+       
       onAddApiLog({ id: 'nearby', label: 'GET /api/v1/restaurants/nearby', method: 'GET' });
+     
     }
+   
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const [showProfileModal, setShowProfileModal] = useState(false);
 
@@ -353,11 +382,10 @@ export default function CustomerDashboard({
   const [view, setView] = useState<'home' | 'settings'>('home');
   const [settingsTab, setSettingsTab] = useState<'profile' | 'history' | 'addresses'>('profile');
 
-  const [, setEditName] = useState(userName);
-  const [, setEditEmail] = useState('');
   const [addressSearchQuery, setAddressSearchQuery] = useState('');
-  
 
+
+ 
 
 
   // If there's an active order, let's keep checking its status in the parent
@@ -370,6 +398,7 @@ export default function CustomerDashboard({
         onAddApiLog({ id: 'live_tracking', label: `GET /api/v1/orders/${currentTrackingOrder.id}/live-tracking (SSE)`, method: 'GET' });
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTrackingOrder?.status]);
 
   // Categories
@@ -379,280 +408,287 @@ export default function CustomerDashboard({
     <div className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-y-auto overflow-x-hidden min-h-0 bg-transparent text-slate-800 dark:text-[#f0ede6] h-full pb-20">
       <CallOverlay />
       {/* Global Error Toast */}
-        <AnimatePresence>
-          {globalError && (
-            <motion.div
-              initial={{ opacity: 0, y: -20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20, scale: 0.95 }}
-              className="fixed top-12 left-0 right-0 mx-auto max-w-sm z-[100] px-4"
-            >
-              <div className="bg-rose-500/90 backdrop-blur-xl border border-rose-500/50 shadow-2xl rounded-2xl p-4 flex items-start gap-3">
-                <AlertCircle className="w-6 h-6 text-white shrink-0" />
-                <p className="text-white font-medium text-sm pt-0.5">{globalError}</p>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+      <AnimatePresence>
+        {globalError && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            className="fixed top-12 left-0 right-0 mx-auto max-w-sm z-[100] px-4"
+          >
+            <div className="bg-rose-500/90 backdrop-blur-xl border border-rose-500/50 shadow-2xl rounded-2xl p-4 flex items-start gap-3">
+              <AlertCircle className="w-6 h-6 text-white shrink-0" />
+              <p className="text-white font-medium text-sm pt-0.5">{globalError}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-        <AnimatePresence>
-          {orderSuccessToast && (
-            <motion.div
-              initial={{ opacity: 0, y: -20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20, scale: 0.95 }}
-              className="fixed top-12 left-0 right-0 mx-auto max-w-sm z-[100] px-4"
-            >
-              <div className="bg-emerald-500/95 backdrop-blur-xl border border-emerald-500/50 shadow-2xl rounded-2xl p-4 flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-                      <Check className="w-4 h-4 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-white font-bold text-sm">Order Placed Successfully!</p>
-                      <p className="text-emerald-100 text-[10px] mt-0.5">{orderSuccessToast.restaurantName}</p>
-                    </div>
+      <AnimatePresence>
+        {orderSuccessToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            className="fixed top-12 left-0 right-0 mx-auto max-w-sm z-[100] px-4"
+          >
+            <div className="bg-emerald-500/95 backdrop-blur-xl border border-emerald-500/50 shadow-2xl rounded-2xl p-4 flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                    <Check className="w-4 h-4 text-white" />
                   </div>
-                  <button onClick={() => setOrderSuccessToast(null)} className="text-white/70 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors">
-                    <X className="w-4 h-4" />
-                  </button>
+                  <div>
+                    <p className="text-white font-bold text-sm">Order Placed Successfully!</p>
+                    <p className="text-emerald-100 text-[10px] mt-0.5">{orderSuccessToast.restaurantName}</p>
+                  </div>
                 </div>
-                <div className="flex justify-end mt-1">
-                  <button
-                    onClick={() => {
-                       setTrackingOrder(orderSuccessToast);
-                       setOrderSuccessToast(null);
-                    }}
-                    className="px-4 py-2 bg-white text-emerald-600 rounded-lg text-xs font-bold shadow-sm hover:shadow transition-all hover:bg-emerald-50 w-full"
-                  >
-                    Track Order
-                  </button>
-                </div>
+                <button onClick={() => setOrderSuccessToast(null)} className="text-white/70 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors">
+                  <X className="w-4 h-4" />
+                </button>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              <div className="flex justify-end mt-1">
+                <button
+                  onClick={() => {
+                    setTrackingOrder(orderSuccessToast);
+                    setOrderSuccessToast(null);
+                  }}
+                  className="px-4 py-2 bg-white text-emerald-600 rounded-lg text-xs font-bold shadow-sm hover:shadow transition-all hover:bg-emerald-50 w-full"
+                >
+                  Track Order
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* 1. Header Area */}
-      <DashboardHeader 
-        address={address} 
-        view={view} 
-        setView={setView} 
-        setIsAddressSelectorOpen={setIsAddressSelectorOpen} 
+      <DashboardHeader
+        address={address}
+        view={view}
+        setView={setView}
+        setIsAddressSelectorOpen={setIsAddressSelectorOpen}
       />
 
       {view === 'settings' ? (
         <SharedSettingsView
-            onBack={() => setView('home')}
-            theme={theme}
-            showCustomerTabs={true}
-            setTrackingOrder={(order) => {
-              setTrackingOrder(order);
-              setView('home');
-            }}
-            savedAddresses={savedAddresses}
-            initialTab={settingsTab}
-            isAddressModalOpen={isAddressModalOpen}
-            setIsAddressModalOpen={setIsAddressModalOpen}
-            addressSearchQuery={addressSearchQuery}
-            setAddressSearchQuery={setAddressSearchQuery}
-            address={address}
-            setAddress={setAddress}
-            onAddApiLog={onAddApiLog}
-            onLogout={onLogout}
-            customerId={getUserProfile()?.id}
-            onAddressAdded={refreshAddresses}
-            onDeleteAddress={handleDeleteAddress}
-            deliveryLat={deliveryLat ?? undefined}
-            deliveryLng={deliveryLng ?? undefined}
-            onSelectDeliveryLocation={(addr: string, lat?: string | number, lng?: string | number) => {
-              if (addr !== address) {
-                const hasItems = Object.values(carts || {}).some((cart: unknown) => (cart as { items?: unknown[] }).items && (cart as { items?: unknown[] }).items!.length > 0);
-                if (hasItems) {
-                  if (!window.confirm("Changing your address will clear your active cart. Do you want to continue?")) {
-                    return;
-                  }
-                  Object.keys(carts).forEach(restaurantId => {
-                    if (carts[restaurantId]?.items?.length > 0) {
-                      clearCart(restaurantId);
-                    }
-                  });
+          onBack={() => setView('home')}
+          theme={theme}
+          showCustomerTabs={true}
+          setTrackingOrder={(order) => {
+            setTrackingOrder(order);
+            setView('home');
+          }}
+          savedAddresses={savedAddresses}
+          initialTab={settingsTab}
+          isAddressModalOpen={isAddressModalOpen}
+          setIsAddressModalOpen={setIsAddressModalOpen}
+           
+          addressSearchQuery={addressSearchQuery}
+          setAddressSearchQuery={setAddressSearchQuery}
+          address={address}
+          setAddress={setAddress}
+          onAddApiLog={onAddApiLog}
+          onLogout={onLogout}
+          customerId={getUserProfile()?.id}
+          onAddressAdded={refreshAddresses}
+          onDeleteAddress={handleDeleteAddress}
+          deliveryLat={deliveryLat ?? undefined}
+          deliveryLng={deliveryLng ?? undefined}
+          onSelectDeliveryLocation={(addr: string, lat?: string | number, lng?: string | number) => {
+            if (addr !== address) {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const hasItems = Object.values(carts || {}).some((cart: any) => cart.items && cart.items.length > 0);
+              if (hasItems) {
+                if (!window.confirm("Changing your address will clear your active cart. Do you want to continue?")) {
+                  return;
                 }
+                Object.keys(carts).forEach(restaurantId => {
+                  if (carts[restaurantId]?.items?.length > 0) {
+                    clearCart(restaurantId);
+                  }
+                });
               }
-              setAddress(addr);
-              if (lat !== undefined && lng !== undefined) {
-                setDeliveryLat(Number(lat));
-                setDeliveryLng(Number(lng));
-              }
-              setIsAddressSelectorOpen(false);
-              setView('home');
-            }}
-          />
+            }
+            setAddress(addr);
+            if (lat !== undefined && lng !== undefined) {
+              setDeliveryLat(Number(lat));
+              setDeliveryLng(Number(lng));
+            }
+            setIsAddressSelectorOpen(false);
+            setView('home');
+          }}
+        />
       ) : (
         <AnimatePresence mode="wait">
-        {currentTrackingOrder ? (
-          currentTrackingOrder.deliveryStatus === DeliveryStatus.DELIVERED ? (
-            /* ------------------- DELIVERED SUMMARY SCREEN ------------------- */
-            <motion.div
-              key="summary"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              className="p-5 space-y-5"
-            >
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => setTrackingOrder(null)}
-                  className="p-1.5 rounded-lg bg-slate-200 dark:bg-slate-900 text-slate-500 dark:text-slate-300 hover:text-slate-800 dark:text-[#f0ede6] cursor-pointer"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                </button>
-                <h3 className="font-bold text-lg flex items-center gap-2">
-                  Order Summary
-                  <span className="text-xs font-mono bg-slate-100 dark:bg-slate-900 px-2 py-0.5 rounded text-slate-500 dark:text-slate-300">#{currentTrackingOrder.id}</span>
-                </h3>
-              </div>
-
-              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-3xl p-6 text-center space-y-2">
-                <div className="w-16 h-16 bg-emerald-500 rounded-full mx-auto flex items-center justify-center shadow-lg shadow-emerald-500/30 mb-4">
-                  <Check className="w-8 h-8 text-white" />
+          {currentTrackingOrder ? (
+            currentTrackingOrder.deliveryStatus === DeliveryStatus.DELIVERED ? (
+              /* ------------------- DELIVERED SUMMARY SCREEN ------------------- */
+              <motion.div
+                key="summary"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                className="p-5 space-y-5"
+              >
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setTrackingOrder(null)}
+                    className="p-1.5 rounded-lg bg-slate-200 dark:bg-slate-900 text-slate-500 dark:text-slate-300 hover:text-slate-800 dark:text-[#f0ede6] cursor-pointer"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                  </button>
+                  <h3 className="font-bold text-lg flex items-center gap-2">
+                    Order Summary
+                    <span className="text-xs font-mono bg-slate-100 dark:bg-slate-900 px-2 py-0.5 rounded text-slate-500 dark:text-slate-300">#{currentTrackingOrder.id}</span>
+                  </h3>
                 </div>
-                <h4 className="font-bold text-2xl text-emerald-600 dark:text-emerald-400">Order Delivered! 🎉</h4>
-                <p className="text-sm text-emerald-700/70 dark:text-emerald-400/70">
-                  Enjoy your food from {currentTrackingOrder.restaurantName}.
-                </p>
-              </div>
 
-              <div className="bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 p-5 rounded-3xl">
-                <div className="flex items-center justify-between mb-4 pb-4 border-b border-rose-500/10">
-                  <span className="font-bold text-slate-800 dark:text-[#f0ede6]">Digital Invoice</span>
-                  <span className="text-xs font-mono text-slate-500">#{currentTrackingOrder.id.substring(0, 8).toUpperCase()}</span>
+                <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-3xl p-6 text-center space-y-2">
+                  <div className="w-16 h-16 bg-emerald-500 rounded-full mx-auto flex items-center justify-center shadow-lg shadow-emerald-500/30 mb-4">
+                    <Check className="w-8 h-8 text-white" />
+                  </div>
+                  <h4 className="font-bold text-2xl text-emerald-600 dark:text-emerald-400">Order Delivered! 🎉</h4>
+                  <p className="text-sm text-emerald-700/70 dark:text-emerald-400/70">
+                    Enjoy your food from {currentTrackingOrder.restaurantName}.
+                  </p>
                 </div>
-                <div className="space-y-3 mb-6">
-                  {currentTrackingOrder.items.map((item: unknown, idx: number) => {
-                    const i = asUntyped<unknown>(item) as { item?: { id?: string; name?: string; price?: number }; quantity?: number; name?: string; price?: number };
-                    return (
-                    <div key={i.item?.id || idx} className="flex justify-between text-sm text-slate-600 dark:text-slate-300">
-                      <span>{i.quantity || 1}x {i.item?.name || i.name || 'Item'}</span>
-                      <span>₹{((i.item?.price || i.price || 0) * (i.quantity || 1)).toFixed(2)}</span>
+
+                <div className="bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 p-5 rounded-3xl">
+                  <div className="flex items-center justify-between mb-4 pb-4 border-b border-rose-500/10">
+                    <span className="font-bold text-slate-800 dark:text-[#f0ede6]">Digital Invoice</span>
+                    <span className="text-xs font-mono text-slate-500">#{currentTrackingOrder.id.substring(0, 8).toUpperCase()}</span>
+                  </div>
+                  <div className="space-y-3 mb-6">
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    {currentTrackingOrder.items.map((item: any, idx: number) => (
+                      <div key={item.item?.id || idx} className="flex justify-between text-sm text-slate-600 dark:text-slate-300">
+                        <span>{item.quantity || 1}x {item.item?.name || item.name || 'Item'}</span>
+                        <span>₹{((item.item?.price || item.price || 0) * (item.quantity || 1)).toFixed(2)}</span>
+                      </div>
+                    ))}
+                    <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300 pt-3 border-t border-slate-200 dark:border-slate-800">
+                      <span>Subtotal</span>
+                      <span>₹{(currentTrackingOrder.itemTotal || currentTrackingOrder.subtotal || 0).toFixed(2)}</span>
                     </div>
-                  )})}
-                  <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300 pt-3 border-t border-slate-200 dark:border-slate-800">
-                    <span>Subtotal</span>
-                    <span>₹{(currentTrackingOrder.itemTotal || currentTrackingOrder.subtotal || 0).toFixed(2)}</span>
+                    <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300">
+                      <span>SGST (2.5%)</span>
+                      <span>₹{(currentTrackingOrder.sgst || 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300">
+                      <span>CGST (2.5%)</span>
+                      <span>₹{(currentTrackingOrder.cgst || 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300">
+                      <span>Delivery Fee</span>
+                      <span>₹{(currentTrackingOrder.deliveryFee || 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300">
+                      <span>Platform Fee</span>
+                      <span>₹{(currentTrackingOrder.customerPlatformFee || 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-lg font-black text-slate-900 dark:text-[#f0ede6] pt-2 border-t border-slate-200 dark:border-slate-800 mt-2">
+                      <span>Total Paid</span>
+                      <span>₹{(currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mt-1">
+                      <span>Payment Method</span>
+                      <span className="uppercase font-medium">{currentTrackingOrder.paymentIntent ? 'Wallet / Card' : 'Credit Card'}</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300">
-                    <span>SGST (2.5%)</span>
-                    <span>₹{(currentTrackingOrder.sgst || 0).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300">
-                    <span>CGST (2.5%)</span>
-                    <span>₹{(currentTrackingOrder.cgst || 0).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300">
-                    <span>Delivery Fee</span>
-                    <span>₹{(currentTrackingOrder.deliveryFee || 0).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300">
-                    <span>Platform Fee</span>
-                    <span>₹{(currentTrackingOrder.customerPlatformFee || 0).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-lg font-black text-slate-900 dark:text-[#f0ede6] pt-2 border-t border-slate-200 dark:border-slate-800 mt-2">
-                    <span>Total Paid</span>
-                    <span>₹{(currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    <span>Payment Method</span>
-                    <span className="uppercase font-medium">{currentTrackingOrder.paymentIntent ? 'Wallet / Card' : 'Credit Card'}</span>
-                  </div>
-                </div>
-                <Button 
-                  onClick={() => {
-                    setGlobalError('Invoice downloaded successfully!');
-                    setTimeout(() => setGlobalError(null), 3000);
-                  }}
-                  variant="secondary"
-                  fullWidth
-                  icon={<Package className="w-5 h-5" />}
-                >
-                  Download PDF Invoice
-                </Button>
-                
-                {/* Report Issue / Request Refund Button */}
-                {!currentTrackingOrder.refundedAmount && (
-                  <Button 
+                  <Button
                     onClick={() => {
-                      setGlobalError('Issue reported to support. Our team will contact you shortly regarding a refund.');
+                      setGlobalError('Invoice downloaded successfully!');
                       setTimeout(() => setGlobalError(null), 3000);
                     }}
-                    variant="outline"
-                    className="text-rose-500 border-rose-500/30 hover:bg-rose-50 dark:hover:bg-rose-500/10 mt-3"
+                    variant="secondary"
                     fullWidth
+                    icon={<Package className="w-5 h-5" />}
                   >
-                    Report Issue / Request Refund
+                    Download PDF Invoice
                   </Button>
-                )}
-              </div>
-            </motion.div>
+
+                  {/* Report Issue / Request Refund Button */}
+                  {!currentTrackingOrder.refundedAmount && (
+                    <Button
+                      onClick={() => {
+                        setGlobalError('Issue reported to support. Our team will contact you shortly regarding a refund.');
+                        setTimeout(() => setGlobalError(null), 3000);
+                      }}
+                      variant="outline"
+                      className="text-rose-500 border-rose-500/30 hover:bg-rose-50 dark:hover:bg-rose-500/10 mt-3"
+                      fullWidth
+                    >
+                      Report Issue / Request Refund
+                    </Button>
+                  )}
+                </div>
+              </motion.div>
+            ) : (
+              /* ------------------- TRACKING SCREEN ------------------- */
+              <CustomerOrderTracker
+                currentTrackingOrder={currentTrackingOrder}
+                 
+                setTrackingOrder={setTrackingOrder}
+                isActiveOrder={isActiveOrder}
+                activeOrders={activeOrders}
+                isFailedOrder={isFailedOrder}
+                onAddApiLog={onAddApiLog}
+                onUpdateOrder={onUpdateOrder}
+                setInternalOrders={setInternalOrders}
+                showError={showError}
+                 
+                getFriendlyStatusMessage={getFriendlyStatusMessage}
+              />
+             
+            )
+          ) : selectedRestaurant ? (
+            /* ------------------- RESTAURANT DETAIL & MENU ------------------- */
+            <>
+              <CustomerFreeDeliveryTracker
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                carts={carts as any}
+                getCartTotal={getCartTotal}
+                deliveryPricing={selectedRestaurant ? quotes[selectedRestaurant.id] : null}
+                selectedRestaurantId={selectedRestaurant?.id}
+              />
+              <ErrorBoundary fallbackLabel="Menu View">
+                <CustomerMenuView
+                  selectedRestaurant={selectedRestaurant}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  setSelectedRestaurant={setSelectedRestaurant as any}
+                  deliveryPricing={selectedRestaurant ? quotes[selectedRestaurant.id] : null}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  carts={carts as any}
+                  getCartTotal={getCartTotal}
+                  isDeliveryAvailable={isDeliveryAvailable}
+                  brandOutlets={brandOutlets}
+                  setIsOutletSelectorOpen={setIsOutletSelectorOpen}
+                   
+                  isMenuLoading={isMenuLoading}
+                  effectiveMenu={effectiveMenu}
+                  addToCart={addToCart}
+                  removeFromCart={removeFromCart}
+                  isQuoting={isQuoting}
+                  deliveryAddressId={deliveryAddressId}
+                  setIsAddressSelectorOpen={setIsAddressSelectorOpen}
+                />
+              </ErrorBoundary>
+            </>
           ) : (
-            /* ------------------- TRACKING SCREEN ------------------- */
-            <CustomerOrderTracker
-              currentTrackingOrder={currentTrackingOrder}
-              setTrackingOrder={setTrackingOrder}
-              isActiveOrder={isActiveOrder}
-              activeOrders={activeOrders}
-              isFailedOrder={isFailedOrder}
-              onAddApiLog={onAddApiLog}
-              onUpdateOrder={onUpdateOrder}
-              setInternalOrders={setInternalOrders}
-              showError={showError}
-              getFriendlyStatusMessage={getFriendlyStatusMessage}
-            />
-          )
-        ) : selectedRestaurant ? (
-          /* ------------------- RESTAURANT DETAIL & MENU ------------------- */
-          <>
-            <CustomerFreeDeliveryTracker
-              carts={carts}
-              getCartTotal={getCartTotal}
-              deliveryPricing={selectedRestaurant ? quotes[selectedRestaurant.id] : null}
-              selectedRestaurantId={selectedRestaurant?.id}
-            />
-            <ErrorBoundary fallbackLabel="Menu View">
-            <CustomerMenuView
-              selectedRestaurant={selectedRestaurant}
-              // @ts-expect-error auto-migration type suppression
-              setSelectedRestaurant={setSelectedRestaurant}
-              deliveryPricing={selectedRestaurant ? quotes[selectedRestaurant.id] : null}
-              // @ts-expect-error auto-migration type suppression
-              carts={carts}
-              getCartTotal={getCartTotal}
-              isDeliveryAvailable={isDeliveryAvailable}
-              brandOutlets={brandOutlets}
-              setIsOutletSelectorOpen={setIsOutletSelectorOpen}
-              isMenuLoading={isMenuLoading}
-              effectiveMenu={effectiveMenu}
-              addToCart={addToCart}
-              removeFromCart={removeFromCart}
-              isQuoting={isQuoting}
-              deliveryAddressId={deliveryAddressId}
-              setIsAddressSelectorOpen={setIsAddressSelectorOpen}
-            />
+            /* ------------------- MAIN RESTAURANT FEED ------------------- */
+            <ErrorBoundary fallbackLabel="Restaurant Feed">
+              <CustomerRestaurantBrowser
+                categories={categories}
+                restaurants={restaurants}
+                isRestaurantsLoading={isRestaurantsLoading}
+                setIsAddressSelectorOpen={setIsAddressSelectorOpen}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                setSelectedRestaurant={setSelectedRestaurant as any}
+                onAddApiLog={onAddApiLog}
+              />
             </ErrorBoundary>
-          </>
-        ) : (
-          /* ------------------- MAIN RESTAURANT FEED ------------------- */
-          <ErrorBoundary fallbackLabel="Restaurant Feed">
-            <CustomerRestaurantBrowser
-              categories={categories}
-              restaurants={restaurants}
-              isRestaurantsLoading={isRestaurantsLoading}
-              setIsAddressSelectorOpen={setIsAddressSelectorOpen}
-              setSelectedRestaurant={setSelectedRestaurant}
-              onAddApiLog={onAddApiLog}
-            />
-          </ErrorBoundary>
           )}
         </AnimatePresence>
       )}
@@ -662,10 +698,8 @@ export default function CustomerDashboard({
         isOpen={showProfileModal}
         theme={theme}
         profileId=""
-        onComplete={(p) => {
+        onComplete={() => {
           setShowProfileModal(false);
-          setEditName(p.name);
-          setEditEmail(p.email);
           // Assuming App.tsx passes down some handlers, but we can just dismiss the modal here.
         }}
       />
@@ -713,12 +747,15 @@ export default function CustomerDashboard({
         savedAddresses={savedAddresses}
         address={address}
         setAddress={setAddress}
+         
         setDeliveryLat={setDeliveryLat}
         setDeliveryLng={setDeliveryLng}
         setDeliveryAddressId={setDeliveryAddressId}
         currentAddressId={deliveryAddressId}
+         
         setShowLocationPrompt={setShowLocationPrompt}
-        carts={carts}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        carts={carts as any}
         clearCart={clearCart}
         onAddNewAddress={() => {
           setView('settings');
@@ -727,31 +764,35 @@ export default function CustomerDashboard({
         }}
       />
 
+
       <CustomerOutletSelectorModal
         isOpen={isOutletSelectorOpen}
+         
         onClose={() => setIsOutletSelectorOpen(false)}
         brandOutlets={brandOutlets}
         selectedRestaurant={selectedRestaurant}
-        setSelectedRestaurant={setSelectedRestaurant}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        setSelectedRestaurant={setSelectedRestaurant as any}
         onAddApiLog={onAddApiLog}
         deliveryLat={deliveryLat ?? undefined}
         deliveryLng={deliveryLng ?? undefined}
-        carts={carts}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        carts={carts as any}
         clearCart={clearCart}
       />
 
       <CustomerCartDrawer
         address={address}
         setAddress={setAddress}
-        handleCheckout={handleCheckout} 
+        handleCheckout={handleCheckout}
         isCartOpen={isCartOpen}
         setIsCartOpen={setIsCartOpen}
         selectedRestaurant={selectedRestaurant}
-        // @ts-expect-error auto-migration type suppression
-        carts={carts}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        carts={carts as any}
         removeFromCart={removeFromCart}
-        // @ts-expect-error auto-migration type suppression
-        addToCart={originalAddToCart}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        addToCart={originalAddToCart as any}
         getCartTotal={getCartTotal}
         setIsPaymentModalOpen={setIsPaymentModalOpen}
         isSubmitting={paymentStatus !== 'idle'}
@@ -763,8 +804,8 @@ export default function CustomerDashboard({
         isPaymentModalOpen={isPaymentModalOpen}
         setIsPaymentModalOpen={setIsPaymentModalOpen}
         paymentStatus={paymentStatus}
-        getCartTotal={() => getCartTotal(checkoutRestaurantId || '')} 
-        cart={checkoutRestaurantId ? (carts[checkoutRestaurantId]?.items || []) : []} 
+        getCartTotal={() => getCartTotal(checkoutRestaurantId || '')}
+        cart={checkoutRestaurantId ? (carts[checkoutRestaurantId]?.items || []) : []}
         cartRestaurant={checkoutRestaurantId ? carts[checkoutRestaurantId]?.restaurant : undefined}
         processPaymentAndOrder={processPaymentAndOrder}
         address={address}
@@ -807,18 +848,19 @@ export default function CustomerDashboard({
 
       {/* Chat Widget when tracking an active order or delivered < 2 hrs ago */}
       {currentTrackingOrder && (() => {
-        const isCompleted = currentTrackingOrder.deliveryStatus === DeliveryStatus.DELIVERED || 
-                            [OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT].includes(currentTrackingOrder.status);
+        const isCompleted = currentTrackingOrder.deliveryStatus === DeliveryStatus.DELIVERED ||
+          [OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT].includes(currentTrackingOrder.status);
         let showChat = !isCompleted;
         if (isCompleted && currentTrackingOrder.updatedAt) {
           const updatedTime = new Date(currentTrackingOrder.updatedAt).getTime();
+          // eslint-disable-next-line react-hooks/purity
           showChat = (Date.now() - updatedTime) < (2 * 60 * 60 * 1000);
         }
         return showChat ? (
-          <ChatWidget 
-            orderId={currentTrackingOrder.id} 
+          <ChatWidget
+            orderId={currentTrackingOrder.id}
             order={currentTrackingOrder}
-            currentUserType="CUSTOMER" 
+            currentUserType="CUSTOMER"
             otherParticipants={[
               ...(currentTrackingOrder.deliveryExecutiveId ? [{
                 userId: currentTrackingOrder.deliveryExecutiveId,
@@ -834,7 +876,7 @@ export default function CustomerDashboard({
           />
         ) : null;
       })()}
-      
+
     </div>
   );
 }

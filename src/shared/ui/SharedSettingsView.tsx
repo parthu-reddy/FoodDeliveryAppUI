@@ -43,7 +43,6 @@ interface SharedSettingsViewProps {
 
 export default function SharedSettingsView({
   onBack,
-  theme,
   showCustomerTabs = false,
   setTrackingOrder,
   savedAddresses = [],
@@ -110,15 +109,14 @@ export default function SharedSettingsView({
       
       if (res?.data && 'content' in res.data) {
         if (type === 'history') {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          setPaginatedOrders(prev => page === 0 ? ((res.data as any).content as any) : [...prev, ...((res.data as any).content as any)] as any);
+          const typedContent = (res.data as { content?: Order[] }).content || [];
+          setPaginatedOrders(prev => page === 0 ? typedContent : [...prev, ...typedContent]);
           setHasMoreOrders(!res.data.last);
           setCurrentPageOrders(page);
         }
       } else if (res?.data && Array.isArray(res.data)) { // fallback
          if (type === 'history') {
-             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-             setPaginatedOrders(res.data as any);
+             setPaginatedOrders(res.data as Order[]);
              setHasMoreOrders(false);
          }
       }
@@ -157,9 +155,9 @@ export default function SharedSettingsView({
       
       const txRes = await walletApi.wallet.get('/api/v1/wallets/:entityType/:entityId/transactions', { params: { entityType: 'CUSTOMER', entityId: customerId }, queries: { page: txPage } });
       if (txRes.data) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setTransactions(fromContract((txRes as any).content ?? []) as any);
-        setTxTotalPages(txRes.totalPages || 1);
+        const typedTxRes = txRes as { content?: unknown[], totalPages?: number };
+        setTransactions(fromContract(typedTxRes.content ?? []) as WalletTransaction[]);
+        setTxTotalPages(typedTxRes.totalPages || 1);
       }
     } catch (e: unknown) {
       console.error(e);
@@ -534,18 +532,13 @@ export default function SharedSettingsView({
             ) : (
               <div className="mt-4">
                 <CustomerAddressModal
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  isAddressModalOpen={isAddressModalOpen as any}
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  setIsAddressModalOpen={setIsAddressModalOpen as any}
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  addressSearchQuery={addressSearchQuery as any}
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  setAddressSearchQuery={setAddressSearchQuery as any}
+                  isAddressModalOpen={!!isAddressModalOpen}
+                  setIsAddressModalOpen={setIsAddressModalOpen || (() => {})}
+                  addressSearchQuery={addressSearchQuery || ''}
+                  setAddressSearchQuery={setAddressSearchQuery || (() => {})}
                   address={address}
                   setAddress={setAddress}
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  savedAddresses={savedAddresses as any}
+                  savedAddresses={(savedAddresses || []) as { id: string; label: string; addressLine1: string; city: string; latitude: string; longitude: string; }[]}
                   onAddApiLog={onAddApiLog}
                   customerId={customerId}
                   onSelectDeliveryLocation={onSelectDeliveryLocation}

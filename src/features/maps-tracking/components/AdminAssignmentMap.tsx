@@ -40,6 +40,7 @@ function AdminAssignmentMapInner({
 }: AdminAssignmentMapProps) {
   useConfig();
   const mapContainerRef = useRef<HTMLDivElement>(null);
+  const [, setMapInstance] = useState<maplibregl.Map | null>(null);
 
 
   useEffect(() => {

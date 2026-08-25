@@ -59,7 +59,7 @@ export default function CustomerAddressPage({
   address,
   setAddress,
   onAddApiLog = () => {},
-  savedAddresses: _savedAddresses,
+  
   setSavedAddresses,
   userId
 }: CustomerAddressPageProps) {
@@ -182,10 +182,13 @@ export default function CustomerAddressPage({
          map.remove();
       }
     };
+   
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (!addressSearchQuery || addressSearchQuery.length < 3) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSuggestions([]);
       return;
     }
@@ -203,7 +206,9 @@ export default function CustomerAddressPage({
          setIsSearching(false);
        }
     }, 500);
+     
     return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [addressSearchQuery]);
 
   const handleSuggestionClick = async (suggestion: SearchSuggestion) => {

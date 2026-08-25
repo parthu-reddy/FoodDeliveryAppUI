@@ -18,6 +18,7 @@ export function useRestaurants({ deliveryLat, deliveryLng, radiusKm = 10.0 }: Us
     const controller = new AbortController();
     
     if (deliveryLat !== null && deliveryLng !== null) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsRestaurantsLoading(true);
       restaurantApi.restaurantOutlet.get('/api/v1/restaurants/nearby', { 
         queries: { lat: deliveryLat, lng: deliveryLng, radius: radiusKm },

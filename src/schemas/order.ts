@@ -7,7 +7,7 @@ export const orderSchema = z.object({
   status: z.string().optional(),
   deliveryStatus: z.string().optional(),
   items: z.array(cartItemSchema).optional(),
-  
+
   // Custom UI fields added during normalization
   customerName: z.string().optional(),
   subtotal: z.number().optional(),
@@ -17,7 +17,7 @@ export const orderSchema = z.object({
   riderName: z.string().optional(),
   riderId: z.string().optional(),
   timestamp: z.string().optional(),
-  
+
   // Backwards compatibility
   paymentStatus: z.string().optional(),
   refundedAmount: z.number().optional(),
@@ -31,15 +31,15 @@ export const orderSchema = z.object({
   grossPayout: z.number().optional(),
   payout: z.number().optional(),
   itemsJson: z.string().optional(),
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }).passthrough().transform((raw: any) => {
   const s = raw.status?.toUpperCase() || '';
   const d = raw.deliveryStatus?.toUpperCase() || '';
-  
+
   let parsedItems = raw.items || [];
   if (raw.itemsJson) {
-      // malformed itemsJson falls back to raw.items rather than failing the parse
-      try { parsedItems = JSON.parse(raw.itemsJson); } catch { /* keep fallback */ }
+    // malformed itemsJson falls back to raw.items rather than failing the parse
+    try { parsedItems = JSON.parse(raw.itemsJson); } catch { /* keep fallback */ }
   }
 
   // Calculate totals if missing
@@ -58,7 +58,7 @@ export const orderSchema = z.object({
     riderName: raw.riderName || raw.deliveryExecutiveName,
     deliveryExecutiveName: raw.deliveryExecutiveName || raw.riderName,
     deliveryExecutiveId: raw.deliveryExecutiveId || raw.riderId,
-    
+
     // Map driver payout fields to what UI expects
     grossPayout: raw.grossPayout || raw.driverGrossPayout,
     payout: raw.payout || raw.driverNetPayout,
@@ -66,7 +66,7 @@ export const orderSchema = z.object({
     driverRestaurantContribution: raw.driverRestaurantContribution,
     driverTip: raw.driverTip,
     driverTaxes: raw.driverTaxes,
-    
+
     paymentStatus: raw.paymentStatus,
     refundedAmount: raw.refundedAmount,
   };

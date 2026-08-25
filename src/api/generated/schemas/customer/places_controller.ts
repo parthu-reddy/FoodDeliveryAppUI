@@ -7,10 +7,9 @@ const ApiResponseListMapStringObject = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: z.array(z.record(z.object({}).partial().passthrough())),
+    data: z.array(z.record(z.object({}).partial().passthrough())).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 
 export const schemas = {

@@ -6,55 +6,56 @@ const Brand = z
     id: z.string().uuid(),
     ownerId: z.string().uuid(),
     name: z.string(),
-    gstin: z.string(),
-    pan: z.string(),
-    cin: z.string(),
-    bankAccountNumber: z.string(),
-    bankIfsc: z.string(),
-    logoUrl: z.string(),
-    legalEntityName: z.string(),
-    kycStatus: z.enum([
-      "PENDING",
-      "APPROVED",
-      "VERIFIED",
-      "REJECTED",
-      "MANUAL_REVIEW",
-      "FAILED",
-    ]),
-    bankBeneficiaryName: z.string(),
-    pennyDropStatus: z.enum([
-      "PENDING",
-      "APPROVED",
-      "VERIFIED",
-      "REJECTED",
-      "MANUAL_REVIEW",
-      "FAILED",
-    ]),
-    isGstinVerified: z.boolean(),
-    isBankVerified: z.boolean(),
-    createdAt: z.string().datetime({ offset: true }),
-    updatedAt: z.string().datetime({ offset: true }),
-    version: z.number().int(),
+    gstin: z.string().optional(),
+    pan: z.string().optional(),
+    cin: z.string().optional(),
+    bankAccountNumber: z.string().optional(),
+    bankIfsc: z.string().optional(),
+    logoUrl: z.string().optional(),
+    legalEntityName: z.string().optional(),
+    kycStatus: z
+      .enum([
+        "PENDING",
+        "APPROVED",
+        "VERIFIED",
+        "REJECTED",
+        "MANUAL_REVIEW",
+        "FAILED",
+      ])
+      .optional(),
+    bankBeneficiaryName: z.string().optional(),
+    pennyDropStatus: z
+      .enum([
+        "PENDING",
+        "APPROVED",
+        "VERIFIED",
+        "REJECTED",
+        "MANUAL_REVIEW",
+        "FAILED",
+      ])
+      .optional(),
+    isGstinVerified: z.boolean().optional(),
+    isBankVerified: z.boolean().optional(),
+    createdAt: z.string().datetime({ offset: true }).optional(),
+    updatedAt: z.string().datetime({ offset: true }).optional(),
+    version: z.number().int().optional(),
   })
-  .partial()
   .passthrough();
 const ApiResponseBrand = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: Brand,
+    data: Brand.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const ApiResponseListBrand = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: z.array(Brand),
+    data: z.array(Brand).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const BrandOnboardRequest = z
   .object({

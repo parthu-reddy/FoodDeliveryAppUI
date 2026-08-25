@@ -41,7 +41,7 @@ const CustomerAddressSelectorModal: React.FC<CustomerAddressSelectorModalProps> 
     // If id is provided (saved address), check if it's different from current
     // If no id (GPS), check if the address string is different
     const isDifferent = id ? id !== currentAddressId : addr !== address;
-    
+
     if (isDifferent) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const hasItems = Object.values(carts || {}).some((cart: any) => cart.items && cart.items.length > 0);
@@ -56,7 +56,7 @@ const CustomerAddressSelectorModal: React.FC<CustomerAddressSelectorModalProps> 
         });
       }
     }
-    
+
     setAddress(addr);
     if (lat !== undefined && lng !== undefined) {
       setDeliveryLat(lat);
@@ -80,7 +80,8 @@ const CustomerAddressSelectorModal: React.FC<CustomerAddressSelectorModalProps> 
                   } else {
                     handleAddressSelect('Current Location', pos.coords.latitude, pos.coords.longitude, '');
                   }
-                } catch (_e: unknown) {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                } catch (e: unknown) {
                   handleAddressSelect('Current Location', pos.coords.latitude, pos.coords.longitude, '');
                 }
               }, (err) => {
@@ -91,11 +92,10 @@ const CustomerAddressSelectorModal: React.FC<CustomerAddressSelectorModalProps> 
               });
             }
           }}
-          className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-colors text-left cursor-pointer ${
-            !currentAddressId 
-              ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/20' 
+          className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-colors text-left cursor-pointer ${!currentAddressId
+              ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/20'
               : 'border-indigo-100 dark:border-indigo-500/20 hover:bg-indigo-50 dark:hover:bg-indigo-500/20'
-          }`}
+            }`}
         >
           <Navigation className={`w-5 h-5 shrink-0 ${!currentAddressId ? 'text-indigo-600 dark:text-indigo-400' : 'text-indigo-500'}`} />
           <div className="flex-1">
@@ -122,7 +122,7 @@ const CustomerAddressSelectorModal: React.FC<CustomerAddressSelectorModalProps> 
             <p className="text-xs text-rose-500/80 dark:text-rose-400/80">Search or pick from map</p>
           </div>
         </button>
-        
+
         <div className="pt-2">
           <p className="text-xs font-bold text-slate-400 dark:text-slate-500 mb-3 px-1 uppercase tracking-wider">Saved Addresses</p>
           {savedAddresses.length > 0 ? (
@@ -138,17 +138,15 @@ const CustomerAddressSelectorModal: React.FC<CustomerAddressSelectorModalProps> 
                       addr.id
                     );
                   }}
-                  className={`w-full flex items-start gap-3 p-3 rounded-xl border transition-colors text-left group cursor-pointer ${
-                    addr.id === currentAddressId
+                  className={`w-full flex items-start gap-3 p-3 rounded-xl border transition-colors text-left group cursor-pointer ${addr.id === currentAddressId
                       ? 'border-rose-500 bg-rose-50 dark:bg-rose-500/10'
                       : 'border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
-                  }`}
+                    }`}
                 >
-                  <MapPin className={`w-5 h-5 mt-0.5 shrink-0 transition-colors ${
-                    addr.id === currentAddressId 
-                      ? 'text-rose-500' 
+                  <MapPin className={`w-5 h-5 mt-0.5 shrink-0 transition-colors ${addr.id === currentAddressId
+                      ? 'text-rose-500'
                       : 'text-slate-400 group-hover:text-rose-500'
-                  }`} />
+                    }`} />
                   <div className="flex-1 min-w-0">
                     <p className={`font-bold text-sm ${addr.id === currentAddressId ? 'text-rose-700 dark:text-rose-400' : 'text-slate-900 dark:text-white'}`}>{addr.label}</p>
                     <p className={`text-xs leading-relaxed mt-0.5 line-clamp-2 ${addr.id === currentAddressId ? 'text-rose-600/80 dark:text-rose-400/80' : 'text-slate-500 dark:text-slate-400'}`}>

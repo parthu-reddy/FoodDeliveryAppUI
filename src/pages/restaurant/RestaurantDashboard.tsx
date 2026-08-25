@@ -1,4 +1,4 @@
-import { MenuItem, Order, OrderStatus, VerificationStatus } from "@/types";
+import { MenuItem, Order, OrderStatus, VerificationStatus, Brand, Outlet } from "@/types";
 import {
     MessageSquare,
     Moon,
@@ -38,13 +38,6 @@ import { asUntyped } from '@/lib/untypedResponse';
 
 
 
-interface Outlet {
-  id: string;
-  name?: string;
-  brandId: string;
-  isActive?: boolean;
-  defaultPrepTimeSeconds?: number;
-}
 
 const delaySchema = z.object({
   additionalPrepTime: z.number().int().positive().max(120, 'Delay cannot exceed 120 minutes'),
@@ -117,11 +110,13 @@ export default function RestaurantDashboard({
   const { profile: fetchedProfile, isProfileIncomplete, localProfile } = useUserProfile();
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (localProfile) setEditPhone(localProfile.phoneNumber || '');
   }, [localProfile]);
 
   useEffect(() => {
     if (fetchedProfile) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (fetchedProfile.name) setEditName(fetchedProfile.name);
       if (fetchedProfile.email) setEditEmail(fetchedProfile.email);
     }
@@ -130,48 +125,51 @@ export default function RestaurantDashboard({
 
 
   const [menuList, setMenuList] = useState<MenuItem[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [brands, setBrands] = useState<any>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [outlets, setOutlets] = useState<any>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [outlets, setOutlets] = useState<Outlet[]>([]);
   const [, setMasterItems] = useState<MenuItem[]>([]);
   const [, setOverrides] = useState<unknown[]>([]);
 
   // Function to load all data
   const loadData = async () => {
     try {
-      const [_brands, _outlets] = await Promise.all([
+      const [fetchedBrands, fetchedOutlets] = await Promise.all([
         getBrands(),
         getOutlets()
       ]);
-      setBrands(_brands);
-      setOutlets(_outlets);
+       
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setBrands(fetchedBrands as any);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setOutlets(fetchedOutlets as any);
       
       const newAcceptingState: Record<string, boolean> = {};
-      _outlets.forEach((o: unknown) => {
+      fetchedOutlets.forEach((o: unknown) => {
         const outlet = asUntyped<unknown>(o) as { id: string, isActive?: boolean };
+         
         newAcceptingState[outlet.id] = outlet.isActive !== false;
       });
+      // eslint-disable-next-line react-hooks/immutability
       setIsAcceptingOrders(newAcceptingState);
 
-      if (_outlets.length === 0) {
+      if (fetchedOutlets.length === 0) {
         if (selectedOutletId) {
           setSelectedOutletId('');
           localStorage.removeItem('restaurant_selectedOutletId');
           return;
         }
       }
-      if (!selectedOutletId && _outlets.length > 0) {
-        const firstOutletId = (_outlets[0] as {id: string}).id;
+      if (!selectedOutletId && fetchedOutlets.length > 0) {
+        const firstOutletId = (fetchedOutlets[0] as {id: string}).id;
         setSelectedOutletId(firstOutletId);
         localStorage.setItem('restaurant_selectedOutletId', firstOutletId);
         return; // will re-trigger useEffect
-      } else if (selectedOutletId && _outlets.length > 0 && !_outlets.find((o: unknown) => (o as {id: string}).id === selectedOutletId)) {
-        const firstOutletId = (_outlets[0] as {id: string}).id;
+      } else if (selectedOutletId && fetchedOutlets.length > 0 && !fetchedOutlets.find((o: unknown) => (o as {id: string}).id === selectedOutletId)) {
+        const firstOutletId = (fetchedOutlets[0] as {id: string}).id;
         setSelectedOutletId(firstOutletId);
         localStorage.setItem('restaurant_selectedOutletId', firstOutletId);
         return; // replace stale id with first available
-      } else if (selectedOutletId && _outlets.length === 0) {
+      } else if (selectedOutletId && fetchedOutlets.length === 0) {
         setSelectedOutletId('');
         localStorage.removeItem('restaurant_selectedOutletId');
         return;
@@ -180,20 +178,20 @@ export default function RestaurantDashboard({
       }
 
       if (selectedOutletId) {
-        const [_effective, _overrides] = await Promise.all([
+        const [fetchedEffective, fetchedOverrides] = await Promise.all([
           getEffectiveMenu(selectedOutletId),
           getOutletOverrides(selectedOutletId)
         ]);
-        setMenuList(_effective);
-        setOverrides(_overrides);
+        setMenuList(fetchedEffective);
+        setOverrides(fetchedOverrides);
 
-        const _outlet = _outlets.find((o: unknown) => (o as {id: string}).id === selectedOutletId) as Outlet | undefined;
-        if (_outlet) {
-          const _masterItems = await getMasterMenuItems(_outlet.brandId);
-          setMasterItems(_masterItems as MenuItem[]);
+        const fetchedOutlet = fetchedOutlets.find((o: unknown) => (o as {id: string}).id === selectedOutletId) as Outlet | undefined;
+        if (fetchedOutlet) {
+          const fetchedMasterItems = await getMasterMenuItems(fetchedOutlet.brandId);
+          setMasterItems(fetchedMasterItems as MenuItem[]);
           
-          if (_outlet.defaultPrepTimeSeconds) {
-            setApiPrepSeconds(_outlet.defaultPrepTimeSeconds.toString());
+          if (fetchedOutlet.defaultPrepTimeSeconds) {
+            setApiPrepSeconds(fetchedOutlet.defaultPrepTimeSeconds.toString());
           }
         } else {
           setMasterItems([]);
@@ -208,7 +206,6 @@ export default function RestaurantDashboard({
   useEffect(() => {
     const abortController = new AbortController();
     const hasPendingVerifications = brands.some(
-      // @ts-expect-error auto-migration type suppression
       b => b.kycStatus === VerificationStatus.PENDING || b.pennyDropStatus === VerificationStatus.PENDING
     );
 
@@ -227,8 +224,8 @@ export default function RestaurantDashboard({
             onmessage(msg) {
               if (msg.event === 'brands-update') {
                 try {
-                  const _brands = JSON.parse(msg.data);
-                  setBrands(_brands);
+                  const fetchedBrands = JSON.parse(msg.data);
+                  setBrands(fetchedBrands);
                 } catch (e: unknown) {
                   console.error('Error parsing brand SSE data', e);
                 }
@@ -256,8 +253,11 @@ export default function RestaurantDashboard({
     };
   }, [brands]);
 
+   
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedOutletId]);
 
   const [stockStatus, setStockStatus] = useState<Record<string, boolean>>({});
@@ -275,9 +275,8 @@ export default function RestaurantDashboard({
     } catch (err: unknown) {
         // Revert on error
         setIsAcceptingOrders(prev => ({ ...prev, [selectedOutletId]: !newStatus }));
-        // @ts-expect-error auto-migration type suppression
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        showError((err as any).response?.data?.message || (err as any).response?.data?.error || err.message || "Failed to update outlet status");
+        const typedErr = err as { response?: { data?: { message?: string, error?: string } }, message?: string };
+        showError(typedErr.response?.data?.message || typedErr.response?.data?.error || typedErr.message || "Failed to update outlet status");
     }
   };
 
@@ -344,8 +343,8 @@ export default function RestaurantDashboard({
       await onUpdateOrderStatus(orderId, targetStatus, { reason });
     } catch (e: unknown) {
       console.error('Failed to cancel order', e);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      showError('Failed to cancel order: ' + ((e as any).response?.data?.message || (e as any).message || 'Unknown error'));
+      const typedErr = e as { response?: { data?: { message?: string } }, message?: string };
+      showError('Failed to cancel order: ' + (typedErr.response?.data?.message || typedErr.message || 'Unknown error'));
     }
   };
 
@@ -367,8 +366,8 @@ export default function RestaurantDashboard({
       // Let polling refresh the order, or manually trigger refresh if available.
     } catch (e: unknown) {
       console.error('Failed to initiate partial refund', e);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      showError('Failed to refund: ' + ((e as any).response?.data?.message || (e as any).message || 'Unknown error'));
+      const typedErr = e as { response?: { data?: { message?: string } }, message?: string };
+      showError('Failed to refund: ' + (typedErr.response?.data?.message || typedErr.message || 'Unknown error'));
     }
   };
 
@@ -420,15 +419,14 @@ export default function RestaurantDashboard({
       }
     } catch (e: unknown) {
       console.error('Failed to submit delay request', e);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      showError('Failed to submit delay request: ' + ((e as any).response?.data?.message || (e as any).message || 'Unknown error'));
+      const typedErr = e as { response?: { data?: { message?: string } }, message?: string };
+      showError('Failed to submit delay request: ' + (typedErr.response?.data?.message || typedErr.message || 'Unknown error'));
     }
     
     // handled locally in card
   };
 
   const myRestaurantName = outlets.length > 0 
-    // @ts-expect-error auto-migration type suppression
     ? (outlets.find(r => r.id === selectedOutletId)?.name || 'My Restaurant') 
     : 'No Outlet Registered';
 

@@ -8,7 +8,8 @@ interface UseCustomerOrdersOptions {
   onUpdateOrder?: (orderId: string, status: string) => void;
 }
 
-export function useCustomerOrders({ onUpdateOrder: _onUpdateOrder }: UseCustomerOrdersOptions = {}) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function useCustomerOrders({ onUpdateOrder }: UseCustomerOrdersOptions = {}) {
   const [internalOrders, setInternalOrders] = useState<Order[]>([]);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 

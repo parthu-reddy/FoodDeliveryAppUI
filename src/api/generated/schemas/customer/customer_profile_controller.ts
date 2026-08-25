@@ -8,18 +8,16 @@ const Customer = z
     id: z.string().uuid(),
     phoneNumber: z.string(),
     createdAt: z.string().datetime({ offset: true }),
-    updatedAt: z.string().datetime({ offset: true }),
+    updatedAt: z.string().datetime({ offset: true }).optional(),
   })
-  .partial()
   .passthrough();
 const ApiResponseCustomer = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: Customer,
+    data: Customer.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 
 export const schemas = {

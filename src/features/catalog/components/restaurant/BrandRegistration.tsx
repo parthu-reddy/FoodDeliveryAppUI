@@ -18,7 +18,7 @@ const brandSchema = z.object({
 export default function BrandRegistration({ onRefresh }: { onRefresh: () => void }) {
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState(1);
-  
+
   const [name, setName] = useState('');
   const [gstin, setGstin] = useState('');
   const [pan, setPan] = useState('');
@@ -26,7 +26,7 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
   const [bankAccount, setBankAccount] = useState('');
   const [ifsc, setIfsc] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
-  
+
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -66,7 +66,7 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
   const handleRegister = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setError('');
-    
+
     const newBrand = {
       name,
       gstin,
@@ -78,7 +78,7 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
       owner: 'Logged In User',
       createdAt: new Date().toISOString()
     };
-    
+
     const validation = brandSchema.safeParse({
       name: newBrand.name,
       gstin: newBrand.gstin,
@@ -93,7 +93,7 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
       setError(validation.error.issues[0].message);
       return;
     }
-    
+
     try {
       setIsSaving(true);
       await restaurantApi.restaurantOnboarding.post(`/api/v1/brands`, newBrand, {});
@@ -133,7 +133,7 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
           <div className={`h-1.5 w-6 rounded-full transition-colors ${step >= 2 ? 'bg-rose-500' : 'bg-slate-200 dark:bg-slate-700'}`} />
         </div>
       </div>
-      
+
       {error && (
         <div className="mb-4 p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs flex items-center gap-2 animate-fade-in">
           <AlertCircle className="w-4 h-4 shrink-0" />
@@ -189,11 +189,11 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">Brand Logo</label>
-                <ImageUploadField 
-                  value={logoUrl} 
-                  onChange={setLogoUrl} 
-                  folderId={name ? name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'default' : 'default'} 
-                  placeholder="Logo Image URL (Optional)" 
+                <ImageUploadField
+                  value={logoUrl}
+                  onChange={setLogoUrl}
+                  folderId={name ? name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'default' : 'default'}
+                  placeholder="Logo Image URL (Optional)"
                 />
               </div>
 
@@ -227,7 +227,7 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
                 <CreditCard className="w-4 h-4 text-rose-500" />
                 <span className="font-bold text-xs uppercase tracking-wider">Bank Details</span>
               </div>
-              
+
               <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 mb-4">
                 <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">
                   Bank details are strictly verified against the PAN provided in Step 1. Ensure the account belongs to the registered entity.

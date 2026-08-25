@@ -35,11 +35,11 @@ export const CustomerFreeDeliveryTracker: React.FC<CustomerFreeDeliveryTrackerPr
           className="sticky top-[88px] z-40 mb-2 max-w-[380px] mx-auto pointer-events-none"
         >
           <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-800/50 shadow-2xl rounded-2xl p-3 pointer-events-auto h-16 animate-pulse flex items-center gap-3">
-             <div className="p-2 rounded-full bg-slate-200 dark:bg-slate-800 w-9 h-9" />
-             <div className="flex-1 space-y-2">
-               <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-1/2" />
-               <div className="h-2 bg-slate-200 dark:bg-slate-800 rounded w-1/3" />
-             </div>
+            <div className="p-2 rounded-full bg-slate-200 dark:bg-slate-800 w-9 h-9" />
+            <div className="flex-1 space-y-2">
+              <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-1/2" />
+              <div className="h-2 bg-slate-200 dark:bg-slate-800 rounded w-1/3" />
+            </div>
           </div>
         </motion.div>
       </AnimatePresence>
@@ -87,7 +87,7 @@ export const CustomerFreeDeliveryTracker: React.FC<CustomerFreeDeliveryTrackerPr
             </div>
           </div>
           <div className="mt-2 h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-            <motion.div 
+            <motion.div
               className={`h-full rounded-full ${isFreeDelivery ? 'bg-gradient-to-r from-emerald-400 to-teal-400' : 'bg-gradient-to-r from-orange-400 to-amber-400'}`}
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}

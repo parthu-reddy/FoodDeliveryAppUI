@@ -54,7 +54,8 @@ export async function getBrands(): Promise<Brand[]> {
   } catch { return []; }
 }
 
-export async function saveBrands(_brands: Brand[]) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function saveBrands(brands: Brand[]) {
   // Mocked for now, not fully implemented in API
 }
 
@@ -72,7 +73,8 @@ export async function getOutletsByBrand(brandId: string): Promise<Outlet[]> {
   } catch { return []; }
 }
 
-export async function saveOutlets(_outlets: Outlet[]) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function saveOutlets(outlets: Outlet[]) {
   // Mocked for now
 }
 
@@ -84,7 +86,8 @@ export async function getMasterMenuItems(brandId: string): Promise<MasterMenuIte
   } catch { return []; }
 }
 
-export async function saveMasterMenuItems(_items: MasterMenuItem[]) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function saveMasterMenuItems(items: MasterMenuItem[]) {
   // Mocked
 }
 
@@ -95,7 +98,8 @@ export async function getOutletOverrides(outletId: string): Promise<OutletOverri
   } catch { return []; }
 }
 
-export async function saveOutletOverrides(_overrides: OutletOverride[]) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function saveOutletOverrides(overrides: OutletOverride[]) {
   // Mocked
 }
 
@@ -109,9 +113,9 @@ export async function addMasterMenuItem(brandId: string, item: Partial<MasterMen
 
 // Add/Update Override
 export async function upsertOverride(
-  outletId: string, 
-  masterMenuItemId: string, 
-  price?: number, 
+  outletId: string,
+  masterMenuItemId: string,
+  price?: number,
   active?: boolean
 ): Promise<OutletOverride | null> {
   try {

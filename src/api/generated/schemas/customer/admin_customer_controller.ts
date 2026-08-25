@@ -8,14 +8,14 @@ import { PageableObject } from "./common";
 
 const PageCustomerAddressDto = z
   .object({
-    totalPages: z.number().int(),
     totalElements: z.number().int(),
+    totalPages: z.number().int(),
     numberOfElements: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(CustomerAddressDto),
+    first: z.boolean(),
+    last: z.boolean(),
     sort: z.array(SortObject),
     pageable: PageableObject,
     empty: z.boolean(),
@@ -26,10 +26,9 @@ const ApiResponsePageCustomerAddressDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: PageCustomerAddressDto,
+    data: PageCustomerAddressDto.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 
 export const schemas = {

@@ -31,7 +31,7 @@ export const getDeviceHeaders = () => {
 export const authPlugin: ZodiosPlugin = {
   request: async (api, config) => {
     const token = getToken();
-    
+
     return {
       ...config,
       headers: {
@@ -49,14 +49,14 @@ export const authPlugin: ZodiosPlugin = {
     if (isAxiosError(error)) {
       if (
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (error as any).response?.status === 401 && 
+        (error as any).response?.status === 401 &&
         !config.url?.includes('/api/v1/internal/auth/')
       ) {
         logger.warn('Unauthorized API access via Zodios, clearing session', { url: config.url });
         clearAllLocalData();
         window.location.href = '/';
       }
-      
+
       // Log server errors
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if ((error as any).response?.status && (error as any).response.status >= 500) {
@@ -64,7 +64,7 @@ export const authPlugin: ZodiosPlugin = {
         logger.error('HTTP 5xx Server Error via Zodios', { status: (error as any).response.status, url: config.url });
       }
     }
-    
+
     throw error;
   },
   response: async (api, config, response) => {

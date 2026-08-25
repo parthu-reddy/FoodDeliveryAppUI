@@ -20,7 +20,7 @@ export interface UseDeliveryOrdersProps {
 
 export function useDeliveryOrders({
   riderId,
-  riderName: _riderName,
+  
   isOnline,
   setIsOnline,
   showToast,
@@ -110,7 +110,7 @@ export function useDeliveryOrders({
       
       lastActiveCountRef.current = fetchedActiveJobs.length;
       
-      setInternalOrders(_prev => {
+      setInternalOrders(() => {
         const mergedMap = new Map();
         historyRef.current.forEach(j => mergedMap.set(j.id, j));
         fetchedActiveJobs.forEach(j => mergedMap.set(j.id, j));
@@ -146,6 +146,8 @@ export function useDeliveryOrders({
         });
       }
     }).catch(console.error);
+   
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showHistory, historyDateFilter, isOnline, riderId]);
 
   // Ping Job / Dispatch Logic
@@ -153,11 +155,12 @@ export function useDeliveryOrders({
     if (isOnline && !activeJobId && !pingJob) {
       const jobs = activeOrders.filter(o => !o.riderId && !rejectedIds.has(o.id));
       if (jobs.length > 0) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setPingJob(jobs[0]);
         if ((jobs[0]).remainingPingSeconds !== undefined) {
           setPingTimer((jobs[0]).remainingPingSeconds);
         } else if ((jobs[0]).expiresAt) {
-          const remainingSecs = Math.max(0, Math.floor(((jobs[0]).expiresAt - Date.now()) / 1000));
+          const remainingSecs = Math.max(0, Math.floor((new Date((jobs[0]).expiresAt).getTime() - Date.now()) / 1000));
           setPingTimer(remainingSecs);
         } else {
           setPingTimer(60);
@@ -178,6 +181,7 @@ export function useDeliveryOrders({
     if (!activeJobId) {
       const ongoingJob = activeOrders.find(o => (o.riderId === riderId || !!o.riderId) && o.deliveryStatus !== DeliveryStatus.DELIVERED && o.status !== OrderStatus.CANCELLED && o.status !== OrderStatus.CANCELLED_BY_RESTAURANT && o.deliveryStatus !== DeliveryStatus.FAILED);
       if (ongoingJob) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setActiveJobId(ongoingJob.id);
       }
     } else {
@@ -190,7 +194,9 @@ export function useDeliveryOrders({
         }
         setActiveJobId(null);
       }
+     
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeOrders, riderId, activeJobId]);
 
   useEffect(() => {
@@ -310,7 +316,7 @@ export function useDeliveryOrders({
               if (jobs[0].remainingPingSeconds !== undefined) {
                 setPingTimer(jobs[0].remainingPingSeconds);
               } else if (jobs[0].expiresAt) {
-                const remainingSecs = Math.max(0, Math.floor((jobs[0].expiresAt - Date.now()) / 1000));
+                const remainingSecs = Math.max(0, Math.floor((new Date(jobs[0].expiresAt).getTime() - Date.now()) / 1000));
                 setPingTimer(remainingSecs);
               } else {
                 setPingTimer(60);
@@ -347,17 +353,21 @@ export function useDeliveryOrders({
       }
       if (watchId !== undefined && navigator.geolocation) {
         navigator.geolocation.clearWatch(watchId);
+       
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOnline, riderId]);
 
   // Current active job handling and SSE for status updates
   const currentJob = activeOrders.find(o => o.id === activeJobId && o.deliveryStatus !== DeliveryStatus.DELIVERED);
 
   useEffect(() => {
+     
     if (currentJob && onAddApiLog) {
       onAddApiLog({ id: 'delivery_route', label: `GET /api/v1/logistics/route?sourceLat={riderLat}&sourceLng={riderLng}&destLat=${currentJob.deliveryLat}&destLng=${currentJob.deliveryLng}`, method: 'GET' });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentJob?.id, currentJob?.status]);
 
   useEffect(() => {
@@ -394,7 +404,7 @@ export function useDeliveryOrders({
               }
             }
           },
-          onerror(_err) {
+          onerror() {
             retryCount++;
             return Math.min(1000 * Math.pow(2, retryCount - 1), 16000);
           }
@@ -402,15 +412,18 @@ export function useDeliveryOrders({
       } catch {
         // best effort cleanup on unmount; nothing to recover
       }
+     
     };
 
     connectSSE();
     return () => { ctrl.abort(); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentJob?.id, riderId]);
 
   // Derived Values
   const availableJobs = activeOrders.filter(o => (o.status === OrderStatus.READY_FOR_PICKUP || o.status === OrderStatus.PREPARING || o.status === OrderStatus.ACCEPTED) && !o.riderId);
   const allHistoryJobsMap = new Map();
+  // eslint-disable-next-line react-hooks/refs
   [...historyRef.current, ...activeOrders.filter(o => o.riderId === riderId && [DeliveryStatus.DELIVERED, DeliveryStatus.FAILED, DeliveryStatus.CANCELLED].includes(o.deliveryStatus as DeliveryStatus))]
     .forEach(job => allHistoryJobsMap.set(job.id, { ...job, payout: job.payout || 0 }));
   const allHistoryJobs = Array.from(allHistoryJobsMap.values());

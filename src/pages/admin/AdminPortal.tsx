@@ -17,7 +17,7 @@ const AdminFleetMap = React.lazy(() => import("@features/maps-tracking/component
 
 export default function AdminPortal({
   onLogout,
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }: any) {
   const { theme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<'deliveries' | 'users' | 'categories' | 'map' | 'ledger' | 'payouts' | 'interventions'>('map');
@@ -41,12 +41,12 @@ export default function AdminPortal({
           <LaBouffeLogo showText={false} iconSize="w-8 h-8" textColorClass="text-slate-800 dark:text-[#f0ede6]" subColorClass="text-rose-500" />
           <h1 className="font-black text-xl tracking-tight text-slate-800 dark:text-[#f0ede6]">Admin</h1>
         </div>
-        
+
         <div className="flex-1 p-4 overflow-y-auto">
           <SidebarNav
             activeColor="indigo"
             activeKey={activeTab}
-            onSelect={(key) => setActiveTab(key as 'deliveries'|'interventions'|'users'|'categories'|'map'|'ledger'|'payouts')}
+            onSelect={(key) => setActiveTab(key as 'deliveries' | 'interventions' | 'users' | 'categories' | 'map' | 'ledger' | 'payouts')}
             items={[
               { key: 'deliveries', label: 'Live Operations', icon: <Activity className="w-5 h-5" /> },
               { key: 'interventions', label: 'Manual Interventions', icon: <Shield className="w-5 h-5" />, badge: interventionsCount || undefined },
@@ -61,36 +61,36 @@ export default function AdminPortal({
 
         <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <Button variant="ghost" size="icon" onClick={toggleTheme}>
-          {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
+            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
           </Button>
-            {onLogout && (
-                <Button variant="danger" size="icon" onClick={onLogout}>
-                  <LogOut className="w-4 h-4" />
-                </Button>
-            )}
+          {onLogout && (
+            <Button variant="danger" size="icon" onClick={onLogout}>
+              <LogOut className="w-4 h-4" />
+            </Button>
+          )}
         </div>
       </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 bg-transparent text-slate-800 dark:text-[#f0ede6]">
         {activeTab === 'map' && (
-            <div className="flex-1 flex w-full h-full relative overflow-hidden">
-                <React.Suspense fallback={<div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-500">Loading map...</div>}>
-                  <AdminFleetMap />
-                </React.Suspense>
-            </div>
+          <div className="flex-1 flex w-full h-full relative overflow-hidden">
+            <React.Suspense fallback={<div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-500">Loading map...</div>}>
+              <AdminFleetMap />
+            </React.Suspense>
+          </div>
         )}
 
         {activeTab === 'ledger' && (
-            <div className="flex-1 flex w-full h-full relative overflow-hidden">
-                <AdminLedgerView />
-            </div>
+          <div className="flex-1 flex w-full h-full relative overflow-hidden">
+            <AdminLedgerView />
+          </div>
         )}
-        
+
         {activeTab === 'payouts' && (
-            <div className="flex-1 flex w-full h-full relative overflow-hidden">
-                <AdminPayoutsView />
-            </div>
+          <div className="flex-1 flex w-full h-full relative overflow-hidden">
+            <AdminPayoutsView />
+          </div>
         )}
 
         {activeTab === 'interventions' && <AdminManualInterventions />}

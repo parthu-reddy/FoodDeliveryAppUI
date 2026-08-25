@@ -42,6 +42,8 @@ app.use(
         const separator = proxyReq.path.includes('?') ? '&' : '?';
         proxyReq.path = `${proxyReq.path}${separator}api_key=${OLA_MAPS_API_KEY}`;
       },
+       
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       error: (err, req, res: any) => {
         logger.error({ err }, `[proxy] Error forwarding Ola Maps request: ${err.message}`);
         if (res && res.writeHead) {
@@ -90,7 +92,9 @@ app.use(
           if (req.headers.authorization) {
             proxyReq.setHeader('Authorization', req.headers.authorization);
           }
+         
         },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         error: (err, req: express.Request, res: any) => {
           logger.error({ err }, `[proxy] Error forwarding ${req.method} ${req.url}: ${err.message}`);
           if (res && res.writeHead) {
@@ -116,8 +120,10 @@ async function startServer() {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }
+ 
 
   // Global Error Handler
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
     logger.error(err, 'Unhandled Express Exception');
     if (res.headersSent) {

@@ -7,14 +7,14 @@ import { PageableObject } from "./common";
 
 const PageMapStringObject = z
   .object({
-    totalPages: z.number().int(),
     totalElements: z.number().int(),
+    totalPages: z.number().int(),
     numberOfElements: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(z.record(z.object({}).partial().passthrough())),
+    first: z.boolean(),
+    last: z.boolean(),
     sort: z.array(SortObject),
     pageable: PageableObject,
     empty: z.boolean(),

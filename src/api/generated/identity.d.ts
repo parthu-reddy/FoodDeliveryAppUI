@@ -222,52 +222,52 @@ export interface components {
             phone?: string;
         };
         ApiResponseString: {
-            success?: boolean;
-            message?: string;
+            success: boolean;
+            message: string;
             data?: string;
             /** Format: date-time */
-            timestamp?: string;
+            timestamp: string;
         };
         RoleRequestDTO: {
             /** @enum {string} */
             roleName: "CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN";
         };
         ApiResponseVoid: {
-            success?: boolean;
-            message?: string;
+            success: boolean;
+            message: string;
             data?: Record<string, never>;
             /** Format: date-time */
-            timestamp?: string;
+            timestamp: string;
         };
         ApiResponseMapStringString: {
-            success?: boolean;
-            message?: string;
+            success: boolean;
+            message: string;
             data?: {
                 [key: string]: string;
             };
             /** Format: date-time */
-            timestamp?: string;
+            timestamp: string;
         };
         ApiResponseUserDTO: {
-            success?: boolean;
-            message?: string;
+            success: boolean;
+            message: string;
             data?: components["schemas"]["UserDTO"];
             /** Format: date-time */
-            timestamp?: string;
+            timestamp: string;
         };
         UserDTO: {
             /** Format: uuid */
-            id?: string;
-            phoneNumber?: string;
-            roles?: ("CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN")[];
+            id: string;
+            phoneNumber: string;
+            roles: ("CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN")[];
             active?: boolean;
         };
         ApiResponsePageUserDTO: {
-            success?: boolean;
-            message?: string;
+            success: boolean;
+            message: string;
             data?: components["schemas"]["PageUserDTO"];
             /** Format: date-time */
-            timestamp?: string;
+            timestamp: string;
         };
         PageUserDTO: {
             /** Format: int32 */
@@ -281,9 +281,9 @@ export interface components {
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["UserDTO"][];
-            sort?: components["schemas"]["SortObject"][];
             first?: boolean;
             last?: boolean;
+            sort?: components["schemas"]["SortObject"][];
             pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;
         };
@@ -306,20 +306,20 @@ export interface components {
             ignoreCase?: boolean;
         };
         ApiResponseListSessionInfo: {
-            success?: boolean;
-            message?: string;
+            success: boolean;
+            message: string;
             data?: components["schemas"]["SessionInfo"][];
             /** Format: date-time */
-            timestamp?: string;
+            timestamp: string;
         };
         SessionInfo: {
-            sessionId?: string;
-            deviceInfo?: string;
-            os?: string;
-            browser?: string;
+            sessionId: string;
+            deviceInfo: string;
+            os: string;
+            browser: string;
             /** Format: int64 */
-            lastActive?: number;
-            serviceName?: string;
+            lastActive: number;
+            serviceName: string;
         };
     };
     responses: never;

@@ -90,6 +90,8 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
       setCurrentBgIndex((prev) => (prev + 1) % foodImages.length);
     }, 5000);
     return () => clearInterval(timer);
+   
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Auto dismiss or show SMS simulation
@@ -114,7 +116,7 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
     }
 
     setLoading(true);
-    
+
     if (onAddApiLog) {
       onAddApiLog({ id: 'auth_initiate', label: 'POST /api/v1/internal/auth/initiate', method: 'POST' });
     }
@@ -122,7 +124,7 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
     try {
       const serviceName = roleToServiceName(selectedRole!);
       await identityApi.auth.post('/api/v1/internal/auth/initiate', undefined, { queries: { phoneNumber }, headers: { 'X-Calling-Service': serviceName } });
-      
+
       // Try to fetch the OTP via admin endpoint (dev convenience or feature flag)
       if (import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEV_OTP === 'true') {
         try {
@@ -158,7 +160,7 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
     }
 
     setLoading(true);
-    
+
     if (onAddApiLog) {
       onAddApiLog({ id: 'auth_verify', label: 'POST /api/v1/internal/auth/verify', method: 'POST' });
     }
@@ -196,8 +198,9 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
           // If profile is already complete, just proceed
           setUserProfile({ id, phone: phoneNumber, role: selectedRole!, name: p.name });
           onLoginSuccess(selectedRole!, phoneNumber, p.name);
+         
         }
-      } catch (_profileErr: unknown) {
+      } catch {
         // If there's an error fetching profile, show the modal as a fallback
         setPendingLoginData({ id, phone: phoneNumber, role: selectedRole!, name });
         setShowProfileModal(true);
@@ -241,7 +244,7 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
   };
 
   return (
-    <div 
+    <div
       ref={scrollContainerRef}
       onScroll={handleScroll}
       className="w-full flex-1 flex flex-col justify-between bg-transparent pt-0 px-0 pb-4 sm:pt-0 sm:pb-6 relative overflow-y-auto overflow-x-hidden"
@@ -252,12 +255,11 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
 
       {/* Sticky Shrinking Logo Header (only shown when selecting roles) */}
       {!selectedRole && (
-        <div 
-          className={`sticky top-0 left-0 right-0 z-30 transition-all duration-300 flex flex-col items-center justify-center text-center pb-5 px-4 sm:px-6 rounded-b-3xl border-b backdrop-blur-xl ${
-            theme === 'dark'
+        <div
+          className={`sticky top-0 left-0 right-0 z-30 transition-all duration-300 flex flex-col items-center justify-center text-center pb-5 px-4 sm:px-6 rounded-b-3xl border-b backdrop-blur-xl ${theme === 'dark'
               ? 'bg-slate-900/20 border-rose-500/30/40 shadow-[0_10px_30px_rgba(0,0,0,0.2)]'
               : 'bg-white/20 border-white/30 shadow-[0_4px_20px_rgba(0,0,0,0.02)]'
-          }`}
+            }`}
           style={{
             paddingTop: 'calc(1.25rem + env(safe-area-inset-top, 16px))'
           }}
@@ -265,11 +267,10 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
           {/* Theme Toggle inside Sticky Header */}
           <button
             onClick={toggleTheme}
-            className={`absolute right-6 sm:right-8 top-1/2 -translate-y-1/2 p-2.5 rounded-xl border backdrop-blur-xl transition-all cursor-pointer z-40 ${
-              theme === 'dark'
+            className={`absolute right-6 sm:right-8 top-1/2 -translate-y-1/2 p-2.5 rounded-xl border backdrop-blur-xl transition-all cursor-pointer z-40 ${theme === 'dark'
                 ? 'bg-slate-900/20 border-rose-500/30/40 text-amber-400 hover:text-amber-300 shadow-[0_4px_20px_rgba(0,0,0,0.15)]'
                 : 'bg-white/20 border-white/30 text-indigo-600 hover:text-indigo-800 shadow-sm'
-            }`}
+              }`}
             style={{
               right: 'calc(1.5rem + env(safe-area-inset-right, 0px))'
             }}
@@ -279,21 +280,21 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
           </button>
 
           {/* Smoothly scaling logo wrapper */}
-          <div 
+          <div
             className="transition-all duration-300 transform origin-center"
             style={{
               transform: `scale(${Math.max(0.72, Math.min(1.0, 1 - scrollY / 300))})`,
               opacity: Math.max(0.9, Math.min(1.0, 1 - scrollY / 550))
             }}
           >
-            <LaBouffeLogo 
-              className="flex flex-col items-center gap-2.5 w-full" 
+            <LaBouffeLogo
+              className="flex flex-col items-center gap-2.5 w-full"
               iconSize={scrollY > 10 ? "w-11 h-11" : "w-18 h-18"}
               align="center"
               textColorClass={theme === 'dark' ? 'text-white' : 'text-slate-800'}
             />
           </div>
-          
+
 
         </div>
       )}
@@ -328,7 +329,7 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
 
       {/* Header */}
       {selectedRole && (
-        <div 
+        <div
           className="shrink-0 flex items-center justify-between relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-8"
           style={{
             marginTop: 'calc(0.375rem + env(safe-area-inset-top, 16px))'
@@ -336,9 +337,8 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
         >
           <button
             onClick={handleBack}
-            className={`p-2.5 rounded-xl transition-all border cursor-pointer backdrop-blur-md ${
-              theme === 'dark' ? 'bg-slate-900 border-rose-500/30 text-slate-300 hover:bg-slate-800' : 'bg-white/20 border-rose-500/20 text-slate-600 dark:text-slate-300 hover:bg-white/20'
-            }`}
+            className={`p-2.5 rounded-xl transition-all border cursor-pointer backdrop-blur-md ${theme === 'dark' ? 'bg-slate-900 border-rose-500/30 text-slate-300 hover:bg-slate-800' : 'bg-white/20 border-rose-500/20 text-slate-600 dark:text-slate-300 hover:bg-white/20'
+              }`}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -348,11 +348,10 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
           </div>
           <button
             onClick={toggleTheme}
-            className={`p-2.5 rounded-xl border transition-all cursor-pointer backdrop-blur-md ${
-              theme === 'dark'
+            className={`p-2.5 rounded-xl border transition-all cursor-pointer backdrop-blur-md ${theme === 'dark'
                 ? 'bg-slate-900 border-rose-500/30 text-amber-400 hover:text-amber-300'
                 : 'bg-white/20 border-rose-500/20 text-indigo-600 hover:bg-white/20'
-            }`}
+              }`}
             title="Toggle Light/Dark Mode"
           >
             {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
@@ -434,8 +433,9 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
             } else {
               setUserProfile({ id, phone: phoneNumber, role, name: p.name });
               onLoginSuccess(role, phoneNumber, p.name);
+             
             }
-          } catch (_err: unknown) {
+          } catch {
             setPendingLoginData({ id, phone: phoneNumber, role, name });
             setShowProfileModal(true);
           }
@@ -459,7 +459,7 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
       {/* Footer Disclaimer */}
       <div className="shrink-0 text-center space-y-1 sm:space-y-1.5 mt-auto relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-8">
         <p className="text-[9.5px] sm:text-[10px] text-slate-300 dark:text-slate-300">
-          By continuing, you agree to our terms & instant delivery guidelines. 
+          By continuing, you agree to our terms & instant delivery guidelines.
         </p>
         <div className="flex items-center justify-center gap-3 text-[9px] sm:text-[10px] text-slate-300 dark:text-slate-300 font-mono">
           <span>SECURE END-TO-END</span>

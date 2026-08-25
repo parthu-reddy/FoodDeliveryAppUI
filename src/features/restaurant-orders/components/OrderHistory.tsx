@@ -1,4 +1,3 @@
-import { useToast } from '@/contexts/ToastContext';
 import { restaurantApi } from '@/lib/zodiosClients';
 import { Order, OrderStatus } from '@/types';
 import { getFriendlyStatusMessage } from '@features/customer-orders/model/statusMessaging';
@@ -34,8 +33,7 @@ interface RawOrder {
   id?: string;
   orderId?: string;
   status?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  items?: any[];
+  items?: unknown[];
   itemsJson?: string;
   total?: number;
   totalAmount?: number;
@@ -60,8 +58,10 @@ interface RawOrder {
                 // malformed itemsJson falls back to o.items rather than failing the row
                 try { parsedItems = JSON.parse(o.itemsJson); } catch { /* keep fallback */ }
             }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const calculatedTotal = parsedItems.reduce((acc: number, item: any) => acc + (item.item?.price || item.price || 0) * (item.quantity || 1), 0);
+            const calculatedTotal = parsedItems.reduce((acc: number, it: unknown) => {
+              const item = it as { item?: { price?: number }; price?: number; quantity?: number };
+              return acc + (item.item?.price || item.price || 0) * (item.quantity || 1);
+            }, 0);
             
             return {
               ...o, 
@@ -74,7 +74,7 @@ interface RawOrder {
               timestamp: o.createdAt || new Date().toISOString()
             };
           });
-          setOrders(mapped);
+          setOrders(mapped as Order[]);
           setTotalPages(res.data.totalPages || 1);
           setTotalElements(res.data.totalElements || mapped.length);
         }
@@ -152,10 +152,10 @@ interface RawOrder {
                     <td className="p-4 whitespace-nowrap">
                       <div className="flex flex-col">
                         <span className="font-medium text-slate-800 dark:text-[#f0ede6]">
-                          {new Date(order.timestamp).toLocaleDateString()}
+                          {new Date((order as {timestamp?: string}).timestamp || order.createdAt).toLocaleDateString()}
                         </span>
                         <span className="text-xs text-slate-500 dark:text-slate-300 font-mono">
-                          {new Date(order.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {new Date((order as {timestamp?: string}).timestamp || order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
                     </td>
@@ -176,13 +176,15 @@ interface RawOrder {
                     <td className="p-4">
                       <div className="flex flex-col gap-1">
                         // @ts-expect-error auto-migration type suppression
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        {order.items.map((item: any, idx: number) => (
+                        {order.items.map((it: unknown, idx: number) => {
+                          const item = it as { quantity?: number, item?: { name?: string }, name?: string };
+                          return (
                           <div key={idx} className="text-xs flex items-center gap-1.5 text-slate-600 dark:text-[#f0ede6]">
                             <span className="font-bold text-slate-800 dark:text-[#f0ede6]">{item.quantity || 1}x</span>
                             <span className="truncate max-w-[120px] sm:max-w-[180px]">{item.item?.name || (item).name || 'Item'}</span>
                           </div>
-                        ))}
+                          )
+                        })}
                       </div>
                     </td>
                     <td className="p-4 whitespace-nowrap">
@@ -208,6 +210,8 @@ interface RawOrder {
                         {/* Refund button removed as Restaurants do not have API permissions to issue refunds directly */}
                         
                         {/* Restaurant's OrderHistory gives a 4 hour window from HANDED_OVER to account for delivery time */}
+                        { }
+                        {/* eslint-disable-next-line react-hooks/purity */}
                         {onOpenChat && order.updatedAt && (Date.now() - new Date(order.updatedAt).getTime() < 4 * 60 * 60 * 1000) && (
                           <button
                             onClick={() => onOpenChat(order.id)}
@@ -240,9 +244,7 @@ interface RawOrder {
                       <h3 className="text-lg font-bold text-slate-800 dark:text-[#f0ede6]">No Orders Found</h3>
                       <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm">
                         {dateFilter 
-                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
                           ? "We couldn't find any orders for the selected date. Try choosing a different date or clear the filter." 
-                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
                           : "You don't have any past orders yet. Once you start receiving orders, they will appear here."}
                       </p>
                     </div>

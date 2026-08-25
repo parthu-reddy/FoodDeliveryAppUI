@@ -2,16 +2,17 @@ import { Order, OrderStatus } from '@/types';
 import { RestaurantOrderCard } from '@features/restaurant-orders/components/RestaurantOrderCard';
 import { motion } from 'framer-motion';
 import {
-    Bike,
-    ChefHat,
-    Clock,
-    RefreshCw,
-    Sliders,
-    Truck
+  Bike,
+  ChefHat,
+  Clock,
+  RefreshCw,
+  Sliders,
+  Truck
 } from 'lucide-react';
 import React from 'react';
 
 // Utility
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const getFriendlyDeliveryStatusMessage = (status: string | undefined): string => {
   if (!status) return "Searching...";
   switch (status.toUpperCase()) {
@@ -32,19 +33,21 @@ interface RestaurantOrderQueueProps {
   pendingOrders: Order[];
   activePreparing: Order[];
   myOrders: Order[];
-  
+
   cardDelayStatus: Record<string, { minutes: number, reason: string }>;
-  
+
   handleCardCancelSubmit: (orderId: string, reason: string) => void;
   handleCardDelaySubmit: (orderId: string, minutes: string, reason: string) => void;
   handleCardPartialRefundSubmit: (orderId: string, amount: string, reason: string) => void;
-  
+
   handleStatusTransition: (order: Order) => void;
   setSelectedChatOrder: (order: Order) => void;
 }
 
 export const RestaurantOrderQueue = React.memo(function RestaurantOrderQueue({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   totalRevenue,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   completedOrders,
   pendingOrders,
   activePreparing,
@@ -84,7 +87,7 @@ export const RestaurantOrderQueue = React.memo(function RestaurantOrderQueue({
 
         {/* Responsive Kanban Columns */}
         <div className="flex gap-4 pb-6 w-full overflow-x-auto touch-pan-x snap-x snap-mandatory scrollbar-thin scrollbar-thumb-rose-500/30 scrollbar-track-transparent ">
-          
+
           {/* COLUMN 1: Placed Orders (Just Got Placed) */}
           <div className="w-[85%] xs:w-[310px] sm:w-[350px] shrink-0 snap-center flex flex-col glass-panel p-4 min-h-[480px]">
             <div className="flex items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 pb-3 mb-3">

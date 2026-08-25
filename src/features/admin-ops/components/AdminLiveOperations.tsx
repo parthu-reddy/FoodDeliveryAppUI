@@ -5,7 +5,7 @@ import { customerApi, deliveryApi, restaurantApi } from "@/lib/zodiosClients";
 import { getFriendlyStatusMessage } from '@features/customer-orders/model/statusMessaging';
 import { Button, Input } from '@shared/ui';
 import { Navigation, Package, Truck } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { asUntyped, WirePage } from '../../../lib/untypedResponse';
 
 const AdminAssignmentMap = React.lazy(() => import("@features/maps-tracking/components/AdminAssignmentMap"));
@@ -33,31 +33,31 @@ export default function AdminLiveOperations() {
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
+  const [activeOrders, setActiveOrders] = useState<AdminOrder[]>([]);
   // Polling for active orders every 15 seconds
-  const { data: activeOrdersResponse, refetch: fetchActiveOrders } = usePolling({
+  const { refetch: fetchActiveOrders } = usePolling({
     fetchFn: async () => {
       const res = await customerApi.adminOrder.get('/api/v1/internal/admin/orders/active-all', { queries: { page } });
       return res;
     },
     intervalMs: 15000,
-    enabled: true
+    enabled: true,
+    onData: (response) => {
+        const page = asUntyped<WirePage<unknown>>(response);
+        const content = page.content ?? (Array.isArray(response) ? response : []);
+        // @ts-expect-error auto-migration type suppression
+        setActiveOrders(Array.isArray(content) ? content : []);
+        if (page.totalPages !== undefined) {
+            setTotalPages(page.totalPages);
+        }
+    }
   });
   
-  const [activeOrders, setActiveOrders] = useState<AdminOrder[]>([]);
-  useEffect(() => {
-      if (activeOrdersResponse) {
-          const page = asUntyped<WirePage<unknown>>(activeOrdersResponse);
-          const content = page.content ?? (Array.isArray(activeOrdersResponse) ? activeOrdersResponse : []);
-          // @ts-expect-error auto-migration type suppression
-          setActiveOrders(Array.isArray(content) ? content : []);
-          if (page.totalPages !== undefined) {
-              setTotalPages(page.totalPages);
-          }
-      }
-  }, [activeOrdersResponse]);
 
+
+  const [availableDrivers, setAvailableDrivers] = useState<AdminDriver[]>([]);
   // Polling for available drivers every 15 seconds
-  const { data: driversList, refetch: fetchAvailableDrivers } = usePolling({
+  const { refetch: fetchAvailableDrivers } = usePolling({
     fetchFn: async () => {
         let queries: Record<string, string | number> = {};
         if (selectedOrder) {
@@ -78,16 +78,14 @@ export default function AdminLiveOperations() {
         return Array.isArray(content) ? content : [];
     },
     intervalMs: 15000,
-    enabled: true
+    enabled: true,
+    onData: (response) => {
+        // @ts-expect-error auto-migration type suppression
+        setAvailableDrivers(response);
+    }
   });
 
-  const [availableDrivers, setAvailableDrivers] = useState<AdminDriver[]>([]);
-  useEffect(() => {
-      if (driversList) {
-          // @ts-expect-error auto-migration type suppression
-          setAvailableDrivers(driversList);
-      }
-  }, [driversList]);
+
 
   // Optimistic Assign Driver
   const handleAssignDriver = async (orderId: string, driverId: string) => {
@@ -118,8 +116,8 @@ export default function AdminLiveOperations() {
       fetchActiveOrders();
     } catch (e: unknown) {
       console.error(e);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      showError((e as any).response?.data?.error || (e as any).response?.data?.message || "Failed to initiate partial refund");
+      const typedErr = e as { response?: { data?: { error?: string, message?: string } } };
+      showError(typedErr.response?.data?.error || typedErr.response?.data?.message || "Failed to initiate partial refund");
     }
   };
 
@@ -131,8 +129,8 @@ export default function AdminLiveOperations() {
       fetchActiveOrders();
     } catch (e: unknown) {
       console.error(e);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      showError((e as any).response?.data?.error || (e as any).response?.data?.message || "Failed to initiate post-delivery refund");
+      const typedErr = e as { response?: { data?: { error?: string, message?: string } } };
+      showError(typedErr.response?.data?.error || typedErr.response?.data?.message || "Failed to initiate post-delivery refund");
     }
   };
 
