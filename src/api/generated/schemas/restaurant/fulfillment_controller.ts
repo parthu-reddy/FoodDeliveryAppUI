@@ -76,14 +76,14 @@ const PageRestaurantOrder = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    size: z.number().int(),
-    content: z.array(RestaurantOrder),
+    numberOfElements: z.number().int(),
     number: z.number().int(),
     sort: z.array(SortObject),
-    first: z.boolean(),
+    size: z.number().int(),
+    content: z.array(RestaurantOrder),
     pageable: PageableObject,
     last: z.boolean(),
-    numberOfElements: z.number().int(),
+    first: z.boolean(),
     empty: z.boolean(),
   })
   .partial()

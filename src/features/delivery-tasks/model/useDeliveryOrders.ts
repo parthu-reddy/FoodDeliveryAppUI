@@ -13,14 +13,14 @@ export interface UseDeliveryOrdersProps {
   setIsOnline: (online: boolean) => void;
   showToast: (msg: string) => void;
   externalOrders?: Order[];
-  externalUpdateStatus?: (orderId: string, status: OrderStatus, deliveryStatus?: DeliveryStatus, riderInfo?: any) => void;
+  externalUpdateStatus?: (orderId: string, status: OrderStatus, deliveryStatus?: DeliveryStatus, riderInfo?: unknown) => void;
   setShowPermissionsPrompt: (show: boolean) => void;
-  onAddApiLog?: (log: any) => void;
+  onAddApiLog?: (log: unknown) => void;
 }
 
 export function useDeliveryOrders({
   riderId,
-  riderName,
+  riderName: _riderName,
   isOnline,
   setIsOnline,
   showToast,
@@ -32,7 +32,7 @@ export function useDeliveryOrders({
   const [internalOrders, setInternalOrders] = useState<Order[]>([]);
   const activeOrders = externalOrders ?? internalOrders;
 
-  const onUpdateOrderStatus = externalUpdateStatus ?? ((orderId: string, status: OrderStatus, deliveryStatus?: DeliveryStatus, riderInfo?: any) => {
+  const onUpdateOrderStatus = externalUpdateStatus ?? ((orderId: string, status: OrderStatus, deliveryStatus?: DeliveryStatus, _riderInfo?: unknown) => {
     setInternalOrders(prev => prev.map(o => o.id === orderId ? { ...o, status, ...(deliveryStatus ? { deliveryStatus } : {}) } : o));
   });
 
@@ -54,7 +54,7 @@ export function useDeliveryOrders({
   const [pingJob, setPingJob] = useState<Order | null>(null);
   const [pingTimer, setPingTimer] = useState(30);
   const [rejectedIds, setRejectedIds] = useState<Set<string>>(new Set());
-  const historyRef = useRef<any[]>([]);
+  const historyRef = useRef<Order[]>([]);
   const lastActiveCountRef = useRef(0);
 
   // Polling Orders
@@ -62,22 +62,22 @@ export function useDeliveryOrders({
     fetchFn: async () => {
     if (!isOnline || !riderId) return;
 
-    let fetchedActiveJobs: any[] = [];
-    let fetchedAvailableJobs: any[] = [];
-    const getArrayFromRes = (res: any) => res?.content || res?.data?.data || res?.data || (Array.isArray(res) ? res : []);
+    let fetchedActiveJobs: Order[] = [];
+    let fetchedAvailableJobs: Order[] = [];
+    const getArrayFromRes = (res: unknown) => (res as {content?: unknown[]}).content || (res as {data?:{data?:unknown[]}}).data?.data || (res as {data?:unknown[]}).data || (Array.isArray(res) ? res : []);
 
     try {
       const activeRes = await deliveryApi.deliveryOrder.get(`/api/v1/delivery/orders/active`, {});
       if (activeRes) {
          const activeData = getArrayFromRes(activeRes);
-         fetchedActiveJobs = activeData.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
+         fetchedActiveJobs = activeData.map((o: unknown) => ({ ...(o as Order), status: ((o as Order).status as string)?.toUpperCase() as OrderStatus || '' as OrderStatus }));
       }
 
       if (fetchedActiveJobs.length === 0) {
          const availableRes = await deliveryApi.deliveryOrder.get(`/api/v1/delivery/orders/available`, {});
          if (availableRes) {
             const availableData = getArrayFromRes(availableRes);
-            fetchedAvailableJobs = availableData.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
+            fetchedAvailableJobs = availableData.map((o: unknown) => ({ ...(o as Order), status: ((o as Order).status as string)?.toUpperCase() as OrderStatus || '' as OrderStatus }));
             if (fetchedAvailableJobs.length > 0) {
               const newPingId = fetchedAvailableJobs[0].id;
               setRejectedIds(prev => {
@@ -104,20 +104,20 @@ export function useDeliveryOrders({
          const histRes = await deliveryApi.deliveryOrder.get('/api/v1/delivery/orders/history', { queries: { date: todayDateString } });
          if (histRes) {
             const histData = getArrayFromRes(histRes);
-            historyRef.current = histData.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
+            historyRef.current = histData.map((o: unknown) => ({ ...(o as Order), status: ((o as Order).status as string)?.toUpperCase() as OrderStatus || '' as OrderStatus }));
          }
       }
       
       lastActiveCountRef.current = fetchedActiveJobs.length;
       
-      setInternalOrders(prev => {
+      setInternalOrders(_prev => {
         const mergedMap = new Map();
         historyRef.current.forEach(j => mergedMap.set(j.id, j));
         fetchedActiveJobs.forEach(j => mergedMap.set(j.id, j));
         fetchedAvailableJobs.forEach(j => mergedMap.set(j.id, j));
         return Array.from(mergedMap.values());
       });
-    } catch (err) {
+    } catch (err: unknown) {
       console.error(err);
     }
   }, 
@@ -134,13 +134,13 @@ export function useDeliveryOrders({
 
     deliveryApi.deliveryOrder.get('/api/v1/delivery/orders/history', { queries: { date: dateToFetch } }).then(res => {
       if (res) {
-        const getArrayFromRes = (res: any) => res?.content || res?.data?.data || res?.data || (Array.isArray(res) ? res : []);
+        const getArrayFromRes = (res: unknown) => (res as {content?: unknown[]}).content || (res as {data?:{data?:unknown[]}}).data?.data || (res as {data?:unknown[]}).data || (Array.isArray(res) ? res : []);
         const histData = getArrayFromRes(res);
-        historyRef.current = histData.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
+        historyRef.current = histData.map((o: unknown) => ({ ...(o as Order), status: ((o as Order).status as string)?.toUpperCase() as OrderStatus || '' as OrderStatus }));
         setInternalOrders(prev => {
           const active = prev.filter(o => isActiveOrder(o));
           const mergedMap = new Map();
-          historyRef.current.forEach((j: any) => mergedMap.set(j.id, j));
+          historyRef.current.forEach((j: Order) => mergedMap.set(j.id, j));
           active.forEach(j => mergedMap.set(j.id, j));
           return Array.from(mergedMap.values());
         });
@@ -276,7 +276,7 @@ export function useDeliveryOrders({
         
         const sendLocation = () => {
           if (ws.readyState === WebSocket.OPEN) {
-            const payload: any = { driverId: riderId, lat: currentLat, lng: currentLng, timestamp: new Date().toISOString() };
+            const payload: { driverId: string, lat: number, lng: number, timestamp: string, orderId?: string } = { driverId: riderId, lat: currentLat, lng: currentLng, timestamp: new Date().toISOString() };
             if (activeJobIdRef.current) {
                 payload.orderId = activeJobIdRef.current;
             }
@@ -294,7 +294,7 @@ export function useDeliveryOrders({
             const pingRes = await deliveryApi.deliveryOrder.get(`/api/v1/delivery/orders/available`, {});
             const pingData = pingRes;
             if (pingData && pingData.length > 0) {
-              const jobs = pingData.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
+              const jobs = (pingData as unknown[]).map((o: unknown) => ({ ...(o as Order), status: ((o as Order).status as string)?.toUpperCase() as OrderStatus || '' as OrderStatus }));
               setRejectedIds(prev => {
                 const newSet = new Set(prev);
                 newSet.delete(jobs[0].id);
@@ -303,7 +303,7 @@ export function useDeliveryOrders({
               setInternalOrders(prev => {
                 const mergedMap = new Map();
                 prev.forEach(j => mergedMap.set(j.id, j));
-                jobs.forEach((j: any) => mergedMap.set(j.id, j));
+                jobs.forEach((j: Order) => mergedMap.set(j.id, j));
                 return Array.from(mergedMap.values());
               });
               setPingJob(jobs[0]);
@@ -317,7 +317,7 @@ export function useDeliveryOrders({
               }
             }
           }
-        } catch (e) {
+        } catch (e: unknown) {
           console.error("Failed to parse websocket message", e);
         }
       };
@@ -394,7 +394,7 @@ export function useDeliveryOrders({
               }
             }
           },
-          onerror(err) {
+          onerror(_err) {
             retryCount++;
             return Math.min(1000 * Math.pow(2, retryCount - 1), 16000);
           }

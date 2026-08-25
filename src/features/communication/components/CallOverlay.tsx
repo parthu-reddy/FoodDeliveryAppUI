@@ -6,8 +6,6 @@ export const CallOverlay: React.FC = () => {
   const { 
     callState, 
     callEndReason,
-    callerId, 
-    remoteUserId, 
     remoteStream, 
     acceptCall, 
     declineCall, 

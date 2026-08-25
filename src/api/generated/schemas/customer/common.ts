@@ -87,6 +87,26 @@ export const ApiResponseString = z
   })
   .partial()
   .passthrough();
+export const SupportTicket = z
+  .object({
+    version: z.number().int(),
+    id: z.string().uuid(),
+    orderId: z.string().uuid(),
+    customerId: z.string().uuid(),
+    reason: z.string(),
+    status: z.enum(["OPEN", "IN_REVIEW", "RESOLVED", "REJECTED"]),
+    resolutionNotes: z.string(),
+    resolvedBy: z.string().uuid(),
+    createdAt: z.string().datetime({ offset: true }),
+    resolvedAt: z.string().datetime({ offset: true }),
+    chatSessionId: z.string().uuid(),
+    requestedRefundItems: z.string(),
+    refundAmount: z.number(),
+    restaurantComments: z.string(),
+    riderComments: z.string(),
+  })
+  .partial()
+  .passthrough();
 export const CustomerAddressDto = z
   .object({
     id: z.string().uuid(),
@@ -112,26 +132,6 @@ export const ApiResponseMapStringObject = z
   })
   .partial()
   .passthrough();
-export const SupportTicket = z
-  .object({
-    version: z.number().int(),
-    id: z.string().uuid(),
-    orderId: z.string().uuid(),
-    customerId: z.string().uuid(),
-    reason: z.string(),
-    status: z.enum(["OPEN", "IN_REVIEW", "RESOLVED", "REJECTED"]),
-    resolutionNotes: z.string(),
-    resolvedBy: z.string().uuid(),
-    createdAt: z.string().datetime({ offset: true }),
-    resolvedAt: z.string().datetime({ offset: true }),
-    chatSessionId: z.string().uuid(),
-    requestedRefundItems: z.string(),
-    refundAmount: z.number(),
-    restaurantComments: z.string(),
-    riderComments: z.string(),
-  })
-  .partial()
-  .passthrough();
 export const SortObject = z
   .object({
     direction: z.string(),
@@ -145,11 +145,11 @@ export const SortObject = z
 export const PageableObject = z
   .object({
     offset: z.number().int(),
+    unpaged: z.boolean(),
     sort: z.array(SortObject),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
-    unpaged: z.boolean(),
   })
   .partial()
   .passthrough();
@@ -157,14 +157,14 @@ export const PageOrderResponse = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
+    numberOfElements: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
+    number: z.number().int(),
     size: z.number().int(),
     content: z.array(OrderResponse),
-    number: z.number().int(),
     sort: z.array(SortObject),
-    first: z.boolean(),
     pageable: PageableObject,
-    numberOfElements: z.number().int(),
-    last: z.boolean(),
     empty: z.boolean(),
   })
   .partial()
@@ -273,14 +273,14 @@ export const PageOrder = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
+    numberOfElements: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
+    number: z.number().int(),
     size: z.number().int(),
     content: z.array(Order),
-    number: z.number().int(),
     sort: z.array(SortObject),
-    first: z.boolean(),
     pageable: PageableObject,
-    numberOfElements: z.number().int(),
-    last: z.boolean(),
     empty: z.boolean(),
   })
   .partial()
@@ -289,14 +289,14 @@ export const PageSupportTicket = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
+    numberOfElements: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
+    number: z.number().int(),
     size: z.number().int(),
     content: z.array(SupportTicket),
-    number: z.number().int(),
     sort: z.array(SortObject),
-    first: z.boolean(),
     pageable: PageableObject,
-    numberOfElements: z.number().int(),
-    last: z.boolean(),
     empty: z.boolean(),
   })
   .partial()

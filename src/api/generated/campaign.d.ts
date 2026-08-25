@@ -11,9 +11,41 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: operations["getCampaign"];
         put: operations["updateCampaign"];
         post?: never;
+        delete: operations["deleteCampaign"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/advertisers/{advertiserId}/campaigns/{campaignId}/ad-groups/{adGroupId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAdGroup"];
+        put: operations["updateAdGroup"];
+        post?: never;
+        delete: operations["deleteAdGroup"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/internal/creatives/{creativeId}/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["auditCreative"];
         delete?: never;
         options?: never;
         head?: never;
@@ -36,6 +68,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/advertisers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAdvertiserByExternalRef"];
+        put?: never;
+        post: operations["register"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/advertisers/{advertiserId}/campaigns": {
         parameters: {
             query?: never;
@@ -46,6 +94,22 @@ export interface paths {
         get: operations["getCampaigns"];
         put?: never;
         post: operations["createCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/advertisers/{advertiserId}/campaigns/{id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["resumeCampaign"];
         delete?: never;
         options?: never;
         head?: never;
@@ -68,6 +132,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/advertisers/{advertiserId}/campaigns/{id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["activateCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/advertisers/{advertiserId}/campaigns/{campaignId}/ad-groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listAdGroups"];
+        put?: never;
+        post: operations["createAdGroup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/advertisers/{advertiserId}/campaigns/{campaignId}/ad-groups/{adGroupId}/creatives": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listCreatives"];
+        put?: never;
+        post: operations["createCreative"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/advertisers/{advertiserId}/campaigns/{campaignId}/ad-groups/{adGroupId}/creatives/upload-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["generateUploadUrl"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/advertisers/{advertiserId}/campaigns/wallet/topup": {
         parameters: {
             query?: never;
@@ -84,16 +212,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/advertiser/register": {
+    "/api/v1/internal/campaigns/active-for-bidding": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: operations["getActiveCampaignsForBidding"];
         put?: never;
-        post: operations["registerAdvertiser"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/advertisers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAdvertiser"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/advertisers/{advertiserId}/presigned-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPresignedUrlForUpload"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -132,14 +292,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/advertiser/{advertiserId}/presigned-url": {
+    "/api/v1/advertisers/me": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["getPresignedUrlForUpload"];
+        get: operations["getMyAdvertiser"];
         put?: never;
         post?: never;
         delete?: never;
@@ -157,12 +317,21 @@ export interface components {
             advertiserId: string;
             name: string;
             dailyBudget: number;
-            lifetimeBudget: number;
+            lifetimeBudget?: number;
             maxBid: number;
             /** Format: date-time */
             startDate: string;
             /** Format: date-time */
             endDate?: string;
+            /** Format: int32 */
+            frequencyCap?: number;
+        };
+        ApiResponseCampaignResponse: {
+            success?: boolean;
+            message?: string;
+            data?: components["schemas"]["CampaignResponse"];
+            /** Format: date-time */
+            timestamp?: string;
         };
         CampaignResponse: {
             /** Format: uuid */
@@ -171,7 +340,7 @@ export interface components {
             advertiserId?: string;
             name?: string;
             /** @enum {string} */
-            status?: "DRAFT" | "ACTIVE" | "PAUSED" | "COMPLETED" | "ARCHIVED";
+            status?: "DRAFT" | "SCHEDULED" | "ACTIVE" | "PAUSED" | "COMPLETED" | "ARCHIVED" | "DELETED";
             dailyBudget?: number;
             lifetimeBudget?: number;
             maxBid?: number;
@@ -179,14 +348,143 @@ export interface components {
             startDate?: string;
             /** Format: date-time */
             endDate?: string;
+            /** Format: int32 */
+            frequencyCap?: number;
             /** Format: int64 */
             version?: number;
+        };
+        AdGroupRequest: {
+            name: string;
+            geoTargeting?: components["schemas"]["GeoTargeting"];
+            daypartingConfig?: components["schemas"]["DaypartingConfig"];
+            contextualKeywords?: components["schemas"]["ContextualKeywords"];
+            brandSafetyBlocklist?: string[];
+            active?: boolean;
+        };
+        ContextualKeywords: {
+            keywords?: string[];
+        };
+        Daypart: {
+            dayOfWeek?: string;
+            startTime?: string;
+            endTime?: string;
+        };
+        DaypartingConfig: {
+            dayparts?: components["schemas"]["Daypart"][];
+        };
+        GeoTargeting: {
+            regions?: string[];
+        };
+        AdGroupResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            campaignId?: string;
+            name?: string;
+            geoTargeting?: components["schemas"]["GeoTargeting"];
+            daypartingConfig?: components["schemas"]["DaypartingConfig"];
+            contextualKeywords?: components["schemas"]["ContextualKeywords"];
+            brandSafetyBlocklist?: string[];
+            active?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        ApiResponseAdGroupResponse: {
+            success?: boolean;
+            message?: string;
+            data?: components["schemas"]["AdGroupResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+        };
+        ApiResponseVoid: {
+            success?: boolean;
+            message?: string;
+            data?: Record<string, never>;
+            /** Format: date-time */
+            timestamp?: string;
         };
         CampaignPacingDTO: {
             /** Format: double */
             dailyBudget?: number;
+            /** Format: double */
+            lifetimeBudget?: number;
             /** Format: uuid */
             advertiserId?: string;
+        };
+        AdvertiserRegistrationRequest: {
+            companyName: string;
+            externalRef?: string;
+        };
+        AdvertiserResponse: {
+            /** Format: uuid */
+            id?: string;
+            userId?: string;
+            companyName?: string;
+            externalRef?: string;
+            /** Format: uuid */
+            walletBalanceId?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        ApiResponseAdvertiserResponse: {
+            success?: boolean;
+            message?: string;
+            data?: components["schemas"]["AdvertiserResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+        };
+        AdCreativeRequest: {
+            /** @enum {string} */
+            format: "BANNER" | "CAROUSEL" | "VIDEO" | "VIDEO_VAST" | "NATIVE";
+            assetUrl?: string;
+            vastXml?: string;
+        };
+        AdCreativeResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            adGroupId?: string;
+            /** @enum {string} */
+            format?: "BANNER" | "CAROUSEL" | "VIDEO" | "VIDEO_VAST" | "NATIVE";
+            assetUrl?: string;
+            vastXml?: string;
+            /** @enum {string} */
+            auditStatus?: "PENDING" | "APPROVED" | "REJECTED";
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        ApiResponseAdCreativeResponse: {
+            success?: boolean;
+            message?: string;
+            data?: components["schemas"]["AdCreativeResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+        };
+        ApiResponseString: {
+            success?: boolean;
+            message?: string;
+            data?: string;
+            /** Format: date-time */
+            timestamp?: string;
+        };
+        TopupWalletRequest: {
+            amount: number;
+            gatewayName?: string;
+        };
+        ApiResponseMapStringString: {
+            success?: boolean;
+            message?: string;
+            data?: {
+                [key: string]: string;
+            };
+            /** Format: date-time */
+            timestamp?: string;
         };
         Pageable: {
             /** Format: int32 */
@@ -195,33 +493,40 @@ export interface components {
             size?: number;
             sort?: string[];
         };
+        ApiResponsePageCampaignResponse: {
+            success?: boolean;
+            message?: string;
+            data?: components["schemas"]["PageCampaignResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+        };
         PageCampaignResponse: {
             /** Format: int32 */
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
             /** Format: int32 */
-            size?: number;
-            content?: components["schemas"]["CampaignResponse"][];
+            numberOfElements?: number;
+            first?: boolean;
+            last?: boolean;
             /** Format: int32 */
             number?: number;
-            sort?: components["schemas"]["SortObject"][];
-            pageable?: components["schemas"]["PageableObject"];
-            last?: boolean;
-            first?: boolean;
             /** Format: int32 */
-            numberOfElements?: number;
+            size?: number;
+            content?: components["schemas"]["CampaignResponse"][];
+            pageable?: components["schemas"]["PageableObject"];
+            sort?: components["schemas"]["SortObject"][];
             empty?: boolean;
         };
         PageableObject: {
             /** Format: int64 */
             offset?: number;
-            sort?: components["schemas"]["SortObject"][];
             paged?: boolean;
             /** Format: int32 */
             pageNumber?: number;
             /** Format: int32 */
             pageSize?: number;
+            sort?: components["schemas"]["SortObject"][];
             unpaged?: boolean;
         };
         SortObject: {
@@ -231,13 +536,20 @@ export interface components {
             property?: string;
             ignoreCase?: boolean;
         };
-        CampaignPerformance: {
+        ApiResponsePageCampaignPerformanceResponse: {
+            success?: boolean;
+            message?: string;
+            data?: components["schemas"]["PageCampaignPerformanceResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+        };
+        CampaignPerformanceResponse: {
             /** Format: uuid */
             id?: string;
             /** Format: uuid */
-            campaignId?: string;
-            /** Format: uuid */
             advertiserId?: string;
+            /** Format: uuid */
+            campaignId?: string;
             /** Format: date */
             date?: string;
             /** Format: int64 */
@@ -247,14 +559,56 @@ export interface components {
             /** Format: int64 */
             conversions?: number;
             spend?: number;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            updatedAt?: string;
         };
-        TopupWalletRequest: {
-            /** Format: double */
-            amount: number;
+        PageCampaignPerformanceResponse: {
+            /** Format: int32 */
+            totalPages?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
+            size?: number;
+            content?: components["schemas"]["CampaignPerformanceResponse"][];
+            pageable?: components["schemas"]["PageableObject"];
+            sort?: components["schemas"]["SortObject"][];
+            empty?: boolean;
+        };
+        ApiResponsePageAdGroupResponse: {
+            success?: boolean;
+            message?: string;
+            data?: components["schemas"]["PageAdGroupResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+        };
+        PageAdGroupResponse: {
+            /** Format: int32 */
+            totalPages?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
+            size?: number;
+            content?: components["schemas"]["AdGroupResponse"][];
+            pageable?: components["schemas"]["PageableObject"];
+            sort?: components["schemas"]["SortObject"][];
+            empty?: boolean;
+        };
+        ApiResponseListAdCreativeResponse: {
+            success?: boolean;
+            message?: string;
+            data?: components["schemas"]["AdCreativeResponse"][];
+            /** Format: date-time */
+            timestamp?: string;
         };
     };
     responses: never;
@@ -265,12 +619,37 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getCampaign: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-User-Id"?: string;
+            };
+            path: {
+                advertiserId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseCampaignResponse"];
+                };
+            };
+        };
+    };
     updateCampaign: {
         parameters: {
             query?: never;
             header?: {
                 "X-User-Id"?: string;
-                "If-Match"?: number;
+                "If-Match"?: string;
             };
             path: {
                 advertiserId: string;
@@ -290,7 +669,136 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CampaignResponse"];
+                    "application/json": components["schemas"]["ApiResponseCampaignResponse"];
+                };
+            };
+        };
+    };
+    deleteCampaign: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-User-Id"?: string;
+            };
+            path: {
+                advertiserId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
+    getAdGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                advertiserId: string;
+                campaignId: string;
+                adGroupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseAdGroupResponse"];
+                };
+            };
+        };
+    };
+    updateAdGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                advertiserId: string;
+                campaignId: string;
+                adGroupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdGroupRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseAdGroupResponse"];
+                };
+            };
+        };
+    };
+    deleteAdGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                advertiserId: string;
+                campaignId: string;
+                adGroupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
+    auditCreative: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                creativeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: Record<string, never>;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseVoid"];
                 };
             };
         };
@@ -321,6 +829,54 @@ export interface operations {
             };
         };
     };
+    getAdvertiserByExternalRef: {
+        parameters: {
+            query: {
+                externalRef: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseAdvertiserResponse"];
+                };
+            };
+        };
+    };
+    register: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-User-Id": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdvertiserRegistrationRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseAdvertiserResponse"];
+                };
+            };
+        };
+    };
     getCampaigns: {
         parameters: {
             query: {
@@ -342,7 +898,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PageCampaignResponse"];
+                    "application/json": components["schemas"]["ApiResponsePageCampaignResponse"];
                 };
             };
         };
@@ -370,7 +926,32 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CampaignResponse"];
+                    "application/json": components["schemas"]["ApiResponseCampaignResponse"];
+                };
+            };
+        };
+    };
+    resumeCampaign: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-User-Id"?: string;
+            };
+            path: {
+                advertiserId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseVoid"];
                 };
             };
         };
@@ -394,63 +975,13 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
-            };
-        };
-    };
-    topupWallet: {
-        parameters: {
-            query?: never;
-            header?: {
-                "X-User-Id"?: string;
-            };
-            path: {
-                advertiserId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    [key: string]: Record<string, never>;
-                };
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
                 content: {
-                    "application/json": {
-                        [key: string]: string;
-                    };
+                    "application/json": components["schemas"]["ApiResponseVoid"];
                 };
             };
         };
     };
-    registerAdvertiser: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": string;
-                };
-            };
-        };
-    };
-    getCampaignPerformance: {
+    activateCampaign: {
         parameters: {
             query?: never;
             header?: {
@@ -470,14 +1001,276 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CampaignPerformance"][];
+                    "application/json": components["schemas"]["ApiResponseCampaignResponse"];
+                };
+            };
+        };
+    };
+    listAdGroups: {
+        parameters: {
+            query: {
+                pageable: components["schemas"]["Pageable"];
+            };
+            header?: never;
+            path: {
+                advertiserId: string;
+                campaignId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponsePageAdGroupResponse"];
+                };
+            };
+        };
+    };
+    createAdGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                advertiserId: string;
+                campaignId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdGroupRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseAdGroupResponse"];
+                };
+            };
+        };
+    };
+    listCreatives: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                advertiserId: string;
+                campaignId: string;
+                adGroupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseListAdCreativeResponse"];
+                };
+            };
+        };
+    };
+    createCreative: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                advertiserId: string;
+                campaignId: string;
+                adGroupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdCreativeRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseAdCreativeResponse"];
+                };
+            };
+        };
+    };
+    generateUploadUrl: {
+        parameters: {
+            query: {
+                fileName: string;
+                contentType: string;
+            };
+            header?: never;
+            path: {
+                advertiserId: string;
+                campaignId: string;
+                adGroupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseString"];
+                };
+            };
+        };
+    };
+    topupWallet: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-User-Id"?: string;
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                advertiserId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TopupWalletRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseMapStringString"];
+                };
+            };
+        };
+    };
+    getActiveCampaignsForBidding: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: Record<string, never>;
+                    }[];
+                };
+            };
+        };
+    };
+    getAdvertiser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseAdvertiserResponse"];
+                };
+            };
+        };
+    };
+    getPresignedUrlForUpload: {
+        parameters: {
+            query: {
+                fileName: string;
+                contentType: string;
+            };
+            header?: never;
+            path: {
+                advertiserId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseString"];
+                };
+            };
+        };
+    };
+    getCampaignPerformance: {
+        parameters: {
+            query: {
+                from?: string;
+                to?: string;
+                pageable: components["schemas"]["Pageable"];
+            };
+            header?: {
+                "X-User-Id"?: string;
+            };
+            path: {
+                advertiserId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponsePageCampaignPerformanceResponse"];
                 };
             };
         };
     };
     getAllCampaignPerformance: {
         parameters: {
-            query?: never;
+            query: {
+                from?: string;
+                to?: string;
+                pageable: components["schemas"]["Pageable"];
+            };
             header?: {
                 "X-User-Id"?: string;
             };
@@ -494,20 +1287,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CampaignPerformance"][];
+                    "application/json": components["schemas"]["ApiResponsePageCampaignPerformanceResponse"];
                 };
             };
         };
     };
-    getPresignedUrlForUpload: {
+    getMyAdvertiser: {
         parameters: {
-            query: {
-                fileName: string;
+            query?: never;
+            header: {
+                "X-User-Id": string;
             };
-            header?: never;
-            path: {
-                advertiserId: string;
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -518,7 +1309,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": string;
+                    "application/json": components["schemas"]["ApiResponseAdvertiserResponse"];
                 };
             };
         };

@@ -1,0 +1,1047 @@
+[
+  {
+    "filePath": "server.ts",
+    "messages": [
+      {
+        "ruleId": "@typescript-eslint/no-explicit-any",
+        "line": 45,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "ruleId": "@typescript-eslint/no-explicit-any",
+        "line": 94,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "ruleId": "@typescript-eslint/no-explicit-any",
+        "line": 121,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "filePath": "src/api/manual-schemas/admin.ts",
+    "messages": [
+      {
+        "ruleId": null,
+        "line": 6,
+        "message": "Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')."
+      },
+      {
+        "ruleId": null,
+        "line": 26,
+        "message": "Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')."
+      },
+      {
+        "ruleId": null,
+        "line": 33,
+        "message": "Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')."
+      }
+    ]
+  },
+  {
+    "filePath": "src/contexts/CallContext.tsx",
+    "messages": [
+      {
+        "ruleId": "react-refresh/only-export-components",
+        "line": 30,
+        "message": "Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components."
+      }
+    ]
+  },
+  {
+    "filePath": "src/contexts/ConfigContext.tsx",
+    "messages": [
+      {
+        "ruleId": "react-refresh/only-export-components",
+        "line": 15,
+        "message": "Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components."
+      }
+    ]
+  },
+  {
+    "filePath": "src/contexts/ThemeContext.tsx",
+    "messages": [
+      {
+        "ruleId": "react-refresh/only-export-components",
+        "line": 30,
+        "message": "Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components."
+      }
+    ]
+  },
+  {
+    "filePath": "src/contexts/ToastContext.tsx",
+    "messages": [
+      {
+        "ruleId": "react-refresh/only-export-components",
+        "line": 21,
+        "message": "Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components."
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/admin-ops/components/AdminLiveOperations.tsx",
+    "messages": [
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 52,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/admin-ops/components/AdminLiveOperations.tsx:52:11\n  50 |           const content = page.content ?? (Array.isArray(activeOrdersResponse) ? activeOrdersResponse : []);\n  51 |           // @ts-expect-error auto-migration type suppression\n> 52 |           setActiveOrders(Array.isArray(content) ? content : []);\n     |           ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect\n  53 |           if (page.totalPages !== undefined) {\n  54 |               setTotalPages(page.totalPages);\n  55 |           }"
+      },
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 88,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/admin-ops/components/AdminLiveOperations.tsx:88:11\n  86 |       if (driversList) {\n  87 |           // @ts-expect-error auto-migration type suppression\n> 88 |           setAvailableDrivers(driversList);\n     |           ^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect\n  89 |       }\n  90 |   }, [driversList]);\n  91 |"
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/admin-ops/components/AdminManualInterventions.tsx",
+    "messages": [
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 69,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/admin-ops/components/AdminManualInterventions.tsx:69:21\n  67 |           const content = asUntyped<WirePage<unknown>>(interventionsResponse).content ?? (Array.isArray(interventionsResponse) ? interventionsResponse : []);\n  68 |                     // eslint-disable-next-line @typescript-eslint/no-explicit-any\n> 69 |                     setInterventions(Array.isArray(content) ? (content as any) : []);\n     |                     ^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect\n  70 |           if (interventionsResponse.totalPages !== undefined) {\n  71 |               setInterventionsTotalPages(interventionsResponse.totalPages);\n  72 |           }"
+      },
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 91,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/admin-ops/components/AdminManualInterventions.tsx:91:21\n  89 |           const content = asUntyped<WirePage<unknown>>(failedRefundsResponse).content ?? (Array.isArray(failedRefundsResponse) ? failedRefundsResponse : []);\n  90 |                     // eslint-disable-next-line @typescript-eslint/no-explicit-any\n> 91 |                     setFailedRefunds(Array.isArray(content) ? (content as any) : []);\n     |                     ^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect\n  92 |           if (failedRefundsResponse.totalPages !== undefined) {\n  93 |               setRefundsTotalPages(failedRefundsResponse.totalPages);\n  94 |           }"
+      },
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 113,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/admin-ops/components/AdminManualInterventions.tsx:113:30\n  111 |   useEffect(() => {\n  112 |             // eslint-disable-next-line @typescript-eslint/no-explicit-any\n> 113 |             if (driversList) setAvailableDrivers(driversList as any);\n      |                              ^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect\n  114 |   }, [driversList]);\n  115 |\n  116 |   const handleAssignDriverToIntervention = async (orderId: string, driverId: string) => {"
+      },
+      {
+        "ruleId": null,
+        "line": 305,
+        "message": "Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')."
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/admin-ops/components/AdminUserManagement.tsx",
+    "messages": [
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 55,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/admin-ops/components/AdminUserManagement.tsx:55:9\n  53 |         const page = asUntyped<WirePage<unknown>>(usersResponse);\n  54 |         const content = page.content ?? (Array.isArray(usersResponse) ? usersResponse : []);\n> 55 |         setUsers(Array.isArray(content) ? content : []);\n     |         ^^^^^^^^ Avoid calling setState() directly within an effect\n  56 |         if (page.totalPages !== undefined) {\n  57 |             setTotalPages(page.totalPages);\n  58 |         }"
+      },
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 94,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/admin-ops/components/AdminUserManagement.tsx:94:7\n  92 |   useEffect(() => {\n  93 |     if (selectedUser) {\n> 94 |       fetchUserActiveOrders(selectedUser.id);\n     |       ^^^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect\n  95 |     } else {\n  96 |       setUserActiveOrders([]);\n  97 |     }"
+      },
+      {
+        "ruleId": null,
+        "line": 209,
+        "message": "Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')."
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/campaigns-ads/components/CampaignManagement.tsx",
+    "messages": [
+      {
+        "ruleId": "react-hooks/immutability",
+        "line": 58,
+        "message": "Error: Cannot access variable before it is declared\n\n`loadCampaigns` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/campaigns-ads/components/CampaignManagement.tsx:58:7\n  56 |   useEffect(() => {\n  57 |     if (restaurantId) {\n> 58 |       loadCampaigns();\n     |       ^^^^^^^^^^^^^ `loadCampaigns` accessed before it is declared\n  59 |       loadWalletData();\n  60 |       loadPerformanceData();\n  61 |     }\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/campaigns-ads/components/CampaignManagement.tsx:112:3\n  110 |   };\n  111 |\n> 112 |   const loadCampaigns = async () => {\n      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n> 113 |     setLoading(true);\n      | ^^^^^^^^^^^^^^^^^^^^^\n> 114 |     try {\n      …\n      | ^^^^^^^^^^^^^^^^^^^^^\n> 122 |     }\n      | ^^^^^^^^^^^^^^^^^^^^^\n> 123 |   };\n      | ^^^^^ `loadCampaigns` is declared here\n  124 |\n  125 |   const handleCreate = async (e: React.FormEvent) => {\n  126 |     e.preventDefault();"
+      },
+      {
+        "ruleId": "react-hooks/immutability",
+        "line": 59,
+        "message": "Error: Cannot access variable before it is declared\n\n`loadWalletData` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/campaigns-ads/components/CampaignManagement.tsx:59:7\n  57 |     if (restaurantId) {\n  58 |       loadCampaigns();\n> 59 |       loadWalletData();\n     |       ^^^^^^^^^^^^^^ `loadWalletData` accessed before it is declared\n  60 |       loadPerformanceData();\n  61 |     }\n  62 |   }, [restaurantId]);\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/campaigns-ads/components/CampaignManagement.tsx:70:3\n  68 |   }, [txPage, restaurantId]);\n  69 |\n> 70 |   const loadWalletData = async () => {\n     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n> 71 |     if (!restaurantId) return;\n     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n> 72 |     setTxLoading(true);\n     …\n     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n> 81 |     }\n     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n> 82 |   };\n     | ^^^^^ `loadWalletData` is declared here\n  83 |\n  84 |   const loadTransactions = async (page: number) => {\n  85 |     setTxLoading(true);"
+      },
+      {
+        "ruleId": "react-hooks/immutability",
+        "line": 60,
+        "message": "Error: Cannot access variable before it is declared\n\n`loadPerformanceData` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/campaigns-ads/components/CampaignManagement.tsx:60:7\n  58 |       loadCampaigns();\n  59 |       loadWalletData();\n> 60 |       loadPerformanceData();\n     |       ^^^^^^^^^^^^^^^^^^^ `loadPerformanceData` accessed before it is declared\n  61 |     }\n  62 |   }, [restaurantId]);\n  63 |\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/campaigns-ads/components/CampaignManagement.tsx:97:3\n   95 |   };\n   96 |\n>  97 |   const loadPerformanceData = async () => {\n      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n>  98 |     if (!restaurantId) return;\n      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n>  99 |     setPerfLoading(true);\n      …\n      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n> 109 |     }\n      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n> 110 |   };\n      | ^^^^^ `loadPerformanceData` is declared here\n  111 |\n  112 |   const loadCampaigns = async () => {\n  113 |     setLoading(true);"
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 62,
+        "message": "React Hook useEffect has missing dependencies: 'loadCampaigns', 'loadPerformanceData', and 'loadWalletData'. Either include them or remove the dependency array."
+      },
+      {
+        "ruleId": "react-hooks/immutability",
+        "line": 66,
+        "message": "Error: Cannot access variable before it is declared\n\n`loadTransactions` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/campaigns-ads/components/CampaignManagement.tsx:66:7\n  64 |   useEffect(() => {\n  65 |     if (restaurantId) {\n> 66 |       loadTransactions(txPage);\n     |       ^^^^^^^^^^^^^^^^ `loadTransactions` accessed before it is declared\n  67 |     }\n  68 |   }, [txPage, restaurantId]);\n  69 |\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/campaigns-ads/components/CampaignManagement.tsx:84:3\n  82 |   };\n  83 |\n> 84 |   const loadTransactions = async (page: number) => {\n     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n> 85 |     setTxLoading(true);\n     | ^^^^^^^^^^^^^^^^^^^^^^^\n> 86 |     try {\n     …\n     | ^^^^^^^^^^^^^^^^^^^^^^^\n> 94 |     }\n     | ^^^^^^^^^^^^^^^^^^^^^^^\n> 95 |   };\n     | ^^^^^ `loadTransactions` is declared here\n  96 |\n  97 |   const loadPerformanceData = async () => {\n  98 |     if (!restaurantId) return;"
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 68,
+        "message": "React Hook useEffect has a missing dependency: 'loadTransactions'. Either include it or remove the dependency array."
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/catalog/components/PartnerAccountModal.tsx",
+    "messages": [
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 50,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/catalog/components/PartnerAccountModal.tsx:50:5\n  48 |\n  49 |   useEffect(() => {\n> 50 |     setEditName(userName || '');\n     |     ^^^^^^^^^^^ Avoid calling setState() directly within an effect\n  51 |     setInitialName(userName || '');\n  52 |   }, [userName]);\n  53 |"
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 65,
+        "message": "React Hook useEffect has a missing dependency: 'fetchDevices'. Either include it or remove the dependency array."
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/catalog/components/customer/CustomerRestaurantBrowser.tsx",
+    "messages": [
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 33,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/catalog/components/customer/CustomerRestaurantBrowser.tsx:33:5\n  31 |\n  32 |   useEffect(() => {\n> 33 |     setVisibleCount(6);\n     |     ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect\n  34 |   }, [debouncedSearchQuery, selectedCategory, restaurants]);\n  35 |\n  36 |   const observerRef = useRef<IntersectionObserver | null>(null);"
+      },
+      {
+        "ruleId": null,
+        "line": 119,
+        "message": "Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')."
+      },
+      {
+        "ruleId": null,
+        "line": 141,
+        "message": "Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')."
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/catalog/components/restaurant/BrandMasterMenu.tsx",
+    "messages": [
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 83,
+        "message": "React Hook useEffect has missing dependencies: 'fetchCategories' and 'fetchMasterItems'. Either include them or remove the dependency array."
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/catalog/components/restaurant/OutletMenuEditor.tsx",
+    "messages": [
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 69,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/catalog/components/restaurant/OutletMenuEditor.tsx:69:7\n  67 |   useEffect(() => {\n  68 |     if (restaurantId && restaurantId !== selectedOutlet) {\n> 69 |       setSelectedOutlet(restaurantId);\n     |       ^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect\n  70 |     }\n  71 |   }, [restaurantId]);\n  72 |"
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 71,
+        "message": "React Hook useEffect has a missing dependency: 'selectedOutlet'. Either include it or remove the dependency array."
+      },
+      {
+        "ruleId": "react-hooks/immutability",
+        "line": 74,
+        "message": "Error: Cannot access variable before it is declared\n\n`fetchOverrides` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/catalog/components/restaurant/OutletMenuEditor.tsx:74:5\n  72 |\n  73 |   useEffect(() => {\n> 74 |     fetchOverrides(selectedOutlet);\n     |     ^^^^^^^^^^^^^^ `fetchOverrides` accessed before it is declared\n  75 |   }, [selectedOutlet]);\n  76 |\n  77 |   useEffect(() => {\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/catalog/components/restaurant/OutletMenuEditor.tsx:127:3\n  125 |   };\n  126 |\n> 127 |   const fetchOverrides = async (targetOutlet: string) => {\n      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n> 128 |     if (!targetOutlet) return;\n      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n> 129 |     try {\n      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n> 130 |       const response = await restaurantApi.catalog.get('/api/v1/outlets/:outletId/menu-overrides', { params: { outletId: targetOutlet } });\n      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n> 131 |       setOverrides(response.data || []);\n      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n> 132 |     } catch (e) { console.error(e); }\n      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n> 133 |   };\n      | ^^^^^ `fetchOverrides` is declared here\n  134 |\n  135 |   const handleSaveTimings = async (catId: string) => {\n  136 |     try {"
+      },
+      {
+        "ruleId": "react-hooks/immutability",
+        "line": 79,
+        "message": "Error: Cannot access variable before it is declared\n\n`fetchCategories` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/catalog/components/restaurant/OutletMenuEditor.tsx:79:7\n  77 |   useEffect(() => {\n  78 |     if (brandId && selectedOutlet) {\n> 79 |       fetchCategories();\n     |       ^^^^^^^^^^^^^^^ `fetchCategories` accessed before it is declared\n  80 |       fetchMasterItems();\n  81 |     }\n  82 |   }, [brandId, selectedOutlet]);\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/catalog/components/restaurant/OutletMenuEditor.tsx:84:3\n   82 |   }, [brandId, selectedOutlet]);\n   83 |\n>  84 |   const fetchCategories = async () => {\n      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n>  85 |     try {\n      | ^^^^^^^^^\n>  86 |       const data = await restaurantApi.category.get('/api/v1/brands/:brandId/categories', { params: { brandId } });\n      …\n      | ^^^^^^^^^\n> 116 |     } catch (e) { console.error(e); }\n      | ^^^^^^^^^\n> 117 |   };\n      | ^^^^^ `fetchCategories` is declared here\n  118 |\n  119 |   const fetchMasterItems = async () => {\n  120 |     if (!brandId || brandId === 'undefined') return;"
+      },
+      {
+        "ruleId": "react-hooks/immutability",
+        "line": 80,
+        "message": "Error: Cannot access variable before it is declared\n\n`fetchMasterItems` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/catalog/components/restaurant/OutletMenuEditor.tsx:80:7\n  78 |     if (brandId && selectedOutlet) {\n  79 |       fetchCategories();\n> 80 |       fetchMasterItems();\n     |       ^^^^^^^^^^^^^^^^ `fetchMasterItems` accessed before it is declared\n  81 |     }\n  82 |   }, [brandId, selectedOutlet]);\n  83 |\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/catalog/components/restaurant/OutletMenuEditor.tsx:119:3\n  117 |   };\n  118 |\n> 119 |   const fetchMasterItems = async () => {\n      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n> 120 |     if (!brandId || brandId === 'undefined') return;\n      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n> 121 |     try {\n      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n> 122 |       const response = await restaurantApi.catalog.get('/api/v1/brands/:brandId/master-menu', { params: { brandId } });\n      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n> 123 |       setMasterItems(response.data || []);\n      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n> 124 |     } catch (e) { console.error(e); }\n      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n> 125 |   };\n      | ^^^^^ `fetchMasterItems` is declared here\n  126 |\n  127 |   const fetchOverrides = async (targetOutlet: string) => {\n  128 |     if (!targetOutlet) return;"
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 82,
+        "message": "React Hook useEffect has missing dependencies: 'fetchCategories' and 'fetchMasterItems'. Either include them or remove the dependency array."
+      },
+      {
+        "ruleId": "@typescript-eslint/no-explicit-any",
+        "line": 348,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "ruleId": "@typescript-eslint/no-explicit-any",
+        "line": 362,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/catalog/components/restaurant/OutletRegistration.tsx",
+    "messages": [
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 90,
+        "message": "React Hook useEffect has missing dependencies: 'lat' and 'lng'. Either include them or remove the dependency array."
+      },
+      {
+        "ruleId": "@typescript-eslint/no-explicit-any",
+        "line": 349,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "ruleId": null,
+        "line": 372,
+        "message": "Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')."
+      },
+      {
+        "ruleId": null,
+        "line": 390,
+        "message": "Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')."
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/catalog/model/useRestaurants.ts",
+    "messages": [
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 21,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/catalog/model/useRestaurants.ts:21:7\n  19 |     \n  20 |     if (deliveryLat !== null && deliveryLng !== null) {\n> 21 |       setIsRestaurantsLoading(true);\n     |       ^^^^^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect\n  22 |       restaurantApi.restaurantOutlet.get('/api/v1/restaurants/nearby', { \n  23 |         queries: { lat: deliveryLat, lng: deliveryLng, radius: radiusKm },\n  24 |         signal: controller.signal "
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/communication/components/CallOverlay.tsx",
+    "messages": [
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 43,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/communication/components/CallOverlay.tsx:43:7\n  41 |   useEffect(() => {\n  42 |     if (callState === 'IDLE' && callEndReason === 'DECLINED') {\n> 43 |       setShowBusy(true);\n     |       ^^^^^^^^^^^ Avoid calling setState() directly within an effect\n  44 |       if (busyAudioRef.current) {\n  45 |         busyAudioRef.current.play().catch(e => console.error(\"Busy audio blocked\", e));\n  46 |       }"
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/communication/components/ChatInput.tsx",
+    "messages": [
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 27,
+        "message": "React Hook useCallback received a function whose dependencies are unknown. Pass an inline function instead."
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/communication/components/ChatWidget.tsx",
+    "messages": [
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 158,
+        "message": "React Hook useEffect has a missing dependency: 'otherParticipants'. Either include it or remove the dependency array."
+      },
+      {
+        "ruleId": "@typescript-eslint/no-explicit-any",
+        "line": 231,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/communication/models/useWebRTC.ts",
+    "messages": [
+      {
+        "ruleId": "react-hooks/immutability",
+        "line": 124,
+        "message": "Error: Cannot access variable before it is declared\n\n`handleIncomingSignal` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/communication/models/useWebRTC.ts:124:15\n  122 |         if (!message.body) return;\n  123 |         const signal: WebRtcSignal = JSON.parse(message.body);\n> 124 |         await handleIncomingSignal(signal);\n      |               ^^^^^^^^^^^^^^^^^^^^ `handleIncomingSignal` accessed before it is declared\n  125 |       });\n  126 |     };\n  127 |\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/communication/models/useWebRTC.ts:139:3\n  137 |\n  138 |   // Handle incoming STOMP messages\n> 139 |   const handleIncomingSignal = async (signal: WebRtcSignal) => {\n      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n> 140 |     if (!signal.senderId) return;\n      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n> 141 |     if (signal.senderId === user?.id) return; // Ignore signals from ourselves\n      …\n      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n> 211 |     }\n      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n> 212 |   };\n      | ^^^^^ `handleIncomingSignal` is declared here\n  213 |\n  214 |   // 2. Cleanup call if user logs out\n  215 |   useEffect(() => {"
+      },
+      {
+        "ruleId": "react-hooks/immutability",
+        "line": 209,
+        "message": "Error: Cannot access variable before it is declared\n\n`cleanupCall` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/communication/models/useWebRTC.ts:209:9\n  207 |            setCallEndReasonCallback('ENDED');\n  208 |         }\n> 209 |         cleanupCall();\n      |         ^^^^^^^^^^^ `cleanupCall` accessed before it is declared\n  210 |         break;\n  211 |     }\n  212 |   };\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/communication/models/useWebRTC.ts:540:3\n  538 |   };\n  539 |\n> 540 |   const cleanupCall = () => {\n      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n> 541 |     clearCallTimeout();\n      | ^^^^^^^^^^^^^^^^^^^^^^^\n> 542 |     \n      …\n      | ^^^^^^^^^^^^^^^^^^^^^^^\n> 568 |     // It gets properly initialized in startCall and handleIncomingSignal.\n      | ^^^^^^^^^^^^^^^^^^^^^^^\n> 569 |   };\n      | ^^^^^ `cleanupCall` is declared here\n  570 |   \n  571 |   const toggleMute = () => {\n  572 |     if (localStreamRef.current) {"
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 219,
+        "message": "React Hook useEffect has a missing dependency: 'cleanupCall'. Either include it or remove the dependency array."
+      },
+      {
+        "ruleId": "react-hooks/refs",
+        "line": 581,
+        "message": "Error: Cannot access refs during render\n\nReact refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/communication/models/useWebRTC.ts:581:10\n  579 |   };\n  580 |\n> 581 |   return {\n      |          ^\n> 582 |     callState,\n      | ^^^^^^^^^^^^^^\n> 583 |     callEndReason,\n      …\n> 591 |     endCall,\n      | ^^^^^^^^^^^^^^\n> 592 |     toggleMute\n      | ^^^^^^^^^^^^^^\n> 593 |   };\n      | ^^^^ Cannot access ref value during render\n  594 | };\n  595 |"
+      },
+      {
+        "ruleId": "react-hooks/refs",
+        "line": 584,
+        "message": "Error: Cannot access refs during render\n\nReact refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/communication/models/useWebRTC.ts:584:15\n  582 |     callState,\n  583 |     callEndReason,\n> 584 |     isCaller: isCallerRef.current,\n      |               ^^^^^^^^^^^^^^^^^^^ Cannot access ref value during render\n  585 |     callerId,\n  586 |     remoteUserId,\n  587 |     remoteStream,"
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/customer-orders/components/AddressSelectionModal.tsx",
+    "messages": [
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "line": 40,
+        "message": "'e' is defined but never used. Allowed unused caught errors must match /^_/u."
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/customer-orders/components/CustomerActiveOrdersCarousel.tsx",
+    "messages": [
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "line": 20,
+        "message": "'selectedRestaurantId' is defined but never used. Allowed unused args must match /^_/u."
+      },
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "line": 21,
+        "message": "'cartRestaurantId' is defined but never used. Allowed unused args must match /^_/u."
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/customer-orders/components/CustomerAddressModal.tsx",
+    "messages": [
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "line": 60,
+        "message": "'address' is defined but never used. Allowed unused args must match /^_/u."
+      },
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "line": 63,
+        "message": "'onAddApiLog' is defined but never used. Allowed unused args must match /^_/u."
+      },
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "line": 75,
+        "message": "'searchTimeoutRef' is assigned a value but never used. Allowed unused vars must match /^_/u."
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 270,
+        "message": "React Hook useEffect has missing dependencies: 'lat' and 'lng'. Either include them or remove the dependency array."
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/customer-orders/components/CustomerAddressPage.tsx",
+    "messages": [
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 185,
+        "message": "React Hook useEffect has missing dependencies: 'onAddApiLog' and 'setAddress'. Either include them or remove the dependency array. If 'onAddApiLog' changes too often, find the parent component that defines it and wrap that definition in useCallback."
+      },
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 189,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/customer-orders/components/CustomerAddressPage.tsx:189:7\n  187 |   useEffect(() => {\n  188 |     if (!addressSearchQuery || addressSearchQuery.length < 3) {\n> 189 |       setSuggestions([]);\n      |       ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect\n  190 |       return;\n  191 |     }\n  192 |     const timer = setTimeout(async () => {"
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 207,
+        "message": "React Hook useEffect has a missing dependency: 'onAddApiLog'. Either include it or remove the dependency array. If 'onAddApiLog' changes too often, find the parent component that defines it and wrap that definition in useCallback."
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/customer-orders/components/CustomerOrderHistory.tsx",
+    "messages": [
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 34,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/customer-orders/components/CustomerOrderHistory.tsx:34:7\n  32 |     \n  33 |     if (page > 0) {\n> 34 |       setIsFetchingPage(true);\n     |       ^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect\n  35 |     }\n  36 |\n  37 |     if (onAddApiLog) {"
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 65,
+        "message": "React Hook useEffect has a missing dependency: 'onAddApiLog'. Either include it or remove the dependency array. If 'onAddApiLog' changes too often, find the parent component that defines it and wrap that definition in useCallback."
+      },
+      {
+        "ruleId": "@typescript-eslint/no-explicit-any",
+        "line": 128,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/customer-orders/model/useCustomerCart.ts",
+    "messages": [
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 56,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/customer-orders/model/useCustomerCart.ts:56:9\n  54 |           }\n  55 |         }\n> 56 |         setGlobalCarts(validGlobalCarts);\n     |         ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect\n  57 |       } else {\n  58 |         // Migration logic from V1 to V2\n  59 |         const oldCarts = localStorage.getItem('food_delivery_carts');"
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 71,
+        "message": "React Hook useEffect has a missing dependency: 'locationKey'. Either include it or remove the dependency array. If 'setGlobalCarts' needs the current value of 'locationKey', you can also switch to useReducer instead of useState and read 'locationKey' in the reducer."
+      },
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 233,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/customer-orders/model/useCustomerCart.ts:233:7\n  231 |     // We only fetch quotes from the backend if we have a valid deliveryAddressId\n  232 |     if (!deliveryAddressId) {\n> 233 |       setQuotes({});\n      |       ^^^^^^^^^ Avoid calling setState() directly within an effect\n  234 |       return;\n  235 |     }\n  236 |"
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 276,
+        "message": "React Hook useEffect has a missing dependency: 'quotes'. Either include it or remove the dependency array."
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/delivery-tasks/components/RiderOnboardingWizard.tsx",
+    "messages": [
+      {
+        "ruleId": "react-hooks/immutability",
+        "line": 55,
+        "message": "Error: Cannot access variable before it is declared\n\n`loadStatus` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/delivery-tasks/components/RiderOnboardingWizard.tsx:55:5\n  53 |\n  54 |   useEffect(() => {\n> 55 |     loadStatus();\n     |     ^^^^^^^^^^ `loadStatus` accessed before it is declared\n  56 |   }, []);\n  57 |\n  58 |   const loadStatus = async () => {\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/delivery-tasks/components/RiderOnboardingWizard.tsx:58:3\n  56 |   }, []);\n  57 |\n> 58 |   const loadStatus = async () => {\n     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n> 59 |     try {\n     | ^^^^^^^^^\n> 60 |       const verRes = await deliveryApi.deliveryVerification.get(`/api/delivery/verification/status`, {});\n     …\n     | ^^^^^^^^^\n> 74 |     }\n     | ^^^^^^^^^\n> 75 |   };\n     | ^^^^^ `loadStatus` is declared here\n  76 |\n  77 |   const handleNext = () => {\n  78 |     setErrorMsg('');"
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 56,
+        "message": "React Hook useEffect has a missing dependency: 'loadStatus'. Either include it or remove the dependency array."
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/delivery-tasks/components/RiderSettingsView.tsx",
+    "messages": [
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "line": 32,
+        "message": "'theme' is defined but never used. Allowed unused args must match /^_/u."
+      },
+      {
+        "ruleId": "react-hooks/immutability",
+        "line": 91,
+        "message": "Error: This value cannot be modified\n\nModifying a variable defined outside a component or hook is not allowed. Consider using an effect.\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/delivery-tasks/components/RiderSettingsView.tsx:91:9\n  89 |       // @ts-expect-error auto-migration type suppression\n  90 |       if (e.status === 401) {\n> 91 |         window.location.href = '/';\n     |         ^^^^^^^^^^^^^^^ value cannot be modified\n  92 |       } else {\n  93 |         console.error(e);\n  94 |         showError('Failed to revoke session');"
+      },
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 143,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/delivery-tasks/components/RiderSettingsView.tsx:143:5\n  141 |\n  142 |     loadData();\n> 143 |     loadSessions();\n      |     ^^^^^^^^^^^^ Avoid calling setState() directly within an effect\n  144 |   }, [riderPhone]);\n  145 |\n  146 |   useEffect(() => {"
+      },
+      {
+        "ruleId": "react-hooks/immutability",
+        "line": 148,
+        "message": "Error: Cannot access variable before it is declared\n\n`loadWalletData` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/delivery-tasks/components/RiderSettingsView.tsx:148:7\n  146 |   useEffect(() => {\n  147 |     if (userId) {\n> 148 |       loadWalletData(txPage);\n      |       ^^^^^^^^^^^^^^ `loadWalletData` accessed before it is declared\n  149 |     }\n  150 |   }, [userId, txPage]);\n  151 |\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/delivery-tasks/components/RiderSettingsView.tsx:152:3\n  150 |   }, [userId, txPage]);\n  151 |\n> 152 |   const loadWalletData = async (page: number) => {\n      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n> 153 |     if (!userId) return;\n      | ^^^^^^^^^^^^^^^^^^^^^^^^\n> 154 |     setTxLoading(true);\n      …\n      | ^^^^^^^^^^^^^^^^^^^^^^^^\n> 169 |     }\n      | ^^^^^^^^^^^^^^^^^^^^^^^^\n> 170 |   };\n      | ^^^^^ `loadWalletData` is declared here\n  171 |\n  172 |   const saveProfile = async (e: React.FormEvent) => {\n  173 |     e.preventDefault();"
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 150,
+        "message": "React Hook useEffect has a missing dependency: 'loadWalletData'. Either include it or remove the dependency array."
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/delivery-tasks/model/useDeliveryOrders.ts",
+    "messages": [
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 149,
+        "message": "React Hook useEffect has a missing dependency: 'todayDateString'. Either include it or remove the dependency array."
+      },
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 156,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/delivery-tasks/model/useDeliveryOrders.ts:156:9\n  154 |       const jobs = activeOrders.filter(o => !o.riderId && !rejectedIds.has(o.id));\n  155 |       if (jobs.length > 0) {\n> 156 |         setPingJob(jobs[0]);\n      |         ^^^^^^^^^^ Avoid calling setState() directly within an effect\n  157 |         if ((jobs[0]).remainingPingSeconds !== undefined) {\n  158 |           setPingTimer((jobs[0]).remainingPingSeconds);\n  159 |         } else if ((jobs[0]).expiresAt) {"
+      },
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 181,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/delivery-tasks/model/useDeliveryOrders.ts:181:9\n  179 |       const ongoingJob = activeOrders.find(o => (o.riderId === riderId || !!o.riderId) && o.deliveryStatus !== DeliveryStatus.DELIVERED && o.status !== OrderStatus.CANCELLED && o.status !== OrderStatus.CANCELLED_BY_RESTAURANT && o.deliveryStatus !== DeliveryStatus.FAILED);\n  180 |       if (ongoingJob) {\n> 181 |         setActiveJobId(ongoingJob.id);\n      |         ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect\n  182 |       }\n  183 |     } else {\n  184 |       const currentJob = activeOrders.find(o => o.id === activeJobId);"
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 194,
+        "message": "React Hook useEffect has a missing dependency: 'showToast'. Either include it or remove the dependency array. If 'showToast' changes too often, find the parent component that defines it and wrap that definition in useCallback."
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 352,
+        "message": "React Hook useEffect has missing dependencies: 'setIsOnline' and 'setShowPermissionsPrompt'. Either include them or remove the dependency array. If 'setIsOnline' changes too often, find the parent component that defines it and wrap that definition in useCallback."
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 361,
+        "message": "React Hook useEffect has missing dependencies: 'currentJob' and 'onAddApiLog'. Either include them or remove the dependency array. If 'onAddApiLog' changes too often, find the parent component that defines it and wrap that definition in useCallback."
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 409,
+        "message": "React Hook useEffect has missing dependencies: 'currentJob.deliveryStatus', 'onUpdateOrderStatus', and 'showToast'. Either include them or remove the dependency array. If 'showToast' changes too often, find the parent component that defines it and wrap that definition in useCallback."
+      },
+      {
+        "ruleId": "react-hooks/refs",
+        "line": 414,
+        "message": "Error: Cannot access refs during render\n\nReact refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/delivery-tasks/model/useDeliveryOrders.ts:414:3\n  412 |   const availableJobs = activeOrders.filter(o => (o.status === OrderStatus.READY_FOR_PICKUP || o.status === OrderStatus.PREPARING || o.status === OrderStatus.ACCEPTED) && !o.riderId);\n  413 |   const allHistoryJobsMap = new Map();\n> 414 |   [...historyRef.current, ...activeOrders.filter(o => o.riderId === riderId && [DeliveryStatus.DELIVERED, DeliveryStatus.FAILED, DeliveryStatus.CANCELLED].includes(o.deliveryStatus as DeliveryStatus))]\n      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Passing a ref to a function may read its value during render\n  415 |     .forEach(job => allHistoryJobsMap.set(job.id, { ...job, payout: job.payout || 0 }));\n  416 |   const allHistoryJobs = Array.from(allHistoryJobsMap.values());\n  417 |   const todayHistoryJobs = allHistoryJobs.filter(job => job.createdAt?.startsWith(todayDateString));"
+      },
+      {
+        "ruleId": "react-hooks/refs",
+        "line": 414,
+        "message": "Error: Cannot access refs during render\n\nReact refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/delivery-tasks/model/useDeliveryOrders.ts:414:3\n  412 |   const availableJobs = activeOrders.filter(o => (o.status === OrderStatus.READY_FOR_PICKUP || o.status === OrderStatus.PREPARING || o.status === OrderStatus.ACCEPTED) && !o.riderId);\n  413 |   const allHistoryJobsMap = new Map();\n> 414 |   [...historyRef.current, ...activeOrders.filter(o => o.riderId === riderId && [DeliveryStatus.DELIVERED, DeliveryStatus.FAILED, DeliveryStatus.CANCELLED].includes(o.deliveryStatus as DeliveryStatus))]\n      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n> 415 |     .forEach(job => allHistoryJobsMap.set(job.id, { ...job, payout: job.payout || 0 }));\n      | ^^^^^^^^^^^^^ Passing a ref to a function may read its value during render\n  416 |   const allHistoryJobs = Array.from(allHistoryJobsMap.values());\n  417 |   const todayHistoryJobs = allHistoryJobs.filter(job => job.createdAt?.startsWith(todayDateString));\n  418 |   const todayEarnings = todayHistoryJobs.reduce((acc, job) => acc + (job.payout || 0), 0);"
+      },
+      {
+        "ruleId": "react-hooks/refs",
+        "line": 414,
+        "message": "Error: Cannot access refs during render\n\nReact refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/delivery-tasks/model/useDeliveryOrders.ts:414:7\n  412 |   const availableJobs = activeOrders.filter(o => (o.status === OrderStatus.READY_FOR_PICKUP || o.status === OrderStatus.PREPARING || o.status === OrderStatus.ACCEPTED) && !o.riderId);\n  413 |   const allHistoryJobsMap = new Map();\n> 414 |   [...historyRef.current, ...activeOrders.filter(o => o.riderId === riderId && [DeliveryStatus.DELIVERED, DeliveryStatus.FAILED, DeliveryStatus.CANCELLED].includes(o.deliveryStatus as DeliveryStatus))]\n      |       ^^^^^^^^^^^^^^^^^^ Cannot access ref value during render\n  415 |     .forEach(job => allHistoryJobsMap.set(job.id, { ...job, payout: job.payout || 0 }));\n  416 |   const allHistoryJobs = Array.from(allHistoryJobsMap.values());\n  417 |   const todayHistoryJobs = allHistoryJobs.filter(job => job.createdAt?.startsWith(todayDateString));"
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/identity/components/LoginScreen.tsx",
+    "messages": [
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 93,
+        "message": "React Hook useEffect has a missing dependency: 'foodImages.length'. Either include it or remove the dependency array."
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/identity/components/SessionManagementModal.tsx",
+    "messages": [
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "line": 92,
+        "message": "'idx' is defined but never used. Allowed unused args must match /^_/u."
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/ledger/components/AdminLedgerView.tsx",
+    "messages": [
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 49,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/ledger/components/AdminLedgerView.tsx:49:5\n  47 |\n  48 |   useEffect(() => {\n> 49 |     fetchEntries();\n     |     ^^^^^^^^^^^^ Avoid calling setState() directly within an effect\n  50 |   }, [page]); // Re-fetch when page changes\n  51 |\n  52 |   const handleFilter = (e: React.FormEvent) => {"
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 50,
+        "message": "React Hook useEffect has a missing dependency: 'fetchEntries'. Either include it or remove the dependency array."
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/ledger/components/AdminPayoutsView.tsx",
+    "messages": [
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 30,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/ledger/components/AdminPayoutsView.tsx:30:5\n  28 |\n  29 |   useEffect(() => {\n> 30 |     fetchPayouts();\n     |     ^^^^^^^^^^^^ Avoid calling setState() directly within an effect\n  31 |   }, []);\n  32 |\n  33 |   const handleSettle = async (ownerId: string, ownerType: string, amount: number) => {"
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 31,
+        "message": "React Hook useEffect has a missing dependency: 'fetchPayouts'. Either include it or remove the dependency array."
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/maps-tracking/components/AdminAssignmentMap.tsx",
+    "messages": [
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "line": 43,
+        "message": "'mapInstance' is assigned a value but never used. Allowed unused vars must match /^_/u."
+      },
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "line": 84,
+        "message": "'resourceType' is defined but never used. Allowed unused args must match /^_/u."
+      },
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "line": 129,
+        "message": "'marker' is assigned a value but never used. Allowed unused vars must match /^_/u."
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 155,
+        "message": "React Hook useEffect has missing dependencies: 'onAssign' and 'order.restaurantName'. Either include them or remove the dependency array. If 'onAssign' changes too often, find the parent component that defines it and wrap that definition in useCallback."
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/maps-tracking/components/OrderTrackingMap.tsx",
+    "messages": [
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "line": 31,
+        "message": "'mapInstance' is assigned a value but never used. Allowed unused vars must match /^_/u."
+      },
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "line": 90,
+        "message": "'resourceType' is defined but never used. Allowed unused args must match /^_/u."
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 325,
+        "message": "React Hook useEffect has missing dependencies: 'enableLiveTracking', 'order.deliveryLat', 'order.deliveryLng', 'order.deliveryStatus', 'order.riderId', 'order.status', and 'showError'. Either include them or remove the dependency array."
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/payments-wallet/components/CustomerPaymentModal.tsx",
+    "messages": [
+      {
+        "ruleId": "@typescript-eslint/no-explicit-any",
+        "line": 66,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/restaurant-orders/components/OrderHistory.tsx",
+    "messages": [
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "line": 17,
+        "message": "'showSuccess' is assigned a value but never used. Allowed unused vars must match /^_/u."
+      },
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "line": 17,
+        "message": "'showError' is assigned a value but never used. Allowed unused vars must match /^_/u."
+      },
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "line": 31,
+        "message": "'RawOrderItem' is defined but never used. Allowed unused vars must match /^_/u."
+      },
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "line": 98,
+        "message": "'getStatusColor' is assigned a value but never used. Allowed unused vars must match /^_/u."
+      },
+      {
+        "ruleId": "@typescript-eslint/no-explicit-any",
+        "line": 197,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "ruleId": "react-hooks/purity",
+        "line": 228,
+        "message": "Error: Cannot call impure function during render\n\n`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/restaurant-orders/components/OrderHistory.tsx:228:60\n  226 |                         \n  227 |                         {/* Restaurant's OrderHistory gives a 4 hour window from HANDED_OVER to account for delivery time */}\n> 228 |                         {onOpenChat && order.updatedAt && (Date.now() - new Date(order.updatedAt).getTime() < 4 * 60 * 60 * 1000) && (\n      |                                                            ^^^^^^^^^^ Cannot call impure function\n  229 |                           <button\n  230 |                             onClick={() => onOpenChat(order.id)}\n  231 |                             className=\"text-xs font-bold text-blue-500 hover:text-blue-600 underline text-left\""
+      },
+      {
+        "ruleId": null,
+        "line": 260,
+        "message": "Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')."
+      },
+      {
+        "ruleId": null,
+        "line": 262,
+        "message": "Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')."
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/restaurant-orders/components/RestaurantOrderCard.tsx",
+    "messages": [
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 79,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/restaurant-orders/components/RestaurantOrderCard.tsx:79:5\n  77 |   \n  78 |   React.useEffect(() => {\n> 79 |     setIsSubmitting(false);\n     |     ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect\n  80 |   }, [order.status]);\n  81 |\n  82 |   "
+      },
+      {
+        "ruleId": "@typescript-eslint/no-explicit-any",
+        "line": 195,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/restaurant-orders/components/RestaurantOrderDetailsModal.tsx",
+    "messages": [
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 22,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/restaurant-orders/components/RestaurantOrderDetailsModal.tsx:22:7\n  20 |   useEffect(() => {\n  21 |     if (isOpen && order) {\n> 22 |       setLoading(true);\n     |       ^^^^^^^^^^ Avoid calling setState() directly within an effect\n  23 |       setError(null);\n  24 |       // Fetch transparent invoice details\n  25 |       restaurantApi.fulfillment.get('/api/v1/restaurants/:restaurantId/fulfillment/orders/:orderId/invoice', { params: { restaurantId: order.restaurantId, orderId: order.id } })"
+      },
+      {
+        "ruleId": "@typescript-eslint/no-explicit-any",
+        "line": 103,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/restaurant-orders/components/RestaurantOrderQueue.tsx",
+    "messages": [
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "line": 15,
+        "message": "'getFriendlyDeliveryStatusMessage' is assigned a value but never used. Allowed unused vars must match /^_/u."
+      },
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "line": 47,
+        "message": "'totalRevenue' is defined but never used. Allowed unused args must match /^_/u."
+      },
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "line": 48,
+        "message": "'completedOrders' is defined but never used. Allowed unused args must match /^_/u."
+      }
+    ]
+  },
+  {
+    "filePath": "src/features/restaurant-orders/model/useRestaurantOrders.ts",
+    "messages": [
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "line": 101,
+        "message": "'oldOrder' is assigned a value but never used. Allowed unused vars must match /^_/u."
+      }
+    ]
+  },
+  {
+    "filePath": "src/lib/parseApiError.ts",
+    "messages": [
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "line": 7,
+        "message": "'apiErrorSchema' is assigned a value but never used. Allowed unused vars must match /^_/u."
+      },
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "line": 41,
+        "message": "'e' is defined but never used. Allowed unused caught errors must match /^_/u."
+      }
+    ]
+  },
+  {
+    "filePath": "src/lib/tokenStore.ts",
+    "messages": [
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "line": 87,
+        "message": "'e' is defined but never used. Allowed unused caught errors must match /^_/u."
+      }
+    ]
+  },
+  {
+    "filePath": "src/pages/customer/CustomerDashboard.tsx",
+    "messages": [
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "line": 57,
+        "message": "'userPhone' is defined but never used. Allowed unused args must match /^_/u."
+      },
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 96,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/pages/customer/CustomerDashboard.tsx:96:9\n  94 |       const updated = restaurants.find(r => r.id === selectedRestaurant.id);\n  95 |       if (updated) {\n> 96 |         setSelectedRestaurant(updated);\n     |         ^^^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect\n  97 |       }\n  98 |     }\n  99 |   }, [restaurants]);"
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 99,
+        "message": "React Hook useEffect has a missing dependency: 'selectedRestaurant'. Either include it or remove the dependency array."
+      },
+      {
+        "ruleId": "react-hooks/immutability",
+        "line": 119,
+        "message": "Error: Cannot access variable before it is declared\n\n`setSavedAddresses` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/pages/customer/CustomerDashboard.tsx:119:11\n  117 |         const res = asUntyped<{ data?: unknown[] }>(addrRes);\n  118 |         if (res.data) {\n> 119 |           setSavedAddresses(res.data);\n      |           ^^^^^^^^^^^^^^^^^ `setSavedAddresses` accessed before it is declared\n  120 |         }\n  121 |       })\n  122 |       .catch((err: unknown) => console.error(err));\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/pages/customer/CustomerDashboard.tsx:159:26\n  157 |     localStorage.setItem('deliveryAddressId', deliveryAddressId);\n  158 |   }, [address, deliveryLat, deliveryLng, deliveryAddressId]);\n> 159 |   const [savedAddresses, setSavedAddresses] = useState<unknown[]>([]);\n      |                          ^^^^^^^^^^^^^^^^^ `setSavedAddresses` is declared here\n  160 |   const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);\n  161 |   const [orderSuccessToast, setOrderSuccessToast] = useState<Order | null>(null);\n  162 |"
+      },
+      {
+        "ruleId": "react-hooks/immutability",
+        "line": 143,
+        "message": "Error: Cannot access variable before it is declared\n\n`setIsAddressSelectorOpen` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/pages/customer/CustomerDashboard.tsx:143:9\n  141 |         localStorage.removeItem('deliveryLat');\n  142 |         localStorage.removeItem('deliveryLng');\n> 143 |         setIsAddressSelectorOpen(true);\n      |         ^^^^^^^^^^^^^^^^^^^^^^^^ `setIsAddressSelectorOpen` accessed before it is declared\n  144 |       }\n  145 |     } catch (error: unknown) {\n  146 |       console.error(error);\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/pages/customer/CustomerDashboard.tsx:351:33\n  349 |\n  350 |   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);\n> 351 |   const [isAddressSelectorOpen, setIsAddressSelectorOpen] = useState(() => !localStorage.getItem('deliveryLat'));\n      |                                 ^^^^^^^^^^^^^^^^^^^^^^^^ `setIsAddressSelectorOpen` is declared here\n  352 |   const [isOutletSelectorOpen, setIsOutletSelectorOpen] = useState(false);\n  353 |   const [view, setView] = useState<'home' | 'settings'>('home');\n  354 |   const [settingsTab, setSettingsTab] = useState<'profile' | 'history' | 'addresses'>('profile');"
+      },
+      {
+        "ruleId": "react-hooks/immutability",
+        "line": 176,
+        "message": "Error: Cannot access variable before it is declared\n\n`setEditName` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/pages/customer/CustomerDashboard.tsx:176:23\n  174 |         if (profileRes.data) {\n  175 |           const p = profileRes.data;\n> 176 |           if (p.name) setEditName(p.name);\n      |                       ^^^^^^^^^^^ `setEditName` accessed before it is declared\n  177 |           if (p.email) setEditEmail(p.email);\n  178 |           if (!p.name || !p.email || p.name.trim() === '' || p.email.trim() === '') {\n  179 |             setShowProfileModal(true);\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/pages/customer/CustomerDashboard.tsx:356:12\n  354 |   const [settingsTab, setSettingsTab] = useState<'profile' | 'history' | 'addresses'>('profile');\n  355 |\n> 356 |   const [, setEditName] = useState(userName);\n      |            ^^^^^^^^^^^ `setEditName` is declared here\n  357 |   const [, setEditEmail] = useState('');\n  358 |   const [addressSearchQuery, setAddressSearchQuery] = useState('');\n  359 |   "
+      },
+      {
+        "ruleId": "react-hooks/immutability",
+        "line": 177,
+        "message": "Error: Cannot access variable before it is declared\n\n`setEditEmail` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/pages/customer/CustomerDashboard.tsx:177:24\n  175 |           const p = profileRes.data;\n  176 |           if (p.name) setEditName(p.name);\n> 177 |           if (p.email) setEditEmail(p.email);\n      |                        ^^^^^^^^^^^^ `setEditEmail` accessed before it is declared\n  178 |           if (!p.name || !p.email || p.name.trim() === '' || p.email.trim() === '') {\n  179 |             setShowProfileModal(true);\n  180 |           }\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/pages/customer/CustomerDashboard.tsx:357:12\n  355 |\n  356 |   const [, setEditName] = useState(userName);\n> 357 |   const [, setEditEmail] = useState('');\n      |            ^^^^^^^^^^^^ `setEditEmail` is declared here\n  358 |   const [addressSearchQuery, setAddressSearchQuery] = useState('');\n  359 |   \n  360 |"
+      },
+      {
+        "ruleId": "react-hooks/immutability",
+        "line": 179,
+        "message": "Error: Cannot access variable before it is declared\n\n`setShowProfileModal` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/pages/customer/CustomerDashboard.tsx:179:13\n  177 |           if (p.email) setEditEmail(p.email);\n  178 |           if (!p.name || !p.email || p.name.trim() === '' || p.email.trim() === '') {\n> 179 |             setShowProfileModal(true);\n      |             ^^^^^^^^^^^^^^^^^^^ `setShowProfileModal` accessed before it is declared\n  180 |           }\n  181 |         }\n  182 |         \n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/pages/customer/CustomerDashboard.tsx:348:28\n  346 |     }\n  347 |   }, []);\n> 348 |   const [showProfileModal, setShowProfileModal] = useState(false);\n      |                            ^^^^^^^^^^^^^^^^^^^ `setShowProfileModal` is declared here\n  349 |\n  350 |   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);\n  351 |   const [isAddressSelectorOpen, setIsAddressSelectorOpen] = useState(() => !localStorage.getItem('deliveryLat'));"
+      },
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 212,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/pages/customer/CustomerDashboard.tsx:212:7\n  210 |     let ignore = false;\n  211 |     if (selectedRestaurant) {\n> 212 |       setIsMenuLoading(true);\n      |       ^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect\n  213 |       getEffectiveMenu(selectedRestaurant.id).then(menu => {\n  214 |         if (!ignore) {\n  215 |           setEffectiveMenu(menu);"
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 226,
+        "message": "React Hook useEffect has a missing dependency: 'selectedRestaurant'. Either include it or remove the dependency array."
+      },
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 237,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/pages/customer/CustomerDashboard.tsx:237:7\n  235 |         .catch(console.error);\n  236 |     } else {\n> 237 |       setBrandOutlets([]);\n      |       ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect\n  238 |     }\n  239 |     return () => { ignore = true; };\n  240 |   }, [selectedRestaurant?.brandId, deliveryLat, deliveryLng]); // Only refetch outlets when brand changes"
+      },
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 324,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/pages/customer/CustomerDashboard.tsx:324:7\n  322 |     let ignore = false;\n  323 |     if (selectedRestaurant) {\n> 324 |       setIsDeliveryAvailable(null);\n      |       ^^^^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect\n  325 |       customerApi.customerRestaurant.get('/api/v1/restaurants/:id/delivery-availability', { params: { id: selectedRestaurant.id } })\n  326 |         .then(res => {\n  327 |           if (!ignore && typeof res === 'boolean') {"
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 340,
+        "message": "React Hook useEffect has a missing dependency: 'selectedRestaurant'. Either include it or remove the dependency array."
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 347,
+        "message": "React Hook useEffect has a missing dependency: 'onAddApiLog'. Either include it or remove the dependency array. If 'onAddApiLog' changes too often, find the parent component that defines it and wrap that definition in useCallback."
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 373,
+        "message": "React Hook useEffect has missing dependencies: 'currentTrackingOrder' and 'onAddApiLog'. Either include them or remove the dependency array. If 'onAddApiLog' changes too often, find the parent component that defines it and wrap that definition in useCallback."
+      },
+      {
+        "ruleId": "react-hooks/purity",
+        "line": 815,
+        "message": "Error: Cannot call impure function during render\n\n`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/pages/customer/CustomerDashboard.tsx:815:23\n  813 |         if (isCompleted && currentTrackingOrder.updatedAt) {\n  814 |           const updatedTime = new Date(currentTrackingOrder.updatedAt).getTime();\n> 815 |           showChat = (Date.now() - updatedTime) < (2 * 60 * 60 * 1000);\n      |                       ^^^^^^^^^^ Cannot call impure function\n  816 |         }\n  817 |         return showChat ? (\n  818 |           <ChatWidget "
+      }
+    ]
+  },
+  {
+    "filePath": "src/pages/delivery/DeliveryDashboard.tsx",
+    "messages": [
+      {
+        "ruleId": "no-useless-assignment",
+        "line": 113,
+        "message": "The value assigned to 'pingTimer' is not used in subsequent statements."
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 188,
+        "message": "React Hook useEffect has a missing dependency: 'riderName'. Either include it or remove the dependency array."
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 555,
+        "message": "React Hook useEffect has missing dependencies: 'currentJob.deliveryStatus' and 'isWaitTimerActive'. Either include them or remove the dependency array."
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 572,
+        "message": "React Hook useEffect has a missing dependency: 'currentJob?.deliveryStatus'. Either include it or remove the dependency array."
+      }
+    ]
+  },
+  {
+    "filePath": "src/pages/restaurant/RestaurantDashboard.tsx",
+    "messages": [
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 120,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/pages/restaurant/RestaurantDashboard.tsx:120:23\n  118 |\n  119 |   useEffect(() => {\n> 120 |     if (localProfile) setEditPhone(localProfile.phoneNumber || '');\n      |                       ^^^^^^^^^^^^ Avoid calling setState() directly within an effect\n  121 |   }, [localProfile]);\n  122 |\n  123 |   useEffect(() => {"
+      },
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 125,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/pages/restaurant/RestaurantDashboard.tsx:125:32\n  123 |   useEffect(() => {\n  124 |     if (fetchedProfile) {\n> 125 |       if (fetchedProfile.name) setEditName(fetchedProfile.name);\n      |                                ^^^^^^^^^^^ Avoid calling setState() directly within an effect\n  126 |       if (fetchedProfile.email) setEditEmail(fetchedProfile.email);\n  127 |     }\n  128 |     if (isProfileIncomplete) setShowCompleteProfileModal(true);"
+      },
+      {
+        "ruleId": "react-hooks/immutability",
+        "line": 155,
+        "message": "Error: Cannot access variable before it is declared\n\n`setIsAcceptingOrders` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/pages/restaurant/RestaurantDashboard.tsx:155:7\n  153 |         newAcceptingState[outlet.id] = outlet.isActive !== false;\n  154 |       });\n> 155 |       setIsAcceptingOrders(newAcceptingState);\n      |       ^^^^^^^^^^^^^^^^^^^^ `setIsAcceptingOrders` accessed before it is declared\n  156 |\n  157 |       if (_outlets.length === 0) {\n  158 |         if (selectedOutletId) {\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/pages/restaurant/RestaurantDashboard.tsx:264:29\n  262 |\n  263 |   const [stockStatus, setStockStatus] = useState<Record<string, boolean>>({});\n> 264 |   const [isAcceptingOrders, setIsAcceptingOrders] = useState<Record<string, boolean>>({});\n      |                             ^^^^^^^^^^^^^^^^^^^^ `setIsAcceptingOrders` is declared here\n  265 |   const hasOutlets = outlets.length > 0;\n  266 |   const isCurrentOutletAcceptingOrders = hasOutlets && (isAcceptingOrders[selectedOutletId] ?? true);\n  267 |"
+      },
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 260,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/pages/restaurant/RestaurantDashboard.tsx:260:5\n  258 |\n  259 |   useEffect(() => {\n> 260 |     loadData();\n      |     ^^^^^^^^ Avoid calling setState() directly within an effect\n  261 |   }, [selectedOutletId]);\n  262 |\n  263 |   const [stockStatus, setStockStatus] = useState<Record<string, boolean>>({});"
+      },
+      {
+        "ruleId": "react-hooks/exhaustive-deps",
+        "line": 261,
+        "message": "React Hook useEffect has a missing dependency: 'loadData'. Either include it or remove the dependency array."
+      }
+    ]
+  },
+  {
+    "filePath": "src/pages/restaurant/RestaurantPortal.tsx",
+    "messages": [
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 44,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/pages/restaurant/RestaurantPortal.tsx:44:5\n  42 |\n  43 |   useEffect(() => {\n> 44 |     fetchState();\n     |     ^^^^^^^^^^ Avoid calling setState() directly within an effect\n  45 |   }, []);\n  46 |\n  47 |   const renderRegistrationHeader = () => ("
+      }
+    ]
+  },
+  {
+    "filePath": "src/pages/restaurant/RestaurantSettingsShell.tsx",
+    "messages": [
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 67,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/pages/restaurant/RestaurantSettingsShell.tsx:67:7\n  65 |   React.useEffect(() => {\n  66 |     if (outlets.length === 0) {\n> 67 |       setSettingsTab(\"outlets\");\n     |       ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect\n  68 |     }\n  69 |   }, [outlets.length]);\n  70 |"
+      }
+    ]
+  },
+  {
+    "filePath": "src/schemas/restaurant.ts",
+    "messages": [
+      {
+        "ruleId": null,
+        "line": 17,
+        "message": "Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')."
+      }
+    ]
+  },
+  {
+    "filePath": "src/shared/ui/PaymentModal.tsx",
+    "messages": [
+      {
+        "ruleId": "@typescript-eslint/no-explicit-any",
+        "line": 143,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "ruleId": "@typescript-eslint/no-explicit-any",
+        "line": 143,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "filePath": "src/shared/ui/RefundModal.tsx",
+    "messages": [
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "line": 21,
+        "message": "'orderId' is defined but never used. Allowed unused args must match /^_/u."
+      },
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 39,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/shared/ui/RefundModal.tsx:39:7\n  37 |   useEffect(() => {\n  38 |     if (!isOpen) {\n> 39 |       setLocalTimeoutError(null);\n     |       ^^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect\n  40 |       setRefundType(null);\n  41 |       setSelectedItems({});\n  42 |       setReason('');"
+      },
+      {
+        "ruleId": "react-hooks/set-state-in-effect",
+        "line": 59,
+        "message": "Error: Calling setState synchronously within an effect can trigger cascading renders\n\nEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:\n* Update external systems with the latest state from React.\n* Subscribe for updates from some external system, calling setState in a callback function when external state changes.\n\nCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).\n\n/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/shared/ui/RefundModal.tsx:59:7\n  57 |       }, 15000); // 15 seconds timeout\n  58 |     } else {\n> 59 |       setLocalTimeoutError(null);\n     |       ^^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect\n  60 |     }\n  61 |     return () => clearTimeout(timer);\n  62 |   }, [isSubmitting]);"
+      },
+      {
+        "ruleId": "@typescript-eslint/no-explicit-any",
+        "line": 201,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "filePath": "src/shared/ui/SharedSettingsView.tsx",
+    "messages": [
+      {
+        "ruleId": "@typescript-eslint/no-unused-vars",
+        "line": 46,
+        "message": "'theme' is defined but never used. Allowed unused args must match /^_/u."
+      }
+    ]
+  },
+  {
+    "filePath": "src/types/backend-enums.ts",
+    "messages": [
+      {
+        "ruleId": null,
+        "line": 2,
+        "message": "Unused eslint-disable directive (no problems were reported)."
+      }
+    ]
+  }
+]

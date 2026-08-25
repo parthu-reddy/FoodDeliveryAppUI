@@ -100,6 +100,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/internal/admin/payments/dlq/outbox/{eventId}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["retryOutboxDlqEvent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/payments/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPaymentStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/internal/admin/payments/dlq/outbox": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getOutboxDlqEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -120,6 +168,63 @@ export interface components {
             data?: string;
             /** Format: date-time */
             timestamp?: string;
+        };
+        OutboxEventEntity: {
+            /** Format: uuid */
+            id?: string;
+            /** @enum {string} */
+            aggregateType?: "ORDER" | "PAYMENT" | "NOTIFICATION" | "OUTLET" | "BRAND" | "LEDGER" | "ADVERTISEMENT" | "WALLET" | "CHAT_SESSION" | "REVIEW";
+            aggregateId?: string;
+            /** @enum {string} */
+            eventType?: "ORDER_CREATED" | "ORDER_PAID" | "ORDER_ACCEPTED" | "ORDER_PREPARING" | "ORDER_READY" | "ORDER_DELIVERED" | "ORDER_REJECTED" | "ORDER_AT_RESTAURANT" | "ORDER_STATUS_UPDATED" | "ORDER_STATUS_SYNC" | "ORDER_CANCELLED" | "ORDER_CANCELLED_BY_RESTAURANT" | "ORDER_CANCELLED_BY_CUSTOMER" | "ORDER_CANCELLED_BY_ADMIN" | "ORDER_DELAY_APPROVAL_REQUESTED" | "ORDER_DELAY_APPROVED" | "ORDER_DELAY_REJECTED" | "DISPATCH_CANDIDATE_FOUND" | "DISPATCH_FAILED" | "DRIVER_ASSIGNED" | "ORDER_DRIVER_REJECTED" | "MANUAL_INTERVENTION_REQUIRED" | "FORCE_ASSIGN_DRIVER" | "DELIVERY_FAILED" | "NOTIFICATION_REQUEST" | "NOTIFICATION_DISPATCH" | "PAYMENT_WEBHOOK" | "PAYMENT_COMPLETED" | "PAYMENT_FAILED" | "PAYMENT_REFUNDED" | "PAYMENT_REFUND_REQUESTED" | "PAYMENT_PARTIALLY_REFUNDED" | "ORDER_PARTIALLY_REFUNDED" | "LEDGER_TRANSACTION_REQUEST" | "LEDGER_TRANSACTION_FAILED" | "LEDGER_REVERSAL_REQUEST" | "LEDGER_BULK_TRANSACTION_REQUEST" | "OUTLET_ACTIVATED" | "MENU_UPDATED" | "OUTLET_DEACTIVATED" | "BRAND_CREATED" | "AD_CAMPAIGN_CREATED" | "AD_CAMPAIGN_UPDATED" | "AD_CAMPAIGN_PAUSED" | "AD_CAMPAIGN_RESUMED" | "AD_CAMPAIGN_COMPLETED" | "AD_CAMPAIGN_DELETED" | "AD_CREATIVE_PENDING" | "AD_CREATIVE_APPROVED" | "AD_CREATIVE_REJECTED" | "AD_CAMPAIGN_BUDGET_EXHAUSTED" | "AD_CAMPAIGN_PACING_UPDATED" | "AD_IMPRESSION_BILLED" | "AD_CLICK_BILLED" | "AD_CONVERSION_BILLED" | "AD_WALLET_TOPUP_REQUEST" | "AD_WALLET_TOPUP_COMPLETED" | "AD_BUDGET_ALERT" | "REFUND_GENERATED" | "REVERSAL_GENERATED" | "EARNINGS_GENERATED" | "PAYOUT_GENERATED" | "CHAT_REFUND_QUOTE_REQUESTED" | "CHAT_REFUND_REQUESTED" | "CHAT_REFUND_QUOTE_RESPONSE" | "CHAT_REFUND_DECISION" | "CHAT_REFUND_ERROR" | "REVIEW_CREATED";
+            idempotencyKey?: string;
+            payload?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** @enum {string} */
+            status?: "UNPROCESSED" | "PROCESSED" | "FAILED" | "DLQ";
+            /** Format: date-time */
+            processedAt?: string;
+            errorMessage?: string;
+            /** Format: int32 */
+            retryCount?: number;
+            new?: boolean;
+        };
+        PageOutboxEventEntity: {
+            /** Format: int32 */
+            totalPages?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
+            first?: boolean;
+            last?: boolean;
+            sort?: components["schemas"]["SortObject"][];
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            size?: number;
+            content?: components["schemas"]["OutboxEventEntity"][];
+            /** Format: int32 */
+            number?: number;
+            empty?: boolean;
+        };
+        PageableObject: {
+            unpaged?: boolean;
+            sort?: components["schemas"]["SortObject"][];
+            paged?: boolean;
+            /** Format: int32 */
+            pageNumber?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            /** Format: int64 */
+            offset?: number;
+        };
+        SortObject: {
+            direction?: string;
+            nullHandling?: string;
+            ascending?: boolean;
+            property?: string;
+            ignoreCase?: boolean;
         };
     };
     responses: never;
@@ -257,7 +362,9 @@ export interface operations {
             query?: {
                 topic?: string;
             };
-            header?: never;
+            header?: {
+                eventId?: string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -276,6 +383,75 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiResponseString"];
+                };
+            };
+        };
+    };
+    retryOutboxDlqEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseString"];
+                };
+            };
+        };
+    };
+    getPaymentStatus: {
+        parameters: {
+            query: {
+                orderId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: Record<string, never>;
+                    };
+                };
+            };
+        };
+    };
+    getOutboxDlqEvents: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageOutboxEventEntity"];
                 };
             };
         };

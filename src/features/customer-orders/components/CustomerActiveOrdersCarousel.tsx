@@ -3,6 +3,7 @@ import { getFriendlyStatusMessage } from '@features/customer-orders/model/status
 
 interface CustomerActiveOrdersCarouselProps {
   activeOrders: Order[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   isActiveOrder: (order: any) => boolean;
   trackingOrder: Order | null;
   cartLength: number;
@@ -16,8 +17,8 @@ export default function CustomerActiveOrdersCarousel({
   isActiveOrder,
   trackingOrder,
   cartLength,
-  selectedRestaurantId,
-  cartRestaurantId,
+  _selectedRestaurantId,
+  _cartRestaurantId,
   setTrackingOrder
 }: CustomerActiveOrdersCarouselProps) {
   if (activeOrders.filter(o => isActiveOrder(o)).length === 0 || trackingOrder) {

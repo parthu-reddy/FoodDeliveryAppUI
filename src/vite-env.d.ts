@@ -12,6 +12,6 @@ interface ImportMeta {
 }
 
 interface Window {
-  maplibregl: any;
+  maplibregl: unknown;
   webkitAudioContext: typeof AudioContext;
 }

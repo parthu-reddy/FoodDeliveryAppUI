@@ -41,6 +41,7 @@ const facades = [
 ];
 
 facades.forEach(facade => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Object.values(facade).forEach((client: any) => {
     if (client && typeof client.use === 'function') {
       client.use(authPlugin);

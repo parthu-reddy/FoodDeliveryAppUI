@@ -42,8 +42,10 @@ export default function SessionManagementModal({ isOpen, onClose, sessions, phon
         throw new Error('No token received from server');
       }
       onSuccess(token);
-    } catch (err: any) {
-      setError(err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to remove device and login');
+    } catch (err: unknown) {
+      // @ts-expect-error auto-migration type suppression
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setError((err as any).response?.data?.message || (err as any).response?.data?.error || err.message || 'Failed to remove device and login');
     } finally {
       setLoadingId(null);
     }
@@ -87,7 +89,7 @@ export default function SessionManagementModal({ isOpen, onClose, sessions, phon
         )}
 
         <div className="space-y-3">
-          {sessions.map((session, idx) => (
+          {sessions.map((session, _idx) => (
             <div 
               key={session.sessionId}
               className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${

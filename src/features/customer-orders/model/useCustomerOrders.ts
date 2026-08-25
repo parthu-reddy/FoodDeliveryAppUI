@@ -2,13 +2,13 @@ import { customerApi } from '@/lib/zodiosClients';
 import { Order, OrderStatus } from '@/types';
 import { isActiveOrder, isFailedOrder } from '@features/customer-orders/model/orderStatus';
 import { useEffect, useState } from 'react';
-import { fromContract } from '../../../lib/untypedResponse';
+import { fromContract, asUntyped } from '../../../lib/untypedResponse';
 
 interface UseCustomerOrdersOptions {
   onUpdateOrder?: (orderId: string, status: string) => void;
 }
 
-export function useCustomerOrders({ onUpdateOrder }: UseCustomerOrdersOptions = {}) {
+export function useCustomerOrders({ onUpdateOrder: _onUpdateOrder }: UseCustomerOrdersOptions = {}) {
   const [internalOrders, setInternalOrders] = useState<Order[]>([]);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
@@ -19,7 +19,10 @@ export function useCustomerOrders({ onUpdateOrder }: UseCustomerOrdersOptions = 
       .then(res => {
         if (!ignore && res.data) {
           const content = res.data.content || (Array.isArray(res.data) ? res.data : []);
-          setInternalOrders(content.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' })));
+          setInternalOrders(content.map((o: unknown) => {
+            const orderData = asUntyped<unknown>(o) as Order;
+            return { ...orderData, status: (orderData.status?.toUpperCase() || '') as OrderStatus };
+          }));
         }
       })
       .catch(console.error)
@@ -52,13 +55,16 @@ export function useCustomerOrders({ onUpdateOrder }: UseCustomerOrdersOptions = 
             return;
           }
           const content = res.data.content || (Array.isArray(res.data) ? res.data : []);
-          const updatedOrders = content.map((o: any) => ({ ...o, status: o.status?.toUpperCase() || '' }));
+          const updatedOrders = content.map((o: unknown) => {
+            const orderData = asUntyped<unknown>(o) as Order;
+            return { ...orderData, status: (orderData.status?.toUpperCase() || '') as OrderStatus };
+          });
           
           setInternalOrders(prev => {
             const newOrders = [...prev];
             let changed = false;
             
-            updatedOrders.forEach((updated: any) => {
+            updatedOrders.forEach((updated: Order) => {
               const idx = newOrders.findIndex(o => o.id === updated.id);
               if (idx !== -1) {
                 if (JSON.stringify(newOrders[idx]) !== JSON.stringify(updated)) {
@@ -72,7 +78,7 @@ export function useCustomerOrders({ onUpdateOrder }: UseCustomerOrdersOptions = 
             });
             
             const activePrevIds = prev.filter(o => isActiveOrder(o)).map(o => o.id);
-            const missingIds = activePrevIds.filter(id => !updatedOrders.find((u: any) => u.id === id));
+            const missingIds = activePrevIds.filter(id => !updatedOrders.find((u: Order) => u.id === id));
             
             if (missingIds.length > 0) {
                customerApi.order.get('/api/v1/orders/batch', { queries: { ids: missingIds } }).then(res => {
@@ -80,7 +86,8 @@ export function useCustomerOrders({ onUpdateOrder }: UseCustomerOrdersOptions = 
                      setInternalOrders(curr => {
                         const currentList = [...curr];
                         let batchChanged = false;
-                        fromContract<unknown[]>(res).forEach((batchOrder: any) => {
+                        fromContract<unknown[]>(res).forEach((o: unknown) => {
+                            const batchOrder = asUntyped<unknown>(o) as Order;
                             const idx = currentList.findIndex(o => o.id === batchOrder.id);
                             if (idx !== -1 && JSON.stringify(currentList[idx]) !== JSON.stringify(batchOrder)) {
                                currentList[idx] = batchOrder;
@@ -96,8 +103,8 @@ export function useCustomerOrders({ onUpdateOrder }: UseCustomerOrdersOptions = 
             return changed ? newOrders : prev;
           });
 
-          const hasOutForDelivery = updatedOrders.some((o: any) => o.deliveryStatus === 'OUT_FOR_DELIVERY');
-          const hasPreparingOrAccepted = updatedOrders.some((o: any) => o.status === 'PREPARING' || o.status === 'ACCEPTED');
+          const hasOutForDelivery = updatedOrders.some((o: Order) => o.deliveryStatus === 'OUT_FOR_DELIVERY');
+          const hasPreparingOrAccepted = updatedOrders.some((o: Order) => o.status === 'PREPARING' || o.status === 'ACCEPTED');
           
           let nextInterval = 60000;
           if (hasOutForDelivery) {

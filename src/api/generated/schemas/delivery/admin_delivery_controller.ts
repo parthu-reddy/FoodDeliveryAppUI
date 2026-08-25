@@ -16,26 +16,26 @@ const SortObject = z
 const PageableObject = z
   .object({
     offset: z.number().int(),
-    sort: z.array(SortObject),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
+    sort: z.array(SortObject),
     unpaged: z.boolean(),
   })
   .partial()
   .passthrough();
 const PageDeliveryExecutive = z
   .object({
-    totalElements: z.number().int(),
     totalPages: z.number().int(),
+    totalElements: z.number().int(),
+    numberOfElements: z.number().int(),
+    number: z.number().int(),
     size: z.number().int(),
     content: z.array(DeliveryExecutive),
-    number: z.number().int(),
-    sort: z.array(SortObject),
     first: z.boolean(),
-    pageable: PageableObject,
     last: z.boolean(),
-    numberOfElements: z.number().int(),
+    pageable: PageableObject,
+    sort: z.array(SortObject),
     empty: z.boolean(),
   })
   .partial()
@@ -53,16 +53,16 @@ const DriverLocationDTO = z
   .passthrough();
 const PageDriverLocationDTO = z
   .object({
-    totalElements: z.number().int(),
     totalPages: z.number().int(),
+    totalElements: z.number().int(),
+    numberOfElements: z.number().int(),
+    number: z.number().int(),
     size: z.number().int(),
     content: z.array(DriverLocationDTO),
-    number: z.number().int(),
-    sort: z.array(SortObject),
     first: z.boolean(),
-    pageable: PageableObject,
     last: z.boolean(),
-    numberOfElements: z.number().int(),
+    pageable: PageableObject,
+    sort: z.array(SortObject),
     empty: z.boolean(),
   })
   .partial()
@@ -154,6 +154,11 @@ const endpoints = makeApi([
     requestFormat: "json",
     parameters: [
       {
+        name: "cityId",
+        type: "Query",
+        schema: z.string(),
+      },
+      {
         name: "lat",
         type: "Query",
         schema: z.number().optional().default(0),
@@ -177,6 +182,11 @@ const endpoints = makeApi([
     alias: "getAllDriversWithLocation",
     requestFormat: "json",
     parameters: [
+      {
+        name: "cityId",
+        type: "Query",
+        schema: z.string(),
+      },
       {
         name: "pageable",
         type: "Query",

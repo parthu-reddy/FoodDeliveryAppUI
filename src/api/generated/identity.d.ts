@@ -275,16 +275,16 @@ export interface components {
             /** Format: int64 */
             totalElements?: number;
             /** Format: int32 */
-            size?: number;
-            content?: components["schemas"]["UserDTO"][];
+            numberOfElements?: number;
             /** Format: int32 */
             number?: number;
-            sort?: components["schemas"]["SortObject"][];
-            pageable?: components["schemas"]["PageableObject"];
-            last?: boolean;
-            first?: boolean;
             /** Format: int32 */
-            numberOfElements?: number;
+            size?: number;
+            content?: components["schemas"]["UserDTO"][];
+            sort?: components["schemas"]["SortObject"][];
+            first?: boolean;
+            last?: boolean;
+            pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;
         };
         PageableObject: {
@@ -589,6 +589,7 @@ export interface operations {
             query?: never;
             header?: {
                 "X-User-Id"?: string;
+                "X-Calling-Service"?: string;
             };
             path?: never;
             cookie?: never;
@@ -611,6 +612,7 @@ export interface operations {
             query?: never;
             header?: {
                 "X-User-Id"?: string;
+                "X-Calling-Service"?: string;
             };
             path?: never;
             cookie?: never;
@@ -681,6 +683,7 @@ export interface operations {
             query?: never;
             header?: {
                 "X-User-Id"?: string;
+                "X-Calling-Service"?: string;
             };
             path: {
                 sessionId: string;

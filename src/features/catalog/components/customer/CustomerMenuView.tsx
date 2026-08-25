@@ -5,17 +5,32 @@ import { AlertCircle, ArrowLeft, Bike, ChevronDown, Clock, MapPinOff, Minus, Plu
 import React from 'react';
 
 interface CustomerMenuViewProps {
-  selectedRestaurant: any;
-  setSelectedRestaurant: (res: any | null) => void;
-  deliveryPricing: any;
+  selectedRestaurant: {
+    id: string;
+    name: string;
+    image?: string;
+    cuisine?: string;
+    rating?: number | string;
+    deliveryTime?: number | string;
+    deliveryFee?: number;
+    distance?: number;
+    [key: string]: unknown;
+  };
+  setSelectedRestaurant: (res: unknown | null) => void;
+  deliveryPricing?: {
+    isDeliverable?: boolean;
+    minAmountForFreeDelivery?: number;
+    distanceKm?: number;
+    [key: string]: unknown;
+  } | null;
   getCartTotal: (resId?: string) => { subtotal: number };
   isDeliveryAvailable: boolean | null;
-  brandOutlets: any[];
+  brandOutlets: unknown[];
   setIsOutletSelectorOpen: (isOpen: boolean) => void;
   isMenuLoading: boolean;
   effectiveMenu: MenuItem[];
-  carts: any;
-  addToCart: (item: any) => void;
+  carts: Record<string, { items: { item: { id: string }, quantity: number }[] }>;
+  addToCart: (item: MenuItem) => void;
   removeFromCart: (itemId: string, restaurantId: string) => void;
   isQuoting?: boolean;
   deliveryAddressId?: string | null;
@@ -164,7 +179,7 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
               <h5 className="font-extrabold text-sm text-slate-800 dark:text-slate-300 uppercase tracking-widest">{category}</h5>
               <div className="space-y-4">
                 {(dishes as MenuItem[]).map(dish => {
-                  const cartQty = carts[selectedRestaurant.id]?.items.find((i: any) => i.item.id === dish.id)?.quantity || 0;
+                  const cartQty = carts[selectedRestaurant.id]?.items.find((i) => i.item.id === dish.id)?.quantity || 0;
                   
                   return (
                     <div 

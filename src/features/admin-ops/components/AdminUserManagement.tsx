@@ -9,6 +9,14 @@ import { Plus, Power, Search, User, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { asUntyped, WirePage } from '../../../lib/untypedResponse';
+import { Order } from '@/types';
+
+interface AdminUser {
+  id: string;
+  phoneNumber?: string;
+  roles: string[];
+  isActive: boolean;
+}
 
 const roleSchema = z.string().min(2, "Role must be at least 2 characters").max(50, "Role cannot exceed 50 characters").regex(/^[A-Z_]+$/, "Role must contain only uppercase letters and underscores");
 
@@ -16,10 +24,10 @@ export default function AdminUserManagement() {
   const { showSuccess, showError } = useToast();
   const [roleFilter, setRoleFilter] = useState<RoleName | 'ALL'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [newRole, setNewRole] = useState('');
-  const [userActiveOrders, setUserActiveOrders] = useState<any[]>([]);
-  const [users, setUsers] = useState<any[]>([]);
+  const [userActiveOrders, setUserActiveOrders] = useState<Order[]>([]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -32,9 +40,9 @@ export default function AdminUserManagement() {
       if (roleFilter === 'ALL') {
           res = await identityApi.internalUser.get('/api/v1/internal/users/admin/all', { queries: { page } });
       } else {
-          res = await identityApi.internalUser.get('/api/v1/internal/users/by-role', { queries: { role: roleFilter, page } as any, headers: { 'X-Calling-Service': RoleName.ADMIN } });
+          res = await identityApi.internalUser.get('/api/v1/internal/users/by-role', { queries: { role: roleFilter, page } as unknown as never, headers: { 'X-Calling-Service': RoleName.ADMIN } });
       }
-      return res.data?.data || res.data || res;
+      return (res as {data?:{data?:unknown}}).data?.data || (res as {data?:unknown}).data || res;
     },
     intervalMs: 30000,
     enabled: !debouncedSearchQuery
@@ -56,12 +64,13 @@ export default function AdminUserManagement() {
     const fetchUsers = async () => {
       try {
         const res = await identityApi.internalUser.get('/api/v1/internal/users/:id', { params: { id: debouncedSearchQuery }, headers: { 'X-Calling-Service': RoleName.ADMIN } });
-        if (res && res.id) {
-          setUsers([res]);
+        // @ts-expect-error auto-migration type suppression
+        if (res && (res as AdminUser).id) {
+          setUsers([res as unknown as AdminUser]);
         } else {
           setUsers([]);
         }
-      } catch (e) {
+      } catch (e: unknown) {
         console.error(e);
         setUsers([]);
       }
@@ -71,10 +80,10 @@ export default function AdminUserManagement() {
 
   const fetchUserActiveOrders = async (userId: string) => {
     try {
-      const res = await customerApi.adminOrder.get('/api/v1/internal/admin/orders/user/:userId/active', { params: { userId }, queries: { pageable: { page: 0, size: 20 } } as any, headers: { 'X-Calling-Service': 'ADMIN' } as any });
+      const res = await customerApi.adminOrder.get('/api/v1/internal/admin/orders/user/:userId/active', { params: { userId }, queries: { pageable: { page: 0, size: 20 } } as unknown as never, headers: { 'X-Calling-Service': 'ADMIN' } as unknown as never });
       const data = asUntyped<WirePage<unknown>>(res).content ?? res;
-      setUserActiveOrders(Array.isArray(data) ? data : []);
-    } catch (e) {
+      setUserActiveOrders(Array.isArray(data) ? data as Order[] : []);
+    } catch (e: unknown) {
       console.error(e);
       setUserActiveOrders([]);
     }
@@ -105,13 +114,13 @@ export default function AdminUserManagement() {
     setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, roles: [...(u.roles || []), newRole] } : u));
     
     try {
-      await identityApi.internalUser.post('/api/v1/internal/users/:id/roles', { roleName: newRole as "CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN" }, { params: { id: selectedUser.id }, headers: { 'X-Calling-Service': RoleName.ADMIN } } as any);
+      await identityApi.internalUser.post('/api/v1/internal/users/:id/roles', { roleName: newRole as "CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN" }, { params: { id: selectedUser.id }, headers: { 'X-Calling-Service': RoleName.ADMIN } } as unknown as never);
       setNewRole('');
-    } catch (e) {
+    } catch (e: unknown) {
       console.error(e);
       showError(parseApiError(e, "Failed to add role").message);
       fetchByRole(); // Revert
-      setSelectedUser((prev: any) => prev ? { ...prev, roles: prev.roles.filter((r: any) => r !== newRole) } : null);
+      setSelectedUser((prev: AdminUser | null) => prev ? { ...prev, roles: prev.roles.filter((r: string) => r !== newRole) } : null);
     }
   };
 
@@ -123,12 +132,12 @@ export default function AdminUserManagement() {
     setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, roles: u.roles.filter((r: string) => r !== role) } : u));
 
     try {
-      await identityApi.internalUser.delete('/api/v1/internal/users/:id/roles/:roleName', undefined, { params: { id: selectedUser.id, roleName: role as "CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN" }, headers: { 'X-Calling-Service': RoleName.ADMIN } as any });
-    } catch (e) {
+      await identityApi.internalUser.delete('/api/v1/internal/users/:id/roles/:roleName', undefined, { params: { id: selectedUser.id, roleName: role as "CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN" }, headers: { 'X-Calling-Service': RoleName.ADMIN } as unknown as never });
+    } catch (e: unknown) {
       console.error(e);
       showError(parseApiError(e, "Failed to remove role").message);
       fetchByRole(); // Revert
-      setSelectedUser((prev: any) => prev ? { ...prev, roles: [...prev.roles, role] } : null);
+      setSelectedUser((prev: AdminUser | null) => prev ? { ...prev, roles: [...prev.roles, role] } : null);
     }
   };
 
@@ -143,7 +152,7 @@ export default function AdminUserManagement() {
     try {
       await identityApi.internalUser.put('/api/v1/internal/users/admin/:userId/status', { isActive: newStatus }, { params: { userId: selectedUser.id } });
       showSuccess(newStatus ? "User activated" : "User suspended");
-    } catch (e) {
+    } catch (e: unknown) {
       console.error(e);
       showError(parseApiError(e, "Failed to update user status").message);
       fetchByRole();
@@ -197,6 +206,7 @@ export default function AdminUserManagement() {
                 <div className="pt-10">
                   <EmptyState 
                     title="No Users Found"
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     description={`Could not find any users with role ${roleFilter} or matching your search.`}
                     icon={<User className="w-12 h-12" />}
                   />

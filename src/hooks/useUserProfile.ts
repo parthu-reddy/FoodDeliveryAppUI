@@ -13,6 +13,7 @@ interface UseUserProfileResult {
   profile: UserProfileData | null;
   isProfileIncomplete: boolean;
   isLoading: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   localProfile: any;
 }
 

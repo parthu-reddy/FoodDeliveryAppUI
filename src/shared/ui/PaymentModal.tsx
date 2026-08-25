@@ -139,9 +139,11 @@ function PaymentModalInner({
                           <span>Delivery Fee</span>
                           <span className="font-mono">{totals.deliveryFee === 0 ? 'FREE' : `₹${totals.deliveryFee?.toFixed(2)}`}</span>
                         </div>
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         {(totals as any).platformFee !== undefined && (totals as any).platformFee > 0 && (
                           <div className="flex justify-between">
                             <span>Platform Fee</span>
+                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                             <span className="font-mono">₹{(totals as any).platformFee?.toFixed(2)}</span>
                           </div>
                         )}

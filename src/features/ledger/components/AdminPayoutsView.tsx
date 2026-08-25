@@ -6,6 +6,7 @@ import { Bike, CheckCircle, Clock, Store } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 export default function AdminPayoutsView() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [pendingPayouts, setPendingPayouts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [settling, setSettling] = useState<string | null>(null);
@@ -17,7 +18,7 @@ export default function AdminPayoutsView() {
       const res = await ledgerApi.ledger.get('/api/v1/ledger/payouts/pending');
       const data = res ?? [];
       setPendingPayouts(Array.isArray(data) ? data : []);
-    } catch (e) {
+    } catch (e: unknown) {
       console.error(e);
       showError(parseApiError(e, 'Failed to fetch pending payouts').message);
     } finally {
@@ -39,7 +40,7 @@ export default function AdminPayoutsView() {
             });
       showSuccess(`Payout of $${amount.toFixed(2)} for ${ownerType} settled successfully`);
       fetchPayouts();
-    } catch (e) {
+    } catch (e: unknown) {
       console.error(e);
       showError(parseApiError(e, 'Failed to settle payout').message);
     } finally {

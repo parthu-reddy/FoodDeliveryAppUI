@@ -197,6 +197,7 @@ export const RefundModal: React.FC<RefundModalProps> = ({
               <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Select Items</label>
                 <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   {order.items.map((cartItem: any) => {
                     const itemParsed = z.object({ id: z.string(), quantity: z.number().optional(), price: z.number().optional(), name: z.string().optional(), item: z.object({ name: z.string().optional() }).optional() }).safeParse(cartItem);
                     const item = itemParsed.success ? itemParsed.data : { id: '' };

@@ -138,6 +138,11 @@ const endpoints = makeApi([
         type: "Header",
         schema: z.string().optional(),
       },
+      {
+        name: "X-Calling-Service",
+        type: "Header",
+        schema: z.string().optional(),
+      },
     ],
     response: ApiResponseListSessionInfo,
   },
@@ -152,6 +157,11 @@ const endpoints = makeApi([
         type: "Header",
         schema: z.string().optional(),
       },
+      {
+        name: "X-Calling-Service",
+        type: "Header",
+        schema: z.string().optional(),
+      },
     ],
     response: ApiResponseVoid,
   },
@@ -163,6 +173,11 @@ const endpoints = makeApi([
     parameters: [
       {
         name: "X-User-Id",
+        type: "Header",
+        schema: z.string().optional(),
+      },
+      {
+        name: "X-Calling-Service",
         type: "Header",
         schema: z.string().optional(),
       },

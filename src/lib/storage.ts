@@ -22,7 +22,7 @@ export class TypedStorage {
       
       logger.warn(`Storage item '${key}' failed validation, using fallback`, result.error);
       return fallback;
-    } catch (e) {
+    } catch (e: unknown) {
       logger.error(`Error parsing storage item '${key}'`, e);
       return fallback;
     }
@@ -41,7 +41,7 @@ export class TypedStorage {
     try {
       const stringValue = typeof result.data === 'string' ? result.data : JSON.stringify(result.data);
       localStorage.setItem(key, stringValue);
-    } catch (e) {
+    } catch (e: unknown) {
       logger.error(`Error stringifying storage item '${key}'`, e);
     }
   }

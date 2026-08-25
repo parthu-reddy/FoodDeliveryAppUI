@@ -7,11 +7,13 @@ import CustomerRestaurantCard from './CustomerRestaurantCard';
 
 interface CustomerRestaurantBrowserProps {
   categories: string[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   restaurants: any[];
   isRestaurantsLoading: boolean;
   setIsAddressSelectorOpen: (isOpen: boolean) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setSelectedRestaurant: (restaurant: any) => void;
-  onAddApiLog?: (log: any) => void;
+  onAddApiLog?: (log: unknown) => void;
 }
 
 export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps> = ({
@@ -32,6 +34,7 @@ export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps>
   }, [debouncedSearchQuery, selectedCategory, restaurants]);
 
   const observerRef = useRef<IntersectionObserver | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const lastElementRef = useCallback((node: any) => {
     if (observerRef.current) observerRef.current.disconnect();
     observerRef.current = new IntersectionObserver(entries => {
@@ -113,6 +116,7 @@ export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps>
               <MapPinOff className="w-12 h-12 text-rose-500/50" />
             </div>
             <h3 className="text-lg font-bold text-slate-800 dark:text-[#f0ede6] mb-2">Out of Range</h3>
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             <p className="text-sm mb-4">We don't have any partner kitchens in your delivery area yet.</p>
             <Button
               onClick={() => setIsAddressSelectorOpen(true)}
@@ -134,6 +138,7 @@ export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps>
         ) : filteredRestaurants.length === 0 ? (
           <EmptyState 
             title="No Kitchens Found"
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             description="We couldn't find any kitchens matching your search criteria."
             icon={<AlertCircle className="w-12 h-12 text-rose-500/50" />}
             action={

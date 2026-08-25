@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-// Generated using typescript-generator version 3.2.1263 on 2026-08-24 08:03:50.
+// Generated using typescript-generator version 3.2.1263 on 2026-08-25 01:42:48.
 
 export enum AccountType {
     CUSTOMER = "CUSTOMER",
@@ -73,7 +73,6 @@ export enum OrderStatus {
 
 export enum OutboxStatus {
     UNPROCESSED = "UNPROCESSED",
-    IN_PROGRESS = "IN_PROGRESS",
     PROCESSED = "PROCESSED",
     FAILED = "FAILED",
     DLQ = "DLQ",

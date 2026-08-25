@@ -14,6 +14,7 @@ interface Props {
   userPhone: string;
   onNameUpdate: (name: string) => void;
   activeOrders: Order[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onUpdateOrderStatus: (orderId: string, status: OrderStatus, riderInfo?: any) => void;
   onLogout: () => void;
   theme: 'light' | 'dark';

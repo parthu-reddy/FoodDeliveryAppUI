@@ -6,6 +6,7 @@ import React from 'react';
 interface CustomerAddressSelectorModalProps {
   isOpen: boolean;
   onClose: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   savedAddresses: any[];
   address: string;
   setAddress: (address: string) => void;
@@ -15,6 +16,7 @@ interface CustomerAddressSelectorModalProps {
   currentAddressId?: string;
   setShowLocationPrompt: (show: boolean) => void;
   onAddNewAddress: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   carts?: any;
   clearCart?: (restaurantId: string) => void;
 }
@@ -41,6 +43,7 @@ const CustomerAddressSelectorModal: React.FC<CustomerAddressSelectorModalProps> 
     const isDifferent = id ? id !== currentAddressId : addr !== address;
     
     if (isDifferent) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const hasItems = Object.values(carts || {}).some((cart: any) => cart.items && cart.items.length > 0);
       if (hasItems) {
         if (!window.confirm("Changing your address will clear your active cart. Do you want to continue?")) {
@@ -77,7 +80,7 @@ const CustomerAddressSelectorModal: React.FC<CustomerAddressSelectorModalProps> 
                   } else {
                     handleAddressSelect('Current Location', pos.coords.latitude, pos.coords.longitude, '');
                   }
-                } catch (e) {
+                } catch (_e: unknown) {
                   handleAddressSelect('Current Location', pos.coords.latitude, pos.coords.longitude, '');
                 }
               }, (err) => {

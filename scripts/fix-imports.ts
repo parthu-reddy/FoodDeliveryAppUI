@@ -7,7 +7,7 @@ for (const sourceFile of project.getSourceFiles()) {
   let fileModified = false;
   
   const text = sourceFile.getText();
-  const needsLedger = text.includes('ledgerApi.') && !text.includes('ledgerApi');
+  const _needsLedger = text.includes('ledgerApi.') && !text.includes('ledgerApi');
   
   // Actually, a simpler way is to check if it's used but not imported
   const identifiers = sourceFile.getDescendantsOfKind(SyntaxKind.Identifier);

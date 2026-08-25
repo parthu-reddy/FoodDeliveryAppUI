@@ -5,6 +5,7 @@ interface ImageLoaderProps {
   alt?: string;
   className?: string;
   containerClassName?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
 

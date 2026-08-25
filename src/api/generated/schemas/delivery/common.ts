@@ -23,6 +23,7 @@ export const DeliveryExecutive = z
     vehicleType: z.enum(["BICYCLE", "MCWG", "LMV", "EV_TWO_WHEELER"]),
     active: z.boolean(),
     lastBiometricVerificationAt: z.string().datetime({ offset: true }),
+    cityId: z.string(),
     version: z.number().int(),
     createdAt: z.string().datetime({ offset: true }),
     updatedAt: z.string().datetime({ offset: true }),
@@ -60,7 +61,10 @@ export const TelemetryEventRequest = z
   })
   .passthrough();
 export const RCRequest = z
-  .object({ registrationNumber: z.string(), documentUrl: z.string() })
+  .object({
+    registrationNumber: z.string(),
+    documentUrl: z.string().optional(),
+  })
   .passthrough();
 export const ApiResponseObject = z
   .object({
@@ -72,7 +76,11 @@ export const ApiResponseObject = z
   .partial()
   .passthrough();
 export const DLRequest = z
-  .object({ dlNumber: z.string(), documentUrl: z.string(), dob: z.string() })
+  .object({
+    dlNumber: z.string(),
+    dateOfBirth: z.string(),
+    documentUrl: z.string().optional(),
+  })
   .passthrough();
 export const BiometricRequest = z.object({ selfieUrl: z.string() }).passthrough();
 export const BankRequest = z
@@ -164,26 +172,26 @@ export const SortObject = z
 export const PageableObject = z
   .object({
     offset: z.number().int(),
-    sort: z.array(SortObject),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
+    sort: z.array(SortObject),
     unpaged: z.boolean(),
   })
   .partial()
   .passthrough();
 export const PageDeliveryExecutive = z
   .object({
-    totalElements: z.number().int(),
     totalPages: z.number().int(),
+    totalElements: z.number().int(),
+    numberOfElements: z.number().int(),
+    number: z.number().int(),
     size: z.number().int(),
     content: z.array(DeliveryExecutive),
-    number: z.number().int(),
-    sort: z.array(SortObject),
     first: z.boolean(),
-    pageable: PageableObject,
     last: z.boolean(),
-    numberOfElements: z.number().int(),
+    pageable: PageableObject,
+    sort: z.array(SortObject),
     empty: z.boolean(),
   })
   .partial()
@@ -201,16 +209,16 @@ export const DriverLocationDTO = z
   .passthrough();
 export const PageDriverLocationDTO = z
   .object({
-    totalElements: z.number().int(),
     totalPages: z.number().int(),
+    totalElements: z.number().int(),
+    numberOfElements: z.number().int(),
+    number: z.number().int(),
     size: z.number().int(),
     content: z.array(DriverLocationDTO),
-    number: z.number().int(),
-    sort: z.array(SortObject),
     first: z.boolean(),
-    pageable: PageableObject,
     last: z.boolean(),
-    numberOfElements: z.number().int(),
+    pageable: PageableObject,
+    sort: z.array(SortObject),
     empty: z.boolean(),
   })
   .partial()
@@ -246,5 +254,3 @@ export const SseEmitter = z
   .object({ timeout: z.number().int() })
   .partial()
   .passthrough();
-export const AadharRequest = z.object({ aadharNumber: z.string() }).passthrough();
-export const PanRequest = z.object({ panNumber: z.string() }).passthrough();

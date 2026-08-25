@@ -1,40 +1,41 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
-import { CampaignPerformance } from "./common";
+
+import { ApiResponseVoid } from "./common";
+import { pageable } from "./common";
+import { PageableObject } from "./common";
+import { SortObject } from "./common";
 
 const CampaignResponse = z
   .object({
     id: z.string().uuid(),
     advertiserId: z.string().uuid(),
     name: z.string(),
-    status: z.enum(["DRAFT", "ACTIVE", "PAUSED", "COMPLETED", "ARCHIVED"]),
+    status: z.enum([
+      "DRAFT",
+      "SCHEDULED",
+      "ACTIVE",
+      "PAUSED",
+      "COMPLETED",
+      "ARCHIVED",
+      "DELETED",
+    ]),
     dailyBudget: z.number(),
     lifetimeBudget: z.number(),
     maxBid: z.number(),
     startDate: z.string().datetime({ offset: true }),
     endDate: z.string().datetime({ offset: true }),
+    frequencyCap: z.number().int(),
     version: z.number().int(),
   })
   .partial()
   .passthrough();
-const SortObject = z
+const ApiResponseCampaignResponse = z
   .object({
-    direction: z.string(),
-    nullHandling: z.string(),
-    ascending: z.boolean(),
-    property: z.string(),
-    ignoreCase: z.boolean(),
-  })
-  .partial()
-  .passthrough();
-const PageableObject = z
-  .object({
-    offset: z.number().int(),
-    sort: z.array(SortObject),
-    paged: z.boolean(),
-    pageNumber: z.number().int(),
-    pageSize: z.number().int(),
-    unpaged: z.boolean(),
+    success: z.boolean(),
+    message: z.string(),
+    data: CampaignResponse,
+    timestamp: z.string().datetime({ offset: true }),
   })
   .partial()
   .passthrough();
@@ -42,48 +43,128 @@ const PageCampaignResponse = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
+    numberOfElements: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
+    number: z.number().int(),
     size: z.number().int(),
     content: z.array(CampaignResponse),
-    number: z.number().int(),
-    sort: z.array(SortObject),
     pageable: PageableObject,
-    last: z.boolean(),
-    first: z.boolean(),
-    numberOfElements: z.number().int(),
+    sort: z.array(SortObject),
     empty: z.boolean(),
+  })
+  .partial()
+  .passthrough();
+const ApiResponsePageCampaignResponse = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: PageCampaignResponse,
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+const CampaignPerformanceResponse = z
+  .object({
+    id: z.string().uuid(),
+    advertiserId: z.string().uuid(),
+    campaignId: z.string().uuid(),
+    date: z.string(),
+    impressions: z.number().int(),
+    clicks: z.number().int(),
+    conversions: z.number().int(),
+    spend: z.number(),
+  })
+  .partial()
+  .passthrough();
+const PageCampaignPerformanceResponse = z
+  .object({
+    totalPages: z.number().int(),
+    totalElements: z.number().int(),
+    numberOfElements: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
+    number: z.number().int(),
+    size: z.number().int(),
+    content: z.array(CampaignPerformanceResponse),
+    pageable: PageableObject,
+    sort: z.array(SortObject),
+    empty: z.boolean(),
+  })
+  .partial()
+  .passthrough();
+const ApiResponsePageCampaignPerformanceResponse = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: PageCampaignPerformanceResponse,
+    timestamp: z.string().datetime({ offset: true }),
   })
   .partial()
   .passthrough();
 const CampaignRequest = z
   .object({
     advertiserId: z.string().uuid(),
-    name: z.string(),
+    name: z.string().min(0).max(255),
     dailyBudget: z.number(),
-    lifetimeBudget: z.number(),
+    lifetimeBudget: z.number().optional(),
     maxBid: z.number(),
     startDate: z.string().datetime({ offset: true }),
     endDate: z.string().datetime({ offset: true }).optional(),
+    frequencyCap: z.number().int().optional(),
   })
   .passthrough();
-const pageable = z
+const ApiResponseMapStringString = z
   .object({
-    page: z.number().int().gte(0),
-    size: z.number().int().gte(1),
-    sort: z.array(z.string()),
+    success: z.boolean(),
+    message: z.string(),
+    data: z.record(z.string()),
+    timestamp: z.string().datetime({ offset: true }),
   })
   .partial()
+  .passthrough();
+const TopupWalletRequest = z
+  .object({ amount: z.number(), gatewayName: z.string().optional() })
   .passthrough();
 
 export const schemas = {
   CampaignResponse,
-  SortObject,
-  PageableObject,
+  ApiResponseCampaignResponse,
   PageCampaignResponse,
+  ApiResponsePageCampaignResponse,
+  CampaignPerformanceResponse,
+  PageCampaignPerformanceResponse,
+  ApiResponsePageCampaignPerformanceResponse,
   CampaignRequest,
-  pageable,
+  ApiResponseMapStringString,
+  TopupWalletRequest,
 };
 
 const endpoints = makeApi([
+  {
+    method: "get",
+    path: "/api/v1/advertisers/:advertiserId/campaigns/:id",
+    alias: "getCampaign",
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "advertiserId",
+        type: "Path",
+        schema: z.string().uuid(),
+      },
+      {
+        name: "X-User-Id",
+        type: "Header",
+        schema: z.string().optional(),
+      },
+      {
+        name: "id",
+        type: "Path",
+        schema: z.string().uuid(),
+      },
+    ],
+    response: ApiResponseCampaignResponse,
+  },
   {
     method: "put",
     path: "/api/v1/advertisers/:advertiserId/campaigns/:id",
@@ -113,10 +194,34 @@ const endpoints = makeApi([
       {
         name: "If-Match",
         type: "Header",
-        schema: z.number().int().optional(),
+        schema: z.string().optional(),
       },
     ],
-    response: CampaignResponse,
+    response: ApiResponseCampaignResponse,
+  },
+  {
+    method: "delete",
+    path: "/api/v1/advertisers/:advertiserId/campaigns/:id",
+    alias: "deleteCampaign",
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "advertiserId",
+        type: "Path",
+        schema: z.string().uuid(),
+      },
+      {
+        name: "X-User-Id",
+        type: "Header",
+        schema: z.string().optional(),
+      },
+      {
+        name: "id",
+        type: "Path",
+        schema: z.string().uuid(),
+      },
+    ],
+    response: ApiResponseVoid,
   },
   {
     method: "get",
@@ -140,7 +245,7 @@ const endpoints = makeApi([
         schema: pageable,
       },
     ],
-    response: PageCampaignResponse,
+    response: ApiResponsePageCampaignResponse,
   },
   {
     method: "post",
@@ -164,7 +269,31 @@ const endpoints = makeApi([
         schema: z.string().optional(),
       },
     ],
-    response: CampaignResponse,
+    response: ApiResponseCampaignResponse,
+  },
+  {
+    method: "post",
+    path: "/api/v1/advertisers/:advertiserId/campaigns/:id/resume",
+    alias: "resumeCampaign",
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "advertiserId",
+        type: "Path",
+        schema: z.string().uuid(),
+      },
+      {
+        name: "X-User-Id",
+        type: "Header",
+        schema: z.string().optional(),
+      },
+      {
+        name: "id",
+        type: "Path",
+        schema: z.string().uuid(),
+      },
+    ],
+    response: ApiResponseVoid,
   },
   {
     method: "post",
@@ -188,7 +317,31 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.void(),
+    response: ApiResponseVoid,
+  },
+  {
+    method: "post",
+    path: "/api/v1/advertisers/:advertiserId/campaigns/:id/activate",
+    alias: "activateCampaign",
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "advertiserId",
+        type: "Path",
+        schema: z.string().uuid(),
+      },
+      {
+        name: "X-User-Id",
+        type: "Header",
+        schema: z.string().optional(),
+      },
+      {
+        name: "id",
+        type: "Path",
+        schema: z.string().uuid(),
+      },
+    ],
+    response: ApiResponseCampaignResponse,
   },
   {
     method: "post",
@@ -199,7 +352,7 @@ const endpoints = makeApi([
       {
         name: "body",
         type: "Body",
-        schema: z.record(z.object({}).partial().passthrough()),
+        schema: TopupWalletRequest,
       },
       {
         name: "advertiserId",
@@ -211,8 +364,13 @@ const endpoints = makeApi([
         type: "Header",
         schema: z.string().optional(),
       },
+      {
+        name: "Idempotency-Key",
+        type: "Header",
+        schema: z.string().optional(),
+      },
     ],
-    response: z.record(z.string()),
+    response: ApiResponseMapStringString,
   },
   {
     method: "get",
@@ -235,8 +393,23 @@ const endpoints = makeApi([
         type: "Path",
         schema: z.string().uuid(),
       },
+      {
+        name: "from",
+        type: "Query",
+        schema: z.string().optional(),
+      },
+      {
+        name: "to",
+        type: "Query",
+        schema: z.string().optional(),
+      },
+      {
+        name: "pageable",
+        type: "Query",
+        schema: pageable,
+      },
     ],
-    response: z.array(CampaignPerformance),
+    response: ApiResponsePageCampaignPerformanceResponse,
   },
   {
     method: "get",
@@ -254,8 +427,23 @@ const endpoints = makeApi([
         type: "Header",
         schema: z.string().optional(),
       },
+      {
+        name: "from",
+        type: "Query",
+        schema: z.string().optional(),
+      },
+      {
+        name: "to",
+        type: "Query",
+        schema: z.string().optional(),
+      },
+      {
+        name: "pageable",
+        type: "Query",
+        schema: pageable,
+      },
     ],
-    response: z.array(CampaignPerformance),
+    response: ApiResponsePageCampaignPerformanceResponse,
   },
 ]);
 

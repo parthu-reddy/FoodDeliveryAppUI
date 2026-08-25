@@ -100,7 +100,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/internal/auth/verify": {
+    "/api/v1/internal/admin/refunds/{ticketId}/review": {
         parameters: {
             query?: never;
             header?: never;
@@ -109,15 +109,14 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Verify OTP */
-        post: operations["verifyOtp"];
+        post: operations["addReviewNotes"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/internal/auth/initiate": {
+    "/api/v1/internal/admin/refunds/{ticketId}/resolve": {
         parameters: {
             query?: never;
             header?: never;
@@ -126,8 +125,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Initiate Authentication */
-        post: operations["initiateAuth"];
+        post: operations["resolveTicket"];
         delete?: never;
         options?: never;
         head?: never;
@@ -384,38 +382,6 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["requestPostDeliveryRefund"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/admin/refunds/{ticketId}/review": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["addReviewNotes"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/admin/refunds/{ticketId}/resolve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["resolveTicket"];
         delete?: never;
         options?: never;
         head?: never;
@@ -694,6 +660,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/internal/admin/refunds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getTickets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/internal/admin/orders/user/{userId}/active": {
         parameters: {
             query?: never;
@@ -854,22 +836,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/refunds": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getTickets"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/customers/{customerId}/addresses/{addressId}": {
         parameters: {
             query?: never;
@@ -920,6 +886,8 @@ export interface components {
             restaurantId: string;
             /** Format: uuid */
             deliveryAddressId: string;
+            /** @enum {string} */
+            paymentMethod?: "CARD" | "UPI" | "WALLET" | "COD";
             items: components["schemas"]["OrderItemRequest"][];
         };
         ApiResponseOrderResponse: {
@@ -1031,11 +999,39 @@ export interface components {
             /** Format: date-time */
             timestamp?: string;
         };
-        VerifyOtp200Response: {
-            success?: boolean;
-            /** @description JWT Token */
-            data?: string;
-            message?: string;
+        ReviewRequest: {
+            notes?: string;
+        };
+        SupportTicket: {
+            /** Format: int64 */
+            version?: number;
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            orderId?: string;
+            /** Format: uuid */
+            customerId?: string;
+            reason?: string;
+            /** @enum {string} */
+            status?: "OPEN" | "IN_REVIEW" | "RESOLVED" | "REJECTED";
+            resolutionNotes?: string;
+            /** Format: uuid */
+            resolvedBy?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            resolvedAt?: string;
+            /** Format: uuid */
+            chatSessionId?: string;
+            requestedRefundItems?: string;
+            refundAmount?: number;
+            restaurantComments?: string;
+            riderComments?: string;
+        };
+        ResolveRequest: {
+            approved?: boolean;
+            notes?: string;
+            faultType?: string;
         };
         PartialRefundRequest: {
             amount?: number;
@@ -1078,41 +1074,6 @@ export interface components {
             /** Format: double */
             longitude?: number;
             isDefault?: boolean;
-        };
-        ReviewRequest: {
-            notes?: string;
-        };
-        SupportTicket: {
-            /** Format: int64 */
-            version?: number;
-            /** Format: uuid */
-            id?: string;
-            /** Format: uuid */
-            orderId?: string;
-            /** Format: uuid */
-            customerId?: string;
-            reason?: string;
-            /** @enum {string} */
-            status?: "OPEN" | "IN_REVIEW" | "RESOLVED" | "REJECTED";
-            resolutionNotes?: string;
-            /** Format: uuid */
-            resolvedBy?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            resolvedAt?: string;
-            /** Format: uuid */
-            chatSessionId?: string;
-            requestedRefundItems?: string;
-            /** Format: double */
-            refundAmount?: number;
-            restaurantComments?: string;
-            riderComments?: string;
-        };
-        ResolveRequest: {
-            approved?: boolean;
-            notes?: string;
-            faultType?: string;
         };
         ApiResponseMapStringObject: {
             success?: boolean;
@@ -1163,28 +1124,28 @@ export interface components {
             /** Format: int64 */
             totalElements?: number;
             /** Format: int32 */
-            size?: number;
-            content?: components["schemas"]["OrderResponse"][];
+            numberOfElements?: number;
+            first?: boolean;
+            last?: boolean;
             /** Format: int32 */
             number?: number;
-            sort?: components["schemas"]["SortObject"][];
-            first?: boolean;
-            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
-            numberOfElements?: number;
-            last?: boolean;
+            size?: number;
+            content?: components["schemas"]["OrderResponse"][];
+            sort?: components["schemas"]["SortObject"][];
+            pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;
         };
         PageableObject: {
             /** Format: int64 */
             offset?: number;
+            unpaged?: boolean;
             sort?: components["schemas"]["SortObject"][];
             paged?: boolean;
             /** Format: int32 */
             pageNumber?: number;
             /** Format: int32 */
             pageSize?: number;
-            unpaged?: boolean;
         };
         SortObject: {
             direction?: string;
@@ -1268,16 +1229,16 @@ export interface components {
             /** Format: int64 */
             totalElements?: number;
             /** Format: int32 */
-            size?: number;
-            content?: components["schemas"]["Order"][];
+            numberOfElements?: number;
+            first?: boolean;
+            last?: boolean;
             /** Format: int32 */
             number?: number;
-            sort?: components["schemas"]["SortObject"][];
-            first?: boolean;
-            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
-            numberOfElements?: number;
-            last?: boolean;
+            size?: number;
+            content?: components["schemas"]["Order"][];
+            sort?: components["schemas"]["SortObject"][];
+            pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;
         };
         PageSupportTicket: {
@@ -1286,16 +1247,16 @@ export interface components {
             /** Format: int64 */
             totalElements?: number;
             /** Format: int32 */
-            size?: number;
-            content?: components["schemas"]["SupportTicket"][];
+            numberOfElements?: number;
+            first?: boolean;
+            last?: boolean;
             /** Format: int32 */
             number?: number;
-            sort?: components["schemas"]["SortObject"][];
-            first?: boolean;
-            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
-            numberOfElements?: number;
-            last?: boolean;
+            size?: number;
+            content?: components["schemas"]["SupportTicket"][];
+            sort?: components["schemas"]["SortObject"][];
+            pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;
         };
         PageMapStringObject: {
@@ -1304,18 +1265,18 @@ export interface components {
             /** Format: int64 */
             totalElements?: number;
             /** Format: int32 */
+            numberOfElements?: number;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
             size?: number;
             content?: {
                 [key: string]: Record<string, never>;
             }[];
-            /** Format: int32 */
-            number?: number;
             sort?: components["schemas"]["SortObject"][];
-            first?: boolean;
             pageable?: components["schemas"]["PageableObject"];
-            /** Format: int32 */
-            numberOfElements?: number;
-            last?: boolean;
             empty?: boolean;
         };
         ApiResponsePageCustomerAddressDto: {
@@ -1331,16 +1292,16 @@ export interface components {
             /** Format: int64 */
             totalElements?: number;
             /** Format: int32 */
-            size?: number;
-            content?: components["schemas"]["CustomerAddressDto"][];
+            numberOfElements?: number;
+            first?: boolean;
+            last?: boolean;
             /** Format: int32 */
             number?: number;
-            sort?: components["schemas"]["SortObject"][];
-            first?: boolean;
-            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
-            numberOfElements?: number;
-            last?: boolean;
+            size?: number;
+            content?: components["schemas"]["CustomerAddressDto"][];
+            sort?: components["schemas"]["SortObject"][];
+            pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;
         };
         ApiResponseListCustomerAddressDto: {
@@ -1509,46 +1470,57 @@ export interface operations {
             };
         };
     };
-    verifyOtp: {
+    addReviewNotes: {
         parameters: {
-            query: {
-                phoneNumber: string;
-                otp: string;
-            };
+            query?: never;
             header?: never;
-            path?: never;
+            path: {
+                ticketId: string;
+            };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewRequest"];
+            };
+        };
         responses: {
-            /** @description Successfully authenticated */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["VerifyOtp200Response"];
+                    "application/json": components["schemas"]["SupportTicket"];
                 };
             };
         };
     };
-    initiateAuth: {
+    resolveTicket: {
         parameters: {
-            query: {
-                phoneNumber: string;
+            query?: never;
+            header: {
+                "X-Admin-Id": string;
             };
-            header?: never;
-            path?: never;
+            path: {
+                ticketId: string;
+            };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResolveRequest"];
+            };
+        };
         responses: {
-            /** @description OTP sent successfully */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["SupportTicket"];
+                };
             };
         };
     };
@@ -2026,60 +1998,6 @@ export interface operations {
             };
         };
     };
-    addReviewNotes: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                ticketId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ReviewRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SupportTicket"];
-                };
-            };
-        };
-    };
-    resolveTicket: {
-        parameters: {
-            query?: never;
-            header: {
-                "X-Admin-Id": string;
-            };
-            path: {
-                ticketId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ResolveRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SupportTicket"];
-                };
-            };
-        };
-    };
     getDeliveryPricing: {
         parameters: {
             query: {
@@ -2469,6 +2387,30 @@ export interface operations {
             };
         };
     };
+    getTickets: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageSupportTicket"];
+                };
+            };
+        };
+    };
     getActiveOrdersForUser: {
         parameters: {
             query: {
@@ -2691,30 +2633,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiResponsePageOrderResponse"];
-                };
-            };
-        };
-    };
-    getTickets: {
-        parameters: {
-            query?: {
-                page?: number;
-                size?: number;
-                status?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PageSupportTicket"];
                 };
             };
         };

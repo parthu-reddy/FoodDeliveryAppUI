@@ -489,6 +489,7 @@ export interface components {
             active?: boolean;
             /** Format: date-time */
             lastBiometricVerificationAt?: string;
+            cityId?: string;
             /** Format: int32 */
             version?: number;
             /** Format: date-time */
@@ -520,12 +521,29 @@ export interface components {
             /** Format: int64 */
             timestampMs?: number;
         };
+        RCRequest: {
+            registrationNumber: string;
+            documentUrl?: string;
+        };
         ApiResponseObject: {
             success?: boolean;
             message?: string;
             data?: Record<string, never>;
             /** Format: date-time */
             timestamp?: string;
+        };
+        DLRequest: {
+            dlNumber: string;
+            dateOfBirth: string;
+            documentUrl?: string;
+        };
+        BiometricRequest: {
+            selfieUrl: string;
+        };
+        BankRequest: {
+            accountNumber: string;
+            ifscCode: string;
+            kycFullName: string;
         };
         ToggleStatusRequest: {
             driverId: string;
@@ -568,32 +586,32 @@ export interface components {
             sort?: string[];
         };
         PageDeliveryExecutive: {
+            /** Format: int32 */
+            totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
             /** Format: int32 */
-            totalPages?: number;
+            numberOfElements?: number;
+            /** Format: int32 */
+            number?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["DeliveryExecutive"][];
-            /** Format: int32 */
-            number?: number;
-            sort?: components["schemas"]["SortObject"][];
             first?: boolean;
-            pageable?: components["schemas"]["PageableObject"];
             last?: boolean;
-            /** Format: int32 */
-            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            sort?: components["schemas"]["SortObject"][];
             empty?: boolean;
         };
         PageableObject: {
             /** Format: int64 */
             offset?: number;
-            sort?: components["schemas"]["SortObject"][];
             paged?: boolean;
             /** Format: int32 */
             pageNumber?: number;
             /** Format: int32 */
             pageSize?: number;
+            sort?: components["schemas"]["SortObject"][];
             unpaged?: boolean;
         };
         SortObject: {
@@ -615,21 +633,21 @@ export interface components {
             status?: string;
         };
         PageDriverLocationDTO: {
+            /** Format: int32 */
+            totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
             /** Format: int32 */
-            totalPages?: number;
+            numberOfElements?: number;
+            /** Format: int32 */
+            number?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["DriverLocationDTO"][];
-            /** Format: int32 */
-            number?: number;
-            sort?: components["schemas"]["SortObject"][];
             first?: boolean;
-            pageable?: components["schemas"]["PageableObject"];
             last?: boolean;
-            /** Format: int32 */
-            numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            sort?: components["schemas"]["SortObject"][];
             empty?: boolean;
         };
         JsonNode: Record<string, never>;
@@ -654,30 +672,6 @@ export interface components {
         SseEmitter: {
             /** Format: int64 */
             timeout?: number;
-        };
-        DLRequest: {
-            dlNumber: string;
-            documentUrl: string;
-            /** Format: date */
-            dob: string;
-        };
-        AadharRequest: {
-            aadharNumber: string;
-        };
-        PanRequest: {
-            panNumber: string;
-        };
-        RCRequest: {
-            registrationNumber: string;
-            documentUrl: string;
-        };
-        BankRequest: {
-            accountNumber: string;
-            ifscCode: string;
-            kycFullName: string;
-        };
-        BiometricRequest: {
-            selfieUrl: string;
         };
     };
     responses: never;
@@ -1111,7 +1105,8 @@ export interface operations {
     };
     getAvailableDriversWithLocation: {
         parameters: {
-            query?: {
+            query: {
+                cityId: string;
                 lat?: number;
                 lng?: number;
                 radiusKm?: number;
@@ -1136,6 +1131,7 @@ export interface operations {
     getAllDriversWithLocation: {
         parameters: {
             query: {
+                cityId: string;
                 pageable: components["schemas"]["Pageable"];
             };
             header?: never;
@@ -1289,9 +1285,7 @@ export interface operations {
     };
     getProfile: {
         parameters: {
-            query: {
-                phoneNumber: string;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;

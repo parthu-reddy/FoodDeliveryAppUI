@@ -9,11 +9,10 @@
     "start": "node dist/server.cjs",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
-    "lint": "eslint . --max-warnings 527",
+    "lint": "eslint . --max-warnings 141",
     "typecheck": "tsc --noEmit",
     "generate:api": "bash scripts/generate-api-types.sh",
-    "test": "vitest run",
-    "pretest": "rm -rf pacts"
+    "test": "vitest run"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
@@ -43,7 +42,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@pact-foundation/pact": "^17.1.1",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.2",
@@ -61,6 +59,7 @@
     "eslint": "^10.8.1",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.4",
+    "eslint-plugin-unused-imports": "^4.4.1",
     "jsdom": "^30.0.1",
     "msw": "^2.15.0",
     "openapi-typescript": "^7.13.0",

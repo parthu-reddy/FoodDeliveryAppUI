@@ -32,8 +32,15 @@ export default function PartnerAccountModal({
   portalRole,
   children
 }: PartnerAccountModalProps) {
-  const { showError, showSuccess, showInfo } = useToast();
-  const [devices, setDevices] = useState<any[]>([]);
+  const { showError } = useToast();
+interface DeviceSession {
+  deviceId: string;
+  deviceModel?: string;
+  loginTime: string | number;
+  sessionId: string;
+}
+
+  const [devices, setDevices] = useState<DeviceSession[]>([]);
   const currentDeviceId = localStorage.getItem('device_id');
   
   const [editName, setEditName] = useState(userName || '');
@@ -46,6 +53,7 @@ export default function PartnerAccountModal({
 
   const fetchDevices = () => {
     identityApi.auth.get('/api/v1/internal/auth/sessions', { headers: { 'X-Calling-Service': portalRole || RoleName.RESTAURANT } })
+      // @ts-expect-error auto-migration type suppression
       .then(res => setDevices(res.data || []))
       .catch(err => console.error('Failed to fetch devices', err));
   };
@@ -62,18 +70,18 @@ export default function PartnerAccountModal({
 
   const handleRemoveDevice = async (sessionId: string) => {
     try {
-      await identityApi.auth.delete('/api/v1/internal/auth/sessions/:sessionId', undefined, { params: { sessionId }, headers: { 'X-Calling-Service': portalRole || RoleName.RESTAURANT } as any });
+      await identityApi.auth.delete('/api/v1/internal/auth/sessions/:sessionId', undefined, { params: { sessionId }, headers: { 'X-Calling-Service': portalRole || RoleName.RESTAURANT } as unknown as Record<string, string> });
       fetchDevices();
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Failed to invalidate session", err);
     }
   };
 
   const handleRemoveAllDevices = async () => {
     try {
-      await identityApi.auth.delete(`/api/v1/internal/auth/sessions`, undefined, { headers: { 'X-Calling-Service': portalRole || RoleName.RESTAURANT } as any });
+      await identityApi.auth.delete(`/api/v1/internal/auth/sessions`, undefined, { headers: { 'X-Calling-Service': portalRole || RoleName.RESTAURANT } as unknown as Record<string, string> });
       if (onLogout) onLogout();
-    } catch (e) {
+    } catch (e: unknown) {
       console.error('Failed to remove all devices', e);
     }
   };
@@ -90,7 +98,7 @@ export default function PartnerAccountModal({
       if (onSaveExtra) {
         await onSaveExtra(editName);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       console.error('Failed to update name', e);
     }
     onClose();

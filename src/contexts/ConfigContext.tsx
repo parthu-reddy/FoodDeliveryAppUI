@@ -30,7 +30,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         } else {
           setError('Failed to load Maps API Key from server');
         }
-      } catch (err) {
+      } catch (err: unknown) {
         console.error('Error fetching config:', err);
         setError('Failed to fetch runtime configuration');
       } finally {

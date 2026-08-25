@@ -2,6 +2,7 @@ import { ErrorBoundary } from "@shared/ui";
 import { PaymentModal } from "@shared/ui/PaymentModal";
 import { MapPin, Store } from 'lucide-react';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function CustomerPaymentModal(props: any) {
   return (
     <ErrorBoundary>
@@ -21,6 +22,7 @@ function CustomerPaymentModalInner({
   address,
   deliveryLat,
   deliveryLng
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 }: any) {
   const totals = getCartTotal ? getCartTotal() : { subtotal: 0, deliveryFee: 0, tax: 0, total: 0 };
 
@@ -60,6 +62,7 @@ function CustomerPaymentModalInner({
         </div>
         
         <div className="space-y-3 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           {(cart || []).map((cItem: any, idx: number) => (
             <div key={idx} className="flex justify-between items-center text-sm">
               <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">

@@ -9,9 +9,10 @@ interface CustomerOutletSelectorModalProps {
   brandOutlets: Restaurant[];
   selectedRestaurant: Restaurant | null;
   setSelectedRestaurant: (restaurant: Restaurant) => void;
-  onAddApiLog?: (log: any) => void;
-  deliveryLat?: number | null;
-  deliveryLng?: number | null;
+  onAddApiLog?: (log: unknown) => void;
+  _deliveryLat?: number | null;
+  _deliveryLng?: number | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   carts?: any;
   clearCart?: (restaurantId: string) => void;
 }
@@ -23,12 +24,12 @@ const CustomerOutletSelectorModal: React.FC<CustomerOutletSelectorModalProps> = 
   selectedRestaurant,
   setSelectedRestaurant,
   onAddApiLog,
-  deliveryLat,
-  deliveryLng,
+  _deliveryLat,
+  _deliveryLng,
   carts,
   clearCart
 }) => {
-  const [pendingOutlet, setPendingOutlet] = React.useState<Restaurant | null>(null);
+
 
   if (!brandOutlets) return null;
 

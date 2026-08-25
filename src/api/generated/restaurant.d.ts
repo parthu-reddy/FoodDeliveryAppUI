@@ -628,6 +628,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/internal/restaurants/products/{productId}/exists": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["productExists"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/internal/restaurants/owner/{ownerId}/outlets": {
         parameters: {
             query?: never;
@@ -636,6 +652,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getOwnerOutlets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/internal/restaurants/outlets/{outletId}/exists": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["outletExists"];
         put?: never;
         post?: never;
         delete?: never;
@@ -818,15 +850,15 @@ export interface components {
         GstinRequest: {
             /** Format: uuid */
             brandId?: string;
-            gstin?: string;
-            brandName?: string;
+            gstin: string;
+            brandName: string;
         };
         BankAccountRequest: {
             /** Format: uuid */
             brandId?: string;
-            accountNumber?: string;
-            ifscCode?: string;
-            brandName?: string;
+            accountNumber: string;
+            ifscCode: string;
+            brandName: string;
         };
         OutletMenuOverride: {
             /** Format: uuid */
@@ -948,7 +980,6 @@ export interface components {
             reviewsCount?: number;
             /** Format: int32 */
             deliveryTime?: number;
-            /** Format: double */
             deliveryFee?: number;
             tags?: string;
         };
@@ -968,7 +999,6 @@ export interface components {
             fssaiLicenseNumber?: string;
             bannerUrl?: string;
             timings?: components["schemas"]["OutletTiming"][];
-            isActive?: boolean;
             /** Format: int32 */
             defaultPrepTimeSeconds?: number;
             cuisine?: string;
@@ -978,7 +1008,6 @@ export interface components {
             reviewsCount?: number;
             /** Format: int32 */
             deliveryTime?: number;
-            /** Format: double */
             deliveryFee?: number;
             tags?: string;
             /** Format: date-time */
@@ -1086,28 +1115,28 @@ export interface components {
             /** Format: int64 */
             totalElements?: number;
             /** Format: int32 */
-            size?: number;
-            content?: components["schemas"]["RestaurantOrder"][];
+            numberOfElements?: number;
             /** Format: int32 */
             number?: number;
             sort?: components["schemas"]["SortObject"][];
-            first?: boolean;
+            /** Format: int32 */
+            size?: number;
+            content?: components["schemas"]["RestaurantOrder"][];
             pageable?: components["schemas"]["PageableObject"];
             last?: boolean;
-            /** Format: int32 */
-            numberOfElements?: number;
+            first?: boolean;
             empty?: boolean;
         };
         PageableObject: {
             /** Format: int64 */
             offset?: number;
-            sort?: components["schemas"]["SortObject"][];
             paged?: boolean;
-            /** Format: int32 */
-            pageNumber?: number;
+            sort?: components["schemas"]["SortObject"][];
+            unpaged?: boolean;
             /** Format: int32 */
             pageSize?: number;
-            unpaged?: boolean;
+            /** Format: int32 */
+            pageNumber?: number;
         };
         SortObject: {
             direction?: string;
@@ -1155,6 +1184,13 @@ export interface components {
             /** Format: date-time */
             timestamp?: string;
         };
+        ApiResponseBoolean: {
+            success?: boolean;
+            message?: string;
+            data?: boolean;
+            /** Format: date-time */
+            timestamp?: string;
+        };
         ApiResponsePageMapStringObject: {
             success?: boolean;
             message?: string;
@@ -1168,18 +1204,18 @@ export interface components {
             /** Format: int64 */
             totalElements?: number;
             /** Format: int32 */
+            numberOfElements?: number;
+            /** Format: int32 */
+            number?: number;
+            sort?: components["schemas"]["SortObject"][];
+            /** Format: int32 */
             size?: number;
             content?: {
                 [key: string]: Record<string, never>;
             }[];
-            /** Format: int32 */
-            number?: number;
-            sort?: components["schemas"]["SortObject"][];
-            first?: boolean;
             pageable?: components["schemas"]["PageableObject"];
             last?: boolean;
-            /** Format: int32 */
-            numberOfElements?: number;
+            first?: boolean;
             empty?: boolean;
         };
         ApiResponseListCategoryDTO: {
@@ -2276,6 +2312,28 @@ export interface operations {
             };
         };
     };
+    productExists: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                productId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseBoolean"];
+                };
+            };
+        };
+    };
     getOwnerOutlets: {
         parameters: {
             query?: never;
@@ -2294,6 +2352,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": string[];
+                };
+            };
+        };
+    };
+    outletExists: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outletId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseBoolean"];
                 };
             };
         };

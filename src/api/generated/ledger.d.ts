@@ -36,6 +36,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/ledger/orders/{orderId}/total": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getOrderLedgerAmount"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/ledger/admin/transactions": {
         parameters: {
             query?: never;
@@ -125,28 +141,28 @@ export interface components {
             /** Format: int64 */
             totalElements?: number;
             /** Format: int32 */
-            size?: number;
-            content?: components["schemas"]["LedgerTransactionDto"][];
+            numberOfElements?: number;
             /** Format: int32 */
             number?: number;
-            sort?: components["schemas"]["SortObject"][];
             first?: boolean;
-            pageable?: components["schemas"]["PageableObject"];
-            /** Format: int32 */
-            numberOfElements?: number;
             last?: boolean;
+            /** Format: int32 */
+            size?: number;
+            content?: components["schemas"]["LedgerTransactionDto"][];
+            sort?: components["schemas"]["SortObject"][];
+            pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;
         };
         PageableObject: {
             /** Format: int64 */
             offset?: number;
-            sort?: components["schemas"]["SortObject"][];
             paged?: boolean;
-            /** Format: int32 */
-            pageNumber?: number;
+            sort?: components["schemas"]["SortObject"][];
+            unpaged?: boolean;
             /** Format: int32 */
             pageSize?: number;
-            unpaged?: boolean;
+            /** Format: int32 */
+            pageNumber?: number;
         };
         SortObject: {
             direction?: string;
@@ -178,16 +194,16 @@ export interface components {
             /** Format: int64 */
             totalElements?: number;
             /** Format: int32 */
-            size?: number;
-            content?: components["schemas"]["LedgerEntry"][];
+            numberOfElements?: number;
             /** Format: int32 */
             number?: number;
-            sort?: components["schemas"]["SortObject"][];
             first?: boolean;
-            pageable?: components["schemas"]["PageableObject"];
-            /** Format: int32 */
-            numberOfElements?: number;
             last?: boolean;
+            /** Format: int32 */
+            size?: number;
+            content?: components["schemas"]["LedgerEntry"][];
+            sort?: components["schemas"]["SortObject"][];
+            pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;
         };
     };
@@ -241,6 +257,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LedgerAccount"][];
+                };
+            };
+        };
+    };
+    getOrderLedgerAmount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": number;
                 };
             };
         };

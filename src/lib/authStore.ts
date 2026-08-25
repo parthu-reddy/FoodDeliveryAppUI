@@ -20,7 +20,7 @@ export const logout = async () => {
   try {
     //  Temporarily bypass for API mismatch/TS2589
     await identityApi.auth.post('/api/v1/internal/auth/logout', undefined as unknown as Parameters<typeof identityApi.auth.post>[1]);
-  } catch (e) {
+  } catch (e: unknown) {
     console.error('Logout API call failed', e);
   }
   // Now clear ALL local state

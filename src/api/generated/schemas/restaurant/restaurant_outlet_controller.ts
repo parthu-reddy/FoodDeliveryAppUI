@@ -48,7 +48,6 @@ const Outlet = z
     fssaiLicenseNumber: z.string(),
     bannerUrl: z.string(),
     timings: z.array(OutletTiming),
-    isActive: z.boolean(),
     defaultPrepTimeSeconds: z.number().int(),
     cuisine: z.string(),
     rating: z.number(),
@@ -84,14 +83,14 @@ const PageMapStringObject = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    size: z.number().int(),
-    content: z.array(z.record(z.object({}).partial().passthrough())),
+    numberOfElements: z.number().int(),
     number: z.number().int(),
     sort: z.array(SortObject),
-    first: z.boolean(),
+    size: z.number().int(),
+    content: z.array(z.record(z.object({}).partial().passthrough())),
     pageable: PageableObject,
     last: z.boolean(),
-    numberOfElements: z.number().int(),
+    first: z.boolean(),
     empty: z.boolean(),
   })
   .partial()

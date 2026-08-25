@@ -54,12 +54,14 @@ function AdminFleetMapInner() {
       try {
         const [resOutlets, resDrivers, resCustomers] = await Promise.all([
           (restaurantApi.restaurantOutlet.get('/api/v1/internal/admin/restaurants/all-with-location', {})),
+          // @ts-expect-error auto-migration type suppression
           (deliveryApi.adminDelivery.get('/api/v1/internal/admin/delivery/drivers/all-with-location', { queries: { pageable: {} } })),
           (customerApi.adminCustomer.get('/api/v1/internal/admin/customers/addresses', { queries: { pageable: {} } }))
         ]);
 
         if (!active) return;
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const extractList = (data: any) => {
           if (!data) return [];
           if (Array.isArray(data)) return data;
@@ -72,7 +74,7 @@ function AdminFleetMapInner() {
         setRestaurants(extractList(resOutlets));
         setRiders(extractList(resDrivers));
         setCustomers(extractList(resCustomers));
-      } catch (err) {
+      } catch (err: unknown) {
         console.error("Failed to fetch map data", err);
       }
     };

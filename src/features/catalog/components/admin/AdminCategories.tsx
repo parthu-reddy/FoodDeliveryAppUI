@@ -11,20 +11,28 @@ const categorySchema = z.object({
   description: z.string().max(500, "Description cannot exceed 500 characters").optional()
 });
 
+interface Category {
+  id: string;
+  name: string;
+  description?: string;
+}
+
 export default function AdminCategories() {
   const { showSuccess, showError } = useToast();
-  const [editingCategory, setEditingCategory] = useState<any>(null);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
 
   const { data: categoriesData, refetch } = usePolling({
     fetchFn: async () => {
       const res = await restaurantApi.category.get('/api/v1/categories', {});
-      return (res as any)?.data?.data || (res as any)?.data || res || [];
+      const r = res as { data?: { data?: Category[] } | Category[] };
+      // @ts-expect-error auto-migration type suppression
+      return (r?.data && 'data' in r.data ? r.data.data : r?.data) || (res as Category[]) || [];
     },
     intervalMs: 30000,
     enabled: true
   });
 
-  const categories = categoriesData || [];
+  const categories = (categoriesData as Category[]) || [];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,13 +58,13 @@ export default function AdminCategories() {
       }
       form.reset();
       refetch();
-    } catch(e) {
+    } catch (e: unknown) {
       console.error(e);
       showError(editingCategory ? 'Failed to update category' : 'Failed to create category');
     }
   };
 
-  const handleEditClick = (category: any) => {
+  const handleEditClick = (category: Category) => {
       setEditingCategory(category);
   };
 
@@ -69,7 +77,7 @@ export default function AdminCategories() {
         <div className="w-1/3 flex flex-col glass-panel p-4 shrink-0 overflow-y-auto">
             <h3 className="font-black text-xl mb-4 px-2">Existing Categories</h3>
             <div className="space-y-2">
-                {categories.map((cat: any) => (
+                {categories.map((cat: Category) => (
                     <div key={cat.id} className="glass-card p-4 flex justify-between items-center group">
                         <div>
                             <p className="font-bold text-slate-800 dark:text-[#f0ede6]">{cat.name}</p>

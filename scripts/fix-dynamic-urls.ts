@@ -31,7 +31,7 @@ for (const sourceFile of sourceFiles) {
         let callee;
         try {
             callee = getUnderlyingExpression(callExpr.getExpression());
-        } catch (e) { continue; }
+        } catch (_e) { continue; }
         
         // We only care about things like `api.module.method`
         if (!Node.isPropertyAccessExpression(callee)) continue;

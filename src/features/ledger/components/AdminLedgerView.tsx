@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { asUntyped, WirePage } from '../../../lib/untypedResponse';
 
 export default function AdminLedgerView() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [entries, setEntries] = useState<any[]>([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -36,7 +37,7 @@ export default function AdminLedgerView() {
         setEntries(asUntyped<WirePage<unknown>>(pageData).content ?? []);
         setTotalPages(asUntyped<WirePage<unknown>>(pageData).totalPages ?? 1);
       }
-    } catch (e) {
+    } catch (e: unknown) {
       console.error(e);
       showError(parseApiError(e, 'Failed to fetch ledger transactions').message);
     } finally {

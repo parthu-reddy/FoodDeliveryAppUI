@@ -17,6 +17,7 @@ const AdminFleetMap = React.lazy(() => import("@features/maps-tracking/component
 
 export default function AdminPortal({
   onLogout,
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 }: any) {
   const { theme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<'deliveries' | 'users' | 'categories' | 'map' | 'ledger' | 'payouts' | 'interventions'>('map');

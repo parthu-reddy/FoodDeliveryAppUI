@@ -5,17 +5,19 @@ import React from 'react';
 // Use React.lazy for map
 const OrderTrackingMap = React.lazy(() => import("@features/maps-tracking/components/OrderTrackingMap"));
 
+import { Order } from '@/types';
 import { customerApi } from '@/lib/zodiosClients';
+import { asUntyped } from '@/lib/untypedResponse';
 
 interface CustomerOrderTrackerProps {
-  currentTrackingOrder: any;
-  setTrackingOrder: (order: any | null) => void;
-  isActiveOrder: (order: any) => boolean;
-  activeOrders: any[];
-  isFailedOrder: (order: any) => boolean;
-  onAddApiLog?: (log: any) => void;
+  currentTrackingOrder: Order;
+  setTrackingOrder: (order: Order | null) => void;
+  isActiveOrder: (order: Order) => boolean;
+  activeOrders: Order[];
+  isFailedOrder: (order: Order) => boolean;
+  onAddApiLog?: (log: unknown) => void;
   onUpdateOrder?: (id: string, status: string) => void;
-  setInternalOrders: React.Dispatch<React.SetStateAction<any[]>>;
+  setInternalOrders: React.Dispatch<React.SetStateAction<Order[]>>;
   showError: (msg: string) => void;
   getFriendlyStatusMessage: (status: string, deliveryStatus?: string) => string;
 }
@@ -125,7 +127,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
                       }, { params: { orderId: currentTrackingOrder.id } });
                       if (onUpdateOrder) onUpdateOrder(currentTrackingOrder.id, OrderStatus.ACCEPTED);
                       setInternalOrders(prev => prev.map(o => o.id === currentTrackingOrder.id ? { ...o, status: OrderStatus.ACCEPTED } : o));
-                    } catch (e) {
+                    } catch (e: unknown) {
                       console.error("Failed to approve delay", e);
                     }
                   }}
@@ -145,7 +147,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
                       }, { params: { orderId: currentTrackingOrder.id } });
                       if (onUpdateOrder) onUpdateOrder(currentTrackingOrder.id, OrderStatus.CANCELLED);
                       setInternalOrders(prev => prev.map(o => o.id === currentTrackingOrder.id ? { ...o, status: OrderStatus.CANCELLED } : o));
-                    } catch (e) {
+                    } catch (e: unknown) {
                       console.error("Failed to reject delay", e);
                     }
                   }}
@@ -186,9 +188,10 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
                     }
                     try {
                       await customerApi.order.post('/api/v1/orders/:orderId/cancel', undefined, { params: { orderId: currentTrackingOrder.id } });
-                    } catch (e: any) {
+                    } catch (e: unknown) {
                       console.error("Failed to cancel order", e);
-                      showError(e.response?.data?.message || "Failed to cancel order");
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      showError((e as any).response?.data?.message || "Failed to cancel order");
                       // Revert optimistic update
                       if (onUpdateOrder) onUpdateOrder(currentTrackingOrder.id, oldStatus);
                       else {
@@ -247,7 +250,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
                         <div className="absolute -left-[29px] top-1 w-3 h-3 rounded-full bg-emerald-500 ring-4 ring-white dark:ring-slate-900" />
                         <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Refund Initiated</p>
                         <p className="text-[10px] text-slate-500">
-                          ${(currentTrackingOrder.refundedAmount || currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0).toFixed(2)}
+                          ${(currentTrackingOrder.refundedAmount || currentTrackingOrder.totalAmount || (currentTrackingOrder as {total?: number}).total || 0).toFixed(2)}
                         </p>
                       </div>
 
@@ -364,22 +367,24 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
               </div>
             )}
             <div className="space-y-3">
-              {currentTrackingOrder.items && currentTrackingOrder.items.map((item: any, idx: number) => (
+              {currentTrackingOrder.items && currentTrackingOrder.items.map((item: unknown, idx: number) => {
+                const i = asUntyped<unknown>(item) as { item?: { id?: string; name?: string; price?: number }; quantity?: number; name?: string; price?: number };
+                return (
                 <div key={idx} className="flex justify-between text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  <span>{item.quantity || 1}x {item.item?.name || item.name || 'Item'}</span>
-                  <span>₹{((item.item?.price || item.price || 0) * (item.quantity || 1)).toFixed(2)}</span>
+                  <span>{i.quantity || 1}x {i.item?.name || i.name || 'Item'}</span>
+                  <span>₹{((i.item?.price || i.price || 0) * (i.quantity || 1)).toFixed(2)}</span>
                 </div>
-              ))}
+              )})}
             </div>
             
             <div className="pt-4 mt-4 border-t border-dashed border-slate-200 dark:border-slate-700 space-y-2">
               <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
                 <span>Items Total</span>
-                <span>₹{currentTrackingOrder.items ? currentTrackingOrder.items.reduce((sum: number, item: any) => sum + ((item.item?.price || item.price || 0) * (item.quantity || 1)), 0).toFixed(2) : '0.00'}</span>
+                <span>₹{currentTrackingOrder.items ? currentTrackingOrder.items.reduce((sum: number, item: unknown) => { const i = asUntyped<unknown>(item) as { item?: { price?: number }, price?: number, quantity?: number }; return sum + ((i.item?.price || i.price || 0) * (i.quantity || 1))}, 0).toFixed(2) : '0.00'}</span>
               </div>
               <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
                 <span>Delivery Fee</span>
-                <span>₹{currentTrackingOrder.deliveryFee !== undefined ? currentTrackingOrder.deliveryFee.toFixed(2) : (currentTrackingOrder.items ? ((currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0) - currentTrackingOrder.items.reduce((sum: number, item: any) => sum + ((item.item?.price || item.price || 0) * (item.quantity || 1)), 0)).toFixed(2) : '0.00')}</span>
+                <span>₹{currentTrackingOrder.deliveryFee !== undefined ? currentTrackingOrder.deliveryFee.toFixed(2) : (currentTrackingOrder.items ? ((currentTrackingOrder.totalAmount || (currentTrackingOrder as {total?:number}).total || 0) - currentTrackingOrder.items.reduce((sum: number, item: unknown) => { const i = asUntyped<unknown>(item) as { item?: { price?: number }, price?: number, quantity?: number }; return sum + ((i.item?.price || i.price || 0) * (i.quantity || 1)) }, 0)).toFixed(2) : '0.00')}</span>
               </div>
               {currentTrackingOrder.sgst !== undefined && (
                 <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
@@ -395,7 +400,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
               )}
               <div className="flex justify-between text-lg font-black text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-slate-700">
                 <span>Total Paid</span>
-                <span>₹{(currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0).toFixed(2)}</span>
+                <span>₹{(currentTrackingOrder.totalAmount || (currentTrackingOrder as {total?: number}).total || 0).toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -435,22 +440,24 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
           <div className="space-y-4">
             <h3 className="font-semibold text-lg text-slate-900 dark:text-[#f0ede6]">{currentTrackingOrder.restaurantName}</h3>
             <div className="space-y-3">
-              {currentTrackingOrder.items && currentTrackingOrder.items.map((item: any, idx: number) => (
+              {currentTrackingOrder.items && currentTrackingOrder.items.map((item: unknown, idx: number) => {
+                const i = asUntyped<unknown>(item) as { item?: { id?: string; name?: string; price?: number }; quantity?: number; name?: string; price?: number };
+                return (
                 <div key={idx} className="flex justify-between text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  <span>{item.quantity || 1}x {item.item?.name || item.name || 'Item'}</span>
-                  <span>₹{((item.item?.price || item.price || 0) * (item.quantity || 1)).toFixed(2)}</span>
+                  <span>{i.quantity || 1}x {i.item?.name || i.name || 'Item'}</span>
+                  <span>₹{((i.item?.price || i.price || 0) * (i.quantity || 1)).toFixed(2)}</span>
                 </div>
-              ))}
+              )})}
             </div>
             
             <div className="pt-4 border-t border-dashed border-rose-500/20 dark:border-slate-700 space-y-2">
               <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
                 <span>Items Total</span>
-                <span>₹{currentTrackingOrder.items ? currentTrackingOrder.items.reduce((sum: number, item: any) => sum + ((item.item?.price || item.price || 0) * (item.quantity || 1)), 0).toFixed(2) : '0.00'}</span>
+                <span>₹{currentTrackingOrder.items ? currentTrackingOrder.items.reduce((sum: number, item: unknown) => { const i = asUntyped<unknown>(item) as { item?: { price?: number }, price?: number, quantity?: number }; return sum + ((i.item?.price || i.price || 0) * (i.quantity || 1)) }, 0).toFixed(2) : '0.00'}</span>
               </div>
               <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
                 <span>Delivery Fee {currentTrackingOrder.distanceKm ? `(${currentTrackingOrder.distanceKm} km)` : ''}</span>
-                <span>₹{currentTrackingOrder.charges?.find((c: any) => c.category === 'DELIVERY_FEE' && c.payerType === 'CUSTOMER')?.amount?.toFixed(2) || (currentTrackingOrder.deliveryFee !== undefined ? currentTrackingOrder.deliveryFee.toFixed(2) : (currentTrackingOrder.items ? ((currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0) - currentTrackingOrder.items.reduce((sum: number, item: any) => sum + ((item.item?.price || item.price || 0) * (item.quantity || 1)), 0)).toFixed(2) : '0.00'))}</span>
+                <span>₹{((currentTrackingOrder as {charges?: { category?: string, payerType?: string, amount?: number }[]}).charges || [])?.find((c: unknown) => { const charge = c as { category?: string, payerType?: string, amount?: number }; return charge.category === 'DELIVERY_FEE' && charge.payerType === 'CUSTOMER'; })?.amount?.toFixed(2) || (currentTrackingOrder.deliveryFee !== undefined ? currentTrackingOrder.deliveryFee.toFixed(2) : (currentTrackingOrder.items ? ((currentTrackingOrder.totalAmount || (currentTrackingOrder as {total?:number}).total || 0) - currentTrackingOrder.items.reduce((sum: number, item: unknown) => { const i = asUntyped<unknown>(item) as { item?: { price?: number }, price?: number, quantity?: number }; return sum + ((i.item?.price || i.price || 0) * (i.quantity || 1)) }, 0)).toFixed(2) : '0.00'))}</span>
               </div>
               {currentTrackingOrder.sgst !== undefined && (
                 <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
@@ -466,7 +473,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
               )}
               <div className="flex justify-between text-lg font-black text-slate-900 dark:text-white pt-2 border-t border-rose-500/20 dark:border-slate-700">
                 <span>{isFailedOrder(currentTrackingOrder) ? 'Total Refunded' : 'Total Paid'}</span>
-                <span className={isFailedOrder(currentTrackingOrder) ? 'text-red-500' : ''}>₹{(currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0).toFixed(2)}</span>
+                <span className={isFailedOrder(currentTrackingOrder) ? 'text-red-500' : ''}>₹{(currentTrackingOrder.totalAmount || (currentTrackingOrder as {total?: number}).total || 0).toFixed(2)}</span>
               </div>
             </div>
           </div>

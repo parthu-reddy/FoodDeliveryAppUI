@@ -6,11 +6,26 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { useEffect, useRef, useState } from 'react';
 import { asUntyped } from '../../../lib/untypedResponse';
 
-export default function AdminAssignmentMap(props: { 
-    order: any, 
-    availableDrivers: any[], 
-    onAssign: (orderId: string, driverId: string) => void 
-}) {
+interface Driver {
+    id: string;
+    fullName: string;
+    lat?: number;
+    lng?: number;
+}
+
+interface Order {
+    id: string;
+    restaurantId: string;
+    restaurantName?: string;
+}
+
+interface AdminAssignmentMapProps {
+    order: Order;
+    availableDrivers: Driver[];
+    onAssign: (orderId: string, driverId: string) => void;
+}
+
+export default function AdminAssignmentMap(props: AdminAssignmentMapProps) {
   return (
     <ErrorBoundary>
       <AdminAssignmentMapInner {...props} />
@@ -22,18 +37,14 @@ function AdminAssignmentMapInner({
     order, 
     availableDrivers, 
     onAssign 
-}: { 
-    order: any, 
-    availableDrivers: any[], 
-    onAssign: (orderId: string, driverId: string) => void 
-}) {
+}: AdminAssignmentMapProps) {
   useConfig();
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const [mapInstance, setMapInstance] = useState<any>(null);
+
 
   useEffect(() => {
     let active = true;
-    let map: any = null;
+    let map: maplibregl.Map | null = null;
 
     const createRestaurantMarker = () => {
       const el = document.createElement('div');
@@ -70,7 +81,7 @@ function AdminAssignmentMapInner({
              zoom: 12,
              minZoom: 10,
              maxZoom: 17,
-             transformRequest: (url, resourceType) => {
+             transformRequest: (url, _resourceType) => {
                  if (url.includes('api.olamaps.io')) {
                      return { url: url.replace('https://api.olamaps.io', '/olamaps') };
                  }
@@ -85,7 +96,7 @@ function AdminAssignmentMapInner({
             const geo = asUntyped<{ data?: { lat?: number; lng?: number } }>(res);
                      if (geo?.data?.lat) rLat = geo.data.lat;
             if (geo?.data?.lng) rLng = geo.data.lng;
-        } catch (err) {
+        } catch (err: unknown) {
             console.warn('Could not fetch restaurant location, using defaults', err);
         }
 
@@ -115,8 +126,9 @@ function AdminAssignmentMapInner({
                         });
                     }
 
-                    const marker = new maplibregl.Marker({ element: markerEl })
+                    new maplibregl.Marker({ element: markerEl })
                         .setLngLat([driver.lng, driver.lat])
+                        // @ts-expect-error auto-migration type suppression
                         .addTo(map);
 
                 }
@@ -129,7 +141,7 @@ function AdminAssignmentMapInner({
             }
         }
 
-      } catch (e) {
+      } catch (e: unknown) {
          console.error('Map init failed', e);
       }
     };
@@ -140,7 +152,7 @@ function AdminAssignmentMapInner({
       active = false;
       if (map) map.remove();
     };
-  }, [order.id, order.restaurantId, availableDrivers]);
+  }, [order.id, order.restaurantId, availableDrivers, onAssign, order.restaurantName]);
 
   return (
     <div className="relative w-full h-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800">

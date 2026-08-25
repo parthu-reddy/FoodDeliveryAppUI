@@ -29,7 +29,7 @@ export const useChatWebSocket = ({ sessionId, onMessageReceived, onTypingIndicat
       connectHeaders: {
         Authorization: `Bearer ${token}`
       },
-      debug: (str) => {
+      debug: (_str) => {
         // console.log('STOMP: ' + str);
       },
       reconnectDelay: 5000,
@@ -129,7 +129,7 @@ export const useChatWebSocket = ({ sessionId, onMessageReceived, onTypingIndicat
         console.error("Image upload failed:", data.message);
         return null;
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error uploading image:", error);
       return null;
     }

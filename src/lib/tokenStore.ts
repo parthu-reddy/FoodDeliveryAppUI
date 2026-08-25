@@ -21,13 +21,16 @@ export const clearToken = () => {
 
 // --- Profile ---
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let memoryProfile: any = null;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const setUserProfile = (profile: any) => {
   memoryProfile = profile;
   localStorage.setItem('user_profile', JSON.stringify(profile));
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getUserProfile = (): any | null => {
   if (memoryProfile) return memoryProfile;
 
@@ -81,7 +84,7 @@ export const decodeJwt = (token: string) => {
         return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
     }).join(''));
     return JSON.parse(jsonPayload);
-  } catch (e) {
+  } catch (e: unknown) {
     return null;
   }
 };

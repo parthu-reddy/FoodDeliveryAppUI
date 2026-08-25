@@ -199,13 +199,6 @@ const endpoints = makeApi([
     path: "/api/delivery/profile",
     alias: "getProfile",
     requestFormat: "json",
-    parameters: [
-      {
-        name: "phoneNumber",
-        type: "Query",
-        schema: z.string(),
-      },
-    ],
     response: ApiResponseDeliveryExecutive,
   },
   {

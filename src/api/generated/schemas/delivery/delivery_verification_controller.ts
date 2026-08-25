@@ -4,10 +4,17 @@ import { z } from "zod";
 import { ApiResponseObject } from "./common";
 
 const RCRequest = z
-  .object({ registrationNumber: z.string(), documentUrl: z.string() })
+  .object({
+    registrationNumber: z.string(),
+    documentUrl: z.string().optional(),
+  })
   .passthrough();
 const DLRequest = z
-  .object({ dlNumber: z.string(), documentUrl: z.string(), dob: z.string() })
+  .object({
+    dlNumber: z.string(),
+    dateOfBirth: z.string(),
+    documentUrl: z.string().optional(),
+  })
   .passthrough();
 const BankRequest = z
   .object({

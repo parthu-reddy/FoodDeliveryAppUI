@@ -46,14 +46,14 @@ const PageUserDTO = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
+    numberOfElements: z.number().int(),
+    number: z.number().int(),
     size: z.number().int(),
     content: z.array(UserDTO),
-    number: z.number().int(),
     sort: z.array(SortObject),
-    pageable: PageableObject,
-    last: z.boolean(),
     first: z.boolean(),
-    numberOfElements: z.number().int(),
+    last: z.boolean(),
+    pageable: PageableObject,
     empty: z.boolean(),
   })
   .partial()

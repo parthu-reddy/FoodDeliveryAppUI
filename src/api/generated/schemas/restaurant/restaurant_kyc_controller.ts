@@ -5,20 +5,18 @@ import { ApiResponseVoid } from "./common";
 
 const GstinRequest = z
   .object({
-    brandId: z.string().uuid(),
+    brandId: z.string().uuid().optional(),
     gstin: z.string(),
     brandName: z.string(),
   })
-  .partial()
   .passthrough();
 const BankAccountRequest = z
   .object({
-    brandId: z.string().uuid(),
+    brandId: z.string().uuid().optional(),
     accountNumber: z.string(),
     ifscCode: z.string(),
     brandName: z.string(),
   })
-  .partial()
   .passthrough();
 const VerificationCallbackRequest = z
   .object({

@@ -17,6 +17,13 @@ const endpoints = makeApi([
     ],
     response: z.record(CampaignPacingDTO),
   },
+  {
+    method: "get",
+    path: "/api/v1/internal/campaigns/active-for-bidding",
+    alias: "getActiveCampaignsForBidding",
+    requestFormat: "json",
+    response: z.array(z.record(z.object({}).partial().passthrough())),
+  },
 ]);
 
 export const Internal_campaign_controllerApi = new Zodios(endpoints);

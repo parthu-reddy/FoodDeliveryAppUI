@@ -27,14 +27,16 @@ interface OutletMenuEditorProps {
   onRefresh: () => void;
 }
 
-export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRefresh }: OutletMenuEditorProps) {
-  const { showError, showSuccess, showInfo } = useToast();
+export default function OutletMenuEditor({ restaurantId, brandId, onRefresh }: OutletMenuEditorProps) {
+  const { showError } = useToast();
   const [selectedOutlet, setSelectedOutlet] = useState<string>(restaurantId);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [masterItems, setMasterItems] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [categories, setCategories] = useState<any[]>([]);
   
   // Override Add/Edit State
-  const [addingItemToCatId, setAddingItemToCatId] = useState<string | null>(null);
+
   const [isAddingOverride, setIsAddingOverride] = useState<string | null>(null);
 
   // General Item Add State
@@ -48,12 +50,13 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
   const [mPrepTime, setMPrepTime] = useState('15');
   const [mDesc, setMDesc] = useState('');
   const [mImg, setMImg] = useState('');
-  const [mVeg, setMVeg] = useState(true);
+  const [mVeg] = useState(true);
   
   // Override Value State
   const [oPrice, setOPrice] = useState('');
   const [oPrepTime, setOPrepTime] = useState('');
   const [oActive, setOActive] = useState(true);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [overrides, setOverrides] = useState<any[]>([]);
 
   // Category Timing Edit State
@@ -83,6 +86,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
       const data = await restaurantApi.category.get('/api/v1/brands/:brandId/categories', { params: { brandId } });
       if (data.success && data.data) {
         const updatedCategories = await Promise.all(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           data.data.map(async (cat: any) => {
             const catData = { ...cat };
             try {
@@ -93,7 +97,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
                 } else {
                     catData.timings = [];
                 }
-            } catch (e) { catData.timings = []; }
+            } catch (_e) { catData.timings = []; }
             
             try {
                 const bRes = await restaurantApi.category.get('/api/v1/brands/:brandId/categories/:categoryId/timings', { params: { brandId, categoryId: cat.id } });
@@ -102,7 +106,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
                 } else {
                     catData.brandTimings = [];
                 }
-            } catch (e) { catData.brandTimings = []; }
+            } catch (_e) { catData.brandTimings = []; }
             
             return catData;
           })
@@ -211,7 +215,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
     }
 
     await restaurantApi.catalog.post('/api/v1/outlets/:outletId/menu-overrides/:masterMenuItemId', overridePayload, { params: { outletId: selectedOutlet, masterMenuItemId: newMaster.data?.id ?? '' } });
-    setAddingItemToCatId(null);
+
     setIsAddingItem(false);
     setMName(""); setMPrice(""); setMPackingCharge("0"); setMPrepTime("15"); setMDesc(""); setMCatId('');
     setOPrice(""); setOPrepTime(""); setOActive(true);
@@ -220,16 +224,11 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
     onRefresh();
   };
 
-  const openAddOutletItem = (catId: string) => {
-    setAddingItemToCatId(catId);
-    setIsAddingOverride(null);
-    setMName(''); setMPrice(''); setMPackingCharge('0'); setMPrepTime('15'); setMDesc('');
-    setOPrice(''); setOActive(true); setOPrepTime('');
-  };
+
   
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const startEditingOverride = (item: any, currentOverride: any) => {
     setIsAddingOverride(item.id);
-    setAddingItemToCatId(null);
     if (currentOverride) {
         setOPrice(currentOverride.overriddenPrice ? currentOverride.overriddenPrice.toString() : '');
         setOPrepTime(currentOverride.overriddenPrepTimeMinutes ? currentOverride.overriddenPrepTimeMinutes.toString() : '');
@@ -345,6 +344,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
                     <div>
                       {hasTimings ? (
                         <div className="space-y-1">
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             {cat.timings.map((t: any, i: number) => (
                                 <div key={i} className="text-[10px] font-mono font-bold rounded px-2 py-1 w-fit text-emerald-600 dark:text-emerald-400 bg-emerald-500/10">
                                 {t.openingTime.substring(0,5)} - {t.closingTime.substring(0,5)}
@@ -358,6 +358,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
                           </div>
                           {hasBrandTimings ? (
                               <div className="space-y-1">
+                              // eslint-disable-next-line @typescript-eslint/no-explicit-any
                               {cat.brandTimings.map((t: any, i: number) => (
                                   <div key={i} className="text-[10px] font-mono font-bold rounded px-2 py-0.5 w-fit text-orange-600 dark:text-orange-400 bg-orange-500/10 opacity-75">
                                   {t.openingTime.substring(0,5)} - {t.closingTime.substring(0,5)}
@@ -474,6 +475,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, menuList, onRe
           );
         })}
         
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         {/* Uncategorized Items (if any exist that were mapped incorrectly or created without category) */}
         {masterItems.filter(i => !categories.find(c => c.id === i.categoryId)).length > 0 && (
             <div className="bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl">

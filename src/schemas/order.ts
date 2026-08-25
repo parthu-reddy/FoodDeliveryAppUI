@@ -31,6 +31,7 @@ export const orderSchema = z.object({
   grossPayout: z.number().optional(),
   payout: z.number().optional(),
   itemsJson: z.string().optional(),
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 }).passthrough().transform((raw: any) => {
   const s = raw.status?.toUpperCase() || '';
   const d = raw.deliveryStatus?.toUpperCase() || '';
@@ -42,6 +43,7 @@ export const orderSchema = z.object({
   }
 
   // Calculate totals if missing
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const calculatedTotal = parsedItems.reduce((acc: number, item: any) => acc + (item.item?.price || item.price || 0) * (item.quantity || 1), 0);
 
   return {
@@ -72,6 +74,7 @@ export const orderSchema = z.object({
 
 export type Order = z.infer<typeof orderSchema>;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const normalizeOrder = (raw: any): Order | undefined => {
   const result = orderSchema.safeParse(raw);
   if (result.success) {

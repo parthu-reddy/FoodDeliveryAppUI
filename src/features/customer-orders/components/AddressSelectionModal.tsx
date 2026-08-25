@@ -7,7 +7,9 @@ import { asUntyped } from '../../../lib/untypedResponse';
 interface AddressSelectionModalProps {
   isOpen: boolean;
   onClose: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   savedAddresses: any[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onSelectAddress: (address: any) => void;
   onUseCurrentLocation: (addressStr: string) => void;
   onAddNewAddress: () => void;
@@ -35,7 +37,7 @@ export default function AddressSelectionModal({
             } else {
               onUseCurrentLocation("Current Location");
             }
-          } catch (e) {
+          } catch (_e: unknown) {
              onUseCurrentLocation("Current Location");
           }
         },

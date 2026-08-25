@@ -18,7 +18,7 @@ export const schemas = {
 const endpoints = makeApi([
   {
     method: "post",
-    path: "/api/v1/admin/refunds/:ticketId/review",
+    path: "/api/v1/internal/admin/refunds/:ticketId/review",
     alias: "addReviewNotes",
     requestFormat: "json",
     parameters: [
@@ -37,7 +37,7 @@ const endpoints = makeApi([
   },
   {
     method: "post",
-    path: "/api/v1/admin/refunds/:ticketId/resolve",
+    path: "/api/v1/internal/admin/refunds/:ticketId/resolve",
     alias: "resolveTicket",
     requestFormat: "json",
     parameters: [
@@ -61,7 +61,7 @@ const endpoints = makeApi([
   },
   {
     method: "get",
-    path: "/api/v1/admin/refunds",
+    path: "/api/v1/internal/admin/refunds",
     alias: "getTickets",
     requestFormat: "json",
     parameters: [

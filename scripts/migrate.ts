@@ -59,7 +59,7 @@ for (const sourceFile of project.getSourceFiles()) {
     let apiName = '';
     let method = '';
     let isAsAny = false;
-    const expressionNodeToReplace = expression;
+    const _expressionNodeToReplace = expression;
 
     // Pattern 1: customerApi.get('/path')
     if (expression.isKind(SyntaxKind.PropertyAccessExpression)) {

@@ -9,7 +9,7 @@ import PostDeliverySupportModal from './PostDeliverySupportModal';
 
 interface CustomerOrderHistoryProps {
   onClose: () => void;
-  onAddApiLog?: (log: any) => void;
+  onAddApiLog?: (log: unknown) => void;
 }
 
 export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHistoryProps) {
@@ -124,6 +124,7 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
                 </div>
 
                 <div className="text-sm text-slate-700 dark:text-slate-300 bg-white/40 dark:bg-white/5 rounded-xl p-3 border border-white/20 dark:border-white/5">
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   {order.items?.map((item: any, idx: number) => (
                     <div key={idx} className="flex gap-2">
                       <span className="font-semibold text-indigo-600 dark:text-indigo-400">{item.quantity || 1}x</span>

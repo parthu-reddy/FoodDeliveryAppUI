@@ -6,6 +6,7 @@ import { CartState } from '../model/useCustomerCart';
 interface CustomerFreeDeliveryTrackerProps {
   carts: Record<string, CartState>;
   getCartTotal: (restaurantId: string) => { subtotal: number; minAmountForFreeDelivery?: number };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   deliveryPricing: any;
   selectedRestaurantId?: string;
   isQuoting?: boolean;

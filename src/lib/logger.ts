@@ -5,7 +5,7 @@ export type LogLevel = 'DEBUG' | 'INFO' | 'WARN' | 'ERROR';
 interface LogPayload {
   level: LogLevel;
   message: string;
-  data?: any;
+  data?: unknown;
   timestamp: string;
 }
 
@@ -15,7 +15,7 @@ class Logger {
   private readonly MAX_BATCH_SIZE = 10;
   private flushTimeout: NodeJS.Timeout | null = null;
 
-  private formatMessage(level: LogLevel, message: string, data?: any) {
+  private formatMessage(level: LogLevel, message: string, data?: unknown) {
     const ts = new Date().toISOString();
     return { level, message, data, timestamp: ts };
   }
@@ -39,7 +39,7 @@ class Logger {
         body: payload,
         keepalive: true
       }).catch(() => {});
-    } catch (e) {
+    } catch (e: unknown) {
       console.error('Failed to send logs to backend', e);
     }
   }
@@ -62,19 +62,19 @@ class Logger {
     }
   }
 
-  public debug(message: string, data?: any) {
+  public debug(message: string, data?: unknown) {
     if (this.isDev) {
       console.debug(`[DEBUG] ${message}`, data || '');
     }
   }
 
-  public info(message: string, data?: any) {
+  public info(message: string, data?: unknown) {
     if (this.isDev) {
       console.info(`[INFO] ${message}`, data || '');
     }
   }
 
-  public warn(message: string, data?: any) {
+  public warn(message: string, data?: unknown) {
     const payload = this.formatMessage('WARN', message, data);
     if (this.isDev) {
       console.warn(`[WARN] ${message}`, data || '');
@@ -83,7 +83,7 @@ class Logger {
     }
   }
 
-  public error(message: string, data?: any) {
+  public error(message: string, data?: unknown) {
     const payload = this.formatMessage('ERROR', message, data);
     if (this.isDev) {
       console.error(`[ERROR] ${message}`, data || '');

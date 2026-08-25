@@ -1,0 +1,1243 @@
+[
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/server.ts",
+    "msgs": [
+      {
+        "line": 45,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 94,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 121,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/admin-ops/components/AdminLiveOperations.tsx",
+    "msgs": [
+      {
+        "line": 15,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 30,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 45,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 65,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/admin-ops/components/AdminManualInterventions.tsx",
+    "msgs": [
+      {
+        "line": 13,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 32,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 53,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 75,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/admin-ops/components/AdminUserManagement.tsx",
+    "msgs": [
+      {
+        "line": 19,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 21,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 22,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 35,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 74,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 74,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 108,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 114,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 114,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 126,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 131,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/campaigns-ads/components/CampaignManagement.tsx",
+    "msgs": [
+      {
+        "line": 101,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 114,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 134,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 162,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 163,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/catalog/components/PartnerAccountModal.tsx",
+    "msgs": [
+      {
+        "line": 36,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 65,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 74,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/catalog/components/admin/AdminCategories.tsx",
+    "msgs": [
+      {
+        "line": 16,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 21,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 21,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 59,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 72,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/catalog/components/customer/CustomerMenuView.tsx",
+    "msgs": [
+      {
+        "line": 8,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 9,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 10,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 13,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 17,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 18,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 167,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/catalog/components/customer/CustomerOutletSelectorModal.tsx",
+    "msgs": [
+      {
+        "line": 15,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/catalog/components/customer/CustomerRestaurantBrowser.tsx",
+    "msgs": [
+      {
+        "line": 10,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 13,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 35,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/catalog/components/customer/CustomerRestaurantCard.tsx",
+    "msgs": [
+      {
+        "line": 10,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/catalog/components/restaurant/BrandMasterMenu.tsx",
+    "msgs": [
+      {
+        "line": 32,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 33,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 72,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 208,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 354,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/catalog/components/restaurant/OutletMenuEditor.tsx",
+    "msgs": [
+      {
+        "line": 33,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 34,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 57,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 86,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 230,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 230,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 348,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 361,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/catalog/components/restaurant/OutletRegistration.tsx",
+    "msgs": [
+      {
+        "line": 45,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 229,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 344,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/catalog/components/restaurant/OutletSettingsEditor.tsx",
+    "msgs": [
+      {
+        "line": 6,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/catalog/components/restaurant/OutletShiftEditor.tsx",
+    "msgs": [
+      {
+        "line": 12,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 20,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 71,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/catalog/components/restaurant/RestaurantBrandSelector.tsx",
+    "msgs": [
+      {
+        "line": 9,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/catalog/model/menuStore.ts",
+    "msgs": [
+      {
+        "line": 15,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 16,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/communication/components/ChatWidget.tsx",
+    "msgs": [
+      {
+        "line": 20,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 136,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 231,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/customer-orders/components/AddressSelectionModal.tsx",
+    "msgs": [
+      {
+        "line": 10,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 11,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/customer-orders/components/CustomerActiveOrdersCarousel.tsx",
+    "msgs": [
+      {
+        "line": 6,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/customer-orders/components/CustomerAddressModal.tsx",
+    "msgs": [
+      {
+        "line": 38,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 54,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 188,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 301,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 330,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/customer-orders/components/CustomerAddressPage.tsx",
+    "msgs": [
+      {
+        "line": 33,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 35,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 36,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 183,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 393,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/customer-orders/components/CustomerAddressSelectorModal.tsx",
+    "msgs": [
+      {
+        "line": 9,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 18,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 44,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/customer-orders/components/CustomerCartDrawer.tsx",
+    "msgs": [
+      {
+        "line": 27,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 47,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 93,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 101,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 144,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 148,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 152,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/customer-orders/components/CustomerFreeDeliveryTracker.tsx",
+    "msgs": [
+      {
+        "line": 9,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/customer-orders/components/CustomerOrderHistory.tsx",
+    "msgs": [
+      {
+        "line": 127,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/customer-orders/components/CustomerOrderTracker.tsx",
+    "msgs": [
+      {
+        "line": 11,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 12,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 13,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 14,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 15,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 18,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 367,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 378,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 382,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 438,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 449,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 453,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 453,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/customer-orders/components/PostDeliverySupportModal.tsx",
+    "msgs": [
+      {
+        "line": 5,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 18,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/customer-orders/model/orderStatus.ts",
+    "msgs": [
+      {
+        "line": 3,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 22,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/customer-orders/model/useCustomerCart.ts",
+    "msgs": [
+      {
+        "line": 83,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 180,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 348,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/customer-orders/model/useCustomerOrders.ts",
+    "msgs": [
+      {
+        "line": 22,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 55,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 61,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 75,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 83,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 99,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 100,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/delivery-tasks/components/RiderOnboardingWizard.tsx",
+    "msgs": [
+      {
+        "line": 33,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/delivery-tasks/components/RiderSettingsView.tsx",
+    "msgs": [
+      {
+        "line": 59,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 64,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 226,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 229,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/delivery-tasks/model/useDeliveryOrders.ts",
+    "msgs": [
+      {
+        "line": 16,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 35,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 57,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 65,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 66,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 67,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 73,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 80,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 107,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 137,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 139,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 143,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 279,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 297,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 306,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/identity/components/LoginScreen.tsx",
+    "msgs": [
+      {
+        "line": 44,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 46,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/ledger/components/AdminLedgerView.tsx",
+    "msgs": [
+      {
+        "line": 10,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/ledger/components/AdminPayoutsView.tsx",
+    "msgs": [
+      {
+        "line": 9,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/maps-tracking/components/AdminAssignmentMap.tsx",
+    "msgs": [
+      {
+        "line": 10,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 11,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 26,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 27,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 32,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/maps-tracking/components/AdminFleetMap.tsx",
+    "msgs": [
+      {
+        "line": 63,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/maps-tracking/components/OrderTrackingMap.tsx",
+    "msgs": [
+      {
+        "line": 30,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/payments-wallet/components/CustomerPaymentModal.tsx",
+    "msgs": [
+      {
+        "line": 5,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 24,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 63,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/restaurant-orders/components/OrderHistory.tsx",
+    "msgs": [
+      {
+        "line": 23,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 31,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 41,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 164,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/restaurant-orders/components/RestaurantOrderCard.tsx",
+    "msgs": [
+      {
+        "line": 194,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/restaurant-orders/components/RestaurantOrderDetailsModal.tsx",
+    "msgs": [
+      {
+        "line": 15,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 25,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 100,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/features/restaurant-orders/model/useRestaurantOrders.ts",
+    "msgs": [
+      {
+        "line": 12,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 25,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 61,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 68,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 85,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 89,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 91,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/hooks/useUserProfile.ts",
+    "msgs": [
+      {
+        "line": 16,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/lib/logger.ts",
+    "msgs": [
+      {
+        "line": 8,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 18,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 65,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 71,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 77,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 86,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/lib/parseApiError.ts",
+    "msgs": [
+      {
+        "line": 20,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/lib/tokenStore.ts",
+    "msgs": [
+      {
+        "line": 24,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 26,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 31,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/lib/zodiosClients.ts",
+    "msgs": [
+      {
+        "line": 44,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/pages/admin/AdminPortal.tsx",
+    "msgs": [
+      {
+        "line": 20,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/pages/customer/CustomerDashboard.tsx",
+    "msgs": [
+      {
+        "line": 116,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 158,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 192,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 470,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 532,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/pages/delivery/DeliveryDashboard.tsx",
+    "msgs": [
+      {
+        "line": 71,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 551,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/pages/restaurant/RestaurantDashboard.tsx",
+    "msgs": [
+      {
+        "line": 55,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 122,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 123,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 124,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 125,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 138,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 154,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 174,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/pages/restaurant/RestaurantPortal.tsx",
+    "msgs": [
+      {
+        "line": 17,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/pages/restaurant/RestaurantSettingsShell.tsx",
+    "msgs": [
+      {
+        "line": 23,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 24,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 46,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 47,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 216,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/schemas/order.ts",
+    "msgs": [
+      {
+        "line": 34,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 45,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 75,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/shared/ui/CompleteProfileModal.tsx",
+    "msgs": [
+      {
+        "line": 15,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/shared/ui/ImageLoader.tsx",
+    "msgs": [
+      {
+        "line": 8,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/shared/ui/PaymentModal.tsx",
+    "msgs": [
+      {
+        "line": 142,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 142,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 145,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/shared/ui/RefundModal.tsx",
+    "msgs": [
+      {
+        "line": 200,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/shared/ui/SharedSettingsView.tsx",
+    "msgs": [
+      {
+        "line": 23,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 24,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 80,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 83,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 100,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 365,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 407,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 422,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 473,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/shared/ui/ZodiosSmokeTest.tsx",
+    "msgs": [
+      {
+        "line": 5,
+        "message": "Unexpected any. Specify a different type."
+      },
+      {
+        "line": 6,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  },
+  {
+    "file": "/Users/parthureddy/Documents/Food Delivery.nosync/FoodDeliveryAppUI/src/vite-env.d.ts",
+    "msgs": [
+      {
+        "line": 15,
+        "message": "Unexpected any. Specify a different type."
+      }
+    ]
+  }
+]

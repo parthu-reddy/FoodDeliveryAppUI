@@ -285,13 +285,6 @@ const endpoints = makeApi([
     response: z.object({}).partial().passthrough(),
   },
   {
-    method: "get",
-    path: "/api/config/maps-key",
-    alias: "getMapsKey",
-    requestFormat: "json",
-    response: z.object({}).partial().passthrough(),
-  },
-  {
     method: "delete",
     path: "/api/fleet/driver",
     alias: "deleteDriver",

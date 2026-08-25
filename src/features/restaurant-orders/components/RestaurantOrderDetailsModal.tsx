@@ -12,6 +12,7 @@ interface RestaurantOrderDetailsModalProps {
 }
 
 export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalProps> = ({ order, isOpen, onClose }) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [invoice, setInvoice] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,6 +23,7 @@ export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalPr
       setError(null);
       // Fetch transparent invoice details
       restaurantApi.fulfillment.get('/api/v1/restaurants/:restaurantId/fulfillment/orders/:orderId/invoice', { params: { restaurantId: order.restaurantId, orderId: order.id } })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .then((res: any) => {
           setInvoice(res);
         })
@@ -97,6 +99,7 @@ export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalPr
                 <div>
                   <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Order Items</h3>
                   <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 space-y-3">
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     {data.items?.map((item: any, i: number) => (
                       <div key={i} className="flex justify-between items-center">
                         <div className="flex items-center gap-3">

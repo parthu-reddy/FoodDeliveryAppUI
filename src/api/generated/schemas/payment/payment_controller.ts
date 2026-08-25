@@ -13,7 +13,7 @@ const CreateOrderRequest = z
     internalOrderId: z
       .string()
       .regex(
-        /^([a-zA-Z0-9_]+_)?([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$/
+        /^([a-zA-Z0-9_-]+_)?([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$/
       ),
     amountInInr: z.number(),
     customerPhone: z.string().optional(),
@@ -63,6 +63,20 @@ const endpoints = makeApi([
       },
     ],
     response: z.void(),
+  },
+  {
+    method: "get",
+    path: "/api/v1/payments/status",
+    alias: "getPaymentStatus",
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "orderId",
+        type: "Query",
+        schema: z.string(),
+      },
+    ],
+    response: z.record(z.object({}).partial().passthrough()),
   },
 ]);
 

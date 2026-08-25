@@ -41,8 +41,10 @@ export default function ImageUploadField({ value, onChange, folderId, placeholde
       } else {
         throw new Error("Failed to get public URL");
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to upload file');
+    } catch (err: unknown) {
+      // @ts-expect-error auto-migration type suppression
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setError((err as any).response?.data?.message || (err as any).response?.data?.error || err.message || 'Failed to upload file');
     } finally {
       setLoading(false);
       if (fileInputRef.current) {

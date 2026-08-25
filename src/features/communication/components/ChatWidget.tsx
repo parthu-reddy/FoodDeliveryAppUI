@@ -17,6 +17,7 @@ interface ChatWidgetProps {
   orderId: string;
   currentUserType: 'CUSTOMER' | 'RESTAURANT' | 'DELIVERY';
   otherParticipants?: ChatParticipant[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   order?: any; // To pass order details
   onClose?: () => void;
   onBack?: () => void;
@@ -34,7 +35,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
   const [isTyping, setIsTyping] = useState<Record<string, boolean>>({});
   const [targetUserId, setTargetUserId] = useState<string | null>(null);
   
-  const { startCall, callState, callEndReason, isCaller } = useCallContext();
+  const { startCall } = useCallContext();
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
@@ -133,6 +134,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
           setSessionId(sid);
           
           if (session.participants) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const otherParticipant = session.participants.find((p: any) => p.userId !== user.id);
             if (otherParticipant) {
               setTargetUserId(otherParticipant.userId);
@@ -144,7 +146,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
           if (histData && histData.success) {
             setMessages(asUntyped<ChatMessage[]>(histData.data ?? []));
           }
-        } catch (error) {
+        } catch (error: unknown) {
           console.error("Error initializing chat:", error);
         } finally {
           setIsLoading(false);
@@ -183,10 +185,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
     setIsLoading(false);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputText(e.target.value);
-    sendTypingIndicator();
-  };
+
 
   // The floating chat button
   if (!isOpen) {
@@ -228,6 +227,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
               <span>Order #{orderId.substring(0,8)}</span>
             {order && order.items && Array.isArray(order.items) && order.items.length > 0 && (
               <span className="text-xs opacity-90 truncate max-w-[200px]">
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 {order.items.length} items ({order.items.map((i: any) => i?.item?.name || i?.name || 'Item').join(', ')})
               </span>
             )}

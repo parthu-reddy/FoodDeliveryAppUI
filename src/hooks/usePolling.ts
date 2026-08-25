@@ -65,7 +65,7 @@ export function usePolling<T>({
       if (!isSubscribedRef.current) return;
       setData(result);
       savedOnData.current?.(result);
-    } catch (err) {
+    } catch (err: unknown) {
       if (!isSubscribedRef.current) return;
       const error = err instanceof Error ? err : new Error(String(err));
       setError(error);

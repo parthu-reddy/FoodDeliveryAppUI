@@ -19,9 +19,24 @@ import OutletSettingsEditor from '@features/catalog/components/restaurant/Outlet
 import OutletShiftEditor from '@features/catalog/components/restaurant/OutletShiftEditor';
 import { OrderHistory } from '@features/restaurant-orders/components/OrderHistory';
 
+interface Brand {
+  id: string;
+  name: string;
+  gstin?: string;
+  kycStatus?: string;
+  pennyDropStatus?: string;
+}
+
+interface Outlet {
+  id: string;
+  name: string;
+  fssaiLicenseNumber?: string;
+  timings?: { openingTime: string; closingTime: string }[];
+}
+
 interface RestaurantSettingsShellProps {
-  brands: any[];
-  outlets: any[];
+  brands: Brand[];
+  outlets: Outlet[];
   menuList: MenuItem[];
   selectedOutletId: string;
   restaurantId: string;
@@ -43,8 +58,8 @@ export const RestaurantSettingsShell: React.FC<RestaurantSettingsShellProps> = (
   setShowSettings
 }) => {
   const [settingsTab, setSettingsTab] = useState<"menu-editor" | "outlets" | "history">("menu-editor");
-  const [editingOutletShifts, setEditingOutletShifts] = useState<any | null>(null);
-  const [editingOutletSettings, setEditingOutletSettings] = useState<any | null>(null);
+  const [editingOutletShifts, setEditingOutletShifts] = useState<Outlet | null>(null);
+  const [editingOutletSettings, setEditingOutletSettings] = useState<Outlet | null>(null);
 
   // Default to outlets if no outlets exist
   React.useEffect(() => {
@@ -213,7 +228,7 @@ export const RestaurantSettingsShell: React.FC<RestaurantSettingsShellProps> = (
                         <div className="text-xs text-slate-500 dark:text-slate-300">FSSAI: {o.fssaiLicenseNumber}</div>
                         {o.timings && o.timings.length > 0 && (
                           <div className="mt-1 flex flex-wrap gap-1.5">
-                            {o.timings.map((t: any, i: number) => (
+                            {o.timings.map((t, i: number) => (
                               <span key={i} className="text-[9px] font-bold font-mono bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">
                                 {t.openingTime.substring(0,5)} - {t.closingTime.substring(0,5)}
                               </span>

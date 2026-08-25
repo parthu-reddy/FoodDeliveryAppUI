@@ -12,7 +12,9 @@ function getHeaders() {
 }
 
 async function apiGet(url: string) { const res = await window.fetch(url, { headers: getHeaders() }); const json = await res.json(); if (!res.ok) throw new Error('API Error'); return { data: json?.success !== undefined ? json.data : json }; }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function apiPost(url: string, body: any) { const res = await window.fetch(url, { method: 'POST', headers: getHeaders(), body: JSON.stringify(body) }); const json = await res.json(); if (!res.ok) throw new Error('API Error'); return { data: json?.success !== undefined ? json.data : json }; }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function apiPut(url: string, body: any) { const res = await window.fetch(url, { method: 'PUT', headers: getHeaders(), body: JSON.stringify(body) }); const json = await res.json(); if (!res.ok) throw new Error('API Error'); return { data: json?.success !== undefined ? json.data : json }; }
 async function apiDelete(url: string) { const res = await window.fetch(url, { method: 'DELETE', headers: getHeaders() }); if (!res.ok) throw new Error('API Error'); }
 
@@ -52,7 +54,7 @@ export async function getBrands(): Promise<Brand[]> {
   } catch { return []; }
 }
 
-export async function saveBrands(brands: Brand[]) {
+export async function saveBrands(_brands: Brand[]) {
   // Mocked for now, not fully implemented in API
 }
 
@@ -70,7 +72,7 @@ export async function getOutletsByBrand(brandId: string): Promise<Outlet[]> {
   } catch { return []; }
 }
 
-export async function saveOutlets(outlets: Outlet[]) {
+export async function saveOutlets(_outlets: Outlet[]) {
   // Mocked for now
 }
 
@@ -82,7 +84,7 @@ export async function getMasterMenuItems(brandId: string): Promise<MasterMenuIte
   } catch { return []; }
 }
 
-export async function saveMasterMenuItems(items: MasterMenuItem[]) {
+export async function saveMasterMenuItems(_items: MasterMenuItem[]) {
   // Mocked
 }
 
@@ -93,7 +95,7 @@ export async function getOutletOverrides(outletId: string): Promise<OutletOverri
   } catch { return []; }
 }
 
-export async function saveOutletOverrides(overrides: OutletOverride[]) {
+export async function saveOutletOverrides(_overrides: OutletOverride[]) {
   // Mocked
 }
 

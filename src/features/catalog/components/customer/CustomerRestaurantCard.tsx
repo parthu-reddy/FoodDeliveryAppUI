@@ -7,6 +7,7 @@ interface CustomerRestaurantCardProps {
   key?: React.Key;
   restaurant: Restaurant;
   isLast: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   lastElementRef: (node: any) => void;
   onClick: (restaurant: Restaurant) => void;
 }

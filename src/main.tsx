@@ -32,3 +32,4 @@ enableMocking().then(() => {
     </StrictMode>,
   );
 });
+const _test_unused_ = 'break_lint';

@@ -91,7 +91,7 @@ export const useWebRTC = () => {
                 if (response && (response).iceServers) {
                     iceServersRef.current = { iceServers: asUntyped<RTCIceServer[]>((response as { iceServers?: unknown }).iceServers) };
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.error("Failed to fetch ICE servers, falling back to STUN", error);
       }
     };
@@ -223,7 +223,7 @@ export const useWebRTC = () => {
     for (const candidate of pendingCandidatesRef.current) {
       try {
         await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
-      } catch (e) {
+      } catch (e: unknown) {
         console.error("Error adding pending ice candidate", e);
       }
     }
@@ -285,7 +285,7 @@ export const useWebRTC = () => {
           const order = chunkOrderRef.current++;
           try {
             await saveChunk(activeSessionIdRef.current, event.data, order);
-          } catch (e) {
+          } catch (e: unknown) {
             console.error("Failed to save audio chunk to indexedDB:", e);
           }
         }
@@ -294,7 +294,7 @@ export const useWebRTC = () => {
       mediaRecorder.start(1000); // collect chunks every second
       mediaRecorderRef.current = mediaRecorder;
       console.log("Call recording started successfully.");
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Failed to start recording:", err);
     }
   };
@@ -329,7 +329,7 @@ export const useWebRTC = () => {
       
       // Clear local storage if successful
       await clearSessionData(sessionId);
-    } catch (e) {
+    } catch (e: unknown) {
       console.error("Failed to upload audio recording, will retry when online:", e);
     } finally {
       chunkOrderRef.current = 0;
@@ -378,11 +378,11 @@ export const useWebRTC = () => {
               console.error(`Authentication failed for offline recording sync ${upload.sessionId}. Dropping upload.`);
               await clearSessionData(upload.sessionId);
             }
-          } catch (e) {
+          } catch (e: unknown) {
             console.error(`Failed to sync recording for session ${upload.sessionId}`, e);
           }
         }
-      } catch (e) {
+      } catch (e: unknown) {
         console.error("Failed to process pending offline uploads:", e);
       }
     };
@@ -442,7 +442,7 @@ export const useWebRTC = () => {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
       localStreamRef.current = stream;
       stream.getTracks().forEach(track => pc.addTrack(track, stream));
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Error accessing microphone:', err);
       if (err instanceof Error && err.name !== 'Error') {
          alert("Could not access microphone: " + err.message);
@@ -482,7 +482,7 @@ export const useWebRTC = () => {
         type: 'OFFER',
         sdp: offer.sdp
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error creating offer', error);
       cleanupCall();
     }
@@ -503,7 +503,7 @@ export const useWebRTC = () => {
         type: 'ANSWER',
         sdp: answer.sdp
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error creating answer', error);
       cleanupCall();
     }
