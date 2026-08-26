@@ -163,11 +163,11 @@ export interface components {
             customerPhone?: string;
         };
         ApiResponseString: {
-            success?: boolean;
-            message?: string;
+            success: boolean;
+            message: string;
             data?: string;
             /** Format: date-time */
-            timestamp?: string;
+            timestamp: string;
         };
         OutboxEventEntity: {
             /** Format: uuid */
@@ -209,13 +209,13 @@ export interface components {
             empty?: boolean;
         };
         PageableObject: {
-            unpaged?: boolean;
             sort?: components["schemas"]["SortObject"][];
             paged?: boolean;
             /** Format: int32 */
             pageNumber?: number;
             /** Format: int32 */
             pageSize?: number;
+            unpaged?: boolean;
             /** Format: int64 */
             offset?: number;
         };

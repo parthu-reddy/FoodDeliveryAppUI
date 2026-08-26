@@ -276,13 +276,13 @@ export interface components {
             totalElements?: number;
             /** Format: int32 */
             numberOfElements?: number;
+            first?: boolean;
+            last?: boolean;
             /** Format: int32 */
             number?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["UserDTO"][];
-            first?: boolean;
-            last?: boolean;
             sort?: components["schemas"]["SortObject"][];
             pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;

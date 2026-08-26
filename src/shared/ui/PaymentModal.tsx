@@ -44,7 +44,7 @@ function PaymentModalInner({
   successSubtitle = "Your transaction was successful.",
   processingTitle = "Processing Payment...",
   processingSubtitle = "Please wait while we securely process your payment",
-  buttonText = (method, amt) => method === 'COD' ? 'Confirm Cash Order' : `Pay ₹${amt.toFixed(2)} Now`,
+  buttonText = (method, amt) => method === 'COD' ? 'Confirm Cash Order' : `Pay ₹${(amt || 0).toFixed(2)} Now`,
   leftPanelContent
 }: PaymentModalProps) {
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethodType>(availableMethods[0] || 'CARD');
@@ -155,7 +155,7 @@ function PaymentModalInner({
                       <div className="space-y-2 text-sm text-slate-300 mb-4">
                         <div className="flex justify-between">
                           <span>Amount</span>
-                          <span className="font-mono">₹{amount.toFixed(2)}</span>
+                          <span className="font-mono">₹{(amount || 0).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Platform Fee</span>
@@ -165,7 +165,7 @@ function PaymentModalInner({
                     )}
                     <div className="border-t border-white/20 pt-3 flex justify-between items-end">
                       <span className="text-slate-200">{totals ? 'Total to Pay' : 'Total Amount'}</span>
-                      <span className="font-mono text-2xl font-black">₹{amount.toFixed(2)}</span>
+                      <span className="font-mono text-2xl font-black">₹{(amount || 0).toFixed(2)}</span>
                     </div>
                   </div>
                 </div>

@@ -265,8 +265,16 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
           return { restaurantId: rId, quote: res };
         } catch (error: any) {
           console.error('Failed to fetch quote for restaurant', rId, error);
-          const errorCode = error.response?.data?.error || error.response?.data?.message || 'UNKNOWN_ERROR';
-          return { restaurantId: rId, quote: { isDeliverable: false, error: errorCode } };
+          const errorCode = error.response?.data?.errorCode || error.response?.data?.error || error.response?.data?.message || 'UNKNOWN_ERROR';
+          
+          let friendlyError = errorCode;
+          if (errorCode === 'OUT_OF_SERVICE_AREA') {
+            friendlyError = "This restaurant is too far for delivery to your location.";
+          } else if (errorCode === 'NO_DELIVERY_PARTNER_NEARBY') {
+            friendlyError = "All our delivery partners are currently busy. Please try again in a few minutes.";
+          }
+
+          return { restaurantId: rId, quote: { isDeliverable: false, error: friendlyError, errorCode: error.response?.data?.errorCode } };
         }
       })).then((results) => {
         const newQuotes = { ...quotes };
@@ -430,9 +438,18 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
         setTimeout(() => setGlobalError(null), 5000);
       } else {
         // @ts-expect-error auto-migration type suppression
-        const errorMsg = err?.response?.data?.message || err?.response?.data?.error || err?.message || "Failed to create order";
+        const errorCode = err?.response?.data?.errorCode;
+        // @ts-expect-error auto-migration type suppression
+        let errorMsg = err?.response?.data?.message || err?.response?.data?.error || err?.message || "Failed to create order";
+        
+        if (errorCode === 'OUT_OF_SERVICE_AREA') {
+          errorMsg = "This restaurant is too far for delivery to your location.";
+        } else if (errorCode === 'NO_DELIVERY_PARTNER_NEARBY') {
+          errorMsg = "All our delivery partners are currently busy. Please try again in a few minutes.";
+        }
+
         setGlobalError(errorMsg);
-        setTimeout(() => setGlobalError(null), 3000);
+        setTimeout(() => setGlobalError(null), 4000);
       }
     }
   };

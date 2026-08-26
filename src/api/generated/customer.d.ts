@@ -1123,15 +1123,15 @@ export interface components {
             totalElements?: number;
             /** Format: int32 */
             totalPages?: number;
-            /** Format: int32 */
-            numberOfElements?: number;
+            first?: boolean;
+            last?: boolean;
             /** Format: int32 */
             number?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["OrderResponse"][];
-            first?: boolean;
-            last?: boolean;
+            /** Format: int32 */
+            numberOfElements?: number;
             sort?: components["schemas"]["SortObject"][];
             pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;
@@ -1228,15 +1228,15 @@ export interface components {
             totalElements?: number;
             /** Format: int32 */
             totalPages?: number;
-            /** Format: int32 */
-            numberOfElements?: number;
+            first?: boolean;
+            last?: boolean;
             /** Format: int32 */
             number?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["Order"][];
-            first?: boolean;
-            last?: boolean;
+            /** Format: int32 */
+            numberOfElements?: number;
             sort?: components["schemas"]["SortObject"][];
             pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;
@@ -1246,15 +1246,15 @@ export interface components {
             totalElements?: number;
             /** Format: int32 */
             totalPages?: number;
-            /** Format: int32 */
-            numberOfElements?: number;
+            first?: boolean;
+            last?: boolean;
             /** Format: int32 */
             number?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["SupportTicket"][];
-            first?: boolean;
-            last?: boolean;
+            /** Format: int32 */
+            numberOfElements?: number;
             sort?: components["schemas"]["SortObject"][];
             pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;
@@ -1264,8 +1264,8 @@ export interface components {
             totalElements?: number;
             /** Format: int32 */
             totalPages?: number;
-            /** Format: int32 */
-            numberOfElements?: number;
+            first?: boolean;
+            last?: boolean;
             /** Format: int32 */
             number?: number;
             /** Format: int32 */
@@ -1273,8 +1273,8 @@ export interface components {
             content?: {
                 [key: string]: Record<string, never>;
             }[];
-            first?: boolean;
-            last?: boolean;
+            /** Format: int32 */
+            numberOfElements?: number;
             sort?: components["schemas"]["SortObject"][];
             pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;
@@ -1291,15 +1291,15 @@ export interface components {
             totalElements?: number;
             /** Format: int32 */
             totalPages?: number;
-            /** Format: int32 */
-            numberOfElements?: number;
+            first?: boolean;
+            last?: boolean;
             /** Format: int32 */
             number?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["CustomerAddressDto"][];
-            first?: boolean;
-            last?: boolean;
+            /** Format: int32 */
+            numberOfElements?: number;
             sort?: components["schemas"]["SortObject"][];
             pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;

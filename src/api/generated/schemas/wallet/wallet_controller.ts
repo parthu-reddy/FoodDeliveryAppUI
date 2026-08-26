@@ -2,8 +2,8 @@ import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
 import { WalletDto } from "./common";
-import { PageableObject } from "./common";
 import { SortObject } from "./common";
+import { PageableObject } from "./common";
 
 const WalletTransactionDto = z
   .object({
@@ -11,25 +11,24 @@ const WalletTransactionDto = z
     walletId: z.string().uuid(),
     amount: z.number(),
     transactionType: z.enum(["CREDIT", "DEBIT", "HOLD", "RELEASE", "REFUND"]),
-    referenceId: z.string(),
-    description: z.string(),
+    referenceId: z.string().optional(),
+    description: z.string().optional(),
     createdAt: z.string().datetime({ offset: true }),
-    metadata: z.string(),
+    metadata: z.string().optional(),
   })
-  .partial()
   .passthrough();
 const PageWalletTransactionDto = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
     numberOfElements: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(WalletTransactionDto),
-    pageable: PageableObject,
+    first: z.boolean(),
+    last: z.boolean(),
     sort: z.array(SortObject),
+    pageable: PageableObject,
     empty: z.boolean(),
   })
   .partial()

@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from 'react';
 export interface UseDeliveryOrdersProps {
   riderId: string;
   riderName: string;
+  cityId: string;
   isOnline: boolean;
   setIsOnline: (online: boolean) => void;
   showToast: (msg: string) => void;
@@ -20,7 +21,7 @@ export interface UseDeliveryOrdersProps {
 
 export function useDeliveryOrders({
   riderId,
-  
+  cityId,
   isOnline,
   setIsOnline,
   showToast,
@@ -289,9 +290,12 @@ export function useDeliveryOrders({
         
         const sendLocation = () => {
           if (ws.readyState === WebSocket.OPEN) {
-            const payload: { driverId: string, lat: number, lng: number, timestamp: string, orderId?: string } = { driverId: riderId, lat: currentLat, lng: currentLng, timestamp: new Date().toISOString() };
+            const payload: { driverId: string, lat: number, lng: number, timestamp: string, orderId?: string, cityId?: string } = { driverId: riderId, lat: currentLat, lng: currentLng, timestamp: new Date().toISOString() };
             if (activeJobIdRef.current) {
                 payload.orderId = activeJobIdRef.current;
+            }
+            if (cityId) {
+                payload.cityId = cityId;
             }
             ws.send(JSON.stringify(payload));
           }
@@ -368,7 +372,7 @@ export function useDeliveryOrders({
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOnline, riderId]);
+  }, [isOnline, riderId, cityId]);
 
   // Current active job handling and SSE for status updates
   const currentJob = activeOrders.find(o => o.id === activeJobId && o.deliveryStatus !== DeliveryStatus.DELIVERED);

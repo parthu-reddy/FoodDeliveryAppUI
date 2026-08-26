@@ -140,15 +140,15 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            /** Format: int32 */
-            numberOfElements?: number;
-            /** Format: int32 */
-            number?: number;
             first?: boolean;
             last?: boolean;
             /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
             size?: number;
             content?: components["schemas"]["LedgerTransactionDto"][];
+            /** Format: int32 */
+            numberOfElements?: number;
             sort?: components["schemas"]["SortObject"][];
             pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;
@@ -156,13 +156,13 @@ export interface components {
         PageableObject: {
             /** Format: int64 */
             offset?: number;
-            paged?: boolean;
             sort?: components["schemas"]["SortObject"][];
-            unpaged?: boolean;
-            /** Format: int32 */
-            pageSize?: number;
+            paged?: boolean;
             /** Format: int32 */
             pageNumber?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            unpaged?: boolean;
         };
         SortObject: {
             direction?: string;
@@ -193,15 +193,15 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            /** Format: int32 */
-            numberOfElements?: number;
-            /** Format: int32 */
-            number?: number;
             first?: boolean;
             last?: boolean;
             /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
             size?: number;
             content?: components["schemas"]["LedgerEntry"][];
+            /** Format: int32 */
+            numberOfElements?: number;
             sort?: components["schemas"]["SortObject"][];
             pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;

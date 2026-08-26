@@ -5,10 +5,9 @@ const ApiResponseMapStringString = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: z.record(z.string()),
+    data: z.record(z.string()).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const TopupWalletRequest = z
   .object({ amount: z.number().gte(0.01), gatewayName: z.string().optional() })

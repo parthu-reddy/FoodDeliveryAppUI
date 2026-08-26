@@ -80,14 +80,14 @@ const PageMapStringObject = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    sort: z.array(SortObject),
-    pageable: PageableObject,
-    number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
+    number: z.number().int(),
+    numberOfElements: z.number().int(),
     size: z.number().int(),
     content: z.array(z.record(z.object({}).partial().passthrough())),
-    numberOfElements: z.number().int(),
+    sort: z.array(SortObject),
+    pageable: PageableObject,
     empty: z.boolean(),
   })
   .partial()

@@ -209,24 +209,24 @@ export interface components {
             description?: string;
         };
         ApiResponseString: {
-            success?: boolean;
-            message?: string;
+            success: boolean;
+            message: string;
             data?: string;
             /** Format: date-time */
-            timestamp?: string;
+            timestamp: string;
         };
         TopupWalletRequest: {
             amount: number;
             gatewayName?: string;
         };
         ApiResponseMapStringString: {
-            success?: boolean;
-            message?: string;
+            success: boolean;
+            message: string;
             data?: {
                 [key: string]: string;
             };
             /** Format: date-time */
-            timestamp?: string;
+            timestamp: string;
         };
         PageWalletTransactionDto: {
             /** Format: int32 */
@@ -235,26 +235,26 @@ export interface components {
             totalElements?: number;
             /** Format: int32 */
             numberOfElements?: number;
-            first?: boolean;
-            last?: boolean;
             /** Format: int32 */
             number?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["WalletTransactionDto"][];
-            pageable?: components["schemas"]["PageableObject"];
+            first?: boolean;
+            last?: boolean;
             sort?: components["schemas"]["SortObject"][];
+            pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;
         };
         PageableObject: {
             /** Format: int64 */
             offset?: number;
+            sort?: components["schemas"]["SortObject"][];
             paged?: boolean;
             /** Format: int32 */
             pageNumber?: number;
             /** Format: int32 */
             pageSize?: number;
-            sort?: components["schemas"]["SortObject"][];
             unpaged?: boolean;
         };
         SortObject: {
@@ -266,16 +266,16 @@ export interface components {
         };
         WalletTransactionDto: {
             /** Format: uuid */
-            id?: string;
+            id: string;
             /** Format: uuid */
-            walletId?: string;
-            amount?: number;
+            walletId: string;
+            amount: number;
             /** @enum {string} */
-            transactionType?: "CREDIT" | "DEBIT" | "HOLD" | "RELEASE" | "REFUND";
+            transactionType: "CREDIT" | "DEBIT" | "HOLD" | "RELEASE" | "REFUND";
             referenceId?: string;
             description?: string;
             /** Format: date-time */
-            createdAt?: string;
+            createdAt: string;
             metadata?: string;
         };
         OutboxEventEntity: {
@@ -306,15 +306,15 @@ export interface components {
             totalElements?: number;
             /** Format: int32 */
             numberOfElements?: number;
-            first?: boolean;
-            last?: boolean;
             /** Format: int32 */
             number?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["OutboxEventEntity"][];
-            pageable?: components["schemas"]["PageableObject"];
+            first?: boolean;
+            last?: boolean;
             sort?: components["schemas"]["SortObject"][];
+            pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;
         };
     };

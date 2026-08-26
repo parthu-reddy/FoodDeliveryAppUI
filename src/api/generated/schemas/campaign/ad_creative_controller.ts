@@ -21,19 +21,17 @@ const ApiResponseAdCreativeResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: AdCreativeResponse,
+    data: AdCreativeResponse.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const ApiResponseListAdCreativeResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: z.array(AdCreativeResponse),
+    data: z.array(AdCreativeResponse).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const AdCreativeRequest = z
   .object({

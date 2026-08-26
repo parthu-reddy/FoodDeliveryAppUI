@@ -1,8 +1,8 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-import { PageableObject } from "./common";
 import { SortObject } from "./common";
+import { PageableObject } from "./common";
 
 const OutboxEventEntity = z
   .object({
@@ -106,13 +106,13 @@ const PageOutboxEventEntity = z
     totalPages: z.number().int(),
     totalElements: z.number().int(),
     numberOfElements: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(OutboxEventEntity),
-    pageable: PageableObject,
+    first: z.boolean(),
+    last: z.boolean(),
     sort: z.array(SortObject),
+    pageable: PageableObject,
     empty: z.boolean(),
   })
   .partial()
@@ -121,10 +121,9 @@ const ApiResponseString = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: z.string(),
+    data: z.string().optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 
 export const schemas = {

@@ -3,8 +3,8 @@ import { z } from "zod";
 
 import { ApiResponseVoid } from "./common";
 import { pageable } from "./common";
-import { PageableObject } from "./common";
 import { SortObject } from "./common";
+import { PageableObject } from "./common";
 
 const GeoTargeting = z
   .object({ regions: z.array(z.string()).max(400) })
@@ -51,23 +51,22 @@ const ApiResponseAdGroupResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: AdGroupResponse,
+    data: AdGroupResponse.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const PageAdGroupResponse = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
     numberOfElements: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(AdGroupResponse),
-    pageable: PageableObject,
+    first: z.boolean(),
+    last: z.boolean(),
     sort: z.array(SortObject),
+    pageable: PageableObject,
     empty: z.boolean(),
   })
   .partial()
@@ -76,10 +75,9 @@ const ApiResponsePageAdGroupResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: PageAdGroupResponse,
+    data: PageAdGroupResponse.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 
 export const schemas = {

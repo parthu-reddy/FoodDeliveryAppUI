@@ -13,11 +13,11 @@ const SortObject = z
   .passthrough();
 const PageableObject = z
   .object({
-    unpaged: z.boolean(),
     sort: z.array(SortObject),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
+    unpaged: z.boolean(),
     offset: z.number().int(),
   })
   .partial()
@@ -139,10 +139,9 @@ const ApiResponseString = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: z.string(),
+    data: z.string().optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 
 export const schemas = {

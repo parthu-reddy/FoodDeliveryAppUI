@@ -87,7 +87,7 @@ export function useCustomerOrders({ onUpdateOrder }: UseCustomerOrdersOptions = 
                      setInternalOrders(curr => {
                         const currentList = [...curr];
                         let batchChanged = false;
-                        fromContract<unknown[]>(res).forEach((o: unknown) => {
+                        fromContract<unknown[]>(res.data || []).forEach((o: unknown) => {
                             const batchOrder = asUntyped<unknown>(o) as Order;
                             const idx = currentList.findIndex(o => o.id === batchOrder.id);
                             if (idx !== -1 && JSON.stringify(currentList[idx]) !== JSON.stringify(batchOrder)) {

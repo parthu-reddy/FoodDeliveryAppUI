@@ -25,6 +25,7 @@ interface CustomerMenuViewProps {
   } | null;
   getCartTotal: (resId?: string) => { subtotal: number };
   isDeliveryAvailable: boolean | null;
+  deliveryAvailabilityError?: string | null;
   brandOutlets: unknown[];
   setIsOutletSelectorOpen: (isOpen: boolean) => void;
   isMenuLoading: boolean;
@@ -43,6 +44,7 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
   deliveryPricing,
   getCartTotal,
   isDeliveryAvailable,
+  deliveryAvailabilityError,
   brandOutlets,
   setIsOutletSelectorOpen,
   isMenuLoading,
@@ -121,7 +123,7 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
           <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 font-bold text-sm">
             <MapPinOff className="w-5 h-5 shrink-0" />
             <span>
-              {deliveryPricing?.error === 'NO_DELIVERY_PARTNER_NEARBY' 
+              {(deliveryPricing?.error === 'NO_DELIVERY_PARTNER_NEARBY' || deliveryAvailabilityError === 'NO_DELIVERY_PARTNER_NEARBY')
                 ? 'No Delivery Partner Available' 
                 : 'Out of Serviceable Area'}
             </span>

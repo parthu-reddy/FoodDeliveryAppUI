@@ -8,19 +8,17 @@ const ApiResponseDeliveryExecutive = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: DeliveryExecutive,
+    data: DeliveryExecutive.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const ApiResponseVoid = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: z.object({}).partial().passthrough(),
+    data: z.object({}).partial().passthrough().optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const ToggleStatusRequest = z
   .object({
@@ -69,10 +67,9 @@ const ApiResponseListMapStringObject = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: z.array(z.record(z.object({}).partial().passthrough())),
+    data: z.array(z.record(z.object({}).partial().passthrough())).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 
 export const schemas = {

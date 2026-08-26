@@ -1114,20 +1114,22 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            sort?: components["schemas"]["SortObject"][];
-            pageable?: components["schemas"]["PageableObject"];
-            /** Format: int32 */
-            number?: number;
             first?: boolean;
             last?: boolean;
             /** Format: int32 */
-            size?: number;
-            content?: components["schemas"]["RestaurantOrder"][];
+            number?: number;
             /** Format: int32 */
             numberOfElements?: number;
+            /** Format: int32 */
+            size?: number;
+            content?: components["schemas"]["RestaurantOrder"][];
+            sort?: components["schemas"]["SortObject"][];
+            pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;
         };
         PageableObject: {
+            /** Format: int64 */
+            offset?: number;
             sort?: components["schemas"]["SortObject"][];
             paged?: boolean;
             /** Format: int32 */
@@ -1135,8 +1137,6 @@ export interface components {
             /** Format: int32 */
             pageSize?: number;
             unpaged?: boolean;
-            /** Format: int64 */
-            offset?: number;
         };
         SortObject: {
             direction?: string;
@@ -1203,19 +1203,19 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            sort?: components["schemas"]["SortObject"][];
-            pageable?: components["schemas"]["PageableObject"];
-            /** Format: int32 */
-            number?: number;
             first?: boolean;
             last?: boolean;
+            /** Format: int32 */
+            number?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
             /** Format: int32 */
             size?: number;
             content?: {
                 [key: string]: Record<string, never>;
             }[];
-            /** Format: int32 */
-            numberOfElements?: number;
+            sort?: components["schemas"]["SortObject"][];
+            pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;
         };
         ApiResponseListCategoryDTO: {

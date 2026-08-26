@@ -327,11 +327,11 @@ export interface components {
             frequencyCap?: number;
         };
         ApiResponseCampaignResponse: {
-            success?: boolean;
-            message?: string;
+            success: boolean;
+            message: string;
             data?: components["schemas"]["CampaignResponse"];
             /** Format: date-time */
-            timestamp?: string;
+            timestamp: string;
         };
         CampaignResponse: {
             /** Format: uuid */
@@ -392,18 +392,18 @@ export interface components {
             updatedAt?: string;
         };
         ApiResponseAdGroupResponse: {
-            success?: boolean;
-            message?: string;
+            success: boolean;
+            message: string;
             data?: components["schemas"]["AdGroupResponse"];
             /** Format: date-time */
-            timestamp?: string;
+            timestamp: string;
         };
         ApiResponseVoid: {
-            success?: boolean;
-            message?: string;
+            success: boolean;
+            message: string;
             data?: Record<string, never>;
             /** Format: date-time */
-            timestamp?: string;
+            timestamp: string;
         };
         CampaignPacingDTO: {
             /** Format: double */
@@ -431,11 +431,11 @@ export interface components {
             updatedAt?: string;
         };
         ApiResponseAdvertiserResponse: {
-            success?: boolean;
-            message?: string;
+            success: boolean;
+            message: string;
             data?: components["schemas"]["AdvertiserResponse"];
             /** Format: date-time */
-            timestamp?: string;
+            timestamp: string;
         };
         AdCreativeRequest: {
             /** @enum {string} */
@@ -460,31 +460,31 @@ export interface components {
             updatedAt?: string;
         };
         ApiResponseAdCreativeResponse: {
-            success?: boolean;
-            message?: string;
+            success: boolean;
+            message: string;
             data?: components["schemas"]["AdCreativeResponse"];
             /** Format: date-time */
-            timestamp?: string;
+            timestamp: string;
         };
         ApiResponseString: {
-            success?: boolean;
-            message?: string;
+            success: boolean;
+            message: string;
             data?: string;
             /** Format: date-time */
-            timestamp?: string;
+            timestamp: string;
         };
         TopupWalletRequest: {
             amount: number;
             gatewayName?: string;
         };
         ApiResponseMapStringString: {
-            success?: boolean;
-            message?: string;
+            success: boolean;
+            message: string;
             data?: {
                 [key: string]: string;
             };
             /** Format: date-time */
-            timestamp?: string;
+            timestamp: string;
         };
         Pageable: {
             /** Format: int32 */
@@ -494,11 +494,11 @@ export interface components {
             sort?: string[];
         };
         ApiResponsePageCampaignResponse: {
-            success?: boolean;
-            message?: string;
+            success: boolean;
+            message: string;
             data?: components["schemas"]["PageCampaignResponse"];
             /** Format: date-time */
-            timestamp?: string;
+            timestamp: string;
         };
         PageCampaignResponse: {
             /** Format: int32 */
@@ -507,26 +507,26 @@ export interface components {
             totalElements?: number;
             /** Format: int32 */
             numberOfElements?: number;
-            first?: boolean;
-            last?: boolean;
             /** Format: int32 */
             number?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["CampaignResponse"][];
-            pageable?: components["schemas"]["PageableObject"];
+            first?: boolean;
+            last?: boolean;
             sort?: components["schemas"]["SortObject"][];
+            pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;
         };
         PageableObject: {
             /** Format: int64 */
             offset?: number;
+            sort?: components["schemas"]["SortObject"][];
             paged?: boolean;
             /** Format: int32 */
             pageNumber?: number;
             /** Format: int32 */
             pageSize?: number;
-            sort?: components["schemas"]["SortObject"][];
             unpaged?: boolean;
         };
         SortObject: {
@@ -537,11 +537,11 @@ export interface components {
             ignoreCase?: boolean;
         };
         ApiResponsePageCampaignPerformanceResponse: {
-            success?: boolean;
-            message?: string;
+            success: boolean;
+            message: string;
             data?: components["schemas"]["PageCampaignPerformanceResponse"];
             /** Format: date-time */
-            timestamp?: string;
+            timestamp: string;
         };
         CampaignPerformanceResponse: {
             /** Format: uuid */
@@ -567,23 +567,23 @@ export interface components {
             totalElements?: number;
             /** Format: int32 */
             numberOfElements?: number;
-            first?: boolean;
-            last?: boolean;
             /** Format: int32 */
             number?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["CampaignPerformanceResponse"][];
-            pageable?: components["schemas"]["PageableObject"];
+            first?: boolean;
+            last?: boolean;
             sort?: components["schemas"]["SortObject"][];
+            pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;
         };
         ApiResponsePageAdGroupResponse: {
-            success?: boolean;
-            message?: string;
+            success: boolean;
+            message: string;
             data?: components["schemas"]["PageAdGroupResponse"];
             /** Format: date-time */
-            timestamp?: string;
+            timestamp: string;
         };
         PageAdGroupResponse: {
             /** Format: int32 */
@@ -592,23 +592,23 @@ export interface components {
             totalElements?: number;
             /** Format: int32 */
             numberOfElements?: number;
-            first?: boolean;
-            last?: boolean;
             /** Format: int32 */
             number?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["AdGroupResponse"][];
-            pageable?: components["schemas"]["PageableObject"];
+            first?: boolean;
+            last?: boolean;
             sort?: components["schemas"]["SortObject"][];
+            pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;
         };
         ApiResponseListAdCreativeResponse: {
-            success?: boolean;
-            message?: string;
+            success: boolean;
+            message: string;
             data?: components["schemas"]["AdCreativeResponse"][];
             /** Format: date-time */
-            timestamp?: string;
+            timestamp: string;
         };
     };
     responses: never;

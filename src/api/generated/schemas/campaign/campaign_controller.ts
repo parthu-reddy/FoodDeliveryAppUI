@@ -3,8 +3,8 @@ import { z } from "zod";
 
 import { ApiResponseVoid } from "./common";
 import { pageable } from "./common";
-import { PageableObject } from "./common";
 import { SortObject } from "./common";
+import { PageableObject } from "./common";
 
 const CampaignResponse = z
   .object({
@@ -34,23 +34,22 @@ const ApiResponseCampaignResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: CampaignResponse,
+    data: CampaignResponse.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const PageCampaignResponse = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
     numberOfElements: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(CampaignResponse),
-    pageable: PageableObject,
+    first: z.boolean(),
+    last: z.boolean(),
     sort: z.array(SortObject),
+    pageable: PageableObject,
     empty: z.boolean(),
   })
   .partial()
@@ -59,10 +58,9 @@ const ApiResponsePageCampaignResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: PageCampaignResponse,
+    data: PageCampaignResponse.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const CampaignPerformanceResponse = z
   .object({
@@ -82,13 +80,13 @@ const PageCampaignPerformanceResponse = z
     totalPages: z.number().int(),
     totalElements: z.number().int(),
     numberOfElements: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(CampaignPerformanceResponse),
-    pageable: PageableObject,
+    first: z.boolean(),
+    last: z.boolean(),
     sort: z.array(SortObject),
+    pageable: PageableObject,
     empty: z.boolean(),
   })
   .partial()
@@ -97,10 +95,9 @@ const ApiResponsePageCampaignPerformanceResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: PageCampaignPerformanceResponse,
+    data: PageCampaignPerformanceResponse.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const CampaignRequest = z
   .object({
@@ -118,10 +115,9 @@ const ApiResponseMapStringString = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: z.record(z.string()),
+    data: z.record(z.string()).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const TopupWalletRequest = z
   .object({ amount: z.number(), gatewayName: z.string().optional() })

@@ -16,26 +16,26 @@ const SortObject = z
 const PageableObject = z
   .object({
     offset: z.number().int(),
+    sort: z.array(SortObject),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
-    sort: z.array(SortObject),
     unpaged: z.boolean(),
   })
   .partial()
   .passthrough();
 const PageDeliveryExecutive = z
   .object({
-    totalPages: z.number().int(),
     totalElements: z.number().int(),
+    totalPages: z.number().int(),
     numberOfElements: z.number().int(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(DeliveryExecutive),
     first: z.boolean(),
     last: z.boolean(),
-    pageable: PageableObject,
     sort: z.array(SortObject),
+    pageable: PageableObject,
     empty: z.boolean(),
   })
   .partial()
@@ -53,16 +53,16 @@ const DriverLocationDTO = z
   .passthrough();
 const PageDriverLocationDTO = z
   .object({
-    totalPages: z.number().int(),
     totalElements: z.number().int(),
+    totalPages: z.number().int(),
     numberOfElements: z.number().int(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(DriverLocationDTO),
     first: z.boolean(),
     last: z.boolean(),
-    pageable: PageableObject,
     sort: z.array(SortObject),
+    pageable: PageableObject,
     empty: z.boolean(),
   })
   .partial()

@@ -110,7 +110,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
     try {
       // @ts-expect-error auto-migration type suppression
       const res = await campaignApi.campaign.get('/api/v1/advertisers/:advertiserId/campaigns/performance', { params: { advertiserId: restaurantId }, queries: { pageable: {} } as Record<string, unknown> });
-      setPerformanceData(fromContract<CampaignPerformance[]>(res));
+      setPerformanceData(fromContract<CampaignPerformance[]>(res.data?.content ?? []));
     } catch (e: unknown) {
       console.error(e);
       showError('Failed to load performance data');
@@ -124,7 +124,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
     try {
       // @ts-expect-error auto-migration type suppression
       const res = await campaignApi.campaign.get('/api/v1/advertisers/:advertiserId/campaigns', { params: { advertiserId: restaurantId }, queries: { pageable: {} } as Record<string, unknown> });
-      setCampaigns(fromContract<Campaign[]>(res.content ?? []));
+      setCampaigns(fromContract<Campaign[]>(res.data?.content ?? []));
     } catch (err: unknown) {
       showError(parseApiError(err, 'Failed to load campaigns').message);
     } finally {

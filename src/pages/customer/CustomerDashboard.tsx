@@ -335,7 +335,7 @@ export default function CustomerDashboard({
  
 
   const [isDeliveryAvailable, setIsDeliveryAvailable] = useState<boolean | null>(null);
-
+  const [deliveryAvailabilityError, setDeliveryAvailabilityError] = useState<string | null>(null);
 
 
 
@@ -345,6 +345,7 @@ export default function CustomerDashboard({
     if (selectedRestaurant) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsDeliveryAvailable(null);
+      setDeliveryAvailabilityError(null);
       customerApi.customerRestaurant.get('/api/v1/restaurants/:id/delivery-availability', { params: { id: selectedRestaurant.id } })
         .then(res => {
           if (!ignore && typeof res === 'boolean') {
@@ -356,6 +357,7 @@ export default function CustomerDashboard({
           console.error(err);
           if (!ignore && err.response && (err.response.status === 409 || err.response.status === 400)) {
             setIsDeliveryAvailable(false);
+            setDeliveryAvailabilityError(err.response.data?.errorCode || err.response.data?.message || 'OUT_OF_SERVICE_AREA');
           }
          
         });
@@ -663,6 +665,7 @@ export default function CustomerDashboard({
                   carts={carts as any}
                   getCartTotal={getCartTotal}
                   isDeliveryAvailable={isDeliveryAvailable}
+                  deliveryAvailabilityError={deliveryAvailabilityError}
                   brandOutlets={brandOutlets}
                   setIsOutletSelectorOpen={setIsOutletSelectorOpen}
                    

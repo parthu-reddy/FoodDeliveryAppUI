@@ -46,7 +46,7 @@ const QuoteResponse = z
     sgst: z.number(),
     cgst: z.number(),
     total: z.number(),
-    minAmountForFreeDelivery: z.number(),
+    minAmountForFreeDelivery: z.number().nullable().optional(),
     distanceKm: z.number(),
     driverPayout: z.number(),
     restaurantDeliveryContribution: z.number(),

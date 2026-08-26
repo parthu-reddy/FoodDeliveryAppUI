@@ -19,10 +19,9 @@ const ApiResponseAdvertiserResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: AdvertiserResponse,
+    data: AdvertiserResponse.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const AdvertiserRegistrationRequest = z
   .object({ companyName: z.string(), externalRef: z.string().optional() })

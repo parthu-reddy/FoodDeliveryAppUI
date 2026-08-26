@@ -23,10 +23,10 @@ export const SortObject = z
 export const PageableObject = z
   .object({
     offset: z.number().int(),
+    sort: z.array(SortObject),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
-    sort: z.array(SortObject),
     unpaged: z.boolean(),
   })
   .partial()

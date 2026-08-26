@@ -86,6 +86,7 @@ export default function DeliveryDashboard({
 
   const [riderId, setRiderId] = useState("");
   const [riderName, setRiderName] = useState("");
+  const [cityId, setCityId] = useState("");
   const [vehicleNumber, setVehicleNumber] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -122,6 +123,7 @@ export default function DeliveryDashboard({
   } = useDeliveryOrders({
     riderId,
     riderName,
+    cityId,
     isOnline,
     setIsOnline,
     showToast,
@@ -148,6 +150,7 @@ export default function DeliveryDashboard({
           if (!riderName) setRiderName(profile.fullName || "");
           setVehicleNumber(profile.vehicleNumber || "");
           setPhotoUrl(profile.photoUrl || "");
+          setCityId(profile.cityId || "");
           setIsOnline(
             profile.status === "ONLINE" || profile.status === "ON_DELIVERY"
           );

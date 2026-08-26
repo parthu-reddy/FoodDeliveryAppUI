@@ -54,8 +54,7 @@ function AdminFleetMapInner() {
       try {
         const [resOutlets, resDrivers, resCustomers] = await Promise.all([
           (restaurantApi.restaurantOutlet.get('/api/v1/internal/admin/restaurants/all-with-location', {})),
-          // @ts-expect-error auto-migration type suppression
-          (deliveryApi.adminDelivery.get('/api/v1/internal/admin/delivery/drivers/all-with-location', { queries: { pageable: {} } })),
+          (deliveryApi.adminDelivery.get('/api/v1/internal/admin/delivery/drivers/all-with-location', { queries: { pageable: {}, cityId: 'BLR' } } as any)),
           (customerApi.adminCustomer.get('/api/v1/internal/admin/customers/addresses', { queries: { pageable: {} } }))
         ]);
 

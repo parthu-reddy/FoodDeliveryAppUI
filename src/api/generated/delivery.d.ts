@@ -526,11 +526,11 @@ export interface components {
             documentUrl?: string;
         };
         ApiResponseObject: {
-            success?: boolean;
-            message?: string;
+            success: boolean;
+            message: string;
             data?: Record<string, never>;
             /** Format: date-time */
-            timestamp?: string;
+            timestamp: string;
         };
         DLRequest: {
             dlNumber: string;
@@ -550,11 +550,11 @@ export interface components {
             available: boolean;
         };
         ApiResponseVoid: {
-            success?: boolean;
-            message?: string;
+            success: boolean;
+            message: string;
             data?: Record<string, never>;
             /** Format: date-time */
-            timestamp?: string;
+            timestamp: string;
         };
         DeliveryOnboardRequest: {
             fullName: string;
@@ -565,11 +565,11 @@ export interface components {
             vehicleType?: "BICYCLE" | "MCWG" | "LMV" | "EV_TWO_WHEELER";
         };
         ApiResponseDeliveryExecutive: {
-            success?: boolean;
-            message?: string;
+            success: boolean;
+            message: string;
             data?: components["schemas"]["DeliveryExecutive"];
             /** Format: date-time */
-            timestamp?: string;
+            timestamp: string;
         };
         UpdateOrderStatusRequest: {
             /** @enum {string} */
@@ -586,10 +586,10 @@ export interface components {
             sort?: string[];
         };
         PageDeliveryExecutive: {
-            /** Format: int32 */
-            totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
             /** Format: int32 */
             numberOfElements?: number;
             /** Format: int32 */
@@ -599,19 +599,19 @@ export interface components {
             content?: components["schemas"]["DeliveryExecutive"][];
             first?: boolean;
             last?: boolean;
-            pageable?: components["schemas"]["PageableObject"];
             sort?: components["schemas"]["SortObject"][];
+            pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;
         };
         PageableObject: {
             /** Format: int64 */
             offset?: number;
+            sort?: components["schemas"]["SortObject"][];
             paged?: boolean;
             /** Format: int32 */
             pageNumber?: number;
             /** Format: int32 */
             pageSize?: number;
-            sort?: components["schemas"]["SortObject"][];
             unpaged?: boolean;
         };
         SortObject: {
@@ -633,10 +633,10 @@ export interface components {
             status?: string;
         };
         PageDriverLocationDTO: {
-            /** Format: int32 */
-            totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
             /** Format: int32 */
             numberOfElements?: number;
             /** Format: int32 */
@@ -646,28 +646,28 @@ export interface components {
             content?: components["schemas"]["DriverLocationDTO"][];
             first?: boolean;
             last?: boolean;
-            pageable?: components["schemas"]["PageableObject"];
             sort?: components["schemas"]["SortObject"][];
+            pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;
         };
         JsonNode: Record<string, never>;
         ApiResponseMapStringString: {
-            success?: boolean;
-            message?: string;
+            success: boolean;
+            message: string;
             data?: {
                 [key: string]: string;
             };
             /** Format: date-time */
-            timestamp?: string;
+            timestamp: string;
         };
         ApiResponseListMapStringObject: {
-            success?: boolean;
-            message?: string;
+            success: boolean;
+            message: string;
             data?: {
                 [key: string]: Record<string, never>;
             }[];
             /** Format: date-time */
-            timestamp?: string;
+            timestamp: string;
         };
         SseEmitter: {
             /** Format: int64 */

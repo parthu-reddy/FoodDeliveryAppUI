@@ -70,10 +70,9 @@ export const ApiResponseObject = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: z.object({}).partial().passthrough(),
+    data: z.object({}).partial().passthrough().optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 export const DLRequest = z
   .object({
@@ -104,10 +103,9 @@ export const ApiResponseVoid = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: z.object({}).partial().passthrough(),
+    data: z.object({}).partial().passthrough().optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 export const DeliveryOnboardRequest = z
   .object({
@@ -128,10 +126,9 @@ export const ApiResponseDeliveryExecutive = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: DeliveryExecutive,
+    data: DeliveryExecutive.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 export const UpdateOrderStatusRequest = z
   .object({
@@ -172,26 +169,26 @@ export const SortObject = z
 export const PageableObject = z
   .object({
     offset: z.number().int(),
+    sort: z.array(SortObject),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
-    sort: z.array(SortObject),
     unpaged: z.boolean(),
   })
   .partial()
   .passthrough();
 export const PageDeliveryExecutive = z
   .object({
-    totalPages: z.number().int(),
     totalElements: z.number().int(),
+    totalPages: z.number().int(),
     numberOfElements: z.number().int(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(DeliveryExecutive),
     first: z.boolean(),
     last: z.boolean(),
-    pageable: PageableObject,
     sort: z.array(SortObject),
+    pageable: PageableObject,
     empty: z.boolean(),
   })
   .partial()
@@ -209,16 +206,16 @@ export const DriverLocationDTO = z
   .passthrough();
 export const PageDriverLocationDTO = z
   .object({
-    totalPages: z.number().int(),
     totalElements: z.number().int(),
+    totalPages: z.number().int(),
     numberOfElements: z.number().int(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(DriverLocationDTO),
     first: z.boolean(),
     last: z.boolean(),
-    pageable: PageableObject,
     sort: z.array(SortObject),
+    pageable: PageableObject,
     empty: z.boolean(),
   })
   .partial()
@@ -228,19 +225,17 @@ export const ApiResponseMapStringString = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: z.record(z.string()),
+    data: z.record(z.string()).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 export const ApiResponseListMapStringObject = z
   .object({
     success: z.boolean(),
     message: z.string(),
-    data: z.array(z.record(z.object({}).partial().passthrough())),
+    data: z.array(z.record(z.object({}).partial().passthrough())).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 export const Pageable = z
   .object({
