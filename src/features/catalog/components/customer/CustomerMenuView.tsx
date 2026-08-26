@@ -120,7 +120,11 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
         ) : !isDeliverable ? (
           <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 font-bold text-sm">
             <MapPinOff className="w-5 h-5 shrink-0" />
-            <span>Out of Serviceable Area</span>
+            <span>
+              {deliveryPricing?.error === 'NO_DELIVERY_PARTNER_NEARBY' 
+                ? 'No Delivery Partner Available' 
+                : 'Out of Serviceable Area'}
+            </span>
           </div>
         ) : null}
 

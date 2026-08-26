@@ -263,9 +263,10 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
             })) : []
           });
           return { restaurantId: rId, quote: res };
-        } catch (error: unknown) {
+        } catch (error: any) {
           console.error('Failed to fetch quote for restaurant', rId, error);
-          return { restaurantId: rId, quote: null };
+          const errorCode = error.response?.data?.error || error.response?.data?.message || 'UNKNOWN_ERROR';
+          return { restaurantId: rId, quote: { isDeliverable: false, error: errorCode } };
         }
       })).then((results) => {
         const newQuotes = { ...quotes };
