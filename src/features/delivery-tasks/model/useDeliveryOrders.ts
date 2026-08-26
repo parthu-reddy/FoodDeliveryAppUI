@@ -277,7 +277,14 @@ export function useDeliveryOrders({
       ws = new WebSocket(`${protocol}//${window.location.host}/api/delivery/tracking?token=${token}`);
       
       ws.onopen = () => {
-        attempt = 0;
+        // Wait 3 seconds of stability before resetting attempt to 0
+        // This prevents the instant-reconnect infinite loop if the server drops it immediately
+        setTimeout(() => {
+          if (ws.readyState === WebSocket.OPEN) {
+            attempt = 0;
+          }
+        }, 3000);
+        
         setWsConnected(true);
         
         const sendLocation = () => {
@@ -328,7 +335,8 @@ export function useDeliveryOrders({
         }
       };
       
-      ws.onclose = () => {
+      ws.onclose = (event) => {
+        console.warn(`WebSocket closed. Code: ${event.code}, Reason: ${event.reason || 'None'}, WasClean: ${event.wasClean}`);
         setWsConnected(false);
         if (interval) clearInterval(interval);
         const delay = Math.min(1000 * Math.pow(2, attempt), 30000);
@@ -338,7 +346,10 @@ export function useDeliveryOrders({
 
       ws.onerror = (err) => {
         console.error("WebSocket error:", err);
-        ws.close();
+        // Only close if it's currently open to avoid redundant onclose triggers
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.close();
+        }
       };
     };
     
