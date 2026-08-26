@@ -380,12 +380,18 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
             <div className="pt-4 mt-4 border-t border-dashed border-slate-200 dark:border-slate-700 space-y-2">
               <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
                 <span>Items Total</span>
-                <span>₹{currentTrackingOrder.items ? currentTrackingOrder.items.reduce((sum: number, item: unknown) => { const i = asUntyped<unknown>(item) as { item?: { price?: number }, price?: number, quantity?: number }; return sum + ((i.item?.price || i.price || 0) * (i.quantity || 1))}, 0).toFixed(2) : '0.00'}</span>
+                <span>₹{currentTrackingOrder.itemTotal !== undefined ? currentTrackingOrder.itemTotal.toFixed(2) : (currentTrackingOrder.items ? currentTrackingOrder.items.reduce((sum: number, item: unknown) => { const i = asUntyped<unknown>(item) as { item?: { price?: number }, price?: number, quantity?: number }; return sum + ((i.item?.price || i.price || 0) * (i.quantity || 1))}, 0).toFixed(2) : '0.00')}</span>
               </div>
               <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
                 <span>Delivery Fee</span>
-                <span>₹{currentTrackingOrder.deliveryFee !== undefined ? currentTrackingOrder.deliveryFee.toFixed(2) : (currentTrackingOrder.items ? ((currentTrackingOrder.totalAmount || (currentTrackingOrder as {total?:number}).total || 0) - currentTrackingOrder.items.reduce((sum: number, item: unknown) => { const i = asUntyped<unknown>(item) as { item?: { price?: number }, price?: number, quantity?: number }; return sum + ((i.item?.price || i.price || 0) * (i.quantity || 1)) }, 0)).toFixed(2) : '0.00')}</span>
+                <span>₹{currentTrackingOrder.deliveryFee !== undefined ? currentTrackingOrder.deliveryFee.toFixed(2) : '0.00'}</span>
               </div>
+              {currentTrackingOrder.customerPlatformFee !== undefined && (
+                <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
+                  <span>Platform Fee</span>
+                  <span>₹{currentTrackingOrder.customerPlatformFee.toFixed(2)}</span>
+                </div>
+              )}
               {currentTrackingOrder.sgst !== undefined && (
                 <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
                   <span>SGST</span>
@@ -453,12 +459,18 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
             <div className="pt-4 border-t border-dashed border-rose-500/20 dark:border-slate-700 space-y-2">
               <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
                 <span>Items Total</span>
-                <span>₹{currentTrackingOrder.items ? currentTrackingOrder.items.reduce((sum: number, item: unknown) => { const i = asUntyped<unknown>(item) as { item?: { price?: number }, price?: number, quantity?: number }; return sum + ((i.item?.price || i.price || 0) * (i.quantity || 1)) }, 0).toFixed(2) : '0.00'}</span>
+                <span>₹{currentTrackingOrder.itemTotal !== undefined ? currentTrackingOrder.itemTotal.toFixed(2) : (currentTrackingOrder.items ? currentTrackingOrder.items.reduce((sum: number, item: unknown) => { const i = asUntyped<unknown>(item) as { item?: { price?: number }, price?: number, quantity?: number }; return sum + ((i.item?.price || i.price || 0) * (i.quantity || 1)) }, 0).toFixed(2) : '0.00')}</span>
               </div>
               <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
                 <span>Delivery Fee {(currentTrackingOrder as {otp?: string, distanceKm?: number}).distanceKm ? `(${(currentTrackingOrder as {otp?: string, distanceKm?: number}).distanceKm} km)` : ''}</span>
-                <span>₹{((currentTrackingOrder as {charges?: { category?: string, payerType?: string, amount?: number }[]}).charges || [])?.find((c: unknown) => { const charge = c as { category?: string, payerType?: string, amount?: number }; return charge.category === 'DELIVERY_FEE' && charge.payerType === 'CUSTOMER'; })?.amount?.toFixed(2) || (currentTrackingOrder.deliveryFee !== undefined ? currentTrackingOrder.deliveryFee.toFixed(2) : (currentTrackingOrder.items ? ((currentTrackingOrder.totalAmount || (currentTrackingOrder as {total?:number}).total || 0) - currentTrackingOrder.items.reduce((sum: number, item: unknown) => { const i = asUntyped<unknown>(item) as { item?: { price?: number }, price?: number, quantity?: number }; return sum + ((i.item?.price || i.price || 0) * (i.quantity || 1)) }, 0)).toFixed(2) : '0.00'))}</span>
+                <span>₹{currentTrackingOrder.deliveryFee !== undefined ? currentTrackingOrder.deliveryFee.toFixed(2) : '0.00'}</span>
               </div>
+              {currentTrackingOrder.customerPlatformFee !== undefined && (
+                <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
+                  <span>Platform Fee</span>
+                  <span>₹{currentTrackingOrder.customerPlatformFee.toFixed(2)}</span>
+                </div>
+              )}
               {currentTrackingOrder.sgst !== undefined && (
                 <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
                   <span>SGST</span>

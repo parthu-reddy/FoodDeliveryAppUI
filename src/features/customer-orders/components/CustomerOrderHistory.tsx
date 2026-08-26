@@ -121,7 +121,7 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
                   </div>
                   <div className="text-right">
                     <span className="font-black text-slate-800 dark:text-white text-lg block">
-                      ${(order.totalAmount || order.total || 0).toFixed(2)}
+                      ₹{(order.totalAmount || (order as {total?: number}).total || 0).toFixed(2)}
                     </span>
                   </div>
                 </div>

@@ -80,14 +80,16 @@ export function useDeliveryOrders({
             const availableData = getArrayFromRes(availableRes);
             fetchedAvailableJobs = availableData.map((o: unknown) => ({ ...(o as Order), status: ((o as Order).status as string)?.toUpperCase() as OrderStatus || '' as OrderStatus }));
             if (fetchedAvailableJobs.length > 0) {
-              const newPingId = fetchedAvailableJobs[0].id;
               setRejectedIds(prev => {
-                if (prev.has(newPingId)) {
-                  const newSet = new Set(prev);
-                  newSet.delete(newPingId);
-                  return newSet;
-                }
-                return prev;
+                let changed = false;
+                const newSet = new Set(prev);
+                fetchedAvailableJobs.forEach(job => {
+                  if (newSet.has(job.id)) {
+                    newSet.delete(job.id);
+                    changed = true;
+                  }
+                });
+                return changed ? newSet : prev;
               });
             }
          }
@@ -308,14 +310,29 @@ export function useDeliveryOrders({
         try {
           const data = JSON.parse(event.data);
           if (data.type === "NEW_ORDER_DISPATCH" && data.orderId) {
+            setRejectedIds(prev => {
+              if (prev.has(data.orderId)) {
+                const newSet = new Set(prev);
+                newSet.delete(data.orderId);
+                return newSet;
+              }
+              return prev;
+            });
+            
             const pingRes = await deliveryApi.deliveryOrder.get(`/api/v1/delivery/orders/available`, {});
             const pingData = pingRes;
-            if (pingData && pingData.length > 0) {
+            if (pingData && (pingData as unknown[]).length > 0) {
               const jobs = (pingData as unknown[]).map((o: unknown) => ({ ...(o as Order), status: ((o as Order).status as string)?.toUpperCase() as OrderStatus || '' as OrderStatus }));
               setRejectedIds(prev => {
+                let changed = false;
                 const newSet = new Set(prev);
-                newSet.delete(jobs[0].id);
-                return newSet;
+                jobs.forEach(job => {
+                  if (newSet.has(job.id)) {
+                    newSet.delete(job.id);
+                    changed = true;
+                  }
+                });
+                return changed ? newSet : prev;
               });
               setInternalOrders(prev => {
                 const mergedMap = new Map();

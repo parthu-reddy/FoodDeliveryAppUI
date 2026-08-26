@@ -4,6 +4,7 @@ import { Button } from '@shared/ui';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle2, Receipt, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 interface RestaurantOrderDetailsModalProps {
   order: Order | null;
@@ -40,29 +41,30 @@ export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalPr
     }
   }, [isOpen, order]);
 
-  if (!isOpen || !order) return null;
+  if (!order) return null;
 
-  const data = invoice || order;
+  const data = invoice?.data || invoice || order;
 
-  return (
+  const modalContent = (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh]"
-        >
-          {/* Header */}
-          <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl z-10">
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-                <Receipt className="w-6 h-6 text-emerald-500" />
-                Order Details
-              </h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                Order #{order.id.slice(0, 8).toUpperCase()}
-              </p>
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh]"
+          >
+            {/* Header */}
+            <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl z-10">
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
+                  <Receipt className="w-6 h-6 text-emerald-500" />
+                  Order Details
+                </h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  Order #{order.id.slice(0, 8).toUpperCase()}
+                </p>
             </div>
             <button
               onClick={onClose}
@@ -194,13 +196,17 @@ export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalPr
             )}
           </div>
           
-          <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
-             <Button fullWidth variant="outline" onClick={onClose}>
-               Close Details
-             </Button>
-          </div>
-        </motion.div>
-      </div>
+            <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+               <Button fullWidth variant="outline" onClick={onClose}>
+                 Close Details
+               </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </AnimatePresence>
   );
+
+  if (typeof document === 'undefined') return null;
+  return createPortal(modalContent, document.body);
 };
