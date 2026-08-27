@@ -82,6 +82,12 @@ function AdminAssignmentMapInner({
              zoom: 12,
              minZoom: 10,
              maxZoom: 17,
+             transformRequest: (url, resourceType) => {
+               if (url.includes('api.olamaps.io')) {
+                 return { url: url.replace('https://api.olamaps.io', '/olamaps') };
+               }
+               return { url };
+             }
         });
         
         let rLat = 12.98;

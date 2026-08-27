@@ -87,6 +87,12 @@ function OrderTrackingMapInner({ order, enableLiveTracking = false }: { order: O
           minZoom: 10, // Prevent zooming out too far
           maxZoom: 17, // Prevent over-zooming to reduce tile fetch
           interactive: false, // Block user interaction with the map itself
+          transformRequest: (url, resourceType) => {
+            if (url.includes('api.olamaps.io')) {
+              return { url: url.replace('https://api.olamaps.io', '/olamaps') };
+            }
+            return { url };
+          }
         });
 
         let rLat = 12.98;

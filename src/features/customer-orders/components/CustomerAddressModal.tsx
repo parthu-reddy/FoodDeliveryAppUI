@@ -243,6 +243,12 @@ export default function CustomerAddressModal({
         maxZoom: 17,
         interactive: false,
         attributionControl: false,
+        transformRequest: (url, resourceType) => {
+          if (url.includes('api.olamaps.io')) {
+            return { url: url.replace('https://api.olamaps.io', '/olamaps') };
+          }
+          return { url };
+        }
       });
       map.addControl(new maplibregl.NavigationControl(), 'top-right');
 

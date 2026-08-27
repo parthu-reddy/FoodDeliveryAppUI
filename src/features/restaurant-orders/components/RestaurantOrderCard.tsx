@@ -206,31 +206,33 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
       )}
 
     <div className="pt-2.5 border-t border-rose-500/20 dark:border-rose-500/30 flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-[9px] text-slate-400 dark:text-slate-300 uppercase font-mono block">Order Value</span>
-            <span className="text-xs font-bold text-slate-850 dark:text-[#f0ede6] font-mono">₹{order.total?.toFixed(2) || '0.00'}</span>
-          </div>
-          {order.foodCost !== undefined && (
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-wrap gap-x-4 gap-y-2 flex-1 min-w-0">
             <div className="space-y-1">
-              <span className="text-[9px] text-slate-400 dark:text-slate-300 uppercase font-mono block">Food Cost</span>
-              <span className="text-xs font-bold text-slate-850 dark:text-[#f0ede6] font-mono">₹{order.foodCost.toFixed(2)}</span>
+              <span className="text-[9px] text-slate-400 dark:text-slate-300 uppercase font-mono block truncate">Order Value</span>
+              <span className="text-xs font-bold text-slate-850 dark:text-[#f0ede6] font-mono">₹{order.total?.toFixed(2) || '0.00'}</span>
             </div>
-          )}
-          {order.restaurantPlatformFee !== undefined && order.restaurantPlatformFee > 0 && (
+            {order.foodCost !== undefined && (
+              <div className="space-y-1">
+                <span className="text-[9px] text-slate-400 dark:text-slate-300 uppercase font-mono block truncate">Food Cost</span>
+                <span className="text-xs font-bold text-slate-850 dark:text-[#f0ede6] font-mono">₹{order.foodCost.toFixed(2)}</span>
+              </div>
+            )}
+            {order.restaurantPlatformFee !== undefined && order.restaurantPlatformFee > 0 && (
+              <div className="space-y-1">
+                <span className="text-[9px] text-slate-400 dark:text-slate-300 uppercase font-mono block truncate">Platform Fee</span>
+                <span className="text-xs font-bold text-rose-500 font-mono">-₹{order.restaurantPlatformFee.toFixed(2)}</span>
+              </div>
+            )}
             <div className="space-y-1">
-              <span className="text-[9px] text-slate-400 dark:text-slate-300 uppercase font-mono block">Platform Fee</span>
-              <span className="text-xs font-bold text-rose-500 font-mono">-₹{order.restaurantPlatformFee.toFixed(2)}</span>
+              <span className="text-[9px] text-slate-400 dark:text-slate-300 uppercase font-mono block truncate">Your Payout</span>
+              <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+                ₹{order.restaurantPayout !== undefined ? order.restaurantPayout.toFixed(2) : (order.total || 0).toFixed(2)}
+              </span>
             </div>
-          )}
-          <div className="space-y-1">
-            <span className="text-[9px] text-slate-400 dark:text-slate-300 uppercase font-mono block">Your Payout</span>
-            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 font-mono">
-              ₹{order.restaurantPayout !== undefined ? order.restaurantPayout.toFixed(2) : (order.total || 0).toFixed(2)}
-            </span>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 shrink-0">
             {isNewPlaced && (
                <Button
                  variant="secondary"

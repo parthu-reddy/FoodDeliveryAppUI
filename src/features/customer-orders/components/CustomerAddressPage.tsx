@@ -92,6 +92,12 @@ export default function CustomerAddressPage({
              minZoom: 10,
              maxZoom: 17,
              interactive: false,
+             transformRequest: (url, resourceType) => {
+               if (url.includes('api.olamaps.io')) {
+                 return { url: url.replace('https://api.olamaps.io', '/olamaps') };
+               }
+               return { url };
+             }
         });
         
         // @ts-expect-error auto-migration type suppression
