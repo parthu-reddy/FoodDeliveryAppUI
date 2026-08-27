@@ -132,38 +132,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/probe/protected": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["protectedEndpoint"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/internal/probe": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["internalEndpoint"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/internal/admin/wallet/dlq/outbox": {
         parameters: {
             query?: never;
@@ -188,7 +156,7 @@ export interface components {
             /** Format: uuid */
             entityId?: string;
             /** @enum {string} */
-            entityType?: "CUSTOMER" | "ADVERTISER" | "RESTAURANT" | "DRIVER";
+            entityType?: "CUSTOMER" | "RESTAURANT" | "DRIVER" | "PLATFORM" | "ADVERTISER";
             currency: string;
         };
         WalletDto: {
@@ -197,7 +165,7 @@ export interface components {
             /** Format: uuid */
             entityId: string;
             /** @enum {string} */
-            entityType: "CUSTOMER" | "ADVERTISER" | "RESTAURANT" | "DRIVER";
+            entityType: "CUSTOMER" | "RESTAURANT" | "DRIVER" | "PLATFORM" | "ADVERTISER";
             balance: number;
             currency: string;
             /** @enum {string} */
@@ -211,6 +179,7 @@ export interface components {
         ApiResponseString: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: string;
             /** Format: date-time */
             timestamp: string;
@@ -222,6 +191,7 @@ export interface components {
         ApiResponseMapStringString: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: {
                 [key: string]: string;
             };
@@ -233,6 +203,8 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
+            sort?: components["schemas"]["SortObject"][];
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             numberOfElements?: number;
             /** Format: int32 */
@@ -242,20 +214,18 @@ export interface components {
             content?: components["schemas"]["WalletTransactionDto"][];
             first?: boolean;
             last?: boolean;
-            sort?: components["schemas"]["SortObject"][];
-            pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;
         };
         PageableObject: {
-            /** Format: int64 */
-            offset?: number;
+            unpaged?: boolean;
             sort?: components["schemas"]["SortObject"][];
             paged?: boolean;
             /** Format: int32 */
             pageNumber?: number;
             /** Format: int32 */
             pageSize?: number;
-            unpaged?: boolean;
+            /** Format: int64 */
+            offset?: number;
         };
         SortObject: {
             direction?: string;
@@ -304,6 +274,8 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
+            sort?: components["schemas"]["SortObject"][];
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             numberOfElements?: number;
             /** Format: int32 */
@@ -313,8 +285,6 @@ export interface components {
             content?: components["schemas"]["OutboxEventEntity"][];
             first?: boolean;
             last?: boolean;
-            sort?: components["schemas"]["SortObject"][];
-            pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;
         };
     };
@@ -359,7 +329,7 @@ export interface operations {
                 "X-Calling-Service"?: string;
             };
             path: {
-                entityType: "CUSTOMER" | "ADVERTISER" | "RESTAURANT" | "DRIVER";
+                entityType: "CUSTOMER" | "RESTAURANT" | "DRIVER" | "PLATFORM" | "ADVERTISER";
                 entityId: string;
             };
             cookie?: never;
@@ -388,7 +358,7 @@ export interface operations {
                 "X-Calling-Service"?: string;
             };
             path: {
-                entityType: "CUSTOMER" | "ADVERTISER" | "RESTAURANT" | "DRIVER";
+                entityType: "CUSTOMER" | "RESTAURANT" | "DRIVER" | "PLATFORM" | "ADVERTISER";
                 entityId: string;
             };
             cookie?: never;
@@ -497,7 +467,7 @@ export interface operations {
                 "X-User-Id"?: string;
             };
             path: {
-                entityType: "CUSTOMER" | "ADVERTISER" | "RESTAURANT" | "DRIVER";
+                entityType: "CUSTOMER" | "RESTAURANT" | "DRIVER" | "PLATFORM" | "ADVERTISER";
                 entityId: string;
             };
             cookie?: never;
@@ -525,7 +495,7 @@ export interface operations {
                 "X-User-Id"?: string;
             };
             path: {
-                entityType: "CUSTOMER" | "ADVERTISER" | "RESTAURANT" | "DRIVER";
+                entityType: "CUSTOMER" | "RESTAURANT" | "DRIVER" | "PLATFORM" | "ADVERTISER";
                 entityId: string;
             };
             cookie?: never;
@@ -539,46 +509,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PageWalletTransactionDto"];
-                };
-            };
-        };
-    };
-    protectedEndpoint: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": string;
-                };
-            };
-        };
-    };
-    internalEndpoint: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": string;
                 };
             };
         };

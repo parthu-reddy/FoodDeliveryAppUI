@@ -8,6 +8,7 @@ const ApiResponseMasterMenuItem = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: MasterMenuItem.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
@@ -27,6 +28,7 @@ const ApiResponseOutletMenuOverride = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: OutletMenuOverride.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
@@ -49,6 +51,7 @@ const ApiResponseListMenuItemDTO = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: z.array(MenuItemDTO).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
@@ -57,6 +60,7 @@ const ApiResponseListOutletMenuOverride = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: z.array(OutletMenuOverride).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })

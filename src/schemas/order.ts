@@ -9,6 +9,8 @@ export const orderSchema = z.object({
   items: z.array(cartItemSchema).optional(),
 
   // Custom UI fields added during normalization
+  restaurantId: z.string().optional(),
+  customerId: z.string().optional(),
   customerName: z.string().optional(),
   subtotal: z.number().optional(),
   total: z.number().optional(),
@@ -54,6 +56,8 @@ export const orderSchema = z.object({
     items: parsedItems,
     total: raw.total || raw.totalAmount || calculatedTotal,
     subtotal: raw.subtotal || calculatedTotal,
+    restaurantId: raw.restaurantId,
+    customerId: raw.customerId,
     customerName: raw.customerName || 'Customer',
     riderName: raw.riderName || raw.deliveryExecutiveName,
     deliveryExecutiveName: raw.deliveryExecutiveName || raw.riderName,

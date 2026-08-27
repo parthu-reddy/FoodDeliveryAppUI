@@ -9,7 +9,6 @@ import {
     Clock,
     Flame,
     KeyRound,
-    MapPin,
     MessageSquare,
     Receipt,
     RefreshCw,
@@ -148,7 +147,7 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
           <div className="flex items-center justify-between gap-1">
             <p className="font-bold text-slate-700 dark:text-[#f0ede6] flex items-center gap-1">
               <User className="w-3 h-3 text-slate-400 dark:text-slate-300" />
-              <span className="truncate max-w-[120px]">{order.customerName}</span>
+              <span className="truncate max-w-[120px]">Customer #{order.customerId?.substring(0, 8) || order.id?.substring(0, 8)}</span>
             </p>
             {order.estimatedCompletionTime && (
               <span className="flex items-center gap-1 text-[9px] text-amber-500 font-bold shrink-0">
@@ -157,12 +156,6 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
               </span>
             )}
           </div>
-          {order.deliveryAddress && (
-            <div className="flex items-center gap-1 text-[10px] text-slate-400 dark:text-slate-300">
-              <MapPin className="w-3 h-3 text-rose-450 shrink-0" />
-              <span className="truncate max-w-[170px]">{order.deliveryAddress}</span>
-            </div>
-          )}
         </div>
 
         <div className="p-2.5 bg-indigo-50/30 dark:bg-indigo-950/20">

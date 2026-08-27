@@ -68,6 +68,7 @@ const ApiResponseListRestaurantOrder = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: z.array(RestaurantOrder).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
@@ -76,14 +77,14 @@ const PageRestaurantOrder = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
     number: z.number().int(),
-    numberOfElements: z.number().int(),
     size: z.number().int(),
     content: z.array(RestaurantOrder),
     sort: z.array(SortObject),
     pageable: PageableObject,
+    numberOfElements: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
     empty: z.boolean(),
   })
   .partial()
@@ -92,6 +93,7 @@ const ApiResponsePageRestaurantOrder = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: PageRestaurantOrder.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })

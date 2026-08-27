@@ -45,6 +45,7 @@ const ApiResponseBrand = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: Brand.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
@@ -53,6 +54,7 @@ const ApiResponseListBrand = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: z.array(Brand).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })

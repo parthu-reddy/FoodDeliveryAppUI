@@ -3,8 +3,8 @@ import { z } from "zod";
 
 import { SupportTicket } from "./common";
 import { PageSupportTicket } from "./common";
-import { SortObject } from "./common";
 import { PageableObject } from "./common";
+import { SortObject } from "./common";
 
 const ResolveRequest = z
   .object({ approved: z.boolean(), notes: z.string(), faultType: z.string() })

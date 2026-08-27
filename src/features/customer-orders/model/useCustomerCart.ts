@@ -263,9 +263,10 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
             })) : []
           });
           return { restaurantId: rId, quote: res };
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('Failed to fetch quote for restaurant', rId, error);
-          const errorCode = error.response?.data?.errorCode || error.response?.data?.error || error.response?.data?.message || 'UNKNOWN_ERROR';
+          const errorData = (error as { response?: { data?: { errorCode?: string; error?: string; message?: string } } }).response?.data;
+          const errorCode = errorData?.errorCode || errorData?.error || errorData?.message || 'UNKNOWN_ERROR';
           
           let friendlyError = errorCode;
           if (errorCode === 'OUT_OF_SERVICE_AREA') {
@@ -274,7 +275,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
             friendlyError = "All our delivery partners are currently busy. Please try again in a few minutes.";
           }
 
-          return { restaurantId: rId, quote: { isDeliverable: false, error: friendlyError, errorCode: error.response?.data?.errorCode } };
+          return { restaurantId: rId, quote: { isDeliverable: false, error: friendlyError, errorCode: errorData?.errorCode } };
         }
       })).then((results) => {
         const newQuotes = { ...quotes };

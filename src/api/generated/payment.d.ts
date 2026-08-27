@@ -165,6 +165,7 @@ export interface components {
         ApiResponseString: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: string;
             /** Format: date-time */
             timestamp: string;
@@ -195,12 +196,12 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
+            sort?: components["schemas"]["SortObject"][];
             /** Format: int32 */
             numberOfElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
             first?: boolean;
             last?: boolean;
-            sort?: components["schemas"]["SortObject"][];
-            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["OutboxEventEntity"][];
@@ -210,12 +211,12 @@ export interface components {
         };
         PageableObject: {
             sort?: components["schemas"]["SortObject"][];
+            unpaged?: boolean;
             paged?: boolean;
             /** Format: int32 */
             pageNumber?: number;
             /** Format: int32 */
             pageSize?: number;
-            unpaged?: boolean;
             /** Format: int64 */
             offset?: number;
         };

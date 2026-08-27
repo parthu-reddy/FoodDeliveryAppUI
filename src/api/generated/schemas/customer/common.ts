@@ -71,6 +71,7 @@ export const ApiResponseVoid = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: z.object({}).partial().passthrough().optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
@@ -79,6 +80,7 @@ export const ApiResponseString = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: z.string().optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
@@ -122,6 +124,7 @@ export const ApiResponseMapStringObject = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: z.record(z.object({}).partial().passthrough()).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
@@ -138,27 +141,27 @@ export const SortObject = z
   .passthrough();
 export const PageableObject = z
   .object({
-    offset: z.number().int(),
-    sort: z.array(SortObject),
     paged: z.boolean(),
-    pageNumber: z.number().int(),
-    pageSize: z.number().int(),
+    sort: z.array(SortObject),
     unpaged: z.boolean(),
+    pageSize: z.number().int(),
+    pageNumber: z.number().int(),
+    offset: z.number().int(),
   })
   .partial()
   .passthrough();
 export const PageOrderResponse = z
   .object({
-    totalElements: z.number().int(),
     totalPages: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
+    totalElements: z.number().int(),
+    pageable: PageableObject,
+    sort: z.array(SortObject),
+    numberOfElements: z.number().int(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(OrderResponse),
-    numberOfElements: z.number().int(),
-    sort: z.array(SortObject),
-    pageable: PageableObject,
+    first: z.boolean(),
+    last: z.boolean(),
     empty: z.boolean(),
   })
   .partial()
@@ -167,6 +170,7 @@ export const ApiResponsePageOrderResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: PageOrderResponse.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
@@ -175,6 +179,7 @@ export const ApiResponseListOrderResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: z.array(OrderResponse).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
@@ -263,32 +268,32 @@ export const pageable = z
   .passthrough();
 export const PageOrder = z
   .object({
-    totalElements: z.number().int(),
     totalPages: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
+    totalElements: z.number().int(),
+    pageable: PageableObject,
+    sort: z.array(SortObject),
+    numberOfElements: z.number().int(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(Order),
-    numberOfElements: z.number().int(),
-    sort: z.array(SortObject),
-    pageable: PageableObject,
+    first: z.boolean(),
+    last: z.boolean(),
     empty: z.boolean(),
   })
   .partial()
   .passthrough();
 export const PageSupportTicket = z
   .object({
-    totalElements: z.number().int(),
     totalPages: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
+    totalElements: z.number().int(),
+    pageable: PageableObject,
+    sort: z.array(SortObject),
+    numberOfElements: z.number().int(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(SupportTicket),
-    numberOfElements: z.number().int(),
-    sort: z.array(SortObject),
-    pageable: PageableObject,
+    first: z.boolean(),
+    last: z.boolean(),
     empty: z.boolean(),
   })
   .partial()

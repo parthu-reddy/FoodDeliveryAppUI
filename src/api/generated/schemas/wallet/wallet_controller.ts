@@ -21,14 +21,14 @@ const PageWalletTransactionDto = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
+    sort: z.array(SortObject),
+    pageable: PageableObject,
     numberOfElements: z.number().int(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(WalletTransactionDto),
     first: z.boolean(),
     last: z.boolean(),
-    sort: z.array(SortObject),
-    pageable: PageableObject,
     empty: z.boolean(),
   })
   .partial()
@@ -49,7 +49,13 @@ const endpoints = makeApi([
       {
         name: "entityType",
         type: "Path",
-        schema: z.enum(["CUSTOMER", "ADVERTISER", "RESTAURANT", "DRIVER"]),
+        schema: z.enum([
+          "CUSTOMER",
+          "RESTAURANT",
+          "DRIVER",
+          "PLATFORM",
+          "ADVERTISER",
+        ]),
       },
       {
         name: "entityId",
@@ -73,7 +79,13 @@ const endpoints = makeApi([
       {
         name: "entityType",
         type: "Path",
-        schema: z.enum(["CUSTOMER", "ADVERTISER", "RESTAURANT", "DRIVER"]),
+        schema: z.enum([
+          "CUSTOMER",
+          "RESTAURANT",
+          "DRIVER",
+          "PLATFORM",
+          "ADVERTISER",
+        ]),
       },
       {
         name: "entityId",

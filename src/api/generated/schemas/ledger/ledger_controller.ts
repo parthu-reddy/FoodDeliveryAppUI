@@ -44,11 +44,11 @@ const SortObject = z
 const PageableObject = z
   .object({
     offset: z.number().int(),
-    sort: z.array(SortObject),
     paged: z.boolean(),
-    pageNumber: z.number().int(),
-    pageSize: z.number().int(),
+    sort: z.array(SortObject),
     unpaged: z.boolean(),
+    pageSize: z.number().int(),
+    pageNumber: z.number().int(),
   })
   .partial()
   .passthrough();
@@ -56,12 +56,12 @@ const PageLedgerTransactionDto = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
+    numberOfElements: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(LedgerTransactionDto),
-    numberOfElements: z.number().int(),
     sort: z.array(SortObject),
     pageable: PageableObject,
     empty: z.boolean(),
@@ -104,12 +104,12 @@ const PageLedgerEntry = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
+    numberOfElements: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(LedgerEntry),
-    numberOfElements: z.number().int(),
     sort: z.array(SortObject),
     pageable: PageableObject,
     empty: z.boolean(),

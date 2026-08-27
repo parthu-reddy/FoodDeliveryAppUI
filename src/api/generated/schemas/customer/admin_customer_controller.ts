@@ -2,22 +2,22 @@ import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
 import { pageable } from "./common";
-import { CustomerAddressDto } from "./common";
-import { SortObject } from "./common";
 import { PageableObject } from "./common";
+import { SortObject } from "./common";
+import { CustomerAddressDto } from "./common";
 
 const PageCustomerAddressDto = z
   .object({
-    totalElements: z.number().int(),
     totalPages: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
+    totalElements: z.number().int(),
+    pageable: PageableObject,
+    sort: z.array(SortObject),
+    numberOfElements: z.number().int(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(CustomerAddressDto),
-    numberOfElements: z.number().int(),
-    sort: z.array(SortObject),
-    pageable: PageableObject,
+    first: z.boolean(),
+    last: z.boolean(),
     empty: z.boolean(),
   })
   .partial()
@@ -26,6 +26,7 @@ const ApiResponsePageCustomerAddressDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: PageCustomerAddressDto.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })

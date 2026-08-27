@@ -20,6 +20,7 @@ const ApiResponseCategoryDTO = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: CategoryDTO.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
@@ -36,6 +37,7 @@ const ApiResponseListTimingDTO = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: z.array(TimingDTO).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
@@ -50,6 +52,7 @@ const ApiResponseListCategoryDTO = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: z.array(CategoryDTO).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })

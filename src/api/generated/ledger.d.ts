@@ -140,6 +140,8 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
             first?: boolean;
             last?: boolean;
             /** Format: int32 */
@@ -147,8 +149,6 @@ export interface components {
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["LedgerTransactionDto"][];
-            /** Format: int32 */
-            numberOfElements?: number;
             sort?: components["schemas"]["SortObject"][];
             pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;
@@ -156,13 +156,13 @@ export interface components {
         PageableObject: {
             /** Format: int64 */
             offset?: number;
-            sort?: components["schemas"]["SortObject"][];
             paged?: boolean;
-            /** Format: int32 */
-            pageNumber?: number;
+            sort?: components["schemas"]["SortObject"][];
+            unpaged?: boolean;
             /** Format: int32 */
             pageSize?: number;
-            unpaged?: boolean;
+            /** Format: int32 */
+            pageNumber?: number;
         };
         SortObject: {
             direction?: string;
@@ -193,6 +193,8 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
+            /** Format: int32 */
+            numberOfElements?: number;
             first?: boolean;
             last?: boolean;
             /** Format: int32 */
@@ -200,8 +202,6 @@ export interface components {
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["LedgerEntry"][];
-            /** Format: int32 */
-            numberOfElements?: number;
             sort?: components["schemas"]["SortObject"][];
             pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;

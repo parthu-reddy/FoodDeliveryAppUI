@@ -88,15 +88,7 @@ export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalPr
                     <p className="text-sm text-amber-600 dark:text-amber-400 font-medium">{error}</p>
                   </div>
                 )}
-                
-                {/* Customer Info */}
-                <div>
-                  <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Customer Details</h3>
-                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-800">
-                    <p className="font-medium text-slate-900 dark:text-white">{data.customerName || 'Customer'}</p>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{data.deliveryAddress}</p>
-                  </div>
-                </div>
+
 
                 {/* Items */}
                 <div>
@@ -127,39 +119,7 @@ export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalPr
                     Transparent Financial Breakdown
                   </h3>
                   <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-5 border border-slate-100 dark:border-slate-800 space-y-4">
-                    
-                    {/* The Customer's Perspective */}
-                    <div>
-                      <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Customer Paid</h4>
-                      <div className="space-y-2 text-sm pl-2 border-l-2 border-slate-200 dark:border-slate-700">
-                        <div className="flex justify-between text-slate-600 dark:text-slate-300">
-                          <span>Item Total (Food Cost)</span>
-                          <span>₹{(data.itemTotal || data.foodCost || 0).toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-600 dark:text-slate-300">
-                          <span>SGST <span className="text-xs text-slate-400">(Collected & paid by Platform)</span></span>
-                          <span>₹{(data.sgst || 0).toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-600 dark:text-slate-300">
-                          <span>CGST <span className="text-xs text-slate-400">(Collected & paid by Platform)</span></span>
-                          <span>₹{(data.cgst || 0).toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-600 dark:text-slate-300">
-                          <span>Delivery Fee (Customer)</span>
-                          <span>₹{(data.deliveryFee || 0).toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-600 dark:text-slate-300">
-                          <span>Platform Fee (Customer)</span>
-                          <span>₹{(data.customerPlatformFee || 0).toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between font-semibold text-slate-800 dark:text-slate-200 pt-2">
-                          <span>Total Paid by Customer</span>
-                          <span>₹{(data.totalAmount || data.total || 0).toFixed(2)}</span>
-                        </div>
-                      </div>
-                    </div>
 
-                    <div className="h-px bg-slate-200 dark:bg-slate-700 w-full" />
 
                     {/* The Restaurant's Perspective */}
                     <div>

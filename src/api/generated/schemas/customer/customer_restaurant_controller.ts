@@ -7,6 +7,7 @@ const ApiResponseBoolean = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: z.boolean().optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
@@ -15,6 +16,7 @@ const ApiResponseListObject = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: z.array(z.object({}).partial().passthrough()).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })

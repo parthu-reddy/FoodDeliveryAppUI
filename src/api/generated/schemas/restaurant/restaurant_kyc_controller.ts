@@ -32,6 +32,7 @@ const ApiResponseMapStringString = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: z.record(z.string()).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })

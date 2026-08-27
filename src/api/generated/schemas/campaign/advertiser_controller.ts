@@ -19,6 +19,7 @@ const ApiResponseAdvertiserResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: AdvertiserResponse.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })

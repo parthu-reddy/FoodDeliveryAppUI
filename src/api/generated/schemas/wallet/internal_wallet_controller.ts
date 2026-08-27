@@ -7,7 +7,7 @@ const CreateWalletRequest = z
   .object({
     entityId: z.string().uuid().optional(),
     entityType: z
-      .enum(["CUSTOMER", "ADVERTISER", "RESTAURANT", "DRIVER"])
+      .enum(["CUSTOMER", "RESTAURANT", "DRIVER", "PLATFORM", "ADVERTISER"])
       .optional(),
     currency: z.string(),
   })
@@ -60,7 +60,13 @@ const endpoints = makeApi([
       {
         name: "entityType",
         type: "Path",
-        schema: z.enum(["CUSTOMER", "ADVERTISER", "RESTAURANT", "DRIVER"]),
+        schema: z.enum([
+          "CUSTOMER",
+          "RESTAURANT",
+          "DRIVER",
+          "PLATFORM",
+          "ADVERTISER",
+        ]),
       },
       {
         name: "entityId",
@@ -89,7 +95,13 @@ const endpoints = makeApi([
       {
         name: "entityType",
         type: "Path",
-        schema: z.enum(["CUSTOMER", "ADVERTISER", "RESTAURANT", "DRIVER"]),
+        schema: z.enum([
+          "CUSTOMER",
+          "RESTAURANT",
+          "DRIVER",
+          "PLATFORM",
+          "ADVERTISER",
+        ]),
       },
       {
         name: "entityId",

@@ -868,6 +868,7 @@ export interface components {
         ApiResponseCustomer: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["Customer"];
             /** Format: date-time */
             timestamp: string;
@@ -893,6 +894,7 @@ export interface components {
         ApiResponseOrderResponse: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["OrderResponse"];
             /** Format: date-time */
             timestamp: string;
@@ -962,6 +964,7 @@ export interface components {
         ApiResponseVoid: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: Record<string, never>;
             /** Format: date-time */
             timestamp: string;
@@ -976,6 +979,7 @@ export interface components {
         ApiResponseQuoteResponse: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["QuoteResponse"];
             /** Format: date-time */
             timestamp: string;
@@ -995,6 +999,7 @@ export interface components {
         ApiResponseString: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: string;
             /** Format: date-time */
             timestamp: string;
@@ -1054,6 +1059,7 @@ export interface components {
         ApiResponseCustomerAddressDto: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["CustomerAddressDto"];
             /** Format: date-time */
             timestamp: string;
@@ -1078,6 +1084,7 @@ export interface components {
         ApiResponseMapStringObject: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: {
                 [key: string]: Record<string, never>;
             };
@@ -1087,6 +1094,7 @@ export interface components {
         ApiResponseBoolean: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: boolean;
             /** Format: date-time */
             timestamp: string;
@@ -1094,6 +1102,7 @@ export interface components {
         ApiResponseListObject: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: Record<string, never>[];
             /** Format: date-time */
             timestamp: string;
@@ -1101,6 +1110,7 @@ export interface components {
         ApiResponseListMapStringObject: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: {
                 [key: string]: Record<string, never>;
             }[];
@@ -1114,38 +1124,39 @@ export interface components {
         ApiResponsePageOrderResponse: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["PageOrderResponse"];
             /** Format: date-time */
             timestamp: string;
         };
         PageOrderResponse: {
-            /** Format: int64 */
-            totalElements?: number;
             /** Format: int32 */
             totalPages?: number;
-            first?: boolean;
-            last?: boolean;
+            /** Format: int64 */
+            totalElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            sort?: components["schemas"]["SortObject"][];
+            /** Format: int32 */
+            numberOfElements?: number;
             /** Format: int32 */
             number?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["OrderResponse"][];
-            /** Format: int32 */
-            numberOfElements?: number;
-            sort?: components["schemas"]["SortObject"][];
-            pageable?: components["schemas"]["PageableObject"];
+            first?: boolean;
+            last?: boolean;
             empty?: boolean;
         };
         PageableObject: {
-            /** Format: int64 */
-            offset?: number;
-            sort?: components["schemas"]["SortObject"][];
             paged?: boolean;
-            /** Format: int32 */
-            pageNumber?: number;
+            sort?: components["schemas"]["SortObject"][];
+            unpaged?: boolean;
             /** Format: int32 */
             pageSize?: number;
-            unpaged?: boolean;
+            /** Format: int32 */
+            pageNumber?: number;
+            /** Format: int64 */
+            offset?: number;
         };
         SortObject: {
             direction?: string;
@@ -1157,6 +1168,7 @@ export interface components {
         ApiResponseListOrderResponse: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["OrderResponse"][];
             /** Format: date-time */
             timestamp: string;
@@ -1224,48 +1236,50 @@ export interface components {
             sort?: string[];
         };
         PageOrder: {
-            /** Format: int64 */
-            totalElements?: number;
             /** Format: int32 */
             totalPages?: number;
-            first?: boolean;
-            last?: boolean;
+            /** Format: int64 */
+            totalElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            sort?: components["schemas"]["SortObject"][];
+            /** Format: int32 */
+            numberOfElements?: number;
             /** Format: int32 */
             number?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["Order"][];
-            /** Format: int32 */
-            numberOfElements?: number;
-            sort?: components["schemas"]["SortObject"][];
-            pageable?: components["schemas"]["PageableObject"];
+            first?: boolean;
+            last?: boolean;
             empty?: boolean;
         };
         PageSupportTicket: {
-            /** Format: int64 */
-            totalElements?: number;
             /** Format: int32 */
             totalPages?: number;
-            first?: boolean;
-            last?: boolean;
+            /** Format: int64 */
+            totalElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            sort?: components["schemas"]["SortObject"][];
+            /** Format: int32 */
+            numberOfElements?: number;
             /** Format: int32 */
             number?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["SupportTicket"][];
-            /** Format: int32 */
-            numberOfElements?: number;
-            sort?: components["schemas"]["SortObject"][];
-            pageable?: components["schemas"]["PageableObject"];
+            first?: boolean;
+            last?: boolean;
             empty?: boolean;
         };
         PageMapStringObject: {
-            /** Format: int64 */
-            totalElements?: number;
             /** Format: int32 */
             totalPages?: number;
-            first?: boolean;
-            last?: boolean;
+            /** Format: int64 */
+            totalElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            sort?: components["schemas"]["SortObject"][];
+            /** Format: int32 */
+            numberOfElements?: number;
             /** Format: int32 */
             number?: number;
             /** Format: int32 */
@@ -1273,40 +1287,40 @@ export interface components {
             content?: {
                 [key: string]: Record<string, never>;
             }[];
-            /** Format: int32 */
-            numberOfElements?: number;
-            sort?: components["schemas"]["SortObject"][];
-            pageable?: components["schemas"]["PageableObject"];
+            first?: boolean;
+            last?: boolean;
             empty?: boolean;
         };
         ApiResponsePageCustomerAddressDto: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["PageCustomerAddressDto"];
             /** Format: date-time */
             timestamp: string;
         };
         PageCustomerAddressDto: {
-            /** Format: int64 */
-            totalElements?: number;
             /** Format: int32 */
             totalPages?: number;
-            first?: boolean;
-            last?: boolean;
+            /** Format: int64 */
+            totalElements?: number;
+            pageable?: components["schemas"]["PageableObject"];
+            sort?: components["schemas"]["SortObject"][];
+            /** Format: int32 */
+            numberOfElements?: number;
             /** Format: int32 */
             number?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["CustomerAddressDto"][];
-            /** Format: int32 */
-            numberOfElements?: number;
-            sort?: components["schemas"]["SortObject"][];
-            pageable?: components["schemas"]["PageableObject"];
+            first?: boolean;
+            last?: boolean;
             empty?: boolean;
         };
         ApiResponseListCustomerAddressDto: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["CustomerAddressDto"][];
             /** Format: date-time */
             timestamp: string;

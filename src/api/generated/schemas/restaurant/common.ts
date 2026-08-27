@@ -13,6 +13,7 @@ export const ApiResponseVoid = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: z.object({}).partial().passthrough().optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
@@ -35,6 +36,7 @@ export const ApiResponseListMasterMenuItem = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: z.array(MasterMenuItem).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
@@ -43,6 +45,7 @@ export const ApiResponseMapStringObject = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: z.record(z.object({}).partial().passthrough()).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
@@ -61,9 +64,9 @@ export const PageableObject = z
   .object({
     offset: z.number().int(),
     sort: z.array(SortObject),
-    paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
+    paged: z.boolean(),
     unpaged: z.boolean(),
   })
   .partial()

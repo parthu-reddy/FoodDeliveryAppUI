@@ -15,6 +15,7 @@ const ApiResponseUserDTO = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: UserDTO.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
@@ -31,12 +32,12 @@ const SortObject = z
   .passthrough();
 const PageableObject = z
   .object({
-    offset: z.number().int(),
-    sort: z.array(SortObject),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
     unpaged: z.boolean(),
+    sort: z.array(SortObject),
+    offset: z.number().int(),
   })
   .partial()
   .passthrough();
@@ -45,13 +46,13 @@ const PageUserDTO = z
     totalPages: z.number().int(),
     totalElements: z.number().int(),
     numberOfElements: z.number().int(),
+    pageable: PageableObject,
     first: z.boolean(),
-    last: z.boolean(),
+    sort: z.array(SortObject),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(UserDTO),
-    sort: z.array(SortObject),
-    pageable: PageableObject,
+    last: z.boolean(),
     empty: z.boolean(),
   })
   .partial()
@@ -60,6 +61,7 @@ const ApiResponsePageUserDTO = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: PageUserDTO.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })

@@ -780,6 +780,7 @@ export interface components {
         ApiResponseVoid: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: Record<string, never>;
             /** Format: date-time */
             timestamp: string;
@@ -807,6 +808,7 @@ export interface components {
         ApiResponseCategoryDTO: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["CategoryDTO"];
             /** Format: date-time */
             timestamp: string;
@@ -814,6 +816,7 @@ export interface components {
         ApiResponseObject: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: Record<string, never>;
             /** Format: date-time */
             timestamp: string;
@@ -838,6 +841,7 @@ export interface components {
         ApiResponseMasterMenuItem: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["MasterMenuItem"];
             /** Format: date-time */
             timestamp: string;
@@ -877,6 +881,7 @@ export interface components {
         ApiResponseOutletMenuOverride: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["OutletMenuOverride"];
             /** Format: date-time */
             timestamp: string;
@@ -895,6 +900,7 @@ export interface components {
         ApiResponseListTimingDTO: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["TimingDTO"][];
             /** Format: date-time */
             timestamp: string;
@@ -910,6 +916,7 @@ export interface components {
         ApiResponseListMasterMenuItem: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["MasterMenuItem"][];
             /** Format: date-time */
             timestamp: string;
@@ -917,6 +924,7 @@ export interface components {
         ApiResponseString: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: string;
             /** Format: date-time */
             timestamp: string;
@@ -933,6 +941,7 @@ export interface components {
         ApiResponseBrand: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["Brand"];
             /** Format: date-time */
             timestamp: string;
@@ -986,6 +995,7 @@ export interface components {
         ApiResponseOutlet: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["Outlet"];
             /** Format: date-time */
             timestamp: string;
@@ -1053,6 +1063,7 @@ export interface components {
         ApiResponseListRestaurantOrder: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["RestaurantOrder"][];
             /** Format: date-time */
             timestamp: string;
@@ -1096,6 +1107,7 @@ export interface components {
         ApiResponseMapStringObject: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: {
                 [key: string]: Record<string, never>;
             };
@@ -1105,6 +1117,7 @@ export interface components {
         ApiResponsePageRestaurantOrder: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["PageRestaurantOrder"];
             /** Format: date-time */
             timestamp: string;
@@ -1114,28 +1127,28 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            first?: boolean;
-            last?: boolean;
             /** Format: int32 */
             number?: number;
-            /** Format: int32 */
-            numberOfElements?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["RestaurantOrder"][];
             sort?: components["schemas"]["SortObject"][];
             pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            numberOfElements?: number;
+            first?: boolean;
+            last?: boolean;
             empty?: boolean;
         };
         PageableObject: {
             /** Format: int64 */
             offset?: number;
             sort?: components["schemas"]["SortObject"][];
-            paged?: boolean;
             /** Format: int32 */
             pageNumber?: number;
             /** Format: int32 */
             pageSize?: number;
+            paged?: boolean;
             unpaged?: boolean;
         };
         SortObject: {
@@ -1148,6 +1161,7 @@ export interface components {
         ApiResponseListMenuItemDTO: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["MenuItemDTO"][];
             /** Format: date-time */
             timestamp: string;
@@ -1155,6 +1169,7 @@ export interface components {
         ApiResponseMapStringString: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: {
                 [key: string]: string;
             };
@@ -1164,6 +1179,7 @@ export interface components {
         ApiResponseListMapStringObject: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: {
                 [key: string]: Record<string, never>;
             }[];
@@ -1173,6 +1189,7 @@ export interface components {
         ApiResponseListOutlet: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["Outlet"][];
             /** Format: date-time */
             timestamp: string;
@@ -1180,6 +1197,7 @@ export interface components {
         ApiResponseListOutletMenuOverride: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["OutletMenuOverride"][];
             /** Format: date-time */
             timestamp: string;
@@ -1187,6 +1205,7 @@ export interface components {
         ApiResponseBoolean: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: boolean;
             /** Format: date-time */
             timestamp: string;
@@ -1194,6 +1213,7 @@ export interface components {
         ApiResponsePageMapStringObject: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["PageMapStringObject"];
             /** Format: date-time */
             timestamp: string;
@@ -1203,12 +1223,8 @@ export interface components {
             totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
-            first?: boolean;
-            last?: boolean;
             /** Format: int32 */
             number?: number;
-            /** Format: int32 */
-            numberOfElements?: number;
             /** Format: int32 */
             size?: number;
             content?: {
@@ -1216,11 +1232,16 @@ export interface components {
             }[];
             sort?: components["schemas"]["SortObject"][];
             pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            numberOfElements?: number;
+            first?: boolean;
+            last?: boolean;
             empty?: boolean;
         };
         ApiResponseListCategoryDTO: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["CategoryDTO"][];
             /** Format: date-time */
             timestamp: string;
@@ -1228,6 +1249,7 @@ export interface components {
         ApiResponseListBrand: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["Brand"][];
             /** Format: date-time */
             timestamp: string;

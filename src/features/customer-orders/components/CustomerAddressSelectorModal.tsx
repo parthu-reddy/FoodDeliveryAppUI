@@ -73,10 +73,10 @@ const CustomerAddressSelectorModal: React.FC<CustomerAddressSelectorModalProps> 
             if (navigator.geolocation) {
               navigator.geolocation.getCurrentPosition(async (pos) => {
                 try {
-                  const res = await window.fetch(`/olamaps/places/v1/reverse-geocode?latlng=${pos.coords.latitude},${pos.coords.longitude}`);
+                  const res = await window.fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
                   const data = await res.json();
-                  if (data.results && data.results.length > 0) {
-                    handleAddressSelect(`Current Location: ${data.results[0].formatted_address}`, pos.coords.latitude, pos.coords.longitude, '');
+                  if (data && data.display_name) {
+                    handleAddressSelect(`Current Location: ${data.display_name}`, pos.coords.latitude, pos.coords.longitude, '');
                   } else {
                     handleAddressSelect('Current Location', pos.coords.latitude, pos.coords.longitude, '');
                   }

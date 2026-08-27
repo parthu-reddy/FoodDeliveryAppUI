@@ -51,6 +51,7 @@ const ApiResponseAdGroupResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: AdGroupResponse.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
@@ -59,12 +60,12 @@ const PageAdGroupResponse = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    numberOfElements: z.number().int(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(AdGroupResponse),
     first: z.boolean(),
     last: z.boolean(),
+    numberOfElements: z.number().int(),
     sort: z.array(SortObject),
     pageable: PageableObject,
     empty: z.boolean(),
@@ -75,6 +76,7 @@ const ApiResponsePageAdGroupResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: PageAdGroupResponse.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })

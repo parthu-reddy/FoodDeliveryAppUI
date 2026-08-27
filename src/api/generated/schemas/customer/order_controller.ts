@@ -6,8 +6,8 @@ import { OrderItemResponse } from "./common";
 import { ApiResponseVoid } from "./common";
 import { ApiResponsePageOrderResponse } from "./common";
 import { PageOrderResponse } from "./common";
-import { SortObject } from "./common";
 import { PageableObject } from "./common";
+import { SortObject } from "./common";
 import { ApiResponseListOrderResponse } from "./common";
 
 const OrderItemRequest = z
@@ -27,6 +27,7 @@ const ApiResponseOrderResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: OrderResponse.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
@@ -46,7 +47,7 @@ const QuoteResponse = z
     sgst: z.number(),
     cgst: z.number(),
     total: z.number(),
-    minAmountForFreeDelivery: z.number().nullable().optional(),
+    minAmountForFreeDelivery: z.number(),
     distanceKm: z.number(),
     driverPayout: z.number(),
     restaurantDeliveryContribution: z.number(),
@@ -56,6 +57,7 @@ const ApiResponseQuoteResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: QuoteResponse.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })

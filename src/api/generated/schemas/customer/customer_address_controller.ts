@@ -8,6 +8,7 @@ const ApiResponseCustomerAddressDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: CustomerAddressDto.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
@@ -16,6 +17,7 @@ const ApiResponseListCustomerAddressDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: z.array(CustomerAddressDto).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })

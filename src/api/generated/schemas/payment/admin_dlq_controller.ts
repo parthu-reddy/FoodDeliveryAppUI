@@ -14,10 +14,10 @@ const SortObject = z
 const PageableObject = z
   .object({
     sort: z.array(SortObject),
+    unpaged: z.boolean(),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
-    unpaged: z.boolean(),
     offset: z.number().int(),
   })
   .partial()
@@ -123,11 +123,11 @@ const PageOutboxEventEntity = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
+    sort: z.array(SortObject),
     numberOfElements: z.number().int(),
+    pageable: PageableObject,
     first: z.boolean(),
     last: z.boolean(),
-    sort: z.array(SortObject),
-    pageable: PageableObject,
     size: z.number().int(),
     content: z.array(OutboxEventEntity),
     number: z.number().int(),
@@ -139,6 +139,7 @@ const ApiResponseString = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: z.string().optional(),
     timestamp: z.string().datetime({ offset: true }),
   })

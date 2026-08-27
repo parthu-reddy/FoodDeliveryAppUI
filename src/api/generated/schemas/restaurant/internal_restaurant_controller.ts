@@ -5,6 +5,7 @@ const ApiResponseBoolean = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: z.boolean().optional(),
     timestamp: z.string().datetime({ offset: true }),
   })

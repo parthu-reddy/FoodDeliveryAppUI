@@ -329,6 +329,7 @@ export interface components {
         ApiResponseCampaignResponse: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["CampaignResponse"];
             /** Format: date-time */
             timestamp: string;
@@ -394,6 +395,7 @@ export interface components {
         ApiResponseAdGroupResponse: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["AdGroupResponse"];
             /** Format: date-time */
             timestamp: string;
@@ -401,6 +403,7 @@ export interface components {
         ApiResponseVoid: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: Record<string, never>;
             /** Format: date-time */
             timestamp: string;
@@ -433,6 +436,7 @@ export interface components {
         ApiResponseAdvertiserResponse: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["AdvertiserResponse"];
             /** Format: date-time */
             timestamp: string;
@@ -462,6 +466,7 @@ export interface components {
         ApiResponseAdCreativeResponse: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["AdCreativeResponse"];
             /** Format: date-time */
             timestamp: string;
@@ -469,6 +474,7 @@ export interface components {
         ApiResponseString: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: string;
             /** Format: date-time */
             timestamp: string;
@@ -480,6 +486,7 @@ export interface components {
         ApiResponseMapStringString: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: {
                 [key: string]: string;
             };
@@ -496,6 +503,7 @@ export interface components {
         ApiResponsePageCampaignResponse: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["PageCampaignResponse"];
             /** Format: date-time */
             timestamp: string;
@@ -506,14 +514,14 @@ export interface components {
             /** Format: int64 */
             totalElements?: number;
             /** Format: int32 */
-            numberOfElements?: number;
-            /** Format: int32 */
             number?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["CampaignResponse"][];
             first?: boolean;
             last?: boolean;
+            /** Format: int32 */
+            numberOfElements?: number;
             sort?: components["schemas"]["SortObject"][];
             pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;
@@ -539,6 +547,7 @@ export interface components {
         ApiResponsePageCampaignPerformanceResponse: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["PageCampaignPerformanceResponse"];
             /** Format: date-time */
             timestamp: string;
@@ -566,14 +575,14 @@ export interface components {
             /** Format: int64 */
             totalElements?: number;
             /** Format: int32 */
-            numberOfElements?: number;
-            /** Format: int32 */
             number?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["CampaignPerformanceResponse"][];
             first?: boolean;
             last?: boolean;
+            /** Format: int32 */
+            numberOfElements?: number;
             sort?: components["schemas"]["SortObject"][];
             pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;
@@ -581,6 +590,7 @@ export interface components {
         ApiResponsePageAdGroupResponse: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["PageAdGroupResponse"];
             /** Format: date-time */
             timestamp: string;
@@ -591,14 +601,14 @@ export interface components {
             /** Format: int64 */
             totalElements?: number;
             /** Format: int32 */
-            numberOfElements?: number;
-            /** Format: int32 */
             number?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["AdGroupResponse"][];
             first?: boolean;
             last?: boolean;
+            /** Format: int32 */
+            numberOfElements?: number;
             sort?: components["schemas"]["SortObject"][];
             pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;
@@ -606,6 +616,7 @@ export interface components {
         ApiResponseListAdCreativeResponse: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["AdCreativeResponse"][];
             /** Format: date-time */
             timestamp: string;

@@ -81,19 +81,12 @@ function OrderTrackingMapInner({ order, enableLiveTracking = false }: { order: O
 
         map = new maplibregl.Map({
           container: mapContainerRef.current!,
-          style: '/olamaps/styleEditor/v1/styleEdit/styles/53575843-c000-4b22-ac12-5818a67991bd/LowCost',
+          style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
           center: [cLng, cLat], // Center on delivery location initially
           zoom: 12,
           minZoom: 10, // Prevent zooming out too far
           maxZoom: 17, // Prevent over-zooming to reduce tile fetch
           interactive: false, // Block user interaction with the map itself
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          transformRequest: (url, resourceType) => {
-            if (url.includes('api.olamaps.io')) {
-              return { url: url.replace('https://api.olamaps.io', '/olamaps') };
-            }
-            return { url };
-          }
         });
 
         let rLat = 12.98;

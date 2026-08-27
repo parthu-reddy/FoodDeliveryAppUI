@@ -70,6 +70,7 @@ export const ApiResponseObject = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: z.object({}).partial().passthrough().optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
@@ -103,6 +104,7 @@ export const ApiResponseVoid = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: z.object({}).partial().passthrough().optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
@@ -126,6 +128,7 @@ export const ApiResponseDeliveryExecutive = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: DeliveryExecutive.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
@@ -179,14 +182,14 @@ export const PageableObject = z
   .passthrough();
 export const PageDeliveryExecutive = z
   .object({
-    totalElements: z.number().int(),
     totalPages: z.number().int(),
+    totalElements: z.number().int(),
     numberOfElements: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(DeliveryExecutive),
-    first: z.boolean(),
-    last: z.boolean(),
     sort: z.array(SortObject),
     pageable: PageableObject,
     empty: z.boolean(),
@@ -206,14 +209,14 @@ export const DriverLocationDTO = z
   .passthrough();
 export const PageDriverLocationDTO = z
   .object({
-    totalElements: z.number().int(),
     totalPages: z.number().int(),
+    totalElements: z.number().int(),
     numberOfElements: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(DriverLocationDTO),
-    first: z.boolean(),
-    last: z.boolean(),
     sort: z.array(SortObject),
     pageable: PageableObject,
     empty: z.boolean(),
@@ -225,6 +228,7 @@ export const ApiResponseMapStringString = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: z.record(z.string()).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
@@ -233,6 +237,7 @@ export const ApiResponseListMapStringObject = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: z.array(z.record(z.object({}).partial().passthrough())).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })

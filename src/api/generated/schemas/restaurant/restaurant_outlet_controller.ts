@@ -64,6 +64,7 @@ const ApiResponseOutlet = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: Outlet.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
@@ -72,6 +73,7 @@ const ApiResponseListOutlet = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: z.array(Outlet).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
@@ -80,14 +82,14 @@ const PageMapStringObject = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
     number: z.number().int(),
-    numberOfElements: z.number().int(),
     size: z.number().int(),
     content: z.array(z.record(z.object({}).partial().passthrough())),
     sort: z.array(SortObject),
     pageable: PageableObject,
+    numberOfElements: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
     empty: z.boolean(),
   })
   .partial()
@@ -96,6 +98,7 @@ const ApiResponsePageMapStringObject = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: PageMapStringObject.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
@@ -104,6 +107,7 @@ const ApiResponseListMapStringObject = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: z.array(z.record(z.object({}).partial().passthrough())).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })

@@ -88,18 +88,10 @@ export default function CustomerAddressPage({
         
         map = new maplibregl.Map({
              container: mapContainerRef.current!,
-             style: '/olamaps/styleEditor/v1/styleEdit/styles/53575843-c000-4b22-ac12-5818a67991bd/LowCost',
+             style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
              minZoom: 10,
              maxZoom: 17,
              interactive: false,
-             transformRequest: (url, _resourceType) => {
-                 if (url.includes('api.olamaps.io')) {
-                     return {
-                         url: url.replace('https://api.olamaps.io', '/olamaps')
-                     };
-                 }
-                 return { url };
-             }
         });
         
         // @ts-expect-error auto-migration type suppression

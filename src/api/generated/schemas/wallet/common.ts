@@ -4,7 +4,13 @@ export const WalletDto = z
   .object({
     id: z.string().uuid(),
     entityId: z.string().uuid(),
-    entityType: z.enum(["CUSTOMER", "ADVERTISER", "RESTAURANT", "DRIVER"]),
+    entityType: z.enum([
+      "CUSTOMER",
+      "RESTAURANT",
+      "DRIVER",
+      "PLATFORM",
+      "ADVERTISER",
+    ]),
     balance: z.number(),
     currency: z.string(),
     status: z.enum(["ACTIVE", "SUSPENDED", "CLOSED"]),
@@ -22,12 +28,12 @@ export const SortObject = z
   .passthrough();
 export const PageableObject = z
   .object({
-    offset: z.number().int(),
+    unpaged: z.boolean(),
     sort: z.array(SortObject),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
-    unpaged: z.boolean(),
+    offset: z.number().int(),
   })
   .partial()
   .passthrough();

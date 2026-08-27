@@ -34,6 +34,7 @@ const ApiResponseCampaignResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: CampaignResponse.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
@@ -42,12 +43,12 @@ const PageCampaignResponse = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    numberOfElements: z.number().int(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(CampaignResponse),
     first: z.boolean(),
     last: z.boolean(),
+    numberOfElements: z.number().int(),
     sort: z.array(SortObject),
     pageable: PageableObject,
     empty: z.boolean(),
@@ -58,6 +59,7 @@ const ApiResponsePageCampaignResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: PageCampaignResponse.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
@@ -79,12 +81,12 @@ const PageCampaignPerformanceResponse = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    numberOfElements: z.number().int(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(CampaignPerformanceResponse),
     first: z.boolean(),
     last: z.boolean(),
+    numberOfElements: z.number().int(),
     sort: z.array(SortObject),
     pageable: PageableObject,
     empty: z.boolean(),
@@ -95,6 +97,7 @@ const ApiResponsePageCampaignPerformanceResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: PageCampaignPerformanceResponse.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
@@ -115,6 +118,7 @@ const ApiResponseMapStringString = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: z.record(z.string()).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })

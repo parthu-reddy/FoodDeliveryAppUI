@@ -15,6 +15,7 @@ const ApiResponseCustomer = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: Customer.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })

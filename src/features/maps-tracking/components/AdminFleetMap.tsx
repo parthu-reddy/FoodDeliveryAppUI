@@ -54,7 +54,7 @@ function AdminFleetMapInner() {
       try {
         const [resOutlets, resDrivers, resCustomers] = await Promise.all([
           (restaurantApi.restaurantOutlet.get('/api/v1/internal/admin/restaurants/all-with-location', {})),
-          (deliveryApi.adminDelivery.get('/api/v1/internal/admin/delivery/drivers/all-with-location', { queries: { pageable: {}, cityId: 'BLR' } } as any)),
+          (deliveryApi.adminDelivery.get('/api/v1/internal/admin/delivery/drivers/all-with-location', { queries: { pageable: {}, cityId: 'BLR' } })),
           (customerApi.adminCustomer.get('/api/v1/internal/admin/customers/addresses', { queries: { pageable: {} } }))
         ]);
 

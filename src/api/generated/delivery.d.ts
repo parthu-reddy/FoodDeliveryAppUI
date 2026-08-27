@@ -528,6 +528,7 @@ export interface components {
         ApiResponseObject: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: Record<string, never>;
             /** Format: date-time */
             timestamp: string;
@@ -552,6 +553,7 @@ export interface components {
         ApiResponseVoid: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: Record<string, never>;
             /** Format: date-time */
             timestamp: string;
@@ -567,6 +569,7 @@ export interface components {
         ApiResponseDeliveryExecutive: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: components["schemas"]["DeliveryExecutive"];
             /** Format: date-time */
             timestamp: string;
@@ -586,19 +589,19 @@ export interface components {
             sort?: string[];
         };
         PageDeliveryExecutive: {
+            /** Format: int32 */
+            totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
             /** Format: int32 */
-            totalPages?: number;
-            /** Format: int32 */
             numberOfElements?: number;
+            first?: boolean;
+            last?: boolean;
             /** Format: int32 */
             number?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["DeliveryExecutive"][];
-            first?: boolean;
-            last?: boolean;
             sort?: components["schemas"]["SortObject"][];
             pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;
@@ -633,19 +636,19 @@ export interface components {
             status?: string;
         };
         PageDriverLocationDTO: {
+            /** Format: int32 */
+            totalPages?: number;
             /** Format: int64 */
             totalElements?: number;
             /** Format: int32 */
-            totalPages?: number;
-            /** Format: int32 */
             numberOfElements?: number;
+            first?: boolean;
+            last?: boolean;
             /** Format: int32 */
             number?: number;
             /** Format: int32 */
             size?: number;
             content?: components["schemas"]["DriverLocationDTO"][];
-            first?: boolean;
-            last?: boolean;
             sort?: components["schemas"]["SortObject"][];
             pageable?: components["schemas"]["PageableObject"];
             empty?: boolean;
@@ -654,6 +657,7 @@ export interface components {
         ApiResponseMapStringString: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: {
                 [key: string]: string;
             };
@@ -663,6 +667,7 @@ export interface components {
         ApiResponseListMapStringObject: {
             success: boolean;
             message: string;
+            errorCode?: string;
             data?: {
                 [key: string]: Record<string, never>;
             }[];

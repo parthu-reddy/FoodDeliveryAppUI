@@ -105,14 +105,14 @@ const PageOutboxEventEntity = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
+    sort: z.array(SortObject),
+    pageable: PageableObject,
     numberOfElements: z.number().int(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(OutboxEventEntity),
     first: z.boolean(),
     last: z.boolean(),
-    sort: z.array(SortObject),
-    pageable: PageableObject,
     empty: z.boolean(),
   })
   .partial()
@@ -121,6 +121,7 @@ const ApiResponseString = z
   .object({
     success: z.boolean(),
     message: z.string(),
+    errorCode: z.string().optional(),
     data: z.string().optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
