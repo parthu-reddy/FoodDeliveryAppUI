@@ -114,12 +114,12 @@ export interface components {
             displayName?: string;
         };
         IceServer: {
-            urls?: string;
+            urls: string;
             username?: string;
             credential?: string;
         };
         TurnCredentialsResponse: {
-            iceServers?: components["schemas"]["IceServer"][];
+            iceServers: components["schemas"]["IceServer"][];
         };
     };
     responses: never;

@@ -474,14 +474,14 @@ export interface components {
     schemas: {
         DeliveryExecutive: {
             /** Format: uuid */
-            id?: string;
+            id: string;
             fullName?: string;
-            phoneNumber?: string;
+            phoneNumber: string;
             vehicleNumber?: string;
             photoUrl?: string;
             email?: string;
             /** @enum {string} */
-            status?: "OFFLINE" | "ONLINE" | "ON_DELIVERY";
+            status: "OFFLINE" | "ONLINE" | "ON_DELIVERY";
             /** @enum {string} */
             verificationStatus?: "PENDING" | "APPROVED" | "VERIFIED" | "REJECTED" | "MANUAL_REVIEW" | "FAILED";
             /** @enum {string} */
@@ -493,20 +493,20 @@ export interface components {
             /** Format: int32 */
             version?: number;
             /** Format: date-time */
-            createdAt?: string;
+            createdAt: string;
             /** Format: date-time */
-            updatedAt?: string;
+            updatedAt: string;
         };
         LocationPayload: {
             /** Format: double */
-            latitude?: number;
+            latitude: number;
             /** Format: double */
-            longitude?: number;
+            longitude: number;
             /** Format: double */
-            speedKmh?: number;
-            isMockLocation?: boolean;
+            speedKmh: number;
+            isMockLocation: boolean;
             /** Format: int64 */
-            timestampMs?: number;
+            timestampMs: number;
         };
         TelemetryEventRequest: {
             driverId: string;
@@ -590,32 +590,32 @@ export interface components {
         };
         PageDeliveryExecutive: {
             /** Format: int32 */
-            totalPages?: number;
+            totalPages: number;
             /** Format: int64 */
-            totalElements?: number;
+            totalElements: number;
             /** Format: int32 */
-            numberOfElements?: number;
-            first?: boolean;
-            last?: boolean;
+            numberOfElements: number;
+            first: boolean;
+            last: boolean;
             /** Format: int32 */
-            number?: number;
+            number: number;
             /** Format: int32 */
-            size?: number;
-            content?: components["schemas"]["DeliveryExecutive"][];
+            size: number;
+            content: components["schemas"]["DeliveryExecutive"][];
             sort?: components["schemas"]["SortObject"][];
             pageable?: components["schemas"]["PageableObject"];
-            empty?: boolean;
+            empty: boolean;
         };
         PageableObject: {
             /** Format: int64 */
-            offset?: number;
+            offset: number;
             sort?: components["schemas"]["SortObject"][];
-            paged?: boolean;
+            paged: boolean;
             /** Format: int32 */
-            pageNumber?: number;
+            pageNumber: number;
             /** Format: int32 */
-            pageSize?: number;
-            unpaged?: boolean;
+            pageSize: number;
+            unpaged: boolean;
         };
         SortObject: {
             direction?: string;
@@ -626,32 +626,32 @@ export interface components {
         };
         DriverLocationDTO: {
             /** Format: uuid */
-            id?: string;
+            id: string;
             fullName?: string;
             phoneNumber?: string;
             /** Format: double */
-            lat?: number;
+            lat: number;
             /** Format: double */
-            lng?: number;
-            status?: string;
+            lng: number;
+            status: string;
         };
         PageDriverLocationDTO: {
             /** Format: int32 */
-            totalPages?: number;
+            totalPages: number;
             /** Format: int64 */
-            totalElements?: number;
+            totalElements: number;
             /** Format: int32 */
-            numberOfElements?: number;
-            first?: boolean;
-            last?: boolean;
+            numberOfElements: number;
+            first: boolean;
+            last: boolean;
             /** Format: int32 */
-            number?: number;
+            number: number;
             /** Format: int32 */
-            size?: number;
-            content?: components["schemas"]["DriverLocationDTO"][];
+            size: number;
+            content: components["schemas"]["DriverLocationDTO"][];
             sort?: components["schemas"]["SortObject"][];
             pageable?: components["schemas"]["PageableObject"];
-            empty?: boolean;
+            empty: boolean;
         };
         JsonNode: Record<string, never>;
         ApiResponseMapStringString: {

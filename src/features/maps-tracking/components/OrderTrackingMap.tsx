@@ -81,7 +81,7 @@ function OrderTrackingMapInner({ order, enableLiveTracking = false }: { order: O
 
         map = new maplibregl.Map({
           container: mapContainerRef.current!,
-          style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
+          style: '/olamaps/tiles/vector/v1/styles/default-light-standard/style.json',
           center: [cLng, cLat], // Center on delivery location initially
           zoom: 12,
           minZoom: 10, // Prevent zooming out too far

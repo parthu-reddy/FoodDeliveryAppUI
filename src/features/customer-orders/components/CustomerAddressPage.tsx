@@ -88,7 +88,7 @@ export default function CustomerAddressPage({
         
         map = new maplibregl.Map({
              container: mapContainerRef.current!,
-             style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
+             style: '/olamaps/tiles/vector/v1/styles/default-light-standard/style.json',
              minZoom: 10,
              maxZoom: 17,
              interactive: false,

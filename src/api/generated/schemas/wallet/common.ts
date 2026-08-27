@@ -28,12 +28,11 @@ export const SortObject = z
   .passthrough();
 export const PageableObject = z
   .object({
-    unpaged: z.boolean(),
-    sort: z.array(SortObject),
+    offset: z.number().int(),
+    sort: z.array(SortObject).optional(),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
-    offset: z.number().int(),
+    unpaged: z.boolean(),
   })
-  .partial()
   .passthrough();

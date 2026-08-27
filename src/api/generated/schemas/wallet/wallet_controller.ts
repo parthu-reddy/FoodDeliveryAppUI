@@ -21,17 +21,16 @@ const PageWalletTransactionDto = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    sort: z.array(SortObject),
-    pageable: PageableObject,
     numberOfElements: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(WalletTransactionDto),
-    first: z.boolean(),
-    last: z.boolean(),
+    sort: z.array(SortObject).optional(),
+    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
-  .partial()
   .passthrough();
 
 export const schemas = {

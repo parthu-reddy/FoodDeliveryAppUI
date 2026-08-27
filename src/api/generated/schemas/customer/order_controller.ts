@@ -96,7 +96,7 @@ const endpoints = makeApi([
       {
         name: "body",
         type: "Body",
-        schema: z.object({ approved: z.boolean() }).partial().passthrough(),
+        schema: z.object({ approved: z.boolean() }).passthrough(),
       },
       {
         name: "orderId",

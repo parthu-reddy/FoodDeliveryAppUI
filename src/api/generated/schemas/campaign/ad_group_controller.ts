@@ -8,19 +8,15 @@ import { PageableObject } from "./common";
 
 const GeoTargeting = z
   .object({ regions: z.array(z.string()).max(400) })
-  .partial()
   .passthrough();
 const Daypart = z
   .object({ dayOfWeek: z.string(), startTime: z.string(), endTime: z.string() })
-  .partial()
   .passthrough();
 const DaypartingConfig = z
   .object({ dayparts: z.array(Daypart).max(400) })
-  .partial()
   .passthrough();
 const ContextualKeywords = z
   .object({ keywords: z.array(z.string()).max(400) })
-  .partial()
   .passthrough();
 const AdGroupRequest = z
   .object({
@@ -37,15 +33,14 @@ const AdGroupResponse = z
     id: z.string().uuid(),
     campaignId: z.string().uuid(),
     name: z.string(),
-    geoTargeting: GeoTargeting,
-    daypartingConfig: DaypartingConfig,
-    contextualKeywords: ContextualKeywords,
-    brandSafetyBlocklist: z.array(z.string()),
+    geoTargeting: GeoTargeting.optional(),
+    daypartingConfig: DaypartingConfig.optional(),
+    contextualKeywords: ContextualKeywords.optional(),
+    brandSafetyBlocklist: z.array(z.string()).optional(),
     active: z.boolean(),
     createdAt: z.string().datetime({ offset: true }),
     updatedAt: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const ApiResponseAdGroupResponse = z
   .object({
@@ -60,17 +55,16 @@ const PageAdGroupResponse = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
+    sort: z.array(SortObject).optional(),
+    numberOfElements: z.number().int(),
+    pageable: PageableObject.optional(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(AdGroupResponse),
     first: z.boolean(),
     last: z.boolean(),
-    numberOfElements: z.number().int(),
-    sort: z.array(SortObject),
-    pageable: PageableObject,
     empty: z.boolean(),
   })
-  .partial()
   .passthrough();
 const ApiResponsePageAdGroupResponse = z
   .object({

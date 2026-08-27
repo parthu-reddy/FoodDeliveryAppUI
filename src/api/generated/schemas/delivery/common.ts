@@ -6,29 +6,35 @@ import { z } from "zod";
 export const DeliveryExecutive = z
   .object({
     id: z.string().uuid(),
-    fullName: z.string(),
+    fullName: z.string().optional(),
     phoneNumber: z.string(),
-    vehicleNumber: z.string(),
-    photoUrl: z.string(),
-    email: z.string(),
+    vehicleNumber: z.string().optional(),
+    photoUrl: z.string().optional(),
+    email: z.string().optional(),
     status: z.enum(["OFFLINE", "ONLINE", "ON_DELIVERY"]),
-    verificationStatus: z.enum([
-      "PENDING",
-      "APPROVED",
-      "VERIFIED",
-      "REJECTED",
-      "MANUAL_REVIEW",
-      "FAILED",
-    ]),
-    vehicleType: z.enum(["BICYCLE", "MCWG", "LMV", "EV_TWO_WHEELER"]),
-    active: z.boolean(),
-    lastBiometricVerificationAt: z.string().datetime({ offset: true }),
-    cityId: z.string(),
-    version: z.number().int(),
+    verificationStatus: z
+      .enum([
+        "PENDING",
+        "APPROVED",
+        "VERIFIED",
+        "REJECTED",
+        "MANUAL_REVIEW",
+        "FAILED",
+      ])
+      .optional(),
+    vehicleType: z
+      .enum(["BICYCLE", "MCWG", "LMV", "EV_TWO_WHEELER"])
+      .optional(),
+    active: z.boolean().optional(),
+    lastBiometricVerificationAt: z
+      .string()
+      .datetime({ offset: true })
+      .optional(),
+    cityId: z.string().optional(),
+    version: z.number().int().optional(),
     createdAt: z.string().datetime({ offset: true }),
     updatedAt: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 export const LocationPayload = z
   .object({
@@ -38,7 +44,6 @@ export const LocationPayload = z
     isMockLocation: z.boolean(),
     timestampMs: z.number().int(),
   })
-  .partial()
   .passthrough();
 export const TelemetryEventRequest = z
   .object({
@@ -172,13 +177,12 @@ export const SortObject = z
 export const PageableObject = z
   .object({
     offset: z.number().int(),
-    sort: z.array(SortObject),
+    sort: z.array(SortObject).optional(),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
     unpaged: z.boolean(),
   })
-  .partial()
   .passthrough();
 export const PageDeliveryExecutive = z
   .object({
@@ -190,22 +194,20 @@ export const PageDeliveryExecutive = z
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(DeliveryExecutive),
-    sort: z.array(SortObject),
-    pageable: PageableObject,
+    sort: z.array(SortObject).optional(),
+    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
-  .partial()
   .passthrough();
 export const DriverLocationDTO = z
   .object({
     id: z.string().uuid(),
-    fullName: z.string(),
-    phoneNumber: z.string(),
+    fullName: z.string().optional(),
+    phoneNumber: z.string().optional(),
     lat: z.number(),
     lng: z.number(),
     status: z.string(),
   })
-  .partial()
   .passthrough();
 export const PageDriverLocationDTO = z
   .object({
@@ -217,11 +219,10 @@ export const PageDriverLocationDTO = z
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(DriverLocationDTO),
-    sort: z.array(SortObject),
-    pageable: PageableObject,
+    sort: z.array(SortObject).optional(),
+    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
-  .partial()
   .passthrough();
 export const JsonNode = z.object({}).partial().passthrough();
 export const ApiResponseMapStringString = z

@@ -93,7 +93,7 @@ function AdminFleetMapInner() {
     if (!map) {
       map = new maplibregl.Map({
         container: mapContainerRef.current,
-        style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+        style: '/olamaps/tiles/vector/v1/styles/default-light-standard/style.json',
         center: [77.670900, 12.990300], // Default center
         zoom: 11
       });

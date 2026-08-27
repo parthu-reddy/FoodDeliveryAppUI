@@ -10,16 +10,17 @@ import { Order } from "./common";
 const PartialRefundRequest = z
   .object({
     amount: z.number(),
-    reason: z.string(),
-    faultType: z.enum([
-      "PLATFORM_FAULT",
-      "RESTAURANT_FAULT",
-      "RIDER_FAULT",
-      "CUSTOMER_FAULT",
-      "UNKNOWN",
-    ]),
+    reason: z.string().optional(),
+    faultType: z
+      .enum([
+        "PLATFORM_FAULT",
+        "RESTAURANT_FAULT",
+        "RIDER_FAULT",
+        "CUSTOMER_FAULT",
+        "UNKNOWN",
+      ])
+      .optional(),
   })
-  .partial()
   .passthrough();
 
 export const schemas = {

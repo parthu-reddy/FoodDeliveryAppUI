@@ -47,22 +47,28 @@ export const authPlugin: ZodiosPlugin = {
     // we should log out the user.
     // Zodios/Axios attaches the response to (error as any).response if it's an Axios error
     if (isAxiosError(error)) {
-      if (
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (error as any).response?.status === 401 &&
-        !config.url?.includes('/api/v1/internal/auth/')
-      ) {
-        logger.warn('Unauthorized API access via Zodios, clearing session', { url: config.url });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const status = (error as any).response?.status;
+      const url = config.url;
+
+      if (status === 401 && !url?.includes('/api/v1/internal/auth/')) {
+        logger.warn('Unauthorized API access via Zodios, clearing session', { url });
         clearAllLocalData();
         window.location.href = '/';
       }
 
-      // Log server errors
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if ((error as any).response?.status && (error as any).response.status >= 500) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        logger.error('HTTP 5xx Server Error via Zodios', { status: (error as any).response.status, url: config.url });
+      if (status) {
+        if (status >= 500) {
+          logger.error('HTTP 5xx Server Error via Zodios', { status, url });
+        } else if (status >= 400 && status !== 401 && status !== 429) {
+          logger.error(`HTTP ${status} Client Error via Zodios`, { status, url, message: error.message });
+        }
+      } else {
+        // No status means network failure, timeout, or CORS error
+        logger.error('Network Error or Timeout via Zodios', { url, message: error.message });
       }
+    } else {
+      logger.error('Unknown Error via Zodios', { url: config.url, message: String(error) });
     }
 
     throw error;

@@ -24,11 +24,10 @@ const CampaignResponse = z
     lifetimeBudget: z.number(),
     maxBid: z.number(),
     startDate: z.string().datetime({ offset: true }),
-    endDate: z.string().datetime({ offset: true }),
+    endDate: z.string().datetime({ offset: true }).optional(),
     frequencyCap: z.number().int(),
     version: z.number().int(),
   })
-  .partial()
   .passthrough();
 const ApiResponseCampaignResponse = z
   .object({
@@ -43,17 +42,16 @@ const PageCampaignResponse = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
+    sort: z.array(SortObject).optional(),
+    numberOfElements: z.number().int(),
+    pageable: PageableObject.optional(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(CampaignResponse),
     first: z.boolean(),
     last: z.boolean(),
-    numberOfElements: z.number().int(),
-    sort: z.array(SortObject),
-    pageable: PageableObject,
     empty: z.boolean(),
   })
-  .partial()
   .passthrough();
 const ApiResponsePageCampaignResponse = z
   .object({
@@ -70,28 +68,26 @@ const CampaignPerformanceResponse = z
     advertiserId: z.string().uuid(),
     campaignId: z.string().uuid(),
     date: z.string(),
-    impressions: z.number().int(),
-    clicks: z.number().int(),
-    conversions: z.number().int(),
+    impressions: z.number().int().optional(),
+    clicks: z.number().int().optional(),
+    conversions: z.number().int().optional(),
     spend: z.number(),
   })
-  .partial()
   .passthrough();
 const PageCampaignPerformanceResponse = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
+    sort: z.array(SortObject).optional(),
+    numberOfElements: z.number().int(),
+    pageable: PageableObject.optional(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(CampaignPerformanceResponse),
     first: z.boolean(),
     last: z.boolean(),
-    numberOfElements: z.number().int(),
-    sort: z.array(SortObject),
-    pageable: PageableObject,
     empty: z.boolean(),
   })
-  .partial()
   .passthrough();
 const ApiResponsePageCampaignPerformanceResponse = z
   .object({

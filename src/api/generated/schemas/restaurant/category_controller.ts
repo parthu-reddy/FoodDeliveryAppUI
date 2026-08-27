@@ -5,7 +5,6 @@ import { LocalTime } from "./common";
 
 const CategoryTimingDTO = z
   .object({ openingTime: LocalTime, closingTime: LocalTime })
-  .partial()
   .passthrough();
 const CategoryDTO = z
   .object({
@@ -27,11 +26,9 @@ const ApiResponseCategoryDTO = z
   .passthrough();
 const TimingDTO = z
   .object({ openingTime: z.string(), closingTime: z.string() })
-  .partial()
   .passthrough();
 const SetOutletCategoryTimingRequest = z
   .object({ categoryId: z.string().uuid(), timings: z.array(TimingDTO) })
-  .partial()
   .passthrough();
 const ApiResponseListTimingDTO = z
   .object({

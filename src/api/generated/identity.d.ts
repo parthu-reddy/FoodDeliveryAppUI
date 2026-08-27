@@ -276,32 +276,32 @@ export interface components {
         };
         PageUserDTO: {
             /** Format: int32 */
-            totalPages?: number;
+            totalPages: number;
             /** Format: int64 */
-            totalElements?: number;
+            totalElements: number;
             /** Format: int32 */
-            numberOfElements?: number;
-            pageable?: components["schemas"]["PageableObject"];
-            first?: boolean;
+            number: number;
+            /** Format: int32 */
+            size: number;
+            content: components["schemas"]["UserDTO"][];
+            last: boolean;
             sort?: components["schemas"]["SortObject"][];
+            first: boolean;
             /** Format: int32 */
-            number?: number;
-            /** Format: int32 */
-            size?: number;
-            content?: components["schemas"]["UserDTO"][];
-            last?: boolean;
-            empty?: boolean;
+            numberOfElements: number;
+            pageable?: components["schemas"]["PageableObject"];
+            empty: boolean;
         };
         PageableObject: {
-            paged?: boolean;
-            /** Format: int32 */
-            pageNumber?: number;
-            /** Format: int32 */
-            pageSize?: number;
-            unpaged?: boolean;
-            sort?: components["schemas"]["SortObject"][];
             /** Format: int64 */
-            offset?: number;
+            offset: number;
+            sort?: components["schemas"]["SortObject"][];
+            paged: boolean;
+            /** Format: int32 */
+            pageNumber: number;
+            /** Format: int32 */
+            pageSize: number;
+            unpaged: boolean;
         };
         SortObject: {
             direction?: string;

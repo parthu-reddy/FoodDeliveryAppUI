@@ -236,7 +236,7 @@ export default function CustomerAddressModal({
       
       const map = new maplibregl.Map({
         container: mapContainerRef.current,
-        style: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
+        style: '/olamaps/tiles/vector/v1/styles/default-light-standard/style.json',
         center: [parseFloat(lng), parseFloat(lat)],
         zoom: 12,
         minZoom: 10,

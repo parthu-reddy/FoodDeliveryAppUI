@@ -16,13 +16,12 @@ const SortObject = z
 const PageableObject = z
   .object({
     offset: z.number().int(),
-    sort: z.array(SortObject),
+    sort: z.array(SortObject).optional(),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
     unpaged: z.boolean(),
   })
-  .partial()
   .passthrough();
 const PageDeliveryExecutive = z
   .object({
@@ -34,22 +33,20 @@ const PageDeliveryExecutive = z
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(DeliveryExecutive),
-    sort: z.array(SortObject),
-    pageable: PageableObject,
+    sort: z.array(SortObject).optional(),
+    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
-  .partial()
   .passthrough();
 const DriverLocationDTO = z
   .object({
     id: z.string().uuid(),
-    fullName: z.string(),
-    phoneNumber: z.string(),
+    fullName: z.string().optional(),
+    phoneNumber: z.string().optional(),
     lat: z.number(),
     lng: z.number(),
     status: z.string(),
   })
-  .partial()
   .passthrough();
 const PageDriverLocationDTO = z
   .object({
@@ -61,11 +58,10 @@ const PageDriverLocationDTO = z
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(DriverLocationDTO),
-    sort: z.array(SortObject),
-    pageable: PageableObject,
+    sort: z.array(SortObject).optional(),
+    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
-  .partial()
   .passthrough();
 const pageable = z
   .object({

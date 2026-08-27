@@ -106,63 +106,63 @@ export interface components {
     schemas: {
         PayoutSettlementRequest: {
             /** Format: uuid */
-            ownerId?: string;
+            ownerId: string;
             /** @enum {string} */
-            ownerType?: "CUSTOMER" | "PLATFORM" | "RESTAURANT" | "DRIVER" | "ADVERTISER_WALLET" | "GOVERNMENT";
-            amount?: number;
+            ownerType: "CUSTOMER" | "PLATFORM" | "RESTAURANT" | "DRIVER" | "ADVERTISER_WALLET" | "GOVERNMENT";
+            amount: number;
         };
         LedgerAccount: {
             /** Format: uuid */
-            id?: string;
+            id: string;
             /** @enum {string} */
-            ownerType?: "CUSTOMER" | "PLATFORM" | "RESTAURANT" | "DRIVER" | "ADVERTISER_WALLET" | "GOVERNMENT";
+            ownerType: "CUSTOMER" | "PLATFORM" | "RESTAURANT" | "DRIVER" | "ADVERTISER_WALLET" | "GOVERNMENT";
             /** Format: uuid */
-            ownerId?: string;
-            balance?: number;
+            ownerId: string;
+            balance: number;
             /** Format: int32 */
-            lockVersion?: number;
+            lockVersion: number;
         };
         LedgerTransactionDto: {
             /** Format: uuid */
-            transactionId?: string;
+            transactionId: string;
             /** @enum {string} */
-            category?: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "TIP" | "PACKAGING_FEE" | "SURGE_PRICING" | "TAX" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "PAYOUT" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "AD_REVENUE";
+            category: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "TIP" | "PACKAGING_FEE" | "SURGE_PRICING" | "TAX" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "PAYOUT" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "AD_REVENUE";
             /** Format: uuid */
-            fromAccountId?: string;
+            fromAccountId: string;
             /** Format: uuid */
-            toAccountId?: string;
-            amount?: number;
+            toAccountId: string;
+            amount: number;
             /** Format: date-time */
-            date?: string;
+            date: string;
         };
         PageLedgerTransactionDto: {
             /** Format: int32 */
-            totalPages?: number;
+            totalPages: number;
             /** Format: int64 */
-            totalElements?: number;
+            totalElements: number;
             /** Format: int32 */
-            numberOfElements?: number;
-            first?: boolean;
-            last?: boolean;
+            numberOfElements: number;
+            first: boolean;
+            last: boolean;
             /** Format: int32 */
-            number?: number;
+            number: number;
             /** Format: int32 */
-            size?: number;
-            content?: components["schemas"]["LedgerTransactionDto"][];
+            size: number;
+            content: components["schemas"]["LedgerTransactionDto"][];
             sort?: components["schemas"]["SortObject"][];
             pageable?: components["schemas"]["PageableObject"];
-            empty?: boolean;
+            empty: boolean;
         };
         PageableObject: {
             /** Format: int64 */
-            offset?: number;
-            paged?: boolean;
+            offset: number;
+            paged: boolean;
             sort?: components["schemas"]["SortObject"][];
-            unpaged?: boolean;
+            unpaged: boolean;
             /** Format: int32 */
-            pageSize?: number;
+            pageSize: number;
             /** Format: int32 */
-            pageNumber?: number;
+            pageNumber: number;
         };
         SortObject: {
             direction?: string;
@@ -173,38 +173,38 @@ export interface components {
         };
         LedgerEntry: {
             /** Format: uuid */
-            id?: string;
+            id: string;
             /** Format: uuid */
-            transactionId?: string;
+            transactionId: string;
             /** Format: uuid */
             referenceId?: string;
             /** Format: uuid */
-            accountId?: string;
+            accountId: string;
             /** @enum {string} */
-            direction?: "CREDIT" | "DEBIT";
+            direction: "CREDIT" | "DEBIT";
             /** @enum {string} */
-            category?: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "TIP" | "PACKAGING_FEE" | "SURGE_PRICING" | "TAX" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "PAYOUT" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "AD_REVENUE";
-            amount?: number;
+            category: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "TIP" | "PACKAGING_FEE" | "SURGE_PRICING" | "TAX" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "PAYOUT" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "AD_REVENUE";
+            amount: number;
             /** Format: date-time */
-            createdAt?: string;
+            createdAt: string;
         };
         PageLedgerEntry: {
             /** Format: int32 */
-            totalPages?: number;
+            totalPages: number;
             /** Format: int64 */
-            totalElements?: number;
+            totalElements: number;
             /** Format: int32 */
-            numberOfElements?: number;
-            first?: boolean;
-            last?: boolean;
+            numberOfElements: number;
+            first: boolean;
+            last: boolean;
             /** Format: int32 */
-            number?: number;
+            number: number;
             /** Format: int32 */
-            size?: number;
-            content?: components["schemas"]["LedgerEntry"][];
+            size: number;
+            content: components["schemas"]["LedgerEntry"][];
             sort?: components["schemas"]["SortObject"][];
             pageable?: components["schemas"]["PageableObject"];
-            empty?: boolean;
+            empty: boolean;
         };
     };
     responses: never;

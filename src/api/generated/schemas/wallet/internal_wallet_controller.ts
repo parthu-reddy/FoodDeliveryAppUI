@@ -15,10 +15,9 @@ const CreateWalletRequest = z
 const TransactionRequest = z
   .object({
     amount: z.number(),
-    referenceId: z.string(),
-    description: z.string(),
+    referenceId: z.string().optional(),
+    description: z.string().optional(),
   })
-  .partial()
   .passthrough();
 
 export const schemas = {

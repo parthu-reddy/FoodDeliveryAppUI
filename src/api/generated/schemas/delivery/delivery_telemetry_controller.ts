@@ -10,7 +10,6 @@ const LocationPayload = z
     isMockLocation: z.boolean(),
     timestampMs: z.number().int(),
   })
-  .partial()
   .passthrough();
 
 export const schemas = {

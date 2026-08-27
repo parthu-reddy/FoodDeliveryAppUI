@@ -802,8 +802,8 @@ export interface components {
             timings?: components["schemas"]["CategoryTimingDTO"][];
         };
         CategoryTimingDTO: {
-            openingTime?: components["schemas"]["LocalTime"];
-            closingTime?: components["schemas"]["LocalTime"];
+            openingTime: components["schemas"]["LocalTime"];
+            closingTime: components["schemas"]["LocalTime"];
         };
         ApiResponseCategoryDTO: {
             success: boolean;
@@ -888,14 +888,14 @@ export interface components {
         };
         SetOutletCategoryTimingRequest: {
             /** Format: uuid */
-            categoryId?: string;
-            timings?: components["schemas"]["TimingDTO"][];
+            categoryId: string;
+            timings: components["schemas"]["TimingDTO"][];
         };
         TimingDTO: {
             /** @example 10:00:00 */
-            openingTime?: string;
+            openingTime: string;
             /** @example 22:00:00 */
-            closingTime?: string;
+            closingTime: string;
         };
         ApiResponseListTimingDTO: {
             success: boolean;
@@ -906,8 +906,8 @@ export interface components {
             timestamp: string;
         };
         VerificationCallbackRequest: {
-            verificationType?: string;
-            status?: string;
+            verificationType: string;
+            status: string;
             legalEntityName?: string;
             bankBeneficiaryName?: string;
             /** Format: double */
@@ -1029,13 +1029,13 @@ export interface components {
         };
         OutletTiming: {
             /** Format: uuid */
-            id?: string;
-            openingTime?: components["schemas"]["LocalTime"];
-            closingTime?: components["schemas"]["LocalTime"];
+            id: string;
+            openingTime: components["schemas"]["LocalTime"];
+            closingTime: components["schemas"]["LocalTime"];
             /** Format: date-time */
-            createdAt?: string;
+            createdAt: string;
             /** Format: date-time */
-            updatedAt?: string;
+            updatedAt: string;
             /** Format: int32 */
             version?: number;
         };
@@ -1124,32 +1124,32 @@ export interface components {
         };
         PageRestaurantOrder: {
             /** Format: int32 */
-            totalPages?: number;
+            totalPages: number;
             /** Format: int64 */
-            totalElements?: number;
+            totalElements: number;
             /** Format: int32 */
-            number?: number;
+            numberOfElements: number;
             /** Format: int32 */
-            size?: number;
-            content?: components["schemas"]["RestaurantOrder"][];
+            number: number;
+            /** Format: int32 */
+            size: number;
+            content: components["schemas"]["RestaurantOrder"][];
             sort?: components["schemas"]["SortObject"][];
             pageable?: components["schemas"]["PageableObject"];
-            /** Format: int32 */
-            numberOfElements?: number;
-            first?: boolean;
-            last?: boolean;
-            empty?: boolean;
+            first: boolean;
+            last: boolean;
+            empty: boolean;
         };
         PageableObject: {
             /** Format: int64 */
-            offset?: number;
+            offset: number;
+            paged: boolean;
             sort?: components["schemas"]["SortObject"][];
+            unpaged: boolean;
             /** Format: int32 */
-            pageNumber?: number;
+            pageSize: number;
             /** Format: int32 */
-            pageSize?: number;
-            paged?: boolean;
-            unpaged?: boolean;
+            pageNumber: number;
         };
         SortObject: {
             direction?: string;
@@ -1220,23 +1220,23 @@ export interface components {
         };
         PageMapStringObject: {
             /** Format: int32 */
-            totalPages?: number;
+            totalPages: number;
             /** Format: int64 */
-            totalElements?: number;
+            totalElements: number;
             /** Format: int32 */
-            number?: number;
+            numberOfElements: number;
             /** Format: int32 */
-            size?: number;
-            content?: {
+            number: number;
+            /** Format: int32 */
+            size: number;
+            content: {
                 [key: string]: Record<string, never>;
             }[];
             sort?: components["schemas"]["SortObject"][];
             pageable?: components["schemas"]["PageableObject"];
-            /** Format: int32 */
-            numberOfElements?: number;
-            first?: boolean;
-            last?: boolean;
-            empty?: boolean;
+            first: boolean;
+            last: boolean;
+            empty: boolean;
         };
         ApiResponseListCategoryDTO: {
             success: boolean;

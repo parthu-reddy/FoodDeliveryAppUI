@@ -396,6 +396,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
           onSuccessCb();
         }
         isSubmittingOrderRef.current = false;
+        setPaymentStatus('idle');
       }, 3000);
     } catch (err: unknown) {
       console.error(err);

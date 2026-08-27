@@ -80,7 +80,6 @@ export default function AdminLiveOperations() {
     intervalMs: 15000,
     enabled: true,
     onData: (response) => {
-        // @ts-expect-error auto-migration type suppression
         setAvailableDrivers(response);
     }
   });

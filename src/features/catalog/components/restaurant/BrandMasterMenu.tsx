@@ -99,7 +99,6 @@ const BrandMasterMenu = React.memo(function BrandMasterMenu({ brandId, onRefresh
             }
           })
         );
-        // @ts-expect-error auto-migration type suppression
         setCategories(updatedCategories);
       }
     } catch (e: unknown) { console.error(e); }

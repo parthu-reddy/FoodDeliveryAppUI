@@ -959,7 +959,7 @@ export interface components {
             expiresAt?: number;
         };
         DelayApprovalRequest: {
-            approved?: boolean;
+            approved: boolean;
         };
         ApiResponseVoid: {
             success: boolean;
@@ -1011,19 +1011,19 @@ export interface components {
             /** Format: int64 */
             version?: number;
             /** Format: uuid */
-            id?: string;
+            id: string;
             /** Format: uuid */
-            orderId?: string;
+            orderId: string;
             /** Format: uuid */
-            customerId?: string;
-            reason?: string;
+            customerId: string;
+            reason: string;
             /** @enum {string} */
-            status?: "OPEN" | "IN_REVIEW" | "RESOLVED" | "REJECTED";
+            status: "OPEN" | "IN_REVIEW" | "RESOLVED" | "REJECTED";
             resolutionNotes?: string;
             /** Format: uuid */
             resolvedBy?: string;
             /** Format: date-time */
-            createdAt?: string;
+            createdAt: string;
             /** Format: date-time */
             resolvedAt?: string;
             /** Format: uuid */
@@ -1034,12 +1034,12 @@ export interface components {
             riderComments?: string;
         };
         ResolveRequest: {
-            approved?: boolean;
+            approved: boolean;
             notes?: string;
             faultType?: string;
         };
         PartialRefundRequest: {
-            amount?: number;
+            amount: number;
             reason?: string;
             /** @enum {string} */
             faultType?: "PLATFORM_FAULT" | "RESTAURANT_FAULT" | "RIDER_FAULT" | "CUSTOMER_FAULT" | "UNKNOWN";
@@ -1131,32 +1131,32 @@ export interface components {
         };
         PageOrderResponse: {
             /** Format: int32 */
-            totalPages?: number;
+            totalPages: number;
             /** Format: int64 */
-            totalElements?: number;
+            totalElements: number;
             pageable?: components["schemas"]["PageableObject"];
             sort?: components["schemas"]["SortObject"][];
             /** Format: int32 */
-            numberOfElements?: number;
+            numberOfElements: number;
             /** Format: int32 */
-            number?: number;
+            number: number;
+            first: boolean;
+            last: boolean;
             /** Format: int32 */
-            size?: number;
-            content?: components["schemas"]["OrderResponse"][];
-            first?: boolean;
-            last?: boolean;
-            empty?: boolean;
+            size: number;
+            content: components["schemas"]["OrderResponse"][];
+            empty: boolean;
         };
         PageableObject: {
-            paged?: boolean;
+            paged: boolean;
             sort?: components["schemas"]["SortObject"][];
-            unpaged?: boolean;
+            unpaged: boolean;
             /** Format: int32 */
-            pageSize?: number;
+            pageSize: number;
             /** Format: int32 */
-            pageNumber?: number;
+            pageNumber: number;
             /** Format: int64 */
-            offset?: number;
+            offset: number;
         };
         SortObject: {
             direction?: string;
@@ -1175,20 +1175,20 @@ export interface components {
         };
         Order: {
             /** Format: uuid */
-            id?: string;
+            id: string;
             /** Format: uuid */
-            customerId?: string;
+            customerId: string;
             customerName?: string;
             /** Format: uuid */
-            restaurantId?: string;
+            restaurantId: string;
             restaurantName?: string;
             /** @enum {string} */
-            status?: "CREATED" | "PENDING_ACCEPTANCE" | "AWAITING_DELAY_APPROVAL" | "ACCEPTED" | "PREPARING" | "READY_FOR_PICKUP" | "HANDED_OVER" | "CANCELLED" | "CANCELLED_BY_RESTAURANT";
+            status: "CREATED" | "PENDING_ACCEPTANCE" | "AWAITING_DELAY_APPROVAL" | "ACCEPTED" | "PREPARING" | "READY_FOR_PICKUP" | "HANDED_OVER" | "CANCELLED" | "CANCELLED_BY_RESTAURANT";
             /** @enum {string} */
             deliveryStatus?: "PENDING" | "SEARCHING_FOR_DRIVER" | "MANUAL_INTERVENTION_REQUIRED" | "ASSIGNED" | "AT_RESTAURANT" | "OUT_FOR_DELIVERY" | "DELIVERED" | "CANCELLED" | "FAILED";
             /** @enum {string} */
             paymentStatus?: "CREATED" | "INITIATED" | "PENDING" | "SUCCESS" | "FAILED" | "CAPTURED" | "PAID" | "PARTIALLY_REFUNDED" | "REFUNDED" | "REFUND_PENDING" | "REFUND_FAILED";
-            totalAmount?: number;
+            totalAmount: number;
             itemTotal?: number;
             customerPlatformFee?: number;
             restaurantPlatformFee?: number;
@@ -1222,9 +1222,9 @@ export interface components {
             /** Format: int32 */
             version?: number;
             /** Format: date-time */
-            createdAt?: string;
+            createdAt: string;
             /** Format: date-time */
-            updatedAt?: string;
+            updatedAt: string;
             /** Format: date-time */
             deliveredAt?: string;
         };
@@ -1237,59 +1237,59 @@ export interface components {
         };
         PageOrder: {
             /** Format: int32 */
-            totalPages?: number;
+            totalPages: number;
             /** Format: int64 */
-            totalElements?: number;
+            totalElements: number;
             pageable?: components["schemas"]["PageableObject"];
             sort?: components["schemas"]["SortObject"][];
             /** Format: int32 */
-            numberOfElements?: number;
+            numberOfElements: number;
             /** Format: int32 */
-            number?: number;
+            number: number;
+            first: boolean;
+            last: boolean;
             /** Format: int32 */
-            size?: number;
-            content?: components["schemas"]["Order"][];
-            first?: boolean;
-            last?: boolean;
-            empty?: boolean;
+            size: number;
+            content: components["schemas"]["Order"][];
+            empty: boolean;
         };
         PageSupportTicket: {
             /** Format: int32 */
-            totalPages?: number;
+            totalPages: number;
             /** Format: int64 */
-            totalElements?: number;
+            totalElements: number;
             pageable?: components["schemas"]["PageableObject"];
             sort?: components["schemas"]["SortObject"][];
             /** Format: int32 */
-            numberOfElements?: number;
+            numberOfElements: number;
             /** Format: int32 */
-            number?: number;
+            number: number;
+            first: boolean;
+            last: boolean;
             /** Format: int32 */
-            size?: number;
-            content?: components["schemas"]["SupportTicket"][];
-            first?: boolean;
-            last?: boolean;
-            empty?: boolean;
+            size: number;
+            content: components["schemas"]["SupportTicket"][];
+            empty: boolean;
         };
         PageMapStringObject: {
             /** Format: int32 */
-            totalPages?: number;
+            totalPages: number;
             /** Format: int64 */
-            totalElements?: number;
+            totalElements: number;
             pageable?: components["schemas"]["PageableObject"];
             sort?: components["schemas"]["SortObject"][];
             /** Format: int32 */
-            numberOfElements?: number;
+            numberOfElements: number;
             /** Format: int32 */
-            number?: number;
+            number: number;
+            first: boolean;
+            last: boolean;
             /** Format: int32 */
-            size?: number;
-            content?: {
+            size: number;
+            content: {
                 [key: string]: Record<string, never>;
             }[];
-            first?: boolean;
-            last?: boolean;
-            empty?: boolean;
+            empty: boolean;
         };
         ApiResponsePageCustomerAddressDto: {
             success: boolean;
@@ -1301,21 +1301,21 @@ export interface components {
         };
         PageCustomerAddressDto: {
             /** Format: int32 */
-            totalPages?: number;
+            totalPages: number;
             /** Format: int64 */
-            totalElements?: number;
+            totalElements: number;
             pageable?: components["schemas"]["PageableObject"];
             sort?: components["schemas"]["SortObject"][];
             /** Format: int32 */
-            numberOfElements?: number;
+            numberOfElements: number;
             /** Format: int32 */
-            number?: number;
+            number: number;
+            first: boolean;
+            last: boolean;
             /** Format: int32 */
-            size?: number;
-            content?: components["schemas"]["CustomerAddressDto"][];
-            first?: boolean;
-            last?: boolean;
-            empty?: boolean;
+            size: number;
+            content: components["schemas"]["CustomerAddressDto"][];
+            empty: boolean;
         };
         ApiResponseListCustomerAddressDto: {
             success: boolean;

@@ -32,30 +32,28 @@ const SortObject = z
   .passthrough();
 const PageableObject = z
   .object({
+    offset: z.number().int(),
+    sort: z.array(SortObject).optional(),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
     unpaged: z.boolean(),
-    sort: z.array(SortObject),
-    offset: z.number().int(),
   })
-  .partial()
   .passthrough();
 const PageUserDTO = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    numberOfElements: z.number().int(),
-    pageable: PageableObject,
-    first: z.boolean(),
-    sort: z.array(SortObject),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(UserDTO),
     last: z.boolean(),
+    sort: z.array(SortObject).optional(),
+    first: z.boolean(),
+    numberOfElements: z.number().int(),
+    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
-  .partial()
   .passthrough();
 const ApiResponsePageUserDTO = z
   .object({

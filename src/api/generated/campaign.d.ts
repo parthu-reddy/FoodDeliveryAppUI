@@ -336,23 +336,23 @@ export interface components {
         };
         CampaignResponse: {
             /** Format: uuid */
-            id?: string;
+            id: string;
             /** Format: uuid */
-            advertiserId?: string;
-            name?: string;
+            advertiserId: string;
+            name: string;
             /** @enum {string} */
-            status?: "DRAFT" | "SCHEDULED" | "ACTIVE" | "PAUSED" | "COMPLETED" | "ARCHIVED" | "DELETED";
-            dailyBudget?: number;
-            lifetimeBudget?: number;
-            maxBid?: number;
+            status: "DRAFT" | "SCHEDULED" | "ACTIVE" | "PAUSED" | "COMPLETED" | "ARCHIVED" | "DELETED";
+            dailyBudget: number;
+            lifetimeBudget: number;
+            maxBid: number;
             /** Format: date-time */
-            startDate?: string;
+            startDate: string;
             /** Format: date-time */
             endDate?: string;
             /** Format: int32 */
-            frequencyCap?: number;
+            frequencyCap: number;
             /** Format: int64 */
-            version?: number;
+            version: number;
         };
         AdGroupRequest: {
             name: string;
@@ -363,34 +363,34 @@ export interface components {
             active?: boolean;
         };
         ContextualKeywords: {
-            keywords?: string[];
+            keywords: string[];
         };
         Daypart: {
-            dayOfWeek?: string;
-            startTime?: string;
-            endTime?: string;
+            dayOfWeek: string;
+            startTime: string;
+            endTime: string;
         };
         DaypartingConfig: {
-            dayparts?: components["schemas"]["Daypart"][];
+            dayparts: components["schemas"]["Daypart"][];
         };
         GeoTargeting: {
-            regions?: string[];
+            regions: string[];
         };
         AdGroupResponse: {
             /** Format: uuid */
-            id?: string;
+            id: string;
             /** Format: uuid */
-            campaignId?: string;
-            name?: string;
+            campaignId: string;
+            name: string;
             geoTargeting?: components["schemas"]["GeoTargeting"];
             daypartingConfig?: components["schemas"]["DaypartingConfig"];
             contextualKeywords?: components["schemas"]["ContextualKeywords"];
             brandSafetyBlocklist?: string[];
-            active?: boolean;
+            active: boolean;
             /** Format: date-time */
-            createdAt?: string;
+            createdAt: string;
             /** Format: date-time */
-            updatedAt?: string;
+            updatedAt: string;
         };
         ApiResponseAdGroupResponse: {
             success: boolean;
@@ -414,7 +414,7 @@ export interface components {
             /** Format: double */
             lifetimeBudget?: number;
             /** Format: uuid */
-            advertiserId?: string;
+            advertiserId: string;
         };
         AdvertiserRegistrationRequest: {
             companyName: string;
@@ -422,16 +422,16 @@ export interface components {
         };
         AdvertiserResponse: {
             /** Format: uuid */
-            id?: string;
-            userId?: string;
-            companyName?: string;
+            id: string;
+            userId: string;
+            companyName: string;
             externalRef?: string;
             /** Format: uuid */
             walletBalanceId?: string;
             /** Format: date-time */
-            createdAt?: string;
+            createdAt: string;
             /** Format: date-time */
-            updatedAt?: string;
+            updatedAt: string;
         };
         ApiResponseAdvertiserResponse: {
             success: boolean;
@@ -449,19 +449,19 @@ export interface components {
         };
         AdCreativeResponse: {
             /** Format: uuid */
-            id?: string;
+            id: string;
             /** Format: uuid */
-            adGroupId?: string;
+            adGroupId: string;
             /** @enum {string} */
-            format?: "BANNER" | "CAROUSEL" | "VIDEO" | "VIDEO_VAST" | "NATIVE";
-            assetUrl?: string;
+            format: "BANNER" | "CAROUSEL" | "VIDEO" | "VIDEO_VAST" | "NATIVE";
+            assetUrl: string;
             vastXml?: string;
             /** @enum {string} */
-            auditStatus?: "PENDING" | "APPROVED" | "REJECTED";
+            auditStatus: "PENDING" | "APPROVED" | "REJECTED";
             /** Format: date-time */
-            createdAt?: string;
+            createdAt: string;
             /** Format: date-time */
-            updatedAt?: string;
+            updatedAt: string;
         };
         ApiResponseAdCreativeResponse: {
             success: boolean;
@@ -510,32 +510,32 @@ export interface components {
         };
         PageCampaignResponse: {
             /** Format: int32 */
-            totalPages?: number;
+            totalPages: number;
             /** Format: int64 */
-            totalElements?: number;
-            /** Format: int32 */
-            number?: number;
-            /** Format: int32 */
-            size?: number;
-            content?: components["schemas"]["CampaignResponse"][];
-            first?: boolean;
-            last?: boolean;
-            /** Format: int32 */
-            numberOfElements?: number;
+            totalElements: number;
             sort?: components["schemas"]["SortObject"][];
+            /** Format: int32 */
+            numberOfElements: number;
             pageable?: components["schemas"]["PageableObject"];
-            empty?: boolean;
+            /** Format: int32 */
+            number: number;
+            /** Format: int32 */
+            size: number;
+            content: components["schemas"]["CampaignResponse"][];
+            first: boolean;
+            last: boolean;
+            empty: boolean;
         };
         PageableObject: {
-            /** Format: int64 */
-            offset?: number;
             sort?: components["schemas"]["SortObject"][];
-            paged?: boolean;
+            unpaged: boolean;
+            paged: boolean;
             /** Format: int32 */
-            pageNumber?: number;
+            pageNumber: number;
             /** Format: int32 */
-            pageSize?: number;
-            unpaged?: boolean;
+            pageSize: number;
+            /** Format: int64 */
+            offset: number;
         };
         SortObject: {
             direction?: string;
@@ -554,38 +554,38 @@ export interface components {
         };
         CampaignPerformanceResponse: {
             /** Format: uuid */
-            id?: string;
+            id: string;
             /** Format: uuid */
-            advertiserId?: string;
+            advertiserId: string;
             /** Format: uuid */
-            campaignId?: string;
+            campaignId: string;
             /** Format: date */
-            date?: string;
+            date: string;
             /** Format: int64 */
             impressions?: number;
             /** Format: int64 */
             clicks?: number;
             /** Format: int64 */
             conversions?: number;
-            spend?: number;
+            spend: number;
         };
         PageCampaignPerformanceResponse: {
             /** Format: int32 */
-            totalPages?: number;
+            totalPages: number;
             /** Format: int64 */
-            totalElements?: number;
-            /** Format: int32 */
-            number?: number;
-            /** Format: int32 */
-            size?: number;
-            content?: components["schemas"]["CampaignPerformanceResponse"][];
-            first?: boolean;
-            last?: boolean;
-            /** Format: int32 */
-            numberOfElements?: number;
+            totalElements: number;
             sort?: components["schemas"]["SortObject"][];
+            /** Format: int32 */
+            numberOfElements: number;
             pageable?: components["schemas"]["PageableObject"];
-            empty?: boolean;
+            /** Format: int32 */
+            number: number;
+            /** Format: int32 */
+            size: number;
+            content: components["schemas"]["CampaignPerformanceResponse"][];
+            first: boolean;
+            last: boolean;
+            empty: boolean;
         };
         ApiResponsePageAdGroupResponse: {
             success: boolean;
@@ -597,21 +597,21 @@ export interface components {
         };
         PageAdGroupResponse: {
             /** Format: int32 */
-            totalPages?: number;
+            totalPages: number;
             /** Format: int64 */
-            totalElements?: number;
-            /** Format: int32 */
-            number?: number;
-            /** Format: int32 */
-            size?: number;
-            content?: components["schemas"]["AdGroupResponse"][];
-            first?: boolean;
-            last?: boolean;
-            /** Format: int32 */
-            numberOfElements?: number;
+            totalElements: number;
             sort?: components["schemas"]["SortObject"][];
+            /** Format: int32 */
+            numberOfElements: number;
             pageable?: components["schemas"]["PageableObject"];
-            empty?: boolean;
+            /** Format: int32 */
+            number: number;
+            /** Format: int32 */
+            size: number;
+            content: components["schemas"]["AdGroupResponse"][];
+            first: boolean;
+            last: boolean;
+            empty: boolean;
         };
         ApiResponseListAdCreativeResponse: {
             success: boolean;

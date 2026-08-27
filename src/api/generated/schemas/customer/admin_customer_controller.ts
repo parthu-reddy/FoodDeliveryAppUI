@@ -10,17 +10,16 @@ const PageCustomerAddressDto = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    pageable: PageableObject,
-    sort: z.array(SortObject),
+    pageable: PageableObject.optional(),
+    sort: z.array(SortObject).optional(),
     numberOfElements: z.number().int(),
     number: z.number().int(),
-    size: z.number().int(),
-    content: z.array(CustomerAddressDto),
     first: z.boolean(),
     last: z.boolean(),
+    size: z.number().int(),
+    content: z.array(CustomerAddressDto),
     empty: z.boolean(),
   })
-  .partial()
   .passthrough();
 const ApiResponsePageCustomerAddressDto = z
   .object({

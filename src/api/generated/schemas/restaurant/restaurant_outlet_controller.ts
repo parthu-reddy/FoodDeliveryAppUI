@@ -36,9 +36,8 @@ const OutletTiming = z
     closingTime: LocalTime,
     createdAt: z.string().datetime({ offset: true }),
     updatedAt: z.string().datetime({ offset: true }),
-    version: z.number().int(),
+    version: z.number().int().optional(),
   })
-  .partial()
   .passthrough();
 const Outlet = z
   .object({
@@ -82,17 +81,16 @@ const PageMapStringObject = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
+    numberOfElements: z.number().int(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(z.record(z.object({}).partial().passthrough())),
-    sort: z.array(SortObject),
-    pageable: PageableObject,
-    numberOfElements: z.number().int(),
+    sort: z.array(SortObject).optional(),
+    pageable: PageableObject.optional(),
     first: z.boolean(),
     last: z.boolean(),
     empty: z.boolean(),
   })
-  .partial()
   .passthrough();
 const ApiResponsePageMapStringObject = z
   .object({

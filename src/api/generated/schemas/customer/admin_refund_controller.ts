@@ -7,8 +7,11 @@ import { PageableObject } from "./common";
 import { SortObject } from "./common";
 
 const ResolveRequest = z
-  .object({ approved: z.boolean(), notes: z.string(), faultType: z.string() })
-  .partial()
+  .object({
+    approved: z.boolean(),
+    notes: z.string().optional(),
+    faultType: z.string().optional(),
+  })
   .passthrough();
 
 export const schemas = {

@@ -29,7 +29,6 @@ const LedgerTransactionDto = z
     amount: z.number(),
     date: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const SortObject = z
   .object({
@@ -45,12 +44,11 @@ const PageableObject = z
   .object({
     offset: z.number().int(),
     paged: z.boolean(),
-    sort: z.array(SortObject),
+    sort: z.array(SortObject).optional(),
     unpaged: z.boolean(),
     pageSize: z.number().int(),
     pageNumber: z.number().int(),
   })
-  .partial()
   .passthrough();
 const PageLedgerTransactionDto = z
   .object({
@@ -62,17 +60,16 @@ const PageLedgerTransactionDto = z
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(LedgerTransactionDto),
-    sort: z.array(SortObject),
-    pageable: PageableObject,
+    sort: z.array(SortObject).optional(),
+    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
-  .partial()
   .passthrough();
 const LedgerEntry = z
   .object({
     id: z.string().uuid(),
     transactionId: z.string().uuid(),
-    referenceId: z.string().uuid(),
+    referenceId: z.string().uuid().optional(),
     accountId: z.string().uuid(),
     direction: z.enum(["CREDIT", "DEBIT"]),
     category: z.enum([
@@ -98,7 +95,6 @@ const LedgerEntry = z
     amount: z.number(),
     createdAt: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const PageLedgerEntry = z
   .object({
@@ -110,11 +106,10 @@ const PageLedgerEntry = z
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(LedgerEntry),
-    sort: z.array(SortObject),
-    pageable: PageableObject,
+    sort: z.array(SortObject).optional(),
+    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
-  .partial()
   .passthrough();
 const PayoutSettlementRequest = z
   .object({
@@ -129,7 +124,6 @@ const PayoutSettlementRequest = z
     ]),
     amount: z.number(),
   })
-  .partial()
   .passthrough();
 const LedgerAccount = z
   .object({
@@ -146,7 +140,6 @@ const LedgerAccount = z
     balance: z.number(),
     lockVersion: z.number().int(),
   })
-  .partial()
   .passthrough();
 
 export const schemas = {

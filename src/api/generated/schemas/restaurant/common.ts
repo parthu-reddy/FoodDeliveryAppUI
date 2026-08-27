@@ -63,11 +63,10 @@ export const SortObject = z
 export const PageableObject = z
   .object({
     offset: z.number().int(),
-    sort: z.array(SortObject),
-    pageNumber: z.number().int(),
-    pageSize: z.number().int(),
     paged: z.boolean(),
+    sort: z.array(SortObject).optional(),
     unpaged: z.boolean(),
+    pageSize: z.number().int(),
+    pageNumber: z.number().int(),
   })
-  .partial()
   .passthrough();

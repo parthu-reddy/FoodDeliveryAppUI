@@ -8,12 +8,11 @@ const AdvertiserResponse = z
     id: z.string().uuid(),
     userId: z.string(),
     companyName: z.string(),
-    externalRef: z.string(),
-    walletBalanceId: z.string().uuid(),
+    externalRef: z.string().optional(),
+    walletBalanceId: z.string().uuid().optional(),
     createdAt: z.string().datetime({ offset: true }),
     updatedAt: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const ApiResponseAdvertiserResponse = z
   .object({

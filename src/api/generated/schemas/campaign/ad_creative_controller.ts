@@ -10,12 +10,11 @@ const AdCreativeResponse = z
     adGroupId: z.string().uuid(),
     format: z.enum(["BANNER", "CAROUSEL", "VIDEO", "VIDEO_VAST", "NATIVE"]),
     assetUrl: z.string(),
-    vastXml: z.string(),
+    vastXml: z.string().optional(),
     auditStatus: z.enum(["PENDING", "APPROVED", "REJECTED"]),
     createdAt: z.string().datetime({ offset: true }),
     updatedAt: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 const ApiResponseAdCreativeResponse = z
   .object({

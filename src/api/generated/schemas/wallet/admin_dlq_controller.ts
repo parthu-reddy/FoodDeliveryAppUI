@@ -90,32 +90,30 @@ const OutboxEventEntity = z
       "CHAT_REFUND_ERROR",
       "REVIEW_CREATED",
     ]),
-    idempotencyKey: z.string(),
+    idempotencyKey: z.string().optional(),
     payload: z.string(),
     createdAt: z.string().datetime({ offset: true }),
     status: z.enum(["UNPROCESSED", "PROCESSED", "FAILED", "DLQ"]),
-    processedAt: z.string().datetime({ offset: true }),
-    errorMessage: z.string(),
+    processedAt: z.string().datetime({ offset: true }).optional(),
+    errorMessage: z.string().optional(),
     retryCount: z.number().int(),
-    new: z.boolean(),
+    new: z.boolean().optional(),
   })
-  .partial()
   .passthrough();
 const PageOutboxEventEntity = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    sort: z.array(SortObject),
-    pageable: PageableObject,
     numberOfElements: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(OutboxEventEntity),
-    first: z.boolean(),
-    last: z.boolean(),
+    sort: z.array(SortObject).optional(),
+    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
-  .partial()
   .passthrough();
 const ApiResponseString = z
   .object({

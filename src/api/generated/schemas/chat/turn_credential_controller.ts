@@ -2,12 +2,14 @@ import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
 const IceServer = z
-  .object({ urls: z.string(), username: z.string(), credential: z.string() })
-  .partial()
+  .object({
+    urls: z.string(),
+    username: z.string().optional(),
+    credential: z.string().optional(),
+  })
   .passthrough();
 const TurnCredentialsResponse = z
   .object({ iceServers: z.array(IceServer) })
-  .partial()
   .passthrough();
 
 export const schemas = {

@@ -22,11 +22,10 @@ const VerificationCallbackRequest = z
   .object({
     verificationType: z.string(),
     status: z.string(),
-    legalEntityName: z.string(),
-    bankBeneficiaryName: z.string(),
-    matchScore: z.number(),
+    legalEntityName: z.string().optional(),
+    bankBeneficiaryName: z.string().optional(),
+    matchScore: z.number().optional(),
   })
-  .partial()
   .passthrough();
 const ApiResponseMapStringString = z
   .object({

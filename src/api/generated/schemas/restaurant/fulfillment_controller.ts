@@ -77,17 +77,16 @@ const PageRestaurantOrder = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
+    numberOfElements: z.number().int(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(RestaurantOrder),
-    sort: z.array(SortObject),
-    pageable: PageableObject,
-    numberOfElements: z.number().int(),
+    sort: z.array(SortObject).optional(),
+    pageable: PageableObject.optional(),
     first: z.boolean(),
     last: z.boolean(),
     empty: z.boolean(),
   })
-  .partial()
   .passthrough();
 const ApiResponsePageRestaurantOrder = z
   .object({
