@@ -311,8 +311,8 @@ function OpenChatHelper({ widgetRef, show }: { widgetRef: any, show: boolean }) 
   useEffect(() => {
     if (show && widgetRef.current) {
       setTimeout(() => {
-        if (widgetRef.current.openAndRequestRefundQuote) {
-           widgetRef.current.openAndRequestRefundQuote();
+        if (widgetRef.current.openChatOnly) {
+           widgetRef.current.openChatOnly();
         }
       }, 100);
     }

@@ -25,6 +25,7 @@ interface ChatWidgetProps {
 
 export interface ChatWidgetHandle {
   openAndRequestRefundQuote: () => void;
+  openChatOnly: () => void;
 }
 
 export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({ orderId, order, currentUserType, otherParticipants, onClose, onBack }, ref) => {
@@ -45,6 +46,10 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
       setIsOpen(true);
       setUnreadCount(0);
       setPendingRefundAction(true);
+    },
+    openChatOnly: () => {
+      setIsOpen(true);
+      setUnreadCount(0);
     }
   }));
 
