@@ -28,7 +28,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import CustomerOutletSelectorModal from '@features/catalog/components/customer/CustomerOutletSelectorModal';
 import { useRestaurants } from '@features/catalog/model/useRestaurants';
 import { CallOverlay } from "@features/communication/components/CallOverlay";
-import { ChatWidget } from "@features/communication/components/ChatWidget";
+import { ChatWidget, type ChatWidgetHandle } from "@features/communication/components/ChatWidget";
 import CustomerAddressSelectorModal from "@features/customer-orders/components/CustomerAddressSelectorModal";
 import CustomerCartDrawer from '@features/customer-orders/components/CustomerCartDrawer';
 import { isActiveOrder, isFailedOrder } from '@features/customer-orders/model/orderStatus';
@@ -170,6 +170,11 @@ export default function CustomerDashboard({
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
   const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
   const [orderSuccessToast, setOrderSuccessToast] = useState<Order | null>(null);
+
+  const [showLocationSearch, setShowLocationSearch] = useState(false);
+  const [addressQuery, setAddressQuery] = useState('');
+  
+  const chatWidgetRef = useRef<ChatWidgetHandle>(null);
 
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
 
@@ -615,8 +620,7 @@ export default function CustomerDashboard({
                   {!currentTrackingOrder.refundedAmount && (
                     <Button
                       onClick={() => {
-                        setGlobalError('Issue reported to support. Our team will contact you shortly regarding a refund.');
-                        setTimeout(() => setGlobalError(null), 3000);
+                        chatWidgetRef.current?.openAndRequestRefundQuote();
                       }}
                       variant="outline"
                       className="text-rose-500 border-rose-500/30 hover:bg-rose-50 dark:hover:bg-rose-500/10 mt-3"
@@ -861,6 +865,7 @@ export default function CustomerDashboard({
         }
         return showChat ? (
           <ChatWidget
+            ref={chatWidgetRef}
             orderId={currentTrackingOrder.id}
             order={currentTrackingOrder}
             currentUserType="CUSTOMER"

@@ -82,7 +82,7 @@ function AdminAssignmentMapInner({
              zoom: 12,
              minZoom: 10,
              maxZoom: 17,
-             transformRequest: (url, resourceType) => {
+             transformRequest: (url, _resourceType) => {
                if (url.includes('api.olamaps.io')) {
                  return { url: url.replace('https://api.olamaps.io', '/olamaps') };
                }

@@ -2,13 +2,14 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { customerApi } from "@/lib/zodiosClients";
 import AdminLiveOperations from "@features/admin-ops/components/AdminLiveOperations";
 import AdminManualInterventions from "@features/admin-ops/components/AdminManualInterventions";
+import AdminSupportTickets from "@features/admin-ops/components/AdminSupportTickets";
 import AdminUserManagement from "@features/admin-ops/components/AdminUserManagement";
 import AdminCategories from '@features/catalog/components/admin/AdminCategories';
 import AdminLedgerView from "@features/ledger/components/AdminLedgerView";
 import AdminPayoutsView from "@features/ledger/components/AdminPayoutsView";
 import { Button, SidebarNav } from '@shared/ui';
 import LaBouffeLogo from '@shared/ui/LaBouffeLogo';
-import { Activity, Database, LogOut, MapPin, Moon, Shield, Sun, Tags, Users } from 'lucide-react';
+import { Activity, Database, LogOut, MapPin, Moon, Shield, Sun, Tags, Users, MessageSquare } from 'lucide-react';
 import React, { useState } from 'react';
 import { usePolling } from '../../hooks/usePolling';
 import { asUntyped, WirePage } from '../../lib/untypedResponse';
@@ -20,7 +21,7 @@ export default function AdminPortal({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }: any) {
   const { theme, toggleTheme } = useTheme();
-  const [activeTab, setActiveTab] = useState<'deliveries' | 'users' | 'categories' | 'map' | 'ledger' | 'payouts' | 'interventions'>('map');
+  const [activeTab, setActiveTab] = useState<'deliveries' | 'users' | 'categories' | 'map' | 'ledger' | 'payouts' | 'interventions' | 'support_tickets'>('map');
 
   // Poll for intervention count to show badge on sidebar
   const { data: interventionsCount = 0 } = usePolling({
@@ -46,9 +47,10 @@ export default function AdminPortal({
           <SidebarNav
             activeColor="indigo"
             activeKey={activeTab}
-            onSelect={(key) => setActiveTab(key as 'deliveries' | 'interventions' | 'users' | 'categories' | 'map' | 'ledger' | 'payouts')}
+            onSelect={(key) => setActiveTab(key as 'deliveries' | 'interventions' | 'users' | 'categories' | 'map' | 'ledger' | 'payouts' | 'support_tickets')}
             items={[
               { key: 'deliveries', label: 'Live Operations', icon: <Activity className="w-5 h-5" /> },
+              { key: 'support_tickets', label: 'Support Tickets', icon: <MessageSquare className="w-5 h-5" /> },
               { key: 'interventions', label: 'Manual Interventions', icon: <Shield className="w-5 h-5" />, badge: interventionsCount || undefined },
               { key: 'users', label: 'User Management', icon: <Users className="w-5 h-5" /> },
               { key: 'categories', label: 'Categories', icon: <Tags className="w-5 h-5" /> },
@@ -94,6 +96,7 @@ export default function AdminPortal({
         )}
 
         {activeTab === 'interventions' && <AdminManualInterventions />}
+        {activeTab === 'support_tickets' && <AdminSupportTickets />}
         {activeTab === 'deliveries' && <AdminLiveOperations />}
         {activeTab === 'users' && <AdminUserManagement />}
         {activeTab === 'categories' && <AdminCategories />}

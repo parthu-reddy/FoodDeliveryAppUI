@@ -15,7 +15,7 @@ export interface ChatParticipant {
 
 interface ChatWidgetProps {
   orderId: string;
-  currentUserType: 'CUSTOMER' | 'RESTAURANT' | 'DELIVERY';
+  currentUserType: 'CUSTOMER' | 'RESTAURANT' | 'DELIVERY' | 'ADMIN';
   otherParticipants?: ChatParticipant[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   order?: any; // To pass order details
@@ -23,7 +23,11 @@ interface ChatWidgetProps {
   onBack?: () => void;
 }
 
-export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentUserType, otherParticipants, onClose, onBack }) => {
+export interface ChatWidgetHandle {
+  openAndRequestRefundQuote: () => void;
+}
+
+export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({ orderId, order, currentUserType, otherParticipants, onClose, onBack }, ref) => {
   const token = getToken();
   const user = getUserProfile();
   const [isOpen, setIsOpen] = useState(false);
@@ -34,6 +38,15 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState<Record<string, boolean>>({});
   const [targetUserId, setTargetUserId] = useState<string | null>(null);
+  const [pendingRefundAction, setPendingRefundAction] = useState<boolean>(false);
+
+  React.useImperativeHandle(ref, () => ({
+    openAndRequestRefundQuote: () => {
+      setIsOpen(true);
+      setUnreadCount(0);
+      setPendingRefundAction(true);
+    }
+  }));
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { startCall, callState, callEndReason, isCaller } = useCallContext();
@@ -104,6 +117,13 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
     onMessageReceived: handleMessageReceived,
     onTypingIndicator: handleTypingIndicator,
   });
+
+  useEffect(() => {
+    if (isConnected && pendingRefundAction && orderId) {
+      sendMessage(JSON.stringify({ orderId }), 'REFUND_QUOTE_REQUEST');
+      setPendingRefundAction(false);
+    }
+  }, [isConnected, pendingRefundAction, orderId, sendMessage]);
 
   const uploadedImageCount = messages.filter(
     (msg) => msg.messageType === 'IMAGE' && msg.senderId === user?.id
@@ -335,6 +355,66 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
                       <span className="text-xs font-semibold">📞 Call Recording</span>
                       <audio controls src={msg.content} className="max-w-[200px] h-10" />
                     </div>
+                  ) : msg.messageType === 'REFUND_QUOTE_RESPONSE' ? (() => {
+                    try {
+                      const payload = JSON.parse(msg.content);
+                      return (
+                        <div className={`flex flex-col space-y-3 p-2 min-w-[220px] ${isMe ? 'text-white' : 'text-gray-800'}`}>
+                          <div className={`flex items-center space-x-2 border-b pb-2 ${isMe ? 'border-orange-400' : 'border-gray-200'}`}>
+                            <span className="text-xl">💰</span>
+                            <span className="font-semibold">Refund Quote</span>
+                          </div>
+                          <div>
+                            <div className="text-sm opacity-80 mb-1">Eligible Amount:</div>
+                            <div className="font-bold text-2xl">${parseFloat(payload.quoteAmount).toFixed(2)}</div>
+                          </div>
+                          <div className="text-xs opacity-75">Type: {payload.refundType}</div>
+                          <button 
+                            onClick={() => {
+                              sendMessage(JSON.stringify({ orderId, reason: "Customer requested", refundType: payload.refundType, customerId: user?.id }), 'REFUND_REQUEST');
+                            }}
+                            className={`w-full font-semibold py-2 rounded-xl transition-all shadow-sm ${
+                              isMe 
+                                ? 'bg-white text-orange-600 hover:bg-orange-50' 
+                                : 'bg-orange-600 text-white hover:bg-orange-700 hover:shadow-md'
+                            }`}
+                          >
+                            Accept & Process Refund
+                          </button>
+                        </div>
+                      );
+                    } catch(e) {
+                      return <span>Invalid quote response</span>;
+                    }
+                  })() : msg.messageType === 'REFUND_DECISION' ? (() => {
+                    try {
+                      const payload = JSON.parse(msg.content);
+                      return (
+                        <div className="flex flex-col space-y-2 p-2">
+                          <div className="flex items-center space-x-2 text-green-600 font-bold">
+                            <span className="text-lg">✅</span>
+                            <span>Refund Request Submitted</span>
+                          </div>
+                          <div className="text-sm font-medium">Amount: ${parseFloat(payload.amount || payload.quoteAmount || 0).toFixed(2)}</div>
+                          <div className="text-xs opacity-75 mt-1">Check your dashboard for details.</div>
+                        </div>
+                      );
+                    } catch(e) { return <span>Invalid decision response</span>; }
+                  })() : msg.messageType === 'REFUND_ERROR' ? (
+                    <div className="flex flex-col space-y-1 p-2">
+                      <div className="flex items-center space-x-2 text-red-500 font-bold">
+                        <span>❌</span>
+                        <span>Request Failed</span>
+                      </div>
+                      <span className="text-sm">{msg.content}</span>
+                    </div>
+                  ) : msg.messageType === 'REFUND_QUOTE_REQUEST' || msg.messageType === 'REFUND_REQUEST' ? (
+                    <div className="flex items-center space-x-2 p-1 opacity-90">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span className="text-sm font-medium">
+                        {msg.messageType === 'REFUND_QUOTE_REQUEST' ? 'Requesting quote...' : 'Processing refund...'}
+                      </span>
+                    </div>
                   ) : (
                     msg.content
                   )}
@@ -419,4 +499,4 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ orderId, order, currentU
       </form>
     </div>
   );
-};
+});

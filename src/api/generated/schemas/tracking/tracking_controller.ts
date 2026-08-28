@@ -24,12 +24,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
       {
-        name: "X-Device-Id",
-        type: "Header",
-        schema: z.string().optional(),
-      },
-      {
-        name: "X-Forwarded-For",
+        name: "X-Client-Fingerprint",
         type: "Header",
         schema: z.string().optional(),
       },
@@ -58,12 +53,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
       {
-        name: "X-Device-Id",
-        type: "Header",
-        schema: z.string().optional(),
-      },
-      {
-        name: "X-Forwarded-For",
+        name: "X-Client-Fingerprint",
         type: "Header",
         schema: z.string().optional(),
       },
@@ -92,12 +82,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
       {
-        name: "X-Device-Id",
-        type: "Header",
-        schema: z.string().optional(),
-      },
-      {
-        name: "X-Forwarded-For",
+        name: "X-Client-Fingerprint",
         type: "Header",
         schema: z.string().optional(),
       },

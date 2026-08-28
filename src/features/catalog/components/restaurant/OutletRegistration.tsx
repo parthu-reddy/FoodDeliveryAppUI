@@ -61,7 +61,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
         maxZoom: 17,
         interactive: false,
         attributionControl: false,
-        transformRequest: (url, resourceType) => {
+        transformRequest: (url, _resourceType) => {
           if (url.includes('api.olamaps.io')) {
             return { url: url.replace('https://api.olamaps.io', '/olamaps') };
           }

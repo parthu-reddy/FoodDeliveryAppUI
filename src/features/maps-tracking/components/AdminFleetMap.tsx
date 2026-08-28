@@ -96,7 +96,7 @@ function AdminFleetMapInner() {
         style: '/olamaps/tiles/vector/v1/styles/default-light-standard/style.json',
         center: [77.670900, 12.990300], // Default center
         zoom: 11,
-        transformRequest: (url, resourceType) => {
+        transformRequest: (url, _resourceType) => {
           if (url.includes('api.olamaps.io')) {
             return { url: url.replace('https://api.olamaps.io', '/olamaps') };
           }

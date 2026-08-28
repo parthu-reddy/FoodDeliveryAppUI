@@ -288,7 +288,7 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
               </Button>
             )}
 
-            {(isCooking || isRequestedDelay) && (
+            {isCooking && (
               <>
                 {order.status === OrderStatus.ACCEPTED ? (
                   <Button

@@ -32,5 +32,51 @@ export const adminApiDef = makeApi([
     alias: 'getDashboard',
      
     response: z.any()
+  },
+  {
+    method: 'get',
+    path: '/api/v1/internal/admin/refunds',
+    alias: 'getRefundTickets',
+    parameters: [
+      {
+        name: 'page',
+        type: 'Query',
+        schema: z.number().optional()
+      },
+      {
+        name: 'size',
+        type: 'Query',
+        schema: z.number().optional()
+      },
+      {
+        name: 'status',
+        type: 'Query',
+        schema: z.string().optional()
+      }
+    ],
+    response: z.any()
+  },
+  {
+    method: 'post',
+    path: '/api/v1/internal/admin/refunds/:ticketId/resolve',
+    alias: 'resolveRefundTicket',
+    parameters: [
+      {
+        name: 'ticketId',
+        type: 'Path',
+        schema: z.string()
+      },
+      {
+        name: 'body',
+        type: 'Body',
+        schema: z.object({
+          approved: z.boolean(),
+          notes: z.string().optional(),
+          faultType: z.string().optional(),
+          overrideAmount: z.number().optional()
+        })
+      }
+    ],
+    response: z.any()
   }
 ]);

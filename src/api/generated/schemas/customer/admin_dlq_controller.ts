@@ -7,16 +7,16 @@ import { SortObject } from "./common";
 
 const PageMapStringObject = z
   .object({
-    totalPages: z.number().int(),
     totalElements: z.number().int(),
-    pageable: PageableObject.optional(),
-    sort: z.array(SortObject).optional(),
-    numberOfElements: z.number().int(),
+    totalPages: z.number().int(),
     number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
     size: z.number().int(),
     content: z.array(z.record(z.object({}).partial().passthrough())),
+    numberOfElements: z.number().int(),
+    pageable: PageableObject.optional(),
+    sort: z.array(SortObject).optional(),
     empty: z.boolean(),
   })
   .passthrough();

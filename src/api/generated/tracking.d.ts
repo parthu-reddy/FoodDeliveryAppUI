@@ -72,8 +72,7 @@ export interface operations {
                 wp: string;
             };
             header?: {
-                "X-Device-Id"?: string;
-                "X-Forwarded-For"?: string;
+                "X-Client-Fingerprint"?: string;
             };
             path?: never;
             cookie?: never;
@@ -97,8 +96,7 @@ export interface operations {
                 wp: string;
             };
             header?: {
-                "X-Device-Id"?: string;
-                "X-Forwarded-For"?: string;
+                "X-Client-Fingerprint"?: string;
             };
             path?: never;
             cookie?: never;
@@ -122,8 +120,7 @@ export interface operations {
                 wp: string;
             };
             header?: {
-                "X-Device-Id"?: string;
-                "X-Forwarded-For"?: string;
+                "X-Client-Fingerprint"?: string;
             };
             path?: never;
             cookie?: never;
