@@ -1,3 +1,4 @@
+import { normalizeOrder } from '../../../schemas/order';
 import { customerApi } from '@/lib/zodiosClients';
 import { Order, OrderStatus } from '@/types';
 import { getFriendlyStatusMessage } from '@features/customer-orders/model/statusMessaging';
@@ -43,7 +44,10 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
       .then(res => {
         if (!ignore && res.data) {
           const content = res.data.content || (Array.isArray(res.data) ? res.data : []);
-          setOrders(content);
+          // Normalise rather than cast. The API sends `totalAmount` but no `total`, `subtotal` or
+          // `customerName`, and this view reads all three -- assigning the raw response left them
+          // undefined. That was invisible while Order resolved to `any`.
+          setOrders((content as unknown[]).map(normalizeOrder));
           if (res.data.totalPages) {
             setTotalPages(res.data.totalPages);
           } else {

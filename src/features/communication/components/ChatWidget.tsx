@@ -388,7 +388,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
                           </button>
                         </div>
                       );
-                    } catch(e) {
+                    } catch {
                       return <span>Invalid quote response</span>;
                     }
                   })() : msg.messageType === 'REFUND_DECISION' ? (() => {
@@ -404,7 +404,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
                           <div className="text-xs opacity-75 mt-1">Check your dashboard for details.</div>
                         </div>
                       );
-                    } catch(e) { return <span>Invalid decision response</span>; }
+                    } catch { return <span>Invalid decision response</span>; }
                   })() : msg.messageType === 'REFUND_ERROR' ? (
                     <div className="flex flex-col space-y-1 p-2">
                       <div className="flex items-center space-x-2 text-red-500 font-bold">

@@ -58,7 +58,9 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
   order,
   cardDelayStatus = {},
   isNewPlaced,
-  isRequestedDelay,
+  // Passed by RestaurantOrderQueue but not read here; renamed to satisfy the unused-args rule
+  // rather than dropped, so the caller keeps compiling.
+  isRequestedDelay: _isRequestedDelay,
   isCooking,
   isPrepared,
   isBeingDelivered,

@@ -66,7 +66,9 @@ export default function AdminSupportTickets() {
     }
   };
 
-  const handleOpenChat = (ticket: any) => {
+  /** Only the fields this handler reads; responses stay untyped at component level here. */
+  interface OpenChatTicket { resolutionNotes?: string | null; refundAmount?: number | null }
+  const handleOpenChat = (ticket: OpenChatTicket) => {
     setSelectedTicket(ticket);
     setShowChat(true);
     setResolutionNotes(ticket.resolutionNotes || '');
@@ -307,13 +309,12 @@ export default function AdminSupportTickets() {
 }
 
 // Helper to auto-open the chat widget when mounted in the admin view
-function OpenChatHelper({ widgetRef, show }: { widgetRef: any, show: boolean }) {
+/** The ref only ever has openChatOnly() called on it. */
+function OpenChatHelper({ widgetRef, show }: { widgetRef: React.RefObject<{ openChatOnly?: () => void } | null>, show: boolean }) {
   useEffect(() => {
     if (show && widgetRef.current) {
       setTimeout(() => {
-        if (widgetRef.current.openChatOnly) {
-           widgetRef.current.openChatOnly();
-        }
+        widgetRef.current?.openChatOnly?.();
       }, 100);
     }
   }, [show, widgetRef]);

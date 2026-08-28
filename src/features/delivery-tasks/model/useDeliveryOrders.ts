@@ -322,7 +322,9 @@ export function useDeliveryOrders({
             const pingRes = await deliveryApi.deliveryOrder.get(`/api/v1/delivery/orders/available`, {});
             const pingData = pingRes;
             if (pingData && (pingData as unknown[]).length > 0) {
-              const jobs = (pingData as unknown[]).map((o: unknown) => ({ ...(o as Order), status: ((o as Order).status as string)?.toUpperCase() as OrderStatus || '' as OrderStatus }));
+              // Annotated: spreading into an object literal drops Order's index signature, which is
+              // what makes passthrough fields such as remainingPingSeconds reachable.
+              const jobs: Order[] = (pingData as unknown[]).map((o: unknown) => ({ ...(o as Order), status: ((o as Order).status as string)?.toUpperCase() as OrderStatus || '' as OrderStatus }));
               setRejectedIds(prev => {
                 let changed = false;
                 const newSet = new Set(prev);

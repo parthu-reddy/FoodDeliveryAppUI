@@ -171,8 +171,6 @@ export default function CustomerDashboard({
   const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
   const [orderSuccessToast, setOrderSuccessToast] = useState<Order | null>(null);
 
-  const [showLocationSearch, setShowLocationSearch] = useState(false);
-  const [addressQuery, setAddressQuery] = useState('');
   
   const chatWidgetRef = useRef<ChatWidgetHandle>(null);
 
