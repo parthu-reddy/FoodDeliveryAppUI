@@ -21,13 +21,13 @@ const PageWalletTransactionDto = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    numberOfElements: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
-    number: z.number().int(),
     size: z.number().int(),
     content: z.array(WalletTransactionDto),
-    sort: z.array(SortObject).optional(),
+    numberOfElements: z.number().int(),
+    number: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
+    sort: SortObject.optional(),
     pageable: PageableObject.optional(),
     empty: z.boolean(),
   })

@@ -141,35 +141,33 @@ export interface components {
             /** Format: int64 */
             totalElements: number;
             /** Format: int32 */
-            numberOfElements: number;
-            first: boolean;
-            last: boolean;
-            /** Format: int32 */
-            number: number;
-            /** Format: int32 */
             size: number;
             content: components["schemas"]["LedgerTransactionDto"][];
-            sort?: components["schemas"]["SortObject"][];
+            /** Format: int32 */
+            numberOfElements: number;
+            /** Format: int32 */
+            number: number;
+            first: boolean;
+            last: boolean;
             pageable?: components["schemas"]["PageableObject"];
+            sort?: components["schemas"]["SortObject"];
             empty: boolean;
         };
         PageableObject: {
             /** Format: int64 */
             offset: number;
-            paged: boolean;
-            sort?: components["schemas"]["SortObject"][];
-            unpaged: boolean;
             /** Format: int32 */
             pageSize: number;
+            paged: boolean;
             /** Format: int32 */
             pageNumber: number;
+            sort?: components["schemas"]["SortObject"];
+            unpaged: boolean;
         };
         SortObject: {
-            direction?: string;
-            nullHandling?: string;
-            ascending?: boolean;
-            property?: string;
-            ignoreCase?: boolean;
+            empty: boolean;
+            sorted: boolean;
+            unsorted: boolean;
         };
         LedgerEntry: {
             /** Format: uuid */
@@ -194,16 +192,16 @@ export interface components {
             /** Format: int64 */
             totalElements: number;
             /** Format: int32 */
-            numberOfElements: number;
-            first: boolean;
-            last: boolean;
-            /** Format: int32 */
-            number: number;
-            /** Format: int32 */
             size: number;
             content: components["schemas"]["LedgerEntry"][];
-            sort?: components["schemas"]["SortObject"][];
+            /** Format: int32 */
+            numberOfElements: number;
+            /** Format: int32 */
+            number: number;
+            first: boolean;
+            last: boolean;
             pageable?: components["schemas"]["PageableObject"];
+            sort?: components["schemas"]["SortObject"];
             empty: boolean;
         };
     };

@@ -17,22 +17,15 @@ export const WalletDto = z
   })
   .passthrough();
 export const SortObject = z
-  .object({
-    direction: z.string(),
-    nullHandling: z.string(),
-    ascending: z.boolean(),
-    property: z.string(),
-    ignoreCase: z.boolean(),
-  })
-  .partial()
+  .object({ empty: z.boolean(), sorted: z.boolean(), unsorted: z.boolean() })
   .passthrough();
 export const PageableObject = z
   .object({
     offset: z.number().int(),
-    sort: z.array(SortObject).optional(),
+    sort: SortObject.optional(),
+    unpaged: z.boolean(),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
-    unpaged: z.boolean(),
   })
   .passthrough();

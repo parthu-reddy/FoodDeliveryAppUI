@@ -881,6 +881,8 @@ export interface components {
         };
         OrderRequest: {
             /** Format: uuid */
+            quoteId: string;
+            /** Format: uuid */
             customerId: string;
             customerName?: string;
             /** Format: uuid */
@@ -985,6 +987,10 @@ export interface components {
             timestamp: string;
         };
         QuoteResponse: {
+            /** Format: uuid */
+            quoteId: string;
+            /** Format: date-time */
+            expiresAt: string;
             subtotal: number;
             deliveryFee: number;
             platformFee: number;
@@ -1037,6 +1043,7 @@ export interface components {
             approved: boolean;
             notes?: string;
             faultType?: string;
+            overrideAmount?: number;
         };
         PartialRefundRequest: {
             amount: number;
@@ -1135,35 +1142,33 @@ export interface components {
             /** Format: int32 */
             totalPages: number;
             /** Format: int32 */
-            number: number;
-            first: boolean;
-            last: boolean;
-            /** Format: int32 */
             size: number;
             content: components["schemas"]["OrderResponse"][];
             /** Format: int32 */
             numberOfElements: number;
+            /** Format: int32 */
+            number: number;
+            first: boolean;
+            last: boolean;
+            sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
-            sort?: components["schemas"]["SortObject"][];
             empty: boolean;
         };
         PageableObject: {
             /** Format: int64 */
             offset: number;
+            sort?: components["schemas"]["SortObject"];
             paged: boolean;
             /** Format: int32 */
             pageNumber: number;
             /** Format: int32 */
             pageSize: number;
-            sort?: components["schemas"]["SortObject"][];
             unpaged: boolean;
         };
         SortObject: {
-            direction?: string;
-            nullHandling?: string;
-            ascending?: boolean;
-            property?: string;
-            ignoreCase?: boolean;
+            empty: boolean;
+            sorted: boolean;
+            unsorted: boolean;
         };
         ApiResponseListOrderResponse: {
             success: boolean;
@@ -1201,6 +1206,17 @@ export interface components {
             driverGrossPayout?: number;
             driverTaxes?: number;
             driverNetPayout?: number;
+            /** Format: uuid */
+            quoteId?: string;
+            rateBasePrice?: number;
+            ratePerKm?: number;
+            rateRestMaxContributionPercent?: number;
+            rateFixedPlatformFee?: number;
+            ratePlatformExcessCutPercent?: number;
+            rateSgstPercent?: number;
+            rateCgstPercent?: number;
+            rateDeliverySgstPercent?: number;
+            rateDeliveryCgstPercent?: number;
             refundedAmount?: number;
             distanceKm?: number;
             /** Format: uuid */
@@ -1233,7 +1249,7 @@ export interface components {
             page?: number;
             /** Format: int32 */
             size?: number;
-            sort?: string[];
+            sort?: components["schemas"]["SortObject"];
         };
         PageOrder: {
             /** Format: int64 */
@@ -1241,16 +1257,16 @@ export interface components {
             /** Format: int32 */
             totalPages: number;
             /** Format: int32 */
-            number: number;
-            first: boolean;
-            last: boolean;
-            /** Format: int32 */
             size: number;
             content: components["schemas"]["Order"][];
             /** Format: int32 */
             numberOfElements: number;
+            /** Format: int32 */
+            number: number;
+            first: boolean;
+            last: boolean;
+            sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
-            sort?: components["schemas"]["SortObject"][];
             empty: boolean;
         };
         PageSupportTicket: {
@@ -1259,16 +1275,16 @@ export interface components {
             /** Format: int32 */
             totalPages: number;
             /** Format: int32 */
-            number: number;
-            first: boolean;
-            last: boolean;
-            /** Format: int32 */
             size: number;
             content: components["schemas"]["SupportTicket"][];
             /** Format: int32 */
             numberOfElements: number;
+            /** Format: int32 */
+            number: number;
+            first: boolean;
+            last: boolean;
+            sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
-            sort?: components["schemas"]["SortObject"][];
             empty: boolean;
         };
         PageMapStringObject: {
@@ -1277,18 +1293,18 @@ export interface components {
             /** Format: int32 */
             totalPages: number;
             /** Format: int32 */
-            number: number;
-            first: boolean;
-            last: boolean;
-            /** Format: int32 */
             size: number;
             content: {
                 [key: string]: Record<string, never>;
             }[];
             /** Format: int32 */
             numberOfElements: number;
+            /** Format: int32 */
+            number: number;
+            first: boolean;
+            last: boolean;
+            sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
-            sort?: components["schemas"]["SortObject"][];
             empty: boolean;
         };
         ApiResponsePageCustomerAddressDto: {
@@ -1305,16 +1321,16 @@ export interface components {
             /** Format: int32 */
             totalPages: number;
             /** Format: int32 */
-            number: number;
-            first: boolean;
-            last: boolean;
-            /** Format: int32 */
             size: number;
             content: components["schemas"]["CustomerAddressDto"][];
             /** Format: int32 */
             numberOfElements: number;
+            /** Format: int32 */
+            number: number;
+            first: boolean;
+            last: boolean;
+            sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
-            sort?: components["schemas"]["SortObject"][];
             empty: boolean;
         };
         ApiResponseListCustomerAddressDto: {
@@ -1514,7 +1530,7 @@ export interface operations {
         parameters: {
             query?: never;
             header: {
-                "X-Admin-Id": string;
+                "X-User-Id": string;
             };
             path: {
                 ticketId: string;

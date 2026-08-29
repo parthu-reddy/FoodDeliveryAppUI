@@ -60,6 +60,12 @@ const RestaurantOrder = z
     customerName: z.string().optional(),
     riderName: z.string().optional(),
     itemsJson: z.string().optional(),
+    totalAmount: z.number().optional(),
+    foodCost: z.number().optional(),
+    restaurantPlatformFee: z.number().optional(),
+    restaurantDeliveryContribution: z.number().optional(),
+    platformBonus: z.number().optional(),
+    restaurantPayout: z.number().optional(),
     createdAt: z.string().datetime({ offset: true }),
     updatedAt: z.string().datetime({ offset: true }).optional(),
   })
@@ -77,14 +83,14 @@ const PageRestaurantOrder = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    numberOfElements: z.number().int(),
-    number: z.number().int(),
     size: z.number().int(),
     content: z.array(RestaurantOrder),
-    sort: z.array(SortObject).optional(),
-    pageable: PageableObject.optional(),
+    numberOfElements: z.number().int(),
+    number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();

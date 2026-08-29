@@ -156,28 +156,21 @@ export const UpdateOrderStatusRequest = z
     goOfflineAfter: z.boolean().optional(),
   })
   .passthrough();
+export const SortObject = z
+  .object({ empty: z.boolean(), sorted: z.boolean(), unsorted: z.boolean() })
+  .passthrough();
 export const pageable = z
   .object({
     page: z.number().int().gte(0),
     size: z.number().int().gte(1),
-    sort: z.array(z.string()),
-  })
-  .partial()
-  .passthrough();
-export const SortObject = z
-  .object({
-    direction: z.string(),
-    nullHandling: z.string(),
-    ascending: z.boolean(),
-    property: z.string(),
-    ignoreCase: z.boolean(),
+    sort: SortObject,
   })
   .partial()
   .passthrough();
 export const PageableObject = z
   .object({
     offset: z.number().int(),
-    sort: z.array(SortObject).optional(),
+    sort: SortObject.optional(),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
@@ -186,15 +179,15 @@ export const PageableObject = z
   .passthrough();
 export const PageDeliveryExecutive = z
   .object({
-    totalPages: z.number().int(),
     totalElements: z.number().int(),
-    numberOfElements: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
-    number: z.number().int(),
+    totalPages: z.number().int(),
     size: z.number().int(),
     content: z.array(DeliveryExecutive),
-    sort: z.array(SortObject).optional(),
+    numberOfElements: z.number().int(),
+    number: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
+    sort: SortObject.optional(),
     pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
@@ -211,15 +204,15 @@ export const DriverLocationDTO = z
   .passthrough();
 export const PageDriverLocationDTO = z
   .object({
-    totalPages: z.number().int(),
     totalElements: z.number().int(),
-    numberOfElements: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
-    number: z.number().int(),
+    totalPages: z.number().int(),
     size: z.number().int(),
     content: z.array(DriverLocationDTO),
-    sort: z.array(SortObject).optional(),
+    numberOfElements: z.number().int(),
+    number: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
+    sort: SortObject.optional(),
     pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
@@ -247,7 +240,7 @@ export const Pageable = z
   .object({
     page: z.number().int().gte(0),
     size: z.number().int().gte(1),
-    sort: z.array(z.string()),
+    sort: SortObject,
   })
   .partial()
   .passthrough();

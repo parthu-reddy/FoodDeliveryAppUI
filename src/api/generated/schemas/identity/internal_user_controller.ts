@@ -21,37 +21,30 @@ const ApiResponseUserDTO = z
   })
   .passthrough();
 const SortObject = z
-  .object({
-    direction: z.string(),
-    nullHandling: z.string(),
-    ascending: z.boolean(),
-    property: z.string(),
-    ignoreCase: z.boolean(),
-  })
-  .partial()
+  .object({ empty: z.boolean(), sorted: z.boolean(), unsorted: z.boolean() })
   .passthrough();
 const PageableObject = z
   .object({
     offset: z.number().int(),
-    sort: z.array(SortObject).optional(),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
     unpaged: z.boolean(),
+    sort: SortObject.optional(),
   })
   .passthrough();
 const PageUserDTO = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    number: z.number().int(),
     size: z.number().int(),
     content: z.array(UserDTO),
-    last: z.boolean(),
-    sort: z.array(SortObject).optional(),
-    first: z.boolean(),
     numberOfElements: z.number().int(),
+    number: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
     pageable: PageableObject.optional(),
+    sort: SortObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();

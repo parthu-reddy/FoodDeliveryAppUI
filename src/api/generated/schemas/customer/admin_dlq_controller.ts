@@ -2,21 +2,21 @@ import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
 import { ApiResponseString } from "./common";
-import { PageableObject } from "./common";
 import { SortObject } from "./common";
+import { PageableObject } from "./common";
 
 const PageMapStringObject = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    number: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
     size: z.number().int(),
     content: z.array(z.record(z.object({}).partial().passthrough())),
     numberOfElements: z.number().int(),
+    number: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
+    sort: SortObject.optional(),
     pageable: PageableObject.optional(),
-    sort: z.array(SortObject).optional(),
     empty: z.boolean(),
   })
   .passthrough();

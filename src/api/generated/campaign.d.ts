@@ -498,7 +498,7 @@ export interface components {
             page?: number;
             /** Format: int32 */
             size?: number;
-            sort?: string[];
+            sort?: components["schemas"]["SortObject"];
         };
         ApiResponsePageCampaignResponse: {
             success: boolean;
@@ -513,36 +513,34 @@ export interface components {
             totalPages: number;
             /** Format: int64 */
             totalElements: number;
-            sort?: components["schemas"]["SortObject"][];
-            /** Format: int32 */
-            numberOfElements: number;
-            pageable?: components["schemas"]["PageableObject"];
-            /** Format: int32 */
-            number: number;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["CampaignResponse"][];
+            /** Format: int32 */
+            numberOfElements: number;
+            /** Format: int32 */
+            number: number;
             first: boolean;
             last: boolean;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };
         PageableObject: {
-            sort?: components["schemas"]["SortObject"][];
+            /** Format: int64 */
+            offset: number;
             unpaged: boolean;
+            sort?: components["schemas"]["SortObject"];
             paged: boolean;
             /** Format: int32 */
             pageNumber: number;
             /** Format: int32 */
             pageSize: number;
-            /** Format: int64 */
-            offset: number;
         };
         SortObject: {
-            direction?: string;
-            nullHandling?: string;
-            ascending?: boolean;
-            property?: string;
-            ignoreCase?: boolean;
+            empty: boolean;
+            sorted: boolean;
+            unsorted: boolean;
         };
         ApiResponsePageCampaignPerformanceResponse: {
             success: boolean;
@@ -574,17 +572,17 @@ export interface components {
             totalPages: number;
             /** Format: int64 */
             totalElements: number;
-            sort?: components["schemas"]["SortObject"][];
-            /** Format: int32 */
-            numberOfElements: number;
-            pageable?: components["schemas"]["PageableObject"];
-            /** Format: int32 */
-            number: number;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["CampaignPerformanceResponse"][];
+            /** Format: int32 */
+            numberOfElements: number;
+            /** Format: int32 */
+            number: number;
             first: boolean;
             last: boolean;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };
         ApiResponsePageAdGroupResponse: {
@@ -600,17 +598,17 @@ export interface components {
             totalPages: number;
             /** Format: int64 */
             totalElements: number;
-            sort?: components["schemas"]["SortObject"][];
-            /** Format: int32 */
-            numberOfElements: number;
-            pageable?: components["schemas"]["PageableObject"];
-            /** Format: int32 */
-            number: number;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["AdGroupResponse"][];
+            /** Format: int32 */
+            numberOfElements: number;
+            /** Format: int32 */
+            number: number;
             first: boolean;
             last: boolean;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };
         ApiResponseListAdCreativeResponse: {

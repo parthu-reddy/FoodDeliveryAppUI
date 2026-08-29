@@ -6,8 +6,8 @@ import { OrderItemResponse } from "./common";
 import { ApiResponseVoid } from "./common";
 import { ApiResponsePageOrderResponse } from "./common";
 import { PageOrderResponse } from "./common";
-import { PageableObject } from "./common";
 import { SortObject } from "./common";
+import { PageableObject } from "./common";
 import { ApiResponseListOrderResponse } from "./common";
 
 const OrderItemRequest = z
@@ -15,6 +15,7 @@ const OrderItemRequest = z
   .passthrough();
 const OrderRequest = z
   .object({
+    quoteId: z.string().uuid(),
     customerId: z.string().uuid(),
     customerName: z.string().optional(),
     restaurantId: z.string().uuid(),
@@ -41,6 +42,8 @@ const QuoteRequest = z
   .passthrough();
 const QuoteResponse = z
   .object({
+    quoteId: z.string().uuid(),
+    expiresAt: z.string().datetime({ offset: true }),
     subtotal: z.number(),
     deliveryFee: z.number(),
     platformFee: z.number(),

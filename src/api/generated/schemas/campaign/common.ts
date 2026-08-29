@@ -131,46 +131,39 @@ export const ApiResponseAdvertiserResponse = z
 export const AdvertiserRegistrationRequest = z
   .object({ companyName: z.string(), externalRef: z.string().optional() })
   .passthrough();
+export const SortObject = z
+  .object({ empty: z.boolean(), sorted: z.boolean(), unsorted: z.boolean() })
+  .passthrough();
 export const pageable = z
   .object({
     page: z.number().int().gte(0),
     size: z.number().int().gte(1),
-    sort: z.array(z.string()),
-  })
-  .partial()
-  .passthrough();
-export const SortObject = z
-  .object({
-    direction: z.string(),
-    nullHandling: z.string(),
-    ascending: z.boolean(),
-    property: z.string(),
-    ignoreCase: z.boolean(),
+    sort: SortObject,
   })
   .partial()
   .passthrough();
 export const PageableObject = z
   .object({
-    sort: z.array(SortObject).optional(),
+    offset: z.number().int(),
     unpaged: z.boolean(),
+    sort: SortObject.optional(),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
-    offset: z.number().int(),
   })
   .passthrough();
 export const PageCampaignResponse = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    sort: z.array(SortObject).optional(),
-    numberOfElements: z.number().int(),
-    pageable: PageableObject.optional(),
-    number: z.number().int(),
     size: z.number().int(),
     content: z.array(CampaignResponse),
+    numberOfElements: z.number().int(),
+    number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -187,14 +180,14 @@ export const PageAdGroupResponse = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    sort: z.array(SortObject).optional(),
-    numberOfElements: z.number().int(),
-    pageable: PageableObject.optional(),
-    number: z.number().int(),
     size: z.number().int(),
     content: z.array(AdGroupResponse),
+    numberOfElements: z.number().int(),
+    number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -281,14 +274,14 @@ export const PageCampaignPerformanceResponse = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    sort: z.array(SortObject).optional(),
-    numberOfElements: z.number().int(),
-    pageable: PageableObject.optional(),
-    number: z.number().int(),
     size: z.number().int(),
     content: z.array(CampaignPerformanceResponse),
+    numberOfElements: z.number().int(),
+    number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -305,7 +298,7 @@ export const Pageable = z
   .object({
     page: z.number().int().gte(0),
     size: z.number().int().gte(1),
-    sort: z.array(z.string()),
+    sort: SortObject,
   })
   .partial()
   .passthrough();

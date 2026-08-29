@@ -196,11 +196,11 @@ export interface components {
             totalPages: number;
             /** Format: int64 */
             totalElements: number;
-            first: boolean;
-            last: boolean;
             /** Format: int32 */
             numberOfElements: number;
-            sort?: components["schemas"]["SortObject"][];
+            first: boolean;
+            last: boolean;
+            sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             size: number;
@@ -210,7 +210,7 @@ export interface components {
             empty: boolean;
         };
         PageableObject: {
-            sort?: components["schemas"]["SortObject"][];
+            sort?: components["schemas"]["SortObject"];
             paged: boolean;
             /** Format: int32 */
             pageNumber: number;
@@ -221,11 +221,9 @@ export interface components {
             offset: number;
         };
         SortObject: {
-            direction?: string;
-            nullHandling?: string;
-            ascending?: boolean;
-            property?: string;
-            ignoreCase?: boolean;
+            empty: boolean;
+            sorted: boolean;
+            unsorted: boolean;
         };
     };
     responses: never;

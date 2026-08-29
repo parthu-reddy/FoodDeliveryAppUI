@@ -129,22 +129,15 @@ export const ApiResponseMapStringObject = z
   })
   .passthrough();
 export const SortObject = z
-  .object({
-    direction: z.string(),
-    nullHandling: z.string(),
-    ascending: z.boolean(),
-    property: z.string(),
-    ignoreCase: z.boolean(),
-  })
-  .partial()
+  .object({ empty: z.boolean(), sorted: z.boolean(), unsorted: z.boolean() })
   .passthrough();
 export const PageableObject = z
   .object({
     offset: z.number().int(),
+    sort: SortObject.optional(),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
-    sort: z.array(SortObject).optional(),
     unpaged: z.boolean(),
   })
   .passthrough();
@@ -152,14 +145,14 @@ export const PageOrderResponse = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    number: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
     size: z.number().int(),
     content: z.array(OrderResponse),
     numberOfElements: z.number().int(),
+    number: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
+    sort: SortObject.optional(),
     pageable: PageableObject.optional(),
-    sort: z.array(SortObject).optional(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -240,6 +233,16 @@ export const Order = z
     driverGrossPayout: z.number().optional(),
     driverTaxes: z.number().optional(),
     driverNetPayout: z.number().optional(),
+    quoteId: z.string().uuid().optional(),
+    rateBasePrice: z.number().optional(),
+    ratePerKm: z.number().optional(),
+    rateRestMaxContributionPercent: z.number().optional(),
+    rateFixedPlatformFee: z.number().optional(),
+    ratePlatformExcessCutPercent: z.number().optional(),
+    rateSgstPercent: z.number().optional(),
+    rateCgstPercent: z.number().optional(),
+    rateDeliverySgstPercent: z.number().optional(),
+    rateDeliveryCgstPercent: z.number().optional(),
     refundedAmount: z.number().optional(),
     distanceKm: z.number().optional(),
     deliveryExecutiveId: z.string().uuid().optional(),
@@ -262,7 +265,7 @@ export const pageable = z
   .object({
     page: z.number().int().gte(0),
     size: z.number().int().gte(1),
-    sort: z.array(z.string()),
+    sort: SortObject,
   })
   .partial()
   .passthrough();
@@ -270,14 +273,14 @@ export const PageOrder = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    number: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
     size: z.number().int(),
     content: z.array(Order),
     numberOfElements: z.number().int(),
+    number: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
+    sort: SortObject.optional(),
     pageable: PageableObject.optional(),
-    sort: z.array(SortObject).optional(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -285,14 +288,14 @@ export const PageSupportTicket = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    number: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
     size: z.number().int(),
     content: z.array(SupportTicket),
     numberOfElements: z.number().int(),
+    number: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
+    sort: SortObject.optional(),
     pageable: PageableObject.optional(),
-    sort: z.array(SortObject).optional(),
     empty: z.boolean(),
   })
   .passthrough();

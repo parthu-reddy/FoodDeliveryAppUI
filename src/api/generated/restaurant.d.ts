@@ -1099,6 +1099,12 @@ export interface components {
             customerName?: string;
             riderName?: string;
             itemsJson?: string;
+            totalAmount?: number;
+            foodCost?: number;
+            restaurantPlatformFee?: number;
+            restaurantDeliveryContribution?: number;
+            platformBonus?: number;
+            restaurantPayout?: number;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -1128,35 +1134,33 @@ export interface components {
             /** Format: int64 */
             totalElements: number;
             /** Format: int32 */
+            size: number;
+            content: components["schemas"]["RestaurantOrder"][];
+            /** Format: int32 */
             numberOfElements: number;
             /** Format: int32 */
             number: number;
-            /** Format: int32 */
-            size: number;
-            content: components["schemas"]["RestaurantOrder"][];
-            sort?: components["schemas"]["SortObject"][];
-            pageable?: components["schemas"]["PageableObject"];
             first: boolean;
             last: boolean;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };
         PageableObject: {
             /** Format: int64 */
             offset: number;
+            sort?: components["schemas"]["SortObject"];
             paged: boolean;
-            sort?: components["schemas"]["SortObject"][];
-            unpaged: boolean;
-            /** Format: int32 */
-            pageSize: number;
             /** Format: int32 */
             pageNumber: number;
+            /** Format: int32 */
+            pageSize: number;
+            unpaged: boolean;
         };
         SortObject: {
-            direction?: string;
-            nullHandling?: string;
-            ascending?: boolean;
-            property?: string;
-            ignoreCase?: boolean;
+            empty: boolean;
+            sorted: boolean;
+            unsorted: boolean;
         };
         ApiResponseListMenuItemDTO: {
             success: boolean;
@@ -1224,18 +1228,18 @@ export interface components {
             /** Format: int64 */
             totalElements: number;
             /** Format: int32 */
-            numberOfElements: number;
-            /** Format: int32 */
-            number: number;
-            /** Format: int32 */
             size: number;
             content: {
                 [key: string]: Record<string, never>;
             }[];
-            sort?: components["schemas"]["SortObject"][];
-            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            numberOfElements: number;
+            /** Format: int32 */
+            number: number;
             first: boolean;
             last: boolean;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };
         ApiResponseListCategoryDTO: {

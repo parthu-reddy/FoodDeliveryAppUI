@@ -4,19 +4,12 @@ import { z } from "zod";
 import { DeliveryExecutive } from "./common";
 
 const SortObject = z
-  .object({
-    direction: z.string(),
-    nullHandling: z.string(),
-    ascending: z.boolean(),
-    property: z.string(),
-    ignoreCase: z.boolean(),
-  })
-  .partial()
+  .object({ empty: z.boolean(), sorted: z.boolean(), unsorted: z.boolean() })
   .passthrough();
 const PageableObject = z
   .object({
     offset: z.number().int(),
-    sort: z.array(SortObject).optional(),
+    sort: SortObject.optional(),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
@@ -25,15 +18,15 @@ const PageableObject = z
   .passthrough();
 const PageDeliveryExecutive = z
   .object({
-    totalPages: z.number().int(),
     totalElements: z.number().int(),
-    numberOfElements: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
-    number: z.number().int(),
+    totalPages: z.number().int(),
     size: z.number().int(),
     content: z.array(DeliveryExecutive),
-    sort: z.array(SortObject).optional(),
+    numberOfElements: z.number().int(),
+    number: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
+    sort: SortObject.optional(),
     pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
@@ -50,15 +43,15 @@ const DriverLocationDTO = z
   .passthrough();
 const PageDriverLocationDTO = z
   .object({
-    totalPages: z.number().int(),
     totalElements: z.number().int(),
-    numberOfElements: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
-    number: z.number().int(),
+    totalPages: z.number().int(),
     size: z.number().int(),
     content: z.array(DriverLocationDTO),
-    sort: z.array(SortObject).optional(),
+    numberOfElements: z.number().int(),
+    number: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
+    sort: SortObject.optional(),
     pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
@@ -67,7 +60,7 @@ const pageable = z
   .object({
     page: z.number().int().gte(0),
     size: z.number().int().gte(1),
-    sort: z.array(z.string()),
+    sort: SortObject,
   })
   .partial()
   .passthrough();

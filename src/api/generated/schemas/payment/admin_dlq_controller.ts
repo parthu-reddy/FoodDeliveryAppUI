@@ -2,18 +2,11 @@ import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
 const SortObject = z
-  .object({
-    direction: z.string(),
-    nullHandling: z.string(),
-    ascending: z.boolean(),
-    property: z.string(),
-    ignoreCase: z.boolean(),
-  })
-  .partial()
+  .object({ empty: z.boolean(), sorted: z.boolean(), unsorted: z.boolean() })
   .passthrough();
 const PageableObject = z
   .object({
-    sort: z.array(SortObject).optional(),
+    sort: SortObject.optional(),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
@@ -121,10 +114,10 @@ const PageOutboxEventEntity = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
+    numberOfElements: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
-    numberOfElements: z.number().int(),
-    sort: z.array(SortObject).optional(),
+    sort: SortObject.optional(),
     pageable: PageableObject.optional(),
     size: z.number().int(),
     content: z.array(OutboxEventEntity),

@@ -51,22 +51,15 @@ export const ApiResponseMapStringObject = z
   })
   .passthrough();
 export const SortObject = z
-  .object({
-    direction: z.string(),
-    nullHandling: z.string(),
-    ascending: z.boolean(),
-    property: z.string(),
-    ignoreCase: z.boolean(),
-  })
-  .partial()
+  .object({ empty: z.boolean(), sorted: z.boolean(), unsorted: z.boolean() })
   .passthrough();
 export const PageableObject = z
   .object({
     offset: z.number().int(),
+    sort: SortObject.optional(),
     paged: z.boolean(),
-    sort: z.array(SortObject).optional(),
-    unpaged: z.boolean(),
-    pageSize: z.number().int(),
     pageNumber: z.number().int(),
+    pageSize: z.number().int(),
+    unpaged: z.boolean(),
   })
   .passthrough();

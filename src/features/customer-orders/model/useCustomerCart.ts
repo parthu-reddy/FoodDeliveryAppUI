@@ -358,7 +358,22 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
         return;
       }
 
+      // The order is charged the quoted price, so the quote it was priced from must be sent.
+      // Quotes are refreshed whenever the cart or address changes; if one is missing the customer
+      // has to re-quote rather than have the server invent a price.
+      const rawQuote = quotes[checkoutRestaurantId];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const activeQuote: any = (rawQuote as any)?.data ?? rawQuote;
+      const quoteId: string | undefined = activeQuote?.quoteId;
+      if (!quoteId) {
+        setPaymentStatus('failed');
+        setGlobalError('Your price quote is no longer available. Please review your cart and try again.');
+        isSubmittingOrderRef.current = false;
+        return;
+      }
+
       const orderPayload = {
+        quoteId,
         customerId: profile?.id,
         customerName: profile?.fullName || profile?.name || 'Customer',
         restaurantId: activeCart.restaurant.id,

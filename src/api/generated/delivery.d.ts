@@ -586,30 +586,30 @@ export interface components {
             page?: number;
             /** Format: int32 */
             size?: number;
-            sort?: string[];
+            sort?: components["schemas"]["SortObject"];
         };
         PageDeliveryExecutive: {
-            /** Format: int32 */
-            totalPages: number;
             /** Format: int64 */
             totalElements: number;
             /** Format: int32 */
-            numberOfElements: number;
-            first: boolean;
-            last: boolean;
-            /** Format: int32 */
-            number: number;
+            totalPages: number;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["DeliveryExecutive"][];
-            sort?: components["schemas"]["SortObject"][];
+            /** Format: int32 */
+            numberOfElements: number;
+            /** Format: int32 */
+            number: number;
+            first: boolean;
+            last: boolean;
+            sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };
         PageableObject: {
             /** Format: int64 */
             offset: number;
-            sort?: components["schemas"]["SortObject"][];
+            sort?: components["schemas"]["SortObject"];
             paged: boolean;
             /** Format: int32 */
             pageNumber: number;
@@ -618,11 +618,9 @@ export interface components {
             unpaged: boolean;
         };
         SortObject: {
-            direction?: string;
-            nullHandling?: string;
-            ascending?: boolean;
-            property?: string;
-            ignoreCase?: boolean;
+            empty: boolean;
+            sorted: boolean;
+            unsorted: boolean;
         };
         DriverLocationDTO: {
             /** Format: uuid */
@@ -636,20 +634,20 @@ export interface components {
             status: string;
         };
         PageDriverLocationDTO: {
-            /** Format: int32 */
-            totalPages: number;
             /** Format: int64 */
             totalElements: number;
             /** Format: int32 */
-            numberOfElements: number;
-            first: boolean;
-            last: boolean;
-            /** Format: int32 */
-            number: number;
+            totalPages: number;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["DriverLocationDTO"][];
-            sort?: components["schemas"]["SortObject"][];
+            /** Format: int32 */
+            numberOfElements: number;
+            /** Format: int32 */
+            number: number;
+            first: boolean;
+            last: boolean;
+            sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };

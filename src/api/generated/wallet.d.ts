@@ -204,35 +204,33 @@ export interface components {
             /** Format: int64 */
             totalElements: number;
             /** Format: int32 */
-            numberOfElements: number;
-            first: boolean;
-            last: boolean;
-            /** Format: int32 */
-            number: number;
-            /** Format: int32 */
             size: number;
             content: components["schemas"]["WalletTransactionDto"][];
-            sort?: components["schemas"]["SortObject"][];
+            /** Format: int32 */
+            numberOfElements: number;
+            /** Format: int32 */
+            number: number;
+            first: boolean;
+            last: boolean;
+            sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };
         PageableObject: {
             /** Format: int64 */
             offset: number;
-            sort?: components["schemas"]["SortObject"][];
+            sort?: components["schemas"]["SortObject"];
+            unpaged: boolean;
             paged: boolean;
             /** Format: int32 */
             pageNumber: number;
             /** Format: int32 */
             pageSize: number;
-            unpaged: boolean;
         };
         SortObject: {
-            direction?: string;
-            nullHandling?: string;
-            ascending?: boolean;
-            property?: string;
-            ignoreCase?: boolean;
+            empty: boolean;
+            sorted: boolean;
+            unsorted: boolean;
         };
         WalletTransactionDto: {
             /** Format: uuid */
@@ -275,15 +273,15 @@ export interface components {
             /** Format: int64 */
             totalElements: number;
             /** Format: int32 */
-            numberOfElements: number;
-            first: boolean;
-            last: boolean;
-            /** Format: int32 */
-            number: number;
-            /** Format: int32 */
             size: number;
             content: components["schemas"]["OutboxEventEntity"][];
-            sort?: components["schemas"]["SortObject"][];
+            /** Format: int32 */
+            numberOfElements: number;
+            /** Format: int32 */
+            number: number;
+            first: boolean;
+            last: boolean;
+            sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };

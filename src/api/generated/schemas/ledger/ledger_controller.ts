@@ -31,37 +31,30 @@ const LedgerTransactionDto = z
   })
   .passthrough();
 const SortObject = z
-  .object({
-    direction: z.string(),
-    nullHandling: z.string(),
-    ascending: z.boolean(),
-    property: z.string(),
-    ignoreCase: z.boolean(),
-  })
-  .partial()
+  .object({ empty: z.boolean(), sorted: z.boolean(), unsorted: z.boolean() })
   .passthrough();
 const PageableObject = z
   .object({
     offset: z.number().int(),
-    paged: z.boolean(),
-    sort: z.array(SortObject).optional(),
-    unpaged: z.boolean(),
     pageSize: z.number().int(),
+    paged: z.boolean(),
     pageNumber: z.number().int(),
+    sort: SortObject.optional(),
+    unpaged: z.boolean(),
   })
   .passthrough();
 const PageLedgerTransactionDto = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    numberOfElements: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
-    number: z.number().int(),
     size: z.number().int(),
     content: z.array(LedgerTransactionDto),
-    sort: z.array(SortObject).optional(),
+    numberOfElements: z.number().int(),
+    number: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
     pageable: PageableObject.optional(),
+    sort: SortObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -100,14 +93,14 @@ const PageLedgerEntry = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    numberOfElements: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
-    number: z.number().int(),
     size: z.number().int(),
     content: z.array(LedgerEntry),
-    sort: z.array(SortObject).optional(),
+    numberOfElements: z.number().int(),
+    number: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
     pageable: PageableObject.optional(),
+    sort: SortObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();

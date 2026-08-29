@@ -42,14 +42,14 @@ const PageCampaignResponse = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    sort: z.array(SortObject).optional(),
-    numberOfElements: z.number().int(),
-    pageable: PageableObject.optional(),
-    number: z.number().int(),
     size: z.number().int(),
     content: z.array(CampaignResponse),
+    numberOfElements: z.number().int(),
+    number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -78,14 +78,14 @@ const PageCampaignPerformanceResponse = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    sort: z.array(SortObject).optional(),
-    numberOfElements: z.number().int(),
-    pageable: PageableObject.optional(),
-    number: z.number().int(),
     size: z.number().int(),
     content: z.array(CampaignPerformanceResponse),
+    numberOfElements: z.number().int(),
+    number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();

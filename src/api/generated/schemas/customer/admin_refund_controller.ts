@@ -3,14 +3,15 @@ import { z } from "zod";
 
 import { SupportTicket } from "./common";
 import { PageSupportTicket } from "./common";
-import { PageableObject } from "./common";
 import { SortObject } from "./common";
+import { PageableObject } from "./common";
 
 const ResolveRequest = z
   .object({
     approved: z.boolean(),
     notes: z.string().optional(),
     faultType: z.string().optional(),
+    overrideAmount: z.number().optional(),
   })
   .passthrough();
 
@@ -55,7 +56,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
       {
-        name: "X-Admin-Id",
+        name: "X-User-Id",
         type: "Header",
         schema: z.string().uuid(),
       },
