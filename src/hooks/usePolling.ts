@@ -44,6 +44,7 @@ export function usePolling<T>({
   const [error, setError] = useState<Error | null>(null);
   const isSubscribedRef = useRef(true);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fetchIdRef = useRef(0);
 
   const savedFetchFn = useRef(fetchFn);
   const savedOnData = useRef(onData);
@@ -58,20 +59,21 @@ export function usePolling<T>({
 
   const executeFetch = useCallback(async () => {
     if (!isSubscribedRef.current) return;
+    const fetchId = ++fetchIdRef.current;
     setIsLoading(true);
     setError(null);
     try {
       const result = await savedFetchFn.current();
-      if (!isSubscribedRef.current) return;
+      if (!isSubscribedRef.current || fetchId !== fetchIdRef.current) return;
       setData(result);
       savedOnData.current?.(result);
     } catch (err: unknown) {
-      if (!isSubscribedRef.current) return;
+      if (!isSubscribedRef.current || fetchId !== fetchIdRef.current) return;
       const error = err instanceof Error ? err : new Error(String(err));
       setError(error);
       savedOnError.current?.(error);
     } finally {
-      if (isSubscribedRef.current) {
+      if (isSubscribedRef.current && fetchId === fetchIdRef.current) {
         setIsLoading(false);
       }
     }

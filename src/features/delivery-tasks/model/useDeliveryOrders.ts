@@ -59,9 +59,9 @@ export function useDeliveryOrders({
   const lastActiveCountRef = useRef(0);
 
   // Polling Orders
-  usePolling({
+  const { refetch: refetchPolling } = usePolling({
     fetchFn: async () => {
-    if (!isOnline || !riderId) return;
+    if (!isOnline || !riderId) return null;
 
     let fetchedActiveJobs: Order[] = [];
     let fetchedAvailableJobs: Order[] = [];
@@ -79,19 +79,6 @@ export function useDeliveryOrders({
          if (availableRes) {
             const availableData = getArrayFromRes(availableRes);
             fetchedAvailableJobs = availableData.map((o: unknown) => ({ ...(o as Order), status: ((o as Order).status as string)?.toUpperCase() as OrderStatus || '' as OrderStatus }));
-            if (fetchedAvailableJobs.length > 0) {
-              setRejectedIds(prev => {
-                let changed = false;
-                const newSet = new Set(prev);
-                fetchedAvailableJobs.forEach(job => {
-                  if (newSet.has(job.id)) {
-                    newSet.delete(job.id);
-                    changed = true;
-                  }
-                });
-                return changed ? newSet : prev;
-              });
-            }
          }
       }
 
@@ -112,18 +99,36 @@ export function useDeliveryOrders({
       }
       
       lastActiveCountRef.current = fetchedActiveJobs.length;
-      
-      setInternalOrders(() => {
-        const mergedMap = new Map();
-        historyRef.current.forEach(j => mergedMap.set(j.id, j));
-        fetchedActiveJobs.forEach(j => mergedMap.set(j.id, j));
-        fetchedAvailableJobs.forEach(j => mergedMap.set(j.id, j));
-        return Array.from(mergedMap.values());
-      });
+      return { fetchedActiveJobs, fetchedAvailableJobs };
     } catch (err: unknown) {
       console.error(err);
+      return null;
     }
   }, 
+  onData: (data) => {
+    if (!data) return;
+    const { fetchedActiveJobs, fetchedAvailableJobs } = data;
+    setInternalOrders(() => {
+      const mergedMap = new Map();
+      historyRef.current.forEach(j => mergedMap.set(j.id, j));
+      fetchedActiveJobs.forEach(j => mergedMap.set(j.id, j));
+      fetchedAvailableJobs.forEach(j => mergedMap.set(j.id, j));
+      return Array.from(mergedMap.values());
+    });
+    if (fetchedAvailableJobs.length > 0) {
+      setRejectedIds(prev => {
+        let changed = false;
+        const newSet = new Set(prev);
+        fetchedAvailableJobs.forEach(job => {
+          if (newSet.has(job.id)) {
+            newSet.delete(job.id);
+            changed = true;
+          }
+        });
+        return changed ? newSet : prev;
+      });
+    }
+  },
   intervalMs: 5000, 
   enabled: isOnline 
 });
@@ -319,39 +324,7 @@ export function useDeliveryOrders({
               return prev;
             });
             
-            const pingRes = await deliveryApi.deliveryOrder.get(`/api/v1/delivery/orders/available`, {});
-            const pingData = pingRes;
-            if (pingData && (pingData as unknown[]).length > 0) {
-              // Annotated: spreading into an object literal drops Order's index signature, which is
-              // what makes passthrough fields such as remainingPingSeconds reachable.
-              const jobs: Order[] = (pingData as unknown[]).map((o: unknown) => ({ ...(o as Order), status: ((o as Order).status as string)?.toUpperCase() as OrderStatus || '' as OrderStatus }));
-              setRejectedIds(prev => {
-                let changed = false;
-                const newSet = new Set(prev);
-                jobs.forEach(job => {
-                  if (newSet.has(job.id)) {
-                    newSet.delete(job.id);
-                    changed = true;
-                  }
-                });
-                return changed ? newSet : prev;
-              });
-              setInternalOrders(prev => {
-                const mergedMap = new Map();
-                prev.forEach(j => mergedMap.set(j.id, j));
-                jobs.forEach((j: Order) => mergedMap.set(j.id, j));
-                return Array.from(mergedMap.values());
-              });
-              setPingJob(jobs[0]);
-              if (jobs[0].remainingPingSeconds !== undefined) {
-                setPingTimer(jobs[0].remainingPingSeconds);
-              } else if (jobs[0].expiresAt) {
-                const remainingSecs = Math.max(0, Math.floor((new Date(jobs[0].expiresAt).getTime() - Date.now()) / 1000));
-                setPingTimer(remainingSecs);
-              } else {
-                setPingTimer(60);
-              }
-            }
+            refetchPolling();
           }
         } catch (e: unknown) {
           console.error("Failed to parse websocket message", e);
@@ -391,7 +364,7 @@ export function useDeliveryOrders({
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOnline, riderId, cityId]);
+  }, [isOnline, riderId, cityId, refetchPolling]);
 
   // Current active job handling and SSE for status updates
   const currentJob = activeOrders.find(o => o.id === activeJobId && o.deliveryStatus !== DeliveryStatus.DELIVERED);
