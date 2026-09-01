@@ -31,25 +31,40 @@ const PORT = Number(process.env.PORT) || 3000;
 const API_GATEWAY_URL = process.env.API_GATEWAY_URL || 'http://localhost:8080';
 const OLA_MAPS_API_KEY = process.env.OLA_MAPS_API_KEY || process.env.VITE_OLA_MAPS_API_KEY || '';
 
-// Proxy all /olamaps/** requests to api.olamaps.io and attach the API key
+// Intercept Ola Maps style.json to remove the sprite URL which is currently returning 404 from Ola Maps
+app.get('/olamaps/tiles/vector/v1/styles/:styleId/style.json', async (req, res) => {
+  try {
+    const styleId = req.params.styleId;
+    const fetchUrl = `${API_GATEWAY_URL}/olamaps/tiles/vector/v1/styles/${styleId}/style.json`;
+    const response = await fetch(fetchUrl);
+    if (!response.ok) {
+      return res.status(response.status).send(await response.text());
+    }
+    const data = await response.json() as { sprite?: string };
+    if (data.sprite) {
+      delete data.sprite;
+    }
+    res.json(data);
+  } catch (error) {
+    logger.error({ err: error }, 'Failed to fetch Ola Maps style via API Gateway');
+    res.status(502).json({ success: false, message: 'Failed to fetch Ola Maps style via API Gateway' });
+  }
+});
+
+// Proxy all /olamaps/** requests to the API Gateway
 app.use(
   '/olamaps',
   createProxyMiddleware({
-    target: 'https://api.olamaps.io',
+    target: API_GATEWAY_URL,
     changeOrigin: true,
-    pathRewrite: { '^/olamaps': '' },
+    // Do not strip /olamaps since ApiGateway expects it for its routing
     on: {
-      proxyReq: (proxyReq) => {
-        const separator = proxyReq.path.includes('?') ? '&' : '?';
-        proxyReq.path = `${proxyReq.path}${separator}api_key=${OLA_MAPS_API_KEY}`;
-      },
-       
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       error: (err, req, res: any) => {
-        logger.error({ err }, `[proxy] Error forwarding Ola Maps request: ${err.message}`);
+        logger.error({ err }, `[proxy] Error forwarding Ola Maps request via API Gateway: ${err.message}`);
         if (res && res.writeHead) {
           res.writeHead(502, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ success: false, message: 'Ola Maps unreachable: ' + err.message }));
+          res.end(JSON.stringify({ success: false, message: 'API Gateway unreachable for Ola Maps: ' + err.message }));
         }
       },
     },
