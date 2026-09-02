@@ -7,3 +7,4 @@ export { RoleName as UserRole };
     export * from '../schemas/menu';
     export * from '../schemas/order';
     export * from '../schemas/restaurant';
+    export * from '../schemas/support-ticket';

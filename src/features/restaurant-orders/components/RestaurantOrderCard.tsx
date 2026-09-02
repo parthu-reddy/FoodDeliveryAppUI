@@ -43,6 +43,7 @@ interface RestaurantOrderCardProps {
   isCooking?: boolean;
   isPrepared?: boolean;
   isBeingDelivered?: boolean;
+  isRefundRequest?: boolean;
 
   // Actions
   handleStatusTransition: (order: Order) => void;
@@ -64,6 +65,7 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
   isCooking,
   isPrepared,
   isBeingDelivered,
+  isRefundRequest,
   handleStatusTransition,
   setSelectedChatOrder,
   handleCardCancelSubmit,
@@ -272,6 +274,12 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
               >
                 Cancel
               </Button>
+            )}
+            
+            {isRefundRequest && (
+              <Badge variant="destructive" className="animate-pulse">
+                Action Required: Refund
+              </Badge>
             )}
 
             {isNewPlaced && (

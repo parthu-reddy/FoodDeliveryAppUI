@@ -72,7 +72,7 @@ export default function RestaurantDashboard({
   const { theme, toggleTheme } = useTheme();
   const { showError, showSuccess } = useToast();
 
-  const { internalOrders, setInternalOrders, activeOrders, onUpdateOrderStatus } = useRestaurantOrders({
+  const { internalOrders, setInternalOrders, activeOrders, onUpdateOrderStatus, refundRequests } = useRestaurantOrders({
     restaurantId: localStorage.getItem('restaurant_selectedOutletId') || '',
     onAddApiLog,
     showError,
@@ -592,6 +592,7 @@ export default function RestaurantDashboard({
                 pendingOrders={pendingOrders}
                 activePreparing={activePreparing}
                 myOrders={internalOrders}
+                refundRequests={refundRequests}
                 cardDelayStatus={cardDelayStatus}
                 handleCardCancelSubmit={handleCardCancelSubmit}
                 handleCardDelaySubmit={handleCardDelaySubmit}

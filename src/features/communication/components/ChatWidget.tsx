@@ -4,8 +4,9 @@ import { chatApi } from "@/lib/zodiosClients";
 import { type ChatMessage, type TypingIndicator } from "@/types";
 import { useChatWebSocket } from "@features/communication/models/useChatWebSocket";
 import { ImagePlus, Loader2, MessageSquare, PhoneCall, PhoneOff, Send, X } from 'lucide-react';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState, useImperativeHandle } from 'react';
 import { asUntyped } from '../../../lib/untypedResponse';
+import { RefundRequestModal } from './RefundRequestModal';
 
 export interface ChatParticipant {
   userId: string;
@@ -39,13 +40,13 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
   const [isLoading, setIsLoading] = useState(false);
   const [isTyping, setIsTyping] = useState<Record<string, boolean>>({});
   const [targetUserId, setTargetUserId] = useState<string | null>(null);
-  const [pendingRefundAction, setPendingRefundAction] = useState<boolean>(false);
+  const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
 
-  React.useImperativeHandle(ref, () => ({
+  useImperativeHandle(ref, () => ({
     openAndRequestRefundQuote: () => {
       setIsOpen(true);
       setUnreadCount(0);
-      setPendingRefundAction(true);
+      setIsRefundModalOpen(true);
     },
     openChatOnly: () => {
       setIsOpen(true);
@@ -123,12 +124,17 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
     onTypingIndicator: handleTypingIndicator,
   });
 
-  useEffect(() => {
-    if (isConnected && pendingRefundAction && orderId) {
-      sendMessage(JSON.stringify({ orderId }), 'REFUND_QUOTE_REQUEST');
-      setPendingRefundAction(false);
+  const handleRefundSubmit = (items: { itemId: string; quantity: number }[], reason: string) => {
+    if (isConnected && orderId) {
+      sendMessage(JSON.stringify({ 
+        orderId, 
+        refundType: "PARTIAL", 
+        reason,
+        items 
+      }), 'REFUND_QUOTE_REQUEST');
+      setIsRefundModalOpen(false);
     }
-  }, [isConnected, pendingRefundAction, orderId, sendMessage]);
+  };
 
   const uploadedImageCount = messages.filter(
     (msg) => msg.messageType === 'IMAGE' && msg.senderId === user?.id
@@ -213,8 +219,6 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
     setIsLoading(false);
   };
  
-
-
 
   // The floating chat button
   if (!isOpen) {
@@ -405,15 +409,22 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
                         </div>
                       );
                     } catch { return <span>Invalid decision response</span>; }
-                  })() : msg.messageType === 'REFUND_ERROR' ? (
-                    <div className="flex flex-col space-y-1 p-2">
-                      <div className="flex items-center space-x-2 text-red-500 font-bold">
-                        <span>❌</span>
-                        <span>Request Failed</span>
+                  })() : msg.messageType === 'REFUND_ERROR' ? (() => {
+                    let errorMessage = msg.content;
+                    try {
+                      const payload = JSON.parse(msg.content);
+                      errorMessage = payload.error || payload.message || msg.content;
+                    } catch { /* ignore */ }
+                    return (
+                      <div className="flex flex-col space-y-1 p-2">
+                        <div className="flex items-center space-x-2 text-red-500 font-bold">
+                          <span>❌</span>
+                          <span>Request Failed</span>
+                        </div>
+                        <span className="text-sm">{errorMessage}</span>
                       </div>
-                      <span className="text-sm">{msg.content}</span>
-                    </div>
-                  ) : msg.messageType === 'REFUND_QUOTE_REQUEST' || msg.messageType === 'REFUND_REQUEST' ? (
+                    );
+                  })() : msg.messageType === 'REFUND_QUOTE_REQUEST' || msg.messageType === 'REFUND_REQUEST' ? (
                     <div className="flex items-center space-x-2 p-1 opacity-90">
                       <Loader2 className="w-4 h-4 animate-spin" />
                       <span className="text-sm font-medium">
@@ -502,6 +513,16 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
           </button>
         </div>
       </form>
+      
+      {/* Refund Request Modal */}
+      {orderId && (
+        <RefundRequestModal
+          isOpen={isRefundModalOpen}
+          onClose={() => setIsRefundModalOpen(false)}
+          orderId={orderId}
+          onSubmit={handleRefundSubmit}
+        />
+      )}
     </div>
   );
 });

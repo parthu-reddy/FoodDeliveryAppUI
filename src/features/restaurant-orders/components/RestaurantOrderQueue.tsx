@@ -33,6 +33,7 @@ interface RestaurantOrderQueueProps {
   pendingOrders: Order[];
   activePreparing: Order[];
   myOrders: Order[];
+  refundRequests?: any[];
 
   cardDelayStatus: Record<string, { minutes: number, reason: string }>;
 
@@ -52,6 +53,7 @@ export const RestaurantOrderQueue = React.memo(function RestaurantOrderQueue({
   pendingOrders,
   activePreparing,
   myOrders,
+  refundRequests = [],
   cardDelayStatus,
   handleCardCancelSubmit,
   handleCardDelaySubmit,
@@ -126,6 +128,52 @@ export const RestaurantOrderQueue = React.memo(function RestaurantOrderQueue({
                     handleCardPartialRefundSubmit={handleCardPartialRefundSubmit}
                   />
                 ))
+              )}
+            </div>
+          </div>
+
+          {/* COLUMN 1.5: Active Refund Requests */}
+          <div className="w-[85%] xs:w-[310px] sm:w-[350px] shrink-0 snap-center flex flex-col glass-panel p-4 min-h-[480px]">
+            <div className="flex items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 pb-3 mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-indigo-500 animate-ping" />
+                <span className="font-extrabold text-xs text-slate-800 dark:text-[#f0ede6] uppercase font-sans tracking-wide">Active Refunds</span>
+              </div>
+              <span className="text-[10px] font-black font-mono bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 px-2.5 py-0.5 rounded-full border border-indigo-500/20">
+                {refundRequests.length}
+              </span>
+            </div>
+
+            <div className="flex-1 space-y-3.5 overflow-y-auto h-[500px] scrollbar-thin pr-1">
+              {refundRequests.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-center py-16 px-4 animate-in fade-in slide-in-from-bottom-4 duration-500 bg-white/40 dark:bg-slate-900/10 border border-dashed border-rose-500/20 dark:border-rose-500/30 rounded-2xl">
+                  <div className="relative mb-4">
+                    <div className="absolute inset-0 bg-indigo-500/20 dark:bg-indigo-500/10 rounded-full blur-xl animate-pulse"></div>
+                    <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-lg border border-slate-100 dark:border-slate-700 relative z-10">
+                      <RefreshCw className="w-8 h-8 text-indigo-400 dark:text-indigo-500" strokeWidth={1.5} />
+                    </div>
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-800 dark:text-[#f0ede6]">No active requests</h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 max-w-[180px]">Customer refund requests will appear here for review.</p>
+                </div>
+              ) : (
+                refundRequests.slice().reverse().map(ticket => {
+                  const orderMatch = myOrders.find(o => o.id === ticket.orderId);
+                  if (!orderMatch) return null;
+                  return (
+                    <RestaurantOrderCard
+                      key={ticket.id}
+                      order={orderMatch}
+                      cardDelayStatus={cardDelayStatus}
+                      isRefundRequest={true}
+                      handleStatusTransition={handleStatusTransition}
+                      setSelectedChatOrder={setSelectedChatOrder}
+                      handleCardCancelSubmit={handleCardCancelSubmit}
+                      handleCardDelaySubmit={handleCardDelaySubmit}
+                      handleCardPartialRefundSubmit={handleCardPartialRefundSubmit}
+                    />
+                  );
+                })
               )}
             </div>
           </div>
