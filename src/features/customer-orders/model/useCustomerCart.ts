@@ -463,10 +463,26 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
           errorMsg = "This restaurant is too far for delivery to your location.";
         } else if (errorCode === 'NO_DELIVERY_PARTNER_NEARBY') {
           errorMsg = "All our delivery partners are currently busy. Please try again in a few minutes.";
+        } else if (errorCode === 'QUOTE_EXPIRED') {
+          try {
+            customerApi.order.post('/api/v1/orders/quote', {
+              restaurantId: checkoutRestaurantId,
+              deliveryAddressId: finalAddressId,
+              items: activeCart.items.map(item => ({
+                menuItemId: item.item.id as string,
+                quantity: item.quantity
+              }))
+            }).then(res => {
+              setQuotes(prev => ({ ...prev, [checkoutRestaurantId]: res }));
+            });
+            errorMsg = "Your quote expired. We have updated your cart with the latest values. Please review and try again.";
+          } catch (quoteErr) {
+            errorMsg = "Your quote expired and we couldn't refresh it. Please review your cart.";
+          }
         }
 
         setGlobalError(errorMsg);
-        setTimeout(() => setGlobalError(null), 4000);
+        setTimeout(() => setGlobalError(null), errorCode === 'QUOTE_EXPIRED' ? 6000 : 4000);
       }
     }
   };
