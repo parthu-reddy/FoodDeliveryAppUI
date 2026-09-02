@@ -122,7 +122,7 @@ export const RefundRequestModal: React.FC<RefundRequestModalProps> = ({
                   <div>
                     <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">Select Items to Refund</h4>
                     <div className="space-y-3">
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                       {order.items?.map((item: any, idx: number) => {
                         const itemId = item.item?.id || item.id || `item-${idx}`;
                         const itemName = item.item?.name || item.name || 'Unknown Item';

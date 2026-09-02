@@ -29,13 +29,13 @@ const logsLimiter = rateLimit({
 
 const PORT = Number(process.env.PORT) || 3000;
 const API_GATEWAY_URL = process.env.API_GATEWAY_URL || 'http://localhost:8080';
-const OLA_MAPS_API_KEY = process.env.OLA_MAPS_API_KEY || process.env.VITE_OLA_MAPS_API_KEY || '';
 
 // Intercept Ola Maps style.json to remove the sprite URL which is currently returning 404 from Ola Maps
 app.get('/olamaps/tiles/vector/v1/styles/:styleId/style.json', async (req, res) => {
   try {
     const styleId = req.params.styleId;
     const fetchUrl = `${API_GATEWAY_URL}/olamaps/tiles/vector/v1/styles/${styleId}/style.json`;
+    // eslint-disable-next-line no-restricted-syntax
     const response = await fetch(fetchUrl);
     if (!response.ok) {
       return res.status(response.status).send(await response.text());

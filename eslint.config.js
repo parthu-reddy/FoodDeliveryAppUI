@@ -86,7 +86,8 @@ export default tseslint.config(
       "src/features/customer-orders/components/CustomerAddressModal.tsx",   // /olamaps/* proxy
       "src/features/customer-orders/components/CustomerAddressSelectorModal.tsx",
       "src/features/customer-orders/components/CustomerAddressPage.tsx",    // /api/places/geocode on the BFF
-      "src/features/kyc/components/DocumentUploadField.tsx"                 // presigned-URL upload, not a service API
+      "src/features/kyc/components/DocumentUploadField.tsx",                // presigned-URL upload, not a service API
+      "src/features/restaurant-orders/model/useRestaurantOrders.ts"         // missing from OpenAPI spec
     ],
     rules: {
       "no-restricted-syntax": "off"

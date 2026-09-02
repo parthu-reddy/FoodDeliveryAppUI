@@ -107,13 +107,14 @@ export function useRestaurantOrders({
     onError: (err) => console.error("Failed to poll orders", err)
   });
 
-  const [refundRequests, setRefundRequests] = useState<any[]>([]);
+  const [refundRequests, setRefundRequests] = useState<unknown[]>([]);
 
   const fetchRefundRequests = useCallback(async () => {
     if (!selectedOutletId) return [];
     try {
       const url = `${import.meta.env.VITE_API_BASE_URL || ''}/api/v1/internal/restaurants/outlets/${selectedOutletId}/refund-requests`;
       const token = localStorage.getItem('token');
+       
       const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
       if (res.ok) {
         const json = await res.json();
@@ -125,7 +126,7 @@ export function useRestaurantOrders({
     return [];
   }, [selectedOutletId]);
 
-  usePolling<any[]>({
+  usePolling<unknown[]>({
     fetchFn: fetchRefundRequests,
     intervalMs: 10000,
     enabled: !!selectedOutletId,

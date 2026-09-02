@@ -9,7 +9,6 @@ import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useToast } from '../../contexts/ToastContext';
 import { customerApi, identityApi, walletApi } from '../../lib/zodiosClients';
-import { DeliveryStatus, OrderStatus } from '../../types';
 import { fromContract, asUntyped } from '../../lib/untypedResponse';
 
 const sharedProfileSchema = z.object({
@@ -44,7 +43,7 @@ interface SharedSettingsViewProps {
 export default function SharedSettingsView({
   onBack,
   showCustomerTabs = false,
-  setTrackingOrder,
+  _setTrackingOrder,
   savedAddresses = [],
   initialTab = 'profile',
   isAddressModalOpen = false,
