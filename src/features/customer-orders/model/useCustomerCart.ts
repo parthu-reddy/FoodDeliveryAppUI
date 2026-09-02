@@ -465,18 +465,20 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
           errorMsg = "All our delivery partners are currently busy. Please try again in a few minutes.";
         } else if (errorCode === 'QUOTE_EXPIRED') {
           try {
-            customerApi.order.post('/api/v1/orders/quote', {
+            console.log("Attempting to refresh quote...");
+            const res = await customerApi.order.post('/api/v1/orders/quote', {
               restaurantId: checkoutRestaurantId,
               deliveryAddressId: finalAddressId,
               items: activeCart.items.map(item => ({
                 menuItemId: item.item.id as string,
                 quantity: item.quantity
               }))
-            }).then(res => {
-              setQuotes(prev => ({ ...prev, [checkoutRestaurantId]: res }));
             });
+            console.log("Refreshed quote:", res);
+            setQuotes(prev => ({ ...prev, [checkoutRestaurantId]: res }));
             errorMsg = "Your quote expired. We have updated your cart with the latest values. Please review and try again.";
           } catch (quoteErr) {
+            console.error("Failed to refresh quote:", quoteErr);
             errorMsg = "Your quote expired and we couldn't refresh it. Please review your cart.";
           }
         }
