@@ -223,14 +223,32 @@ export default function DeliveryDashboard({
           console.error("Failed to toggle status", e);
         }
       },
-      (error) => {
+      async (error) => {
         setShowPermissionsPrompt(false);
-        showToast(
-          "Location permission is required. Please enable in browser settings if denied."
-        );
         console.error("Error getting location", error);
+        
+        // If permission is denied, block going online
+        if (error.code === error.PERMISSION_DENIED) {
+          showToast(
+            "Location permission is required. Please enable in browser settings if denied."
+          );
+        } else {
+          // If it's a timeout or position unavailable (e.g. on desktop/emulator), 
+          // still allow going online since they granted permission.
+          showToast("Warning: Could not determine exact location, but proceeding online.");
+          try {
+            await deliveryApi.deliveryExecutive.post(
+              `/api/delivery/status`,
+              { driverId: riderId, available: true },
+              {}
+            );
+            setIsOnline(true);
+          } catch (e: unknown) {
+            console.error("Failed to toggle status", e);
+          }
+        }
       },
-      { enableHighAccuracy: true }
+      { enableHighAccuracy: true, timeout: 10000 }
     );
   };
 
@@ -273,11 +291,25 @@ export default function DeliveryDashboard({
               console.error("Failed to toggle status", e);
             }
           },
-          (error) => {
-            setShowPermissionsPrompt(true);
+          async (error) => {
             console.error("Error getting location", error);
+            if (error.code === error.PERMISSION_DENIED) {
+              setShowPermissionsPrompt(true);
+            } else {
+              showToast("Warning: Could not determine exact location, but proceeding online.");
+              try {
+                await deliveryApi.deliveryExecutive.post(
+                  `/api/delivery/status`,
+                  { driverId: riderId, available: true },
+                  {}
+                );
+                setIsOnline(true);
+              } catch (e: unknown) {
+                console.error("Failed to toggle status", e);
+              }
+            }
           },
-          { enableHighAccuracy: true }
+          { enableHighAccuracy: true, timeout: 10000 }
         );
       } else {
         setShowPermissionsPrompt(true);
