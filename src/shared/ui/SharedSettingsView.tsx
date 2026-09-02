@@ -43,7 +43,8 @@ interface SharedSettingsViewProps {
 export default function SharedSettingsView({
   onBack,
   showCustomerTabs = false,
-  _setTrackingOrder,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  setTrackingOrder,
   savedAddresses = [],
   initialTab = 'profile',
   isAddressModalOpen = false,

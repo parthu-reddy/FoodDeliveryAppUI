@@ -33,7 +33,7 @@ interface RestaurantOrderQueueProps {
   pendingOrders: Order[];
   activePreparing: Order[];
   myOrders: Order[];
-  refundRequests?: unknown[];
+  refundRequests?: { id: string; orderId: string; [key: string]: unknown }[];
 
   cardDelayStatus: Record<string, { minutes: number, reason: string }>;
 

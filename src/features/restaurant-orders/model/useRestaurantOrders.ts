@@ -62,7 +62,7 @@ export function useRestaurantOrders({
     if (!selectedOutletId) return [];
     const res = await restaurantApi.fulfillment.get('/api/v1/restaurants/:restaurantId/fulfillment/orders/active', { params: { restaurantId: selectedOutletId } });
     if (res.data) {
-      const activeOrdersData = fromContract<unknown[]>(res.data || []);
+      const activeOrdersData = fromContract<{ id: string; orderId: string; [key: string]: unknown }[]>(res.data || []);
       const mapped = activeOrdersData.map((o: unknown) => {
         const orderData = o as Order & { itemsJson?: string, orderId?: string, totalAmount?: number };
         const s = orderData.status?.toUpperCase() || '';
@@ -107,7 +107,7 @@ export function useRestaurantOrders({
     onError: (err) => console.error("Failed to poll orders", err)
   });
 
-  const [refundRequests, setRefundRequests] = useState<unknown[]>([]);
+  const [refundRequests, setRefundRequests] = useState<{ id: string; orderId: string; [key: string]: unknown }[]>([]);
 
   const fetchRefundRequests = useCallback(async () => {
     if (!selectedOutletId) return [];
@@ -126,7 +126,7 @@ export function useRestaurantOrders({
     return [];
   }, [selectedOutletId]);
 
-  usePolling<unknown[]>({
+  usePolling<{ id: string; orderId: string; [key: string]: unknown }[]>({
     fetchFn: fetchRefundRequests,
     intervalMs: 10000,
     enabled: !!selectedOutletId,
