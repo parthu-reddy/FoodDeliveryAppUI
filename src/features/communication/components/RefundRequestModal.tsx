@@ -24,27 +24,33 @@ export const RefundRequestModal: React.FC<RefundRequestModalProps> = ({
   const [reason, setReason] = useState('');
 
   useEffect(() => {
-    if (isOpen && orderId && !order) {
-      setLoading(true);
-      customerApi.customerOrder
-        .get(`/api/v1/customer/orders/${orderId}`)
-        .then((res: any) => {
-          setOrder(res.data?.data || res.data);
-        })
-        .catch((err: any) => {
+    let isMounted = true;
+    const fetchOrder = async () => {
+      if (isOpen && orderId && !order) {
+        setLoading(true);
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const res: any = await customerApi.order.get('/api/v1/orders/:orderId', { params: { orderId } });
+          if (isMounted) setOrder(res.data?.data || res.data);
+        } catch (err) {
           console.error('Failed to fetch order details for refund', err);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    }
+        } finally {
+          if (isMounted) setLoading(false);
+        }
+      }
+    };
+    fetchOrder();
+    return () => { isMounted = false; };
   }, [isOpen, orderId, order]);
 
   // Reset state when closed
   useEffect(() => {
     if (!isOpen) {
-      setSelectedItems({});
-      setReason('');
+      const reset = () => {
+        setSelectedItems({});
+        setReason('');
+      };
+      reset();
     }
   }, [isOpen]);
 
@@ -116,6 +122,7 @@ export const RefundRequestModal: React.FC<RefundRequestModalProps> = ({
                   <div>
                     <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">Select Items to Refund</h4>
                     <div className="space-y-3">
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       {order.items?.map((item: any, idx: number) => {
                         const itemId = item.item?.id || item.id || `item-${idx}`;
                         const itemName = item.item?.name || item.name || 'Unknown Item';

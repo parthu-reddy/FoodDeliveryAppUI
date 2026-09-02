@@ -468,7 +468,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
             console.log("Attempting to refresh quote...");
             const res = await customerApi.order.post('/api/v1/orders/quote', {
               restaurantId: checkoutRestaurantId,
-              deliveryAddressId: finalAddressId,
+              deliveryAddressId: deliveryAddressId,
               items: activeCart.items.map(item => ({
                 menuItemId: item.item.id as string,
                 quantity: item.quantity

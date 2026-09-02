@@ -277,7 +277,7 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
             )}
             
             {isRefundRequest && (
-              <Badge variant="destructive" className="animate-pulse">
+              <Badge variant="danger" className="animate-pulse">
                 Action Required: Refund
               </Badge>
             )}
