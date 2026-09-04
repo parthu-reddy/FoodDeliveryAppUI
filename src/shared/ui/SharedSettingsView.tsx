@@ -9,8 +9,7 @@ import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useToast } from '../../contexts/ToastContext';
 import { customerApi, identityApi, walletApi } from '../../lib/zodiosClients';
-import { fromContract } from '../../lib/untypedResponse';
-
+import { fromContract, asUntyped } from '../../lib/untypedResponse';
 const sharedProfileSchema = z.object({
   name: z.string().min(1, 'Please enter your full name.').max(100, 'Name cannot exceed 100 characters.'),
   email: z.string().min(1, 'Please enter your email address.').email('Please enter a valid email address.').max(255, 'Email cannot exceed 255 characters.')
@@ -77,7 +76,6 @@ export default function SharedSettingsView({
   const [editPhone, setEditPhone] = useState('');
   const [userId, setUserId] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-  const [txTotalPages, setTxTotalPages] = useState(1);
 
   const [paginatedOrders, setPaginatedOrders] = useState<Order[]>([]);
   const [currentPageOrders, setCurrentPageOrders] = useState(0);
