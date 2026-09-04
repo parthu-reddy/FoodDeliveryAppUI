@@ -5,7 +5,7 @@ import { deliveryApi, identityApi, walletApi } from "@/lib/zodiosClients";
 import { useToast } from '@/contexts/ToastContext';
 import ImageUploadField from "@features/kyc/components/ImageUploadField";
 
-import { Badge, Button, Input, Modal, Spinner, TransactionHistoryTable, WalletTransaction, ActiveSessions } from "@shared/ui";
+import { TransactionHistoryTable, WalletTransaction, ActiveSessions } from "@shared/ui";
 import { z } from 'zod';
 
 import { fromContract } from '../../../lib/untypedResponse';
