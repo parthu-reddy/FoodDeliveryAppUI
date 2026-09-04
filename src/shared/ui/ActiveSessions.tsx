@@ -6,7 +6,7 @@ import { asUntyped } from '../../lib/untypedResponse';
 
 export interface ActiveSessionsProps {
   callingService: string;
-  onAddApiLog?: (log: any) => void;
+  onAddApiLog?: (log: { id: string; label: string; method: string }) => void;
 }
 
 export function ActiveSessions({ callingService, onAddApiLog }: ActiveSessionsProps) {
@@ -60,6 +60,7 @@ export function ActiveSessions({ callingService, onAddApiLog }: ActiveSessionsPr
 
   useEffect(() => {
     loadSessions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

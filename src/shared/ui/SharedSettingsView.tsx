@@ -2,7 +2,7 @@ import type { Order } from '../../schemas/order';
 /* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps, react-hooks/immutability */
 import CustomerAddressModal from "@features/customer-orders/components/CustomerAddressModal";
 import { getFriendlyStatusMessage } from '@features/customer-orders/model/statusMessaging';
-import { Badge, Button, FormField, Input, Spinner, TransactionHistoryTable, WalletTransaction, ActiveSessions } from "@shared/ui";
+import { Badge, Button, FormField, Input, TransactionHistoryTable, WalletTransaction, ActiveSessions } from "@shared/ui";
 import { LogOut, MapPin, Trash2, X } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useEffect, useState } from 'react';

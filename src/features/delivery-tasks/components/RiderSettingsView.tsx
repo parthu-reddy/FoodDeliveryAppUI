@@ -54,7 +54,7 @@ export default function RiderSettingsView({
   const [isSaving, setIsSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const { showSuccess, showError } = useToast();
+  const { showSuccess } = useToast();
   
   // Wallet State
   const [walletBalance, setWalletBalance] = useState<number>(0);
