@@ -215,7 +215,7 @@ export const useWebRTC = () => {
     }
   };
 
-  // 2. Cleanup call if user logs out
+  // 2. Cleanup call if user logs out or component unmounts
   useEffect(() => {
     if (!token) {
        
@@ -223,6 +223,13 @@ export const useWebRTC = () => {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
+
+  useEffect(() => {
+    return () => {
+      cleanupCall();
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const processPendingCandidates = async () => {
     if (!peerConnectionRef.current) return;
@@ -446,6 +453,13 @@ export const useWebRTC = () => {
         throw new Error("Media devices API not available. HTTPS is required.");
       }
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      
+      // If the component unmounted or the call was cleaned up while waiting for user permission
+      if (peerConnectionRef.current !== pc) {
+        stream.getTracks().forEach(track => track.stop());
+        return null;
+      }
+      
       localStreamRef.current = stream;
       stream.getTracks().forEach(track => pc.addTrack(track, stream));
     } catch (err: unknown) {

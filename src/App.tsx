@@ -73,40 +73,42 @@ function AppContent() {
               </ZodErrorBoundary>
             </div>
           ) : (
-            <div className="flex-1 flex flex-col w-full h-full overflow-hidden relative">
-              {userRole === RoleName.CUSTOMER && (
-                <ZodErrorBoundary contextName="Customer Dashboard">
-                  <CustomerDashboard 
-                    userName={userName || 'Customer'} 
-                    userPhone={phone}
-                    onLogout={handleLogout}
-                  />
-                </ZodErrorBoundary>
-              )}
-              {userRole === RoleName.RESTAURANT && (
-                <ZodErrorBoundary contextName="Restaurant Dashboard">
-                  <RestaurantDashboard 
-                    restaurantId=""
-                    onLogout={handleLogout}
-                  />
-                </ZodErrorBoundary>
-              )}
-              {userRole === RoleName.DELIVERY && (
-                <ZodErrorBoundary contextName="Delivery Dashboard">
-                  <DeliveryDashboard 
-                    riderPhone={phone}
-                    onLogout={handleLogout}
-                  />
-                </ZodErrorBoundary>
-              )}
-              {userRole === RoleName.ADMIN && (
-                <ZodErrorBoundary contextName="Admin Portal">
-                  <AdminPortal 
-                    onLogout={handleLogout}
-                  />
-                </ZodErrorBoundary>
-              )}
-            </div>
+            <CallProvider>
+              <div className="flex-1 flex flex-col w-full h-full overflow-hidden relative">
+                {userRole === RoleName.CUSTOMER && (
+                  <ZodErrorBoundary contextName="Customer Dashboard">
+                    <CustomerDashboard 
+                      userName={userName || 'Customer'} 
+                      userPhone={phone}
+                      onLogout={handleLogout}
+                    />
+                  </ZodErrorBoundary>
+                )}
+                {userRole === RoleName.RESTAURANT && (
+                  <ZodErrorBoundary contextName="Restaurant Dashboard">
+                    <RestaurantDashboard 
+                      restaurantId=""
+                      onLogout={handleLogout}
+                    />
+                  </ZodErrorBoundary>
+                )}
+                {userRole === RoleName.DELIVERY && (
+                  <ZodErrorBoundary contextName="Delivery Dashboard">
+                    <DeliveryDashboard 
+                      riderPhone={phone}
+                      onLogout={handleLogout}
+                    />
+                  </ZodErrorBoundary>
+                )}
+                {userRole === RoleName.ADMIN && (
+                  <ZodErrorBoundary contextName="Admin Portal">
+                    <AdminPortal 
+                      onLogout={handleLogout}
+                    />
+                  </ZodErrorBoundary>
+                )}
+              </div>
+            </CallProvider>
           )}
         </Suspense>
       </div>
@@ -119,9 +121,7 @@ export default function App() {
     <ThemeProvider>
       <ConfigProvider>
         <ToastProvider>
-          <CallProvider>
-            <AppContent />
-          </CallProvider>
+          <AppContent />
         </ToastProvider>
       </ConfigProvider>
     </ThemeProvider>
