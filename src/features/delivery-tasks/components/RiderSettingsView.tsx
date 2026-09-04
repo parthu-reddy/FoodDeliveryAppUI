@@ -378,26 +378,39 @@ export default function RiderSettingsView({
           </div>
           <div className="space-y-2">
             {isLoadingSessions ? (
-              <p className="text-xs text-slate-500">Loading devices...</p>
+              <div className="text-center text-slate-500 text-sm py-8">Loading devices...</div>
             ) : sessions.length === 0 ? (
-              <p className="text-xs text-slate-500">No active devices found.</p>
+              <div className="text-center py-6 text-sm font-bold text-slate-500 dark:text-slate-400">
+                No active sessions found.
+              </div>
             ) : (
-              sessions.map((s, i) => (
-                <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-white/10 dark:bg-slate-900/10 border border-rose-500/10 backdrop-blur-sm">
-                  <div>
-                    <p className="text-xs font-bold text-slate-800 dark:text-[#f0ede6]">{s.deviceInfo || 'Unknown Device'}</p>
-                    <p className="text-[10px] text-slate-500 mt-0.5">IP: {s.ipAddress}</p>
-                    <p className="text-[10px] text-slate-500">Last active: {new Date(s.lastActive).toLocaleString()}</p>
+              sessions.map((s: unknown) => {
+                const session = s as { id?: string; sessionId?: string; deviceInfo?: string; browser?: string; os?: string; serviceName?: string; lastActive?: number };
+                const sessionId = session.sessionId || session.id || "";
+                const os = session.os || "Unknown";
+                const browser = session.browser || "Unknown";
+                return (
+                <div key={sessionId} className="p-3 bg-white/70 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-between shadow-sm">
+                  <div className="flex-1 overflow-hidden pr-2">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[9px] font-black tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400">
+                        RIDER
+                      </span>
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+                        {os} • {browser}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 truncate" title={session.deviceInfo}>{session.deviceInfo || 'Unknown Device'}</p>
+                    <p className="text-[9px] text-rose-500 mt-0.5">Last Active: {session.lastActive ? new Date(session.lastActive).toLocaleString() : ''}</p>
                   </div>
-                  <button 
-                    onClick={() => revokeSession(s.id)}
-                    className="p-2 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors"
-                    title="Sign out this device"
+                  <button
+                    onClick={() => revokeSession(sessionId)}
+                    className="text-xs text-rose-500 hover:text-rose-600 font-bold p-1 shrink-0"
                   >
-                    <LogOut className="w-4 h-4" />
+                    Remove
                   </button>
                 </div>
-              ))
+              )})
             )}
           </div>
         </div>
