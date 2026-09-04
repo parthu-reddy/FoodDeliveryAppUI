@@ -1,4 +1,4 @@
-import { ImagePlus, Send } from 'lucide-react';
+import { Camera, ImagePlus, Send } from 'lucide-react';
 import React, { useCallback, useRef, useState } from 'react';
 
 interface ChatInputProps {
@@ -22,6 +22,7 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
 }) => {
   const [inputText, setInputText] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   
   // Throttle typing indicators
    
@@ -52,8 +53,9 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
     const file = e.target.files?.[0];
     if (!file) return;
     
-    // Clear the input
+    // Clear both inputs so the same file can be selected again
     if (fileInputRef.current) fileInputRef.current.value = '';
+    if (cameraInputRef.current) cameraInputRef.current.value = '';
     
     if (uploadedImageCount >= 4) {
       alert("You have reached the maximum limit of 4 images for this chat session.");
@@ -69,15 +71,32 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
         <input 
           type="file" 
           accept="image/*" 
+          capture="environment"
+          className="hidden" 
+          ref={cameraInputRef} 
+          onChange={handleFileChange} 
+        />
+        <input 
+          type="file" 
+          accept="image/*" 
           className="hidden" 
           ref={fileInputRef} 
           onChange={handleFileChange} 
         />
         <button 
           type="button" 
+          onClick={() => cameraInputRef.current?.click()}
+          disabled={isImageUploadDisabled}
+          title={uploadedImageCount >= 4 ? "Maximum 4 images allowed per session" : "Take Photo"}
+          className="p-1.5 text-gray-500 hover:text-orange-600 transition-colors disabled:opacity-50"
+        >
+          <Camera className="w-5 h-5" />
+        </button>
+        <button 
+          type="button" 
           onClick={() => fileInputRef.current?.click()}
           disabled={isImageUploadDisabled}
-          title={uploadedImageCount >= 4 ? "Maximum 4 images allowed per session" : "Upload Image"}
+          title={uploadedImageCount >= 4 ? "Maximum 4 images allowed per session" : "Upload from Gallery"}
           className="p-1.5 text-gray-500 hover:text-orange-600 transition-colors disabled:opacity-50"
         >
           <ImagePlus className="w-5 h-5" />

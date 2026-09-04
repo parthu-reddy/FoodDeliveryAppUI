@@ -1,4 +1,5 @@
 import { cleanOrphanedChunks, clearSessionData, getChunks, getPendingUploads, saveChunk, savePendingUpload } from "@/lib/offlineStorage";
+import { registerMediaStream } from "@/lib/permissionCleanup";
 import { getToken, getUserProfile } from "@/lib/tokenStore";
 import { chatApi } from "@/lib/zodiosClients";
 import { Client, IMessage } from '@stomp/stompjs';
@@ -461,6 +462,7 @@ export const useWebRTC = () => {
       }
       
       localStreamRef.current = stream;
+      registerMediaStream(stream);
       stream.getTracks().forEach(track => pc.addTrack(track, stream));
     } catch (err: unknown) {
       console.error('Error accessing microphone:', err);

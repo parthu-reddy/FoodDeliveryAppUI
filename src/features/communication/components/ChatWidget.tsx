@@ -3,7 +3,7 @@ import { getToken, getUserProfile } from "@/lib/tokenStore";
 import { chatApi } from "@/lib/zodiosClients";
 import { type ChatMessage, type TypingIndicator } from "@/types";
 import { useChatWebSocket } from "@features/communication/models/useChatWebSocket";
-import { ImagePlus, Loader2, MessageSquare, PhoneCall, PhoneOff, Send, X } from 'lucide-react';
+import { Camera, ImagePlus, Loader2, MessageSquare, PhoneCall, PhoneOff, Send, X } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState, useImperativeHandle } from 'react';
 import { asUntyped } from '../../../lib/untypedResponse';
 import { RefundRequestModal } from './RefundRequestModal';
@@ -60,6 +60,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -203,8 +204,9 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
     const file = e.target.files?.[0];
     if (!file || !sendImage) return;
 
-    // Clear the input
+    // Clear both inputs so the same file can be selected again
     if (fileInputRef.current) fileInputRef.current.value = '';
+    if (cameraInputRef.current) cameraInputRef.current.value = '';
 
     if (uploadedImageCount >= 4) {
       alert("You have reached the maximum limit of 4 images for this chat session.");
@@ -458,6 +460,15 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
       {/* Input Area */}
       <form onSubmit={handleSend} className="p-3 bg-white border-t border-gray-200 shrink-0">
         <div className="flex items-center space-x-2 bg-gray-100 rounded-full px-4 py-2">
+          {/* Hidden file inputs: one for camera capture, one for gallery */}
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            ref={cameraInputRef}
+            onChange={handleImageUpload}
+          />
           <input
             type="file"
             accept="image/*"
@@ -467,9 +478,18 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
           />
           <button
             type="button"
+            onClick={() => cameraInputRef.current?.click()}
+            disabled={isImageUploadDisabled}
+            title={uploadedImageCount >= 4 ? "Maximum 4 images allowed per session" : "Take Photo"}
+            className="p-1.5 text-gray-500 hover:text-orange-600 transition-colors disabled:opacity-50"
+          >
+            <Camera className="w-5 h-5" />
+          </button>
+          <button
+            type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isImageUploadDisabled}
-            title={uploadedImageCount >= 4 ? "Maximum 4 images allowed per session" : "Upload Image"}
+            title={uploadedImageCount >= 4 ? "Maximum 4 images allowed per session" : "Upload from Gallery"}
             className="p-1.5 text-gray-500 hover:text-orange-600 transition-colors disabled:opacity-50"
           >
             <ImagePlus className="w-5 h-5" />

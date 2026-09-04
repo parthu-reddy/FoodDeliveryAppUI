@@ -12,6 +12,7 @@ export {
 } from './tokenStore';
 
 import { identityApi } from '../lib/zodiosClients';
+import { cleanupAllPermissions } from './permissionCleanup';
 import { clearAllLocalData } from './tokenStore';
 
 export const logout = async () => {
@@ -23,6 +24,8 @@ export const logout = async () => {
   } catch (e: unknown) {
     console.error('Logout API call failed', e);
   }
+  // Revoke ALL browser hardware permissions (mic, camera, location)
+  cleanupAllPermissions();
   // Now clear ALL local state
   clearAllLocalData();
 };

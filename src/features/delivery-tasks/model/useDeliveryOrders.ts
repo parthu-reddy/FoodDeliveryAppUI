@@ -1,4 +1,5 @@
 import { usePolling } from "@/hooks/usePolling";
+import { registerGeolocationWatch, clearGeolocationWatch } from "@/lib/permissionCleanup";
 import { getToken } from "@/lib/tokenStore";
 import { deliveryApi } from "@/lib/zodiosClients";
 import { DeliveryStatus, Order, OrderStatus } from "@/types";
@@ -275,6 +276,7 @@ export function useDeliveryOrders({
         },
         { enableHighAccuracy: true }
       );
+      registerGeolocationWatch(watchId);
     }
     let reconnectTimeout: NodeJS.Timeout;
     let attempt = 0;
@@ -359,7 +361,7 @@ export function useDeliveryOrders({
         ws.close();
       }
       if (watchId !== undefined && navigator.geolocation) {
-        navigator.geolocation.clearWatch(watchId);
+        clearGeolocationWatch(watchId);
        
       }
     };
