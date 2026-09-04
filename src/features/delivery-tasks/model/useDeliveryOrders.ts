@@ -230,6 +230,9 @@ export function useDeliveryOrders({
           
           osc.start(ctx.currentTime);
           osc.stop(ctx.currentTime + 0.5);
+          
+          // Close AudioContext after chime finishes to prevent resource leak
+          osc.onended = () => { ctx.close().catch(() => {}); };
         }
       } catch {
         // best effort: WebAudio is unavailable in some browsers/contexts

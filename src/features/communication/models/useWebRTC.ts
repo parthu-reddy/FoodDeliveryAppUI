@@ -39,6 +39,8 @@ export const useWebRTC = () => {
 
   // Recording Refs
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const mixedStreamRef = useRef<MediaStream | null>(null);
   const chunkOrderRef = useRef<number>(0);
 
   // Buffer for ICE candidates received before remote description is set
@@ -270,8 +272,9 @@ export const useWebRTC = () => {
 
   const startRecording = (localMediaStream: MediaStream, remoteMediaStream: MediaStream) => {
     try {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      const audioContext = new AudioContext();
+      const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+      const audioContext = new AudioContextCtor();
+      audioContextRef.current = audioContext;
       const dest = audioContext.createMediaStreamDestination();
 
       const localSource = audioContext.createMediaStreamSource(localMediaStream);
@@ -281,6 +284,7 @@ export const useWebRTC = () => {
       remoteSource.connect(dest);
 
       const mixedStream = dest.stream;
+      mixedStreamRef.current = mixedStream;
       
       // Compress audio by setting a low bitrate suitable for voice (16 kbps)
       const options: MediaRecorderOptions = { audioBitsPerSecond: 16000 };
@@ -570,6 +574,17 @@ export const useWebRTC = () => {
          // Upload asynchronously
          setTimeout(() => uploadRecording(sessionIdToUpload), 500);
       }
+    }
+    mediaRecorderRef.current = null;
+
+    // Stop the mixed recording stream and close the AudioContext
+    if (mixedStreamRef.current) {
+      mixedStreamRef.current.getTracks().forEach(track => track.stop());
+      mixedStreamRef.current = null;
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close().catch(() => { /* best effort */ });
+      audioContextRef.current = null;
     }
 
     if (peerConnectionRef.current) {
