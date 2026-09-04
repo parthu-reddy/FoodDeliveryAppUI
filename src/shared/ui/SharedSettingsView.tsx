@@ -413,7 +413,11 @@ export default function SharedSettingsView({
               <div className="text-center text-slate-500 text-sm py-8">No order history found.</div>
             ) : (
               paginatedOrders.map((order: Order) => (
-                <div key={order.id} className="p-4 rounded-2xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md">
+                <div 
+                  key={order.id} 
+                  onClick={() => setTrackingOrder && setTrackingOrder(order)}
+                  className="p-4 rounded-2xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md cursor-pointer hover:bg-white/40 dark:hover:bg-slate-900/40 transition-colors"
+                >
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <span className="text-[10px] font-bold text-slate-400 dark:text-slate-300 font-mono block">{order.id.substring(0, 8)}</span>
