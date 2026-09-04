@@ -1,5 +1,6 @@
 import { DeliveryStatus, Order } from "@/types";
-import { KeyRound } from 'lucide-react';
+import { KeyRound, PhoneCall } from 'lucide-react';
+import { useCallContext } from '@/contexts/CallContext';
 import React from 'react';
 
 interface ActiveDeliveryCardProps {
@@ -21,6 +22,8 @@ export default function ActiveDeliveryCard({
   handleArrivedAtRestaurant,
   handlePickUpFood
 }: ActiveDeliveryCardProps) {
+  const { startCall } = useCallContext();
+
   return (
     <div className="glass-card rounded-3xl p-5 space-y-4">
       <div className="space-y-1">
@@ -33,18 +36,42 @@ export default function ActiveDeliveryCard({
       <div className="space-y-3.5 text-sm">
         <div className="flex gap-3">
           <div className="w-5 h-5 rounded bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">A</div>
-          <div>
+          <div className="flex-1">
             <span className="text-[10px] text-slate-400 block font-mono">RESTAURANT ADDRESS</span>
-            <span className="font-bold text-slate-800 dark:text-[#f0ede6]">{currentJob.restaurantName}</span>
+            <div className="flex justify-between items-center w-full">
+              <span className="font-bold text-slate-800 dark:text-[#f0ede6]">{currentJob.restaurantName}</span>
+              {currentJob.restaurantId && (
+                <button
+                  type="button"
+                  onClick={() => startCall(currentJob.restaurantId!, currentJob.id)}
+                  className="p-1.5 rounded-full bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-500/20 dark:text-orange-400 transition-colors"
+                  title={`Call ${currentJob.restaurantName}`}
+                >
+                  <PhoneCall className="w-4 h-4" />
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
         <div className="flex gap-3">
           <div className="w-5 h-5 rounded bg-emerald-500/10 text-emerald-500 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">B</div>
-          <div>
+          <div className="flex-1">
             <span className="text-[10px] text-slate-400 block font-mono">DELIVERY ADDRESS</span>
-            <span className="font-bold text-slate-800 dark:text-[#f0ede6]">{currentJob.customerName}</span>
-            <p className="text-xs text-slate-400">{currentJob.deliveryAddress}</p>
+            <div className="flex justify-between items-center w-full">
+              <span className="font-bold text-slate-800 dark:text-[#f0ede6]">{currentJob.customerName}</span>
+              {currentJob.customerId && (
+                <button
+                  type="button"
+                  onClick={() => startCall(currentJob.customerId!, currentJob.id)}
+                  className="p-1.5 rounded-full bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-500/20 dark:text-orange-400 transition-colors"
+                  title={`Call ${currentJob.customerName}`}
+                >
+                  <PhoneCall className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            <p className="text-xs text-slate-400 mt-1">{currentJob.deliveryAddress}</p>
           </div>
         </div>
       </div>

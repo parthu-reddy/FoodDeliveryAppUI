@@ -1,9 +1,10 @@
 import { DeliveryStatus, OrderStatus } from '@/types/backend-enums';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Check, Clock, Timer, X, XCircle } from 'lucide-react';
+import { ArrowLeft, Check, Clock, Timer, X, XCircle, PhoneCall } from 'lucide-react';
 import React from 'react';
 // Use React.lazy for map
 const OrderTrackingMap = React.lazy(() => import("@features/maps-tracking/components/OrderTrackingMap"));
+import { useCallContext } from '@/contexts/CallContext';
 
 import { Order } from '@/types';
 import { customerApi } from '@/lib/zodiosClients';
@@ -34,6 +35,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
   showError,
   getFriendlyStatusMessage,
 }) => {
+  const { startCall } = useCallContext();
   return (
     <motion.div
       key="tracking"
@@ -362,8 +364,31 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
           <div className="bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-slate-200/50 dark:border-slate-800/50 p-6 rounded-3xl mt-6">
             <h3 className="font-bold text-lg text-slate-900 dark:text-[#f0ede6] mb-4">Order Details</h3>
             {currentTrackingOrder.restaurantName && (
-              <div className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-3 pb-3 border-b border-dashed border-slate-200 dark:border-slate-800">
-                From: {currentTrackingOrder.restaurantName}
+              <div className="flex items-center justify-between text-sm font-semibold text-slate-500 dark:text-slate-400 mb-3 pb-3 border-b border-dashed border-slate-200 dark:border-slate-800">
+                <span>From: {currentTrackingOrder.restaurantName}</span>
+                {currentTrackingOrder.restaurantId && (
+                  <button 
+                    onClick={() => startCall(currentTrackingOrder.restaurantId!, currentTrackingOrder.id)}
+                    className="p-1.5 rounded-full bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-500/20 dark:text-orange-400 dark:hover:bg-orange-500/30 transition-colors"
+                    title={`Call ${currentTrackingOrder.restaurantName}`}
+                  >
+                    <PhoneCall className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            )}
+            {currentTrackingOrder.deliveryExecutiveName && (
+              <div className="flex items-center justify-between text-sm font-semibold text-slate-500 dark:text-slate-400 mb-3 pb-3 border-b border-dashed border-slate-200 dark:border-slate-800">
+                <span>Rider: {currentTrackingOrder.deliveryExecutiveName}</span>
+                {currentTrackingOrder.deliveryExecutiveId && (
+                  <button 
+                    onClick={() => startCall(currentTrackingOrder.deliveryExecutiveId!, currentTrackingOrder.id)}
+                    className="p-1.5 rounded-full bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-500/20 dark:text-orange-400 dark:hover:bg-orange-500/30 transition-colors"
+                    title={`Call ${currentTrackingOrder.deliveryExecutiveName}`}
+                  >
+                    <PhoneCall className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             )}
             <div className="space-y-3">
@@ -444,7 +469,18 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
           </div>
           
           <div className="space-y-4">
-            <h3 className="font-semibold text-lg text-slate-900 dark:text-[#f0ede6]">{currentTrackingOrder.restaurantName}</h3>
+            <div className="flex justify-between items-center">
+              <h3 className="font-semibold text-lg text-slate-900 dark:text-[#f0ede6]">{currentTrackingOrder.restaurantName}</h3>
+              {currentTrackingOrder.restaurantId && (
+                <button 
+                  onClick={() => startCall(currentTrackingOrder.restaurantId!, currentTrackingOrder.id)}
+                  className="p-1.5 rounded-full bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-500/20 dark:text-orange-400 dark:hover:bg-orange-500/30 transition-colors"
+                  title={`Call ${currentTrackingOrder.restaurantName}`}
+                >
+                  <PhoneCall className="w-4 h-4" />
+                </button>
+              )}
+            </div>
             <div className="space-y-3">
               {currentTrackingOrder.items && currentTrackingOrder.items.map((item: unknown, idx: number) => {
                 const i = asUntyped<unknown>(item) as { item?: { id?: string; name?: string; price?: number }; quantity?: number; name?: string; price?: number };

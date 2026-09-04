@@ -1,5 +1,6 @@
 import { Order, OrderStatus } from '@/types';
 import { RestaurantOrderDetailsModal } from '@features/restaurant-orders/components/RestaurantOrderDetailsModal';
+import { useCallContext } from '@/contexts/CallContext';
 import { Badge, Button, FormField, Input } from '@shared/ui';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -14,7 +15,8 @@ import {
     RefreshCw,
     Send,
     User,
-    XCircle
+    XCircle,
+    PhoneCall
 } from 'lucide-react';
 import React, { useState } from 'react';
 
@@ -72,6 +74,7 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
   handleCardDelaySubmit,
   handleCardPartialRefundSubmit
 }) => {
+  const { startCall } = useCallContext();
   // Local state for modals to avoid global record bloat in parent
   const [activeModal, setActiveModal] = useState<'none' | 'cancel' | 'delay' | 'refund'>('none');
   const [showDetails, setShowDetails] = useState(false);
@@ -149,10 +152,22 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
       <div className="bg-slate-50 dark:bg-slate-950/40 rounded-xl border border-rose-500/20 dark:border-rose-500/30 overflow-hidden divide-y divide-rose-500/10 dark:divide-rose-500/20">
         <div className="p-2.5 space-y-1 text-[11px]">
           <div className="flex items-center justify-between gap-1">
-            <p className="font-bold text-slate-700 dark:text-[#f0ede6] flex items-center gap-1">
-              <User className="w-3 h-3 text-slate-400 dark:text-slate-300" />
-              <span className="truncate max-w-[120px]">Customer #{order.customerId?.substring(0, 8) || order.id?.substring(0, 8)}</span>
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="font-bold text-slate-700 dark:text-[#f0ede6] flex items-center gap-1">
+                <User className="w-3 h-3 text-slate-400 dark:text-slate-300" />
+                <span className="truncate max-w-[120px]">Customer #{order.customerId?.substring(0, 8) || order.id?.substring(0, 8)}</span>
+              </p>
+              {order.customerId && (
+                <button
+                  type="button"
+                  onClick={() => startCall(order.customerId!, order.id)}
+                  className="p-1 rounded-full bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-500/20 dark:text-orange-400 transition-colors"
+                  title="Call Customer"
+                >
+                  <PhoneCall className="w-3 h-3" />
+                </button>
+              )}
+            </div>
             {order.estimatedCompletionTime && (
               <span className="flex items-center gap-1 text-[9px] text-amber-500 font-bold shrink-0">
                 <Clock className="w-2.5 h-2.5" />
@@ -171,11 +186,23 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
             </span>
           </div>
           {order.riderName ? (
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-indigo-500/15 flex items-center justify-center text-indigo-550 shrink-0">
-                <Bike className="w-3 h-3" />
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-indigo-500/15 flex items-center justify-center text-indigo-550 shrink-0">
+                  <Bike className="w-3 h-3" />
+                </div>
+                <p className="font-bold text-[11px] text-slate-750 dark:text-[#f0ede6] truncate">{order.riderName}</p>
               </div>
-              <p className="font-bold text-[11px] text-slate-750 dark:text-[#f0ede6] truncate">{order.riderName}</p>
+              {order.deliveryExecutiveId && (
+                <button
+                  type="button"
+                  onClick={() => startCall(order.deliveryExecutiveId!, order.id)}
+                  className="p-1 rounded-full bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-500/20 dark:text-orange-400 transition-colors"
+                  title={`Call ${order.riderName}`}
+                >
+                  <PhoneCall className="w-3 h-3" />
+                </button>
+              )}
             </div>
           ) : (
             <div className="flex items-center gap-2 py-0.5 text-slate-450">
