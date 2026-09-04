@@ -33,3 +33,4 @@ export { RefundModal } from "./RefundModal";
 export { default as SharedSettingsView } from "./SharedSettingsView";
 export { ZodErrorBoundary } from "./ZodErrorBoundary";
 export { default as ZodiosSmokeTest } from "./ZodiosSmokeTest";
+export { ActiveSessions } from "./ActiveSessions";

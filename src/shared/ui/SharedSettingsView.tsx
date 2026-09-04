@@ -2,14 +2,14 @@ import type { Order } from '../../schemas/order';
 /* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps, react-hooks/immutability */
 import CustomerAddressModal from "@features/customer-orders/components/CustomerAddressModal";
 import { getFriendlyStatusMessage } from '@features/customer-orders/model/statusMessaging';
-import { Badge, Button, FormField, Input, Spinner, TransactionHistoryTable, WalletTransaction } from "@shared/ui";
+import { Badge, Button, FormField, Input, Spinner, TransactionHistoryTable, WalletTransaction, ActiveSessions } from "@shared/ui";
 import { LogOut, MapPin, Trash2, X } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useToast } from '../../contexts/ToastContext';
 import { customerApi, identityApi, walletApi } from '../../lib/zodiosClients';
-import { fromContract, asUntyped } from '../../lib/untypedResponse';
+import { fromContract } from '../../lib/untypedResponse';
 
 const sharedProfileSchema = z.object({
   name: z.string().min(1, 'Please enter your full name.').max(100, 'Name cannot exceed 100 characters.'),
@@ -77,8 +77,7 @@ export default function SharedSettingsView({
   const [editPhone, setEditPhone] = useState('');
   const [userId, setUserId] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-  const [sessions, setSessions] = useState<unknown[]>([]);
-  const [isLoadingSessions, setIsLoadingSessions] = useState(false);
+  const [txTotalPages, setTxTotalPages] = useState(1);
 
   const [paginatedOrders, setPaginatedOrders] = useState<Order[]>([]);
   const [currentPageOrders, setCurrentPageOrders] = useState(0);
@@ -130,21 +129,6 @@ export default function SharedSettingsView({
     }
   };
 
-  const loadSessions = async () => {
-    setIsLoadingSessions(true);
-    try {
-      const res = await identityApi.auth.get('/api/v1/internal/auth/sessions', { headers: { 'X-Calling-Service': 'CustomerApplication' } });
-      if (res?.data) {
-        setSessions(res.data);
-      }
-    } catch (e: unknown) {
-      console.error(e);
-      showError('Failed to load sessions. Please try again.');
-    } finally {
-      setIsLoadingSessions(false);
-    }
-  };
-
   const fetchWalletData = async () => {
     if (!customerId) return;
     setTxLoading(true);
@@ -167,35 +151,12 @@ export default function SharedSettingsView({
     }
   };
 
-  const revokeSession = async (sessionId: string) => {
-    try {
-      if (onAddApiLog) {
-        onAddApiLog({ id: `revoke_${sessionId}`, label: `DELETE /api/v1/internal/auth/sessions/${sessionId}`, method: 'DELETE' });
-      }
-      await identityApi.auth.delete('/api/v1/internal/auth/sessions/:sessionId', undefined, { params: { sessionId }, headers: { 'X-Calling-Service': 'CustomerApplication' } });
-      
-      // If we revoked the current session, it might throw a 401 on next request. We'll reload sessions to be safe.
-      await loadSessions();
-    } catch (e: unknown) {
-      // @ts-expect-error auto-migration type suppression
-      if (e.status === 401) {
-        // We revoked our own session
-        window.location.href = '/';
-      } else {
-        console.error(e);
-        showError('Failed to revoke session');
-      }
-    }
-  };
-
   const handleLogout = () => {
     if (onLogout) onLogout();
   };
 
   useEffect(() => {
-    if (accountTab === 'profile') {
-      loadSessions();
-    } else if (accountTab === 'history' && !hasFetchedOrders) {
+    if (accountTab === 'history' && !hasFetchedOrders) {
       fetchOrders(0, 'history');
     } else if (accountTab === 'wallet' && !hasFetchedWallet) {
       fetchWalletData();
@@ -352,44 +313,7 @@ export default function SharedSettingsView({
               </div>
             )}
 
-            <div className="pt-6 border-t border-rose-500/10">
-              <div className="flex justify-between items-center mb-3">
-                <h4 className="text-sm font-bold text-slate-900 dark:text-[#f0ede6]">Logged-in Devices</h4>
-              </div>
-              <div className="space-y-2">
-                {isLoadingSessions ? (
-                  <div className="text-center py-6 text-sm font-bold text-slate-500 dark:text-slate-400">
-                    <Spinner size="sm" className="mx-auto mb-2" />
-                    Loading sessions...
-                  </div>
-                ) : sessions.length === 0 ? (
-                  <div className="text-center py-6 text-sm font-bold text-slate-500 dark:text-slate-400">
-                    No active sessions found.
-                  </div>
-                ) : (
-                  sessions.map((s: unknown) => {
-                    const session = asUntyped<unknown>(s) as { sessionId: string, serviceName?: string, os?: string, browser?: string, deviceInfo?: string, lastActive?: string };
-                    return (
-                    <div key={session.sessionId} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex justify-between items-center">
-                      <div>
-                        <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                          {session.serviceName ? <Badge variant="warning" className="mr-2 text-[9px] px-1.5 py-0.5">{session.serviceName}</Badge> : null}
-                          {session.os} • {session.browser}
-                        </p>
-                        <p className="text-[10px] text-slate-500 mt-0.5 line-clamp-1">{session.deviceInfo}</p>
-                        <p className="text-[9px] text-rose-500 mt-0.5">Last Active: {session.lastActive ? new Date(session.lastActive).toLocaleString() : ''}</p>
-                      </div>
-                      <button
-                        onClick={() => revokeSession(session.sessionId)}
-                        className="text-xs text-rose-500 hover:text-rose-600 font-bold p-1 shrink-0"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  )})
-                )}
-              </div>
-            </div>
+            <ActiveSessions callingService="CustomerApplication" onAddApiLog={onAddApiLog} />
 
             <div className="pt-6">
               <Button

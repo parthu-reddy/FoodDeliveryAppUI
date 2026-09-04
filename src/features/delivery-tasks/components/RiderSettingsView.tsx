@@ -5,7 +5,7 @@ import { deliveryApi, identityApi, walletApi } from "@/lib/zodiosClients";
 import { useToast } from '@/contexts/ToastContext';
 import ImageUploadField from "@features/kyc/components/ImageUploadField";
 
-import { TransactionHistoryTable, WalletTransaction } from "@shared/ui";
+import { Badge, Button, Input, Modal, Spinner, TransactionHistoryTable, WalletTransaction, ActiveSessions } from "@shared/ui";
 import { z } from 'zod';
 
 import { fromContract } from '../../../lib/untypedResponse';
@@ -53,8 +53,6 @@ export default function RiderSettingsView({
   // State
   const [isSaving, setIsSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [sessions, setSessions] = useState<{ id: string; deviceInfo?: string; ipAddress?: string; lastActive: string | number }[]>([]);
-  const [isLoadingSessions, setIsLoadingSessions] = useState(false);
 
   const { showSuccess, showError } = useToast();
   
@@ -64,36 +62,6 @@ export default function RiderSettingsView({
   const [txPage, setTxPage] = useState(0);
   const [txTotalPages, setTxTotalPages] = useState(1);
   const [txLoading, setTxLoading] = useState(false);
-
-  const loadSessions = async () => {
-    setIsLoadingSessions(true);
-    try {
-      const res = await identityApi.auth.get('/api/v1/internal/auth/sessions', { headers: { 'X-Calling-Service': 'DeliveryExecutiveApplication' } });
-      if (res?.data) {
-        // @ts-expect-error auto-migration type suppression
-        setSessions(res.data);
-      }
-    } catch (e: unknown) {
-      console.error(e);
-    } finally {
-      setIsLoadingSessions(false);
-    }
-  };
-
-  const revokeSession = async (sessionId: string) => {
-    try {
-      await identityApi.auth.delete('/api/v1/internal/auth/sessions/:sessionId', undefined, { params: { sessionId }, headers: { 'X-Calling-Service': 'DeliveryExecutiveApplication' } });
-      await loadSessions();
-    } catch (e: unknown) {
-      // @ts-expect-error auto-migration type suppression
-      if (e.status === 401) {
-        window.location.assign('/');
-      } else {
-        console.error(e);
-        showError('Failed to revoke session');
-      }
-    }
-  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -139,8 +107,6 @@ export default function RiderSettingsView({
     };
 
     loadData();
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadSessions();
   }, [riderPhone]);
 
   const loadWalletData = useCallback(async (page: number) => {
@@ -373,46 +339,7 @@ export default function RiderSettingsView({
         </div>
 
         <div className="pt-8 mt-8 border-t border-rose-500/20">
-          <div className="flex justify-between items-center mb-4">
-            <h4 className="text-sm font-bold text-slate-900 dark:text-[#f0ede6]">Logged-in Devices</h4>
-          </div>
-          <div className="space-y-2">
-            {isLoadingSessions ? (
-              <div className="text-center text-slate-500 text-sm py-8">Loading devices...</div>
-            ) : sessions.length === 0 ? (
-              <div className="text-center py-6 text-sm font-bold text-slate-500 dark:text-slate-400">
-                No active sessions found.
-              </div>
-            ) : (
-              sessions.map((s: unknown) => {
-                const session = s as { id?: string; sessionId?: string; deviceInfo?: string; browser?: string; os?: string; serviceName?: string; lastActive?: number };
-                const sessionId = session.sessionId || session.id || "";
-                const os = session.os || "Unknown";
-                const browser = session.browser || "Unknown";
-                return (
-                <div key={sessionId} className="p-3 bg-white/70 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-between shadow-sm">
-                  <div className="flex-1 overflow-hidden pr-2">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[9px] font-black tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400">
-                        RIDER
-                      </span>
-                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
-                        {os} • {browser}
-                      </span>
-                    </div>
-                    <p className="text-[10px] text-slate-500 truncate" title={session.deviceInfo}>{session.deviceInfo || 'Unknown Device'}</p>
-                    <p className="text-[9px] text-rose-500 mt-0.5">Last Active: {session.lastActive ? new Date(session.lastActive).toLocaleString() : ''}</p>
-                  </div>
-                  <button
-                    onClick={() => revokeSession(sessionId)}
-                    className="text-xs text-rose-500 hover:text-rose-600 font-bold p-1 shrink-0"
-                  >
-                    Remove
-                  </button>
-                </div>
-              )})
-            )}
-          </div>
+          <ActiveSessions callingService="DeliveryExecutiveApplication" />
         </div>
 
         {/* Wallet Transactions */}
