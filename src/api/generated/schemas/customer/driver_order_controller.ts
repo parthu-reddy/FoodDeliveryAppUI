@@ -6,8 +6,8 @@ import { pageable } from "./common";
 import { PageOrderResponse } from "./common";
 import { OrderResponse } from "./common";
 import { OrderItemResponse } from "./common";
-import { SortObject } from "./common";
 import { PageableObject } from "./common";
+import { SortObject } from "./common";
 import { ApiResponseListOrderResponse } from "./common";
 
 const endpoints = makeApi([

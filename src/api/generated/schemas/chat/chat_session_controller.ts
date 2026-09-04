@@ -11,10 +11,88 @@ const ParticipantDto = z
 const CreateSessionRequest = z
   .object({ orderId: z.string(), participants: z.array(ParticipantDto) })
   .passthrough();
+const ChatSessionResponse = z
+  .object({
+    sessionId: z.string().uuid(),
+    sessionType: z.string(),
+    referenceId: z.string(),
+    isActive: z.boolean(),
+    createdAt: z.string().datetime({ offset: true }),
+    participants: z.array(ParticipantDto),
+  })
+  .partial()
+  .passthrough();
+const ApiResponseChatSessionResponse = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    errorCode: z.string().optional(),
+    data: ChatSessionResponse.optional(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
+const SortObject = z
+  .object({ empty: z.boolean(), sorted: z.boolean(), unsorted: z.boolean() })
+  .passthrough();
+const PageableObject = z
+  .object({
+    unpaged: z.boolean(),
+    sort: SortObject.optional(),
+    paged: z.boolean(),
+    pageNumber: z.number().int(),
+    pageSize: z.number().int(),
+    offset: z.number().int(),
+  })
+  .passthrough();
+const ChatMessageDto = z
+  .object({
+    id: z.string().uuid(),
+    sessionId: z.string().uuid(),
+    senderId: z.string(),
+    senderName: z.string(),
+    senderType: z.string(),
+    messageType: z.string(),
+    content: z.string(),
+    imageUrl: z.string(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+const PageChatMessageDto = z
+  .object({
+    totalPages: z.number().int(),
+    totalElements: z.number().int(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
+    numberOfElements: z.number().int(),
+    size: z.number().int(),
+    content: z.array(ChatMessageDto),
+    number: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
+    empty: z.boolean(),
+  })
+  .passthrough();
+const ApiResponsePageChatMessageDto = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    errorCode: z.string().optional(),
+    data: PageChatMessageDto.optional(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
 
 export const schemas = {
   ParticipantDto,
   CreateSessionRequest,
+  ChatSessionResponse,
+  ApiResponseChatSessionResponse,
+  SortObject,
+  PageableObject,
+  ChatMessageDto,
+  PageChatMessageDto,
+  ApiResponsePageChatMessageDto,
 };
 
 const endpoints = makeApi([
@@ -30,7 +108,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.record(z.object({}).partial().passthrough()),
+    response: ApiResponseChatSessionResponse,
   },
   {
     method: "post",
@@ -44,7 +122,7 @@ const endpoints = makeApi([
         schema: CreateSessionRequest,
       },
     ],
-    response: z.record(z.object({}).partial().passthrough()),
+    response: ApiResponseChatSessionResponse,
   },
   {
     method: "post",
@@ -63,7 +141,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.record(z.object({}).partial().passthrough()),
+    response: ApiResponseChatSessionResponse,
   },
   {
     method: "get",
@@ -87,7 +165,7 @@ const endpoints = makeApi([
         schema: z.number().int().optional().default(50),
       },
     ],
-    response: z.record(z.object({}).partial().passthrough()),
+    response: ApiResponsePageChatMessageDto,
   },
 ]);
 

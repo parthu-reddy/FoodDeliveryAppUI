@@ -46,6 +46,20 @@ const endpoints = makeApi([
   },
   {
     method: "get",
+    path: "/api/v1/internal/restaurants/outlets/:outletId/owner",
+    alias: "getOutletOwner",
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "outletId",
+        type: "Path",
+        schema: z.string(),
+      },
+    ],
+    response: z.object({}).partial().passthrough(),
+  },
+  {
+    method: "get",
     path: "/api/v1/internal/restaurants/outlets/:outletId/exists",
     alias: "outletExists",
     requestFormat: "json",

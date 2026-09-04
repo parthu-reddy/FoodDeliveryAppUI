@@ -11,8 +11,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Get the chat session for a specific order */
         get: operations["getSessionByOrderId"];
         put?: never;
+        /** Create or retrieve a chat session for an order */
         post: operations["createOrGetSession"];
         delete?: never;
         options?: never;
@@ -61,6 +63,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** Add a participant to an existing session */
         post: operations["addParticipant"];
         delete?: never;
         options?: never;
@@ -91,6 +94,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Get paginated message history for a session */
         get: operations["getMessages"];
         put?: never;
         post?: never;
@@ -113,6 +117,24 @@ export interface components {
             entityType: string;
             displayName?: string;
         };
+        ApiResponseChatSessionResponse: {
+            success: boolean;
+            message: string;
+            errorCode?: string;
+            data?: components["schemas"]["ChatSessionResponse"];
+            /** Format: date-time */
+            timestamp: string;
+        };
+        ChatSessionResponse: {
+            /** Format: uuid */
+            sessionId?: string;
+            sessionType?: string;
+            referenceId?: string;
+            isActive?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
+            participants?: components["schemas"]["ParticipantDto"][];
+        };
         IceServer: {
             urls: string;
             username?: string;
@@ -120,6 +142,62 @@ export interface components {
         };
         TurnCredentialsResponse: {
             iceServers: components["schemas"]["IceServer"][];
+        };
+        ApiResponsePageChatMessageDto: {
+            success: boolean;
+            message: string;
+            errorCode?: string;
+            data?: components["schemas"]["PageChatMessageDto"];
+            /** Format: date-time */
+            timestamp: string;
+        };
+        ChatMessageDto: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            sessionId?: string;
+            senderId?: string;
+            senderName?: string;
+            senderType?: string;
+            messageType?: string;
+            content?: string;
+            imageUrl?: string;
+            /** Format: date-time */
+            timestamp?: string;
+        };
+        PageChatMessageDto: {
+            /** Format: int32 */
+            totalPages: number;
+            /** Format: int64 */
+            totalElements: number;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            numberOfElements: number;
+            /** Format: int32 */
+            size: number;
+            content: components["schemas"]["ChatMessageDto"][];
+            /** Format: int32 */
+            number: number;
+            first: boolean;
+            last: boolean;
+            empty: boolean;
+        };
+        PageableObject: {
+            unpaged: boolean;
+            sort?: components["schemas"]["SortObject"];
+            paged: boolean;
+            /** Format: int32 */
+            pageNumber: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int64 */
+            offset: number;
+        };
+        SortObject: {
+            empty: boolean;
+            sorted: boolean;
+            unsorted: boolean;
         };
     };
     responses: never;
@@ -147,9 +225,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: Record<string, never>;
-                    };
+                    "application/json": components["schemas"]["ApiResponseChatSessionResponse"];
                 };
             };
         };
@@ -173,9 +249,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: Record<string, never>;
-                    };
+                    "application/json": components["schemas"]["ApiResponseChatSessionResponse"];
                 };
             };
         };
@@ -263,9 +337,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: Record<string, never>;
-                    };
+                    "application/json": components["schemas"]["ApiResponseChatSessionResponse"];
                 };
             };
         };
@@ -310,9 +382,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: Record<string, never>;
-                    };
+                    "application/json": components["schemas"]["ApiResponsePageChatMessageDto"];
                 };
             };
         };

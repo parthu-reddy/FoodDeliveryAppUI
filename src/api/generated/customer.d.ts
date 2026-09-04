@@ -580,6 +580,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/internal/restaurants/outlets/{outletId}/refund-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getActiveRefundRequests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/internal/orders/{orderId}/participants": {
         parameters: {
             query?: never;
@@ -1142,27 +1158,27 @@ export interface components {
             /** Format: int32 */
             totalPages: number;
             /** Format: int32 */
+            numberOfElements: number;
+            /** Format: int32 */
             size: number;
             content: components["schemas"]["OrderResponse"][];
-            /** Format: int32 */
-            numberOfElements: number;
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             number: number;
             first: boolean;
             last: boolean;
             sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };
         PageableObject: {
-            /** Format: int64 */
-            offset: number;
-            sort?: components["schemas"]["SortObject"];
             paged: boolean;
             /** Format: int32 */
             pageNumber: number;
             /** Format: int32 */
             pageSize: number;
+            /** Format: int64 */
+            offset: number;
+            sort?: components["schemas"]["SortObject"];
             unpaged: boolean;
         };
         SortObject: {
@@ -1175,6 +1191,14 @@ export interface components {
             message: string;
             errorCode?: string;
             data?: components["schemas"]["OrderResponse"][];
+            /** Format: date-time */
+            timestamp: string;
+        };
+        ApiResponseListSupportTicket: {
+            success: boolean;
+            message: string;
+            errorCode?: string;
+            data?: components["schemas"]["SupportTicket"][];
             /** Format: date-time */
             timestamp: string;
         };
@@ -1257,16 +1281,16 @@ export interface components {
             /** Format: int32 */
             totalPages: number;
             /** Format: int32 */
+            numberOfElements: number;
+            /** Format: int32 */
             size: number;
             content: components["schemas"]["Order"][];
-            /** Format: int32 */
-            numberOfElements: number;
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             number: number;
             first: boolean;
             last: boolean;
             sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };
         PageSupportTicket: {
@@ -1275,16 +1299,16 @@ export interface components {
             /** Format: int32 */
             totalPages: number;
             /** Format: int32 */
+            numberOfElements: number;
+            /** Format: int32 */
             size: number;
             content: components["schemas"]["SupportTicket"][];
-            /** Format: int32 */
-            numberOfElements: number;
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             number: number;
             first: boolean;
             last: boolean;
             sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };
         PageMapStringObject: {
@@ -1293,18 +1317,18 @@ export interface components {
             /** Format: int32 */
             totalPages: number;
             /** Format: int32 */
+            numberOfElements: number;
+            /** Format: int32 */
             size: number;
             content: {
                 [key: string]: Record<string, never>;
             }[];
-            /** Format: int32 */
-            numberOfElements: number;
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             number: number;
             first: boolean;
             last: boolean;
             sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };
         ApiResponsePageCustomerAddressDto: {
@@ -1321,16 +1345,16 @@ export interface components {
             /** Format: int32 */
             totalPages: number;
             /** Format: int32 */
+            numberOfElements: number;
+            /** Format: int32 */
             size: number;
             content: components["schemas"]["CustomerAddressDto"][];
-            /** Format: int32 */
-            numberOfElements: number;
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             number: number;
             first: boolean;
             last: boolean;
             sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };
         ApiResponseListCustomerAddressDto: {
@@ -2300,6 +2324,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiResponsePageOrderResponse"];
+                };
+            };
+        };
+    };
+    getActiveRefundRequests: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outletId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseListSupportTicket"];
                 };
             };
         };

@@ -3,21 +3,21 @@ import { z } from "zod";
 
 import { pageable } from "./common";
 import { CustomerAddressDto } from "./common";
-import { SortObject } from "./common";
 import { PageableObject } from "./common";
+import { SortObject } from "./common";
 
 const PageCustomerAddressDto = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
+    numberOfElements: z.number().int(),
     size: z.number().int(),
     content: z.array(CustomerAddressDto),
-    numberOfElements: z.number().int(),
+    pageable: PageableObject.optional(),
     number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
     sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();

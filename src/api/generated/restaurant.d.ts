@@ -660,6 +660,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/internal/restaurants/outlets/{outletId}/owner": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getOutletOwner"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/internal/restaurants/outlets/{outletId}/exists": {
         parameters: {
             query?: never;
@@ -1149,13 +1165,13 @@ export interface components {
         PageableObject: {
             /** Format: int64 */
             offset: number;
+            unpaged: boolean;
             sort?: components["schemas"]["SortObject"];
             paged: boolean;
             /** Format: int32 */
             pageNumber: number;
             /** Format: int32 */
             pageSize: number;
-            unpaged: boolean;
         };
         SortObject: {
             empty: boolean;
@@ -2378,6 +2394,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": string[];
+                };
+            };
+        };
+    };
+    getOutletOwner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outletId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
                 };
             };
         };
