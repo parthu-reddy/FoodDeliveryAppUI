@@ -1,5 +1,5 @@
 import type { Order } from '../../schemas/order';
-/* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps, react-hooks/immutability */
+/* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
 import CustomerAddressModal from "@features/customer-orders/components/CustomerAddressModal";
 import { getFriendlyStatusMessage } from '@features/customer-orders/model/statusMessaging';
 import { Badge, Button, FormField, Input, TransactionHistoryTable, WalletTransaction, ActiveSessions } from "@shared/ui";

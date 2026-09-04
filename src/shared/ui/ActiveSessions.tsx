@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect, react-hooks/immutability */
 import { useEffect, useState } from 'react';
 import { Badge, Spinner } from "@shared/ui";
 import { identityApi } from '../../lib/zodiosClients';
