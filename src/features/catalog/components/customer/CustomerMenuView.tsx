@@ -114,12 +114,7 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
 
         {/* Removed static free delivery tracker as it is now global floating */}
 
-        {isQuoting ? (
-          <div className="flex items-center gap-2 p-3 rounded-xl bg-slate-200/50 dark:bg-slate-800/50 animate-pulse border border-slate-300/20 dark:border-slate-700/50 h-11">
-            <div className="w-5 h-5 rounded-full bg-slate-300 dark:bg-slate-700 shrink-0" />
-            <div className="h-4 bg-slate-300 dark:bg-slate-700 rounded w-1/3" />
-          </div>
-        ) : !isDeliverable ? (
+        {!isDeliverable ? (
           <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 font-bold text-sm">
             <MapPinOff className="w-5 h-5 shrink-0" />
             <span>
