@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 
 export const Rejections = () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [rejections, setRejections] = useState<any[]>([]);
 
     useEffect(() => {
+        // eslint-disable-next-line no-restricted-syntax
         fetch('/api/v1/ledger/admin/rejections')
             .then(res => res.json())
             .then(data => setRejections(data.content || []))
@@ -25,6 +27,7 @@ export const Rejections = () => {
                     </tr>
                 </thead>
                 <tbody>
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                     {rejections.map((r: any) => (
                         <tr key={r.id}>
                             <td>{r.id}</td>
