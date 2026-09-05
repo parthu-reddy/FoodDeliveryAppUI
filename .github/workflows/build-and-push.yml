@@ -70,8 +70,7 @@ jobs:
           MAX_RETRIES=5
           for i in $(seq 1 $MAX_RETRIES); do
             # Always start fresh from the remote
-            git fetch origin main
-            git reset --hard origin/main
+            git pull --rebase origin main
 
             TAG_VAR="FOOD_DELIVERY_APP_UI_TAG"
             if grep -q "^${TAG_VAR}=" .versions; then
@@ -99,6 +98,8 @@ jobs:
             fi
             
             echo "Push rejected due to race condition. Retrying ($i/$MAX_RETRIES)..."
+            git reset --hard HEAD~1
+            git pull --rebase origin main
             sleep $((1 + RANDOM % 5))
           done
 
