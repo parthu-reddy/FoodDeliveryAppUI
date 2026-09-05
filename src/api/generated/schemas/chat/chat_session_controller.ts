@@ -9,7 +9,7 @@ const ParticipantDto = z
   })
   .passthrough();
 const CreateSessionRequest = z
-  .object({ orderId: z.string(), participants: z.array(ParticipantDto) })
+  .object({ id: z.string(), participants: z.array(ParticipantDto) })
   .passthrough();
 const ChatSessionResponse = z
   .object({

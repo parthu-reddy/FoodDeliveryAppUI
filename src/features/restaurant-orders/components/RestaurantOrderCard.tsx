@@ -186,20 +186,20 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
               {getFriendlyDeliveryStatusMessage(order.deliveryStatus)}
             </span>
           </div>
-          {order.riderName ? (
+          {order.deliveryExecutiveName ? (
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 rounded-full bg-indigo-500/15 flex items-center justify-center text-indigo-550 shrink-0">
                   <Bike className="w-3 h-3" />
                 </div>
-                <p className="font-bold text-[11px] text-slate-750 dark:text-[#f0ede6] truncate">{order.riderName}</p>
+                <p className="font-bold text-[11px] text-slate-750 dark:text-[#f0ede6] truncate">{order.deliveryExecutiveName}</p>
               </div>
               {order.deliveryExecutiveId && (
                 <button
                   type="button"
                   onClick={() => startCall(order.deliveryExecutiveId!, order.id)}
                   className="p-1 rounded-full bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-500/20 dark:text-orange-400 transition-colors"
-                  title={`Call ${order.riderName}`}
+                  title={`Call ${order.deliveryExecutiveName}`}
                 >
                   <PhoneCall className="w-3 h-3" />
                 </button>
@@ -215,11 +215,11 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
       </div>
 
       <div className="space-y-1">
-        <span className="text-[9px] text-slate-400 dark:text-slate-300 font-extrabold uppercase font-mono">Dishes ({order.items.length})</span>
+        <span className="text-[9px] text-slate-400 dark:text-slate-300 font-extrabold uppercase font-mono">Dishes ({order.items?.length || 0})</span>
         <div className="space-y-1 max-h-[100px] overflow-y-auto scrollbar-thin pl-1">
           { }
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-          {order.items.map((cartItem: any, idx: number) => (
+          {order.items?.map((cartItem: any, idx: number) => (
             <div key={cartItem.item?.id || idx} className="flex justify-between text-[11px]">
               <span className="text-slate-600 dark:text-[#f0ede6] font-medium">
                 <span className="font-mono text-orange-500 font-bold pr-1">{cartItem.quantity || 1}x</span> {cartItem.item?.name || cartItem.name || 'Item'}

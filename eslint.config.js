@@ -70,6 +70,10 @@ export default tseslint.config(
         {
           selector: 'CallExpression[callee.property.name="toFixed"][arguments.0.value=2]',
           message: 'Do not use .toFixed(2) for money. Use formatINR from src/shared/money/format.ts.',
+        },
+        {
+          selector: 'CallExpression[callee.property.name="parse"][callee.object.name!="JSON"]',
+          message: 'Do not use .parse() on Zod schemas as it throws on failure. Use .safeParse() instead to gracefully handle validation errors.',
         }
       ],
     },

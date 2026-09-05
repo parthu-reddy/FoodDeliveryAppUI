@@ -128,7 +128,7 @@ export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalPr
                       <div className="space-y-2 text-sm pl-2 border-l-2 border-slate-200 dark:border-slate-700">
                         <div className="flex justify-between text-slate-600 dark:text-slate-300">
                           <span>Food Value (Item Total)</span>
-                          <span>{formatINR((data.itemTotal || data.foodCost || 0))}</span>
+                          <span>{formatINR((data.subtotal || data.foodCost || 0))}</span>
                         </div>
                         <div className="flex justify-between text-rose-500 dark:text-rose-400">
                           <span>Platform Fee (Restaurant)</span>

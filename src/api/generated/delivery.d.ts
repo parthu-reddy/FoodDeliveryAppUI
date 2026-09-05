@@ -514,7 +514,7 @@ export interface components {
             lat: number;
             /** Format: double */
             lng: number;
-            orderId?: string;
+            id?: string;
             /** Format: double */
             speedKmh?: number;
             isMockLocation?: boolean;

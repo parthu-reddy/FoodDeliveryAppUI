@@ -36,8 +36,8 @@ const LedgerStatementLineDto = z
   .passthrough();
 const AdminOrderMoney = z
   .object({
-    orderId: z.string().uuid(),
-    totalAmount: z.number(),
+    id: z.string().uuid(),
+    total: z.number(),
     foodCost: z.number(),
     deliveryFee: z.number(),
     customerPlatformFee: z.number(),

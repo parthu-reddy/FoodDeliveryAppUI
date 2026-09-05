@@ -5,8 +5,8 @@ export const liveTrackingEventSchema = z.object({
   orderId: z.string().optional(),
   status: z.string().optional(),
   deliveryStatus: z.string().optional(),
-  riderId: z.string().optional(),
-  riderName: z.string().optional(),
+  deliveryExecutiveId: z.string().optional(),
+  deliveryExecutiveName: z.string().optional(),
   riderPhone: z.string().optional(),
   riderLocation: z.object({
     latitude: z.number(),

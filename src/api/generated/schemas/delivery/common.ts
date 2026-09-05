@@ -54,7 +54,7 @@ export const TelemetryEventRequest = z
       .regex(/^[0-9a-fA-F\-]{36}$/),
     lat: z.number(),
     lng: z.number(),
-    orderId: z
+    id: z
       .string()
       .min(0)
       .max(36)

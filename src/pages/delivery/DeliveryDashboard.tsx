@@ -85,8 +85,8 @@ export default function DeliveryDashboard({
   const [waitTimerSeconds, setWaitTimerSeconds] = useState(0);
   const [isWaitTimerActive, setIsWaitTimerActive] = useState(false);
 
-  const [riderId, setRiderId] = useState("");
-  const [riderName, setRiderName] = useState("");
+  const [deliveryExecutiveId, setRiderId] = useState("");
+  const [deliveryExecutiveName, setRiderName] = useState("");
   const [cityId, setCityId] = useState("");
   const [vehicleNumber, setVehicleNumber] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
@@ -122,8 +122,8 @@ export default function DeliveryDashboard({
     historyRef,
     onUpdateOrderStatus,
   } = useDeliveryOrders({
-    riderId,
-    riderName,
+    deliveryExecutiveId,
+    deliveryExecutiveName,
     cityId,
     isOnline,
     setIsOnline,
@@ -148,7 +148,7 @@ export default function DeliveryDashboard({
       .then((data) => {
         if (data.success && data.data) {
           const profile = data.data;
-          if (!riderName) setRiderName(profile.fullName || "");
+          if (!deliveryExecutiveName) setRiderName(profile.fullName || "");
           setVehicleNumber(profile.vehicleNumber || "");
           setPhotoUrl(profile.photoUrl || "");
           setCityId(profile.cityId || "");
@@ -216,7 +216,7 @@ export default function DeliveryDashboard({
         try {
           await deliveryApi.deliveryExecutive.post(
             `/api/delivery/status`,
-            { driverId: riderId, available: true },
+            { driverId: deliveryExecutiveId, available: true },
             {}
           );
           setIsOnline(true);
@@ -240,7 +240,7 @@ export default function DeliveryDashboard({
           try {
             await deliveryApi.deliveryExecutive.post(
               `/api/delivery/status`,
-              { driverId: riderId, available: true },
+              { driverId: deliveryExecutiveId, available: true },
               {}
             );
             setIsOnline(true);
@@ -254,7 +254,7 @@ export default function DeliveryDashboard({
   };
 
   const handleToggleOnline = async () => {
-    if (!riderId || isProfileMandatory) {
+    if (!deliveryExecutiveId || isProfileMandatory) {
       setShowProfileRequiredPrompt(true);
       return;
     }
@@ -284,7 +284,7 @@ export default function DeliveryDashboard({
             try {
               await deliveryApi.deliveryExecutive.post(
                 `/api/delivery/status`,
-                { driverId: riderId, available: true },
+                { driverId: deliveryExecutiveId, available: true },
                 {}
               );
               setIsOnline(true);
@@ -301,7 +301,7 @@ export default function DeliveryDashboard({
               try {
                 await deliveryApi.deliveryExecutive.post(
                   `/api/delivery/status`,
-                  { driverId: riderId, available: true },
+                  { driverId: deliveryExecutiveId, available: true },
                   {}
                 );
                 setIsOnline(true);
@@ -319,7 +319,7 @@ export default function DeliveryDashboard({
       try {
         await deliveryApi.deliveryExecutive.post(
           `/api/delivery/status`,
-          { driverId: riderId, available: false },
+          { driverId: deliveryExecutiveId, available: false },
           {}
         );
         setIsOnline(false);
@@ -333,13 +333,13 @@ export default function DeliveryDashboard({
     // Optimistic UI update
     setActiveJobId(job.id);
     onUpdateOrderStatus(job.id, job.status, DeliveryStatus.ASSIGNED, {
-      name: riderName,
+      name: deliveryExecutiveName,
     });
     try {
       await deliveryApi.deliveryExecutive.post(
         "/api/delivery/drivers/:driverId/orders/:orderId/accept",
         undefined,
-        { params: { driverId: riderId, orderId: job.id } }
+        { params: { driverId: deliveryExecutiveId, orderId: job.id } }
       );
     } catch (e: unknown) {
       // Revert on error
@@ -363,7 +363,7 @@ export default function DeliveryDashboard({
       await deliveryApi.deliveryExecutive.post(
         "/api/delivery/drivers/:driverId/orders/:orderId/reject",
         undefined,
-        { params: { driverId: riderId, orderId: jobId } }
+        { params: { driverId: deliveryExecutiveId, orderId: jobId } }
       );
     } catch (_e: unknown) {
       // Revert on error (optional, mostly fire and forget)
@@ -379,13 +379,13 @@ export default function DeliveryDashboard({
     // Optimistic UI update
     setActiveJobId(order.id);
     onUpdateOrderStatus(order.id, order.status, DeliveryStatus.ASSIGNED, {
-      name: riderName,
+      name: deliveryExecutiveName,
     });
     try {
       await deliveryApi.deliveryExecutive.post(
         "/api/delivery/drivers/:driverId/orders/:orderId/accept",
         undefined,
-        { params: { driverId: riderId, orderId: order.id } }
+        { params: { driverId: deliveryExecutiveId, orderId: order.id } }
       );
     } catch (e: unknown) {
       console.error("Failed to accept job", e);
@@ -408,7 +408,7 @@ export default function DeliveryDashboard({
       await deliveryApi.deliveryExecutive.post(
         "/api/delivery/drivers/:driverId/orders/:orderId/status",
         { status: DeliveryStatus.AT_RESTAURANT },
-        { params: { driverId: riderId, orderId: currentJob.id } }
+        { params: { driverId: deliveryExecutiveId, orderId: currentJob.id } }
       );
     } catch (e: unknown) {
       onUpdateOrderStatus(
@@ -434,7 +434,7 @@ export default function DeliveryDashboard({
       await deliveryApi.deliveryExecutive.post(
         "/api/delivery/drivers/:driverId/orders/:orderId/abort",
         undefined,
-        { params: { driverId: riderId, orderId: currentJob.id } }
+        { params: { driverId: deliveryExecutiveId, orderId: currentJob.id } }
       );
       setActiveJobId(null);
       showToast("Delivery aborted. You will be placed back in the pool.");
@@ -463,7 +463,7 @@ export default function DeliveryDashboard({
       await deliveryApi.deliveryExecutive.post(
         "/api/delivery/drivers/:driverId/orders/:orderId/status",
         { status: DeliveryStatus.FAILED, goOfflineAfter },
-        { params: { driverId: riderId, orderId: currentJob.id } }
+        { params: { driverId: deliveryExecutiveId, orderId: currentJob.id } }
       );
       setActiveJobId(null);
 
@@ -507,7 +507,7 @@ export default function DeliveryDashboard({
           status: DeliveryStatus.OUT_FOR_DELIVERY,
           pickupOtp: enteredPickupOtp,
         },
-        { params: { driverId: riderId, orderId: currentJob.id } }
+        { params: { driverId: deliveryExecutiveId, orderId: currentJob.id } }
       );
       setIsUpdatingPickup(false);
       setEnteredPickupOtp("");
@@ -549,7 +549,7 @@ export default function DeliveryDashboard({
           deliveryOtp: enteredOtp,
           goOfflineAfter,
         },
-        { params: { driverId: riderId, orderId: currentJob.id } }
+        { params: { driverId: deliveryExecutiveId, orderId: currentJob.id } }
       );
       setIsUpdatingDelivery(false);
 
@@ -650,7 +650,7 @@ export default function DeliveryDashboard({
           })
         }
         userId={user?.id || ""}
-        initialName={riderName}
+        initialName={deliveryExecutiveName}
         onLogout={onLogout}
       />
     );
@@ -708,7 +708,7 @@ export default function DeliveryDashboard({
               )}
               <div>
                 <h3 className="font-extrabold text-xs tracking-tight leading-none text-slate-900 dark:text-[#f0ede6]">
-                  {riderName || "Rider Portal"}
+                  {deliveryExecutiveName || "Rider Portal"}
                 </h3>
                 {vehicleNumber && (
                   <span className="text-[9px] text-slate-400 dark:text-slate-300 font-bold block mt-0.5">
@@ -722,7 +722,7 @@ export default function DeliveryDashboard({
           <div className="flex items-center gap-2 self-end sm:self-auto">
             <DeliveryOnlineToggle
               isOnline={isOnline}
-              riderId={riderId}
+              deliveryExecutiveId={deliveryExecutiveId}
               isProfileMandatory={isProfileMandatory}
               handleToggleOnline={handleToggleOnline}
             />

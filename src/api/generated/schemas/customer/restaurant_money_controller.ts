@@ -21,7 +21,7 @@ const RestaurantSummary = z
   .passthrough();
 const RestaurantOrderEarnings = z
   .object({
-    orderId: z.string().uuid(),
+    id: z.string().uuid(),
     restaurantId: z.string().uuid(),
     foodCost: z.number(),
     platformFee: z.number(),

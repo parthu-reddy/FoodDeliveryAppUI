@@ -10,7 +10,7 @@ const ReceiptItem = z
 const CustomerReceipt = z
   .object({
     items: z.array(ReceiptItem),
-    itemTotal: z.number(),
+    subtotal: z.number(),
     deliveryFee: z.number(),
     platformFee: z.number(),
     sgst: z.number(),

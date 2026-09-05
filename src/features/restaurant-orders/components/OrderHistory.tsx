@@ -176,7 +176,7 @@ interface RawOrder {
                     <td className="p-4">
                       <div className="flex flex-col gap-1">
                         // @ts-expect-error auto-migration type suppression
-                        {order.items.map((it: unknown, idx: number) => {
+                        {order.items?.map((it: unknown, idx: number) => {
                           const item = it as { quantity?: number, item?: { name?: string }, name?: string };
                           return (
                           <div key={idx} className="text-xs flex items-center gap-1.5 text-slate-600 dark:text-[#f0ede6]">

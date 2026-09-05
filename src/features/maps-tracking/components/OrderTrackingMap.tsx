@@ -222,7 +222,7 @@ function OrderTrackingMapInner({ order, enableLiveTracking = false }: { order: O
           navigator.geolocation.getCurrentPosition(
             (position) => {
               const { latitude, longitude } = position.coords;
-              if (order.riderId || order.status === OrderStatus.HANDED_OVER) {
+              if (order.deliveryExecutiveId || order.status === OrderStatus.HANDED_OVER) {
                 addMarkers(latitude, longitude);
 
                 // Draw route from rider to destination (restaurant or customer depending on status)

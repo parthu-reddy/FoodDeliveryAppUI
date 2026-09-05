@@ -71,8 +71,8 @@ export const OrderResponse = z
       "CANCELLED",
       "FAILED",
     ]),
-    totalAmount: z.number(),
-    itemTotal: z.number(),
+    total: z.number(),
+    subtotal: z.number(),
     customerPlatformFee: z.number(),
     sgst: z.number(),
     cgst: z.number(),
@@ -83,7 +83,6 @@ export const OrderResponse = z
     items: z.array(OrderItemResponse),
     createdAt: z.string().datetime({ offset: true }),
     updatedAt: z.string().datetime({ offset: true }).optional(),
-    riderId: z.string().uuid().optional(),
     deliveryExecutiveId: z.string().uuid().optional(),
     paymentIntent: z.string().optional(),
     pickupOtp: z.string().optional(),
@@ -147,7 +146,7 @@ export const ApiResponseQuoteResponse = z
   .passthrough();
 export const DriverOrderEarnings = z
   .object({
-    orderId: z.string().uuid(),
+    id: z.string().uuid(),
     driverId: z.string().uuid(),
     grossPayout: z.number(),
     taxes: z.number(),
@@ -164,7 +163,7 @@ export const Item = z
   .passthrough();
 export const RefundCommand = z
   .object({
-    orderId: z.string().uuid(),
+    id: z.string().uuid(),
     amount: z.number(),
     items: z.array(Item),
     reasonCode: z.string(),
@@ -195,7 +194,6 @@ export const RefundCommand = z
 export const RefundView = z
   .object({
     id: z.string().uuid(),
-    orderId: z.string().uuid(),
     amount: z.number(),
     status: z.enum([
       "REQUESTED",
@@ -218,7 +216,6 @@ export const SupportTicket = z
   .object({
     version: z.number().int().optional(),
     id: z.string().uuid(),
-    orderId: z.string().uuid(),
     customerId: z.string().uuid(),
     reason: z.string(),
     status: z.enum(["OPEN", "IN_REVIEW", "RESOLVED", "REJECTED"]),
@@ -395,7 +392,7 @@ export const RestaurantSummary = z
   .passthrough();
 export const RestaurantOrderEarnings = z
   .object({
-    orderId: z.string().uuid(),
+    id: z.string().uuid(),
     restaurantId: z.string().uuid(),
     foodCost: z.number(),
     platformFee: z.number(),
@@ -425,7 +422,7 @@ export const ReceiptItem = z
 export const CustomerReceipt = z
   .object({
     items: z.array(ReceiptItem),
-    itemTotal: z.number(),
+    subtotal: z.number(),
     deliveryFee: z.number(),
     platformFee: z.number(),
     sgst: z.number(),
@@ -493,8 +490,8 @@ export const Order = z
         "REFUND_FAILED",
       ])
       .optional(),
-    totalAmount: z.number(),
-    itemTotal: z.number().optional(),
+    total: z.number(),
+    subtotal: z.number().optional(),
     customerPlatformFee: z.number().optional(),
     restaurantPlatformFee: z.number().optional(),
     platformBonus: z.number().optional(),
@@ -606,8 +603,8 @@ export const LedgerStatementLineDto = z
   .passthrough();
 export const AdminOrderMoney = z
   .object({
-    orderId: z.string().uuid(),
-    totalAmount: z.number(),
+    id: z.string().uuid(),
+    total: z.number(),
     foodCost: z.number(),
     deliveryFee: z.number(),
     customerPlatformFee: z.number(),

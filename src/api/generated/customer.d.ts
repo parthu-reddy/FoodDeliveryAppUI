@@ -1131,8 +1131,8 @@ export interface components {
             status: "CREATED" | "PENDING_ACCEPTANCE" | "AWAITING_DELAY_APPROVAL" | "ACCEPTED" | "PREPARING" | "READY_FOR_PICKUP" | "HANDED_OVER" | "CANCELLED" | "CANCELLED_BY_RESTAURANT";
             /** @enum {string} */
             deliveryStatus: "PENDING" | "SEARCHING_FOR_DRIVER" | "MANUAL_INTERVENTION_REQUIRED" | "ASSIGNED" | "AT_RESTAURANT" | "OUT_FOR_DELIVERY" | "DELIVERED" | "CANCELLED" | "FAILED";
-            totalAmount: number;
-            itemTotal: number;
+            total: number;
+            subtotal: number;
             customerPlatformFee: number;
             sgst: number;
             cgst: number;
@@ -1148,7 +1148,7 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
             /** Format: uuid */
-            riderId?: string;
+            deliveryExecutiveId?: string;
             /** Format: uuid */
             deliveryExecutiveId?: string;
             paymentIntent?: string;
@@ -1206,7 +1206,7 @@ export interface components {
         };
         DriverOrderEarnings: {
             /** Format: uuid */
-            orderId?: string;
+            id?: string;
             /** Format: uuid */
             driverId?: string;
             grossPayout?: number;
@@ -1224,7 +1224,7 @@ export interface components {
         };
         RefundCommand: {
             /** Format: uuid */
-            orderId?: string;
+            id?: string;
             amount?: number;
             items?: components["schemas"]["Item"][];
             reasonCode?: string;
@@ -1246,8 +1246,6 @@ export interface components {
         RefundView: {
             /** Format: uuid */
             id?: string;
-            /** Format: uuid */
-            orderId?: string;
             amount?: number;
             /** @enum {string} */
             status?: "REQUESTED" | "PROCESSING" | "COMPLETED" | "FAILED" | "CANCELLED";
@@ -1271,8 +1269,6 @@ export interface components {
             version?: number;
             /** Format: uuid */
             id: string;
-            /** Format: uuid */
-            orderId: string;
             /** Format: uuid */
             customerId: string;
             reason: string;
@@ -1449,7 +1445,7 @@ export interface components {
         };
         RestaurantOrderEarnings: {
             /** Format: uuid */
-            orderId?: string;
+            id?: string;
             /** Format: uuid */
             restaurantId?: string;
             foodCost?: number;
@@ -1471,7 +1467,7 @@ export interface components {
         };
         CustomerReceipt: {
             items?: components["schemas"]["ReceiptItem"][];
-            itemTotal?: number;
+            subtotal?: number;
             deliveryFee?: number;
             platformFee?: number;
             sgst?: number;
@@ -1515,8 +1511,8 @@ export interface components {
             deliveryStatus?: "PENDING" | "SEARCHING_FOR_DRIVER" | "MANUAL_INTERVENTION_REQUIRED" | "ASSIGNED" | "AT_RESTAURANT" | "OUT_FOR_DELIVERY" | "DELIVERED" | "CANCELLED" | "FAILED";
             /** @enum {string} */
             paymentStatus?: "INITIATED" | "SUCCESS" | "FAILED" | "PENDING_COLLECTION" | "COLLECTED" | "PARTIALLY_REFUNDED" | "REFUNDED" | "REFUND_PENDING" | "REFUND_FAILED";
-            totalAmount: number;
-            itemTotal?: number;
+            total: number;
+            subtotal?: number;
             customerPlatformFee?: number;
             restaurantPlatformFee?: number;
             platformBonus?: number;
@@ -1610,8 +1606,8 @@ export interface components {
         };
         AdminOrderMoney: {
             /** Format: uuid */
-            orderId?: string;
-            totalAmount?: number;
+            id?: string;
+            total?: number;
             foodCost?: number;
             deliveryFee?: number;
             customerPlatformFee?: number;

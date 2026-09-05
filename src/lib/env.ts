@@ -23,4 +23,9 @@ const preprocessedEnv = Object.fromEntries(
   Object.entries(rawEnv).map(([key, value]) => [key, value === '' ? undefined : value])
 );
 
-export const env = envSchema.parse(preprocessedEnv);
+const parsed = envSchema.safeParse(preprocessedEnv);
+if (!parsed.success) {
+  console.error('Invalid environment variables:', parsed.error.format());
+  throw new Error('Invalid environment variables');
+}
+export const env = parsed.data;

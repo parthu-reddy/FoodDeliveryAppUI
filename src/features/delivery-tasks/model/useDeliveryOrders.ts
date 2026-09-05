@@ -9,8 +9,8 @@ import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { useEffect, useRef, useState } from 'react';
 
 export interface UseDeliveryOrdersProps {
-  riderId: string;
-  riderName: string;
+  deliveryExecutiveId: string;
+  deliveryExecutiveName: string;
   cityId: string;
   isOnline: boolean;
   setIsOnline: (online: boolean) => void;
@@ -22,7 +22,7 @@ export interface UseDeliveryOrdersProps {
 }
 
 export function useDeliveryOrders({
-  riderId,
+  deliveryExecutiveId,
   cityId,
   isOnline,
   setIsOnline,
@@ -63,7 +63,7 @@ export function useDeliveryOrders({
   // Polling Orders
   const { refetch: refetchPolling } = usePolling({
     fetchFn: async () => {
-    if (!isOnline || !riderId) return null;
+    if (!isOnline || !deliveryExecutiveId) return null;
 
     let fetchedActiveJobs: Order[] = [];
     let fetchedAvailableJobs: Order[] = [];
@@ -137,7 +137,7 @@ export function useDeliveryOrders({
 
   // History Fetch
   useEffect(() => {
-    if (!isOnline || !riderId) return;
+    if (!isOnline || !deliveryExecutiveId) return;
     
     const dateToFetch = showHistory ? historyDateFilter : todayDateString;
     if (!dateToFetch) return;
@@ -158,12 +158,12 @@ export function useDeliveryOrders({
     }).catch(console.error);
    
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showHistory, historyDateFilter, isOnline, riderId]);
+  }, [showHistory, historyDateFilter, isOnline, deliveryExecutiveId]);
 
   // Ping Job / Dispatch Logic
   useEffect(() => {
     if (isOnline && !activeJobId && !pingJob) {
-      const jobs = activeOrders.filter(o => !o.riderId && !rejectedIds.has(o.id));
+      const jobs = activeOrders.filter(o => !o.deliveryExecutiveId && !rejectedIds.has(o.id));
       if (jobs.length > 0) {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setPingJob(jobs[0]);
@@ -189,7 +189,7 @@ export function useDeliveryOrders({
 
   useEffect(() => {
     if (!activeJobId) {
-      const ongoingJob = activeOrders.find(o => (o.riderId === riderId || !!o.riderId) && o.deliveryStatus !== DeliveryStatus.DELIVERED && o.status !== OrderStatus.CANCELLED && o.status !== OrderStatus.CANCELLED_BY_RESTAURANT && o.deliveryStatus !== DeliveryStatus.FAILED);
+      const ongoingJob = activeOrders.find(o => (o.deliveryExecutiveId === deliveryExecutiveId || !!o.deliveryExecutiveId) && o.deliveryStatus !== DeliveryStatus.DELIVERED && o.status !== OrderStatus.CANCELLED && o.status !== OrderStatus.CANCELLED_BY_RESTAURANT && o.deliveryStatus !== DeliveryStatus.FAILED);
       if (ongoingJob) {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setActiveJobId(ongoingJob.id);
@@ -207,7 +207,7 @@ export function useDeliveryOrders({
      
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeOrders, riderId, activeJobId]);
+  }, [activeOrders, deliveryExecutiveId, activeJobId]);
 
   useEffect(() => {
     if (pingJob) {
@@ -256,7 +256,7 @@ export function useDeliveryOrders({
 
   // WebSocket Location & Tracking
   useEffect(() => {
-    if (!isOnline || !riderId) return;
+    if (!isOnline || !deliveryExecutiveId) return;
     let ws: WebSocket;
     let interval: NodeJS.Timeout;
     let watchId: number;
@@ -271,8 +271,8 @@ export function useDeliveryOrders({
         },
         (err) => {
           console.error("Location error:", err);
-          if (riderId) {
-            (deliveryApi.deliveryExecutive.post(`/api/delivery/status`, { driverId: riderId, available: false }, {}))
+          if (deliveryExecutiveId) {
+            (deliveryApi.deliveryExecutive.post(`/api/delivery/status`, { driverId: deliveryExecutiveId, available: false }, {}))
               .catch(e => console.error(e));
           }
           setIsOnline(false);
@@ -303,7 +303,7 @@ export function useDeliveryOrders({
         
         const sendLocation = () => {
           if (ws.readyState === WebSocket.OPEN) {
-            const payload: { driverId: string, lat: number, lng: number, timestamp: string, orderId?: string, cityId?: string } = { driverId: riderId, lat: currentLat, lng: currentLng, timestamp: new Date().toISOString() };
+            const payload: { driverId: string, lat: number, lng: number, timestamp: string, orderId?: string, cityId?: string } = { driverId: deliveryExecutiveId, lat: currentLat, lng: currentLng, timestamp: new Date().toISOString() };
             if (activeJobIdRef.current) {
                 payload.orderId = activeJobIdRef.current;
             }
@@ -370,7 +370,7 @@ export function useDeliveryOrders({
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOnline, riderId, cityId, refetchPolling]);
+  }, [isOnline, deliveryExecutiveId, cityId, refetchPolling]);
 
   // Current active job handling and SSE for status updates
   const currentJob = activeOrders.find(o => o.id === activeJobId && o.deliveryStatus !== DeliveryStatus.DELIVERED);
@@ -384,13 +384,13 @@ export function useDeliveryOrders({
   }, [currentJob?.id, currentJob?.status]);
 
   useEffect(() => {
-    if (!currentJob?.id || !riderId) return;
+    if (!currentJob?.id || !deliveryExecutiveId) return;
     const ctrl = new AbortController();
     let retryCount = 0;
 
     const connectSSE = async () => {
       const token = getToken();
-      const url = `${import.meta.env?.VITE_API_BASE_URL || ''}/api/delivery/drivers/${riderId}/orders/${currentJob.id}/restaurant-status-stream`;
+      const url = `${import.meta.env?.VITE_API_BASE_URL || ''}/api/delivery/drivers/${deliveryExecutiveId}/orders/${currentJob.id}/restaurant-status-stream`;
       
       try {
         await fetchEventSource(url, {
@@ -431,13 +431,13 @@ export function useDeliveryOrders({
     connectSSE();
     return () => { ctrl.abort(); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentJob?.id, riderId]);
+  }, [currentJob?.id, deliveryExecutiveId]);
 
   // Derived Values
-  const availableJobs = activeOrders.filter(o => (o.status === OrderStatus.READY_FOR_PICKUP || o.status === OrderStatus.PREPARING || o.status === OrderStatus.ACCEPTED) && !o.riderId);
+  const availableJobs = activeOrders.filter(o => (o.status === OrderStatus.READY_FOR_PICKUP || o.status === OrderStatus.PREPARING || o.status === OrderStatus.ACCEPTED) && !o.deliveryExecutiveId);
   const allHistoryJobsMap = new Map();
   // eslint-disable-next-line react-hooks/refs
-  [...historyRef.current, ...activeOrders.filter(o => o.riderId === riderId && [DeliveryStatus.DELIVERED, DeliveryStatus.FAILED, DeliveryStatus.CANCELLED].includes(o.deliveryStatus as DeliveryStatus))]
+  [...historyRef.current, ...activeOrders.filter(o => o.deliveryExecutiveId === deliveryExecutiveId && [DeliveryStatus.DELIVERED, DeliveryStatus.FAILED, DeliveryStatus.CANCELLED].includes(o.deliveryStatus as DeliveryStatus))]
     .forEach(job => allHistoryJobsMap.set(job.id, { ...job, payout: job.payout || 0 }));
   const allHistoryJobs = Array.from(allHistoryJobsMap.values());
   const todayHistoryJobs = allHistoryJobs.filter(job => job.createdAt?.startsWith(todayDateString));

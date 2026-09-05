@@ -568,7 +568,7 @@ export default function CustomerDashboard({
                   </div>
                   <div className="space-y-3 mb-6">
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    {currentTrackingOrder.items.map((item: any, idx: number) => (
+                    {currentTrackingOrder.items?.map((item: any, idx: number) => (
                       <div key={item.item?.id || idx} className="flex justify-between text-sm text-slate-600 dark:text-slate-300">
                         <span>{item.quantity || 1}x {item.item?.name || item.name || 'Item'}</span>
                         <span>{formatINR(((item.item?.price || item.price || 0) * (item.quantity || 1)))}</span>
@@ -576,7 +576,7 @@ export default function CustomerDashboard({
                     ))}
                     <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300 pt-3 border-t border-slate-200 dark:border-slate-800">
                       <span>Subtotal</span>
-                      <span>{formatINR((currentTrackingOrder.itemTotal || currentTrackingOrder.subtotal || 0))}</span>
+                      <span>{formatINR((currentTrackingOrder.subtotal || currentTrackingOrder.subtotal || 0))}</span>
                     </div>
                     <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300">
                       <span>SGST (2.5%)</span>
@@ -596,7 +596,7 @@ export default function CustomerDashboard({
                     </div>
                     <div className="flex justify-between text-lg font-black text-slate-900 dark:text-[#f0ede6] pt-2 border-t border-slate-200 dark:border-slate-800 mt-2">
                       <span>Total Paid</span>
-                      <span>{formatINR((currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0))}</span>
+                      <span>{formatINR((currentTrackingOrder.total || currentTrackingOrder.total || 0))}</span>
                     </div>
                     <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mt-1">
                       <span>Payment Method</span>
@@ -872,7 +872,7 @@ export default function CustomerDashboard({
               ...(currentTrackingOrder.deliveryExecutiveId ? [{
                 userId: currentTrackingOrder.deliveryExecutiveId,
                 entityType: 'DELIVERY' as const,
-                displayName: currentTrackingOrder.deliveryExecutiveName || currentTrackingOrder.riderName || 'Rider'
+                displayName: currentTrackingOrder.deliveryExecutiveName || currentTrackingOrder.deliveryExecutiveName || 'Rider'
               }] : []),
               ...(currentTrackingOrder.restaurantId ? [{
                 userId: currentTrackingOrder.restaurantId,

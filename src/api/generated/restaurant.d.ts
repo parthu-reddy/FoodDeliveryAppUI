@@ -1086,7 +1086,7 @@ export interface components {
         };
         RestaurantOrder: {
             /** Format: uuid */
-            orderId: string;
+            id: string;
             /** Format: uuid */
             restaurantId: string;
             /** @enum {string} */
@@ -1113,9 +1113,8 @@ export interface components {
             /** Format: uuid */
             deliveryExecutiveId?: string;
             customerName?: string;
-            riderName?: string;
-            itemsJson?: string;
-            totalAmount?: number;
+            deliveryExecutiveName?: string;
+            total?: number;
             foodCost?: number;
             restaurantPlatformFee?: number;
             restaurantDeliveryContribution?: number;

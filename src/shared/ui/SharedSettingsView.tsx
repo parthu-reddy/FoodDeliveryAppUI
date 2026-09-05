@@ -350,7 +350,7 @@ export default function SharedSettingsView({
                     </Badge>
                   </div>
                   <div className="text-xs text-slate-500 dark:text-slate-300 mb-3">
-                    <div className="mb-1 font-semibold">{order.items?.length || 0} items • {formatINR(order.totalAmount || (order as {total?:number}).total || 0)}</div>
+                    <div className="mb-1 font-semibold">{order.items?.length || 0} items • {formatINR(order.total || (order as {total?:number}).total || 0)}</div>
                     {order.items && order.items.length > 0 && (
                       <ul className="list-disc pl-4 space-y-0.5 text-slate-400">
                         {order.items.map((it: unknown, idx: number) => {

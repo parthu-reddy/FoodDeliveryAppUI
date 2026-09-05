@@ -682,7 +682,7 @@ export default function RestaurantDashboard({
             ...(selectedChatOrder.deliveryExecutiveId ? [{
               userId: selectedChatOrder.deliveryExecutiveId,
               entityType: 'DELIVERY' as const,
-              displayName: selectedChatOrder.deliveryExecutiveName || selectedChatOrder.riderName || 'Rider'
+              displayName: selectedChatOrder.deliveryExecutiveName || selectedChatOrder.deliveryExecutiveName || 'Rider'
             }] : [])
           ]}
           onClose={() => setSelectedChatOrder(null)}

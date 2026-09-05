@@ -19,7 +19,7 @@ const DriverSummary = z
   .passthrough();
 const DriverOrderEarnings = z
   .object({
-    orderId: z.string().uuid(),
+    id: z.string().uuid(),
     driverId: z.string().uuid(),
     grossPayout: z.number(),
     taxes: z.number(),

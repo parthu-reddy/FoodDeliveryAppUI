@@ -150,8 +150,9 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
         setIsLoading(true);
         try {
           // 1. Create or get session
-          const data = await chatApi.chatSession.post(`/api/v1/chat/sessions`, {
-            orderId,
+            const data = await chatApi.chatSession.post(`/api/v1/chat/sessions`, {
+              id: "",
+              orderId,
             participants: [
               {
                 userId: user.id,

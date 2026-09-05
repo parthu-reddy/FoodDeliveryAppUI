@@ -8,7 +8,7 @@ import { PageableObject } from "./common";
 
 const RestaurantOrder = z
   .object({
-    orderId: z.string().uuid(),
+    id: z.string().uuid(),
     restaurantId: z.string().uuid(),
     status: z.enum([
       "CREATED",
@@ -58,9 +58,8 @@ const RestaurantOrder = z
     deliveryOtp: z.string().optional(),
     deliveryExecutiveId: z.string().uuid().optional(),
     customerName: z.string().optional(),
-    riderName: z.string().optional(),
-    itemsJson: z.string().optional(),
-    totalAmount: z.number().optional(),
+    deliveryExecutiveName: z.string().optional(),
+    total: z.number().optional(),
     foodCost: z.number().optional(),
     restaurantPlatformFee: z.number().optional(),
     restaurantDeliveryContribution: z.number().optional(),

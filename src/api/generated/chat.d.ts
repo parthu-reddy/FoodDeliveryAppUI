@@ -109,7 +109,7 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         CreateSessionRequest: {
-            orderId: string;
+            id: string;
             participants: components["schemas"]["ParticipantDto"][];
         };
         ParticipantDto: {
