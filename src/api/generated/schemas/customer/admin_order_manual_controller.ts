@@ -3,65 +3,13 @@ import { z } from "zod";
 
 import { ApiResponseString } from "./common";
 import { PageOrder } from "./common";
-import { Order } from "./common";
-import { PageableObject } from "./common";
 import { SortObject } from "./common";
+import { PageableObject } from "./common";
+import { Order } from "./common";
 import { PageSupportTicket } from "./common";
 import { SupportTicket } from "./common";
 
 const endpoints = makeApi([
-  {
-    method: "post",
-    path: "/api/v1/internal/admin/orders/intervention/:orderId/refund/post-delivery",
-    alias: "postDeliveryRefund",
-    requestFormat: "json",
-    parameters: [
-      {
-        name: "body",
-        type: "Body",
-        schema: z.record(z.object({}).partial().passthrough()),
-      },
-      {
-        name: "orderId",
-        type: "Path",
-        schema: z.string().uuid(),
-      },
-    ],
-    response: ApiResponseString,
-  },
-  {
-    method: "post",
-    path: "/api/v1/internal/admin/orders/intervention/:orderId/refund/partial",
-    alias: "partialRefund_1",
-    requestFormat: "json",
-    parameters: [
-      {
-        name: "body",
-        type: "Body",
-        schema: z.record(z.object({}).partial().passthrough()),
-      },
-      {
-        name: "orderId",
-        type: "Path",
-        schema: z.string().uuid(),
-      },
-    ],
-    response: ApiResponseString,
-  },
-  {
-    method: "post",
-    path: "/api/v1/internal/admin/orders/intervention/:orderId/force-refund",
-    alias: "forceRefund",
-    requestFormat: "json",
-    parameters: [
-      {
-        name: "orderId",
-        type: "Path",
-        schema: z.string().uuid(),
-      },
-    ],
-    response: ApiResponseString,
-  },
   {
     method: "post",
     path: "/api/v1/internal/admin/orders/intervention/:orderId/force-cancel",

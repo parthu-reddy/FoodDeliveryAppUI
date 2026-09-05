@@ -64,7 +64,7 @@ export function useRestaurantOrders({
     if (res.data) {
       const activeOrdersData = fromContract<{ id: string; orderId: string; [key: string]: unknown }[]>(res.data || []);
       const mapped = activeOrdersData.map((o: unknown) => {
-        const orderData = o as Order & { itemsJson?: string, orderId?: string, totalAmount?: number };
+        const orderData = o as Order & { itemsJson?: string, orderId?: string };
         const s = orderData.status?.toUpperCase() || '';
         let parsedItems = orderData.items || [];
         if (orderData.itemsJson) {
@@ -81,7 +81,7 @@ export function useRestaurantOrders({
           id: orderData.orderId || orderData.id || '', 
           status: s as OrderStatus, 
           items: parsedItems as { quantity: number; item: { id: string; name: string; price: number } }[],
-          total: orderData.total || orderData.totalAmount || calculatedTotal,
+          total: orderData.total || calculatedTotal,
           subtotal: orderData.subtotal || calculatedTotal,
           customerName: orderData.customerName || 'Customer'
         };

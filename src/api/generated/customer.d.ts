@@ -84,6 +84,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/money/driver/{driverId}/orders:batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["getDriverOrderMoneyBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/internal/orders/{orderId}/partial-refund": {
         parameters: {
             query?: never;
@@ -93,7 +109,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["partialRefund"];
+        post: operations["initiatePartialRefund"];
         delete?: never;
         options?: never;
         head?: never;
@@ -132,7 +148,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/internal/admin/orders/{orderId}/refund/post-delivery": {
+    "/api/v1/internal/admin/refunds/request": {
         parameters: {
             query?: never;
             header?: never;
@@ -141,23 +157,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["initiatePostDeliveryRefund"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/internal/admin/orders/{orderId}/refund/partial": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["initiatePartialRefund"];
+        post: operations["requestRefund"];
         delete?: never;
         options?: never;
         head?: never;
@@ -190,54 +190,6 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["overrideOrderStatus"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/internal/admin/orders/intervention/{orderId}/refund/post-delivery": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["postDeliveryRefund"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/internal/admin/orders/intervention/{orderId}/refund/partial": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["partialRefund_1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/internal/admin/orders/intervention/{orderId}/force-refund": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["forceRefund"];
         delete?: never;
         options?: never;
         head?: never;
@@ -324,7 +276,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/internal/admin/orders/dlq/refunds/{orderId}/retry": {
+    "/api/v1/internal/admin/orders/dlq/refunds/{refundId}/retry": {
         parameters: {
             query?: never;
             header?: never;
@@ -580,6 +532,246 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/money/restaurant/{outletId}/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/money/restaurant/{outletId}/statement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getStatement"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/money/restaurant/{outletId}/refunds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getRestaurantRefunds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/money/restaurant/{outletId}/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getOrders"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/money/restaurant/{outletId}/orders/{orderId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getOrderEarnings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/money/restaurant/orders/{orderId}/earnings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getOrderEarningsInternal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/money/driver/{driverId}/orders/{orderId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getOrderEarnings_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/money/driver/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getSummary_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/money/driver/statement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getStatement_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/money/driver/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getOrders_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/money/driver/orders/{orderId}/earnings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getOrderEarningsInternal_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/money/driver/cash": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getCash"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/money/customer/refunds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getMyRefunds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/money/customer/orders/{orderId}/refunds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getOrderRefunds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/money/customer/orders/{orderId}/receipt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getReceipt"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/internal/restaurants/outlets/{outletId}/refund-requests": {
         parameters: {
             query?: never;
@@ -604,22 +796,6 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getOrderParticipants"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/internal/orders/{orderId}/invoice": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getOrderInvoice"];
         put?: never;
         post?: never;
         delete?: never;
@@ -684,6 +860,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getTickets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/internal/admin/orders/{orderId}/money": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getOrderMoney"];
         put?: never;
         post?: never;
         delete?: never;
@@ -941,18 +1133,10 @@ export interface components {
             deliveryStatus: "PENDING" | "SEARCHING_FOR_DRIVER" | "MANUAL_INTERVENTION_REQUIRED" | "ASSIGNED" | "AT_RESTAURANT" | "OUT_FOR_DELIVERY" | "DELIVERED" | "CANCELLED" | "FAILED";
             totalAmount: number;
             itemTotal: number;
-            foodCost: number;
             customerPlatformFee: number;
-            restaurantPlatformFee?: number;
-            platformBonus?: number;
-            restaurantDeliveryContribution?: number;
-            restaurantPayout?: number;
             sgst: number;
             cgst: number;
             deliveryFee: number;
-            driverGrossPayout?: number;
-            driverTaxes?: number;
-            driverNetPayout?: number;
             deliveryAddress: string;
             /** Format: double */
             deliveryLat?: number;
@@ -965,6 +1149,8 @@ export interface components {
             updatedAt?: string;
             /** Format: uuid */
             riderId?: string;
+            /** Format: uuid */
+            deliveryExecutiveId?: string;
             paymentIntent?: string;
             pickupOtp?: string;
             otp?: string;
@@ -1018,13 +1204,64 @@ export interface components {
             driverPayout: number;
             restaurantDeliveryContribution: number;
         };
-        ApiResponseString: {
-            success: boolean;
-            message: string;
-            errorCode?: string;
-            data?: string;
+        DriverOrderEarnings: {
+            /** Format: uuid */
+            orderId?: string;
+            /** Format: uuid */
+            driverId?: string;
+            grossPayout?: number;
+            taxes?: number;
+            netPayout?: number;
+            customerContribution?: number;
+            restaurantContribution?: number;
+            platformBonus?: number;
+        };
+        Item: {
+            /** Format: uuid */
+            orderItemId?: string;
+            /** Format: int32 */
+            quantity?: number;
+        };
+        RefundCommand: {
+            /** Format: uuid */
+            orderId?: string;
+            amount?: number;
+            items?: components["schemas"]["Item"][];
+            reasonCode?: string;
+            reasonText?: string;
+            /** @enum {string} */
+            faultType?: "PLATFORM_FAULT" | "RESTAURANT_FAULT" | "RIDER_FAULT" | "CUSTOMER_FAULT" | "UNKNOWN";
+            /** @enum {string} */
+            destination?: "ORIGINAL_METHOD" | "STORE_CREDIT" | "NONE";
+            /** @enum {string} */
+            source?: "CUSTOMER_TICKET" | "RESTAURANT" | "ADMIN" | "SYSTEM_CANCELLATION" | "SYSTEM_DELIVERY_FAILED" | "SYSTEM_LATE_PAYMENT";
+            /** @enum {string} */
+            initiatorType?: "CUSTOMER" | "RESTAURANT" | "ADMIN" | "SYSTEM";
+            /** Format: uuid */
+            initiatorId?: string;
+            idempotencyKey?: string;
+            /** Format: uuid */
+            ticketId?: string;
+        };
+        RefundView: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            orderId?: string;
+            amount?: number;
+            /** @enum {string} */
+            status?: "REQUESTED" | "PROCESSING" | "COMPLETED" | "FAILED" | "CANCELLED";
+            /** @enum {string} */
+            destination?: "ORIGINAL_METHOD" | "STORE_CREDIT" | "NONE";
+            /** @enum {string} */
+            method?: "CARD" | "UPI" | "WALLET" | "COD";
+            reasonCode?: string;
             /** Format: date-time */
-            timestamp: string;
+            requestedAt?: string;
+            /** Format: date-time */
+            completedAt?: string;
+            /** Format: date-time */
+            expectedBy?: string;
         };
         ReviewRequest: {
             notes?: string;
@@ -1061,11 +1298,13 @@ export interface components {
             faultType?: string;
             overrideAmount?: number;
         };
-        PartialRefundRequest: {
-            amount: number;
-            reason?: string;
-            /** @enum {string} */
-            faultType?: "PLATFORM_FAULT" | "RESTAURANT_FAULT" | "RIDER_FAULT" | "CUSTOMER_FAULT" | "UNKNOWN";
+        ApiResponseString: {
+            success: boolean;
+            message: string;
+            errorCode?: string;
+            data?: string;
+            /** Format: date-time */
+            timestamp: string;
         };
         AddressRequest: {
             label: string;
@@ -1157,20 +1396,22 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             numberOfElements: number;
+            first: boolean;
+            last: boolean;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["OrderResponse"][];
-            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             number: number;
-            first: boolean;
-            last: boolean;
-            sort?: components["schemas"]["SortObject"];
             empty: boolean;
         };
         PageableObject: {
+            unpaged: boolean;
+            sort?: components["schemas"]["SortObject"];
             paged: boolean;
             /** Format: int32 */
             pageNumber: number;
@@ -1178,8 +1419,6 @@ export interface components {
             pageSize: number;
             /** Format: int64 */
             offset: number;
-            sort?: components["schemas"]["SortObject"];
-            unpaged: boolean;
         };
         SortObject: {
             empty: boolean;
@@ -1194,11 +1433,67 @@ export interface components {
             /** Format: date-time */
             timestamp: string;
         };
-        ApiResponseListSupportTicket: {
+        JsonNode: Record<string, never>;
+        RestaurantSummary: {
+            /** Format: int32 */
+            orders?: number;
+            grossFoodCost?: number;
+            platformFees?: number;
+            deliveryContribution?: number;
+            platformBonus?: number;
+            netEarnings?: number;
+            clawbacks?: number;
+            pendingBalance?: number;
+            lastPayout?: components["schemas"]["JsonNode"];
+            beneficiaryStatus?: components["schemas"]["JsonNode"];
+        };
+        RestaurantOrderEarnings: {
+            /** Format: uuid */
+            orderId?: string;
+            /** Format: uuid */
+            restaurantId?: string;
+            foodCost?: number;
+            platformFee?: number;
+            deliveryContribution?: number;
+            netPayout?: number;
+        };
+        DriverSummary: {
+            /** Format: int32 */
+            deliveries?: number;
+            gross?: number;
+            taxes?: number;
+            net?: number;
+            cashCollected?: number;
+            cashRemitted?: number;
+            cashInHand?: number;
+            pendingBalance?: number;
+            lastPayout?: components["schemas"]["JsonNode"];
+        };
+        CustomerReceipt: {
+            items?: components["schemas"]["ReceiptItem"][];
+            itemTotal?: number;
+            deliveryFee?: number;
+            platformFee?: number;
+            sgst?: number;
+            cgst?: number;
+            total?: number;
+            paymentMethod?: string;
+            /** Format: date-time */
+            paidAt?: string;
+            refunds?: components["schemas"]["RefundView"][];
+            storeCreditUsed?: number;
+        };
+        ReceiptItem: {
+            name?: string;
+            /** Format: int32 */
+            quantity?: number;
+            price?: number;
+        };
+        ApiResponseListRefundView: {
             success: boolean;
             message: string;
             errorCode?: string;
-            data?: components["schemas"]["SupportTicket"][];
+            data?: components["schemas"]["RefundView"][];
             /** Format: date-time */
             timestamp: string;
         };
@@ -1214,9 +1509,12 @@ export interface components {
             /** @enum {string} */
             status: "CREATED" | "PENDING_ACCEPTANCE" | "AWAITING_DELAY_APPROVAL" | "ACCEPTED" | "PREPARING" | "READY_FOR_PICKUP" | "HANDED_OVER" | "CANCELLED" | "CANCELLED_BY_RESTAURANT";
             /** @enum {string} */
+            paymentMethod?: "CARD" | "UPI" | "WALLET" | "COD";
+            cashCollectedAmount?: number;
+            /** @enum {string} */
             deliveryStatus?: "PENDING" | "SEARCHING_FOR_DRIVER" | "MANUAL_INTERVENTION_REQUIRED" | "ASSIGNED" | "AT_RESTAURANT" | "OUT_FOR_DELIVERY" | "DELIVERED" | "CANCELLED" | "FAILED";
             /** @enum {string} */
-            paymentStatus?: "CREATED" | "INITIATED" | "PENDING" | "SUCCESS" | "FAILED" | "CAPTURED" | "PAID" | "PARTIALLY_REFUNDED" | "REFUNDED" | "REFUND_PENDING" | "REFUND_FAILED";
+            paymentStatus?: "INITIATED" | "SUCCESS" | "FAILED" | "PENDING_COLLECTION" | "COLLECTED" | "PARTIALLY_REFUNDED" | "REFUNDED" | "REFUND_PENDING" | "REFUND_FAILED";
             totalAmount: number;
             itemTotal?: number;
             customerPlatformFee?: number;
@@ -1241,7 +1539,6 @@ export interface components {
             rateCgstPercent?: number;
             rateDeliverySgstPercent?: number;
             rateDeliveryCgstPercent?: number;
-            refundedAmount?: number;
             distanceKm?: number;
             /** Format: uuid */
             deliveryExecutiveId?: string;
@@ -1280,17 +1577,17 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             numberOfElements: number;
+            first: boolean;
+            last: boolean;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["Order"][];
-            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             number: number;
-            first: boolean;
-            last: boolean;
-            sort?: components["schemas"]["SortObject"];
             empty: boolean;
         };
         PageSupportTicket: {
@@ -1298,37 +1595,73 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             numberOfElements: number;
+            first: boolean;
+            last: boolean;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["SupportTicket"][];
-            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             number: number;
-            first: boolean;
-            last: boolean;
-            sort?: components["schemas"]["SortObject"];
             empty: boolean;
+        };
+        AdminOrderMoney: {
+            /** Format: uuid */
+            orderId?: string;
+            totalAmount?: number;
+            foodCost?: number;
+            deliveryFee?: number;
+            customerPlatformFee?: number;
+            restaurantPayout?: number;
+            restaurantPlatformFee?: number;
+            restaurantDeliveryContribution?: number;
+            driverGrossPayout?: number;
+            driverTaxes?: number;
+            driverNetPayout?: number;
+            platformBonus?: number;
+            sgst?: number;
+            cgst?: number;
+            ledgerLines?: components["schemas"]["LedgerStatementLineDto"][];
+        };
+        LedgerStatementLineDto: {
+            /** Format: uuid */
+            transactionId?: string;
+            /** Format: uuid */
+            referenceId?: string;
+            /** @enum {string} */
+            category?: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "CLAWBACK" | "PAYOUT_TRANSFER" | "CASH_COLLECTED" | "CASH_REMITTED" | "STORE_CREDIT";
+            amount?: number;
+            /** @enum {string} */
+            direction?: "CREDIT" | "DEBIT";
+            /** Format: date-time */
+            createdAt?: string;
+            description?: string;
+            /** Format: uuid */
+            payoutId?: string;
+            payoutStatus?: string;
+            settled?: boolean;
         };
         PageMapStringObject: {
             /** Format: int64 */
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             numberOfElements: number;
+            first: boolean;
+            last: boolean;
             /** Format: int32 */
             size: number;
             content: {
                 [key: string]: Record<string, never>;
             }[];
-            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             number: number;
-            first: boolean;
-            last: boolean;
-            sort?: components["schemas"]["SortObject"];
             empty: boolean;
         };
         ApiResponsePageCustomerAddressDto: {
@@ -1344,17 +1677,17 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             numberOfElements: number;
+            first: boolean;
+            last: boolean;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["CustomerAddressDto"][];
-            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             number: number;
-            first: boolean;
-            last: boolean;
-            sort?: components["schemas"]["SortObject"];
             empty: boolean;
         };
         ApiResponseListCustomerAddressDto: {
@@ -1496,7 +1829,33 @@ export interface operations {
             };
         };
     };
-    partialRefund: {
+    getDriverOrderMoneyBatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                driverId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": string[];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DriverOrderEarnings"][];
+                };
+            };
+        };
+    };
+    initiatePartialRefund: {
         parameters: {
             query?: never;
             header?: never;
@@ -1507,9 +1866,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: string;
-                };
+                "application/json": components["schemas"]["RefundCommand"];
             };
         };
         responses: {
@@ -1519,7 +1876,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseString"];
+                    "application/json": components["schemas"]["RefundView"];
                 };
             };
         };
@@ -1578,18 +1935,16 @@ export interface operations {
             };
         };
     };
-    initiatePostDeliveryRefund: {
+    requestRefund: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                orderId: string;
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PartialRefundRequest"];
+                "application/json": components["schemas"]["RefundCommand"];
             };
         };
         responses: {
@@ -1599,37 +1954,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: string;
-                    };
-                };
-            };
-        };
-    };
-    initiatePartialRefund: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                orderId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PartialRefundRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: string;
-                    };
+                    "application/json": components["schemas"]["RefundView"];
                 };
             };
         };
@@ -1684,84 +2009,6 @@ export interface operations {
                     "application/json": {
                         [key: string]: string;
                     };
-                };
-            };
-        };
-    };
-    postDeliveryRefund: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                orderId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    [key: string]: Record<string, never>;
-                };
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseString"];
-                };
-            };
-        };
-    };
-    partialRefund_1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                orderId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    [key: string]: Record<string, never>;
-                };
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseString"];
-                };
-            };
-        };
-    };
-    forceRefund: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                orderId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseString"];
                 };
             };
         };
@@ -1911,7 +2158,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                orderId: string;
+                refundId: string;
             };
             cookie?: never;
         };
@@ -2328,6 +2575,347 @@ export interface operations {
             };
         };
     };
+    getSummary: {
+        parameters: {
+            query?: {
+                period?: string;
+            };
+            header?: never;
+            path: {
+                outletId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestaurantSummary"];
+                };
+            };
+        };
+    };
+    getStatement: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                outletId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JsonNode"];
+                };
+            };
+        };
+    };
+    getRestaurantRefunds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outletId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RefundView"][];
+                };
+            };
+        };
+    };
+    getOrders: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                page?: number;
+            };
+            header?: never;
+            path: {
+                outletId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestaurantOrderEarnings"][];
+                };
+            };
+        };
+    };
+    getOrderEarnings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outletId: string;
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestaurantOrderEarnings"];
+                };
+            };
+        };
+    };
+    getOrderEarningsInternal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestaurantOrderEarnings"];
+                };
+            };
+        };
+    };
+    getOrderEarnings_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                driverId: string;
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DriverOrderEarnings"];
+                };
+            };
+        };
+    };
+    getSummary_1: {
+        parameters: {
+            query?: {
+                period?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DriverSummary"];
+                };
+            };
+        };
+    };
+    getStatement_1: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JsonNode"];
+                };
+            };
+        };
+    };
+    getOrders_1: {
+        parameters: {
+            query?: {
+                date?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DriverOrderEarnings"][];
+                };
+            };
+        };
+    };
+    getOrderEarningsInternal_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DriverOrderEarnings"];
+                };
+            };
+        };
+    };
+    getCash: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JsonNode"];
+                };
+            };
+        };
+    };
+    getMyRefunds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RefundView"][];
+                };
+            };
+        };
+    };
+    getOrderRefunds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RefundView"][];
+                };
+            };
+        };
+    };
+    getReceipt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerReceipt"];
+                };
+            };
+        };
+    };
     getActiveRefundRequests: {
         parameters: {
             query?: never;
@@ -2345,7 +2933,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseListSupportTicket"];
+                    "application/json": components["schemas"]["ApiResponseListRefundView"];
                 };
             };
         };
@@ -2368,28 +2956,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": string[];
-                };
-            };
-        };
-    };
-    getOrderInvoice: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                orderId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OrderResponse"];
                 };
             };
         };
@@ -2483,6 +3049,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PageSupportTicket"];
+                };
+            };
+        };
+    };
+    getOrderMoney: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminOrderMoney"];
                 };
             };
         };

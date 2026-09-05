@@ -3,69 +3,11 @@ import { z } from "zod";
 
 import { PageOrder } from "./common";
 import { pageable } from "./common";
-import { Order } from "./common";
-import { PageableObject } from "./common";
 import { SortObject } from "./common";
-
-const PartialRefundRequest = z
-  .object({
-    amount: z.number(),
-    reason: z.string().optional(),
-    faultType: z
-      .enum([
-        "PLATFORM_FAULT",
-        "RESTAURANT_FAULT",
-        "RIDER_FAULT",
-        "CUSTOMER_FAULT",
-        "UNKNOWN",
-      ])
-      .optional(),
-  })
-  .passthrough();
-
-export const schemas = {
-  PartialRefundRequest,
-};
+import { PageableObject } from "./common";
+import { Order } from "./common";
 
 const endpoints = makeApi([
-  {
-    method: "post",
-    path: "/api/v1/internal/admin/orders/:orderId/refund/post-delivery",
-    alias: "initiatePostDeliveryRefund",
-    requestFormat: "json",
-    parameters: [
-      {
-        name: "body",
-        type: "Body",
-        schema: PartialRefundRequest,
-      },
-      {
-        name: "orderId",
-        type: "Path",
-        schema: z.string().uuid(),
-      },
-    ],
-    response: z.record(z.string()),
-  },
-  {
-    method: "post",
-    path: "/api/v1/internal/admin/orders/:orderId/refund/partial",
-    alias: "initiatePartialRefund",
-    requestFormat: "json",
-    parameters: [
-      {
-        name: "body",
-        type: "Body",
-        schema: PartialRefundRequest,
-      },
-      {
-        name: "orderId",
-        type: "Path",
-        schema: z.string().uuid(),
-      },
-    ],
-    response: z.record(z.string()),
-  },
   {
     method: "post",
     path: "/api/v1/internal/admin/orders/:orderId/reconcile",

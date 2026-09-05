@@ -109,7 +109,11 @@ export default function AdminLiveOperations() {
 
   const handlePartialRefund = async (orderId: string, amount: string) => {
     try {
-      await customerApi.adminOrder.post('/api/v1/internal/admin/orders/:orderId/refund/partial', { amount: parseFloat(amount) }, { params: { orderId } });
+      await customerApi.adminRefundCommand.post('/api/v1/internal/admin/refunds/request', { 
+        orderId, 
+        refundAmount: parseFloat(amount), 
+        refundType: "PARTIAL" 
+      });
       showSuccess("Partial refund initiated successfully!");
       setRefundAmount('');
       fetchActiveOrders();
@@ -122,7 +126,11 @@ export default function AdminLiveOperations() {
 
   const handlePostDeliveryRefund = async (orderId: string, amount: string) => {
     try {
-      await customerApi.adminOrder.post('/api/v1/internal/admin/orders/:orderId/refund/post-delivery', { amount: parseFloat(amount) }, { params: { orderId } });
+      await customerApi.adminRefundCommand.post('/api/v1/internal/admin/refunds/request', { 
+        orderId, 
+        refundAmount: parseFloat(amount), 
+        refundType: "POST_DELIVERY" 
+      });
       showSuccess("Post-delivery refund initiated successfully!");
       setRefundAmount('');
       fetchActiveOrders();

@@ -22,7 +22,7 @@ export const schemas = {
 const endpoints = makeApi([
   {
     method: "post",
-    path: "/api/v1/advertisers/:advertiserId/wallet/topups",
+    path: "/api/v1/internal/advertisers/:advertiserId/wallet/topups",
     alias: "topupWallet",
     requestFormat: "json",
     parameters: [

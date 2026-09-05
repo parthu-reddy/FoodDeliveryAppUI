@@ -3,6 +3,7 @@ import { AlertCircle, ShieldCheck, ShoppingBag, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import React from 'react';
 import { z } from 'zod';
+import { formatINR } from '@shared/money';
 
 const checkoutSchema = z.object({
   deliveryAddressId: z.string().min(1, "Please select a valid delivery address before checking out.")
@@ -140,7 +141,7 @@ export default function CustomerCartDrawer({
                           <div key={cartItem.item.id} className="flex justify-between items-center text-sm">
                             <div className="flex-1">
                               <span className="font-semibold text-slate-900 dark:text-[#f0ede6]">{cartItem.item.name}</span>
-                              <p className="text-xs text-amber-500 font-mono">₹{cartItem.item.price}</p>
+                              <p className="text-xs text-amber-500 font-mono">{formatINR(cartItem.item.price)}</p>
                             </div>
                             <div className="flex items-center bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-[#f0ede6] rounded-lg font-bold">
                               <button 
@@ -165,30 +166,29 @@ export default function CustomerCartDrawer({
                       <div className="border-t border-rose-500/10 pt-3 space-y-1.5 text-xs font-mono">
                         <div className="flex justify-between text-slate-500 dark:text-slate-400">
                           <span>Subtotal</span>
-                          <span>₹{total.subtotal.toFixed(2)}</span>
+                          <span>{formatINR(total.subtotal)}</span>
                         </div>
                         {(total.platformFee !== undefined && total.platformFee > 0) && (
                           <div className="flex justify-between text-slate-500 dark:text-slate-400">
                             <span>Platform Fee</span>
-                            <span>₹{total.platformFee.toFixed(2)}</span>
+                            <span>{formatINR(total.platformFee)}</span>
                           </div>
                         )}
                         <div className="flex justify-between text-slate-500 dark:text-slate-400">
                           <span>Delivery Fee</span>
-                          {/* @ts-expect-error auto-migration type suppression */}
-                          <span>{total.deliveryFee === 0 ? <span className="text-emerald-500 font-bold">FREE</span> : `₹${total.deliveryFee.toFixed(2)}`}</span>
+                          <span>{total.deliveryFee === 0 ? <span className="text-emerald-500 font-bold">FREE</span> : `${formatINR(total.deliveryFee)}`}</span>
                         </div>
                         <div className="flex justify-between text-slate-500 dark:text-slate-400">
                           <span>SGST (2.5%)</span>
-                          <span>{total.isEstimated ? 'Calculating...' : `₹${total.sgst.toFixed(2)}`}</span>
+                          <span>{total.isEstimated ? 'Calculating...' : `${formatINR(total.sgst)}`}</span>
                         </div>
                         <div className="flex justify-between text-slate-500 dark:text-slate-400">
                           <span>CGST (2.5%)</span>
-                          <span>{total.isEstimated ? 'Calculating...' : `₹${total.cgst.toFixed(2)}`}</span>
+                          <span>{total.isEstimated ? 'Calculating...' : `${formatINR(total.cgst)}`}</span>
                         </div>
                         <div className="flex justify-between text-slate-900 dark:text-[#f0ede6] font-bold text-sm pt-1 border-t border-rose-500/10">
                           <span>Total</span>
-                          <span>{total.isEstimated ? `Estimate: ₹${total.total?.toFixed(2)}` : `₹${total.total?.toFixed(2)}`}</span>
+                          <span>{total.isEstimated ? `Estimate: ${formatINR(total.total)}` : `${formatINR(total.total)}`}</span>
                         </div>
                       </div>
 

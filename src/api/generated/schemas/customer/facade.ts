@@ -4,6 +4,7 @@ import { createApiClient as create_adminDlq } from './admin_dlq_controller';
 import { createApiClient as create_adminOrder } from './admin_order_controller';
 import { createApiClient as create_adminOrderManual } from './admin_order_manual_controller';
 import { createApiClient as create_adminRefund } from './admin_refund_controller';
+import { createApiClient as create_adminRefundCommand } from './admin_refund_command_controller';
 import { createApiClient as create_api } from './api';
 import { createApiClient as create_customerAddress } from './customer_address_controller';
 import { createApiClient as create_customerOrder } from './customer_order_controller';
@@ -27,6 +28,7 @@ export function createCustomerFacade(baseUrl: string, options?: ZodiosOptions) {
   customerAddress: create_customerAddress(baseUrl, options),
   customerOrder: create_customerOrder(baseUrl, options),
   adminRefund: create_adminRefund(baseUrl, options),
+  adminRefundCommand: create_adminRefundCommand(baseUrl, options),
   customerRestaurant: create_customerRestaurant(baseUrl, options),
   places: create_places(baseUrl, options),
   customerTracking: create_customerTracking(baseUrl, options),

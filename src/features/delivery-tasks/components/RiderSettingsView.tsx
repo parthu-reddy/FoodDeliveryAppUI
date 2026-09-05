@@ -9,6 +9,7 @@ import { TransactionHistoryTable, WalletTransaction, ActiveSessions } from "@sha
 import { z } from 'zod';
 
 import { fromContract } from '../../../lib/untypedResponse';
+import { formatINR } from '@shared/money';
 
 const riderProfileSchema = z.object({
   name: z.string().min(1, 'Please enter your full name.').max(100, 'Name cannot exceed 100 characters.'),
@@ -346,7 +347,7 @@ export default function RiderSettingsView({
         <div className="pt-8 mt-8 border-t border-rose-500/20">
           <div className="flex justify-between items-center mb-4">
             <h4 className="text-sm font-bold text-slate-900 dark:text-[#f0ede6]">Earnings Wallet</h4>
-            <span className="font-black text-slate-900 dark:text-[#f0ede6] text-lg">₹{walletBalance.toFixed(2)}</span>
+            <span className="font-black text-slate-900 dark:text-[#f0ede6] text-lg">{formatINR(walletBalance)}</span>
           </div>
           <TransactionHistoryTable 
             transactions={transactions}

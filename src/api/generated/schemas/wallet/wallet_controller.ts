@@ -1,7 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-import { WalletDto } from "./common";
+import { WalletDto } from "./internal_wallet_controller";
 import { SortObject } from "./common";
 import { PageableObject } from "./common";
 
@@ -9,7 +9,7 @@ const WalletTransactionDto = z
   .object({
     id: z.string().uuid(),
     walletId: z.string().uuid(),
-    amount: z.number(),
+    amount: z.number().transform(v => Math.round((v || 0) * 100)),
     transactionType: z.enum(["CREDIT", "DEBIT", "HOLD", "RELEASE", "REFUND"]),
     referenceId: z.string().optional(),
     description: z.string().optional(),

@@ -6,6 +6,7 @@ import { Badge, Button, FormField, Input, TransactionHistoryTable, WalletTransac
 import { LogOut, MapPin, Trash2, X } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useEffect, useState } from 'react';
+import { formatINR } from '@shared/money';
 import { z } from 'zod';
 import { useToast } from '../../contexts/ToastContext';
 import { customerApi, identityApi, walletApi } from '../../lib/zodiosClients';
@@ -264,7 +265,7 @@ export default function SharedSettingsView({
           onClick={() => setAccountTab('wallet')}
           className={`flex-1 min-w-[100px] px-3 py-2 rounded-lg text-xs font-bold transition-all shadow-sm border ${accountTab === 'wallet' ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white border-transparent shadow-rose-500/20 shadow-md' : 'bg-white/40 dark:bg-white/10 backdrop-blur-sm text-slate-700 dark:text-slate-200 border-white/50 dark:border-white/10 hover:bg-white/60 dark:hover:bg-white/20'}`}
         >
-          Wallet / Earnings
+          {showCustomerTabs ? 'Store Credit' : 'Wallet / Earnings'}
         </button>
       </div>
 
@@ -349,7 +350,7 @@ export default function SharedSettingsView({
                     </Badge>
                   </div>
                   <div className="text-xs text-slate-500 dark:text-slate-300 mb-3">
-                    <div className="mb-1 font-semibold">{order.items?.length || 0} items • ${(order.totalAmount || (order as {total?:number}).total || 0).toFixed(2)}</div>
+                    <div className="mb-1 font-semibold">{order.items?.length || 0} items • {formatINR(order.totalAmount || (order as {total?:number}).total || 0)}</div>
                     {order.items && order.items.length > 0 && (
                       <ul className="list-disc pl-4 space-y-0.5 text-slate-400">
                         {order.items.map((it: unknown, idx: number) => {
@@ -455,7 +456,7 @@ export default function SharedSettingsView({
           <div className="space-y-6 pb-6">
             <div className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 rounded-2xl p-6 text-center">
               <p className="text-sm font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wide">Available Balance</p>
-              <h2 className="text-4xl font-black text-slate-900 dark:text-[#f0ede6]">₹{walletBalance.toFixed(2)}</h2>
+              <h2 className="text-4xl font-black text-slate-900 dark:text-[#f0ede6]">{formatINR(walletBalance)}</h2>
             </div>
             
             <div>

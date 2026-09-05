@@ -19,6 +19,7 @@ import {
     PhoneCall
 } from 'lucide-react';
 import React, { useState } from 'react';
+import { formatINR } from '@shared/money';
 
 // Utility
 const getFriendlyDeliveryStatusMessage = (status: string | undefined): string => {
@@ -223,7 +224,7 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
               <span className="text-slate-600 dark:text-[#f0ede6] font-medium">
                 <span className="font-mono text-orange-500 font-bold pr-1">{cartItem.quantity || 1}x</span> {cartItem.item?.name || cartItem.name || 'Item'}
               </span>
-              <span className="text-slate-400 dark:text-slate-300 font-mono">₹{((cartItem.item?.price || cartItem.price || 0) * (cartItem.quantity || 1)).toFixed(2)}</span>
+              <span className="text-slate-400 dark:text-slate-300 font-mono">{formatINR((cartItem.item?.price || cartItem.price || 0) * (cartItem.quantity || 1))}</span>
             </div>
           ))}
         </div>
@@ -241,24 +242,24 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
           <div className="flex flex-wrap gap-x-4 gap-y-2 flex-1 min-w-0">
             <div className="space-y-1">
               <span className="text-[9px] text-slate-400 dark:text-slate-300 uppercase font-mono block truncate">Order Value</span>
-              <span className="text-xs font-bold text-slate-850 dark:text-[#f0ede6] font-mono">₹{order.total?.toFixed(2) || '0.00'}</span>
+              <span className="text-xs font-bold text-slate-850 dark:text-[#f0ede6] font-mono">{formatINR(order.total)}</span>
             </div>
             {order.foodCost !== undefined && (
               <div className="space-y-1">
                 <span className="text-[9px] text-slate-400 dark:text-slate-300 uppercase font-mono block truncate">Food Cost</span>
-                <span className="text-xs font-bold text-slate-850 dark:text-[#f0ede6] font-mono">₹{order.foodCost.toFixed(2)}</span>
+                <span className="text-xs font-bold text-slate-850 dark:text-[#f0ede6] font-mono">{formatINR(order.foodCost)}</span>
               </div>
             )}
             {order.restaurantPlatformFee !== undefined && order.restaurantPlatformFee > 0 && (
               <div className="space-y-1">
                 <span className="text-[9px] text-slate-400 dark:text-slate-300 uppercase font-mono block truncate">Platform Fee</span>
-                <span className="text-xs font-bold text-rose-500 font-mono">-₹{order.restaurantPlatformFee.toFixed(2)}</span>
+                <span className="text-xs font-bold text-rose-500 font-mono">-{formatINR(order.restaurantPlatformFee)}</span>
               </div>
             )}
             <div className="space-y-1">
               <span className="text-[9px] text-slate-400 dark:text-slate-300 uppercase font-mono block truncate">Your Payout</span>
               <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 font-mono">
-                ₹{order.restaurantPayout !== undefined ? order.restaurantPayout.toFixed(2) : (order.total || 0).toFixed(2)}
+                {formatINR(order.restaurantPayout !== undefined ? order.restaurantPayout : (order.total || 0))}
               </span>
             </div>
           </div>

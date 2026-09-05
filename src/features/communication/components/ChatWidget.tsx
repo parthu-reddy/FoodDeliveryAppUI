@@ -5,6 +5,7 @@ import { type ChatMessage, type TypingIndicator } from "@/types";
 import { useChatWebSocket } from "@features/communication/models/useChatWebSocket";
 import { Camera, ImagePlus, Loader2, MessageSquare, PhoneCall, PhoneOff, Send, X } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState, useImperativeHandle } from 'react';
+import { formatINR } from '@shared/money';
 import { asUntyped } from '../../../lib/untypedResponse';
 import { RefundRequestModal } from './RefundRequestModal';
 
@@ -377,7 +378,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
                           </div>
                           <div>
                             <div className="text-sm opacity-80 mb-1">Eligible Amount:</div>
-                            <div className="font-bold text-2xl">${parseFloat(payload.quoteAmount).toFixed(2)}</div>
+                            <div className="font-bold text-2xl">{formatINR(payload.quoteAmount)}</div>
                           </div>
                           <div className="text-xs opacity-75">Type: {payload.refundType}</div>
                           <button 
@@ -406,7 +407,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
                             <span className="text-lg">✅</span>
                             <span>Refund Request Submitted</span>
                           </div>
-                          <div className="text-sm font-medium">Amount: ${parseFloat(payload.amount || payload.quoteAmount || 0).toFixed(2)}</div>
+                          <div className="text-sm font-medium">Amount: {formatINR(payload.amount || payload.quoteAmount || 0)}</div>
                           <div className="text-xs opacity-75 mt-1">Check your dashboard for details.</div>
                         </div>
                       );

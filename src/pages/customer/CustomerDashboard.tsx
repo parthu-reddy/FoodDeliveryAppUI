@@ -37,6 +37,7 @@ import { useCustomerOrders } from '@features/customer-orders/model/useCustomerOr
 import CustomerPaymentModal from "@features/payments-wallet/components/CustomerPaymentModal";
 import { Button, CompleteProfileModal, SharedSettingsView } from "@shared/ui";
 import { fromContract } from '../../lib/untypedResponse';
+import { formatINR } from '@shared/money';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const OrderTrackingMap = React.lazy(() => import("@features/maps-tracking/components/OrderTrackingMap"));
 
@@ -570,32 +571,32 @@ export default function CustomerDashboard({
                     {currentTrackingOrder.items.map((item: any, idx: number) => (
                       <div key={item.item?.id || idx} className="flex justify-between text-sm text-slate-600 dark:text-slate-300">
                         <span>{item.quantity || 1}x {item.item?.name || item.name || 'Item'}</span>
-                        <span>₹{((item.item?.price || item.price || 0) * (item.quantity || 1)).toFixed(2)}</span>
+                        <span>{formatINR(((item.item?.price || item.price || 0) * (item.quantity || 1)))}</span>
                       </div>
                     ))}
                     <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300 pt-3 border-t border-slate-200 dark:border-slate-800">
                       <span>Subtotal</span>
-                      <span>₹{(currentTrackingOrder.itemTotal || currentTrackingOrder.subtotal || 0).toFixed(2)}</span>
+                      <span>{formatINR((currentTrackingOrder.itemTotal || currentTrackingOrder.subtotal || 0))}</span>
                     </div>
                     <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300">
                       <span>SGST (2.5%)</span>
-                      <span>₹{(currentTrackingOrder.sgst || 0).toFixed(2)}</span>
+                      <span>{formatINR((currentTrackingOrder.sgst || 0))}</span>
                     </div>
                     <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300">
                       <span>CGST (2.5%)</span>
-                      <span>₹{(currentTrackingOrder.cgst || 0).toFixed(2)}</span>
+                      <span>{formatINR((currentTrackingOrder.cgst || 0))}</span>
                     </div>
                     <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300">
                       <span>Delivery Fee</span>
-                      <span>₹{(currentTrackingOrder.deliveryFee || 0).toFixed(2)}</span>
+                      <span>{formatINR((currentTrackingOrder.deliveryFee || 0))}</span>
                     </div>
                     <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300">
                       <span>Platform Fee</span>
-                      <span>₹{(currentTrackingOrder.customerPlatformFee || 0).toFixed(2)}</span>
+                      <span>{formatINR((currentTrackingOrder.customerPlatformFee || 0))}</span>
                     </div>
                     <div className="flex justify-between text-lg font-black text-slate-900 dark:text-[#f0ede6] pt-2 border-t border-slate-200 dark:border-slate-800 mt-2">
                       <span>Total Paid</span>
-                      <span>₹{(currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0).toFixed(2)}</span>
+                      <span>{formatINR((currentTrackingOrder.totalAmount || currentTrackingOrder.total || 0))}</span>
                     </div>
                     <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mt-1">
                       <span>Payment Method</span>

@@ -1,5 +1,6 @@
 import { StatCard } from '@shared/ui';
 import { CheckCircle, DollarSign } from 'lucide-react';
+import { formatINR } from '@shared/money';
 
 interface RestaurantStatsBarProps {
   totalRevenue: number;
@@ -15,7 +16,7 @@ export function RestaurantStatsBar({
       <StatCard
         icon={<DollarSign className="w-5 h-5" />}
         label="Today's Sales"
-        value={`₹${totalRevenue.toFixed(2)}`}
+        value={`${formatINR(totalRevenue)}`}
         color="emerald"
       />
       <StatCard

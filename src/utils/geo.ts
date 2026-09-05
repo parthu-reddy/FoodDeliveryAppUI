@@ -18,5 +18,5 @@ export function calculateHaversineDistance(
       Math.sin(dLon / 2) *
       Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return Number((R * c).toFixed(2));
+  return Math.round(R * c * 100) / 100;
 }

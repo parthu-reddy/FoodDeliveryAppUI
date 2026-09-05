@@ -6,6 +6,7 @@ import { Button, Textarea } from '@shared/ui';
 import { Shield, Truck } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { asUntyped, WirePage } from '../../../lib/untypedResponse';
+import { formatINR } from '@shared/money';
 
 export default function AdminManualInterventions() {
   const { showSuccess, showError } = useToast();
@@ -126,12 +127,12 @@ export default function AdminManualInterventions() {
     }
   };
 
-  const handleRetryRefund = async (orderId: string) => {
+  const handleRetryRefund = async (refundId: string) => {
     // Optimistic UI Update
-    setFailedRefunds(prev => prev.filter(o => o.orderId !== orderId));
+    setFailedRefunds(prev => prev.filter(o => o.refundId !== refundId));
 
     try {
-      await customerApi.adminDlq.post('/api/v1/internal/admin/orders/dlq/refunds/:orderId/retry', undefined, { params: { orderId } });
+      await customerApi.adminDlq.post('/api/v1/internal/admin/orders/dlq/refunds/:refundId/retry', undefined, { params: { refundId } });
       showSuccess("Refund retry initiated successfully!");
       fetchFailedRefunds();
       setSelectedIntervention(null);
@@ -157,7 +158,11 @@ export default function AdminManualInterventions() {
 
   const handleForceRefund = async (orderId: string) => {
     try {
-      await customerApi.adminOrderManual.post('/api/v1/internal/admin/orders/intervention/:orderId/force-refund', undefined, { params: { orderId } });
+      await customerApi.adminRefundCommand.post('/api/v1/internal/admin/refunds/request', { 
+        orderId, 
+        refundType: "FULL", 
+        reason: cancelReason || "Admin forced refund from DLQ" 
+      });
       showSuccess("Force refund requested!");
       fetchFailedRefunds();
       setSelectedIntervention(null);
@@ -233,16 +238,16 @@ export default function AdminManualInterventions() {
             <>
               {failedRefunds.map(refund => (
                 <button
-                  key={refund.paymentIntentId}
+                  key={refund.refundId}
                   onClick={() => setSelectedIntervention(refund)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all ${selectedIntervention?.paymentIntentId === refund.paymentIntentId ? 'glass-card !border-blue-500 shadow-md ring-1 ring-blue-500' : 'glass-card hover:border-blue-300'}`}
+                  className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all ${selectedIntervention?.refundId === refund.refundId ? 'glass-card !border-blue-500 shadow-md ring-1 ring-blue-500' : 'glass-card hover:border-blue-300'}`}
                 >
                   <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-blue-500/20">
                     <Shield className="w-5 h-5 text-blue-500" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-sm truncate">#{refund.orderId.substring(0, 8)}</p>
-                    <p className="text-xs text-red-500 font-bold">₹{refund.amount?.toFixed(2)} Failed</p>
+                    <p className="text-xs text-red-500 font-bold">{formatINR(refund.amount)} Failed</p>
                   </div>
                 </button>
               ))}
@@ -346,7 +351,7 @@ export default function AdminManualInterventions() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-slate-500 dark:text-slate-400">Amount</p>
-                      <p className="font-black text-xl text-slate-800 dark:text-white">₹{selectedIntervention.amount?.toFixed(2)}</p>
+                      <p className="font-black text-xl text-slate-800 dark:text-white">{formatINR(selectedIntervention.amount)}</p>
                     </div>
                     <div>
                       <p className="text-sm text-slate-500 dark:text-slate-400">Retry Count</p>
@@ -366,7 +371,7 @@ export default function AdminManualInterventions() {
                 <div className="flex flex-col gap-4">
                   <Button
                     variant="primary"
-                    onClick={() => handleRetryRefund(selectedIntervention.orderId)}
+                    onClick={() => handleRetryRefund(selectedIntervention.refundId)}
                     className="w-full !py-3 !bg-blue-500 hover:!bg-blue-600 shadow-lg shadow-blue-500/30 text-center"
                   >
                     Retry Refund Now

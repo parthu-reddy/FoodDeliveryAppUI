@@ -4,10 +4,15 @@ import { ledgerApi } from "@/lib/zodiosClients";
 import { Button, Spinner } from '@shared/ui';
 import { Bike, CheckCircle, Clock, Store } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { formatINR } from '@shared/money';
 
-export default function AdminPayoutsView() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [pendingPayouts, setPendingPayouts] = useState<any[]>([]);
+import { schemas } from "@/api/generated/schemas/ledger/ledger_controller";
+import { z } from "zod";
+
+type LedgerAccount = z.infer<typeof schemas.LedgerAccount>;
+
+export default function AdminPayoutsPage() {
+  const [pendingPayouts, setPendingPayouts] = useState<LedgerAccount[]>([]);
   const [loading, setLoading] = useState(false);
   const [settling, setSettling] = useState<string | null>(null);
   const { showError, showSuccess } = useToast();
@@ -36,12 +41,13 @@ export default function AdminPayoutsView() {
   const handleSettle = async (ownerId: string, ownerType: string, amount: number) => {
     setSettling(ownerId);
     try {
+      // The endpoint is actually /settle, not /mark-paid anymore.
       await ledgerApi.ledger.post('/api/v1/ledger/payouts/settle', {
               ownerId,
               ownerType: ownerType as "CUSTOMER" | "PLATFORM" | "RESTAURANT" | "DRIVER" | "ADVERTISER_WALLET" | "GOVERNMENT",
               amount
             });
-      showSuccess(`Payout of $${amount.toFixed(2)} for ${ownerType} settled successfully`);
+      showSuccess(`Payout of ${formatINR(amount)} for ${ownerType} settled successfully`);
       fetchPayouts();
     } catch (e: unknown) {
       console.error(e);
@@ -97,10 +103,9 @@ export default function AdminPayoutsView() {
                 
                 <div className="mb-6 flex-1">
                   <p className="text-sm text-slate-500 mb-1">Unsettled Balance</p>
-                  <p className="text-4xl font-black text-slate-900 dark:text-white flex items-baseline gap-1">
-                    <span className="text-2xl text-slate-400">₹</span>
-                    {account.balance.toFixed(2)}
-                  </p>
+                  <div className="text-4xl font-black text-slate-900 dark:text-white flex items-center gap-1">
+                    {formatINR(account.balance)}
+                  </div>
                 </div>
 
                 <Button

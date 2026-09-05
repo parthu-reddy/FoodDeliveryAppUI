@@ -1,0 +1,23 @@
+export const MONEY_FIELDS = [
+  'amount',
+  'balance',
+  'netEarnings',
+  'grossEarnings',
+  'sgst',
+  'cgst',
+  'foodCost',
+  'deliveryFee',
+  'platformFee',
+  'total',
+  'totalAmount',
+  'unsettledAmount',
+  'cashCollectedAmount',
+  'refundedAmount',
+  'itemTotal',
+  'platformBonus',
+  'deliveryContribution',
+  'price',
+  'quoteAmount',
+  'overrideAmount',
+  'spend'
+];

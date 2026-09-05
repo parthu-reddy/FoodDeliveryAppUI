@@ -1,8 +1,8 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-import { SortObject } from "./common";
 import { PageableObject } from "./common";
+import { SortObject } from "./common";
 
 const OutboxEventEntity = z
   .object({
@@ -110,8 +110,8 @@ const PageOutboxEventEntity = z
     number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
-    sort: SortObject.optional(),
     pageable: PageableObject.optional(),
+    sort: SortObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();

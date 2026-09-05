@@ -1,5 +1,6 @@
 import { useToast } from "@/contexts/ToastContext";
 import { usePolling } from "@/hooks/usePolling";
+import { formatINR } from '@shared/money';
 import { parseApiError } from '@/lib/parseApiError';
 import { adminApi } from "@/lib/zodiosClients";
 import { ChatWidget } from "@features/communication/components/ChatWidget";
@@ -52,7 +53,7 @@ export default function AdminSupportTickets() {
         approved, 
         notes: resolutionNotes,
         faultType,
-        overrideAmount: overrideAmount === '' ? undefined : Number(overrideAmount)
+        overrideAmount: overrideAmount === '' ? undefined : Math.round(Number(overrideAmount) * 100)
       }, { params: { ticketId } });
       
       showSuccess(`Ticket successfully ${approved ? 'approved' : 'rejected'}`);
@@ -139,7 +140,7 @@ export default function AdminSupportTickets() {
                     <div className="flex justify-between items-start mb-2">
                       <div className="text-sm font-bold text-slate-800 dark:text-[#f0ede6]">Order #{ticket.orderId?.substring(0, 8)}</div>
                       <div className="text-xs font-medium px-2 py-1 bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 rounded-full">
-                        ${parseFloat(ticket.refundAmount || 0).toFixed(2)}
+                        {formatINR(ticket.refundAmount)}
                       </div>
                     </div>
                     <div className="text-xs text-slate-500 dark:text-slate-400 mb-3 truncate">
@@ -244,12 +245,12 @@ export default function AdminSupportTickets() {
                           Override Refund Amount:
                         </label>
                         <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">$</span>
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">₹</span>
                           <input 
                             type="number"
                             min="0"
                             step="0.01"
-                            max={selectedTicket.refundAmount}
+                            max={selectedTicket.refundAmount ? selectedTicket.refundAmount / 100 : undefined}
                             value={overrideAmount}
                             onChange={(e) => {
                               const val = e.target.value;
@@ -266,7 +267,7 @@ export default function AdminSupportTickets() {
                           />
                         </div>
                         <div className="text-xs text-slate-500 dark:text-slate-400">
-                          Original Quote: ${selectedTicket.refundAmount?.toFixed(2)}
+                          Original Quote: {formatINR(selectedTicket.refundAmount)}
                         </div>
                       </div>
                     </div>

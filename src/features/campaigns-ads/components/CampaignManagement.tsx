@@ -7,6 +7,7 @@ import { PaymentModal, type PaymentMethodType } from "@shared/ui/PaymentModal";
 import { Calendar, DollarSign, Pause, Plus, TrendingUp, Wallet } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { fromContract } from '../../../lib/untypedResponse';
+import { formatINR } from '@shared/money';
 
 interface Campaign {
   id: string;
@@ -18,7 +19,7 @@ interface Campaign {
   endDate: string;
 }
 
-export default function CampaignManagement({ restaurantId }: { restaurantId: string }) {
+export default function CampaignManagement({ advertiserId }: { advertiserId: string }) {
   const { showError, showSuccess } = useToast();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(false);
@@ -27,6 +28,13 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success'>('idle');
   const [topupAmount, setTopupAmount] = useState('100');
+  const pollRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, []);
   
   const [walletBalance, setWalletBalance] = useState<number>(0);
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
@@ -54,7 +62,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
   const [radiusKm, setRadiusKm] = useState('5.0');
 
   useEffect(() => {
-    if (restaurantId) {
+    if (advertiserId) {
        
       // eslint-disable-next-line react-hooks/immutability
       loadCampaigns();
@@ -66,22 +74,22 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
       loadPerformanceData();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restaurantId]);
+  }, [advertiserId]);
 
    
   useEffect(() => {
-    if (restaurantId) {
+    if (advertiserId) {
       // eslint-disable-next-line react-hooks/immutability
       loadTransactions(txPage);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [txPage, restaurantId]);
+  }, [txPage, advertiserId]);
 
   const loadWalletData = async () => {
-    if (!restaurantId) return;
+    if (!advertiserId) return;
     setTxLoading(true);
     try {
-      const balanceRes = await walletApi.wallet.get('/api/v1/wallets/:entityType/:entityId', { params: { entityType: 'ADVERTISER', entityId: restaurantId } });
+      const balanceRes = await walletApi.wallet.get('/api/v1/wallets/:entityType/:entityId', { params: { entityType: 'ADVERTISER', entityId: advertiserId } });
       if (balanceRes) setWalletBalance(balanceRes.balance ?? 0);
     } catch (e: unknown) {
       console.error(e);
@@ -94,7 +102,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
   const loadTransactions = async (page: number) => {
     setTxLoading(true);
     try {
-      const res = await walletApi.wallet.get('/api/v1/wallets/:entityType/:entityId/transactions', { params: { entityType: 'ADVERTISER', entityId: restaurantId }, queries: { page } });
+      const res = await walletApi.wallet.get('/api/v1/wallets/:entityType/:entityId/transactions', { params: { entityType: 'ADVERTISER', entityId: advertiserId }, queries: { page } });
       setTransactions(fromContract<WalletTransaction[]>(res.content ?? []));
       setTxTotalPages(res.totalPages ?? 1);
     } catch (err: unknown) {
@@ -105,11 +113,11 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
   };
 
   const loadPerformanceData = async () => {
-    if (!restaurantId) return;
+    if (!advertiserId) return;
     setPerfLoading(true);
     try {
       // @ts-expect-error auto-migration type suppression
-      const res = await campaignApi.campaign.get('/api/v1/advertisers/:advertiserId/campaigns/performance', { params: { advertiserId: restaurantId }, queries: { pageable: {} } as Record<string, unknown> });
+      const res = await campaignApi.campaign.get('/api/v1/advertisers/:advertiserId/campaigns/performance', { params: { advertiserId: advertiserId }, queries: { pageable: {} } as Record<string, unknown> });
       setPerformanceData(fromContract<CampaignPerformance[]>(res.data?.content ?? []));
     } catch (e: unknown) {
       console.error(e);
@@ -123,7 +131,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
     setLoading(true);
     try {
       // @ts-expect-error auto-migration type suppression
-      const res = await campaignApi.campaign.get('/api/v1/advertisers/:advertiserId/campaigns', { params: { advertiserId: restaurantId }, queries: { pageable: {} } as Record<string, unknown> });
+      const res = await campaignApi.campaign.get('/api/v1/advertisers/:advertiserId/campaigns', { params: { advertiserId: advertiserId }, queries: { pageable: {} } as Record<string, unknown> });
       setCampaigns(fromContract<Campaign[]>(res.data?.content ?? []));
     } catch (err: unknown) {
       showError(parseApiError(err, 'Failed to load campaigns').message);
@@ -136,14 +144,14 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
     e.preventDefault();
     try {
       await campaignApi.campaign.post('/api/v1/advertisers/:advertiserId/campaigns', {
-              advertiserId: restaurantId,
+              advertiserId: advertiserId,
               name,
-              dailyBudget: parseFloat(dailyBudget),
-              lifetimeBudget: parseFloat(totalBudget),
-              maxBid: parseFloat(bidAmount),
+              dailyBudget: Math.round(parseFloat(dailyBudget) * 100),
+              lifetimeBudget: Math.round(parseFloat(totalBudget) * 100),
+              maxBid: Math.round(parseFloat(bidAmount) * 100),
               startDate: new Date(startDate).toISOString(),
               endDate: new Date(endDate).toISOString()
-            }, { params: { advertiserId: restaurantId }, queries: { pageable: {} } as Record<string, unknown> });
+            }, { params: { advertiserId: advertiserId }, queries: { pageable: {} } as Record<string, unknown> });
       showSuccess('Campaign created successfully');
       setShowCreateModal(false);
       loadCampaigns();
@@ -154,7 +162,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
 
   const handlePause = async (id: string) => {
     try {
-      await campaignApi.campaign.post('/api/v1/advertisers/:advertiserId/campaigns/:id/pause', undefined, { params: { advertiserId: restaurantId, id } });
+      await campaignApi.campaign.post('/api/v1/advertisers/:advertiserId/campaigns/:id/pause', undefined, { params: { advertiserId: advertiserId, id } });
       showSuccess('Campaign paused');
       loadCampaigns();
     } catch (err: unknown) {
@@ -169,23 +177,40 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
       let gateway = 'RAZORPAY'; // default
       if (method === 'UPI' || method === 'CARD') gateway = 'VYAPAR';
       
-      await campaignApi.campaign.post(
-        '/api/v1/advertisers/:advertiserId/campaigns/wallet/topup', 
+      const topupRes = await walletApi.topup.post(
+        '/api/v1/internal/advertisers/:advertiserId/wallet/topups', 
         // @ts-expect-error auto-migration type suppression
-        { amount: parseFloat(topupAmount), gatewayName: gateway } as Record<string, unknown>, 
-        { params: { advertiserId: restaurantId }, queries: { pageable: {} } as Record<string, unknown> }
+        { amount: Math.round(parseFloat(topupAmount) * 100), gatewayName: gateway } as Record<string, unknown>, 
+        { params: { advertiserId: advertiserId } }
       );
       
-      setPaymentStatus('success');
-      setTimeout(() => {
-        setIsPaymentModalOpen(false);
-        setPaymentStatus('idle');
-        setTopupAmount('100');
-        // Reload wallet data after a short delay for webhook
-        setTimeout(loadWalletData, 1000);
-      }, 2000);
+      const topupId = topupRes.data?.topupId || 'dummy-id';
+      
+      // Poll topup status
+      let attempts = 0;
+      if (pollRef.current) clearInterval(pollRef.current);
+      pollRef.current = setInterval(async () => {
+        attempts++;
+        try {
+          // eslint-disable-next-line no-restricted-syntax
+          const res = await fetch(`/api/v1/wallets/ADVERTISER/${advertiserId}/topups/${topupId}`);
+          if (res.ok || attempts > 10) {
+            if (pollRef.current) clearInterval(pollRef.current);
+            setPaymentStatus('success');
+            setTimeout(() => {
+              setIsPaymentModalOpen(false);
+              setPaymentStatus('idle');
+              setTopupAmount('100');
+              loadWalletData();
+            }, 2000);
+          }
+        } catch (_e) {
+          if (attempts > 10 && pollRef.current) clearInterval(pollRef.current);
+        }
+      }, 1000);
       
     } catch (err: unknown) {
+      if (pollRef.current) clearInterval(pollRef.current);
       setPaymentStatus('idle');
       showError(parseApiError(err, 'Payment initiation failed').message);
     }
@@ -199,7 +224,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
       <div>
         <h4 className="font-bold text-slate-800 dark:text-white text-lg mb-1">Add Funds to Wallet</h4>
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          Current Balance: <span className="font-bold text-slate-700 dark:text-slate-300">₹{walletBalance.toFixed(2)}</span>
+          Current Balance: <span className="font-bold text-slate-700 dark:text-slate-300">{formatINR(walletBalance)}</span>
         </p>
       </div>
     </div>
@@ -216,7 +241,7 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
           <div>
             <span className="text-[10px] text-slate-500 dark:text-[#f0ede6] uppercase font-mono block">Ad Wallet Balance</span>
             <div className="flex items-center gap-3">
-              <span className="text-base font-black text-slate-800 dark:text-[#f0ede6]">₹{walletBalance.toFixed(2)}</span>
+              <span className="text-base font-black text-slate-800 dark:text-[#f0ede6]">{formatINR(walletBalance)}</span>
               <Button variant="success" size="xs" onClick={() => setShowAmountModal(true)}>
                 Top Up
               </Button>
@@ -267,11 +292,11 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="bg-slate-100 dark:bg-slate-800 p-2 rounded-lg">
                   <div className="text-[10px] text-slate-400">Daily Budget</div>
-                  <div className="font-bold text-slate-800 dark:text-[#f0ede6]">₹{campaign.dailyBudget}</div>
+                  <div className="font-bold text-slate-800 dark:text-[#f0ede6]">{formatINR(campaign.dailyBudget)}</div>
                 </div>
                 <div className="bg-slate-100 dark:bg-slate-800 p-2 rounded-lg">
                   <div className="text-[10px] text-slate-400">Total Budget</div>
-                  <div className="font-bold text-slate-800 dark:text-[#f0ede6]">₹{campaign.totalBudget}</div>
+                  <div className="font-bold text-slate-800 dark:text-[#f0ede6]">{formatINR(campaign.totalBudget)}</div>
                 </div>
               </div>
 
@@ -374,14 +399,14 @@ export default function CampaignManagement({ restaurantId }: { restaurantId: str
         status={paymentStatus}
         onProcessPayment={processTopupPayment}
         availableMethods={['CARD', 'UPI']}
-        amount={parseFloat(topupAmount || '0')}
+        amount={Math.round(parseFloat(topupAmount || '0') * 100)}
         leftPanelContent={paymentLeftContent}
         title="Wallet Top Up"
         successTitle="Top Up Successful!"
         successSubtitle="Your funds have been added to your wallet."
         processingTitle="Processing Payment..."
         processingSubtitle="Securely connecting to payment gateway"
-        buttonText={(method, amt) => `Add ₹${amt.toFixed(2)} to Wallet`}
+        buttonText={(method, amt) => `Add ${formatINR(amt)} to Wallet`}
       />
     </div>
   );

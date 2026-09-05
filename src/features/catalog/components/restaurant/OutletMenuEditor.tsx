@@ -6,6 +6,7 @@ import ImageUploadField from "@features/kyc/components/ImageUploadField";
 import { Clock, Edit3, Layers, Plus, Save, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
+import { formatINR } from '@shared/money';
 import CategorySelector from './CategorySelector';
 
 const masterItemSchema = z.object({
@@ -436,7 +437,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, onRefresh }: O
                                 <div className="grid grid-cols-3 gap-3">
                                   <div>
                                     <label className="text-[10px] font-bold text-slate-500 dark:text-slate-300 uppercase block mb-1">Price</label>
-                                    <input type="number" step="0.01" min="0" placeholder={`₹${item.basePrice.toFixed(2)}`} value={oPrice} onChange={e=>setOPrice(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-emerald-500/20 rounded-lg px-2 py-1.5 text-xs font-bold dark:text-[#f0ede6]" />
+                                    <input type="number" step="0.01" min="0" placeholder={formatINR(item.basePrice)} value={oPrice} onChange={e=>setOPrice(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-emerald-500/20 rounded-lg px-2 py-1.5 text-xs font-bold dark:text-[#f0ede6]" />
                                   </div>
                                   <div>
                                     <label className="text-[10px] font-bold text-slate-500 dark:text-slate-300 uppercase block mb-1">Prep</label>
@@ -463,16 +464,16 @@ export default function OutletMenuEditor({ restaurantId, brandId, onRefresh }: O
                                           {currentOverride && currentOverride.overriddenPrice !== null && currentOverride.overriddenPrice !== undefined ? (
                                             <div className="flex items-center gap-2 bg-emerald-500/5 border border-emerald-500/20 rounded-full px-2 py-0.5">
                                               <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 line-through">
-                                                ${(item.basePrice + (item.packingCharge || 0)).toFixed(2)}
+                                                {formatINR(item.basePrice + (item.packingCharge || 0))}
                                               </span>
                                               <span className="text-xs font-extrabold text-emerald-500 dark:text-emerald-400">
-                                                ${(currentOverride.overriddenPrice + (item.packingCharge || 0)).toFixed(2)}
+                                                {formatINR(currentOverride.overriddenPrice + (item.packingCharge || 0))}
                                               </span>
                                             </div>
                                           ) : (
                                             <div className="bg-slate-100 dark:bg-slate-800 rounded-full px-2 py-0.5 border border-slate-200 dark:border-slate-700">
                                               <span className="text-xs font-extrabold text-slate-500 dark:text-[#f0ede6]">
-                                                ${(item.basePrice + (item.packingCharge || 0)).toFixed(2)}
+                                                {formatINR(item.basePrice + (item.packingCharge || 0))}
                                               </span>
                                             </div>
                                           )}
@@ -524,16 +525,16 @@ export default function OutletMenuEditor({ restaurantId, brandId, onRefresh }: O
                                         {currentOverride && currentOverride.overriddenPrice !== null && currentOverride.overriddenPrice !== undefined ? (
                                             <div className="flex items-center gap-2 bg-emerald-500/5 border border-emerald-500/20 rounded-full px-2 py-0.5">
                                                 <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 line-through">
-                                                    ${item.basePrice.toFixed(2)}
+                                                    {formatINR(item.basePrice)}
                                                 </span>
                                                 <span className="text-xs font-extrabold text-emerald-500 dark:text-emerald-400">
-                                                    ${currentOverride.overriddenPrice.toFixed(2)}
+                                                    {formatINR(currentOverride.overriddenPrice)}
                                                 </span>
                                             </div>
                                         ) : (
                                             <div className="bg-slate-100 dark:bg-slate-800 rounded-full px-2 py-0.5 border border-slate-200 dark:border-slate-700">
                                                 <span className="text-[10px] font-extrabold text-slate-500 dark:text-[#f0ede6]">
-                                                    ${item.basePrice.toFixed(2)}
+                                                    {formatINR(item.basePrice)}
                                                 </span>
                                             </div>
                                         )}

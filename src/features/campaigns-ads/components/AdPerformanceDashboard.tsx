@@ -1,5 +1,6 @@
 import { format } from 'date-fns';
 import { CheckCircle, Eye, MousePointerClick, TrendingUp } from 'lucide-react';
+import { formatINR } from '@shared/money';
 
 export interface CampaignPerformance {
   id: string;
@@ -68,7 +69,7 @@ export function AdPerformanceDashboard({ performanceData, isLoading }: AdPerform
           <div className="flex items-center gap-2 text-slate-500 mb-2 text-sm font-medium">
             <TrendingUp className="w-4 h-4 text-rose-500" /> Total Spend
           </div>
-          <div className="text-2xl font-bold text-slate-900">₹{totals.spend.toFixed(2)}</div>
+          <div className="text-2xl font-bold text-slate-900">{formatINR(totals.spend)}</div>
         </div>
       </div>
 
@@ -91,7 +92,7 @@ export function AdPerformanceDashboard({ performanceData, isLoading }: AdPerform
                 <td className="px-4 py-3 text-right">{data.impressions.toLocaleString()}</td>
                 <td className="px-4 py-3 text-right font-medium text-slate-900">{data.clicks.toLocaleString()}</td>
                 <td className="px-4 py-3 text-right text-emerald-600">{data.conversions.toLocaleString()}</td>
-                <td className="px-4 py-3 text-right font-medium">₹{data.spend.toFixed(2)}</td>
+                <td className="px-4 py-3 text-right font-medium">{formatINR(data.spend)}</td>
               </tr>
             ))}
           </tbody>

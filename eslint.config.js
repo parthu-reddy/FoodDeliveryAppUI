@@ -63,6 +63,14 @@ export default tseslint.config(
           selector: 'CallExpression[callee.type="MemberExpression"][callee.property.name="fetch"]',
           message: 'Raw fetch is forbidden (including window.fetch/globalThis.fetch). Use the typed Zodios API client instead.',
         },
+        {
+          selector: 'TemplateLiteral > TemplateElement[value.raw=/\\$/] ~ Identifier[name=/[aA]mount|[tT]otal|[bB]alance|[rR]efund|[qQ]uote|[pP]ayout/]',
+          message: 'Do not use $ for currency. Use formatINR from src/shared/money/format.ts.',
+        },
+        {
+          selector: 'CallExpression[callee.property.name="toFixed"][arguments.0.value=2]',
+          message: 'Do not use .toFixed(2) for money. Use formatINR from src/shared/money/format.ts.',
+        }
       ],
     },
   },
@@ -89,6 +97,12 @@ export default tseslint.config(
       "src/features/kyc/components/DocumentUploadField.tsx",                // presigned-URL upload, not a service API
       "src/features/restaurant-orders/model/useRestaurantOrders.ts"         // missing from OpenAPI spec
     ],
+    rules: {
+      "no-restricted-syntax": "off"
+    }
+  },
+  {
+    files: ["src/shared/money/**/*.ts", "src/shared/money/**/*.tsx"],
     rules: {
       "no-restricted-syntax": "off"
     }

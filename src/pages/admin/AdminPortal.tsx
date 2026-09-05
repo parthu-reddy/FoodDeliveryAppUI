@@ -6,7 +6,7 @@ import AdminSupportTickets from "@features/admin-ops/components/AdminSupportTick
 import AdminUserManagement from "@features/admin-ops/components/AdminUserManagement";
 import AdminCategories from '@features/catalog/components/admin/AdminCategories';
 import AdminLedgerView from "@features/ledger/components/AdminLedgerView";
-import AdminPayoutsView from "@features/ledger/components/AdminPayoutsView";
+import AdminPayoutsPage from "./AdminPayoutsPage";
 import { Button, SidebarNav } from '@shared/ui';
 import LaBouffeLogo from '@shared/ui/LaBouffeLogo';
 import { Activity, Database, LogOut, MapPin, Moon, Shield, Sun, Tags, Users, MessageSquare } from 'lucide-react';
@@ -91,7 +91,7 @@ export default function AdminPortal({
 
         {activeTab === 'payouts' && (
           <div className="flex-1 flex w-full h-full relative overflow-hidden">
-            <AdminPayoutsView />
+            <AdminPayoutsPage />
           </div>
         )}
 

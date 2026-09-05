@@ -2,6 +2,7 @@ import { Order } from "@/types";
 import { EmptyState } from "@shared/ui";
 import { Map as MapIcon, Play } from 'lucide-react';
 import { motion } from 'motion/react';
+import { formatINR } from '@shared/money';
 
 interface DeliveryAvailableJobsProps {
   availableJobs: Order[];
@@ -45,7 +46,7 @@ export function DeliveryAvailableJobs({
                 </div>
                 <div className="text-right">
                   <span className="text-xs text-slate-400 dark:text-slate-300 block font-mono">PAYOUT</span>
-                  <span className="text-lg font-black text-emerald-500">₹{job.payout ? job.payout.toFixed(2) : '—'}</span>
+                  <span className="text-lg font-black text-emerald-500">{job.payout ? formatINR(job.payout) : '—'}</span>
                 </div>
               </div>
 

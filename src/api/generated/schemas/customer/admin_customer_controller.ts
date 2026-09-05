@@ -2,22 +2,22 @@ import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
 import { pageable } from "./common";
-import { CustomerAddressDto } from "./common";
-import { PageableObject } from "./common";
 import { SortObject } from "./common";
+import { PageableObject } from "./common";
+import { CustomerAddressDto } from "./common";
 
 const PageCustomerAddressDto = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    numberOfElements: z.number().int(),
-    size: z.number().int(),
-    content: z.array(CustomerAddressDto),
+    sort: SortObject.optional(),
     pageable: PageableObject.optional(),
-    number: z.number().int(),
+    numberOfElements: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
-    sort: SortObject.optional(),
+    size: z.number().int(),
+    content: z.array(CustomerAddressDto),
+    number: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();

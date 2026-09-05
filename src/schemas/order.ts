@@ -25,14 +25,7 @@ export const orderSchema = z.object({
   paymentStatus: z.string().optional(),
   refundedAmount: z.number().optional(),
   deliveryExecutiveId: z.string().optional(),
-  driverCustomerContribution: z.number().optional(),
-  driverRestaurantContribution: z.number().optional(),
-  driverTip: z.number().optional(),
-  driverTaxes: z.number().optional(),
-  driverGrossPayout: z.number().optional(),
-  driverNetPayout: z.number().optional(),
-  grossPayout: z.number().optional(),
-  payout: z.number().optional(),
+
   itemsJson: z.string().optional(),
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }).passthrough().transform((raw: any) => {
@@ -45,18 +38,15 @@ export const orderSchema = z.object({
     try { parsedItems = JSON.parse(raw.itemsJson); } catch { /* keep fallback */ }
   }
 
-  // Calculate totals if missing
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const calculatedTotal = parsedItems.reduce((acc: number, item: any) => acc + (item.item?.price || item.price || 0) * (item.quantity || 1), 0);
-
+  // Use totals directly from backend (Phase 6 enforcement)
   const normalized: Order = {
     ...raw,
     id: raw.orderId || raw.id,
     status: s,
     deliveryStatus: d,
     items: parsedItems,
-    total: raw.total || raw.totalAmount || calculatedTotal,
-    subtotal: raw.subtotal || calculatedTotal,
+    total: raw.totalAmount ?? raw.total ?? 0,
+    subtotal: raw.itemTotal ?? raw.subtotal ?? 0,
     restaurantId: raw.restaurantId,
     customerId: raw.customerId,
     customerName: raw.customerName || 'Customer',
@@ -64,13 +54,6 @@ export const orderSchema = z.object({
     deliveryExecutiveName: raw.deliveryExecutiveName || raw.riderName,
     deliveryExecutiveId: raw.deliveryExecutiveId || raw.riderId,
 
-    // Map driver payout fields to what UI expects
-    grossPayout: raw.grossPayout || raw.driverGrossPayout,
-    payout: raw.payout || raw.driverNetPayout,
-    driverCustomerContribution: raw.driverCustomerContribution,
-    driverRestaurantContribution: raw.driverRestaurantContribution,
-    driverTip: raw.driverTip,
-    driverTaxes: raw.driverTaxes,
 
     paymentStatus: raw.paymentStatus,
     refundedAmount: raw.refundedAmount,
@@ -122,14 +105,7 @@ export interface Order {
   paymentStatus?: string;
   refundedAmount?: number;
   deliveryExecutiveId?: string;
-  driverCustomerContribution?: number;
-  driverRestaurantContribution?: number;
-  driverTip?: number;
-  driverTaxes?: number;
-  driverGrossPayout?: number;
-  driverNetPayout?: number;
-  grossPayout?: number;
-  payout?: number;
+
   itemsJson?: string;
   /**
    * `.passthrough()` keeps unrecognised API fields. Deliberately `any`, not `unknown`: these were

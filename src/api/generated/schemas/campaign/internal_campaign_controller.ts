@@ -19,6 +19,20 @@ const endpoints = makeApi([
   },
   {
     method: "get",
+    path: "/api/v1/internal/campaigns/:campaignId/advertiser",
+    alias: "getCampaignAdvertiser",
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "campaignId",
+        type: "Path",
+        schema: z.string().uuid(),
+      },
+    ],
+    response: z.record(z.string()),
+  },
+  {
+    method: "get",
     path: "/api/v1/internal/campaigns/active-for-bidding",
     alias: "getActiveCampaignsForBidding",
     requestFormat: "json",

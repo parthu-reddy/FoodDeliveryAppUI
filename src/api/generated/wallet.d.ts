@@ -52,6 +52,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/internal/advertisers/{advertiserId}/wallet/topups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["topupWallet"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/internal/admin/wallet/dlq/retry": {
         parameters: {
             query?: never;
@@ -84,23 +100,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/advertisers/{advertiserId}/wallet/topups": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["topupWallet"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/wallets/{entityType}/{entityId}": {
+    "/api/v1/internal/wallets/{entityType}/{entityId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -116,7 +116,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/wallets/{entityType}/{entityId}/transactions": {
+    "/api/v1/internal/wallets/{entityType}/{entityId}/transactions": {
         parameters: {
             query?: never;
             header?: never;
@@ -176,14 +176,6 @@ export interface components {
             referenceId?: string;
             description?: string;
         };
-        ApiResponseString: {
-            success: boolean;
-            message: string;
-            errorCode?: string;
-            data?: string;
-            /** Format: date-time */
-            timestamp: string;
-        };
         TopupWalletRequest: {
             amount: number;
             gatewayName?: string;
@@ -195,6 +187,14 @@ export interface components {
             data?: {
                 [key: string]: string;
             };
+            /** Format: date-time */
+            timestamp: string;
+        };
+        ApiResponseString: {
+            success: boolean;
+            message: string;
+            errorCode?: string;
+            data?: string;
             /** Format: date-time */
             timestamp: string;
         };
@@ -212,20 +212,20 @@ export interface components {
             number: number;
             first: boolean;
             last: boolean;
-            sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
+            sort?: components["schemas"]["SortObject"];
             empty: boolean;
         };
         PageableObject: {
             /** Format: int64 */
             offset: number;
-            sort?: components["schemas"]["SortObject"];
-            unpaged: boolean;
             paged: boolean;
             /** Format: int32 */
             pageNumber: number;
             /** Format: int32 */
             pageSize: number;
+            sort?: components["schemas"]["SortObject"];
+            unpaged: boolean;
         };
         SortObject: {
             empty: boolean;
@@ -281,8 +281,8 @@ export interface components {
             number: number;
             first: boolean;
             last: boolean;
-            sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
+            sort?: components["schemas"]["SortObject"];
             empty: boolean;
         };
     };
@@ -297,9 +297,7 @@ export interface operations {
     createWallet: {
         parameters: {
             query?: never;
-            header?: {
-                "X-Calling-Service"?: string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -323,9 +321,7 @@ export interface operations {
     debit: {
         parameters: {
             query?: never;
-            header?: {
-                "X-Calling-Service"?: string;
-            };
+            header?: never;
             path: {
                 entityType: "CUSTOMER" | "RESTAURANT" | "DRIVER" | "PLATFORM" | "ADVERTISER";
                 entityId: string;
@@ -352,9 +348,7 @@ export interface operations {
     credit: {
         parameters: {
             query?: never;
-            header?: {
-                "X-Calling-Service"?: string;
-            };
+            header?: never;
             path: {
                 entityType: "CUSTOMER" | "RESTAURANT" | "DRIVER" | "PLATFORM" | "ADVERTISER";
                 entityId: string;
@@ -374,6 +368,34 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WalletDto"];
+                };
+            };
+        };
+    };
+    topupWallet: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path: {
+                advertiserId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TopupWalletRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseMapStringString"];
                 };
             };
         };
@@ -430,40 +452,10 @@ export interface operations {
             };
         };
     };
-    topupWallet: {
-        parameters: {
-            query?: never;
-            header: {
-                "Idempotency-Key": string;
-            };
-            path: {
-                advertiserId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TopupWalletRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseMapStringString"];
-                };
-            };
-        };
-    };
     getWallet: {
         parameters: {
             query?: never;
-            header?: {
-                "X-User-Id"?: string;
-            };
+            header?: never;
             path: {
                 entityType: "CUSTOMER" | "RESTAURANT" | "DRIVER" | "PLATFORM" | "ADVERTISER";
                 entityId: string;
@@ -489,9 +481,7 @@ export interface operations {
                 page?: number;
                 size?: number;
             };
-            header?: {
-                "X-User-Id"?: string;
-            };
+            header?: never;
             path: {
                 entityType: "CUSTOMER" | "RESTAURANT" | "DRIVER" | "PLATFORM" | "ADVERTISER";
                 entityId: string;

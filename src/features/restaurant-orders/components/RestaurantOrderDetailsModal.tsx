@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle2, Receipt, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { formatINR } from '@shared/money';
 
 interface RestaurantOrderDetailsModalProps {
   order: Order | null;
@@ -105,7 +106,7 @@ export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalPr
                           <span className="text-slate-700 dark:text-slate-200 font-medium">{item.name}</span>
                         </div>
                         <span className="text-slate-900 dark:text-white font-medium">
-                          ₹{(item.price * item.quantity).toFixed(2)}
+                          {formatINR((item.price * item.quantity))}
                         </span>
                       </div>
                     ))}
@@ -127,25 +128,25 @@ export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalPr
                       <div className="space-y-2 text-sm pl-2 border-l-2 border-slate-200 dark:border-slate-700">
                         <div className="flex justify-between text-slate-600 dark:text-slate-300">
                           <span>Food Value (Item Total)</span>
-                          <span>₹{(data.itemTotal || data.foodCost || 0).toFixed(2)}</span>
+                          <span>{formatINR((data.itemTotal || data.foodCost || 0))}</span>
                         </div>
                         <div className="flex justify-between text-rose-500 dark:text-rose-400">
                           <span>Platform Fee (Restaurant)</span>
-                          <span>- ₹{(data.restaurantPlatformFee || 0).toFixed(2)}</span>
+                          <span>- {formatINR((data.restaurantPlatformFee || 0))}</span>
                         </div>
                         <div className="flex justify-between text-rose-500 dark:text-rose-400">
                           <span>Delivery Contribution</span>
-                          <span>- ₹{(data.restaurantDeliveryContribution || 0).toFixed(2)}</span>
+                          <span>- {formatINR((data.restaurantDeliveryContribution || 0))}</span>
                         </div>
                         {data.platformBonus > 0 && (
                           <div className="flex justify-between text-emerald-500 dark:text-emerald-400">
                             <span>Platform Bonus</span>
-                            <span>+ ₹{(data.platformBonus || 0).toFixed(2)}</span>
+                            <span>+ {formatINR((data.platformBonus || 0))}</span>
                           </div>
                         )}
                         <div className="flex justify-between font-bold text-lg text-emerald-600 dark:text-emerald-400 pt-2">
                           <span>Net Restaurant Payout</span>
-                          <span>₹{(data.restaurantPayout || 0).toFixed(2)}</span>
+                          <span>{formatINR((data.restaurantPayout || 0))}</span>
                         </div>
                       </div>
                     </div>

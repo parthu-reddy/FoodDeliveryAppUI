@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Banknote, Check, ChevronRight, CreditCard, Lock, Phone, ShieldCheck, Store, Wallet } from 'lucide-react';
 import React, { useState } from 'react';
 import { ErrorBoundary } from './ErrorBoundary';
+import { formatINR } from '@shared/money';
 
 export type PaymentMethodType = 'CARD' | 'WALLET' | 'COD' | 'UPI';
 
@@ -21,6 +22,8 @@ export interface PaymentModalProps {
   processingSubtitle?: string;
   buttonText?: (method: PaymentMethodType, amount: number) => string;
   leftPanelContent?: React.ReactNode;
+  disabledMethods?: PaymentMethodType[];
+  methodHints?: Partial<Record<PaymentMethodType, React.ReactNode>>;
 }
 
 export function PaymentModal(props: PaymentModalProps) {
@@ -44,8 +47,10 @@ function PaymentModalInner({
   successSubtitle = "Your transaction was successful.",
   processingTitle = "Processing Payment...",
   processingSubtitle = "Please wait while we securely process your payment",
-  buttonText = (method, amt) => method === 'COD' ? 'Confirm Cash Order' : `Pay ₹${(amt || 0).toFixed(2)} Now`,
-  leftPanelContent
+  buttonText = (method, amt) => method === 'COD' ? 'Confirm Cash Order' : `Pay ${formatINR((amt || 0))} Now`,
+  leftPanelContent,
+  disabledMethods = [],
+  methodHints = {}
 }: PaymentModalProps) {
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethodType>(availableMethods[0] || 'CARD');
 
@@ -99,28 +104,41 @@ function PaymentModalInner({
                     <div className="space-y-2">
                       {methods.map((method) => {
                         const Icon = method.icon;
-                        const isSelected = selectedMethod === method.id;
+                        const isDisabled = disabledMethods.includes(method.id as PaymentMethodType);
+                        // If selected method is disabled, default back to CARD (assuming CARD is available)
+                        const isSelected = selectedMethod === method.id && !isDisabled;
+                        
                         return (
-                          <button
-                            key={method.id}
-                            onClick={() => setSelectedMethod(method.id as PaymentMethodType)}
-                            className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all ${isSelected
-                                ? 'border-indigo-500 bg-indigo-50/80 dark:bg-indigo-500/20 shadow-md'
-                                : 'border-white/40 dark:border-white/10 bg-white/20 dark:bg-white/5 hover:bg-white/40 dark:hover:bg-white/10'
-                              }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className={`p-2 rounded-lg ${isSelected ? 'bg-indigo-100 dark:bg-indigo-500/30 text-indigo-600 dark:text-indigo-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
-                                <Icon className="w-4 h-4" />
+                          <div key={method.id} className="flex flex-col gap-1">
+                            <button
+                              onClick={() => !isDisabled && setSelectedMethod(method.id as PaymentMethodType)}
+                              disabled={isDisabled}
+                              className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all ${
+                                isDisabled 
+                                  ? 'opacity-50 cursor-not-allowed border-white/20 dark:border-white/5 bg-slate-50 dark:bg-slate-900/50 grayscale'
+                                  : isSelected
+                                    ? 'border-indigo-500 bg-indigo-50/80 dark:bg-indigo-500/20 shadow-md'
+                                    : 'border-white/40 dark:border-white/10 bg-white/20 dark:bg-white/5 hover:bg-white/40 dark:hover:bg-white/10'
+                                }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className={`p-2 rounded-lg ${isSelected ? 'bg-indigo-100 dark:bg-indigo-500/30 text-indigo-600 dark:text-indigo-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+                                  <Icon className="w-4 h-4" />
+                                </div>
+                                <span className={`font-semibold text-sm ${isSelected ? 'text-indigo-900 dark:text-indigo-100' : 'text-slate-600 dark:text-slate-300'}`}>
+                                  {method.label}
+                                </span>
                               </div>
-                              <span className={`font-semibold text-sm ${isSelected ? 'text-indigo-900 dark:text-indigo-100' : 'text-slate-600 dark:text-slate-300'}`}>
-                                {method.label}
-                              </span>
-                            </div>
-                            <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${isSelected ? 'border-indigo-500 bg-indigo-500' : 'border-slate-300 dark:border-slate-600'}`}>
-                              {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white"></div>}
-                            </div>
-                          </button>
+                              <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${isSelected ? 'border-indigo-500 bg-indigo-500' : 'border-slate-300 dark:border-slate-600'}`}>
+                                {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white"></div>}
+                              </div>
+                            </button>
+                            {methodHints[method.id as PaymentMethodType] && (
+                              <div className="pl-2 text-[11px] text-rose-500 dark:text-rose-400 font-medium">
+                                {methodHints[method.id as PaymentMethodType]}
+                              </div>
+                            )}
+                          </div>
                         );
                       })}
                     </div>
@@ -132,30 +150,30 @@ function PaymentModalInner({
                       <div className="space-y-2 text-sm text-slate-300 mb-4">
                         <div className="flex justify-between">
                           <span>Subtotal</span>
-                          <span className="font-mono">₹{totals.subtotal?.toFixed(2)}</span>
+                          <span className="font-mono">{formatINR(totals.subtotal)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Delivery Fee</span>
-                          <span className="font-mono">{totals.deliveryFee === 0 ? 'FREE' : `₹${totals.deliveryFee?.toFixed(2)}`}</span>
+                          <span className="font-mono">{totals.deliveryFee === 0 ? 'FREE' : `${formatINR(totals.deliveryFee)}`}</span>
                         </div>
                         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                         {(totals as any).platformFee !== undefined && (totals as any).platformFee > 0 && (
                           <div className="flex justify-between">
                             <span>Platform Fee</span>
                             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                            <span className="font-mono">₹{(totals as any).platformFee?.toFixed(2)}</span>
+                            <span className="font-mono">{formatINR((totals as any).platformFee)}</span>
                           </div>
                         )}
                         <div className="flex justify-between">
                           <span>Taxes</span>
-                          <span className="font-mono">₹{totals.tax?.toFixed(2)}</span>
+                          <span className="font-mono">{formatINR(totals.tax)}</span>
                         </div>
                       </div>
                     ) : (
                       <div className="space-y-2 text-sm text-slate-300 mb-4">
                         <div className="flex justify-between">
                           <span>Amount</span>
-                          <span className="font-mono">₹{(amount || 0).toFixed(2)}</span>
+                          <span className="font-mono">{formatINR((amount || 0))}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Platform Fee</span>
@@ -165,7 +183,7 @@ function PaymentModalInner({
                     )}
                     <div className="border-t border-white/20 pt-3 flex justify-between items-end">
                       <span className="text-slate-200">{totals ? 'Total to Pay' : 'Total Amount'}</span>
-                      <span className="font-mono text-2xl font-black">₹{(amount || 0).toFixed(2)}</span>
+                      <span className="font-mono text-2xl font-black">{formatINR((amount || 0))}</span>
                     </div>
                   </div>
                 </div>

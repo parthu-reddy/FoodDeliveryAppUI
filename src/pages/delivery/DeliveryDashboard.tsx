@@ -33,6 +33,7 @@ import {
 import { AnimatePresence, motion } from "motion/react";
 import React, { useEffect, useState } from "react";
 import { z } from "zod";
+import { formatINR } from '@shared/money';
 
 const otpSchema = z
   .string()
@@ -814,7 +815,7 @@ export default function DeliveryDashboard({
                     Today's Earnings
                   </span>
                   <span className="text-base font-black text-slate-800 dark:text-[#f0ede6]">
-                    ₹{todayEarnings.toFixed(2)}
+                    {formatINR(todayEarnings)}
                   </span>
                 </div>
               </div>
@@ -924,7 +925,7 @@ export default function DeliveryDashboard({
                       <p className="text-emerald-400 text-xs font-mono font-bold mt-1">
                         Est. Payout:{" "}
                         {pingJob.payout
-                          ? `₹${pingJob.payout.toFixed(2)}`
+                          ? `${formatINR(pingJob.payout)}`
                           : "Calculating..."}
                       </p>
                     </div>

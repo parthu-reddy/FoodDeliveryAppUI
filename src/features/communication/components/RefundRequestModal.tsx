@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { formatINR } from '@shared/money';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@shared/ui';
@@ -148,7 +149,7 @@ export const RefundRequestModal: React.FC<RefundRequestModalProps> = ({
                               />
                               <div>
                                 <p className="text-sm font-medium text-slate-900 dark:text-white">{itemName}</p>
-                                <p className="text-xs text-slate-500">${(itemPrice * maxQuantity).toFixed(2)} total ({maxQuantity}x)</p>
+                                <p className="text-xs text-slate-500">{formatINR(itemPrice * maxQuantity)} total ({maxQuantity}x)</p>
                               </div>
                             </label>
                             

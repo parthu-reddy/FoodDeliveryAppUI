@@ -6,6 +6,7 @@ import { EmptyState } from "@shared/ui";
 import { AlertCircle, Clock, Package, X } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useEffect, useState } from 'react';
+import { formatINR } from '@shared/money';
 import PostDeliverySupportModal from './PostDeliverySupportModal';
 
 interface CustomerOrderHistoryProps {
@@ -125,7 +126,7 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
                   </div>
                   <div className="text-right">
                     <span className="font-black text-slate-800 dark:text-white text-lg block">
-                      ₹{(order.totalAmount || (order as {total?: number}).total || 0).toFixed(2)}
+                      {formatINR(order.total || 0)}
                     </span>
                   </div>
                 </div>
@@ -164,12 +165,12 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
                       )}
                       {order.paymentStatus === 'REFUNDED' && (
                         <span className="text-[10px] bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-bold px-2 py-1 rounded-md">
-                          Refunded: ₹{(order.refundedAmount || order.totalAmount || order.total || 0).toFixed(2)}
+                          Refunded: {formatINR(order.refundedAmount || order.total || 0)}
                         </span>
                       )}
                       {order.paymentStatus === 'PARTIALLY_REFUNDED' && (
                         <span className="text-[10px] bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-bold px-2 py-1 rounded-md">
-                          Partial Refund: ₹{(order.refundedAmount || 0).toFixed(2)}
+                          Partial Refund: {formatINR(order.refundedAmount || 0)}
                         </span>
                       )}
                       {order.paymentStatus === 'REFUND_FAILED' && (

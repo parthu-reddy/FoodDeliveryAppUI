@@ -52,6 +52,7 @@ import {
     getOutlets
 } from '@features/catalog/model/menuStore';
 import { isActiveOrder } from '@features/customer-orders/model/orderStatus';
+import { formatINR, sumPaise } from '@shared/money';
 
 interface RestaurantDashboardProps {
   restaurantId: string;
@@ -292,7 +293,7 @@ export default function RestaurantDashboard({
   const completedOrders = historyOrders.filter(o => o.status === OrderStatus.HANDED_OVER);
 
   // Compute stats
-  const totalRevenue = myOrders.reduce((acc, curr) => acc + curr.subtotal, 0);
+  const totalRevenue = sumPaise(...myOrders.map((o) => (o as unknown as { restaurantPayout?: number }).restaurantPayout ?? 0));
 
   const toggleStock = async (dishId: string, currentStatus: boolean) => {
     const key = `${selectedOutletId}_${dishId}`;
@@ -356,13 +357,16 @@ export default function RestaurantDashboard({
       return;
     }
     
+    // Phase 6: Ensure amount is converted to paise integer
+    const paiseAmount = Math.round(amount * 100);
+
     try {
       // cleared locally in card component
       await restaurantApi.fulfillment.post('/api/v1/restaurants/:restaurantId/fulfillment/orders/:orderId/refund/partial', {
-              partialAmount: amount.toString(),
+              partialAmount: paiseAmount.toString(),
               reason: reason
             }, { params: { restaurantId: selectedOutletId, orderId } });
-      showSuccess(`Partial refund of $${amount.toFixed(2)} initiated successfully`);
+      showSuccess(`Partial refund of ${formatINR(paiseAmount)} initiated successfully`);
       // Let polling refresh the order, or manually trigger refresh if available.
     } catch (e: unknown) {
       console.error('Failed to initiate partial refund', e);
@@ -625,7 +629,7 @@ export default function RestaurantDashboard({
           >
             <ErrorBoundary fallbackLabel="Campaigns">
               <Suspense fallback={<LoadingSkeleton />}>
-                <CampaignManagement restaurantId={selectedOutletId} />
+                <CampaignManagement advertiserId={restaurantId} />
               </Suspense>
             </ErrorBoundary>
           </motion.div>

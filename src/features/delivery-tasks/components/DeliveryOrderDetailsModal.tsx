@@ -3,6 +3,7 @@ import { Button } from '@shared/ui';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle2, MapPin, Receipt, X } from 'lucide-react';
 import React from 'react';
+import { formatINR } from '@shared/money';
 
 interface DeliveryOrderDetailsModalProps {
   order: Order | null;
@@ -75,16 +76,16 @@ export const DeliveryOrderDetailsModal: React.FC<DeliveryOrderDetailsModalProps>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between text-slate-600 dark:text-slate-300">
                       <span>Base Pay (Customer)</span>
-                      <span>₹{(order.driverCustomerContribution || 0).toFixed(2)}</span>
+                      <span>{formatINR((order.driverCustomerContribution || 0))}</span>
                     </div>
                     <div className="flex justify-between text-slate-600 dark:text-slate-300">
                       <span>Distance/Surge Pay (Restaurant)</span>
-                      <span>₹{(order.driverRestaurantContribution || 0).toFixed(2)}</span>
+                      <span>{formatINR((order.driverRestaurantContribution || 0))}</span>
                     </div>
                     {(order.driverTip && order.driverTip > 0) ? (
                       <div className="flex justify-between text-emerald-500 dark:text-emerald-400 font-medium">
                         <span>Customer Tip</span>
-                        <span>+ ₹{order.driverTip.toFixed(2)}</span>
+                        <span>+ {formatINR(order.driverTip)}</span>
                       </div>
                     ) : null}
                   </div>
@@ -96,13 +97,13 @@ export const DeliveryOrderDetailsModal: React.FC<DeliveryOrderDetailsModalProps>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between text-slate-900 dark:text-white font-medium">
                     <span>Total Gross Earnings</span>
-                    <span>₹{(order.grossPayout || ((order.driverCustomerContribution || 0) + (order.driverRestaurantContribution || 0) + (order.driverTip || 0))).toFixed(2)}</span>
+                    <span>{formatINR((order.grossPayout || ((order.driverCustomerContribution || 0) + (order.driverRestaurantContribution || 0) + (order.driverTip || 0))))}</span>
                   </div>
                   
                   {order.driverTaxes ? (
                     <div className="flex justify-between text-rose-500 dark:text-rose-400">
                       <span>Government Tax Deducted (18%)</span>
-                      <span>- ₹{order.driverTaxes.toFixed(2)}</span>
+                      <span>- {formatINR(order.driverTaxes)}</span>
                     </div>
                   ) : null}
                 </div>
@@ -113,7 +114,7 @@ export const DeliveryOrderDetailsModal: React.FC<DeliveryOrderDetailsModalProps>
                 <div className="flex justify-between items-center">
                   <span className="font-bold text-slate-900 dark:text-white">Total Net Payout</span>
                   <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">
-                    ₹{(order.payout || ((order.grossPayout || 0) - (order.driverTaxes || 0))).toFixed(2)}
+                    {formatINR((order.payout || ((order.grossPayout || 0) - (order.driverTaxes || 0))))}
                   </span>
                 </div>
               </div>

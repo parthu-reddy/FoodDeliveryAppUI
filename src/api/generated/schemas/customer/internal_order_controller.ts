@@ -1,35 +1,13 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-import { ApiResponseString } from "./common";
-import { OrderResponse } from "./common";
-import { OrderItemResponse } from "./common";
 import { PageOrder } from "./common";
 import { pageable } from "./common";
-import { Order } from "./common";
-import { PageableObject } from "./common";
 import { SortObject } from "./common";
+import { PageableObject } from "./common";
+import { Order } from "./common";
 
 const endpoints = makeApi([
-  {
-    method: "post",
-    path: "/api/v1/internal/orders/:orderId/partial-refund",
-    alias: "partialRefund",
-    requestFormat: "json",
-    parameters: [
-      {
-        name: "body",
-        type: "Body",
-        schema: z.record(z.string()),
-      },
-      {
-        name: "orderId",
-        type: "Path",
-        schema: z.string().uuid(),
-      },
-    ],
-    response: ApiResponseString,
-  },
   {
     method: "get",
     path: "/api/v1/internal/orders/:orderId/participants",
@@ -43,20 +21,6 @@ const endpoints = makeApi([
       },
     ],
     response: z.array(z.string()),
-  },
-  {
-    method: "get",
-    path: "/api/v1/internal/orders/:orderId/invoice",
-    alias: "getOrderInvoice",
-    requestFormat: "json",
-    parameters: [
-      {
-        name: "orderId",
-        type: "Path",
-        schema: z.string().uuid(),
-      },
-    ],
-    response: OrderResponse,
   },
   {
     method: "get",

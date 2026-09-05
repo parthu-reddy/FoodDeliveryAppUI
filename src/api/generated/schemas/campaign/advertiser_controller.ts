@@ -78,6 +78,11 @@ const endpoints = makeApi([
         type: "Path",
         schema: z.string().uuid(),
       },
+      {
+        name: "X-User-Id",
+        type: "Header",
+        schema: z.string().optional(),
+      },
     ],
     response: ApiResponseAdvertiserResponse,
   },
@@ -101,6 +106,11 @@ const endpoints = makeApi([
         name: "contentType",
         type: "Query",
         schema: z.string(),
+      },
+      {
+        name: "X-User-Id",
+        type: "Header",
+        schema: z.string().optional(),
       },
     ],
     response: ApiResponseString,

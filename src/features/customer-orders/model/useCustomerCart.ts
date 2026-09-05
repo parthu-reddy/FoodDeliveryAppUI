@@ -417,7 +417,16 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
       console.error(err);
       isSubmittingOrderRef.current = false;
       setPaymentStatus('idle');
-      setIsPaymentModalOpen(false);
+
+      // @ts-expect-error auto-migration type suppression
+      const errorCode = err?.response?.data?.errorCode;
+      // @ts-expect-error auto-migration type suppression
+      let errorMsg = err?.response?.data?.message || err?.response?.data?.error || err?.message || "Failed to create order";
+      const isQuoteExpired = errorCode === 'QUOTE_EXPIRED';
+
+      if (!isQuoteExpired) {
+        setIsPaymentModalOpen(false);
+      }
 
       // @ts-expect-error auto-migration type suppression
       if (err?.data?.data && Array.isArray(err.data.data) && err.data.data.length > 0) {
@@ -454,11 +463,6 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
         setGlobalError(removedItemNames ? `Removed unavailable items from cart: ${removedItemNames}` : "Some items are unavailable.");
         setTimeout(() => setGlobalError(null), 5000);
       } else {
-        // @ts-expect-error auto-migration type suppression
-        const errorCode = err?.response?.data?.errorCode;
-        // @ts-expect-error auto-migration type suppression
-        let errorMsg = err?.response?.data?.message || err?.response?.data?.error || err?.message || "Failed to create order";
-        
         if (errorCode === 'OUT_OF_SERVICE_AREA') {
           errorMsg = "This restaurant is too far for delivery to your location.";
         } else if (errorCode === 'NO_DELIVERY_PARTNER_NEARBY') {

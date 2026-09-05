@@ -5,6 +5,8 @@ import { Badge, Button, Input, Select } from '@shared/ui';
 import { ArrowRight, Check, ChevronLeft, ChevronRight, Copy, Filter, Search } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { asUntyped, WirePage } from '../../../lib/untypedResponse';
+import { formatINR } from '@shared/money';
+import { ChargeCategory } from '@/types/backend-enums';
 
 export default function AdminLedgerView() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -127,15 +129,10 @@ export default function AdminLedgerView() {
             value={category}
             onChange={(val) => setCategory(val)}
             placeholder="All Categories"
-            options={[
-              { value: 'FOOD_COST', label: 'FOOD COST' },
-              { value: 'DELIVERY_FEE', label: 'DELIVERY FEE' },
-              { value: 'PLATFORM_FEE', label: 'PLATFORM FEE' },
-              { value: 'TAX', label: 'TAX' },
-              { value: 'REFUND', label: 'REFUND' },
-              { value: 'DRIVER_EARNING', label: 'DRIVER EARNING' },
-              { value: 'SETTLEMENT', label: 'SETTLEMENT' }
-            ]}
+            options={Object.values(ChargeCategory).map(c => ({
+              value: c,
+              label: c.replace(/_/g, ' ')
+            }))}
           />
           <Select
             value={direction}
@@ -241,7 +238,7 @@ export default function AdminLedgerView() {
                     </td>
                     <td className="p-4 align-middle text-right">
                       <span className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm border border-slate-200/50 dark:border-slate-700/50">
-                        ${tx.amount != null ? tx.amount.toFixed(2) : '0.00'}
+                        {tx.amount != null ? formatINR(tx.amount) : formatINR(0)}
                       </span>
                     </td>
                   </tr>

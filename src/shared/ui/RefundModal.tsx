@@ -1,5 +1,6 @@
 import { Loader2, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { formatINR } from '@shared/money';
 import { z } from 'zod';
 import { Order } from '../../types';
 
@@ -119,7 +120,7 @@ export const RefundModal: React.FC<RefundModalProps> = ({
           <div className="p-6">
             <p className="text-gray-600 mb-4">Based on your selection, the calculated refund amount is:</p>
             <div className="text-3xl font-bold text-center text-orange-600 mb-6">
-              ${quoteAmount.toFixed(2)}
+              {formatINR(quoteAmount)}
             </div>
             <p className="text-sm text-gray-500 mb-6 text-center">
               This request will be submitted as a Support Ticket and reviewed by our team. The responsible party may be asked to provide their comments.
@@ -229,7 +230,7 @@ export const RefundModal: React.FC<RefundModalProps> = ({
                           </select>
                         )}
                         <span className="text-sm font-medium text-gray-600 ml-2">
-                          ${item.price?.toFixed(2)}
+                          {formatINR(item.price)}
                         </span>
                       </div>
                     );

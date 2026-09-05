@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Bike, CheckCircle2 } from 'lucide-react';
 import React from 'react';
 import { CartState } from '../model/useCustomerCart';
+import { formatINR } from '@shared/money';
 
 interface CustomerFreeDeliveryTrackerProps {
   carts: Record<string, CartState>;
@@ -79,7 +80,7 @@ export const CustomerFreeDeliveryTracker: React.FC<CustomerFreeDeliveryTrackerPr
               ) : (
                 <>
                   <h4 className="text-sm font-bold text-orange-700 dark:text-orange-400 tracking-tight">
-                    Add ₹{(minOrder - subtotal).toFixed(2)} for Free Delivery!
+                    Add {formatINR((minOrder - subtotal))} for Free Delivery!
                   </h4>
                   <p className="text-[10px] text-orange-600/80 dark:text-orange-400/80 mt-0.5">Save on variable delivery fees</p>
                 </>

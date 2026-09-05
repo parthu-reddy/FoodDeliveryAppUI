@@ -1,20 +1,20 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-import { SupportTicket } from "./common";
+import { RefundView } from "./common";
 
-const ApiResponseListSupportTicket = z
+const ApiResponseListRefundView = z
   .object({
     success: z.boolean(),
     message: z.string(),
     errorCode: z.string().optional(),
-    data: z.array(SupportTicket).optional(),
+    data: z.array(RefundView).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
 
 export const schemas = {
-  ApiResponseListSupportTicket,
+  ApiResponseListRefundView,
 };
 
 const endpoints = makeApi([
@@ -30,7 +30,7 @@ const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: ApiResponseListSupportTicket,
+    response: ApiResponseListRefundView,
   },
 ]);
 

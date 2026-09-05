@@ -1,6 +1,11 @@
 import { ErrorBoundary } from "@shared/ui";
-import { PaymentModal } from "@shared/ui/PaymentModal";
+import { PaymentModal, PaymentMethodType } from "@shared/ui/PaymentModal";
 import { MapPin, Store } from 'lucide-react';
+import { formatINR } from '@shared/money';
+import { useEffect, useState } from 'react';
+import { walletApi } from '@/lib/zodiosClients';
+import { getUserProfile } from '@/lib/tokenStore';
+import { asUntyped } from '@/lib/untypedResponse';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function CustomerPaymentModal(props: any) {
@@ -25,6 +30,22 @@ function CustomerPaymentModalInner({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }: any) {
   const totals = getCartTotal ? getCartTotal() : { subtotal: 0, deliveryFee: 0, tax: 0, total: 0 };
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (isPaymentModalOpen) {
+      const profile = getUserProfile();
+      if (profile?.id) {
+        walletApi.wallet.get('/api/v1/wallets/:entityType/:entityId', { 
+          params: { entityType: 'CUSTOMER', entityId: profile.id } 
+        }).then(res => {
+          setWalletBalance((asUntyped<{balance?: number}>(res)).balance || 0);
+        }).catch(err => {
+          console.error("Failed to fetch wallet balance", err);
+        });
+      }
+    }
+  }, [isPaymentModalOpen]);
 
   const leftContent = (
     <>
@@ -62,7 +83,6 @@ function CustomerPaymentModalInner({
         </div>
 
         <div className="space-y-3 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
-          { }
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           {(cart || []).map((cItem: any, idx: number) => (
             <div key={idx} className="flex justify-between items-center text-sm">
@@ -70,13 +90,23 @@ function CustomerPaymentModalInner({
                 <span className="bg-slate-100 dark:bg-slate-800/50 px-2 py-0.5 rounded text-xs font-semibold">{cItem.quantity}x</span>
                 <span className="truncate max-w-[150px]">{cItem.item?.name}</span>
               </div>
-              <span className="font-mono font-medium text-slate-800 dark:text-white">₹{(cItem.item?.price * cItem.quantity).toFixed(2)}</span>
+              <span className="font-mono font-medium text-slate-800 dark:text-white">{formatINR((cItem.item?.price * cItem.quantity))}</span>
             </div>
           ))}
         </div>
       </div>
     </>
   );
+
+  const disabledMethods: PaymentMethodType[] = [];
+  const methodHints: Partial<Record<PaymentMethodType, React.ReactNode>> = {};
+
+  if (walletBalance !== null && walletBalance < totals.total) {
+    disabledMethods.push('WALLET');
+    methodHints['WALLET'] = `Insufficient balance (${formatINR(walletBalance)})`;
+  }
+  
+  methodHints['COD'] = "Please keep exact change ready";
 
   return (
     <PaymentModal
@@ -89,6 +119,8 @@ function CustomerPaymentModalInner({
       availableMethods={['CARD', 'WALLET', 'COD']}
       amount={totals.total}
       totals={totals}
+      disabledMethods={disabledMethods}
+      methodHints={methodHints}
       leftPanelContent={leftContent}
       title="Complete Your Order"
       successTitle="Order Confirmed!"
@@ -98,3 +130,4 @@ function CustomerPaymentModalInner({
     />
   );
 }
+

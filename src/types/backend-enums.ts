@@ -1,15 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export enum AccountType {
-    CUSTOMER = "CUSTOMER",
-    PLATFORM = "PLATFORM",
-    RESTAURANT = "RESTAURANT",
-    DRIVER = "DRIVER",
-    ADVERTISER_WALLET = "ADVERTISER_WALLET",
-    GOVERNMENT = "GOVERNMENT",
-}
-
 export enum ChannelType {
     SMS = "SMS",
     EMAIL = "EMAIL",
@@ -22,20 +13,19 @@ export enum ChargeCategory {
     PLATFORM_FIXED_FEE = "PLATFORM_FIXED_FEE",
     PLATFORM_BONUS = "PLATFORM_BONUS",
     FOOD_COST = "FOOD_COST",
-    TIP = "TIP",
-    PACKAGING_FEE = "PACKAGING_FEE",
-    SURGE_PRICING = "SURGE_PRICING",
-    TAX = "TAX",
     SGST = "SGST",
     CGST = "CGST",
     REFUND = "REFUND",
     ORDER_TOTAL = "ORDER_TOTAL",
-    PAYOUT = "PAYOUT",
     AD_IMPRESSION = "AD_IMPRESSION",
     AD_CLICK = "AD_CLICK",
     AD_CONVERSION = "AD_CONVERSION",
     AD_WALLET_TOPUP = "AD_WALLET_TOPUP",
-    AD_REVENUE = "AD_REVENUE",
+    CLAWBACK = "CLAWBACK",
+    PAYOUT_TRANSFER = "PAYOUT_TRANSFER",
+    CASH_COLLECTED = "CASH_COLLECTED",
+    CASH_REMITTED = "CASH_REMITTED",
+    STORE_CREDIT = "STORE_CREDIT",
 }
 
 export enum DeliveryStatus {
@@ -64,6 +54,27 @@ export enum FaultType {
     RIDER_FAULT = "RIDER_FAULT",
     CUSTOMER_FAULT = "CUSTOMER_FAULT",
     UNKNOWN = "UNKNOWN",
+}
+
+export enum LedgerAccountType {
+    GATEWAY_RECEIVABLE = "GATEWAY_RECEIVABLE",
+    CASH_RECEIVABLE = "CASH_RECEIVABLE",
+    BANK = "BANK",
+    PLATFORM_CLEARING = "PLATFORM_CLEARING",
+    PLATFORM_REVENUE = "PLATFORM_REVENUE",
+    TAX_PAYABLE = "TAX_PAYABLE",
+    PAYOUT_IN_TRANSIT = "PAYOUT_IN_TRANSIT",
+    RESTAURANT_PAYABLE = "RESTAURANT_PAYABLE",
+    DRIVER_PAYABLE = "DRIVER_PAYABLE",
+    CUSTOMER_CREDIT = "CUSTOMER_CREDIT",
+    ADVERTISER_PREPAID = "ADVERTISER_PREPAID",
+}
+
+export enum Kind {
+    EXTERNAL = "EXTERNAL",
+    INTERNAL = "INTERNAL",
+    PAYABLE = "PAYABLE",
+    PREPAID = "PREPAID",
 }
 
 export enum OrderStatus {
@@ -99,15 +110,17 @@ export enum PaymentMethod {
 }
 
 export enum RefundDestination {
-    GATEWAY = "GATEWAY",
-    WALLET = "WALLET",
-    MANUAL = "MANUAL",
+    ORIGINAL_METHOD = "ORIGINAL_METHOD",
+    STORE_CREDIT = "STORE_CREDIT",
+    NONE = "NONE",
 }
 
 export enum RefundStatus {
-    PENDING = "PENDING",
+    REQUESTED = "REQUESTED",
+    PROCESSING = "PROCESSING",
     COMPLETED = "COMPLETED",
     FAILED = "FAILED",
+    CANCELLED = "CANCELLED",
 }
 
 export enum RoleName {
@@ -158,4 +171,9 @@ export enum VerificationType {
     PAN = "PAN",
     DRIVING_LICENSE = "DRIVING_LICENSE",
     RC = "RC",
+}
+
+export enum WalletEntityType {
+    CUSTOMER = "CUSTOMER",
+    ADVERTISER = "ADVERTISER",
 }

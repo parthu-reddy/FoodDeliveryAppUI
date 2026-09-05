@@ -2,21 +2,21 @@ import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
 import { ApiResponseString } from "./common";
-import { PageableObject } from "./common";
 import { SortObject } from "./common";
+import { PageableObject } from "./common";
 
 const PageMapStringObject = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    numberOfElements: z.number().int(),
-    size: z.number().int(),
-    content: z.array(z.record(z.object({}).partial().passthrough())),
+    sort: SortObject.optional(),
     pageable: PageableObject.optional(),
-    number: z.number().int(),
+    numberOfElements: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
-    sort: SortObject.optional(),
+    size: z.number().int(),
+    content: z.array(z.record(z.object({}).partial().passthrough())),
+    number: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -47,12 +47,12 @@ const endpoints = makeApi([
   },
   {
     method: "post",
-    path: "/api/v1/internal/admin/orders/dlq/refunds/:orderId/retry",
+    path: "/api/v1/internal/admin/orders/dlq/refunds/:refundId/retry",
     alias: "retryRefund",
     requestFormat: "json",
     parameters: [
       {
-        name: "orderId",
+        name: "refundId",
         type: "Path",
         schema: z.string().uuid(),
       },

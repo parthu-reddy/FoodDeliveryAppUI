@@ -1,8 +1,9 @@
 import { restaurantApi } from '@/lib/zodiosClients';
 import { Order, OrderStatus } from '@/types';
+import { formatINR } from '@shared/money';
 import { getFriendlyStatusMessage } from '@features/customer-orders/model/statusMessaging';
 import { RestaurantOrderDetailsModal } from '@features/restaurant-orders/components/RestaurantOrderDetailsModal';
-import { Calendar, ChevronLeft, ChevronRight, DollarSign, Package, Receipt } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Package, Receipt } from 'lucide-react';
 import React, { useState } from 'react';
 
 export function OrderHistory({ restaurantId, onOpenChat }: { restaurantId: string, onOpenChat?: (orderId: string) => void }) {
@@ -36,7 +37,6 @@ interface RawOrder {
   items?: unknown[];
   itemsJson?: string;
   total?: number;
-  totalAmount?: number;
   subtotal?: number;
   customerName?: string;
   createdAt?: string;
@@ -68,7 +68,7 @@ interface RawOrder {
               id: o.orderId || o.id, 
               status: s, 
               items: parsedItems,
-              total: o.total || o.totalAmount || calculatedTotal,
+              total: o.total || calculatedTotal,
               subtotal: o.subtotal || calculatedTotal,
               customerName: o.customerName || 'Customer',
               timestamp: o.createdAt || new Date().toISOString()
@@ -190,12 +190,11 @@ interface RawOrder {
                     <td className="p-4 whitespace-nowrap">
                       <div className="flex flex-col">
                         <div className="flex items-center gap-1 font-black text-slate-800 dark:text-[#f0ede6]">
-                          <DollarSign className="w-3 h-3 text-emerald-500" />
-                          {order.total?.toFixed(2)}
+                          {formatINR(order.total || 0)}
                         </div>
                         {(order.sgst !== undefined || order.cgst !== undefined) && (
                           <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-                            Incl. Tax: ${((order.sgst || 0) + (order.cgst || 0)).toFixed(2)}
+                            Incl. Tax: {formatINR((order.sgst || 0) + (order.cgst || 0))}
                           </div>
                         )}
                       </div>

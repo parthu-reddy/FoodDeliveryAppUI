@@ -212,6 +212,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/internal/campaigns/{campaignId}/advertiser": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getCampaignAdvertiser"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/internal/campaigns/active-for-bidding": {
         parameters: {
             query?: never;
@@ -220,6 +236,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getActiveCampaignsForBidding"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/internal/advertisers/{advertiserId}/owner": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAdvertiserUserId"];
         put?: never;
         post?: never;
         delete?: never;
@@ -529,13 +561,13 @@ export interface components {
         PageableObject: {
             /** Format: int64 */
             offset: number;
-            unpaged: boolean;
             sort?: components["schemas"]["SortObject"];
             paged: boolean;
             /** Format: int32 */
             pageNumber: number;
             /** Format: int32 */
             pageSize: number;
+            unpaged: boolean;
         };
         SortObject: {
             empty: boolean;
@@ -711,7 +743,9 @@ export interface operations {
     getAdGroup: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "X-User-Id"?: string;
+            };
             path: {
                 advertiserId: string;
                 campaignId: string;
@@ -735,7 +769,9 @@ export interface operations {
     updateAdGroup: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "X-User-Id"?: string;
+            };
             path: {
                 advertiserId: string;
                 campaignId: string;
@@ -763,7 +799,9 @@ export interface operations {
     deleteAdGroup: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "X-User-Id"?: string;
+            };
             path: {
                 advertiserId: string;
                 campaignId: string;
@@ -1020,7 +1058,9 @@ export interface operations {
             query: {
                 pageable: components["schemas"]["Pageable"];
             };
-            header?: never;
+            header?: {
+                "X-User-Id"?: string;
+            };
             path: {
                 advertiserId: string;
                 campaignId: string;
@@ -1043,7 +1083,9 @@ export interface operations {
     createAdGroup: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "X-User-Id"?: string;
+            };
             path: {
                 advertiserId: string;
                 campaignId: string;
@@ -1070,7 +1112,9 @@ export interface operations {
     listCreatives: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "X-User-Id"?: string;
+            };
             path: {
                 advertiserId: string;
                 campaignId: string;
@@ -1094,7 +1138,9 @@ export interface operations {
     createCreative: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "X-User-Id"?: string;
+            };
             path: {
                 advertiserId: string;
                 campaignId: string;
@@ -1125,7 +1171,9 @@ export interface operations {
                 fileName: string;
                 contentType: string;
             };
-            header?: never;
+            header?: {
+                "X-User-Id"?: string;
+            };
             path: {
                 advertiserId: string;
                 campaignId: string;
@@ -1175,6 +1223,30 @@ export interface operations {
             };
         };
     };
+    getCampaignAdvertiser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaignId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
     getActiveCampaignsForBidding: {
         parameters: {
             query?: never;
@@ -1197,10 +1269,36 @@ export interface operations {
             };
         };
     };
-    getAdvertiser: {
+    getAdvertiserUserId: {
         parameters: {
             query?: never;
             header?: never;
+            path: {
+                advertiserId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
+    getAdvertiser: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-User-Id"?: string;
+            };
             path: {
                 id: string;
             };
@@ -1225,7 +1323,9 @@ export interface operations {
                 fileName: string;
                 contentType: string;
             };
-            header?: never;
+            header?: {
+                "X-User-Id"?: string;
+            };
             path: {
                 advertiserId: string;
             };
