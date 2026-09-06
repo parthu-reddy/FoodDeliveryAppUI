@@ -59,13 +59,13 @@ export default function ActiveDeliveryCard({
           <div className="flex-1">
             <span className="text-[10px] text-slate-400 block font-mono">DELIVERY ADDRESS</span>
             <div className="flex justify-between items-center w-full">
-              <span className="font-bold text-slate-800 dark:text-[#f0ede6]">{currentJob.customerName}</span>
+              <span className="font-bold text-slate-800 dark:text-[#f0ede6]">Customer</span>
               {currentJob.customerId && (
                 <button
                   type="button"
                   onClick={() => startCall(currentJob.customerId!, currentJob.id)}
                   className="p-1.5 rounded-full bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-500/20 dark:text-orange-400 transition-colors"
-                  title={`Call ${currentJob.customerName}`}
+                  title={`Call Customer`}
                 >
                   <PhoneCall className="w-4 h-4" />
                 </button>

@@ -46,7 +46,7 @@ export function DeliveryAvailableJobs({
                 </div>
                 <div className="text-right">
                   <span className="text-xs text-slate-400 dark:text-slate-300 block font-mono">PAYOUT</span>
-                  <span className="text-lg font-black text-emerald-500">{job.payout ? formatINR(job.payout) : '—'}</span>
+                  <span className="text-lg font-black text-emerald-500">{job.deliveryFee ? formatINR(job.deliveryFee) : '—'}</span>
                 </div>
               </div>
 

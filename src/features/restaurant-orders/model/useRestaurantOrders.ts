@@ -80,10 +80,9 @@ export function useRestaurantOrders({
           ...orderData, 
           id: orderData.orderId || orderData.id || '', 
           status: s as OrderStatus, 
-          items: parsedItems as { quantity: number; item: { id: string; name: string; price: number } }[],
+          items: parsedItems as any,
           total: orderData.total || calculatedTotal,
-          subtotal: orderData.subtotal || calculatedTotal,
-          customerName: orderData.customerName || 'Customer'
+          subtotal: orderData.subtotal || calculatedTotal
         };
       });
       return mapped;

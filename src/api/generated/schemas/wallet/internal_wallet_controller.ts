@@ -31,7 +31,7 @@ const PageWalletTransactionDto = z
     empty: z.boolean(),
   })
   .passthrough();
-export const WalletDto = z
+const WalletDto = z
   .object({
     id: z.string().uuid(),
     entityId: z.string().uuid(),

@@ -133,7 +133,7 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
       <div className="flex justify-between items-start">
         <div>
           <span className="text-xs font-mono font-bold text-orange-500">#{order.id.substring(0, 8)}</span>
-          <span className="text-[10px] text-slate-400 dark:text-slate-300 font-medium block">{order.timestamp}</span>
+          <span className="text-[10px] text-slate-400 dark:text-slate-300 font-medium block">{order.createdAt ? new Date(order.createdAt).toLocaleTimeString() : ''}</span>
         </div>
         <Badge 
           variant={order.status === OrderStatus.AWAITING_DELAY_APPROVAL ? 'danger' : 'primary'} 
@@ -186,20 +186,20 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
               {getFriendlyDeliveryStatusMessage(order.deliveryStatus)}
             </span>
           </div>
-          {order.deliveryExecutiveName ? (
+          {order.deliveryExecutiveId ? (
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 rounded-full bg-indigo-500/15 flex items-center justify-center text-indigo-550 shrink-0">
                   <Bike className="w-3 h-3" />
                 </div>
-                <p className="font-bold text-[11px] text-slate-750 dark:text-[#f0ede6] truncate">{order.deliveryExecutiveName}</p>
+                <p className="font-bold text-[11px] text-slate-750 dark:text-[#f0ede6] truncate">Rider #{order.deliveryExecutiveId.substring(0, 4)}</p>
               </div>
               {order.deliveryExecutiveId && (
                 <button
                   type="button"
                   onClick={() => startCall(order.deliveryExecutiveId!, order.id)}
                   className="p-1 rounded-full bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-500/20 dark:text-orange-400 transition-colors"
-                  title={`Call ${order.deliveryExecutiveName}`}
+                  title={`Call Rider`}
                 >
                   <PhoneCall className="w-3 h-3" />
                 </button>
@@ -244,22 +244,10 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
               <span className="text-[9px] text-slate-400 dark:text-slate-300 uppercase font-mono block truncate">Order Value</span>
               <span className="text-xs font-bold text-slate-850 dark:text-[#f0ede6] font-mono">{formatINR(order.total)}</span>
             </div>
-            {order.foodCost !== undefined && (
-              <div className="space-y-1">
-                <span className="text-[9px] text-slate-400 dark:text-slate-300 uppercase font-mono block truncate">Food Cost</span>
-                <span className="text-xs font-bold text-slate-850 dark:text-[#f0ede6] font-mono">{formatINR(order.foodCost)}</span>
-              </div>
-            )}
-            {order.restaurantPlatformFee !== undefined && order.restaurantPlatformFee > 0 && (
-              <div className="space-y-1">
-                <span className="text-[9px] text-slate-400 dark:text-slate-300 uppercase font-mono block truncate">Platform Fee</span>
-                <span className="text-xs font-bold text-rose-500 font-mono">-{formatINR(order.restaurantPlatformFee)}</span>
-              </div>
-            )}
             <div className="space-y-1">
               <span className="text-[9px] text-slate-400 dark:text-slate-300 uppercase font-mono block truncate">Your Payout</span>
               <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 font-mono">
-                {formatINR(order.restaurantPayout !== undefined ? order.restaurantPayout : (order.total || 0))}
+                {order.restaurantPayout != null ? formatINR(order.restaurantPayout) : '---'}
               </span>
             </div>
           </div>

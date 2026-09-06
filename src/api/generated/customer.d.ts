@@ -1148,7 +1148,7 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
             /** Format: uuid */
-            deliveryExecutiveId?: string;
+            riderId?: string;
             /** Format: uuid */
             deliveryExecutiveId?: string;
             paymentIntent?: string;

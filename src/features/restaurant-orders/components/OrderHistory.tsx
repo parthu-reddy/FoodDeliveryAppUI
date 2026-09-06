@@ -66,15 +66,14 @@ interface RawOrder {
             return {
               ...o, 
               id: o.orderId || o.id, 
-              status: s, 
+              status: s as OrderStatus, 
               items: parsedItems,
               total: o.total || calculatedTotal,
               subtotal: o.subtotal || calculatedTotal,
-              customerName: o.customerName || 'Customer',
-              timestamp: o.createdAt || new Date().toISOString()
+              createdAt: o.createdAt || new Date().toISOString()
             };
           });
-          setOrders(mapped as Order[]);
+          setOrders(mapped as unknown as Order[]);
           setTotalPages(res.data.totalPages || 1);
           setTotalElements(res.data.totalElements || mapped.length);
         }
@@ -171,7 +170,7 @@ interface RawOrder {
                       )}
                     </td>
                     <td className="p-4 whitespace-nowrap">
-                      <span className="font-medium text-slate-800 dark:text-[#f0ede6]">{order.customerName}</span>
+                      <span className="font-medium text-slate-800 dark:text-[#f0ede6]">Customer</span>
                     </td>
                     <td className="p-4">
                       <div className="flex flex-col gap-1">

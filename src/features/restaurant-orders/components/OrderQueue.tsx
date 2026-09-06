@@ -28,7 +28,7 @@ export default function OrderQueue({ orders, onAcceptOrder, onRejectOrder }: Ord
           <div className="flex justify-between items-start mb-4">
             <div>
               <p className="font-mono text-xs font-bold text-slate-500">ORDER #{order.id.substring(0, 8)}</p>
-              <p className="font-black mt-1 text-slate-900 dark:text-white">{order.customerName}</p>
+              <p className="font-black mt-1 text-slate-900 dark:text-white">Customer</p>
             </div>
             <p className="font-black text-rose-500">{formatINR(order.total || 0)}</p>
           </div>

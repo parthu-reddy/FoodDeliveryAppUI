@@ -616,7 +616,7 @@ export default function CustomerDashboard({
                   </Button>
 
                   {/* Report Issue / Request Refund Button */}
-                  {!currentTrackingOrder.refundedAmount && (
+                  {currentTrackingOrder.status !== OrderStatus.CANCELLED && (
                     <Button
                       onClick={() => {
                         chatWidgetRef.current?.openAndRequestRefundQuote();
@@ -872,7 +872,7 @@ export default function CustomerDashboard({
               ...(currentTrackingOrder.deliveryExecutiveId ? [{
                 userId: currentTrackingOrder.deliveryExecutiveId,
                 entityType: 'DELIVERY' as const,
-                displayName: currentTrackingOrder.deliveryExecutiveName || currentTrackingOrder.deliveryExecutiveName || 'Rider'
+                displayName: 'Rider'
               }] : []),
               ...(currentTrackingOrder.restaurantId ? [{
                 userId: currentTrackingOrder.restaurantId,

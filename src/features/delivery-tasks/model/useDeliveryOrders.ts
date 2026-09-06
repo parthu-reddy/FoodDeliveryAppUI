@@ -438,10 +438,15 @@ export function useDeliveryOrders({
   const allHistoryJobsMap = new Map();
   // eslint-disable-next-line react-hooks/refs
   [...historyRef.current, ...activeOrders.filter(o => o.deliveryExecutiveId === deliveryExecutiveId && [DeliveryStatus.DELIVERED, DeliveryStatus.FAILED, DeliveryStatus.CANCELLED].includes(o.deliveryStatus as DeliveryStatus))]
-    .forEach(job => allHistoryJobsMap.set(job.id, { ...job, payout: job.payout || 0 }));
+    .forEach(job => allHistoryJobsMap.set(job.id, { ...job }));
   const allHistoryJobs = Array.from(allHistoryJobsMap.values());
   const todayHistoryJobs = allHistoryJobs.filter(job => job.createdAt?.startsWith(todayDateString));
-  const todayEarnings = sumPaise(...todayHistoryJobs.map(job => job.payout));
+  const todayEarnings = sumPaise(...todayHistoryJobs.map(job => {
+    if (job.earnings?.netPayout == null) {
+      throw new Error(`Missing earnings.netPayout for job ${job.id}`);
+    }
+    return job.earnings.netPayout;
+  }));
   const todayCompletedCount = todayHistoryJobs.length;
   
   const filteredHistoryJobs = allHistoryJobs.filter(job => {

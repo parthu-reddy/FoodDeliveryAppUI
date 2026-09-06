@@ -293,7 +293,12 @@ export default function RestaurantDashboard({
   const completedOrders = historyOrders.filter(o => o.status === OrderStatus.HANDED_OVER);
 
   // Compute stats
-  const totalRevenue = sumPaise(...myOrders.map((o) => (o as unknown as { restaurantPayout?: number }).restaurantPayout ?? 0));
+  const totalRevenue = sumPaise(...myOrders.map((o) => {
+    if (o.restaurantPayout == null) {
+      throw new Error(`Missing restaurantPayout for order ${o.id}`);
+    }
+    return o.restaurantPayout;
+  }));
 
   const toggleStock = async (dishId: string, currentStatus: boolean) => {
     const key = `${selectedOutletId}_${dishId}`;
@@ -677,12 +682,12 @@ export default function RestaurantDashboard({
             ...(selectedChatOrder.customerId ? [{
               userId: selectedChatOrder.customerId,
               entityType: 'CUSTOMER' as const,
-              displayName: selectedChatOrder.customerName || 'Customer'
+              displayName: 'Customer'
             }] : []),
             ...(selectedChatOrder.deliveryExecutiveId ? [{
               userId: selectedChatOrder.deliveryExecutiveId,
               entityType: 'DELIVERY' as const,
-              displayName: selectedChatOrder.deliveryExecutiveName || selectedChatOrder.deliveryExecutiveName || 'Rider'
+              displayName: 'Rider'
             }] : [])
           ]}
           onClose={() => setSelectedChatOrder(null)}
@@ -733,7 +738,7 @@ export default function RestaurantDashboard({
                 >
                   <div className="flex flex-col overflow-hidden pr-2">
                     <span className="font-bold text-slate-800">Order #{order.id.substring(0,8)}</span>
-                    <span className="text-sm text-slate-500 truncate">{order.customerName || 'Customer'}</span>
+                    <span className="text-sm text-slate-500 truncate">Customer</span>
                   </div>
                   <Badge variant="warning" className="group-hover:!bg-amber-600 group-hover:!text-white transition-colors">
                     Chat

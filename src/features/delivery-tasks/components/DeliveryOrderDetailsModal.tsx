@@ -72,49 +72,22 @@ export const DeliveryOrderDetailsModal: React.FC<DeliveryOrderDetailsModalProps>
               <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Payout Details</h3>
               <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-800">
                 <div className="space-y-3">
-                  {/* Gross Earnings details */}
+                  {/* Earnings details */}
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between text-slate-600 dark:text-slate-300">
-                      <span>Base Pay (Customer)</span>
-                      <span>{formatINR((order.driverCustomerContribution || 0))}</span>
+                      <span>Delivery Fee</span>
+                      <span>{formatINR((order.deliveryFee || 0))}</span>
                     </div>
-                    <div className="flex justify-between text-slate-600 dark:text-slate-300">
-                      <span>Distance/Surge Pay (Restaurant)</span>
-                      <span>{formatINR((order.driverRestaurantContribution || 0))}</span>
-                    </div>
-                    {(order.driverTip && order.driverTip > 0) ? (
-                      <div className="flex justify-between text-emerald-500 dark:text-emerald-400 font-medium">
-                        <span>Customer Tip</span>
-                        <span>+ {formatINR(order.driverTip)}</span>
-                      </div>
-                    ) : null}
                   </div>
-                </div>
-
-                <div className="h-px bg-slate-200 dark:bg-slate-700 w-full my-4" />
-
-                {/* Deductions section */}
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between text-slate-900 dark:text-white font-medium">
-                    <span>Total Gross Earnings</span>
-                    <span>{formatINR((order.grossPayout || ((order.driverCustomerContribution || 0) + (order.driverRestaurantContribution || 0) + (order.driverTip || 0))))}</span>
-                  </div>
-                  
-                  {order.driverTaxes ? (
-                    <div className="flex justify-between text-rose-500 dark:text-rose-400">
-                      <span>Government Tax Deducted (18%)</span>
-                      <span>- {formatINR(order.driverTaxes)}</span>
-                    </div>
-                  ) : null}
                 </div>
 
                 <div className="h-px bg-slate-200 dark:bg-slate-700 w-full my-4" />
 
                 {/* Total Net Payout */}
                 <div className="flex justify-between items-center">
-                  <span className="font-bold text-slate-900 dark:text-white">Total Net Payout</span>
+                  <span className="font-bold text-slate-900 dark:text-white">Total Earnings</span>
                   <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">
-                    {formatINR((order.payout || ((order.grossPayout || 0) - (order.driverTaxes || 0))))}
+                    {formatINR((order.deliveryFee || 0))}
                   </span>
                 </div>
               </div>

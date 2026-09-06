@@ -152,37 +152,8 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
                     {getFriendlyStatusMessage(order.status, order.deliveryStatus)}
                   </span>
                   
-                    {/* Refund Badge */}
-                  {(['REFUND_PENDING', 'REFUNDED', 'PARTIALLY_REFUNDED', 'REFUND_FAILED'].includes(order.paymentStatus || '')) && (
-                    <div className="flex justify-end">
-                      {order.paymentStatus === 'REFUND_PENDING' && (
-                        <div className="flex flex-col items-end">
-                          <span className="text-[10px] bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 font-bold px-2 py-1 rounded-md animate-pulse">
-                            Processing Refund
-                          </span>
-                          <span className="text-[9px] text-slate-500 mt-0.5">ETA: 5-7 business days</span>
-                        </div>
-                      )}
-                      {order.paymentStatus === 'REFUNDED' && (
-                        <span className="text-[10px] bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-bold px-2 py-1 rounded-md">
-                          Refunded: {formatINR(order.refundedAmount || order.total || 0)}
-                        </span>
-                      )}
-                      {order.paymentStatus === 'PARTIALLY_REFUNDED' && (
-                        <span className="text-[10px] bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-bold px-2 py-1 rounded-md">
-                          Partial Refund: {formatINR(order.refundedAmount || 0)}
-                        </span>
-                      )}
-                      {order.paymentStatus === 'REFUND_FAILED' && (
-                        <span className="text-[10px] bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400 font-bold px-2 py-1 rounded-md">
-                          Refund Error
-                        </span>
-                      )}
-                    </div>
-                  )}
-                  
-                  {/* Report Issue Button for Delivered Orders without Refunds */}
-                  {order.status === OrderStatus.HANDED_OVER && !(['REFUND_PENDING', 'REFUNDED', 'PARTIALLY_REFUNDED'].includes(order.paymentStatus || '')) && (
+                  {/* Report Issue Button for Delivered Orders */}
+                  {order.status === OrderStatus.HANDED_OVER && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();

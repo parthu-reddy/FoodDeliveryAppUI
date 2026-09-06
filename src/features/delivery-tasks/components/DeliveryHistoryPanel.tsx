@@ -75,7 +75,7 @@ export function DeliveryHistoryPanel({
                   <p className="text-[10px] text-slate-500 dark:text-slate-300 mt-0.5">{job.createdAt ? new Date(job.createdAt).toLocaleString() : ""}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-black text-emerald-500 text-lg">+{formatINR(job.payout)}</p>
+                  <p className="font-black text-emerald-500 text-lg">+{job.earnings?.netPayout != null ? formatINR(job.earnings.netPayout) : '---'}</p>
                   <p className="text-[10px] text-slate-400 dark:text-slate-300 font-mono uppercase">Payout</p>
                 </div>
               </div>

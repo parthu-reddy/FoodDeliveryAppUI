@@ -923,9 +923,9 @@ export default function DeliveryDashboard({
                         New Dispatch
                       </h3>
                       <p className="text-emerald-400 text-xs font-mono font-bold mt-1">
-                        Est. Payout:{" "}
-                        {pingJob.payout
-                          ? `${formatINR(pingJob.payout)}`
+                        Est. Delivery Fee:{" "}
+                        {pingJob.deliveryFee
+                          ? `${formatINR(pingJob.deliveryFee)}`
                           : "Calculating..."}
                       </p>
                     </div>
@@ -1062,7 +1062,7 @@ export default function DeliveryDashboard({
                     {
                       userId: currentJob.customerId,
                       entityType: "CUSTOMER" as const,
-                      displayName: currentJob.customerName || "Customer",
+                      displayName: "Customer",
                     },
                   ]
                 : []),

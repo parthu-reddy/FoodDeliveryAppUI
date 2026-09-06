@@ -83,6 +83,7 @@ export const OrderResponse = z
     items: z.array(OrderItemResponse),
     createdAt: z.string().datetime({ offset: true }),
     updatedAt: z.string().datetime({ offset: true }).optional(),
+    riderId: z.string().uuid().optional(),
     deliveryExecutiveId: z.string().uuid().optional(),
     paymentIntent: z.string().optional(),
     pickupOtp: z.string().optional(),

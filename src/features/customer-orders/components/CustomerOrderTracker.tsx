@@ -235,61 +235,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
               <div className="bg-rose-500/10 dark:bg-rose-500/5 border border-rose-500/20 p-5 rounded-2xl flex flex-col items-center justify-center text-center space-y-3 mt-4 mx-2">
                 <XCircle className="w-10 h-10 text-rose-500 mb-1" />
                 <h3 className="font-black text-rose-600 dark:text-rose-400">Order Cancelled</h3>
-                {(!currentTrackingOrder.paymentStatus || ['CREATED', 'PENDING', 'INITIATED', 'FAILED'].includes(currentTrackingOrder.paymentStatus)) && (
-                   <p className="text-xs font-semibold text-rose-500/80">This order was cancelled.</p>
-                )}
-                
-                {/* Refund Timeline & ETA */}
-                {['REFUND_PENDING', 'REFUNDED', 'PARTIALLY_REFUNDED', 'REFUND_FAILED'].includes(currentTrackingOrder.paymentStatus || '') && (
-                  <div className="w-full mt-4 bg-white/50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
-                    <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-3 text-left flex items-center gap-2">
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                      Refund Status
-                    </h4>
-                    
-                    <div className="relative pl-6 border-l-2 border-slate-200 dark:border-slate-700 text-left space-y-4">
-                      {/* Step 1: Initiated */}
-                      <div className="relative">
-                        <div className="absolute -left-[29px] top-1 w-3 h-3 rounded-full bg-emerald-500 ring-4 ring-white dark:ring-slate-900" />
-                        <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Refund Initiated</p>
-                        <p className="text-[10px] text-slate-500">
-                          {formatINR(currentTrackingOrder.refundedAmount || 0)}
-                        </p>
-                      </div>
 
-                      {/* Step 2: Processing / Completed */}
-                      <div className="relative">
-                        {currentTrackingOrder.paymentStatus === 'REFUND_PENDING' && (
-                          <>
-                            <div className="absolute -left-[29px] top-1 w-3 h-3 rounded-full bg-amber-500 ring-4 ring-white dark:ring-slate-900 animate-pulse" />
-                            <p className="text-xs font-bold text-amber-600 dark:text-amber-400">Processing with Bank</p>
-                            <p className="text-[10px] font-medium text-amber-600/80 dark:text-amber-400/80 mt-1">
-                              ETA: 3-5 business days
-                            </p>
-                          </>
-                        )}
-                        {(currentTrackingOrder.paymentStatus === 'REFUNDED' || currentTrackingOrder.paymentStatus === 'PARTIALLY_REFUNDED') && (
-                          <>
-                            <div className="absolute -left-[29px] top-1 w-3 h-3 rounded-full bg-emerald-500 ring-4 ring-white dark:ring-slate-900" />
-                            <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Refund Successful</p>
-                            <p className="text-[10px] text-emerald-600/80 dark:text-emerald-400/80 mt-1">
-                              Credited to original payment method
-                            </p>
-                          </>
-                        )}
-                        {currentTrackingOrder.paymentStatus === 'REFUND_FAILED' && (
-                          <>
-                            <div className="absolute -left-[29px] top-1 w-3 h-3 rounded-full bg-rose-500 ring-4 ring-white dark:ring-slate-900" />
-                            <p className="text-xs font-bold text-rose-600 dark:text-rose-400">Refund Failed</p>
-                            <p className="text-[10px] text-rose-600/80 dark:text-rose-400/80 mt-1">
-                              Please contact support for assistance
-                            </p>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             ) : (
               <div className="space-y-0 pt-4 px-2">
@@ -353,12 +299,6 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
               </div>
             )}
 
-            {!isFailedOrder(currentTrackingOrder) && currentTrackingOrder.paymentStatus === 'PARTIALLY_REFUNDED' && (
-              <div className="bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-sm font-bold py-3 px-4 rounded-xl flex items-center justify-between mt-4 mx-2 border border-emerald-500/20">
-                <span>Partial Refund Issued</span>
-                <span>{formatINR(currentTrackingOrder.refundedAmount || 0)}</span>
-              </div>
-            )}
           </div>
           
           {/* Active Order Details */}
@@ -378,18 +318,16 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
                 )}
               </div>
             )}
-            {currentTrackingOrder.deliveryExecutiveName && (
+            {currentTrackingOrder.deliveryExecutiveId && (
               <div className="flex items-center justify-between text-sm font-semibold text-slate-500 dark:text-slate-400 mb-3 pb-3 border-b border-dashed border-slate-200 dark:border-slate-800">
-                <span>Rider: {currentTrackingOrder.deliveryExecutiveName}</span>
-                {currentTrackingOrder.deliveryExecutiveId && (
-                  <button 
-                    onClick={() => startCall(currentTrackingOrder.deliveryExecutiveId!, currentTrackingOrder.id)}
-                    className="p-1.5 rounded-full bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-500/20 dark:text-orange-400 dark:hover:bg-orange-500/30 transition-colors"
-                    title={`Call ${currentTrackingOrder.deliveryExecutiveName}`}
-                  >
-                    <PhoneCall className="w-4 h-4" />
-                  </button>
-                )}
+                <span>Rider Assigned</span>
+                <button 
+                  onClick={() => startCall(currentTrackingOrder.deliveryExecutiveId!, currentTrackingOrder.id)}
+                  className="p-1.5 rounded-full bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-500/20 dark:text-orange-400 dark:hover:bg-orange-500/30 transition-colors"
+                  title={`Call Rider`}
+                >
+                  <PhoneCall className="w-4 h-4" />
+                </button>
               </div>
             )}
             <div className="space-y-3">
