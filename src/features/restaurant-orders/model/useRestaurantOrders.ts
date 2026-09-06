@@ -80,8 +80,7 @@ export function useRestaurantOrders({
           ...orderData, 
           id: orderData.orderId || orderData.id || '', 
           status: s as OrderStatus, 
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          items: parsedItems as any,
+          items: parsedItems as Order['items'],
           total: orderData.total || calculatedTotal,
           subtotal: orderData.subtotal || calculatedTotal
         };
