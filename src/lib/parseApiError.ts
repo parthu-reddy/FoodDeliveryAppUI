@@ -95,7 +95,7 @@ export function parseApiError(error: unknown, defaultMessage = 'An unexpected er
     }
 
     // Sometimes Zodios exposes the underlying axios error in .cause
-    const causeError = (error as Record<string, unknown>)?.cause;
+    const causeError = (error as unknown as Record<string, unknown>)?.cause;
     const causeMsg = isAxiosError(causeError) ? extractMessageFromData(causeError.response?.data) : undefined;
     if (causeMsg) {
       return {

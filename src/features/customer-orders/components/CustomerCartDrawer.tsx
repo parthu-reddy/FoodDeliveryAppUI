@@ -28,11 +28,11 @@ interface CustomerCartDrawerProps {
   handleCheckout: (restaurantId: string) => void;
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
-  selectedRestaurant?: { id: string; name: string; [key: string]: unknown } | null;
+  selectedRestaurant?: Restaurant | null;
   carts: Record<string, CartState>;
   removeFromCart: (itemId: string, restaurantId: string) => void;
   clearCart: (restaurantId: string) => void;
-  addToCart: (item: MenuItem, restaurant: Restaurant | null | undefined) => void;
+  addToCart: (item: MenuItem, restaurant: Restaurant | null) => void;
   getCartTotal: (restaurantId: string) => CartTotal;
   setIsPaymentModalOpen?: (open: boolean) => void;
   isSubmitting?: boolean;
