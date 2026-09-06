@@ -12,7 +12,6 @@ import LaBouffeLogo from '@shared/ui/LaBouffeLogo';
 import { Activity, Database, LogOut, MapPin, Moon, Shield, Sun, Tags, Users, MessageSquare } from 'lucide-react';
 import React, { useState } from 'react';
 import { usePolling } from '../../hooks/usePolling';
-import { asUntyped, WirePage } from '../../lib/untypedResponse';
 
 const AdminFleetMap = React.lazy(() => import("@features/maps-tracking/components/AdminFleetMap"));
 
@@ -27,11 +26,11 @@ export default function AdminPortal({
   const [activeTab, setActiveTab] = useState<'deliveries' | 'users' | 'categories' | 'map' | 'ledger' | 'payouts' | 'interventions' | 'support_tickets'>('map');
 
   // Poll for intervention count to show badge on sidebar
-  const { data: interventionsCount = 0 } = usePolling({
+    const { data: interventionsCount = 0 } = usePolling({
     fetchFn: async () => {
       const res = await customerApi.adminOrderManual.get('/api/v1/internal/admin/orders/intervention', {});
-      const content = asUntyped<WirePage<unknown>>(res).content ?? (Array.isArray(res.data) ? res.data : (Array.isArray(res) ? res : []));
-      return Array.isArray(content) ? content.length : 0;
+      const content = res.content ?? [];
+      return content.length;
     },
     intervalMs: 15000,
     enabled: activeTab !== 'interventions' // AdminManualInterventions handles polling when active

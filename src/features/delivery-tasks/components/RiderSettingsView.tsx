@@ -8,7 +8,6 @@ import ImageUploadField from "@features/kyc/components/ImageUploadField";
 import { TransactionHistoryTable, WalletTransaction, ActiveSessions } from "@shared/ui";
 import { z } from 'zod';
 
-import { fromContract } from '../../../lib/untypedResponse';
 import { formatINR } from '@shared/money';
 
 const riderProfileSchema = z.object({
@@ -118,9 +117,8 @@ export default function RiderSettingsView({
       if (balanceRes) setWalletBalance(balanceRes.balance ?? 0);
       
       const txRes = await walletApi.wallet.get('/api/v1/wallets/:entityType/:entityId/transactions', { params: { entityType: 'DRIVER', entityId: userId }, queries: { page } });
-      if (txRes.data) {
-        const typedTxRes = txRes as { content?: unknown[], totalPages?: number };
-        setTransactions(fromContract(typedTxRes.content ?? []) as WalletTransaction[]);
+      if (txRes && txRes.content) {
+        setTransactions((txRes.content as WalletTransaction[]) ?? []);
         setTxTotalPages(txRes.totalPages || 1);
       }
     } catch (e: unknown) {

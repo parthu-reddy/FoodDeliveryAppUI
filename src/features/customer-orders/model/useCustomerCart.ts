@@ -2,7 +2,6 @@ import { getUserProfile } from '@/lib/tokenStore';
 import { customerApi } from '@/lib/zodiosClients';
 import { CartItem, MenuItem, Order, Restaurant } from '@/types';
 import { useEffect, useRef, useState } from 'react';
-import { asUntyped } from '../../../lib/untypedResponse';
 
 interface UseCustomerCartOptions {
   locationKey: string;
@@ -10,6 +9,23 @@ interface UseCustomerCartOptions {
   onPlaceOrder?: (order: Order) => void;
   setTrackingOrder?: (order: Order) => void;
   selectedRestaurantId?: string | null;
+}
+
+export interface CartQuoteState {
+  isDeliverable?: boolean;
+  error?: string;
+  errorCode?: string;
+  data?: {
+    quoteId?: string;
+    subtotal?: number;
+    sgst?: number;
+    cgst?: number;
+    deliveryFee?: number;
+    total?: number;
+    platformFee?: number;
+    minAmountForFreeDelivery?: number;
+    distanceKm?: number;
+  };
 }
 
 export interface CartState {
@@ -80,11 +96,10 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
 
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success' | 'failed'>('idle');
+  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success'>('idle');
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [checkoutRestaurantId, setCheckoutRestaurantId] = useState<string | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [quotes, setQuotes] = useState<Record<string, any>>({});
+  const [quotes, setQuotes] = useState<Record<string, CartQuoteState>>({});
   const [isQuoting, setIsQuoting] = useState<boolean>(false);
   const [deliveryAddressId, setDeliveryAddressId] = useState<string | null>(null);
 
@@ -92,7 +107,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
   const isSubmittingOrderRef = useRef<boolean>(false);
 
   const addToCart = (item: MenuItem, selectedRestaurant: Restaurant | null) => {
-    if (!selectedRestaurant) {
+    if (!selectedRestaurant || !selectedRestaurant.id) {
       setGlobalError('Please select a restaurant location first');
       setTimeout(() => setGlobalError(null), 3000);
       return;
@@ -103,13 +118,13 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
 
     setGlobalCarts(prevGlobal => {
       const prevLocationCarts = prevGlobal[locationKey] || {};
-      const resId = selectedRestaurant.id;
-      const existingCart = prevLocationCarts[resId] || { items: [], restaurant: selectedRestaurant };
+      const resId = selectedRestaurant.id as string;
+      const existingCart: CartState = prevLocationCarts[resId] || { items: [], restaurant: selectedRestaurant };
 
-      const existingItem = existingCart.items.find(i => i.item.id === item.id);
-      let newItems;
+      const existingItem = existingCart.items.find((i: CartItem) => i.item.id === item.id);
+      let newItems: CartItem[];
       if (existingItem) {
-        newItems = existingCart.items.map(i => i.item.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
+        newItems = existingCart.items.map((i: CartItem) => i.item.id === item.id ? { ...i, quantity: i.quantity + 1 } : i);
       } else {
         newItems = [...existingCart.items, { item, quantity: 1 }];
       }
@@ -181,21 +196,33 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const getCartTotal = (restaurantId: string, legacyPricingFallback?: any) => {
+  const getCartTotal = (restaurantId: string, legacyPricingFallback?: unknown): { subtotal: number; deliveryFee: number; total: number; sgst: number; cgst: number; platformFee: number; driverPayout: number; restaurantPayout: number; tax: number; restaurantDeliveryShare?: number; minAmountForFreeDelivery?: number; distanceKm?: number; isEstimated?: boolean } => {
     const quote = quotes[restaurantId];
-    if (quote) {
-      return quote.data ? quote.data : quote;
+    if (quote && quote.data) {
+      const qData = quote.data;
+      return {
+        subtotal: qData.subtotal || 0,
+        deliveryFee: qData.deliveryFee || 0,
+        total: qData.total || 0,
+        cgst: qData.cgst || 0,
+        sgst: qData.sgst || 0,
+        tax: (qData.cgst || 0) + (qData.sgst || 0),
+        platformFee: qData.platformFee || 0,
+        driverPayout: 0,
+        restaurantPayout: 0,
+        restaurantDeliveryShare: 0,
+      };
     }
     // Fallback if quote not yet loaded
     const cartState = carts[restaurantId];
     if (!cartState) {
-      return { subtotal: 0, sgst: 0, cgst: 0, deliveryFee: 0, driverPayout: 0, restaurantDeliveryShare: 0, total: 0, platformFee: 0, minAmountForFreeDelivery: 0, distanceKm: 0 };
+      return { subtotal: 0, sgst: 0, cgst: 0, tax: 0, deliveryFee: 0, driverPayout: 0, restaurantPayout: 0, restaurantDeliveryShare: 0, total: 0, platformFee: 0, minAmountForFreeDelivery: 0, distanceKm: 0 };
     }
     const subtotal = cartState.items.reduce((sum, item) => sum + ((item.item.price || 0) * item.quantity), 0);
     let deliveryFee = 0;
-    if (legacyPricingFallback && legacyPricingFallback.totalCustomerDeliveryFee !== undefined) {
-      deliveryFee = legacyPricingFallback.totalCustomerDeliveryFee || 0;
+    const legacyObj = legacyPricingFallback as { totalCustomerDeliveryFee?: number } | undefined;
+    if (legacyObj && legacyObj.totalCustomerDeliveryFee !== undefined) {
+      deliveryFee = legacyObj.totalCustomerDeliveryFee || 0;
     } else if (cartState.restaurant) {
       deliveryFee = Number(cartState.restaurant.deliveryFee || 0);
     }
@@ -203,9 +230,11 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
       subtotal,
       sgst: 0,
       cgst: 0,
+      tax: 0,
       deliveryFee,
       platformFee: 0,
       driverPayout: 0,
+      restaurantPayout: 0,
       restaurantDeliveryShare: 0,
       total: subtotal + deliveryFee,
       minAmountForFreeDelivery: 0,
@@ -263,9 +292,11 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
             })) : []
           });
           return { restaurantId: rId, quote: res };
-        } catch (error: unknown) {
-          console.error('Failed to fetch quote for restaurant', rId, error);
-          const errorData = (error as { response?: { data?: { errorCode?: string; error?: string; message?: string } } }).response?.data;
+        } catch (err: unknown) {
+          const axiosErr = err as { response?: { data?: { message?: string, error?: string } }, message?: string };
+          setPaymentStatus('idle');
+          console.error('Failed to fetch quote for restaurant', rId, axiosErr);
+          const errorData = (err as { response?: { data?: { errorCode?: string; error?: string; message?: string } } }).response?.data;
           const errorCode = errorData?.errorCode || errorData?.error || errorData?.message || 'UNKNOWN_ERROR';
           
           let friendlyError = errorCode;
@@ -302,7 +333,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
 
     try {
       const availRes = await customerApi.customerRestaurant.get('/api/v1/restaurants/:id/delivery-availability', { params: { id: restaurantId } });
-      if (asUntyped<boolean>(availRes) === false) {
+      if (availRes?.data === false) {
         setGlobalError("This restaurant is currently out of your delivery zone.");
         setTimeout(() => setGlobalError(null), 3000);
         return;
@@ -352,7 +383,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
 
       const finalAddressId = deliveryAddressId;
       if (!finalAddressId) {
-        setPaymentStatus('failed');
+        setPaymentStatus('idle');
         setGlobalError('Could not determine your delivery address. Please select a saved address and try again.');
         isSubmittingOrderRef.current = false;
         return;
@@ -362,11 +393,9 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
       // Quotes are refreshed whenever the cart or address changes; if one is missing the customer
       // has to re-quote rather than have the server invent a price.
       const rawQuote = quotes[checkoutRestaurantId];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const activeQuote: any = (rawQuote as any)?.data ?? rawQuote;
-      const quoteId: string | undefined = activeQuote?.quoteId;
+      const quoteId = rawQuote?.data?.quoteId;
       if (!quoteId) {
-        setPaymentStatus('failed');
+        setPaymentStatus('idle');
         setGlobalError('Your price quote is no longer available. Please review your cart and try again.');
         isSubmittingOrderRef.current = false;
         return;
@@ -374,26 +403,23 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
 
       const orderPayload = {
         quoteId,
-        customerId: profile?.id,
-        customerName: profile?.fullName || profile?.name || 'Customer',
-        restaurantId: activeCart.restaurant.id,
+        customerId: profile?.id || 'guest',
+        customerName: (profile?.fullName as string) || (profile?.name as string) || 'Customer',
+        restaurantId: activeCart.restaurant.id || checkoutRestaurantId,
         deliveryAddressId: finalAddressId,
         items,
-        paymentMethod: paymentMethod || 'WALLET'
+        paymentMethod: (paymentMethod || 'WALLET') as "WALLET" | "COD" | "UPI" | "CARD"
       };
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const res = await customerApi.order.post('/api/v1/orders', orderPayload as any, {});
+      const res = await customerApi.order.post('/api/v1/orders', orderPayload, {});
 
       setPaymentStatus('success');
        
       setTimeout(() => {
          
         if (res.data?.id) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          onPlaceOrder?.(res.data as any);
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          setTrackingOrder?.(res.data as any);
+          onPlaceOrder?.(res.data as import('@/types').Order);
+          setTrackingOrder?.(res.data as import('@/types').Order);
 
           setGlobalCarts(prevGlobal => {
             const prevLocationCarts = prevGlobal[locationKey] || {};

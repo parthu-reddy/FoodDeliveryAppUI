@@ -20,54 +20,48 @@ export const ApiResponseUserDTO = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const SortObject = z
-  .object({ empty: z.boolean(), sorted: z.boolean(), unsorted: z.boolean() })
-  .passthrough();
-export const PageableObject = z
+export const PageResponseDtoUserDTO = z
   .object({
-    offset: z.number().int(),
-    paged: z.boolean(),
-    pageNumber: z.number().int(),
-    pageSize: z.number().int(),
-    unpaged: z.boolean(),
-    sort: SortObject.optional(),
-  })
-  .passthrough();
-export const PageUserDTO = z
-  .object({
-    totalPages: z.number().int(),
-    totalElements: z.number().int(),
-    size: z.number().int(),
     content: z.array(UserDTO),
-    numberOfElements: z.number().int(),
+    totalElements: z.number().int(),
+    totalPages: z.number().int(),
+    last: z.boolean(),
+    size: z.number().int(),
     number: z.number().int(),
     first: z.boolean(),
-    last: z.boolean(),
-    pageable: PageableObject.optional(),
-    sort: SortObject.optional(),
+    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();
-export const ApiResponsePageUserDTO = z
+export const ApiResponsePageResponseDtoUserDTO = z
   .object({
     success: z.boolean(),
     message: z.string(),
     errorCode: z.string().optional(),
-    data: PageUserDTO.optional(),
+    data: PageResponseDtoUserDTO.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
 export const RoleRequestDTO = z
-  .object({ roleName: z.enum(["CUSTOMER", "DELIVERY", "RESTAURANT", "ADMIN"]) })
+  .object({
+    serviceName: z
+      .string()
+      .min(0)
+      .max(50)
+      .regex(/^[A-Za-z0-9_\-]+$/),
+    roleName: z
+      .string()
+      .min(0)
+      .max(50)
+      .regex(/^[A-Za-z0-9_]+$/),
+  })
   .passthrough();
 
 export const schemas = {
   UserDTO,
   ApiResponseUserDTO,
-  SortObject,
-  PageableObject,
-  PageUserDTO,
-  ApiResponsePageUserDTO,
+  PageResponseDtoUserDTO,
+  ApiResponsePageResponseDtoUserDTO,
   RoleRequestDTO,
 };
 
@@ -81,7 +75,7 @@ export const endpoints = makeApi([
       {
         name: "body",
         type: "Body",
-        schema: z.record(z.boolean()),
+        schema: z.object({ isActive: z.boolean() }).passthrough(),
       },
       {
         name: "userId",
@@ -161,7 +155,7 @@ export const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: ApiResponsePageUserDTO,
+    response: ApiResponsePageResponseDtoUserDTO,
   },
   {
     method: "get",
@@ -180,7 +174,7 @@ export const endpoints = makeApi([
         schema: z.number().int().optional().default(50),
       },
     ],
-    response: ApiResponsePageUserDTO,
+    response: ApiResponsePageResponseDtoUserDTO,
   },
   {
     method: "delete",

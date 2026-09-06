@@ -852,6 +852,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/internal/money/daily-totals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getDailyPaidOrderTotal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/internal/money/admin/refunds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getRefunds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/internal/admin/refunds": {
         parameters: {
             query?: never;
@@ -1131,8 +1163,6 @@ export interface components {
             status: "CREATED" | "PENDING_ACCEPTANCE" | "AWAITING_DELAY_APPROVAL" | "ACCEPTED" | "PREPARING" | "READY_FOR_PICKUP" | "HANDED_OVER" | "CANCELLED" | "CANCELLED_BY_RESTAURANT";
             /** @enum {string} */
             deliveryStatus: "PENDING" | "SEARCHING_FOR_DRIVER" | "MANUAL_INTERVENTION_REQUIRED" | "ASSIGNED" | "AT_RESTAURANT" | "OUT_FOR_DELIVERY" | "DELIVERED" | "CANCELLED" | "FAILED";
-            total: number;
-            subtotal: number;
             customerPlatformFee: number;
             sgst: number;
             cgst: number;
@@ -1151,6 +1181,8 @@ export interface components {
             riderId?: string;
             /** Format: uuid */
             deliveryExecutiveId?: string;
+            customerName?: string;
+            deliveryExecutiveName?: string;
             paymentIntent?: string;
             pickupOtp?: string;
             otp?: string;
@@ -1159,6 +1191,8 @@ export interface components {
             /** Format: int64 */
             remainingPingSeconds?: number;
             distanceKm?: number;
+            total: number;
+            subtotal: number;
             /** Format: int64 */
             expiresAt?: number;
         };
@@ -1206,7 +1240,7 @@ export interface components {
         };
         DriverOrderEarnings: {
             /** Format: uuid */
-            id?: string;
+            orderId?: string;
             /** Format: uuid */
             driverId?: string;
             grossPayout?: number;
@@ -1224,7 +1258,7 @@ export interface components {
         };
         RefundCommand: {
             /** Format: uuid */
-            id?: string;
+            orderId?: string;
             amount?: number;
             items?: components["schemas"]["Item"][];
             reasonCode?: string;
@@ -1243,23 +1277,13 @@ export interface components {
             /** Format: uuid */
             ticketId?: string;
         };
-        RefundView: {
-            /** Format: uuid */
-            id?: string;
-            amount?: number;
-            /** @enum {string} */
-            status?: "REQUESTED" | "PROCESSING" | "COMPLETED" | "FAILED" | "CANCELLED";
-            /** @enum {string} */
-            destination?: "ORIGINAL_METHOD" | "STORE_CREDIT" | "NONE";
-            /** @enum {string} */
-            method?: "CARD" | "UPI" | "WALLET" | "COD";
-            reasonCode?: string;
+        ApiResponseString: {
+            success: boolean;
+            message: string;
+            errorCode?: string;
+            data?: string;
             /** Format: date-time */
-            requestedAt?: string;
-            /** Format: date-time */
-            completedAt?: string;
-            /** Format: date-time */
-            expectedBy?: string;
+            timestamp: string;
         };
         ReviewRequest: {
             notes?: string;
@@ -1269,6 +1293,8 @@ export interface components {
             version?: number;
             /** Format: uuid */
             id: string;
+            /** Format: uuid */
+            orderId: string;
             /** Format: uuid */
             customerId: string;
             reason: string;
@@ -1294,13 +1320,25 @@ export interface components {
             faultType?: string;
             overrideAmount?: number;
         };
-        ApiResponseString: {
-            success: boolean;
-            message: string;
-            errorCode?: string;
-            data?: string;
+        RefundView: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            orderId?: string;
+            amount?: number;
+            /** @enum {string} */
+            status?: "REQUESTED" | "PROCESSING" | "COMPLETED" | "FAILED" | "CANCELLED";
+            /** @enum {string} */
+            destination?: "ORIGINAL_METHOD" | "STORE_CREDIT" | "NONE";
+            /** @enum {string} */
+            method?: "CARD" | "UPI" | "WALLET" | "COD";
+            reasonCode?: string;
             /** Format: date-time */
-            timestamp: string;
+            requestedAt?: string;
+            /** Format: date-time */
+            completedAt?: string;
+            /** Format: date-time */
+            expectedBy?: string;
         };
         AddressRequest: {
             label: string;
@@ -1339,15 +1377,27 @@ export interface components {
             longitude: number;
             isDefault?: boolean;
         };
-        ApiResponseMapStringObject: {
+        ApiResponseDeliveryPricingDto: {
             success: boolean;
             message: string;
             errorCode?: string;
-            data?: {
-                [key: string]: Record<string, never>;
-            };
+            data?: components["schemas"]["DeliveryPricingDto"];
             /** Format: date-time */
             timestamp: string;
+        };
+        DeliveryPricingDto: {
+            /** Format: double */
+            distanceKm?: number;
+            config?: components["schemas"]["PricingConfigDto"];
+        };
+        PricingConfigDto: {
+            basePrice?: number;
+            perKmRate?: number;
+            restMaxContributionPercent?: number;
+            fixedPlatformFee?: number;
+            platformExcessCutPercent?: number;
+            sgstPercent?: number;
+            cgstPercent?: number;
         };
         ApiResponseBoolean: {
             success: boolean;
@@ -1357,23 +1407,68 @@ export interface components {
             /** Format: date-time */
             timestamp: string;
         };
-        ApiResponseListObject: {
+        ApiResponseListRestaurantDto: {
             success: boolean;
             message: string;
             errorCode?: string;
-            data?: Record<string, never>[];
+            data?: components["schemas"]["RestaurantDto"][];
             /** Format: date-time */
             timestamp: string;
         };
-        ApiResponseListMapStringObject: {
+        RestaurantDto: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            brandId?: string;
+            name?: string;
+            description?: string;
+            /** Format: double */
+            lat?: number;
+            /** Format: double */
+            lng?: number;
+            address?: string;
+            /** Format: double */
+            rating?: number;
+            /** Format: double */
+            distance?: number;
+            isSponsored?: boolean;
+            adData?: components["schemas"]["SponsoredListingDTO"];
+        };
+        SponsoredListingDTO: {
+            adId?: string;
+            campaignId?: string;
+            impressionUrl?: string;
+            clickUrl?: string;
+            adm?: string;
+            creativeFormat?: string;
+        };
+        ApiResponsePlaceGeocodeDto: {
             success: boolean;
             message: string;
             errorCode?: string;
-            data?: {
-                [key: string]: Record<string, never>;
-            }[];
+            data?: components["schemas"]["PlaceGeocodeDto"];
             /** Format: date-time */
             timestamp: string;
+        };
+        PlaceGeocodeDto: {
+            formattedAddress?: string;
+            placeId?: string;
+            /** Format: double */
+            lat?: number;
+            /** Format: double */
+            lng?: number;
+        };
+        ApiResponseListPlaceAutocompleteDto: {
+            success: boolean;
+            message: string;
+            errorCode?: string;
+            data?: components["schemas"]["PlaceAutocompleteDto"][];
+            /** Format: date-time */
+            timestamp: string;
+        };
+        PlaceAutocompleteDto: {
+            placeId?: string;
+            description?: string;
         };
         SseEmitter: {
             /** Format: int64 */
@@ -1392,20 +1487,22 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
-            sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
-            /** Format: int32 */
-            numberOfElements: number;
-            first: boolean;
-            last: boolean;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["OrderResponse"][];
             /** Format: int32 */
+            numberOfElements: number;
+            /** Format: int32 */
             number: number;
+            first: boolean;
+            last: boolean;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };
         PageableObject: {
+            /** Format: int64 */
+            offset: number;
             unpaged: boolean;
             sort?: components["schemas"]["SortObject"];
             paged: boolean;
@@ -1413,8 +1510,6 @@ export interface components {
             pageNumber: number;
             /** Format: int32 */
             pageSize: number;
-            /** Format: int64 */
-            offset: number;
         };
         SortObject: {
             empty: boolean;
@@ -1429,7 +1524,18 @@ export interface components {
             /** Format: date-time */
             timestamp: string;
         };
-        JsonNode: Record<string, never>;
+        BeneficiaryStatusDto: {
+            beneficiaryId?: string;
+            verificationStatus?: string;
+            active?: boolean;
+        };
+        PayoutSummaryDto: {
+            payoutId?: string;
+            amount?: number;
+            status?: string;
+            /** Format: date-time */
+            timestamp?: string;
+        };
         RestaurantSummary: {
             /** Format: int32 */
             orders?: number;
@@ -1440,12 +1546,46 @@ export interface components {
             netEarnings?: number;
             clawbacks?: number;
             pendingBalance?: number;
-            lastPayout?: components["schemas"]["JsonNode"];
-            beneficiaryStatus?: components["schemas"]["JsonNode"];
+            lastPayout?: components["schemas"]["PayoutSummaryDto"];
+            beneficiaryStatus?: components["schemas"]["BeneficiaryStatusDto"];
+        };
+        LedgerStatementLineDto: {
+            /** Format: uuid */
+            transactionId?: string;
+            /** Format: uuid */
+            referenceId?: string;
+            /** @enum {string} */
+            category?: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "CLAWBACK" | "PAYOUT_TRANSFER" | "CASH_COLLECTED" | "CASH_REMITTED" | "STORE_CREDIT";
+            amount?: number;
+            /** @enum {string} */
+            direction?: "CREDIT" | "DEBIT";
+            /** Format: date-time */
+            createdAt?: string;
+            description?: string;
+            /** Format: uuid */
+            payoutId?: string;
+            payoutStatus?: string;
+            settled?: boolean;
+        };
+        PageResponseDtoLedgerStatementLineDto: {
+            content: components["schemas"]["LedgerStatementLineDto"][];
+            /** Format: int64 */
+            totalElements: number;
+            /** Format: int32 */
+            totalPages: number;
+            last: boolean;
+            /** Format: int32 */
+            size: number;
+            /** Format: int32 */
+            number: number;
+            first: boolean;
+            /** Format: int32 */
+            numberOfElements: number;
+            empty: boolean;
         };
         RestaurantOrderEarnings: {
             /** Format: uuid */
-            id?: string;
+            orderId?: string;
             /** Format: uuid */
             restaurantId?: string;
             foodCost?: number;
@@ -1463,11 +1603,41 @@ export interface components {
             cashRemitted?: number;
             cashInHand?: number;
             pendingBalance?: number;
-            lastPayout?: components["schemas"]["JsonNode"];
+            lastPayout?: components["schemas"]["PayoutSummaryDto"];
+        };
+        CashRemittanceDto: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            driverId?: string;
+            amount?: number;
+            reference?: string;
+            /** Format: uuid */
+            recordedBy?: string;
+            /** Format: uuid */
+            ledgerTransactionId?: string;
+            /** Format: date-time */
+            createdAt?: string;
+        };
+        PageResponseDtoCashRemittanceDto: {
+            content: components["schemas"]["CashRemittanceDto"][];
+            /** Format: int64 */
+            totalElements: number;
+            /** Format: int32 */
+            totalPages: number;
+            last: boolean;
+            /** Format: int32 */
+            size: number;
+            /** Format: int32 */
+            number: number;
+            first: boolean;
+            /** Format: int32 */
+            numberOfElements: number;
+            empty: boolean;
         };
         CustomerReceipt: {
             items?: components["schemas"]["ReceiptItem"][];
-            subtotal?: number;
+            itemTotal?: number;
             deliveryFee?: number;
             platformFee?: number;
             sgst?: number;
@@ -1511,8 +1681,8 @@ export interface components {
             deliveryStatus?: "PENDING" | "SEARCHING_FOR_DRIVER" | "MANUAL_INTERVENTION_REQUIRED" | "ASSIGNED" | "AT_RESTAURANT" | "OUT_FOR_DELIVERY" | "DELIVERED" | "CANCELLED" | "FAILED";
             /** @enum {string} */
             paymentStatus?: "INITIATED" | "SUCCESS" | "FAILED" | "PENDING_COLLECTION" | "COLLECTED" | "PARTIALLY_REFUNDED" | "REFUNDED" | "REFUND_PENDING" | "REFUND_FAILED";
-            total: number;
-            subtotal?: number;
+            totalAmount: number;
+            itemTotal?: number;
             customerPlatformFee?: number;
             restaurantPlatformFee?: number;
             platformBonus?: number;
@@ -1573,41 +1743,44 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
-            sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
-            /** Format: int32 */
-            numberOfElements: number;
-            first: boolean;
-            last: boolean;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["Order"][];
             /** Format: int32 */
+            numberOfElements: number;
+            /** Format: int32 */
             number: number;
+            first: boolean;
+            last: boolean;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
+        };
+        DailyTotalDto: {
+            orderTotals?: number;
         };
         PageSupportTicket: {
             /** Format: int64 */
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
-            sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
-            /** Format: int32 */
-            numberOfElements: number;
-            first: boolean;
-            last: boolean;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["SupportTicket"][];
             /** Format: int32 */
+            numberOfElements: number;
+            /** Format: int32 */
             number: number;
+            first: boolean;
+            last: boolean;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };
         AdminOrderMoney: {
             /** Format: uuid */
-            id?: string;
-            total?: number;
+            orderId?: string;
+            totalAmount?: number;
             foodCost?: number;
             deliveryFee?: number;
             customerPlatformFee?: number;
@@ -1622,42 +1795,39 @@ export interface components {
             cgst?: number;
             ledgerLines?: components["schemas"]["LedgerStatementLineDto"][];
         };
-        LedgerStatementLineDto: {
+        FailedRefundDto: {
             /** Format: uuid */
-            transactionId?: string;
+            refundId?: string;
             /** Format: uuid */
-            referenceId?: string;
-            /** @enum {string} */
-            category?: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "CLAWBACK" | "PAYOUT_TRANSFER" | "CASH_COLLECTED" | "CASH_REMITTED" | "STORE_CREDIT";
+            orderId?: string;
             amount?: number;
             /** @enum {string} */
-            direction?: "CREDIT" | "DEBIT";
+            status?: "REQUESTED" | "PROCESSING" | "COMPLETED" | "FAILED" | "CANCELLED";
+            errorMessage?: string;
             /** Format: date-time */
             createdAt?: string;
-            description?: string;
             /** Format: uuid */
-            payoutId?: string;
-            payoutStatus?: string;
-            settled?: boolean;
+            customerName?: string;
+            /** Format: uuid */
+            restaurantId?: string;
+            /** @enum {string} */
+            orderStatus?: "CREATED" | "PENDING_ACCEPTANCE" | "AWAITING_DELAY_APPROVAL" | "ACCEPTED" | "PREPARING" | "READY_FOR_PICKUP" | "HANDED_OVER" | "CANCELLED" | "CANCELLED_BY_RESTAURANT";
+            totalAmount?: number;
         };
-        PageMapStringObject: {
+        PageResponseDtoFailedRefundDto: {
+            content: components["schemas"]["FailedRefundDto"][];
             /** Format: int64 */
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
-            sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
-            /** Format: int32 */
-            numberOfElements: number;
-            first: boolean;
             last: boolean;
             /** Format: int32 */
             size: number;
-            content: {
-                [key: string]: Record<string, never>;
-            }[];
             /** Format: int32 */
             number: number;
+            first: boolean;
+            /** Format: int32 */
+            numberOfElements: number;
             empty: boolean;
         };
         ApiResponsePageCustomerAddressDto: {
@@ -1673,17 +1843,17 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
-            sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
-            /** Format: int32 */
-            numberOfElements: number;
-            first: boolean;
-            last: boolean;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["CustomerAddressDto"][];
             /** Format: int32 */
+            numberOfElements: number;
+            /** Format: int32 */
             number: number;
+            first: boolean;
+            last: boolean;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };
         ApiResponseListCustomerAddressDto: {
@@ -1691,6 +1861,16 @@ export interface components {
             message: string;
             errorCode?: string;
             data?: components["schemas"]["CustomerAddressDto"][];
+            /** Format: date-time */
+            timestamp: string;
+        };
+        ApiResponseMapStringObject: {
+            success: boolean;
+            message: string;
+            errorCode?: string;
+            data?: {
+                [key: string]: Record<string, never>;
+            };
             /** Format: date-time */
             timestamp: string;
         };
@@ -1872,7 +2052,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RefundView"];
+                    "application/json": components["schemas"]["ApiResponseString"];
                 };
             };
         };
@@ -2314,7 +2494,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseMapStringObject"];
+                    "application/json": components["schemas"]["ApiResponseDeliveryPricingDto"];
                 };
             };
         };
@@ -2360,7 +2540,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseListObject"];
+                    "application/json": components["schemas"]["ApiResponseListRestaurantDto"];
                 };
             };
         };
@@ -2386,7 +2566,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseListObject"];
+                    "application/json": components["schemas"]["ApiResponseListRestaurantDto"];
                 };
             };
         };
@@ -2409,7 +2589,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseMapStringObject"];
+                    "application/json": components["schemas"]["ApiResponsePlaceGeocodeDto"];
                 };
             };
         };
@@ -2431,7 +2611,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseListMapStringObject"];
+                    "application/json": components["schemas"]["ApiResponseListPlaceAutocompleteDto"];
                 };
             };
         };
@@ -2615,7 +2795,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["JsonNode"];
+                    "application/json": components["schemas"]["PageResponseDtoLedgerStatementLineDto"];
                 };
             };
         };
@@ -2776,7 +2956,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["JsonNode"];
+                    "application/json": components["schemas"]["PageResponseDtoLedgerStatementLineDto"];
                 };
             };
         };
@@ -2843,7 +3023,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["JsonNode"];
+                    "application/json": components["schemas"]["PageResponseDtoCashRemittanceDto"];
                 };
             };
         };
@@ -3025,6 +3205,48 @@ export interface operations {
             };
         };
     };
+    getDailyPaidOrderTotal: {
+        parameters: {
+            query: {
+                date: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DailyTotalDto"];
+                };
+            };
+        };
+    };
+    getRefunds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RefundView"][];
+                };
+            };
+        };
+    };
     getTickets: {
         parameters: {
             query?: {
@@ -3182,7 +3404,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PageMapStringObject"];
+                    "application/json": components["schemas"]["PageResponseDtoFailedRefundDto"];
                 };
             };
         };

@@ -6,7 +6,6 @@ import { getFriendlyStatusMessage } from '@features/customer-orders/model/status
 import { Button, Input } from '@shared/ui';
 import { Navigation, Package, Truck } from 'lucide-react';
 import React, { useState } from 'react';
-import { asUntyped, WirePage } from '../../../lib/untypedResponse';
 
 const AdminAssignmentMap = React.lazy(() => import("@features/maps-tracking/components/AdminAssignmentMap"));
 
@@ -43,10 +42,9 @@ export default function AdminLiveOperations() {
     intervalMs: 15000,
     enabled: true,
     onData: (response) => {
-        const page = asUntyped<WirePage<unknown>>(response);
-        const content = page.content ?? (Array.isArray(response) ? response : []);
-        // @ts-expect-error auto-migration type suppression
-        setActiveOrders(Array.isArray(content) ? content : []);
+        const page = response;
+        const content = page.content ?? [];
+        setActiveOrders(content);
         if (page.totalPages !== undefined) {
             setTotalPages(page.totalPages);
         }
@@ -74,8 +72,7 @@ export default function AdminLiveOperations() {
         }
         // @ts-expect-error auto-migration type suppression
         const res = await deliveryApi.adminDelivery.get('/api/v1/internal/admin/delivery/drivers/available-with-location', { queries });
-        const content = res;
-        return Array.isArray(content) ? content : [];
+        return res;
     },
     intervalMs: 15000,
     enabled: true,

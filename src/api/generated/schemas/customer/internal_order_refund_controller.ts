@@ -1,7 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-import { RefundView } from "./common";
+import { ApiResponseString } from "./common";
 import { RefundCommand } from "./common";
 import { Item } from "./common";
 
@@ -23,7 +23,7 @@ export const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: RefundView,
+    response: ApiResponseString,
   },
 ]);
 

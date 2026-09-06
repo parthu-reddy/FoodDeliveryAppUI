@@ -9,8 +9,7 @@ const shiftSchema = z.object({
 });
 
 interface OutletShiftEditorProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  outlet: any;
+  outlet: import('@/types').Outlet;
   onRefresh: () => void;
   onClose: () => void;
 }
@@ -18,10 +17,9 @@ interface OutletShiftEditorProps {
 export default function OutletShiftEditor({ outlet, onRefresh, onClose }: OutletShiftEditorProps) {
   const [timings, setTimings] = useState<{ openingTime: string; closingTime: string }[]>(
     outlet.timings && outlet.timings.length > 0
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ? outlet.timings.map((t: any) => ({
-        openingTime: t.openingTime.substring(0, 5),
-        closingTime: t.closingTime.substring(0, 5),
+      ? outlet.timings.map((t) => ({
+        openingTime: typeof t.openingTime === 'string' ? t.openingTime.substring(0, 5) : String((t.openingTime as { hour?: number }).hour || 0).padStart(2, '0') + ':' + String((t.openingTime as { minute?: number }).minute || 0).padStart(2, '0'),
+        closingTime: typeof t.closingTime === 'string' ? t.closingTime.substring(0, 5) : String((t.closingTime as { hour?: number }).hour || 0).padStart(2, '0') + ':' + String((t.closingTime as { minute?: number }).minute || 0).padStart(2, '0'),
       }))
       : [{ openingTime: '09:00', closingTime: '22:00' }]
   );
@@ -70,13 +68,12 @@ export default function OutletShiftEditor({ outlet, onRefresh, onClose }: Outlet
         openingTime: t.openingTime.length === 5 ? t.openingTime + ":00" : t.openingTime,
         closingTime: t.closingTime.length === 5 ? t.closingTime + ":00" : t.closingTime
       }));
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await restaurantApi.restaurantOutlet.put('/api/v1/outlets/:outletId/timings', { timings: formattedTimings } as any, { params: { outletId: outlet.id } });
+      await restaurantApi.restaurantOutlet.put('/api/v1/outlets/:outletId/timings', { timings: formattedTimings }, { params: { outletId: outlet.id as string } });
       onRefresh();
       onClose();
     } catch (err: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setError((err as any).response?.data?.message || (err as any).response?.data?.error || (err as any).message || 'Failed to update timings.');
+      const axiosErr = err as { response?: { data?: { message?: string, error?: string } }, message?: string };
+      setError(axiosErr.response?.data?.message || axiosErr.response?.data?.error || axiosErr.message || 'Failed to update timings.');
     } finally {
       setIsSubmitting(false);
     }

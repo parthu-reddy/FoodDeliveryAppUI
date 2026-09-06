@@ -4,7 +4,7 @@ import { otpSchema, phoneSchema as phoneNumberSchema } from "@/lib/zod-schemas";
 import { identityApi } from "@/lib/zodiosClients";
 import { RoleName, UserRole } from "@/types";
 import { RoleSelector } from "@features/identity/components/RoleSelector";
-import SessionManagementModal from "@features/identity/components/SessionManagementModal";
+import SessionManagementModal, { Session } from "@features/identity/components/SessionManagementModal";
 import { CompleteProfileModal } from "@shared/ui";
 import LaBouffeLogo from '@shared/ui/LaBouffeLogo';
 import { LaBouffeLogoMark } from '@shared/ui/LaBouffeLogoMark';
@@ -41,11 +41,9 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showSessionModal, setShowSessionModal] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [activeSessions, setActiveSessions] = useState<any[]>([]);
+  const [activeSessions, setActiveSessions] = useState<Session[]>([]);
   const [showProfileModal, setShowProfileModal] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [pendingLoginData, setPendingLoginData] = useState<any>(null);
+  const [pendingLoginData, setPendingLoginData] = useState<{ id?: string, phone?: string, role?: string, name?: string } | null>(null);
 
   const [scrollY, setScrollY] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -141,9 +139,8 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
 
       setOtpSent(true);
     } catch (err: unknown) {
-      // @ts-expect-error auto-migration type suppression
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setError((err as any).response?.data?.message || (err as any).response?.data?.error || err.message || 'Failed to send OTP. Is the backend running?');
+      const axiosErr = err as { response?: { data?: { message?: string, error?: string } }, message?: string };
+      setError(axiosErr.response?.data?.message || axiosErr.response?.data?.error || axiosErr.message || 'Failed to send OTP. Is the backend running?');
     } finally {
       setLoading(false);
     }
@@ -207,15 +204,12 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
         return;
       }
     } catch (err: unknown) {
-      // @ts-expect-error auto-migration type suppression
-      if (err.status === 409 && err.data?.data?.activeSessions) {
-        // @ts-expect-error auto-migration type suppression
-        setActiveSessions(err.data.data.activeSessions);
+      const errorResponse = err as { status?: number, data?: { data?: { activeSessions?: Session[] } }, response?: { data?: { message?: string, error?: string } }, message?: string };
+      if (errorResponse.status === 409 && errorResponse.data?.data?.activeSessions) {
+        setActiveSessions(errorResponse.data.data.activeSessions as Session[]);
         setShowSessionModal(true);
       } else {
-        // @ts-expect-error auto-migration type suppression
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setError((err as any).response?.data?.message || (err as any).response?.data?.error || err.message || 'OTP verification failed');
+        setError(errorResponse.response?.data?.message || errorResponse.response?.data?.error || errorResponse.message || 'OTP verification failed');
       }
     } finally {
       setLoading(false);
@@ -396,9 +390,8 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
                     }
                   }
                 } catch (err: unknown) {
-                  // @ts-expect-error auto-migration type suppression
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  setError((err as any).response?.data?.message || (err as any).response?.data?.error || err.message || 'Failed to resend OTP.');
+                  const axiosErr = err as { response?: { data?: { message?: string, error?: string } }, message?: string };
+                  setError(axiosErr.response?.data?.message || axiosErr.response?.data?.error || axiosErr.message || 'Failed to resend OTP.');
                 }
               }}
               onAutofillOtp={autofillOtp}
@@ -450,8 +443,8 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
           setShowProfileModal(false);
           const finalName = p.name || pendingLoginData?.name;
           if (pendingLoginData) {
-            setUserProfile({ ...pendingLoginData, name: finalName });
-            onLoginSuccess(pendingLoginData.role, pendingLoginData.phone, finalName);
+            setUserProfile({ ...pendingLoginData, name: finalName, id: pendingLoginData.id || '' } as import('@/lib/tokenStore').LocalUserProfile);
+            onLoginSuccess(pendingLoginData.role as import('@/types').UserRole, pendingLoginData.phone || '', finalName || '');
           }
         }}
       />

@@ -9,7 +9,6 @@ import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import React, { useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
-import { asUntyped } from '../../../../lib/untypedResponse';
 
 const outletSchema = z.object({
   name: z.string().min(1, 'Outlet name is required.').max(100, 'Outlet name cannot exceed 100 characters.'),
@@ -42,8 +41,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
   const markerRef = useRef<maplibregl.Marker | null>(null);
   
   const [searchQuery, setSearchQuery] = useState('');
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<{ place_id: string, description: string }[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const { showError } = useToast();
   useConfig();
@@ -174,7 +172,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
             // Try to reverse geocode
             const res = await mapsApi.integration.get('/api/places/reverse-geocode', { queries: { lat: latitude, lng: longitude } });
             if (res && res.address) {
-              setSearchQuery(asUntyped<{ address?: string }>(res).address ?? '');
+              setSearchQuery((res.address as string) ?? '');
             }
           } catch (e: unknown) {
             console.error("Reverse geocoding failed", e);
@@ -229,8 +227,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
 
     try {
       setIsSaving(true);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await restaurantApi.restaurantOutlet.post('/api/v1/brands/:brandId/outlets', newOutlet as any, { params: { brandId } });
+      await restaurantApi.restaurantOutlet.post('/api/v1/brands/:brandId/outlets', newOutlet, { params: { brandId } });
       setIsOpen(false);
       setName('');
       setFssai('');
@@ -239,9 +236,8 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
       setTimings([{ openingTime: "09:00", closingTime: "23:00" }]);
       onRefresh();
     } catch (err: unknown) {
-      // @ts-expect-error auto-migration type suppression
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setError((err as any).response?.data?.message || (err as any).response?.data?.error || err.message || 'Failed to register outlet');
+      const axiosErr = err as { response?: { data?: { message?: string, error?: string } }, message?: string };
+      setError(axiosErr.response?.data?.message || axiosErr.response?.data?.error || axiosErr.message || 'Failed to register outlet');
     } finally {
       setIsSaving(false);
     }
@@ -349,8 +345,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
               <div className="absolute top-full left-0 right-0 mt-1 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg max-h-48 overflow-y-auto z-20">
                 { }
                 { }
-                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                {searchResults.map((result: any) => (
+                {searchResults.map((result: { place_id: string, description: string }) => (
                   <button
                     key={result.place_id}
                     type="button"

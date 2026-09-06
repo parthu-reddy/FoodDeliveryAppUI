@@ -1,9 +1,6 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-import { PageableObject } from "./common";
-import { SortObject } from "./common";
-
 export const OutboxEventEntity = z
   .object({
     id: z.string().uuid(),
@@ -23,6 +20,7 @@ export const OutboxEventEntity = z
     eventType: z.enum([
       "ORDER_CREATED",
       "ORDER_PAID",
+      "ORDER_PLACED_COD",
       "ORDER_ACCEPTED",
       "ORDER_PREPARING",
       "ORDER_READY",
@@ -52,12 +50,12 @@ export const OutboxEventEntity = z
       "PAYMENT_FAILED",
       "PAYMENT_REFUNDED",
       "PAYMENT_REFUND_REQUESTED",
+      "PAYMENT_REFUND_FAILED",
+      "REFUND_REQUESTED",
+      "REFUND_FAILED",
       "PAYMENT_PARTIALLY_REFUNDED",
       "ORDER_PARTIALLY_REFUNDED",
       "LEDGER_TRANSACTION_REQUEST",
-      "LEDGER_TRANSACTION_FAILED",
-      "LEDGER_REVERSAL_REQUEST",
-      "LEDGER_BULK_TRANSACTION_REQUEST",
       "OUTLET_ACTIVATED",
       "MENU_UPDATED",
       "OUTLET_DEACTIVATED",
@@ -79,10 +77,6 @@ export const OutboxEventEntity = z
       "AD_WALLET_TOPUP_REQUEST",
       "AD_WALLET_TOPUP_COMPLETED",
       "AD_BUDGET_ALERT",
-      "REFUND_GENERATED",
-      "REVERSAL_GENERATED",
-      "EARNINGS_GENERATED",
-      "PAYOUT_GENERATED",
       "CHAT_REFUND_QUOTE_REQUESTED",
       "CHAT_REFUND_REQUESTED",
       "CHAT_REFUND_QUOTE_RESPONSE",
@@ -100,18 +94,16 @@ export const OutboxEventEntity = z
     new: z.boolean().optional(),
   })
   .passthrough();
-export const PageOutboxEventEntity = z
+export const PageResponseDtoOutboxEventEntity = z
   .object({
-    totalPages: z.number().int(),
-    totalElements: z.number().int(),
-    size: z.number().int(),
     content: z.array(OutboxEventEntity),
-    numberOfElements: z.number().int(),
+    totalElements: z.number().int(),
+    totalPages: z.number().int(),
+    last: z.boolean(),
+    size: z.number().int(),
     number: z.number().int(),
     first: z.boolean(),
-    last: z.boolean(),
-    pageable: PageableObject.optional(),
-    sort: SortObject.optional(),
+    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -127,7 +119,7 @@ export const ApiResponseString = z
 
 export const schemas = {
   OutboxEventEntity,
-  PageOutboxEventEntity,
+  PageResponseDtoOutboxEventEntity,
   ApiResponseString,
 };
 
@@ -187,7 +179,7 @@ export const endpoints = makeApi([
         schema: z.number().int().optional().default(20),
       },
     ],
-    response: PageOutboxEventEntity,
+    response: PageResponseDtoOutboxEventEntity,
   },
 ]);
 

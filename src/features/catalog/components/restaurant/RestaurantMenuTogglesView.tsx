@@ -18,7 +18,7 @@ export const RestaurantMenuTogglesView: React.FC<RestaurantMenuTogglesViewProps>
   selectedOutletId
 }) => {
   const categories = menuList.reduce((acc, dish) => {
-    const cat = dish.category || 'Uncategorized';
+    const cat = dish.categoryName || 'Uncategorized';
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push(dish);
     return acc;
@@ -58,7 +58,7 @@ export const RestaurantMenuTogglesView: React.FC<RestaurantMenuTogglesViewProps>
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-200 dark:bg-slate-800 shrink-0">
                         <ImageLoader 
-                          src={dish.imageUrl || dish.image} 
+                          src={dish.imageUrl || ''} 
                           alt={dish.name} 
                           className="w-full h-full object-cover" 
                           containerClassName="w-full h-full" 

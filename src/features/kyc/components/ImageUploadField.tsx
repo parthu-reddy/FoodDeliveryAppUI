@@ -35,16 +35,15 @@ export default function ImageUploadField({ value, onChange, folderId, placeholde
       formData.append('folderId', folderId);
       formData.append('imageType', imageType);
 
-      const res = await restaurantApi.imageUpload.post('/api/v1/images/upload', formData as unknown as { file: File }, { queries: { folderId, imageType } });
+      const res = await restaurantApi.imageUpload.post('/api/v1/images/upload', formData as Parameters<typeof restaurantApi.imageUpload.post>[1], { queries: { folderId, imageType } });
       if (res && res.data) {
         onChange(res.data);
       } else {
         throw new Error("Failed to get public URL");
       }
     } catch (err: unknown) {
-      // @ts-expect-error auto-migration type suppression
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setError((err as any).response?.data?.message || (err as any).response?.data?.error || err.message || 'Failed to upload file');
+      const axiosErr = err as { response?: { data?: { message?: string, error?: string } }, message?: string };
+      setError(axiosErr.response?.data?.message || axiosErr.response?.data?.error || axiosErr.message || 'Failed to upload file');
     } finally {
       setLoading(false);
       if (fileInputRef.current) {

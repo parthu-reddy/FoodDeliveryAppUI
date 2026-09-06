@@ -101,9 +101,8 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
       resetForm();
       onRefresh();
     } catch (err: unknown) {
-      // @ts-expect-error auto-migration type suppression
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setError((err as any).response?.data?.message || (err as any).response?.data?.error || err.message || 'Failed to register brand');
+      const axiosErr = err as { response?: { data?: { message?: string, error?: string } }, message?: string };
+      setError(axiosErr.response?.data?.message || axiosErr.response?.data?.error || axiosErr.message || 'Failed to register brand');
     } finally {
       setIsSaving(false);
     }

@@ -218,8 +218,7 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
         <span className="text-[9px] text-slate-400 dark:text-slate-300 font-extrabold uppercase font-mono">Dishes ({order.items?.length || 0})</span>
         <div className="space-y-1 max-h-[100px] overflow-y-auto scrollbar-thin pl-1">
           { }
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-          {order.items?.map((cartItem: any, idx: number) => (
+          {order.items?.map((cartItem: { quantity: number, name?: string, price?: number, item?: { id?: string, name: string, price?: number } }, idx: number) => (
             <div key={cartItem.item?.id || idx} className="flex justify-between text-[11px]">
               <span className="text-slate-600 dark:text-[#f0ede6] font-medium">
                 <span className="font-mono text-orange-500 font-bold pr-1">{cartItem.quantity || 1}x</span> {cartItem.item?.name || cartItem.name || 'Item'}

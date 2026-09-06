@@ -9,7 +9,7 @@ describe('MSW API Interception', () => {
     // We mocked it to return 2 fake brands
     expect(response).toBeDefined();
     expect(Array.isArray(response)).toBe(true);
-    const restaurants = response as unknown as { name: string }[];
+    const restaurants = response as { name: string }[];
     expect(restaurants.length).toBe(2);
     expect(restaurants[0].name).toBe('Spicy Kitchen');
   });

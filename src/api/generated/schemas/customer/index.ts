@@ -16,6 +16,7 @@ export { Driver_money_controllerApi } from "./driver_money_controller";
 export { Customer_money_controllerApi } from "./customer_money_controller";
 export { Restaurant_support_ticket_controllerApi } from "./restaurant_support_ticket_controller";
 export { Internal_order_controllerApi } from "./internal_order_controller";
+export { Internal_money_controllerApi } from "./internal_money_controller";
 export { Admin_money_controllerApi } from "./admin_money_controller";
 export { Admin_customer_controllerApi } from "./admin_customer_controller";
 export { Driver_order_controllerApi } from "./driver_order_controller";

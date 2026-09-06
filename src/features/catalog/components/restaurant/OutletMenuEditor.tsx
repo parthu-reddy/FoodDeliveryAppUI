@@ -151,7 +151,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, onRefresh }: O
     if (!brandId || brandId === 'undefined') return;
     try {
       const response = await restaurantApi.catalog.get('/api/v1/brands/:brandId/master-menu', { params: { brandId } });
-      setMasterItems((response.data as unknown as MasterMenuItem[]) || []);
+      setMasterItems((response.data as MasterMenuItem[]) || []);
     } catch (e) { console.error(e); }
   };
 
@@ -159,7 +159,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, onRefresh }: O
     if (!targetOutlet) return;
     try {
       const response = await restaurantApi.catalog.get('/api/v1/outlets/:outletId/menu-overrides', { params: { outletId: targetOutlet } });
-      setOverrides((response.data as unknown as OverrideItem[]) || []);
+      setOverrides((response.data as OverrideItem[]) || []);
     } catch (e) { console.error(e); }
   };
 
@@ -258,7 +258,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, onRefresh }: O
 
   
   const startEditingOverride = (item: MasterMenuItem, currentOverride: OverrideItem | undefined) => {
-    setIsAddingOverride(item.id);
+    setIsAddingOverride(item.id as string);
     if (currentOverride) {
         setOPrice(currentOverride.overriddenPrice ? currentOverride.overriddenPrice.toString() : '');
         setOPrepTime(currentOverride.overriddenPrepTimeMinutes ? currentOverride.overriddenPrepTimeMinutes.toString() : '');
@@ -299,7 +299,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, onRefresh }: O
               <ImageUploadField value={mImg} onChange={setMImg} folderId={restaurantId} placeholder="Image URL (Optional)" imageType="menu" />
             </div>
             <div className="z-[60] relative">
-              <CategorySelector categories={categories as unknown as {id: string, name: string}[]} value={mCatId} onChange={setMCatId} />
+              <CategorySelector categories={categories as {id: string, name: string}[]} value={mCatId} onChange={setMCatId} />
             </div>
             <div className="grid grid-cols-3 gap-3">
               <input type="number" step="0.01" min="0" placeholder="Override Price (optional)" value={oPrice} onChange={e=>setOPrice(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-emerald-500/20 dark:border-emerald-500/30 rounded-lg px-3 py-2 text-xs font-bold dark:text-[#f0ede6]" />
@@ -427,7 +427,7 @@ export default function OutletMenuEditor({ restaurantId, brandId, onRefresh }: O
                         return (
                           <div key={item.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-sm transition-all hover:shadow-md">
                             {isAddingOverride === item.id ? (
-                              <form onSubmit={(e) => handleCreateOverride(e, item.id)} className="space-y-3">
+                              <form onSubmit={(e) => handleCreateOverride(e, item.id as string)} className="space-y-3">
                                 <div className="flex justify-between items-center mb-2">
                                   <h6 className="font-bold text-sm text-slate-800 dark:text-[#f0ede6]">Edit Override for {item.name}</h6>
                                   <button type="button" onClick={() => setIsAddingOverride(null)} className="text-slate-400 hover:text-rose-500 transition-colors">

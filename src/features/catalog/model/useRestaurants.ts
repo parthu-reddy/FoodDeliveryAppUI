@@ -1,7 +1,9 @@
-import { restaurantApi } from '@/lib/zodiosClients';
-import { Restaurant } from '@/types';
+import { schemas as restaurantSchemas } from '@/api/generated/schemas/restaurant/restaurant_outlet_controller';
+import { z } from 'zod';
 import { useEffect, useState } from 'react';
-import { fromContract } from '../../../lib/untypedResponse';
+import { restaurantApi } from '@/lib/zodiosClients';
+
+type Restaurant = z.infer<typeof restaurantSchemas.NearbyRestaurantDTO>;
 
 interface UseRestaurantsOptions {
   deliveryLat: number | null;
@@ -24,8 +26,8 @@ export function useRestaurants({ deliveryLat, deliveryLng, radiusKm = 10.0 }: Us
         queries: { lat: deliveryLat, lng: deliveryLng, radius: radiusKm },
         signal: controller.signal 
       })
-        .then(res => {
-          if (res && res.data) setRestaurants(fromContract(res.data));
+        .then((res) => {
+          if (res && res.data) setRestaurants(res.data);
         })
         .catch(err => {
           if (err.name === 'AbortError' || err.code === 'ERR_CANCELED') {

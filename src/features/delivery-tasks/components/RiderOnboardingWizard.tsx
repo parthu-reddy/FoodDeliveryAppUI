@@ -1,4 +1,5 @@
 import { useToast } from "@/contexts/ToastContext";
+import { parseApiError } from '@/lib/parseApiError';
 import { deliveryApi, identityApi } from "@/lib/zodiosClients";
 import DocumentUploadField from "@features/kyc/components/DocumentUploadField";
 import ImageUploadField from "@features/kyc/components/ImageUploadField";
@@ -31,8 +32,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { showSuccess, showError } = useToast();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [verificationStatus, setVerificationStatus] = useState<any>(null);
+  const [verificationStatus, setVerificationStatus] = useState<Record<string, unknown> | null>(null);
 
   // Form State
   const [name, setName] = useState(initialName || '');
@@ -103,8 +103,8 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
       showSuccess('Profile saved');
       handleNext();
     } catch (e: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setErrorMsg((e as any).response?.data?.message || (e as any).response?.data?.error || (e as any).message || 'Failed to save profile');
+      const axiosErr = e as { response?: { data?: { message?: string, error?: string } }, message?: string };
+      setErrorMsg(axiosErr.response?.data?.message || axiosErr.response?.data?.error || axiosErr.message || 'Failed to save profile');
     } finally {
       setIsSubmitting(false);
     }
@@ -123,8 +123,8 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
       await loadStatus();
       handleNext();
     } catch (e: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setErrorMsg((e as any).response?.data?.error || 'Failed to verify DL');
+      const axiosErr = e as { response?: { data?: { error?: string } } };
+      setErrorMsg(axiosErr.response?.data?.error || 'Failed to verify DL');
     } finally {
       setIsSubmitting(false);
     }
@@ -142,8 +142,8 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
       await loadStatus();
       handleNext();
     } catch (e: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setErrorMsg((e as any).response?.data?.error || 'Failed to verify RC');
+      const axiosErr = e as { response?: { data?: { error?: string } } };
+      setErrorMsg(axiosErr.response?.data?.error || 'Failed to verify RC');
     } finally {
       setIsSubmitting(false);
     }
@@ -161,8 +161,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
       await loadStatus();
       handleNext();
     } catch (e: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setErrorMsg((e as any).response?.data?.error || 'Failed to verify bank');
+      setErrorMsg(parseApiError(e, 'Failed to verify bank').message);
     } finally {
       setIsSubmitting(false);
     }
@@ -180,8 +179,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
       await loadStatus();
       onComplete(); // Done!
     } catch (e: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setErrorMsg((e as any).response?.data?.error || 'Face match failed');
+      setErrorMsg(parseApiError(e, 'Face match failed').message);
     } finally {
       setIsSubmitting(false);
     }

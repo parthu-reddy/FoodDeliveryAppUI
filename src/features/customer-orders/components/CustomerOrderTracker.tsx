@@ -9,7 +9,6 @@ import { useCallContext } from '@/contexts/CallContext';
 
 import { Order } from '@/types';
 import { customerApi } from '@/lib/zodiosClients';
-import { asUntyped } from '@/lib/untypedResponse';
 
 interface CustomerOrderTrackerProps {
   currentTrackingOrder: Order;
@@ -332,7 +331,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
             )}
             <div className="space-y-3">
               {currentTrackingOrder.items && currentTrackingOrder.items.map((item: unknown, idx: number) => {
-                const i = asUntyped<unknown>(item) as { item?: { id?: string; name?: string; price?: number }; quantity?: number; name?: string; price?: number };
+                const i = item as { item?: { id?: string; name?: string; price?: number }; quantity?: number; name?: string; price?: number };
                 return (
                 <div key={idx} className="flex justify-between text-sm font-semibold text-slate-700 dark:text-slate-300">
                   <span>{i.quantity || 1}x {i.item?.name || i.name || 'Item'}</span>
@@ -422,7 +421,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
             </div>
             <div className="space-y-3">
               {currentTrackingOrder.items && currentTrackingOrder.items.map((item: unknown, idx: number) => {
-                const i = asUntyped<unknown>(item) as { item?: { id?: string; name?: string; price?: number }; quantity?: number; name?: string; price?: number };
+                const i = item as { item?: { id?: string; name?: string; price?: number }; quantity?: number; name?: string; price?: number };
                 return (
                 <div key={idx} className="flex justify-between text-sm font-semibold text-slate-700 dark:text-slate-300">
                   <span>{i.quantity || 1}x {i.item?.name || i.name || 'Item'}</span>

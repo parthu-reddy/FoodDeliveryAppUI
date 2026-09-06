@@ -3,8 +3,7 @@ import { AlertCircle, CheckCircle, Settings, X } from 'lucide-react';
 import React, { useState } from 'react';
 
 interface OutletSettingsEditorProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  outlet: any;
+  outlet: import('@/types').Outlet;
   onRefresh: () => void;
   onClose: () => void;
 }
@@ -33,9 +32,8 @@ export default function OutletSettingsEditor({ outlet, onRefresh, onClose }: Out
       onRefresh();
       onClose();
     } catch (err: unknown) {
-      // @ts-expect-error auto-migration type suppression
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setError((err as any).response?.data?.message || (err as any).response?.data?.error || err.message || 'Failed to update settings.');
+      const axiosErr = err as { response?: { data?: { message?: string, error?: string } }, message?: string };
+      setError(axiosErr.response?.data?.message || axiosErr.response?.data?.error || axiosErr.message || 'Failed to update settings.');
     } finally {
       setIsSubmitting(false);
     }
@@ -71,7 +69,7 @@ export default function OutletSettingsEditor({ outlet, onRefresh, onClose }: Out
                 min="60"
                 step="60"
                 value={defaultPrepTimeSeconds}
-                onChange={e => setDefaultPrepTimeSeconds(e.target.value)}
+                onChange={e => setDefaultPrepTimeSeconds(parseInt(e.target.value, 10) || 0)}
                 className="w-full bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
               />
               <p className="text-[10px] text-slate-400 mt-1 px-1">

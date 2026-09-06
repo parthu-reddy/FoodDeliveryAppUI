@@ -7,8 +7,7 @@ interface CustomerRestaurantCardProps {
   key?: React.Key;
   restaurant: Restaurant;
   isLast: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  lastElementRef: (node: any) => void;
+  lastElementRef: (node: HTMLDivElement | null) => void;
   onClick: (restaurant: Restaurant) => void;
 }
 
@@ -24,7 +23,7 @@ export default function CustomerRestaurantCard({ restaurant, isLast, lastElement
       (entries) => {
         if (entries[0].isIntersecting) {
           // Fire impression tracking via GET using the URL provided by the bidding engine
-          const trackingUrl = adData.impressionTrackingUrl;
+          const trackingUrl = adData.impressionUrl;
           if (trackingUrl) {
             const relativeUrl = trackingUrl.replace('http://event-tracking-service', '');
             window.fetch(import.meta.env.VITE_API_BASE_URL + relativeUrl, { headers: { 'X-Calling-Service': 'CustomerApplication' } }).catch(err => console.error("Tracking failed", err));
@@ -46,7 +45,7 @@ export default function CustomerRestaurantCard({ restaurant, isLast, lastElement
     const adData = restaurant.adData;
     if (restaurant.isSponsored && adData) {
       // Fire click tracking via GET using the URL provided by the bidding engine
-      const trackingUrl = adData.clickTrackingUrl;
+      const trackingUrl = adData.clickUrl;
       if (trackingUrl) {
         const relativeUrl = trackingUrl.replace('http://event-tracking-service', '');
         window.fetch(import.meta.env.VITE_API_BASE_URL + relativeUrl, { headers: { 'X-Calling-Service': 'CustomerApplication' } }).catch(err => console.error("Click tracking failed", err));

@@ -2,15 +2,13 @@ import { useToast } from "@/contexts/ToastContext";
 import { mapsApi } from "@/lib/zodiosClients";
 import { Modal } from '@shared/ui';
 import { MapPin, Navigation, Plus } from 'lucide-react';
-import { asUntyped } from '../../../lib/untypedResponse';
 
 interface AddressSelectionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  savedAddresses: any[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onSelectAddress: (address: any) => void;
+  savedAddresses: import('@/types').Address[];
+  isAddressLoading: boolean;
+  onSelectAddress: (address: import('@/types').Address) => void;
   onUseCurrentLocation: (addressStr: string) => void;
   onAddNewAddress: () => void;
 }
@@ -33,7 +31,7 @@ export default function AddressSelectionModal({
           try {
             const res = await mapsApi.integration.get('/api/places/reverse-geocode', { queries: { lat: latitude, lng: longitude } });
             if (res && res.address) {
-              onUseCurrentLocation(asUntyped<{ address?: string }>(res).address ?? '');
+              onUseCurrentLocation((res.address as string) ?? '');
             } else {
               onUseCurrentLocation("Current Location");
             }

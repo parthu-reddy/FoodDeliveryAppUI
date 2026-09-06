@@ -7,12 +7,10 @@ import CustomerRestaurantCard from './CustomerRestaurantCard';
 
 interface CustomerRestaurantBrowserProps {
   categories: string[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  restaurants: any[];
+  restaurants: import('@/types').Restaurant[];
   isRestaurantsLoading: boolean;
   setIsAddressSelectorOpen: (isOpen: boolean) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  setSelectedRestaurant: (restaurant: any) => void;
+  setSelectedRestaurant: (restaurant: import('@/types').Restaurant) => void;
   onAddApiLog?: (log: unknown) => void;
 }
 
@@ -35,8 +33,7 @@ export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps>
   }, [debouncedSearchQuery, selectedCategory, restaurants]);
 
   const observerRef = useRef<IntersectionObserver | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const lastElementRef = useCallback((node: any) => {
+  const lastElementRef = useCallback((node: HTMLDivElement | null) => {
     if (observerRef.current) observerRef.current.disconnect();
     observerRef.current = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting) {
@@ -50,7 +47,7 @@ export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps>
     const matchesSearch = (restaurant.name || '').toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
       (restaurant.cuisine || '').toLowerCase().includes(debouncedSearchQuery.toLowerCase());
     const matchesCategory = !selectedCategory || selectedCategory === 'All' ||
-      (restaurant.tags || []).includes(selectedCategory);
+      ((restaurant as { tags?: string[] }).tags || []).includes(selectedCategory);
     return matchesSearch && matchesCategory;
   });
 

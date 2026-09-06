@@ -2,7 +2,6 @@ import { customerApi } from '@/lib/zodiosClients';
 import { Order, OrderStatus } from '@/types';
 import { isActiveOrder, isFailedOrder } from '@features/customer-orders/model/orderStatus';
 import { useEffect, useState } from 'react';
-import { fromContract, asUntyped } from '../../../lib/untypedResponse';
 
 interface UseCustomerOrdersOptions {
   onUpdateOrder?: (orderId: string, status: string) => void;
@@ -19,9 +18,9 @@ export function useCustomerOrders({ onUpdateOrder }: UseCustomerOrdersOptions = 
     customerApi.order.get('/api/v1/orders/active', { queries: { page: 0, size: 50 } })
       .then(res => {
         if (!ignore && res.data) {
-          const content = res.data.content || (Array.isArray(res.data) ? res.data : []);
+          const content = res.data.content || [];
           setInternalOrders(content.map((o: unknown) => {
-            const orderData = asUntyped<unknown>(o) as Order;
+            const orderData = o as Order;
             return { ...orderData, status: (orderData.status?.toUpperCase() || '') as OrderStatus };
           }));
         }
@@ -55,9 +54,9 @@ export function useCustomerOrders({ onUpdateOrder }: UseCustomerOrdersOptions = 
             timeoutId = setTimeout(pollOrders, 60000);
             return;
           }
-          const content = res.data.content || (Array.isArray(res.data) ? res.data : []);
+          const content = res.data.content || [];
           const updatedOrders = content.map((o: unknown) => {
-            const orderData = asUntyped<unknown>(o) as Order;
+            const orderData = o as Order;
             return { ...orderData, status: (orderData.status?.toUpperCase() || '') as OrderStatus };
           });
           
@@ -87,8 +86,7 @@ export function useCustomerOrders({ onUpdateOrder }: UseCustomerOrdersOptions = 
                      setInternalOrders(curr => {
                         const currentList = [...curr];
                         let batchChanged = false;
-                        fromContract<unknown[]>(res.data || []).forEach((o: unknown) => {
-                            const batchOrder = asUntyped<unknown>(o) as Order;
+                        (res.data || []).forEach((batchOrder) => {
                             const idx = currentList.findIndex(o => o.id === batchOrder.id);
                             if (idx !== -1 && JSON.stringify(currentList[idx]) !== JSON.stringify(batchOrder)) {
                                currentList[idx] = batchOrder;

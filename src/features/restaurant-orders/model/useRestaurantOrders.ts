@@ -2,7 +2,6 @@ import { usePolling } from '@/hooks/usePolling';
 import { restaurantApi } from '@/lib/zodiosClients';
 import { Order, OrderStatus } from '@/types';
 import { useCallback, useState } from 'react';
-import { fromContract } from '../../../lib/untypedResponse';
 
 interface UseRestaurantOrdersOptions {
   restaurantId: string;
@@ -62,7 +61,7 @@ export function useRestaurantOrders({
     if (!selectedOutletId) return [];
     const res = await restaurantApi.fulfillment.get('/api/v1/restaurants/:restaurantId/fulfillment/orders/active', { params: { restaurantId: selectedOutletId } });
     if (res.data) {
-      const activeOrdersData = fromContract<{ id: string; orderId: string; [key: string]: unknown }[]>(res.data || []);
+      const activeOrdersData = res.data || [];
       const mapped = activeOrdersData.map((o: unknown) => {
         const orderData = o as Order & { itemsJson?: string, orderId?: string };
         const s = orderData.status?.toUpperCase() || '';

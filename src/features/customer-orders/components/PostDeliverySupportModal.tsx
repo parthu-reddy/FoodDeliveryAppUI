@@ -2,8 +2,14 @@ import { Button, ErrorBoundary, Modal, Spinner } from "@shared/ui";
 import { AlertCircle, Check, HelpCircle, Send } from 'lucide-react';
 import { useState } from 'react';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export default function PostDeliverySupportModal(props: any) {
+interface PostDeliverySupportModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  orderId: string;
+  submitSupportRequest: (orderId: string, reason: string) => Promise<void>;
+}
+
+export default function PostDeliverySupportModal(props: PostDeliverySupportModalProps) {
   return (
     <ErrorBoundary>
       <PostDeliverySupportModalInner {...props} />
@@ -16,8 +22,7 @@ function PostDeliverySupportModalInner({
   onClose,
   orderId,
   submitSupportRequest // (orderId: string, reason: string) => Promise<void>
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-}: any) {
+}: PostDeliverySupportModalProps) {
   const [reason, setReason] = useState('');
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
@@ -35,9 +40,8 @@ function PostDeliverySupportModalInner({
       await submitSupportRequest(orderId, reason);
       setStatus('success');
     } catch (error: unknown) {
-      // @ts-expect-error auto-migration type suppression
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setErrorMessage((error as any).response?.data?.message || (error as any).response?.data?.error || error.message || 'An error occurred while submitting your request.');
+      const axiosErr = error as { response?: { data?: { message?: string, error?: string } }, message?: string };
+      setErrorMessage(axiosErr.response?.data?.message || axiosErr.response?.data?.error || axiosErr.message || 'An error occurred while submitting your request.');
       setStatus('error');
     }
   };

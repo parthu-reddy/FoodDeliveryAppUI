@@ -3,11 +3,9 @@ import { z } from "zod";
 
 import { ApiResponseVoid } from "./common";
 import { LocalTime } from "./common";
-import { ApiResponseMapStringObject } from "./common";
-import { NearbyRestaurantDTO } from "./common";
 
 export const TimingRequest = z
-  .object({ openingTime: LocalTime, closingTime: LocalTime })
+  .object({ openingTime: z.string(), closingTime: z.string() })
   .passthrough();
 export const OutletTimingsUpdateRequest = z
   .object({ timings: z.array(TimingRequest) })
@@ -67,6 +65,48 @@ export const ApiResponseOutlet = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
+export const NearbyRestaurantDTO = z
+  .object({
+    id: z.string().uuid(),
+    name: z.string(),
+    isActive: z.boolean(),
+    defaultPrepTimeSeconds: z.number().int(),
+    isOpen: z.boolean(),
+    lat: z.number(),
+    lng: z.number(),
+    distance: z.number(),
+    image: z.string(),
+    cuisine: z.string(),
+    rating: z.number(),
+    reviewsCount: z.number().int(),
+    deliveryTime: z.number().int(),
+    deliveryFee: z.number(),
+    tags: z.array(z.string()),
+    brandId: z.string().uuid(),
+    brandName: z.string(),
+    isSponsored: z.boolean(),
+    logoUrl: z.string(),
+  })
+  .partial()
+  .passthrough();
+export const ApiResponseNearbyRestaurantDTO = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    errorCode: z.string().optional(),
+    data: NearbyRestaurantDTO.optional(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
+export const ApiResponseListNearbyRestaurantDTO = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    errorCode: z.string().optional(),
+    data: z.array(NearbyRestaurantDTO).optional(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
 export const ApiResponseListOutlet = z
   .object({
     success: z.boolean(),
@@ -76,12 +116,25 @@ export const ApiResponseListOutlet = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const ApiResponseListMapStringObject = z
+export const PageResponseDtoNearbyRestaurantDTO = z
+  .object({
+    content: z.array(NearbyRestaurantDTO),
+    totalElements: z.number().int(),
+    totalPages: z.number().int(),
+    last: z.boolean(),
+    size: z.number().int(),
+    number: z.number().int(),
+    first: z.boolean(),
+    numberOfElements: z.number().int(),
+    empty: z.boolean(),
+  })
+  .passthrough();
+export const ApiResponsePageResponseDtoNearbyRestaurantDTO = z
   .object({
     success: z.boolean(),
     message: z.string(),
     errorCode: z.string().optional(),
-    data: z.array(z.record(z.object({}).partial().passthrough())).optional(),
+    data: PageResponseDtoNearbyRestaurantDTO.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
@@ -93,8 +146,12 @@ export const schemas = {
   OutletTiming,
   Outlet,
   ApiResponseOutlet,
+  NearbyRestaurantDTO,
+  ApiResponseNearbyRestaurantDTO,
+  ApiResponseListNearbyRestaurantDTO,
   ApiResponseListOutlet,
-  ApiResponseListMapStringObject,
+  PageResponseDtoNearbyRestaurantDTO,
+  ApiResponsePageResponseDtoNearbyRestaurantDTO,
 };
 
 export const endpoints = makeApi([
@@ -202,7 +259,7 @@ export const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: ApiResponseMapStringObject,
+    response: ApiResponseNearbyRestaurantDTO,
   },
   {
     method: "get",
@@ -226,7 +283,7 @@ export const endpoints = makeApi([
         schema: z.number().optional().default(5),
       },
     ],
-    response: z.array(NearbyRestaurantDTO),
+    response: ApiResponseListNearbyRestaurantDTO,
   },
   {
     method: "get",
@@ -255,7 +312,7 @@ export const endpoints = makeApi([
         schema: z.number().optional().default(5),
       },
     ],
-    response: ApiResponseListMapStringObject,
+    response: ApiResponseListNearbyRestaurantDTO,
   },
   {
     method: "get",
@@ -281,7 +338,7 @@ export const endpoints = makeApi([
         schema: z.number().int().optional().default(100),
       },
     ],
-    response: z.array(NearbyRestaurantDTO),
+    response: ApiResponsePageResponseDtoNearbyRestaurantDTO,
   },
 ]);
 

@@ -6,7 +6,6 @@ import { Badge, Button, FormField, Input, Modal, TransactionHistoryTable, Wallet
 import { PaymentModal, type PaymentMethodType } from "@shared/ui/PaymentModal";
 import { Calendar, DollarSign, Pause, Plus, TrendingUp, Wallet } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { fromContract } from '../../../lib/untypedResponse';
 import { formatINR } from '@shared/money';
 
 interface Campaign {
@@ -14,9 +13,9 @@ interface Campaign {
   name: string;
   status: string;
   dailyBudget: number;
-  totalBudget: number;
+  totalBudget?: number;
   startDate: string;
-  endDate: string;
+  endDate?: string;
 }
 
 export default function CampaignManagement({ advertiserId }: { advertiserId: string }) {
@@ -103,7 +102,7 @@ export default function CampaignManagement({ advertiserId }: { advertiserId: str
     setTxLoading(true);
     try {
       const res = await walletApi.wallet.get('/api/v1/wallets/:entityType/:entityId/transactions', { params: { entityType: 'ADVERTISER', entityId: advertiserId }, queries: { page } });
-      setTransactions(fromContract<WalletTransaction[]>(res.content ?? []));
+      setTransactions(res.content ?? []);
       setTxTotalPages(res.totalPages ?? 1);
     } catch (err: unknown) {
       console.warn("Could not load transactions", err);
@@ -118,7 +117,7 @@ export default function CampaignManagement({ advertiserId }: { advertiserId: str
     try {
       // @ts-expect-error auto-migration type suppression
       const res = await campaignApi.campaign.get('/api/v1/advertisers/:advertiserId/campaigns/performance', { params: { advertiserId: advertiserId }, queries: { pageable: {} } as Record<string, unknown> });
-      setPerformanceData(fromContract<CampaignPerformance[]>(res.data?.content ?? []));
+      setPerformanceData(res.data?.content ?? []);
     } catch (e: unknown) {
       console.error(e);
       showError('Failed to load performance data');
@@ -132,7 +131,7 @@ export default function CampaignManagement({ advertiserId }: { advertiserId: str
     try {
       // @ts-expect-error auto-migration type suppression
       const res = await campaignApi.campaign.get('/api/v1/advertisers/:advertiserId/campaigns', { params: { advertiserId: advertiserId }, queries: { pageable: {} } as Record<string, unknown> });
-      setCampaigns(fromContract<Campaign[]>(res.data?.content ?? []));
+      setCampaigns(res.data?.content ?? []);
     } catch (err: unknown) {
       showError(parseApiError(err, 'Failed to load campaigns').message);
     } finally {

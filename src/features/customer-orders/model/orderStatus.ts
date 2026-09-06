@@ -1,7 +1,6 @@
 import { DeliveryStatus, OrderStatus } from '@/types/backend-enums';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const isActiveOrder = (order: any): boolean => {
+export const isActiveOrder = (order: Pick<import('@/types').Order, 'status' | 'deliveryStatus'>): boolean => {
   if (!order) return false;
   const s = order.status;
   const ds = order.deliveryStatus;
@@ -20,8 +19,7 @@ export const isActiveOrder = (order: any): boolean => {
   return true;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const isFailedOrder = (order: any): boolean => {
+export const isFailedOrder = (order: Pick<import('@/types').Order, 'status' | 'deliveryStatus'>): boolean => {
   if (!order) return false;
   const s = order.status;
   const ds = order.deliveryStatus;

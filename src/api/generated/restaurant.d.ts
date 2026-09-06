@@ -452,22 +452,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/restaurants/{restaurantId}/fulfillment/orders/{orderId}/invoice": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getOrderInvoice"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/restaurants/{restaurantId}/fulfillment/orders/history": {
         parameters: {
             query?: never;
@@ -628,6 +612,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/internal/restaurants/{restaurantId}/beneficiary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getBeneficiary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/internal/restaurants/products/{productId}/exists": {
         parameters: {
             query?: never;
@@ -776,22 +776,14 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        LocalTime: {
-            /** Format: int32 */
-            hour?: number;
-            /** Format: int32 */
-            minute?: number;
-            /** Format: int32 */
-            second?: number;
-            /** Format: int32 */
-            nano?: number;
-        };
         OutletTimingsUpdateRequest: {
             timings: components["schemas"]["TimingRequest"][];
         };
         TimingRequest: {
-            openingTime: components["schemas"]["LocalTime"];
-            closingTime: components["schemas"]["LocalTime"];
+            /** @example 10:00:00 */
+            openingTime: string;
+            /** @example 22:00:00 */
+            closingTime: string;
         };
         ApiResponseVoid: {
             success: boolean;
@@ -821,6 +813,16 @@ export interface components {
             openingTime: components["schemas"]["LocalTime"];
             closingTime: components["schemas"]["LocalTime"];
         };
+        LocalTime: {
+            /** Format: int32 */
+            hour?: number;
+            /** Format: int32 */
+            minute?: number;
+            /** Format: int32 */
+            second?: number;
+            /** Format: int32 */
+            nano?: number;
+        };
         ApiResponseCategoryDTO: {
             success: boolean;
             message: string;
@@ -829,13 +831,27 @@ export interface components {
             /** Format: date-time */
             timestamp: string;
         };
-        ApiResponseObject: {
+        ApiResponseCampaignDto: {
             success: boolean;
             message: string;
             errorCode?: string;
-            data?: Record<string, never>;
+            data?: components["schemas"]["CampaignDto"];
             /** Format: date-time */
             timestamp: string;
+        };
+        CampaignDto: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            advertiserId?: string;
+            name?: string;
+            /** Format: double */
+            budget?: number;
+            status?: string;
+            /** Format: date-time */
+            startDate?: string;
+            /** Format: date-time */
+            endDate?: string;
         };
         MasterMenuItem: {
             /** Format: uuid */
@@ -847,6 +863,7 @@ export interface components {
             name: string;
             description?: string;
             imageUrl?: string;
+            isVeg?: boolean;
             basePrice: number;
             packingCharge: number;
             /** Format: int32 */
@@ -944,6 +961,14 @@ export interface components {
             data?: string;
             /** Format: date-time */
             timestamp: string;
+        };
+        CampaignRequestDto: {
+            /** Format: uuid */
+            restaurantId?: string;
+            name?: string;
+            /** Format: double */
+            budget?: number;
+            status?: string;
         };
         BrandOnboardRequest: {
             name: string;
@@ -1075,6 +1100,7 @@ export interface components {
             /** Format: uuid */
             categoryId?: string;
             categoryName?: string;
+            isVeg?: boolean;
         };
         ApiResponseListRestaurantOrder: {
             success: boolean;
@@ -1086,15 +1112,13 @@ export interface components {
         };
         RestaurantOrder: {
             /** Format: uuid */
-            id: string;
-            /** Format: uuid */
             restaurantId: string;
             /** @enum {string} */
             status: "CREATED" | "PENDING_ACCEPTANCE" | "AWAITING_DELAY_APPROVAL" | "ACCEPTED" | "PREPARING" | "READY_FOR_PICKUP" | "HANDED_OVER" | "CANCELLED" | "CANCELLED_BY_RESTAURANT";
             /** @enum {string} */
             deliveryStatus: "PENDING" | "SEARCHING_FOR_DRIVER" | "MANUAL_INTERVENTION_REQUIRED" | "ASSIGNED" | "AT_RESTAURANT" | "OUT_FOR_DELIVERY" | "DELIVERED" | "CANCELLED" | "FAILED";
             /** @enum {string} */
-            paymentStatus?: "CREATED" | "INITIATED" | "PENDING" | "SUCCESS" | "FAILED" | "CAPTURED" | "PAID" | "PARTIALLY_REFUNDED" | "REFUNDED" | "REFUND_PENDING" | "REFUND_FAILED";
+            paymentStatus?: "INITIATED" | "SUCCESS" | "FAILED" | "PENDING_COLLECTION" | "COLLECTED" | "PARTIALLY_REFUNDED" | "REFUNDED" | "REFUND_PENDING" | "REFUND_FAILED";
             /** Format: int32 */
             version?: number;
             /** Format: int32 */
@@ -1112,9 +1136,9 @@ export interface components {
             deliveryOtp?: string;
             /** Format: uuid */
             deliveryExecutiveId?: string;
+            /** Format: uuid */
+            customerId?: string;
             customerName?: string;
-            deliveryExecutiveName?: string;
-            total?: number;
             foodCost?: number;
             restaurantPlatformFee?: number;
             restaurantDeliveryContribution?: number;
@@ -1124,16 +1148,11 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             updatedAt?: string;
-        };
-        ApiResponseMapStringObject: {
-            success: boolean;
-            message: string;
-            errorCode?: string;
-            data?: {
-                [key: string]: Record<string, never>;
-            };
-            /** Format: date-time */
-            timestamp: string;
+            /** Format: uuid */
+            id: string;
+            deliveryExecutiveName?: string;
+            total?: number;
+            items?: Record<string, never>;
         };
         ApiResponsePageRestaurantOrder: {
             success: boolean;
@@ -1164,13 +1183,13 @@ export interface components {
         PageableObject: {
             /** Format: int64 */
             offset: number;
-            unpaged: boolean;
             sort?: components["schemas"]["SortObject"];
             paged: boolean;
             /** Format: int32 */
             pageNumber: number;
             /** Format: int32 */
             pageSize: number;
+            unpaged: boolean;
         };
         SortObject: {
             empty: boolean;
@@ -1185,6 +1204,45 @@ export interface components {
             /** Format: date-time */
             timestamp: string;
         };
+        ApiResponseNearbyRestaurantDTO: {
+            success: boolean;
+            message: string;
+            errorCode?: string;
+            data?: components["schemas"]["NearbyRestaurantDTO"];
+            /** Format: date-time */
+            timestamp: string;
+        };
+        NearbyRestaurantDTO: {
+            /** Format: uuid */
+            id?: string;
+            name?: string;
+            isActive?: boolean;
+            /** Format: int32 */
+            defaultPrepTimeSeconds?: number;
+            isOpen?: boolean;
+            /** Format: double */
+            lat?: number;
+            /** Format: double */
+            lng?: number;
+            /** Format: double */
+            distance?: number;
+            image?: string;
+            cuisine?: string;
+            /** Format: double */
+            rating?: number;
+            /** Format: int32 */
+            reviewsCount?: number;
+            /** Format: int32 */
+            deliveryTime?: number;
+            /** Format: double */
+            deliveryFee?: number;
+            tags?: string[];
+            /** Format: uuid */
+            brandId?: string;
+            brandName?: string;
+            isSponsored?: boolean;
+            logoUrl?: string;
+        };
         ApiResponseMapStringString: {
             success: boolean;
             message: string;
@@ -1195,13 +1253,11 @@ export interface components {
             /** Format: date-time */
             timestamp: string;
         };
-        ApiResponseListMapStringObject: {
+        ApiResponseListNearbyRestaurantDTO: {
             success: boolean;
             message: string;
             errorCode?: string;
-            data?: {
-                [key: string]: Record<string, never>;
-            }[];
+            data?: components["schemas"]["NearbyRestaurantDTO"][];
             /** Format: date-time */
             timestamp: string;
         };
@@ -1221,6 +1277,13 @@ export interface components {
             /** Format: date-time */
             timestamp: string;
         };
+        BeneficiaryResponse: {
+            accountNumberMasked?: string;
+            ifsc?: string;
+            beneficiaryName?: string;
+            verified?: boolean;
+            source?: string;
+        };
         ApiResponseBoolean: {
             success: boolean;
             message: string;
@@ -1229,32 +1292,28 @@ export interface components {
             /** Format: date-time */
             timestamp: string;
         };
-        ApiResponsePageMapStringObject: {
+        ApiResponsePageResponseDtoNearbyRestaurantDTO: {
             success: boolean;
             message: string;
             errorCode?: string;
-            data?: components["schemas"]["PageMapStringObject"];
+            data?: components["schemas"]["PageResponseDtoNearbyRestaurantDTO"];
             /** Format: date-time */
             timestamp: string;
         };
-        PageMapStringObject: {
-            /** Format: int32 */
-            totalPages: number;
+        PageResponseDtoNearbyRestaurantDTO: {
+            content: components["schemas"]["NearbyRestaurantDTO"][];
             /** Format: int64 */
             totalElements: number;
             /** Format: int32 */
-            size: number;
-            content: {
-                [key: string]: Record<string, never>;
-            }[];
+            totalPages: number;
+            last: boolean;
             /** Format: int32 */
-            numberOfElements: number;
+            size: number;
             /** Format: int32 */
             number: number;
             first: boolean;
-            last: boolean;
-            sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            numberOfElements: number;
             empty: boolean;
         };
         ApiResponseListCategoryDTO: {
@@ -1262,6 +1321,14 @@ export interface components {
             message: string;
             errorCode?: string;
             data?: components["schemas"]["CategoryDTO"][];
+            /** Format: date-time */
+            timestamp: string;
+        };
+        ApiResponseListCampaignDto: {
+            success: boolean;
+            message: string;
+            errorCode?: string;
+            data?: components["schemas"]["CampaignDto"][];
             /** Format: date-time */
             timestamp: string;
         };
@@ -1276,29 +1343,6 @@ export interface components {
         SseEmitter: {
             /** Format: int64 */
             timeout?: number;
-        };
-        NearbyRestaurantDTO: {
-            /** Format: uuid */
-            id?: string;
-            name?: string;
-            description?: string;
-            image?: string;
-            logoUrl?: string;
-            /** Format: double */
-            rating?: number;
-            /** Format: int32 */
-            reviewCount?: number;
-            /** Format: double */
-            deliveryFee?: number;
-            /** Format: int32 */
-            minDeliveryTime?: number;
-            /** Format: int32 */
-            maxDeliveryTime?: number;
-            /** Format: double */
-            distance?: number;
-            isPromoted?: boolean;
-            isClosed?: boolean;
-            outlets?: components["schemas"]["Outlet"][];
         };
     };
     responses: never;
@@ -1432,7 +1476,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseObject"];
+                    "application/json": components["schemas"]["ApiResponseCampaignDto"];
                 };
             };
         };
@@ -1500,7 +1544,7 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    [key: string]: string;
+                    [key: string]: Record<string, never>;
                 };
             };
         };
@@ -1846,9 +1890,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: Record<string, never>;
-                };
+                "application/json": components["schemas"]["CampaignRequestDto"];
             };
         };
         responses: {
@@ -1858,7 +1900,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseObject"];
+                    "application/json": components["schemas"]["ApiResponseCampaignDto"];
                 };
             };
         };
@@ -2123,29 +2165,6 @@ export interface operations {
             };
         };
     };
-    getOrderInvoice: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                restaurantId: string;
-                orderId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseMapStringObject"];
-                };
-            };
-        };
-    };
     getHistoricalRestaurantOrders: {
         parameters: {
             query?: {
@@ -2233,7 +2252,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseMapStringObject"];
+                    "application/json": components["schemas"]["ApiResponseNearbyRestaurantDTO"];
                 };
             };
         };
@@ -2280,7 +2299,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["NearbyRestaurantDTO"][];
+                    "application/json": components["schemas"]["ApiResponseListNearbyRestaurantDTO"];
                 };
             };
         };
@@ -2306,7 +2325,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseListMapStringObject"];
+                    "application/json": components["schemas"]["ApiResponseListNearbyRestaurantDTO"];
                 };
             };
         };
@@ -2372,6 +2391,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiResponseListTimingDTO"];
+                };
+            };
+        };
+    };
+    getBeneficiary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                restaurantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BeneficiaryResponse"];
                 };
             };
         };
@@ -2506,7 +2547,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["NearbyRestaurantDTO"][];
+                    "application/json": components["schemas"]["ApiResponsePageResponseDtoNearbyRestaurantDTO"];
                 };
             };
         };
@@ -2528,7 +2569,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseObject"];
+                    "application/json": components["schemas"]["ApiResponseListCampaignDto"];
                 };
             };
         };

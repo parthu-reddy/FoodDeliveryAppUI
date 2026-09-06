@@ -14,7 +14,6 @@ window.maplibregl = maplibregl;
 import { useConfig } from "@/contexts/ConfigContext";
 
 import { ErrorBoundary } from "@shared/ui/ErrorBoundary";
-import { asUntyped } from '../../../lib/untypedResponse';
 
 export default function OrderTrackingMap(props: { order: Order; enableLiveTracking?: boolean }) {
   return (
@@ -27,8 +26,7 @@ export default function OrderTrackingMap(props: { order: Order; enableLiveTracki
 function OrderTrackingMapInner({ order, enableLiveTracking = false }: { order: Order; enableLiveTracking?: boolean }) {
   useConfig();
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [, setMapInstance] = useState<any | null>(null);
+  const [, setMapInstance] = useState<unknown | null>(null);
   const { showError } = useToast();
 
   useEffect(() => {
@@ -99,9 +97,9 @@ function OrderTrackingMapInner({ order, enableLiveTracking = false }: { order: O
         let rLng = 77.58;
         try {
           const res = await restaurantApi.restaurantOutlet.get('/api/v1/restaurants/:id', { params: { id: order.restaurantId } });
-          const geo = asUntyped<{ data?: { lat?: number; lng?: number } }>(res);
-          if (geo?.data?.lat) rLat = geo.data.lat;
-          if (geo?.data?.lng) rLng = geo.data.lng;
+          const geo = res;
+          if ((geo?.data)?.lat) rLat = Number((geo.data).lat);
+          if ((geo?.data)?.lng) rLng = Number((geo.data).lng);
         } catch (err: unknown) {
           console.warn('Could not fetch restaurant location, using defaults', err);
         }
@@ -175,7 +173,7 @@ function OrderTrackingMapInner({ order, enableLiveTracking = false }: { order: O
         const drawRoute = async (sourceLat: number, sourceLng: number, destLat: number, destLng: number) => {
           try {
             const res = await deliveryApi.logistics.get('/api/v1/logistics/route', { queries: { sourceLat, sourceLng, destLat, destLng } });
-            const anyRes = res as unknown as { polyline?: string };
+            const anyRes = res as { polyline?: string };
             if (anyRes?.polyline) {
               const decodedCoords = decodePolyline(anyRes.polyline).map(p => [p.lng, p.lat]);
               // @ts-expect-error auto-migration type suppression

@@ -4,7 +4,23 @@
  */
 
 export interface paths {
-    "/api/v1/ledger/payouts/settle": {
+    "/api/v1/admin/payouts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPayouts"];
+        put?: never;
+        post: operations["createPayout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/payouts/{payoutId}/mark-paid": {
         parameters: {
             query?: never;
             header?: never;
@@ -13,21 +29,101 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["settlePayout"];
+        post: operations["markPayoutPaid"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/ledger/payouts/pending": {
+    "/api/v1/admin/payouts/{payoutId}/fail": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["getPendingPayouts"];
+        get?: never;
+        put?: never;
+        post: operations["failPayout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/payouts/{payoutId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cancelPayout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/payouts/{payoutId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["approvePayout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cash/remit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["remitCash"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ledger/statements/{ownerType}/{ownerId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getStatement"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ledger/statements/references/{referenceId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getStatementByReference"];
         put?: never;
         post?: never;
         delete?: never;
@@ -100,33 +196,189 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/payouts/{payoutId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPayout"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/payouts/pending": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPendingPayouts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cash/drivers/{driverId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getCashByDriver"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        PayoutSettlementRequest: {
+        CreatePayoutRequest: {
+            payeeType?: string;
             /** Format: uuid */
-            ownerId: string;
-            /** @enum {string} */
-            ownerType: "CUSTOMER" | "PLATFORM" | "RESTAURANT" | "DRIVER" | "ADVERTISER_WALLET" | "GOVERNMENT";
-            amount: number;
+            payeeId?: string;
+            /** Format: date-time */
+            periodTo?: string;
+            force?: boolean;
         };
-        LedgerAccount: {
+        Payout: {
             /** Format: uuid */
-            id: string;
+            id?: string;
+            payeeType?: string;
+            /** Format: uuid */
+            payeeId?: string;
+            payeeDisplayName?: string;
+            /** Format: date-time */
+            periodFrom?: string;
+            /** Format: date-time */
+            periodTo?: string;
+            amount?: number;
+            currency?: string;
             /** @enum {string} */
-            ownerType: "CUSTOMER" | "PLATFORM" | "RESTAURANT" | "DRIVER" | "ADVERTISER_WALLET" | "GOVERNMENT";
+            status?: "DRAFT" | "APPROVED" | "PAID" | "FAILED" | "CANCELLED";
+            beneficiarySnapshot?: string;
+            bankReference?: string;
+            failureReason?: string;
             /** Format: uuid */
-            ownerId: string;
-            balance: number;
+            createdBy?: string;
+            /** Format: uuid */
+            approvedBy?: string;
+            /** Format: uuid */
+            paidBy?: string;
+            idempotencyKey?: string;
+            /** Format: uuid */
+            ledgerTransactionId?: string;
+            /** Format: uuid */
+            settledTransactionId?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            approvedAt?: string;
+            /** Format: date-time */
+            paidAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        CashRemittanceRequest: {
+            /** Format: uuid */
+            driverId?: string;
+            amount?: number;
+            reference?: string;
+        };
+        CashRemittance: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            driverId?: string;
+            amount?: number;
+            reference?: string;
+            /** Format: uuid */
+            recordedBy?: string;
+            /** Format: uuid */
+            ledgerTransactionId?: string;
+            /** Format: date-time */
+            createdAt?: string;
+        };
+        LedgerStatementLineDto: {
+            /** Format: uuid */
+            transactionId?: string;
+            /** Format: uuid */
+            referenceId?: string;
+            /** @enum {string} */
+            category?: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "CLAWBACK" | "PAYOUT_TRANSFER" | "CASH_COLLECTED" | "CASH_REMITTED" | "STORE_CREDIT";
+            amount?: number;
+            /** @enum {string} */
+            direction?: "CREDIT" | "DEBIT";
+            /** Format: date-time */
+            createdAt?: string;
+            description?: string;
+            /** Format: uuid */
+            payoutId?: string;
+            payoutStatus?: string;
+            settled?: boolean;
+        };
+        PageLedgerStatementLineDto: {
             /** Format: int32 */
-            lockVersion: number;
+            totalPages: number;
+            /** Format: int64 */
+            totalElements: number;
+            /** Format: int32 */
+            size: number;
+            content: components["schemas"]["LedgerStatementLineDto"][];
+            /** Format: int32 */
+            numberOfElements: number;
+            /** Format: int32 */
+            number: number;
+            first: boolean;
+            last: boolean;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
+            empty: boolean;
+        };
+        PageableObject: {
+            /** Format: int64 */
+            offset: number;
+            /** Format: int32 */
+            pageSize: number;
+            sort?: components["schemas"]["SortObject"];
+            paged: boolean;
+            /** Format: int32 */
+            pageNumber: number;
+            unpaged: boolean;
+        };
+        SortObject: {
+            empty: boolean;
+            sorted: boolean;
+            unsorted: boolean;
+        };
+        ApiResponsePageResponseDtoLedgerTransactionDto: {
+            success: boolean;
+            message: string;
+            errorCode?: string;
+            data?: components["schemas"]["PageResponseDtoLedgerTransactionDto"];
+            /** Format: date-time */
+            timestamp: string;
         };
         LedgerTransactionDto: {
             /** Format: uuid */
             transactionId: string;
             /** @enum {string} */
-            category: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "TIP" | "PACKAGING_FEE" | "SURGE_PRICING" | "TAX" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "PAYOUT" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "AD_REVENUE";
+            category: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "CLAWBACK" | "PAYOUT_TRANSFER" | "CASH_COLLECTED" | "CASH_REMITTED" | "STORE_CREDIT";
             /** Format: uuid */
             fromAccountId: string;
             /** Format: uuid */
@@ -135,73 +387,136 @@ export interface components {
             /** Format: date-time */
             date: string;
         };
-        PageLedgerTransactionDto: {
-            /** Format: int32 */
-            totalPages: number;
+        PageResponseDtoLedgerTransactionDto: {
+            content: components["schemas"]["LedgerTransactionDto"][];
             /** Format: int64 */
             totalElements: number;
             /** Format: int32 */
-            size: number;
-            content: components["schemas"]["LedgerTransactionDto"][];
+            totalPages: number;
+            last: boolean;
             /** Format: int32 */
-            numberOfElements: number;
+            size: number;
             /** Format: int32 */
             number: number;
             first: boolean;
-            last: boolean;
-            pageable?: components["schemas"]["PageableObject"];
-            sort?: components["schemas"]["SortObject"];
+            /** Format: int32 */
+            numberOfElements: number;
             empty: boolean;
         };
-        PageableObject: {
-            /** Format: int64 */
-            offset: number;
-            /** Format: int32 */
-            pageSize: number;
-            paged: boolean;
-            /** Format: int32 */
-            pageNumber: number;
-            sort?: components["schemas"]["SortObject"];
-            unpaged: boolean;
-        };
-        SortObject: {
-            empty: boolean;
-            sorted: boolean;
-            unsorted: boolean;
+        ApiResponsePageResponseDtoLedgerEntry: {
+            success: boolean;
+            message: string;
+            errorCode?: string;
+            data?: components["schemas"]["PageResponseDtoLedgerEntry"];
+            /** Format: date-time */
+            timestamp: string;
         };
         LedgerEntry: {
             /** Format: uuid */
-            id: string;
+            id?: string;
             /** Format: uuid */
-            transactionId: string;
+            transactionId?: string;
             /** Format: uuid */
             referenceId?: string;
             /** Format: uuid */
-            accountId: string;
+            accountId?: string;
             /** @enum {string} */
-            direction: "CREDIT" | "DEBIT";
+            direction?: "CREDIT" | "DEBIT";
             /** @enum {string} */
-            category: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "TIP" | "PACKAGING_FEE" | "SURGE_PRICING" | "TAX" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "PAYOUT" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "AD_REVENUE";
-            amount: number;
+            category?: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "CLAWBACK" | "PAYOUT_TRANSFER" | "CASH_COLLECTED" | "CASH_REMITTED" | "STORE_CREDIT";
+            amount?: number;
+            producer?: string;
+            description?: string;
+            authorizedBy?: string;
             /** Format: date-time */
-            createdAt: string;
+            createdAt?: string;
         };
-        PageLedgerEntry: {
+        PageResponseDtoLedgerEntry: {
+            content: components["schemas"]["LedgerEntry"][];
+            /** Format: int64 */
+            totalElements: number;
+            /** Format: int32 */
+            totalPages: number;
+            last: boolean;
+            /** Format: int32 */
+            size: number;
+            /** Format: int32 */
+            number: number;
+            first: boolean;
+            /** Format: int32 */
+            numberOfElements: number;
+            empty: boolean;
+        };
+        LedgerAccount: {
+            /** Format: uuid */
+            id?: string;
+            /** @enum {string} */
+            ownerType?: "GATEWAY_RECEIVABLE" | "CASH_RECEIVABLE" | "BANK" | "PLATFORM_CLEARING" | "PLATFORM_REVENUE" | "TAX_PAYABLE" | "PAYOUT_IN_TRANSIT" | "RESTAURANT_PAYABLE" | "DRIVER_PAYABLE" | "CUSTOMER_CREDIT" | "ADVERTISER_PREPAID";
+            /** Format: uuid */
+            ownerId?: string;
+            /** @enum {string} */
+            kind?: "EXTERNAL" | "INTERNAL" | "PAYABLE" | "PREPAID";
+            balance?: number;
+            currency?: string;
+            /** Format: int32 */
+            lockVersion?: number;
+            /** Format: date-time */
+            createdAt?: string;
+        };
+        PagePayout: {
             /** Format: int32 */
             totalPages: number;
             /** Format: int64 */
             totalElements: number;
             /** Format: int32 */
             size: number;
-            content: components["schemas"]["LedgerEntry"][];
+            content: components["schemas"]["Payout"][];
             /** Format: int32 */
             numberOfElements: number;
             /** Format: int32 */
             number: number;
             first: boolean;
             last: boolean;
-            pageable?: components["schemas"]["PageableObject"];
             sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
+            empty: boolean;
+        };
+        BeneficiaryResponse: {
+            accountNumberMasked?: string;
+            ifsc?: string;
+            beneficiaryName?: string;
+            verified?: boolean;
+            source?: string;
+        };
+        PendingPayoutResponse: {
+            payeeType?: string;
+            /** Format: uuid */
+            payeeId?: string;
+            displayName?: string;
+            unsettledAmount?: number;
+            /** Format: date-time */
+            unsettledSince?: string;
+            /** Format: int32 */
+            lineCount?: number;
+            lastPayout?: components["schemas"]["Payout"];
+            beneficiaryStatus?: components["schemas"]["BeneficiaryResponse"];
+        };
+        PageCashRemittance: {
+            /** Format: int32 */
+            totalPages: number;
+            /** Format: int64 */
+            totalElements: number;
+            /** Format: int32 */
+            size: number;
+            content: components["schemas"]["CashRemittance"][];
+            /** Format: int32 */
+            numberOfElements: number;
+            /** Format: int32 */
+            number: number;
+            first: boolean;
+            last: boolean;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };
     };
@@ -213,35 +528,14 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    settlePayout: {
+    getPayouts: {
         parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PayoutSettlementRequest"];
+            query: {
+                payeeType: string;
+                payeeId: string;
+                page?: number;
+                size?: number;
             };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: string;
-                    };
-                };
-            };
-        };
-    };
-    getPendingPayouts: {
-        parameters: {
-            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -254,7 +548,192 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LedgerAccount"][];
+                    "application/json": components["schemas"]["PagePayout"];
+                };
+            };
+        };
+    };
+    createPayout: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePayoutRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Payout"];
+                };
+            };
+        };
+    };
+    markPayoutPaid: {
+        parameters: {
+            query: {
+                bankReference: string;
+            };
+            header?: never;
+            path: {
+                payoutId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    failPayout: {
+        parameters: {
+            query: {
+                reason: string;
+            };
+            header?: never;
+            path: {
+                payoutId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    cancelPayout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                payoutId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    approvePayout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                payoutId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    remitCash: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CashRemittanceRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CashRemittance"];
+                };
+            };
+        };
+    };
+    getStatement: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                settled?: boolean;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                ownerType: "GATEWAY_RECEIVABLE" | "CASH_RECEIVABLE" | "BANK" | "PLATFORM_CLEARING" | "PLATFORM_REVENUE" | "TAX_PAYABLE" | "PAYOUT_IN_TRANSIT" | "RESTAURANT_PAYABLE" | "DRIVER_PAYABLE" | "CUSTOMER_CREDIT" | "ADVERTISER_PREPAID";
+                ownerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageLedgerStatementLineDto"];
+                };
+            };
+        };
+    };
+    getStatementByReference: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                referenceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LedgerStatementLineDto"][];
                 };
             };
         };
@@ -288,8 +767,8 @@ export interface operations {
                 size?: number;
                 transactionId?: string;
                 ownerId?: string;
-                ownerType?: "CUSTOMER" | "PLATFORM" | "RESTAURANT" | "DRIVER" | "ADVERTISER_WALLET" | "GOVERNMENT";
-                category?: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "TIP" | "PACKAGING_FEE" | "SURGE_PRICING" | "TAX" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "PAYOUT" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "AD_REVENUE";
+                ownerType?: "GATEWAY_RECEIVABLE" | "CASH_RECEIVABLE" | "BANK" | "PLATFORM_CLEARING" | "PLATFORM_REVENUE" | "TAX_PAYABLE" | "PAYOUT_IN_TRANSIT" | "RESTAURANT_PAYABLE" | "DRIVER_PAYABLE" | "CUSTOMER_CREDIT" | "ADVERTISER_PREPAID";
+                category?: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "CLAWBACK" | "PAYOUT_TRANSFER" | "CASH_COLLECTED" | "CASH_REMITTED" | "STORE_CREDIT";
                 direction?: "CREDIT" | "DEBIT";
             };
             header?: never;
@@ -304,7 +783,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PageLedgerTransactionDto"];
+                    "application/json": components["schemas"]["ApiResponsePageResponseDtoLedgerTransactionDto"];
                 };
             };
         };
@@ -316,8 +795,8 @@ export interface operations {
                 size?: number;
                 transactionId?: string;
                 ownerId?: string;
-                ownerType?: "CUSTOMER" | "PLATFORM" | "RESTAURANT" | "DRIVER" | "ADVERTISER_WALLET" | "GOVERNMENT";
-                category?: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "TIP" | "PACKAGING_FEE" | "SURGE_PRICING" | "TAX" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "PAYOUT" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "AD_REVENUE";
+                ownerType?: "GATEWAY_RECEIVABLE" | "CASH_RECEIVABLE" | "BANK" | "PLATFORM_CLEARING" | "PLATFORM_REVENUE" | "TAX_PAYABLE" | "PAYOUT_IN_TRANSIT" | "RESTAURANT_PAYABLE" | "DRIVER_PAYABLE" | "CUSTOMER_CREDIT" | "ADVERTISER_PREPAID";
+                category?: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "CLAWBACK" | "PAYOUT_TRANSFER" | "CASH_COLLECTED" | "CASH_REMITTED" | "STORE_CREDIT";
                 direction?: "CREDIT" | "DEBIT";
             };
             header?: never;
@@ -332,7 +811,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PageLedgerEntry"];
+                    "application/json": components["schemas"]["ApiResponsePageResponseDtoLedgerEntry"];
                 };
             };
         };
@@ -342,7 +821,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                ownerType: "CUSTOMER" | "PLATFORM" | "RESTAURANT" | "DRIVER" | "ADVERTISER_WALLET" | "GOVERNMENT";
+                ownerType: "GATEWAY_RECEIVABLE" | "CASH_RECEIVABLE" | "BANK" | "PLATFORM_CLEARING" | "PLATFORM_REVENUE" | "TAX_PAYABLE" | "PAYOUT_IN_TRANSIT" | "RESTAURANT_PAYABLE" | "DRIVER_PAYABLE" | "CUSTOMER_CREDIT" | "ADVERTISER_PREPAID";
                 ownerId: string;
             };
             cookie?: never;
@@ -356,6 +835,73 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LedgerAccount"];
+                };
+            };
+        };
+    };
+    getPayout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                payoutId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Payout"];
+                };
+            };
+        };
+    };
+    getPendingPayouts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingPayoutResponse"][];
+                };
+            };
+        };
+    };
+    getCashByDriver: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                driverId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageCashRemittance"];
                 };
             };
         };

@@ -72,7 +72,7 @@ interface DeviceSession {
 
   const handleRemoveDevice = async (sessionId: string) => {
     try {
-      await identityApi.auth.delete('/api/v1/internal/auth/sessions/:sessionId', undefined, { params: { sessionId }, headers: { 'X-Calling-Service': portalRole || RoleName.RESTAURANT } as unknown as Record<string, string> });
+      await identityApi.auth.delete('/api/v1/internal/auth/sessions/:sessionId', undefined, { params: { sessionId }, headers: { 'X-Calling-Service': portalRole || RoleName.RESTAURANT } as Record<string, string> });
       fetchDevices();
     } catch (err: unknown) {
       console.error("Failed to invalidate session", err);
@@ -81,7 +81,7 @@ interface DeviceSession {
 
   const handleRemoveAllDevices = async () => {
     try {
-      await identityApi.auth.delete(`/api/v1/internal/auth/sessions`, undefined, { headers: { 'X-Calling-Service': portalRole || RoleName.RESTAURANT } as unknown as Record<string, string> });
+      await identityApi.auth.delete(`/api/v1/internal/auth/sessions`, undefined, { headers: { 'X-Calling-Service': portalRole || RoleName.RESTAURANT } as Record<string, string> });
       if (onLogout) onLogout();
     } catch (e: unknown) {
       console.error('Failed to remove all devices', e);

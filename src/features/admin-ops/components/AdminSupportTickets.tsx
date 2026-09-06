@@ -1,3 +1,4 @@
+import { Order } from "@/types";
 import { useToast } from "@/contexts/ToastContext";
 import { usePolling } from "@/hooks/usePolling";
 import { formatINR } from '@shared/money';
@@ -10,7 +11,6 @@ import { ChatWidget, ChatWidgetHandle } from "@features/communication/components
 import { Button, Textarea } from '@shared/ui';
 import { ShieldCheck, XCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { asUntyped, WirePage } from '../../../lib/untypedResponse';
 
 export default function AdminSupportTickets() {
   const { showSuccess, showError } = useToast();
@@ -38,9 +38,9 @@ export default function AdminSupportTickets() {
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   useEffect(() => {
     if (ticketsResponse) {
-      const content = asUntyped<WirePage<unknown>>(ticketsResponse).content ?? (Array.isArray(ticketsResponse) ? ticketsResponse : []);
+      const content = ticketsResponse.content ?? [];
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setTickets(Array.isArray(content) ? content as SupportTicket[] : []);
+      setTickets(content);
       if (ticketsResponse.totalPages !== undefined) {
         setTotalPages(ticketsResponse.totalPages);
       }
@@ -201,7 +201,7 @@ export default function AdminSupportTickets() {
                 <div className="bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden relative" style={{ minHeight: '400px' }}>
                   {showChat && (
                     <div className="absolute inset-0">
-                      <ChatWidget orderId={String(selectedTicket.id)} order={{ id: String(selectedTicket.id) } as unknown as Record<string, unknown>} currentUserType="ADMIN" otherParticipants={[]} onClose={() => setShowChat(false)} ref={chatWidgetRef} />
+                      <ChatWidget orderId={String(selectedTicket.id)} order={{ id: String(selectedTicket.id) } as Order} currentUserType="ADMIN" otherParticipants={[]} onClose={() => setShowChat(false)} ref={chatWidgetRef} />
                     </div>
                   )}
                   <OpenChatHelper widgetRef={chatWidgetRef} show={showChat} />

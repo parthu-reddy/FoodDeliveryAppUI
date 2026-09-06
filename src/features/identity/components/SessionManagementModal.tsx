@@ -3,7 +3,7 @@ import { Button, Modal, Spinner } from '@shared/ui';
 import { AlertTriangle, Monitor, Smartphone, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
-interface Session {
+export interface Session {
   sessionId: string;
   deviceInfo: string;
   os: string;
@@ -43,9 +43,8 @@ export default function SessionManagementModal({ isOpen, onClose, sessions, phon
       }
       onSuccess(token);
     } catch (err: unknown) {
-      // @ts-expect-error auto-migration type suppression
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setError((err as any).response?.data?.message || (err as any).response?.data?.error || err.message || 'Failed to remove device and login');
+      const axiosErr = err as { response?: { data?: { message?: string, error?: string } }, message?: string };
+      setError(axiosErr.response?.data?.message || axiosErr.response?.data?.error || axiosErr.message || 'Failed to remove device and login');
     } finally {
       setLoadingId(null);
     }

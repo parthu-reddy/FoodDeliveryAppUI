@@ -8,15 +8,11 @@ import { Button, EmptyState, Input, Select } from '@shared/ui';
 import { Plus, Power, Search, User, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
-import { asUntyped, WirePage } from '../../../lib/untypedResponse';
 import { Order } from '@/types';
 
-interface AdminUser {
-  id: string;
-  phoneNumber?: string;
-  roles: string[];
-  isActive: boolean;
-}
+import { schemas as identitySchemas } from '@/api/generated/schemas/identity/internal_user_controller';
+
+type AdminUser = z.infer<typeof identitySchemas.UserDTO>;
 
 const roleSchema = z.string().min(2, "Role must be at least 2 characters").max(50, "Role cannot exceed 50 characters").regex(/^[A-Z_]+$/, "Role must contain only uppercase letters and underscores");
 
@@ -40,19 +36,21 @@ export default function AdminUserManagement() {
       if (roleFilter === 'ALL') {
           res = await identityApi.internalUser.get('/api/v1/internal/users/admin/all', { queries: { page } });
       } else {
-          res = await identityApi.internalUser.get('/api/v1/internal/users/by-role', { queries: { role: roleFilter, page } as unknown as never, headers: { 'X-Calling-Service': RoleName.ADMIN } });
+          res = await identityApi.internalUser.get('/api/v1/internal/users/by-role', { queries: { role: roleFilter as "CUSTOMER"|"DELIVERY"|"RESTAURANT"|"ADMIN", page }, headers: { 'X-Calling-Service': RoleName.ADMIN } });
       }
-      return (res as {data?:{data?:unknown}}).data?.data || (res as {data?:unknown}).data || res;
+      return res.data;
     },
     intervalMs: 30000,
     enabled: !debouncedSearchQuery,
     onData: (response) => {
         if (!debouncedSearchQuery) {
-            const page = asUntyped<WirePage<unknown>>(response);
-            const content = page.content ?? (Array.isArray(response) ? response : []);
-            setUsers(Array.isArray(content) ? content : []);
-            if (page.totalPages !== undefined) {
-                setTotalPages(page.totalPages);
+            const page = response;
+            if (page) {
+              const content = page.content ?? [];
+              setUsers(content);
+              if (page.totalPages !== undefined) {
+                  setTotalPages(page.totalPages);
+              }
             }
         }
     }
@@ -65,7 +63,7 @@ export default function AdminUserManagement() {
         const res = await identityApi.internalUser.get('/api/v1/internal/users/:id', { params: { id: debouncedSearchQuery }, headers: { 'X-Calling-Service': RoleName.ADMIN } });
         // @ts-expect-error auto-migration type suppression
         if (res && (res as AdminUser).id) {
-          setUsers([res as unknown as AdminUser]);
+          setUsers([res.data?.data as AdminUser]);
         } else {
           setUsers([]);
         }
@@ -79,9 +77,9 @@ export default function AdminUserManagement() {
 
   const fetchUserActiveOrders = async (userId: string) => {
     try {
-      const res = await customerApi.adminOrder.get('/api/v1/internal/admin/orders/user/:userId/active', { params: { userId }, queries: { pageable: { page: 0, size: 20 } } as unknown as never, headers: { 'X-Calling-Service': 'ADMIN' } as unknown as never });
-      const data = asUntyped<WirePage<unknown>>(res).content ?? res;
-      setUserActiveOrders(Array.isArray(data) ? data as Order[] : []);
+      const res = await customerApi.adminOrder.get('/api/v1/internal/admin/orders/user/:userId/active', { params: { userId }, queries: { pageable: { page: 0, size: 20 } } });
+      const data = res.content ?? [];
+      setUserActiveOrders(data);
     } catch (e: unknown) {
       console.error(e);
       setUserActiveOrders([]);
@@ -109,18 +107,19 @@ export default function AdminUserManagement() {
       return;
     }
     
+    const newRoleTyped = newRole as "CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN";
     // Optimistic UI Update
-    setSelectedUser({ ...selectedUser, roles: [...(selectedUser.roles || []), newRole] });
-    setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, roles: [...(u.roles || []), newRole] } : u));
+    setSelectedUser({ ...selectedUser, roles: [...(selectedUser.roles || []), newRoleTyped] });
+    setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, roles: [...(u.roles || []), newRoleTyped] } : u));
     
     try {
-      await identityApi.internalUser.post('/api/v1/internal/users/:id/roles', { roleName: newRole as "CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN" }, { params: { id: selectedUser.id }, headers: { 'X-Calling-Service': RoleName.ADMIN } } as unknown as never);
+      await identityApi.internalUser.post('/api/v1/internal/users/:id/roles', { serviceName: "CustomerApplication", roleName: newRole }, { params: { id: selectedUser.id }, headers: { 'X-Calling-Service': RoleName.ADMIN } });
       setNewRole('');
     } catch (e: unknown) {
       console.error(e);
       showError(parseApiError(e, "Failed to add role").message);
       fetchByRole(); // Revert
-      setSelectedUser((prev: AdminUser | null) => prev ? { ...prev, roles: prev.roles.filter((r: string) => r !== newRole) } : null);
+      setSelectedUser((prev: AdminUser | null) => prev ? { ...prev, roles: prev.roles.filter((r) => r !== newRole) } : null);
     }
   };
 
@@ -128,26 +127,26 @@ export default function AdminUserManagement() {
     if (!selectedUser) return;
     
     // Optimistic UI Update
-    setSelectedUser({ ...selectedUser, roles: selectedUser.roles.filter((r: string) => r !== role) });
-    setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, roles: u.roles.filter((r: string) => r !== role) } : u));
+    setSelectedUser({ ...selectedUser, roles: selectedUser.roles.filter(r => r !== role) });
+    setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, roles: u.roles.filter(r => r !== role) } : u));
 
     try {
-      await identityApi.internalUser.delete('/api/v1/internal/users/:id/roles/:roleName', undefined, { params: { id: selectedUser.id, roleName: role as "CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN" }, headers: { 'X-Calling-Service': RoleName.ADMIN } as unknown as never });
+      await identityApi.internalUser.delete('/api/v1/internal/users/:id/roles/:roleName', undefined, { params: { id: selectedUser.id, roleName: role as "CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN" }, headers: { 'X-Calling-Service': RoleName.ADMIN } });
     } catch (e: unknown) {
       console.error(e);
       showError(parseApiError(e, "Failed to remove role").message);
       fetchByRole(); // Revert
-      setSelectedUser((prev: AdminUser | null) => prev ? { ...prev, roles: [...prev.roles, role] } : null);
+      setSelectedUser((prev: AdminUser | null) => prev ? { ...prev, roles: [...(prev.roles || []), role as "CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN"] } : null);
     }
   };
 
   const handleToggleStatus = async () => {
     if (!selectedUser) return;
-    const newStatus = !selectedUser.isActive;
+    const newStatus = !selectedUser.active;
     
     // Optimistic UI update
-    setSelectedUser({ ...selectedUser, isActive: newStatus });
-    setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, isActive: newStatus } : u));
+    setSelectedUser({ ...selectedUser, active: newStatus });
+    setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, active: newStatus } : u));
 
     try {
       await identityApi.internalUser.put('/api/v1/internal/users/admin/:userId/status', { isActive: newStatus }, { params: { userId: selectedUser.id } });
@@ -156,7 +155,7 @@ export default function AdminUserManagement() {
       console.error(e);
       showError(parseApiError(e, "Failed to update user status").message);
       fetchByRole();
-      setSelectedUser({ ...selectedUser, isActive: !newStatus });
+      setSelectedUser({ ...selectedUser, active: !newStatus });
     }
   };
 
@@ -192,7 +191,7 @@ export default function AdminUserManagement() {
                 >
                     <div className="flex items-center justify-between">
                         <p className="font-bold">{user.id.substring(0, 8)}...</p>
-                        {!user.isActive && <span className="text-xs px-2 py-1 bg-red-500 text-white rounded-full">Suspended</span>}
+                        {user.active === false && <span className="text-xs px-2 py-1 bg-red-500 text-white rounded-full">Suspended</span>}
                     </div>
                     <p className={`text-sm mb-1 ${selectedUser?.id === user.id ? 'text-indigo-100' : 'text-slate-500'}`}>{user.phoneNumber}</p>
                     <div className="flex gap-1 flex-wrap">
@@ -240,12 +239,12 @@ export default function AdminUserManagement() {
                         <p className="text-slate-500">Manage roles, status, and view history.</p>
                     </div>
                     <Button
-                        variant={selectedUser.isActive ? 'danger' : 'outline'}
+                        variant={selectedUser.active !== false ? 'danger' : 'outline'}
                         onClick={handleToggleStatus}
                         icon={<Power className="w-4 h-4" />}
-                        className={!selectedUser.isActive ? '!bg-emerald-500/10 !text-emerald-500 hover:!bg-emerald-500/20' : ''}
+                        className={selectedUser.active === false ? '!bg-emerald-500/10 !text-emerald-500 hover:!bg-emerald-500/20' : ''}
                     >
-                        {selectedUser.isActive ? 'Suspend User' : 'Activate User'}
+                        {selectedUser.active !== false ? 'Suspend User' : 'Activate User'}
                     </Button>
                 </div>
 
@@ -257,8 +256,8 @@ export default function AdminUserManagement() {
                     <div className="glass-card p-4">
                         <p className="text-sm text-slate-500 mb-1">Status</p>
                         <p className="font-mono text-sm">
-                            <span className={selectedUser.isActive ? 'text-emerald-500' : 'text-rose-500'}>
-                                {selectedUser.isActive ? 'Active' : 'Suspended'}
+                            <span className={selectedUser.active !== false ? 'text-emerald-500' : 'text-rose-500'}>
+                                {selectedUser.active !== false ? 'Active' : 'Suspended'}
                             </span>
                         </p>
                     </div>

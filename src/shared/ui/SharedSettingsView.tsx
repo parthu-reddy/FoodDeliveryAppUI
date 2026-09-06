@@ -10,7 +10,6 @@ import { formatINR } from '@shared/money';
 import { z } from 'zod';
 import { useToast } from '../../contexts/ToastContext';
 import { customerApi, identityApi, walletApi } from '../../lib/zodiosClients';
-import { fromContract, asUntyped } from '../../lib/untypedResponse';
 const sharedProfileSchema = z.object({
   name: z.string().min(1, 'Please enter your full name.').max(100, 'Name cannot exceed 100 characters.'),
   email: z.string().min(1, 'Please enter your email address.').email('Please enter a valid email address.').max(255, 'Email cannot exceed 255 characters.')
@@ -102,7 +101,7 @@ export default function SharedSettingsView({
          throw new Error(`Unsupported order type: ${type}`);
       }
       
-      const res = asUntyped<unknown>(rawRes) as {data?: {content?: Order[], last?: boolean}} | {data?: Order[]} | undefined;
+      const res = rawRes as {data?: {content?: Order[], last?: boolean}} | {data?: Order[]} | undefined;
       
       if (res?.data && 'content' in res.data) {
         if (type === 'history') {
@@ -111,11 +110,6 @@ export default function SharedSettingsView({
           setHasMoreOrders(!res.data.last);
           setCurrentPageOrders(page);
         }
-      } else if (res?.data && Array.isArray(res.data)) { // fallback
-         if (type === 'history') {
-             setPaginatedOrders(res.data as Order[]);
-             setHasMoreOrders(false);
-         }
       }
     } catch (e: unknown) {
       console.error(e);
@@ -136,10 +130,9 @@ export default function SharedSettingsView({
       if (balanceRes) setWalletBalance(balanceRes.balance ?? 0);
       
       const txRes = await walletApi.wallet.get('/api/v1/wallets/:entityType/:entityId/transactions', { params: { entityType: 'CUSTOMER', entityId: customerId }, queries: { page: txPage } });
-      if (txRes.data) {
-        const typedTxRes = txRes as { content?: unknown[], totalPages?: number };
-        setTransactions(fromContract(typedTxRes.content ?? []) as WalletTransaction[]);
-        setTxTotalPages(typedTxRes.totalPages || 1);
+      if (txRes && txRes.content) {
+        setTransactions((txRes.content as WalletTransaction[]) ?? []);
+        setTxTotalPages(txRes.totalPages || 1);
       }
     } catch (e: unknown) {
       console.error(e);
@@ -354,7 +347,7 @@ export default function SharedSettingsView({
                     {order.items && order.items.length > 0 && (
                       <ul className="list-disc pl-4 space-y-0.5 text-slate-400">
                         {order.items.map((it: unknown, idx: number) => {
-                          const item = asUntyped<unknown>(it) as { quantity?: number, item?: { name?: string }, name?: string };
+                          const item = it as { quantity?: number, item?: { name?: string }, name?: string };
                           return <li key={idx}>{item.quantity || 1}x {item.item?.name || item.name || 'Item'}</li>
                         })}
                       </ul>
@@ -381,7 +374,7 @@ export default function SharedSettingsView({
             {savedAddresses && savedAddresses.length > 0 ? (
               <div className="flex flex-col gap-3">
                 {savedAddresses.map((a: unknown) => {
-                  const addr = asUntyped<unknown>(a) as { id: string, label?: string, addressLine1?: string, addressLine2?: string, city?: string, state?: string, zipCode?: string };
+                  const addr = a as { id: string, label?: string, addressLine1?: string, addressLine2?: string, city?: string, state?: string, zipCode?: string };
                   return (
                   <div
                     key={addr.id}

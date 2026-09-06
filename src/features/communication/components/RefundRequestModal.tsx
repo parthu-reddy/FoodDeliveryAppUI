@@ -30,9 +30,8 @@ export const RefundRequestModal: React.FC<RefundRequestModalProps> = ({
       if (isOpen && orderId && !order) {
         setLoading(true);
         try {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const res: any = await customerApi.order.get('/api/v1/orders/:orderId', { params: { orderId } });
-          if (isMounted) setOrder(res.data?.data || res.data);
+          const res = await customerApi.order.get('/api/v1/orders/:orderId', { params: { orderId } });
+          if (isMounted) setOrder((res.data && 'data' in res.data ? res.data.data : res.data) as import('@/types').Order);
         } catch (err) {
           console.error('Failed to fetch order details for refund', err);
         } finally {
@@ -123,8 +122,7 @@ export const RefundRequestModal: React.FC<RefundRequestModalProps> = ({
                   <div>
                     <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">Select Items to Refund</h4>
                     <div className="space-y-3">
-                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                      {order.items?.map((item: any, idx: number) => {
+                      {order.items?.map((item: import('@/types').OrderItem, idx: number) => {
                         const itemId = item.item?.id || item.id || `item-${idx}`;
                         const itemName = item.item?.name || item.name || 'Unknown Item';
                         const itemPrice = item.item?.price || item.price || 0;

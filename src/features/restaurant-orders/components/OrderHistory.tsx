@@ -73,7 +73,7 @@ interface RawOrder {
               createdAt: o.createdAt || new Date().toISOString()
             };
           });
-          setOrders(mapped as unknown as Order[]);
+          setOrders(mapped as Order[]);
           setTotalPages(res.data.totalPages || 1);
           setTotalElements(res.data.totalElements || mapped.length);
         }

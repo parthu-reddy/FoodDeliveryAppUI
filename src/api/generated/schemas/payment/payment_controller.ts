@@ -4,6 +4,7 @@ import { z } from "zod";
 export const RefundRequest = z
   .object({
     gatewayOrderId: z.string(),
+    refundId: z.string(),
     amountInInr: z.number(),
     reason: z.string().optional(),
   })
@@ -17,6 +18,7 @@ export const CreateOrderRequest = z
       ),
     amountInInr: z.number(),
     customerPhone: z.string().optional(),
+    paymentMethod: z.enum(["CARD", "UPI", "WALLET", "COD"]),
   })
   .passthrough();
 
@@ -57,26 +59,12 @@ export const endpoints = makeApi([
         schema: CreateOrderRequest,
       },
       {
-        name: "gateway",
-        type: "Query",
-        schema: z.enum(["RAZORPAY", "CASHFREE", "VYAPAR"]),
+        name: "Idempotency-Key",
+        type: "Header",
+        schema: z.string().optional(),
       },
     ],
     response: z.void(),
-  },
-  {
-    method: "get",
-    path: "/api/v1/payments/status",
-    alias: "getPaymentStatus",
-    requestFormat: "json",
-    parameters: [
-      {
-        name: "orderId",
-        type: "Query",
-        schema: z.string(),
-      },
-    ],
-    response: z.record(z.object({}).partial().passthrough()),
   },
 ]);
 

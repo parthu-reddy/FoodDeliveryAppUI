@@ -84,6 +84,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/internal/admin/payments/dlq/webhooks/{eventId}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["retryWebhookEvent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/internal/admin/payments/dlq/retry": {
         parameters: {
             query?: never;
@@ -116,14 +132,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/payments/status": {
+    "/api/v1/internal/payments/daily-totals": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["getPaymentStatus"];
+        get: operations["getDailyTotals"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/internal/admin/payments/dlq/webhooks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getFailedWebhooks"];
         put?: never;
         post?: never;
         delete?: never;
@@ -154,6 +186,7 @@ export interface components {
     schemas: {
         RefundRequest: {
             gatewayOrderId: string;
+            refundId: string;
             amountInInr: number;
             reason?: string;
         };
@@ -161,6 +194,8 @@ export interface components {
             internalOrderId: string;
             amountInInr: number;
             customerPhone?: string;
+            /** @enum {string} */
+            paymentMethod: "CARD" | "UPI" | "WALLET" | "COD";
         };
         ApiResponseString: {
             success: boolean;
@@ -170,6 +205,40 @@ export interface components {
             /** Format: date-time */
             timestamp: string;
         };
+        PageResponseDtoWebhookDelivery: {
+            content: components["schemas"]["WebhookDelivery"][];
+            /** Format: int64 */
+            totalElements: number;
+            /** Format: int32 */
+            totalPages: number;
+            last: boolean;
+            /** Format: int32 */
+            size: number;
+            /** Format: int32 */
+            number: number;
+            first: boolean;
+            /** Format: int32 */
+            numberOfElements: number;
+            empty: boolean;
+        };
+        WebhookDelivery: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: int32 */
+            version?: number;
+            /** @enum {string} */
+            gatewayName?: "RAZORPAY" | "CASHFREE" | "VYAPAR";
+            eventId?: string;
+            eventType?: string;
+            payload?: string;
+            /** @enum {string} */
+            processingStatus?: "PENDING" | "COMPLETED" | "FAILED" | "DEAD_LETTER";
+            errorLog?: string;
+        };
         OutboxEventEntity: {
             /** Format: uuid */
             id: string;
@@ -177,7 +246,7 @@ export interface components {
             aggregateType: "ORDER" | "PAYMENT" | "NOTIFICATION" | "OUTLET" | "BRAND" | "LEDGER" | "ADVERTISEMENT" | "WALLET" | "CHAT_SESSION" | "REVIEW";
             aggregateId: string;
             /** @enum {string} */
-            eventType: "ORDER_CREATED" | "ORDER_PAID" | "ORDER_ACCEPTED" | "ORDER_PREPARING" | "ORDER_READY" | "ORDER_DELIVERED" | "ORDER_REJECTED" | "ORDER_AT_RESTAURANT" | "ORDER_STATUS_UPDATED" | "ORDER_STATUS_SYNC" | "ORDER_CANCELLED" | "ORDER_CANCELLED_BY_RESTAURANT" | "ORDER_CANCELLED_BY_CUSTOMER" | "ORDER_CANCELLED_BY_ADMIN" | "ORDER_DELAY_APPROVAL_REQUESTED" | "ORDER_DELAY_APPROVED" | "ORDER_DELAY_REJECTED" | "DISPATCH_CANDIDATE_FOUND" | "DISPATCH_FAILED" | "DRIVER_ASSIGNED" | "ORDER_DRIVER_REJECTED" | "MANUAL_INTERVENTION_REQUIRED" | "FORCE_ASSIGN_DRIVER" | "DELIVERY_FAILED" | "NOTIFICATION_REQUEST" | "NOTIFICATION_DISPATCH" | "PAYMENT_WEBHOOK" | "PAYMENT_COMPLETED" | "PAYMENT_FAILED" | "PAYMENT_REFUNDED" | "PAYMENT_REFUND_REQUESTED" | "PAYMENT_PARTIALLY_REFUNDED" | "ORDER_PARTIALLY_REFUNDED" | "LEDGER_TRANSACTION_REQUEST" | "LEDGER_TRANSACTION_FAILED" | "LEDGER_REVERSAL_REQUEST" | "LEDGER_BULK_TRANSACTION_REQUEST" | "OUTLET_ACTIVATED" | "MENU_UPDATED" | "OUTLET_DEACTIVATED" | "BRAND_CREATED" | "AD_CAMPAIGN_CREATED" | "AD_CAMPAIGN_UPDATED" | "AD_CAMPAIGN_PAUSED" | "AD_CAMPAIGN_RESUMED" | "AD_CAMPAIGN_COMPLETED" | "AD_CAMPAIGN_DELETED" | "AD_CREATIVE_PENDING" | "AD_CREATIVE_APPROVED" | "AD_CREATIVE_REJECTED" | "AD_CAMPAIGN_BUDGET_EXHAUSTED" | "AD_CAMPAIGN_PACING_UPDATED" | "AD_IMPRESSION_BILLED" | "AD_CLICK_BILLED" | "AD_CONVERSION_BILLED" | "AD_WALLET_TOPUP_REQUEST" | "AD_WALLET_TOPUP_COMPLETED" | "AD_BUDGET_ALERT" | "REFUND_GENERATED" | "REVERSAL_GENERATED" | "EARNINGS_GENERATED" | "PAYOUT_GENERATED" | "CHAT_REFUND_QUOTE_REQUESTED" | "CHAT_REFUND_REQUESTED" | "CHAT_REFUND_QUOTE_RESPONSE" | "CHAT_REFUND_DECISION" | "CHAT_REFUND_ERROR" | "REVIEW_CREATED";
+            eventType: "ORDER_CREATED" | "ORDER_PAID" | "ORDER_PLACED_COD" | "ORDER_ACCEPTED" | "ORDER_PREPARING" | "ORDER_READY" | "ORDER_DELIVERED" | "ORDER_REJECTED" | "ORDER_AT_RESTAURANT" | "ORDER_STATUS_UPDATED" | "ORDER_STATUS_SYNC" | "ORDER_CANCELLED" | "ORDER_CANCELLED_BY_RESTAURANT" | "ORDER_CANCELLED_BY_CUSTOMER" | "ORDER_CANCELLED_BY_ADMIN" | "ORDER_DELAY_APPROVAL_REQUESTED" | "ORDER_DELAY_APPROVED" | "ORDER_DELAY_REJECTED" | "DISPATCH_CANDIDATE_FOUND" | "DISPATCH_FAILED" | "DRIVER_ASSIGNED" | "ORDER_DRIVER_REJECTED" | "MANUAL_INTERVENTION_REQUIRED" | "FORCE_ASSIGN_DRIVER" | "DELIVERY_FAILED" | "NOTIFICATION_REQUEST" | "NOTIFICATION_DISPATCH" | "PAYMENT_WEBHOOK" | "PAYMENT_COMPLETED" | "PAYMENT_FAILED" | "PAYMENT_REFUNDED" | "PAYMENT_REFUND_REQUESTED" | "PAYMENT_REFUND_FAILED" | "REFUND_REQUESTED" | "REFUND_FAILED" | "PAYMENT_PARTIALLY_REFUNDED" | "ORDER_PARTIALLY_REFUNDED" | "LEDGER_TRANSACTION_REQUEST" | "OUTLET_ACTIVATED" | "MENU_UPDATED" | "OUTLET_DEACTIVATED" | "BRAND_CREATED" | "AD_CAMPAIGN_CREATED" | "AD_CAMPAIGN_UPDATED" | "AD_CAMPAIGN_PAUSED" | "AD_CAMPAIGN_RESUMED" | "AD_CAMPAIGN_COMPLETED" | "AD_CAMPAIGN_DELETED" | "AD_CREATIVE_PENDING" | "AD_CREATIVE_APPROVED" | "AD_CREATIVE_REJECTED" | "AD_CAMPAIGN_BUDGET_EXHAUSTED" | "AD_CAMPAIGN_PACING_UPDATED" | "AD_IMPRESSION_BILLED" | "AD_CLICK_BILLED" | "AD_CONVERSION_BILLED" | "AD_WALLET_TOPUP_REQUEST" | "AD_WALLET_TOPUP_COMPLETED" | "AD_BUDGET_ALERT" | "CHAT_REFUND_QUOTE_REQUESTED" | "CHAT_REFUND_REQUESTED" | "CHAT_REFUND_QUOTE_RESPONSE" | "CHAT_REFUND_DECISION" | "CHAT_REFUND_ERROR" | "REVIEW_CREATED";
             idempotencyKey?: string;
             payload: string;
             /** Format: date-time */
@@ -191,39 +260,21 @@ export interface components {
             retryCount: number;
             new?: boolean;
         };
-        PageOutboxEventEntity: {
-            /** Format: int32 */
-            totalPages: number;
+        PageResponseDtoOutboxEventEntity: {
+            content: components["schemas"]["OutboxEventEntity"][];
             /** Format: int64 */
             totalElements: number;
             /** Format: int32 */
-            numberOfElements: number;
-            first: boolean;
+            totalPages: number;
             last: boolean;
-            sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             size: number;
-            content: components["schemas"]["OutboxEventEntity"][];
             /** Format: int32 */
             number: number;
-            empty: boolean;
-        };
-        PageableObject: {
-            sort?: components["schemas"]["SortObject"];
-            paged: boolean;
+            first: boolean;
             /** Format: int32 */
-            pageNumber: number;
-            /** Format: int32 */
-            pageSize: number;
-            unpaged: boolean;
-            /** Format: int64 */
-            offset: number;
-        };
-        SortObject: {
+            numberOfElements: number;
             empty: boolean;
-            sorted: boolean;
-            unsorted: boolean;
         };
     };
     responses: never;
@@ -332,10 +383,10 @@ export interface operations {
     };
     createOrder: {
         parameters: {
-            query: {
-                gateway: "RAZORPAY" | "CASHFREE" | "VYAPAR";
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string;
             };
-            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -352,6 +403,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": string;
+                };
+            };
+        };
+    };
+    retryWebhookEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseString"];
                 };
             };
         };
@@ -408,10 +481,10 @@ export interface operations {
             };
         };
     };
-    getPaymentStatus: {
+    getDailyTotals: {
         parameters: {
             query: {
-                orderId: string;
+                date: string;
             };
             header?: never;
             path?: never;
@@ -426,8 +499,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        [key: string]: Record<string, never>;
+                        [key: string]: number;
                     };
+                };
+            };
+        };
+    };
+    getFailedWebhooks: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageResponseDtoWebhookDelivery"];
                 };
             };
         };
@@ -450,7 +546,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PageOutboxEventEntity"];
+                    "application/json": components["schemas"]["PageResponseDtoOutboxEventEntity"];
                 };
             };
         };

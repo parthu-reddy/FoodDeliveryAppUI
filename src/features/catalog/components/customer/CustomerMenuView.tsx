@@ -171,7 +171,7 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
               <h5 className="font-extrabold text-sm text-slate-800 dark:text-slate-300 uppercase tracking-widest">{category}</h5>
               <div className="space-y-4">
                 {(dishes as MenuItem[]).map(dish => {
-                  const cartQty = carts[selectedRestaurant.id]?.items.find((i) => i.item.id === dish.id)?.quantity || 0;
+                  const cartQty = carts[selectedRestaurant.id as string]?.items.find((i: import('@/types').CartItem) => i.item.id === dish.id)?.quantity || 0;
                   
                   return (
                     <div 
@@ -221,7 +221,7 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
                           ) : cartQty > 0 ? (
                             <div className="flex items-center bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl overflow-hidden font-bold shadow-md shadow-orange-500/15">
                               <button 
-                                onClick={() => removeFromCart(dish.id as string, selectedRestaurant.id)}
+                                onClick={() => removeFromCart(dish.id as string, selectedRestaurant.id as string)}
                                 className="px-3 py-1.5 hover:bg-orange-600 cursor-pointer"
                               >
                                 <Minus className="w-3.5 h-3.5" />

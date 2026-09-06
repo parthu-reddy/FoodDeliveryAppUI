@@ -6,7 +6,6 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
-import { asUntyped, fromContract } from '../../../lib/untypedResponse';
 
 const addressSchema = z.object({
   label: z.string().min(1, 'Label is required').max(50, 'Label cannot exceed 50 characters'),
@@ -115,7 +114,7 @@ export default function CustomerAddressPage({
                 if (active && res.address) {
                    // @ts-expect-error auto-migration type suppression
                    setAddress(res.address);
-                   const parts = (asUntyped<{ address?: string }>(res).address ?? '').split(',').map((p: string) => p.trim());
+                   const parts = ((res.address as string) ?? '').split(',').map((p: string) => p.trim());
                    let zip = '';
                    let state = '';
                    let city = '';
@@ -197,7 +196,7 @@ export default function CustomerAddressPage({
             onAddApiLog({ id: 'autocomplete', label: `GET /api/places/autocomplete?input=${encodeURIComponent(addressSearchQuery)}`, method: 'GET' });
          }
          const res = await mapsApi.integration.get('/api/places/autocomplete', { queries: { input: addressSearchQuery } });
-         setSuggestions(fromContract(res ?? []) as SearchSuggestion[]);
+         setSuggestions((res as SearchSuggestion[]) ?? []);
        } catch (e: unknown) {
          console.error(e);
        } finally {

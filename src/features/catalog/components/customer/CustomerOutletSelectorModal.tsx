@@ -12,8 +12,7 @@ interface CustomerOutletSelectorModalProps {
   onAddApiLog?: (log: unknown) => void;
   deliveryLat?: number | null;
   deliveryLng?: number | null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  carts?: any;
+  carts?: Record<string, { items: import('@/types').CartItem[] }>;
   clearCart?: (restaurantId: string) => void;
 }
 
@@ -42,10 +41,10 @@ const CustomerOutletSelectorModal: React.FC<CustomerOutletSelectorModalProps> = 
             <button
               key={outlet.id}
               onClick={() => {
-                const hasActiveCart = selectedRestaurant && carts?.[selectedRestaurant.id]?.items?.length > 0;
+                const hasActiveCart = selectedRestaurant && selectedRestaurant.id && (carts?.[selectedRestaurant.id]?.items?.length ?? 0) > 0;
                 if (hasActiveCart && selectedRestaurant.id !== outlet.id) {
                   if (window.confirm(`You have items in your cart from ${selectedRestaurant.name}. Switching outlets will clear your active cart. Continue?`)) {
-                    if (clearCart) clearCart(selectedRestaurant.id);
+                    if (clearCart) clearCart(selectedRestaurant.id as string);
                     setSelectedRestaurant(outlet);
                     if (onAddApiLog) {
                       onAddApiLog({ id: 'catalog', label: `GET /api/v1/restaurants/${outlet.id}/catalog/items`, method: 'GET' });

@@ -132,6 +132,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/internal/wallets/transactions/reference/{referenceId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getTransactionByReference"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/internal/wallets/balances": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getBalances"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/internal/admin/wallet/dlq/outbox": {
         parameters: {
             query?: never;
@@ -156,24 +188,27 @@ export interface components {
             /** Format: uuid */
             entityId?: string;
             /** @enum {string} */
-            entityType?: "CUSTOMER" | "RESTAURANT" | "DRIVER" | "PLATFORM" | "ADVERTISER";
-            currency: string;
+            entityType?: "CUSTOMER" | "ADVERTISER";
+            currency?: string;
         };
         WalletDto: {
             /** Format: uuid */
-            id: string;
+            id?: string;
             /** Format: uuid */
-            entityId: string;
+            entityId?: string;
             /** @enum {string} */
-            entityType: "CUSTOMER" | "RESTAURANT" | "DRIVER" | "PLATFORM" | "ADVERTISER";
-            balance: number;
-            currency: string;
+            entityType?: "CUSTOMER" | "ADVERTISER";
+            balance?: number;
+            currency?: string;
             /** @enum {string} */
-            status: "ACTIVE" | "SUSPENDED" | "CLOSED";
+            status?: "ACTIVE" | "SUSPENDED" | "CLOSED";
         };
         TransactionRequest: {
             amount: number;
-            referenceId?: string;
+            /** Format: uuid */
+            referenceId: string;
+            /** @enum {string} */
+            category: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "CLAWBACK" | "PAYOUT_TRANSFER" | "CASH_COLLECTED" | "CASH_REMITTED" | "STORE_CREDIT";
             description?: string;
         };
         TopupWalletRequest: {
@@ -199,33 +234,33 @@ export interface components {
             timestamp: string;
         };
         PageWalletTransactionDto: {
-            /** Format: int32 */
-            totalPages: number;
             /** Format: int64 */
             totalElements: number;
+            /** Format: int32 */
+            totalPages: number;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            numberOfElements: number;
+            first: boolean;
+            last: boolean;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["WalletTransactionDto"][];
             /** Format: int32 */
-            numberOfElements: number;
-            /** Format: int32 */
             number: number;
-            first: boolean;
-            last: boolean;
-            pageable?: components["schemas"]["PageableObject"];
-            sort?: components["schemas"]["SortObject"];
             empty: boolean;
         };
         PageableObject: {
-            /** Format: int64 */
-            offset: number;
+            sort?: components["schemas"]["SortObject"];
             paged: boolean;
             /** Format: int32 */
             pageNumber: number;
             /** Format: int32 */
             pageSize: number;
-            sort?: components["schemas"]["SortObject"];
             unpaged: boolean;
+            /** Format: int64 */
+            offset: number;
         };
         SortObject: {
             empty: boolean;
@@ -239,12 +274,30 @@ export interface components {
             walletId: string;
             amount: number;
             /** @enum {string} */
-            transactionType: "CREDIT" | "DEBIT" | "HOLD" | "RELEASE" | "REFUND";
+            transactionType: "CREDIT" | "DEBIT";
             referenceId?: string;
             description?: string;
             /** Format: date-time */
             createdAt: string;
             metadata?: string;
+        };
+        PageWalletDto: {
+            /** Format: int64 */
+            totalElements: number;
+            /** Format: int32 */
+            totalPages: number;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            numberOfElements: number;
+            first: boolean;
+            last: boolean;
+            /** Format: int32 */
+            size: number;
+            content: components["schemas"]["WalletDto"][];
+            /** Format: int32 */
+            number: number;
+            empty: boolean;
         };
         OutboxEventEntity: {
             /** Format: uuid */
@@ -253,7 +306,7 @@ export interface components {
             aggregateType: "ORDER" | "PAYMENT" | "NOTIFICATION" | "OUTLET" | "BRAND" | "LEDGER" | "ADVERTISEMENT" | "WALLET" | "CHAT_SESSION" | "REVIEW";
             aggregateId: string;
             /** @enum {string} */
-            eventType: "ORDER_CREATED" | "ORDER_PAID" | "ORDER_ACCEPTED" | "ORDER_PREPARING" | "ORDER_READY" | "ORDER_DELIVERED" | "ORDER_REJECTED" | "ORDER_AT_RESTAURANT" | "ORDER_STATUS_UPDATED" | "ORDER_STATUS_SYNC" | "ORDER_CANCELLED" | "ORDER_CANCELLED_BY_RESTAURANT" | "ORDER_CANCELLED_BY_CUSTOMER" | "ORDER_CANCELLED_BY_ADMIN" | "ORDER_DELAY_APPROVAL_REQUESTED" | "ORDER_DELAY_APPROVED" | "ORDER_DELAY_REJECTED" | "DISPATCH_CANDIDATE_FOUND" | "DISPATCH_FAILED" | "DRIVER_ASSIGNED" | "ORDER_DRIVER_REJECTED" | "MANUAL_INTERVENTION_REQUIRED" | "FORCE_ASSIGN_DRIVER" | "DELIVERY_FAILED" | "NOTIFICATION_REQUEST" | "NOTIFICATION_DISPATCH" | "PAYMENT_WEBHOOK" | "PAYMENT_COMPLETED" | "PAYMENT_FAILED" | "PAYMENT_REFUNDED" | "PAYMENT_REFUND_REQUESTED" | "PAYMENT_PARTIALLY_REFUNDED" | "ORDER_PARTIALLY_REFUNDED" | "LEDGER_TRANSACTION_REQUEST" | "LEDGER_TRANSACTION_FAILED" | "LEDGER_REVERSAL_REQUEST" | "LEDGER_BULK_TRANSACTION_REQUEST" | "OUTLET_ACTIVATED" | "MENU_UPDATED" | "OUTLET_DEACTIVATED" | "BRAND_CREATED" | "AD_CAMPAIGN_CREATED" | "AD_CAMPAIGN_UPDATED" | "AD_CAMPAIGN_PAUSED" | "AD_CAMPAIGN_RESUMED" | "AD_CAMPAIGN_COMPLETED" | "AD_CAMPAIGN_DELETED" | "AD_CREATIVE_PENDING" | "AD_CREATIVE_APPROVED" | "AD_CREATIVE_REJECTED" | "AD_CAMPAIGN_BUDGET_EXHAUSTED" | "AD_CAMPAIGN_PACING_UPDATED" | "AD_IMPRESSION_BILLED" | "AD_CLICK_BILLED" | "AD_CONVERSION_BILLED" | "AD_WALLET_TOPUP_REQUEST" | "AD_WALLET_TOPUP_COMPLETED" | "AD_BUDGET_ALERT" | "REFUND_GENERATED" | "REVERSAL_GENERATED" | "EARNINGS_GENERATED" | "PAYOUT_GENERATED" | "CHAT_REFUND_QUOTE_REQUESTED" | "CHAT_REFUND_REQUESTED" | "CHAT_REFUND_QUOTE_RESPONSE" | "CHAT_REFUND_DECISION" | "CHAT_REFUND_ERROR" | "REVIEW_CREATED";
+            eventType: "ORDER_CREATED" | "ORDER_PAID" | "ORDER_PLACED_COD" | "ORDER_ACCEPTED" | "ORDER_PREPARING" | "ORDER_READY" | "ORDER_DELIVERED" | "ORDER_REJECTED" | "ORDER_AT_RESTAURANT" | "ORDER_STATUS_UPDATED" | "ORDER_STATUS_SYNC" | "ORDER_CANCELLED" | "ORDER_CANCELLED_BY_RESTAURANT" | "ORDER_CANCELLED_BY_CUSTOMER" | "ORDER_CANCELLED_BY_ADMIN" | "ORDER_DELAY_APPROVAL_REQUESTED" | "ORDER_DELAY_APPROVED" | "ORDER_DELAY_REJECTED" | "DISPATCH_CANDIDATE_FOUND" | "DISPATCH_FAILED" | "DRIVER_ASSIGNED" | "ORDER_DRIVER_REJECTED" | "MANUAL_INTERVENTION_REQUIRED" | "FORCE_ASSIGN_DRIVER" | "DELIVERY_FAILED" | "NOTIFICATION_REQUEST" | "NOTIFICATION_DISPATCH" | "PAYMENT_WEBHOOK" | "PAYMENT_COMPLETED" | "PAYMENT_FAILED" | "PAYMENT_REFUNDED" | "PAYMENT_REFUND_REQUESTED" | "PAYMENT_REFUND_FAILED" | "REFUND_REQUESTED" | "REFUND_FAILED" | "PAYMENT_PARTIALLY_REFUNDED" | "ORDER_PARTIALLY_REFUNDED" | "LEDGER_TRANSACTION_REQUEST" | "OUTLET_ACTIVATED" | "MENU_UPDATED" | "OUTLET_DEACTIVATED" | "BRAND_CREATED" | "AD_CAMPAIGN_CREATED" | "AD_CAMPAIGN_UPDATED" | "AD_CAMPAIGN_PAUSED" | "AD_CAMPAIGN_RESUMED" | "AD_CAMPAIGN_COMPLETED" | "AD_CAMPAIGN_DELETED" | "AD_CREATIVE_PENDING" | "AD_CREATIVE_APPROVED" | "AD_CREATIVE_REJECTED" | "AD_CAMPAIGN_BUDGET_EXHAUSTED" | "AD_CAMPAIGN_PACING_UPDATED" | "AD_IMPRESSION_BILLED" | "AD_CLICK_BILLED" | "AD_CONVERSION_BILLED" | "AD_WALLET_TOPUP_REQUEST" | "AD_WALLET_TOPUP_COMPLETED" | "AD_BUDGET_ALERT" | "CHAT_REFUND_QUOTE_REQUESTED" | "CHAT_REFUND_REQUESTED" | "CHAT_REFUND_QUOTE_RESPONSE" | "CHAT_REFUND_DECISION" | "CHAT_REFUND_ERROR" | "REVIEW_CREATED";
             idempotencyKey?: string;
             payload: string;
             /** Format: date-time */
@@ -267,22 +320,20 @@ export interface components {
             retryCount: number;
             new?: boolean;
         };
-        PageOutboxEventEntity: {
-            /** Format: int32 */
-            totalPages: number;
+        PageResponseDtoOutboxEventEntity: {
+            content: components["schemas"]["OutboxEventEntity"][];
             /** Format: int64 */
             totalElements: number;
             /** Format: int32 */
-            size: number;
-            content: components["schemas"]["OutboxEventEntity"][];
+            totalPages: number;
+            last: boolean;
             /** Format: int32 */
-            numberOfElements: number;
+            size: number;
             /** Format: int32 */
             number: number;
             first: boolean;
-            last: boolean;
-            pageable?: components["schemas"]["PageableObject"];
-            sort?: components["schemas"]["SortObject"];
+            /** Format: int32 */
+            numberOfElements: number;
             empty: boolean;
         };
     };
@@ -323,7 +374,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                entityType: "CUSTOMER" | "RESTAURANT" | "DRIVER" | "PLATFORM" | "ADVERTISER";
+                entityType: "CUSTOMER" | "ADVERTISER";
                 entityId: string;
             };
             cookie?: never;
@@ -350,7 +401,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                entityType: "CUSTOMER" | "RESTAURANT" | "DRIVER" | "PLATFORM" | "ADVERTISER";
+                entityType: "CUSTOMER" | "ADVERTISER";
                 entityId: string;
             };
             cookie?: never;
@@ -457,7 +508,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                entityType: "CUSTOMER" | "RESTAURANT" | "DRIVER" | "PLATFORM" | "ADVERTISER";
+                entityType: "CUSTOMER" | "ADVERTISER";
                 entityId: string;
             };
             cookie?: never;
@@ -483,7 +534,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                entityType: "CUSTOMER" | "RESTAURANT" | "DRIVER" | "PLATFORM" | "ADVERTISER";
+                entityType: "CUSTOMER" | "ADVERTISER";
                 entityId: string;
             };
             cookie?: never;
@@ -497,6 +548,51 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PageWalletTransactionDto"];
+                };
+            };
+        };
+    };
+    getTransactionByReference: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                referenceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WalletTransactionDto"];
+                };
+            };
+        };
+    };
+    getBalances: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageWalletDto"];
                 };
             };
         };
@@ -519,7 +615,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PageOutboxEventEntity"];
+                    "application/json": components["schemas"]["PageResponseDtoOutboxEventEntity"];
                 };
             };
         };

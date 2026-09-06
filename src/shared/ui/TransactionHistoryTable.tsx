@@ -3,9 +3,9 @@ import { StatementTable, StatementRow } from '../money/components/StatementTable
 export interface WalletTransaction {
   id: string;
   amount: number;
-  transactionType: 'CREDIT' | 'DEBIT' | 'REFUND';
-  referenceId: string;
-  description: string;
+  transactionType: 'CREDIT' | 'DEBIT' | 'REFUND' | 'HOLD' | 'RELEASE';
+  referenceId?: string;
+  description?: string;
   metadata?: string;
   createdAt: string;
 }

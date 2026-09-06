@@ -7,8 +7,7 @@ import { formatINR } from '@shared/money';
 interface CustomerFreeDeliveryTrackerProps {
   carts: Record<string, CartState>;
   getCartTotal: (restaurantId: string) => { subtotal: number; minAmountForFreeDelivery?: number };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  deliveryPricing: any;
+  deliveryPricing: { total: number };
   selectedRestaurantId?: string;
   isQuoting?: boolean;
 }

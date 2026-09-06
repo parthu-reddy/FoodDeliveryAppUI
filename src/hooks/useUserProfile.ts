@@ -27,12 +27,12 @@ export function useUserProfile(): UseUserProfileResult {
   const localProfile = getUserProfile();
 
   useEffect(() => {
-    identityApi.user.get('/api/v1/users/profile', undefined as unknown as Parameters<typeof identityApi.user.get>[1])
+    identityApi.user.get('/api/v1/users/profile', undefined as Parameters<typeof identityApi.user.get>[1])
       .then(res => {
         if (res) {
           const p = ('data' in res && typeof res.data === 'object' && res.data !== null)
-            ? (res.data as unknown as UserProfileData)
-            : (res as unknown as UserProfileData);
+            ? (res.data as UserProfileData)
+            : (res as UserProfileData);
           setProfile(p);
           if (!p || !p.name || !p.email || p.name.trim() === '' || p.email.trim() === '') {
             setIsProfileIncomplete(true);

@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { Badge, Spinner } from "@shared/ui";
 import { identityApi } from '../../lib/zodiosClients';
 import { useToast } from '../../contexts/ToastContext';
-import { asUntyped } from '../../lib/untypedResponse';
 
 export interface ActiveSessionsProps {
   callingService: string;
@@ -25,7 +24,7 @@ export function ActiveSessions({ callingService, onAddApiLog }: ActiveSessionsPr
         headers: { 'X-Calling-Service': callingService } 
       });
       if (res?.data) {
-        setSessions(res.data as unknown[]);
+        setSessions(res.data);
       }
     } catch (e: unknown) {
       console.error(e);
@@ -81,7 +80,7 @@ export function ActiveSessions({ callingService, onAddApiLog }: ActiveSessionsPr
           </div>
         ) : (
           sessions.map((s: unknown) => {
-            const session = asUntyped<unknown>(s) as { id?: string, sessionId?: string, serviceName?: string, os?: string, browser?: string, deviceInfo?: string, lastActive?: string | number };
+            const session = s as { id?: string, sessionId?: string, serviceName?: string, os?: string, browser?: string, deviceInfo?: string, lastActive?: string | number };
             const sessionId = session.sessionId || session.id || "";
             const os = session.os || "Unknown";
             const browser = session.browser || "Unknown";

@@ -43,17 +43,13 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
 
     customerApi.order.get('/api/v1/orders/history', { queries: { page } })
       .then(res => {
-        if (!ignore && res.data) {
-          const content = res.data.content || (Array.isArray(res.data) ? res.data : []);
+        if (!ignore && res) {
+          const content = res.content ?? [];
           // Normalise rather than cast. The API sends `total` but no `total`, `subtotal` or
           // `customerName`, and this view reads all three -- assigning the raw response left them
           // undefined. That was invisible while Order resolved to `any`.
           setOrders((content as unknown[]).map(normalizeOrder));
-          if (res.data.totalPages) {
-            setTotalPages(res.data.totalPages);
-          } else {
-             setTotalPages(1);
-          }
+          setTotalPages(res.totalPages || 1);
         }
       })
       .catch(err => {
@@ -134,8 +130,7 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
                 <div className="text-sm text-slate-700 dark:text-slate-300 bg-white/40 dark:bg-white/5 rounded-xl p-3 border border-white/20 dark:border-white/5">
                   { }
                   { }
-                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                  {order.items?.map((item: any, idx: number) => (
+                  {order.items?.map((item: import('@/types').OrderItem, idx: number) => (
                     <div key={idx} className="flex gap-2">
                       <span className="font-semibold text-indigo-600 dark:text-indigo-400">{item.quantity || 1}x</span>
                       <span className="truncate">{item.item?.name || item.name || 'Item'}</span>

@@ -5,10 +5,21 @@ import { formatINR } from '@shared/money';
 import { useEffect, useState } from 'react';
 import { walletApi } from '@/lib/zodiosClients';
 import { getUserProfile } from '@/lib/tokenStore';
-import { asUntyped } from '@/lib/untypedResponse';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export default function CustomerPaymentModal(props: any) {
+interface CustomerPaymentModalProps {
+  isPaymentModalOpen: boolean;
+  setIsPaymentModalOpen: (open: boolean) => void;
+  paymentStatus: 'idle' | 'processing' | 'success';
+  getCartTotal: () => { subtotal: number; deliveryFee: number; tax: number; total: number };
+  processPaymentAndOrder: (method: PaymentMethodType) => void;
+  cart: import('@/types').CartItem[];
+  cartRestaurant: { name: string };
+  address: string;
+  deliveryLat: number;
+  deliveryLng: number;
+}
+
+export default function CustomerPaymentModal(props: CustomerPaymentModalProps) {
   return (
     <ErrorBoundary>
       <CustomerPaymentModalInner {...props} />
@@ -27,8 +38,7 @@ function CustomerPaymentModalInner({
   address,
   deliveryLat,
   deliveryLng
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-}: any) {
+}: CustomerPaymentModalProps) {
   const totals = getCartTotal ? getCartTotal() : { subtotal: 0, deliveryFee: 0, tax: 0, total: 0 };
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
 
@@ -39,7 +49,7 @@ function CustomerPaymentModalInner({
         walletApi.wallet.get('/api/v1/wallets/:entityType/:entityId', { 
           params: { entityType: 'CUSTOMER', entityId: profile.id } 
         }).then(res => {
-          setWalletBalance((asUntyped<{balance?: number}>(res)).balance || 0);
+          setWalletBalance((res).balance || 0);
         }).catch(err => {
           console.error("Failed to fetch wallet balance", err);
         });
@@ -83,8 +93,7 @@ function CustomerPaymentModalInner({
         </div>
 
         <div className="space-y-3 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-          {(cart || []).map((cItem: any, idx: number) => (
+          {(cart || []).map((cItem: import('@/types').CartItem, idx: number) => (
             <div key={idx} className="flex justify-between items-center text-sm">
               <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                 <span className="bg-slate-100 dark:bg-slate-800/50 px-2 py-0.5 rounded text-xs font-semibold">{cItem.quantity}x</span>

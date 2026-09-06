@@ -9,20 +9,19 @@ export const LedgerTransactionDto = z
       "PLATFORM_FIXED_FEE",
       "PLATFORM_BONUS",
       "FOOD_COST",
-      "TIP",
-      "PACKAGING_FEE",
-      "SURGE_PRICING",
-      "TAX",
       "SGST",
       "CGST",
       "REFUND",
       "ORDER_TOTAL",
-      "PAYOUT",
       "AD_IMPRESSION",
       "AD_CLICK",
       "AD_CONVERSION",
       "AD_WALLET_TOPUP",
-      "AD_REVENUE",
+      "CLAWBACK",
+      "PAYOUT_TRANSFER",
+      "CASH_COLLECTED",
+      "CASH_REMITTED",
+      "STORE_CREDIT",
     ]),
     fromAccountId: z.string().uuid(),
     toAccountId: z.string().uuid(),
@@ -30,39 +29,33 @@ export const LedgerTransactionDto = z
     date: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const SortObject = z
-  .object({ empty: z.boolean(), sorted: z.boolean(), unsorted: z.boolean() })
-  .passthrough();
-export const PageableObject = z
+export const PageResponseDtoLedgerTransactionDto = z
   .object({
-    offset: z.number().int(),
-    pageSize: z.number().int(),
-    paged: z.boolean(),
-    pageNumber: z.number().int(),
-    sort: SortObject.optional(),
-    unpaged: z.boolean(),
-  })
-  .passthrough();
-export const PageLedgerTransactionDto = z
-  .object({
-    totalPages: z.number().int(),
-    totalElements: z.number().int(),
-    size: z.number().int(),
     content: z.array(LedgerTransactionDto),
-    numberOfElements: z.number().int(),
+    totalElements: z.number().int(),
+    totalPages: z.number().int(),
+    last: z.boolean(),
+    size: z.number().int(),
     number: z.number().int(),
     first: z.boolean(),
-    last: z.boolean(),
-    pageable: PageableObject.optional(),
-    sort: SortObject.optional(),
+    numberOfElements: z.number().int(),
     empty: z.boolean(),
+  })
+  .passthrough();
+export const ApiResponsePageResponseDtoLedgerTransactionDto = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    errorCode: z.string().optional(),
+    data: PageResponseDtoLedgerTransactionDto.optional(),
+    timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
 export const LedgerEntry = z
   .object({
     id: z.string().uuid(),
     transactionId: z.string().uuid(),
-    referenceId: z.string().uuid().optional(),
+    referenceId: z.string().uuid(),
     accountId: z.string().uuid(),
     direction: z.enum(["CREDIT", "DEBIT"]),
     category: z.enum([
@@ -70,104 +63,87 @@ export const LedgerEntry = z
       "PLATFORM_FIXED_FEE",
       "PLATFORM_BONUS",
       "FOOD_COST",
-      "TIP",
-      "PACKAGING_FEE",
-      "SURGE_PRICING",
-      "TAX",
       "SGST",
       "CGST",
       "REFUND",
       "ORDER_TOTAL",
-      "PAYOUT",
       "AD_IMPRESSION",
       "AD_CLICK",
       "AD_CONVERSION",
       "AD_WALLET_TOPUP",
-      "AD_REVENUE",
+      "CLAWBACK",
+      "PAYOUT_TRANSFER",
+      "CASH_COLLECTED",
+      "CASH_REMITTED",
+      "STORE_CREDIT",
     ]),
     amount: z.number(),
+    producer: z.string(),
+    description: z.string(),
+    authorizedBy: z.string(),
     createdAt: z.string().datetime({ offset: true }),
   })
+  .partial()
   .passthrough();
-export const PageLedgerEntry = z
+export const PageResponseDtoLedgerEntry = z
   .object({
-    totalPages: z.number().int(),
-    totalElements: z.number().int(),
-    size: z.number().int(),
     content: z.array(LedgerEntry),
-    numberOfElements: z.number().int(),
+    totalElements: z.number().int(),
+    totalPages: z.number().int(),
+    last: z.boolean(),
+    size: z.number().int(),
     number: z.number().int(),
     first: z.boolean(),
-    last: z.boolean(),
-    pageable: PageableObject.optional(),
-    sort: SortObject.optional(),
+    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();
-export const PayoutSettlementRequest = z
+export const ApiResponsePageResponseDtoLedgerEntry = z
   .object({
-    ownerId: z.string().uuid(),
-    ownerType: z.enum([
-      "CUSTOMER",
-      "PLATFORM",
-      "RESTAURANT",
-      "DRIVER",
-      "ADVERTISER_WALLET",
-      "GOVERNMENT",
-    ]),
-    amount: z.number(),
+    success: z.boolean(),
+    message: z.string(),
+    errorCode: z.string().optional(),
+    data: PageResponseDtoLedgerEntry.optional(),
+    timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
 export const LedgerAccount = z
   .object({
     id: z.string().uuid(),
     ownerType: z.enum([
-      "CUSTOMER",
-      "PLATFORM",
-      "RESTAURANT",
-      "DRIVER",
-      "ADVERTISER_WALLET",
-      "GOVERNMENT",
+      "GATEWAY_RECEIVABLE",
+      "CASH_RECEIVABLE",
+      "BANK",
+      "PLATFORM_CLEARING",
+      "PLATFORM_REVENUE",
+      "TAX_PAYABLE",
+      "PAYOUT_IN_TRANSIT",
+      "RESTAURANT_PAYABLE",
+      "DRIVER_PAYABLE",
+      "CUSTOMER_CREDIT",
+      "ADVERTISER_PREPAID",
     ]),
     ownerId: z.string().uuid(),
+    kind: z.enum(["EXTERNAL", "INTERNAL", "PAYABLE", "PREPAID"]),
     balance: z.number(),
+    currency: z.string(),
     lockVersion: z.number().int(),
+    createdAt: z.string().datetime({ offset: true }),
   })
+  .partial()
   .passthrough();
 
 export const schemas = {
   LedgerTransactionDto,
-  SortObject,
-  PageableObject,
-  PageLedgerTransactionDto,
+  PageResponseDtoLedgerTransactionDto,
+  ApiResponsePageResponseDtoLedgerTransactionDto,
   LedgerEntry,
-  PageLedgerEntry,
-  PayoutSettlementRequest,
+  PageResponseDtoLedgerEntry,
+  ApiResponsePageResponseDtoLedgerEntry,
   LedgerAccount,
 };
 
 export const endpoints = makeApi([
-  {
-    method: "post",
-    path: "/api/v1/ledger/payouts/settle",
-    alias: "settlePayout",
-    requestFormat: "json",
-    parameters: [
-      {
-        name: "body",
-        type: "Body",
-        schema: PayoutSettlementRequest,
-      },
-    ],
-    response: z.record(z.string()),
-  },
-  {
-    method: "get",
-    path: "/api/v1/ledger/payouts/pending",
-    alias: "getPendingPayouts",
-    requestFormat: "json",
-    response: z.array(LedgerAccount),
-  },
   {
     method: "get",
     path: "/api/v1/ledger/orders/:orderId/total",
@@ -213,12 +189,17 @@ export const endpoints = makeApi([
         type: "Query",
         schema: z
           .enum([
-            "CUSTOMER",
-            "PLATFORM",
-            "RESTAURANT",
-            "DRIVER",
-            "ADVERTISER_WALLET",
-            "GOVERNMENT",
+            "GATEWAY_RECEIVABLE",
+            "CASH_RECEIVABLE",
+            "BANK",
+            "PLATFORM_CLEARING",
+            "PLATFORM_REVENUE",
+            "TAX_PAYABLE",
+            "PAYOUT_IN_TRANSIT",
+            "RESTAURANT_PAYABLE",
+            "DRIVER_PAYABLE",
+            "CUSTOMER_CREDIT",
+            "ADVERTISER_PREPAID",
           ])
           .optional(),
       },
@@ -231,20 +212,19 @@ export const endpoints = makeApi([
             "PLATFORM_FIXED_FEE",
             "PLATFORM_BONUS",
             "FOOD_COST",
-            "TIP",
-            "PACKAGING_FEE",
-            "SURGE_PRICING",
-            "TAX",
             "SGST",
             "CGST",
             "REFUND",
             "ORDER_TOTAL",
-            "PAYOUT",
             "AD_IMPRESSION",
             "AD_CLICK",
             "AD_CONVERSION",
             "AD_WALLET_TOPUP",
-            "AD_REVENUE",
+            "CLAWBACK",
+            "PAYOUT_TRANSFER",
+            "CASH_COLLECTED",
+            "CASH_REMITTED",
+            "STORE_CREDIT",
           ])
           .optional(),
       },
@@ -254,7 +234,7 @@ export const endpoints = makeApi([
         schema: z.enum(["CREDIT", "DEBIT"]).optional(),
       },
     ],
-    response: PageLedgerTransactionDto,
+    response: ApiResponsePageResponseDtoLedgerTransactionDto,
   },
   {
     method: "get",
@@ -287,12 +267,17 @@ export const endpoints = makeApi([
         type: "Query",
         schema: z
           .enum([
-            "CUSTOMER",
-            "PLATFORM",
-            "RESTAURANT",
-            "DRIVER",
-            "ADVERTISER_WALLET",
-            "GOVERNMENT",
+            "GATEWAY_RECEIVABLE",
+            "CASH_RECEIVABLE",
+            "BANK",
+            "PLATFORM_CLEARING",
+            "PLATFORM_REVENUE",
+            "TAX_PAYABLE",
+            "PAYOUT_IN_TRANSIT",
+            "RESTAURANT_PAYABLE",
+            "DRIVER_PAYABLE",
+            "CUSTOMER_CREDIT",
+            "ADVERTISER_PREPAID",
           ])
           .optional(),
       },
@@ -305,20 +290,19 @@ export const endpoints = makeApi([
             "PLATFORM_FIXED_FEE",
             "PLATFORM_BONUS",
             "FOOD_COST",
-            "TIP",
-            "PACKAGING_FEE",
-            "SURGE_PRICING",
-            "TAX",
             "SGST",
             "CGST",
             "REFUND",
             "ORDER_TOTAL",
-            "PAYOUT",
             "AD_IMPRESSION",
             "AD_CLICK",
             "AD_CONVERSION",
             "AD_WALLET_TOPUP",
-            "AD_REVENUE",
+            "CLAWBACK",
+            "PAYOUT_TRANSFER",
+            "CASH_COLLECTED",
+            "CASH_REMITTED",
+            "STORE_CREDIT",
           ])
           .optional(),
       },
@@ -328,7 +312,7 @@ export const endpoints = makeApi([
         schema: z.enum(["CREDIT", "DEBIT"]).optional(),
       },
     ],
-    response: PageLedgerEntry,
+    response: ApiResponsePageResponseDtoLedgerEntry,
   },
   {
     method: "get",
@@ -340,12 +324,17 @@ export const endpoints = makeApi([
         name: "ownerType",
         type: "Path",
         schema: z.enum([
-          "CUSTOMER",
-          "PLATFORM",
-          "RESTAURANT",
-          "DRIVER",
-          "ADVERTISER_WALLET",
-          "GOVERNMENT",
+          "GATEWAY_RECEIVABLE",
+          "CASH_RECEIVABLE",
+          "BANK",
+          "PLATFORM_CLEARING",
+          "PLATFORM_REVENUE",
+          "TAX_PAYABLE",
+          "PAYOUT_IN_TRANSIT",
+          "RESTAURANT_PAYABLE",
+          "DRIVER_PAYABLE",
+          "CUSTOMER_CREDIT",
+          "ADVERTISER_PREPAID",
         ]),
       },
       {

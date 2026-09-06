@@ -1,18 +1,51 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-export const ApiResponseObject = z
+export const CampaignDto = z
+  .object({
+    id: z.string().uuid(),
+    advertiserId: z.string().uuid(),
+    name: z.string(),
+    budget: z.number(),
+    status: z.string(),
+    startDate: z.string().datetime({ offset: true }),
+    endDate: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+export const ApiResponseCampaignDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
     errorCode: z.string().optional(),
-    data: z.object({}).partial().passthrough().optional(),
+    data: CampaignDto.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
+export const ApiResponseListCampaignDto = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    errorCode: z.string().optional(),
+    data: z.array(CampaignDto).optional(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
+export const CampaignRequestDto = z
+  .object({
+    restaurantId: z.string().uuid(),
+    name: z.string(),
+    budget: z.number(),
+    status: z.string(),
+  })
+  .partial()
+  .passthrough();
 
 export const schemas = {
-  ApiResponseObject,
+  CampaignDto,
+  ApiResponseCampaignDto,
+  ApiResponseListCampaignDto,
+  CampaignRequestDto,
 };
 
 export const endpoints = makeApi([
@@ -33,7 +66,7 @@ export const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: ApiResponseObject,
+    response: ApiResponseCampaignDto,
   },
   {
     method: "post",
@@ -44,10 +77,10 @@ export const endpoints = makeApi([
       {
         name: "body",
         type: "Body",
-        schema: z.record(z.object({}).partial().passthrough()),
+        schema: CampaignRequestDto,
       },
     ],
-    response: ApiResponseObject,
+    response: ApiResponseCampaignDto,
   },
   {
     method: "get",
@@ -61,7 +94,7 @@ export const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: ApiResponseObject,
+    response: ApiResponseListCampaignDto,
   },
 ]);
 

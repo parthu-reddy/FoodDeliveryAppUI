@@ -1,8 +1,6 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-import { ApiResponseMapStringObject } from "./common";
-
 export const Customer = z
   .object({
     id: z.string().uuid(),
@@ -20,10 +18,20 @@ export const ApiResponseCustomer = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
+export const ApiResponseMapStringObject = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    errorCode: z.string().optional(),
+    data: z.record(z.object({}).partial().passthrough()).optional(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
 
 export const schemas = {
   Customer,
   ApiResponseCustomer,
+  ApiResponseMapStringObject,
 };
 
 export const endpoints = makeApi([

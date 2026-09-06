@@ -4,7 +4,6 @@ import { ErrorBoundary } from "@shared/ui";
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useEffect, useRef, useState } from 'react';
-import { asUntyped } from '../../../lib/untypedResponse';
 
 interface Driver {
     id: string;
@@ -94,9 +93,9 @@ function AdminAssignmentMapInner({
         let rLng = 77.58;
         try {
             const res = await restaurantApi.restaurantOutlet.get('/api/v1/restaurants/:id', { params: { id: order.restaurantId } });
-            const geo = asUntyped<{ data?: { lat?: number; lng?: number } }>(res);
-                     if (geo?.data?.lat) rLat = geo.data.lat;
-            if (geo?.data?.lng) rLng = geo.data.lng;
+            const geo = res;
+            if ((geo?.data)?.lat) rLat = Number((geo.data).lat);
+            if ((geo?.data)?.lng) rLng = Number((geo.data).lng);
         } catch (err: unknown) {
             console.warn('Could not fetch restaurant location, using defaults', err);
         }

@@ -2,11 +2,9 @@ import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
 import { ApiResponseVoid } from "./common";
-import { ApiResponseMapStringObject } from "./common";
 
 export const RestaurantOrder = z
   .object({
-    id: z.string().uuid(),
     restaurantId: z.string().uuid(),
     status: z.enum([
       "CREATED",
@@ -32,13 +30,11 @@ export const RestaurantOrder = z
     ]),
     paymentStatus: z
       .enum([
-        "CREATED",
         "INITIATED",
-        "PENDING",
         "SUCCESS",
         "FAILED",
-        "CAPTURED",
-        "PAID",
+        "PENDING_COLLECTION",
+        "COLLECTED",
         "PARTIALLY_REFUNDED",
         "REFUNDED",
         "REFUND_PENDING",
@@ -55,9 +51,8 @@ export const RestaurantOrder = z
     pickupOtp: z.string().optional(),
     deliveryOtp: z.string().optional(),
     deliveryExecutiveId: z.string().uuid().optional(),
+    customerId: z.string().uuid().optional(),
     customerName: z.string().optional(),
-    deliveryExecutiveName: z.string().optional(),
-    total: z.number().optional(),
     foodCost: z.number().optional(),
     restaurantPlatformFee: z.number().optional(),
     restaurantDeliveryContribution: z.number().optional(),
@@ -65,6 +60,10 @@ export const RestaurantOrder = z
     restaurantPayout: z.number().optional(),
     createdAt: z.string().datetime({ offset: true }),
     updatedAt: z.string().datetime({ offset: true }).optional(),
+    id: z.string().uuid(),
+    deliveryExecutiveName: z.string().optional(),
+    total: z.number().optional(),
+    items: z.object({}).partial().passthrough().optional(),
   })
   .passthrough();
 export const ApiResponseListRestaurantOrder = z
@@ -82,11 +81,11 @@ export const SortObject = z
 export const PageableObject = z
   .object({
     offset: z.number().int(),
-    unpaged: z.boolean(),
     sort: SortObject.optional(),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
+    unpaged: z.boolean(),
   })
   .passthrough();
 export const PageRestaurantOrder = z
@@ -157,7 +156,7 @@ export const endpoints = makeApi([
       {
         name: "body",
         type: "Body",
-        schema: z.record(z.string()),
+        schema: z.record(z.object({}).partial().passthrough()),
       },
       {
         name: "restaurantId",
@@ -266,25 +265,6 @@ export const endpoints = makeApi([
       },
     ],
     response: ApiResponseListRestaurantOrder,
-  },
-  {
-    method: "get",
-    path: "/api/v1/restaurants/:restaurantId/fulfillment/orders/:orderId/invoice",
-    alias: "getOrderInvoice",
-    requestFormat: "json",
-    parameters: [
-      {
-        name: "restaurantId",
-        type: "Path",
-        schema: z.string().uuid(),
-      },
-      {
-        name: "orderId",
-        type: "Path",
-        schema: z.string().uuid(),
-      },
-    ],
-    response: ApiResponseMapStringObject,
   },
   {
     method: "get",

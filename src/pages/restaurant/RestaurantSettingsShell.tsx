@@ -165,18 +165,18 @@ export const RestaurantSettingsShell: React.FC<RestaurantSettingsShellProps> = (
                           <span>GSTIN: {b.gstin}</span>
                           <div className="flex gap-2">
                             <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] uppercase tracking-wider ${
-                              (b as unknown as Record<string, unknown>).kycStatus === 'VERIFIED' ? 'bg-emerald-500/10 text-emerald-500' :
-                              (b as unknown as Record<string, unknown>).kycStatus === VerificationStatus.PENDING ? 'bg-amber-500/10 text-amber-500 animate-pulse' :
+                              (b as Record<string, unknown>).kycStatus === 'VERIFIED' ? 'bg-emerald-500/10 text-emerald-500' :
+                              (b as Record<string, unknown>).kycStatus === VerificationStatus.PENDING ? 'bg-amber-500/10 text-amber-500 animate-pulse' :
                               'bg-rose-500/10 text-rose-500'
                             }`}>
-                              GSTIN: {(b as unknown as Record<string, string>).kycStatus || VerificationStatus.PENDING}
+                              GSTIN: {(b as Record<string, string>).kycStatus || VerificationStatus.PENDING}
                             </span>
                             <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] uppercase tracking-wider ${
-                              (b as unknown as Record<string, unknown>).pennyDropStatus === 'VERIFIED' ? 'bg-emerald-500/10 text-emerald-500' :
-                              (b as unknown as Record<string, unknown>).pennyDropStatus === VerificationStatus.PENDING ? 'bg-amber-500/10 text-amber-500 animate-pulse' :
+                              (b as Record<string, unknown>).pennyDropStatus === 'VERIFIED' ? 'bg-emerald-500/10 text-emerald-500' :
+                              (b as Record<string, unknown>).pennyDropStatus === VerificationStatus.PENDING ? 'bg-amber-500/10 text-amber-500 animate-pulse' :
                               'bg-rose-500/10 text-rose-500'
                             }`}>
-                              BANK: {(b as unknown as Record<string, string>).pennyDropStatus || VerificationStatus.PENDING}
+                              BANK: {(b as Record<string, string>).pennyDropStatus || VerificationStatus.PENDING}
                             </span>
                           </div>
                         </div>
@@ -216,7 +216,7 @@ export const RestaurantSettingsShell: React.FC<RestaurantSettingsShellProps> = (
                           <div className="mt-1 flex flex-wrap gap-1.5">
                             {o.timings.map((t, i: number) => (
                               <span key={i} className="text-[9px] font-bold font-mono bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">
-                                {t.openingTime.substring(0,5)} - {t.closingTime.substring(0,5)}
+                                {typeof t.openingTime === 'string' ? (t.openingTime as string).substring(0,5) : `${String((t.openingTime)?.hour || 0).padStart(2, '0')}:${String((t.openingTime)?.minute || 0).padStart(2, '0')}`} - {typeof t.closingTime === 'string' ? (t.closingTime as string).substring(0,5) : `${String((t.closingTime)?.hour || 0).padStart(2, '0')}:${String((t.closingTime)?.minute || 0).padStart(2, '0')}`}
                               </span>
                             ))}
                           </div>

@@ -45,6 +45,7 @@ export const MenuItemDTO = z
     imageUrl: z.string().optional(),
     categoryId: z.string().uuid().optional(),
     categoryName: z.string().optional(),
+    isVeg: z.boolean().optional(),
   })
   .passthrough();
 export const ApiResponseListMenuItemDTO = z

@@ -46,7 +46,7 @@ interface CustomerAddressModalProps {
   savedAddresses?: SavedAddress[];
   onAddApiLog?: (log: unknown) => void;
   customerId?: string;
-  onSelectDeliveryLocation?: (address: string, lat: string, lng: string) => void;
+  onSelectDeliveryLocation?: (address: string, lat: string | number, lng: string | number) => void;
   initialLat?: number | string;
   initialLng?: number | string;
   onAddressAdded?: () => void;
@@ -215,7 +215,7 @@ export default function CustomerAddressModal({
 
       setIsSaving(true);
       if (!customerId) throw new Error("Customer ID missing");
-      const addrRes = await customerApi.customerAddress.post('/api/v1/customers/:customerId/addresses', payload, { params: { customerId } }) as unknown as { data: SavedAddress };
+      const addrRes = await customerApi.customerAddress.post('/api/v1/customers/:customerId/addresses', payload, { params: { customerId } });
       const savedAddr = addrRes.data;
       setIsAddressModalOpen(false);
       onAddressAdded?.();

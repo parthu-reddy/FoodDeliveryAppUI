@@ -1,20 +1,43 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-import { ApiResponseMapStringObject } from "./common";
-
-export const ApiResponseListMapStringObject = z
+export const PlaceGeocodeDto = z
+  .object({
+    formattedAddress: z.string(),
+    placeId: z.string(),
+    lat: z.number(),
+    lng: z.number(),
+  })
+  .partial()
+  .passthrough();
+export const ApiResponsePlaceGeocodeDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
     errorCode: z.string().optional(),
-    data: z.array(z.record(z.object({}).partial().passthrough())).optional(),
+    data: PlaceGeocodeDto.optional(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
+export const PlaceAutocompleteDto = z
+  .object({ placeId: z.string(), description: z.string() })
+  .partial()
+  .passthrough();
+export const ApiResponseListPlaceAutocompleteDto = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    errorCode: z.string().optional(),
+    data: z.array(PlaceAutocompleteDto).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
 
 export const schemas = {
-  ApiResponseListMapStringObject,
+  PlaceGeocodeDto,
+  ApiResponsePlaceGeocodeDto,
+  PlaceAutocompleteDto,
+  ApiResponseListPlaceAutocompleteDto,
 };
 
 export const endpoints = makeApi([
@@ -35,7 +58,7 @@ export const endpoints = makeApi([
         schema: z.number(),
       },
     ],
-    response: ApiResponseMapStringObject,
+    response: ApiResponsePlaceGeocodeDto,
   },
   {
     method: "get",
@@ -49,7 +72,7 @@ export const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: ApiResponseListMapStringObject,
+    response: ApiResponseListPlaceAutocompleteDto,
   },
 ]);
 

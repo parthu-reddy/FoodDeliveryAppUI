@@ -1,9 +1,19 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-import { JsonNode } from "./common";
+import { PayoutSummaryDto } from "./common";
+import { PageResponseDtoLedgerStatementLineDto } from "./common";
+import { LedgerStatementLineDto } from "./common";
 import { RefundView } from "./common";
 
+export const BeneficiaryStatusDto = z
+  .object({
+    beneficiaryId: z.string(),
+    verificationStatus: z.string(),
+    active: z.boolean(),
+  })
+  .partial()
+  .passthrough();
 export const RestaurantSummary = z
   .object({
     orders: z.number().int(),
@@ -14,14 +24,14 @@ export const RestaurantSummary = z
     netEarnings: z.number(),
     clawbacks: z.number(),
     pendingBalance: z.number(),
-    lastPayout: JsonNode,
-    beneficiaryStatus: JsonNode,
+    lastPayout: PayoutSummaryDto,
+    beneficiaryStatus: BeneficiaryStatusDto,
   })
   .partial()
   .passthrough();
 export const RestaurantOrderEarnings = z
   .object({
-    id: z.string().uuid(),
+    orderId: z.string().uuid(),
     restaurantId: z.string().uuid(),
     foodCost: z.number(),
     platformFee: z.number(),
@@ -32,6 +42,7 @@ export const RestaurantOrderEarnings = z
   .passthrough();
 
 export const schemas = {
+  BeneficiaryStatusDto,
   RestaurantSummary,
   RestaurantOrderEarnings,
 };
@@ -78,7 +89,7 @@ export const endpoints = makeApi([
         schema: z.number().int().optional().default(20),
       },
     ],
-    response: z.object({}).partial().passthrough(),
+    response: PageResponseDtoLedgerStatementLineDto,
   },
   {
     method: "get",

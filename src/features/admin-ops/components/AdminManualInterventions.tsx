@@ -5,7 +5,6 @@ import { customerApi, deliveryApi } from "@/lib/zodiosClients";
 import { Button, Textarea } from '@shared/ui';
 import { Shield, Truck } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { asUntyped, WirePage } from '../../../lib/untypedResponse';
 import { formatINR } from '@shared/money';
 import { Order as OrderSchema } from '@/api/generated/schemas/customer/common';
 import { z } from 'zod';
@@ -39,9 +38,9 @@ export default function AdminManualInterventions() {
   useEffect(() => {
      
     if (interventionsResponse) {
-      const content = asUntyped<WirePage<unknown>>(interventionsResponse).content ?? (Array.isArray(interventionsResponse) ? interventionsResponse : []);
+      const content = interventionsResponse.content ?? [];
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setInterventions(Array.isArray(content) ? content as Order[] : []);
+      setInterventions(content as Order[]);
       if (interventionsResponse.totalPages !== undefined) {
         setInterventionsTotalPages(interventionsResponse.totalPages);
       }
@@ -63,9 +62,9 @@ export default function AdminManualInterventions() {
    
   useEffect(() => {
     if (failedRefundsResponse) {
-      const content = asUntyped<WirePage<unknown>>(failedRefundsResponse).content ?? (Array.isArray(failedRefundsResponse) ? failedRefundsResponse : []);
+      const content = failedRefundsResponse.content ?? [];
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setFailedRefunds(Array.isArray(content) ? content as Record<string, unknown>[] : []);
+      setFailedRefunds(content as Record<string, unknown>[]);
       if (failedRefundsResponse.totalPages !== undefined) {
         setRefundsTotalPages(failedRefundsResponse.totalPages);
       }
@@ -78,7 +77,7 @@ export default function AdminManualInterventions() {
     fetchFn: async () => {
       const res = await deliveryApi.adminDelivery.get('/api/v1/internal/admin/delivery/drivers/available-with-location', { queries: { cityId: 'all' } });
       const content = res;
-      return Array.isArray(content) ? content : [];
+      return content ?? [];
     },
      
     intervalMs: 15000,

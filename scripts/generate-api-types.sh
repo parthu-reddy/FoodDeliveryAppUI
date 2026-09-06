@@ -26,6 +26,12 @@ for entry in "${SERVICES[@]}"; do
   name="${entry%% *}"
   path="${entry#* }"
   spec="$SPECS_DIR$path"
+  
+  if [ ! -s "$spec" ]; then
+    echo "ERROR: $spec is empty or missing! Backend failed to generate schema."
+    exit 1
+  fi
+
   echo "Generating types and schemas for $name from $spec..."
   npx openapi-typescript "$spec" -o "$OUT_DIR/${name}.d.ts"
   npx openapi-zod-client "$spec" -o "$SCHEMA_DIR/${name}" --export-schemas --group-strategy tag-file

@@ -34,7 +34,6 @@ import { RestaurantOrderQueue } from '@features/restaurant-orders/components/Res
 import { useRestaurantOrders } from '@features/restaurant-orders/model/useRestaurantOrders';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { z } from 'zod';
-import { asUntyped } from '@/lib/untypedResponse';
 
 
 
@@ -128,7 +127,7 @@ export default function RestaurantDashboard({
   const [menuList, setMenuList] = useState<MenuItem[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [outlets, setOutlets] = useState<Outlet[]>([]);
-  const [, setMasterItems] = useState<MenuItem[]>([]);
+  const [, setMasterItems] = useState<unknown[]>([]);
   const [, setOverrides] = useState<unknown[]>([]);
 
   // Function to load all data
@@ -144,7 +143,7 @@ export default function RestaurantDashboard({
       
       const newAcceptingState: Record<string, boolean> = {};
       fetchedOutlets.forEach((o: unknown) => {
-        const outlet = asUntyped<unknown>(o) as { id: string, isActive?: boolean };
+        const outlet = o as { id: string, isActive?: boolean };
          
         newAcceptingState[outlet.id] = outlet.isActive !== false;
       });
@@ -187,7 +186,7 @@ export default function RestaurantDashboard({
         const fetchedOutlet = fetchedOutlets.find((o: unknown) => (o as {id: string}).id === selectedOutletId) as Outlet | undefined;
         if (fetchedOutlet) {
           const fetchedMasterItems = await getMasterMenuItems(fetchedOutlet.brandId);
-          setMasterItems(fetchedMasterItems as MenuItem[]);
+          setMasterItems(fetchedMasterItems as unknown[]);
           
           if (fetchedOutlet.defaultPrepTimeSeconds) {
             setApiPrepSeconds(fetchedOutlet.defaultPrepTimeSeconds.toString());

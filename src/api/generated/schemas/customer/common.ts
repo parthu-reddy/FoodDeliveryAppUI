@@ -71,8 +71,6 @@ export const OrderResponse = z
       "CANCELLED",
       "FAILED",
     ]),
-    total: z.number(),
-    subtotal: z.number(),
     customerPlatformFee: z.number(),
     sgst: z.number(),
     cgst: z.number(),
@@ -85,12 +83,16 @@ export const OrderResponse = z
     updatedAt: z.string().datetime({ offset: true }).optional(),
     riderId: z.string().uuid().optional(),
     deliveryExecutiveId: z.string().uuid().optional(),
+    customerName: z.string().optional(),
+    deliveryExecutiveName: z.string().optional(),
     paymentIntent: z.string().optional(),
     pickupOtp: z.string().optional(),
     otp: z.string().optional(),
     estimatedCompletionTime: z.number().int().optional(),
     remainingPingSeconds: z.number().int().optional(),
     distanceKm: z.number().optional(),
+    total: z.number(),
+    subtotal: z.number(),
     expiresAt: z.number().int().optional(),
   })
   .passthrough();
@@ -147,7 +149,7 @@ export const ApiResponseQuoteResponse = z
   .passthrough();
 export const DriverOrderEarnings = z
   .object({
-    id: z.string().uuid(),
+    orderId: z.string().uuid(),
     driverId: z.string().uuid(),
     grossPayout: z.number(),
     taxes: z.number(),
@@ -164,7 +166,7 @@ export const Item = z
   .passthrough();
 export const RefundCommand = z
   .object({
-    id: z.string().uuid(),
+    orderId: z.string().uuid(),
     amount: z.number(),
     items: z.array(Item),
     reasonCode: z.string(),
@@ -192,31 +194,21 @@ export const RefundCommand = z
   })
   .partial()
   .passthrough();
-export const RefundView = z
+export const ApiResponseString = z
   .object({
-    id: z.string().uuid(),
-    amount: z.number(),
-    status: z.enum([
-      "REQUESTED",
-      "PROCESSING",
-      "COMPLETED",
-      "FAILED",
-      "CANCELLED",
-    ]),
-    destination: z.enum(["ORIGINAL_METHOD", "STORE_CREDIT", "NONE"]),
-    method: z.enum(["CARD", "UPI", "WALLET", "COD"]),
-    reasonCode: z.string(),
-    requestedAt: z.string().datetime({ offset: true }),
-    completedAt: z.string().datetime({ offset: true }),
-    expectedBy: z.string().datetime({ offset: true }),
+    success: z.boolean(),
+    message: z.string(),
+    errorCode: z.string().optional(),
+    data: z.string().optional(),
+    timestamp: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 export const ReviewRequest = z.object({ notes: z.string() }).partial().passthrough();
 export const SupportTicket = z
   .object({
     version: z.number().int().optional(),
     id: z.string().uuid(),
+    orderId: z.string().uuid(),
     customerId: z.string().uuid(),
     reason: z.string(),
     status: z.enum(["OPEN", "IN_REVIEW", "RESOLVED", "REJECTED"]),
@@ -239,14 +231,26 @@ export const ResolveRequest = z
     overrideAmount: z.number().optional(),
   })
   .passthrough();
-export const ApiResponseString = z
+export const RefundView = z
   .object({
-    success: z.boolean(),
-    message: z.string(),
-    errorCode: z.string().optional(),
-    data: z.string().optional(),
-    timestamp: z.string().datetime({ offset: true }),
+    id: z.string().uuid(),
+    orderId: z.string().uuid(),
+    amount: z.number(),
+    status: z.enum([
+      "REQUESTED",
+      "PROCESSING",
+      "COMPLETED",
+      "FAILED",
+      "CANCELLED",
+    ]),
+    destination: z.enum(["ORIGINAL_METHOD", "STORE_CREDIT", "NONE"]),
+    method: z.enum(["CARD", "UPI", "WALLET", "COD"]),
+    reasonCode: z.string(),
+    requestedAt: z.string().datetime({ offset: true }),
+    completedAt: z.string().datetime({ offset: true }),
+    expectedBy: z.string().datetime({ offset: true }),
   })
+  .partial()
   .passthrough();
 export const CustomerAddressDto = z
   .object({
@@ -302,6 +306,31 @@ export const ApiResponseMapStringObject = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
+export const PricingConfigDto = z
+  .object({
+    basePrice: z.number(),
+    perKmRate: z.number(),
+    restMaxContributionPercent: z.number(),
+    fixedPlatformFee: z.number(),
+    platformExcessCutPercent: z.number(),
+    sgstPercent: z.number(),
+    cgstPercent: z.number(),
+  })
+  .partial()
+  .passthrough();
+export const DeliveryPricingDto = z
+  .object({ distanceKm: z.number(), config: PricingConfigDto })
+  .partial()
+  .passthrough();
+export const ApiResponseDeliveryPricingDto = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    errorCode: z.string().optional(),
+    data: DeliveryPricingDto.optional(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
 export const ApiResponseBoolean = z
   .object({
     success: z.boolean(),
@@ -311,21 +340,70 @@ export const ApiResponseBoolean = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const ApiResponseListObject = z
+export const SponsoredListingDTO = z
+  .object({
+    adId: z.string(),
+    campaignId: z.string(),
+    impressionUrl: z.string(),
+    clickUrl: z.string(),
+    adm: z.string(),
+    creativeFormat: z.string(),
+  })
+  .partial()
+  .passthrough();
+export const RestaurantDto = z
+  .object({
+    id: z.string().uuid(),
+    brandId: z.string().uuid(),
+    name: z.string(),
+    description: z.string(),
+    lat: z.number(),
+    lng: z.number(),
+    address: z.string(),
+    rating: z.number(),
+    distance: z.number(),
+    isSponsored: z.boolean(),
+    adData: SponsoredListingDTO,
+  })
+  .partial()
+  .passthrough();
+export const ApiResponseListRestaurantDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
     errorCode: z.string().optional(),
-    data: z.array(z.object({}).partial().passthrough()).optional(),
+    data: z.array(RestaurantDto).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const ApiResponseListMapStringObject = z
+export const PlaceGeocodeDto = z
+  .object({
+    formattedAddress: z.string(),
+    placeId: z.string(),
+    lat: z.number(),
+    lng: z.number(),
+  })
+  .partial()
+  .passthrough();
+export const ApiResponsePlaceGeocodeDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
     errorCode: z.string().optional(),
-    data: z.array(z.record(z.object({}).partial().passthrough())).optional(),
+    data: PlaceGeocodeDto.optional(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
+export const PlaceAutocompleteDto = z
+  .object({ placeId: z.string(), description: z.string() })
+  .partial()
+  .passthrough();
+export const ApiResponseListPlaceAutocompleteDto = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    errorCode: z.string().optional(),
+    data: z.array(PlaceAutocompleteDto).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
@@ -334,26 +412,26 @@ export const SortObject = z
   .passthrough();
 export const PageableObject = z
   .object({
+    offset: z.number().int(),
     unpaged: z.boolean(),
     sort: SortObject.optional(),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
-    offset: z.number().int(),
   })
   .passthrough();
 export const PageOrderResponse = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
-    numberOfElements: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
     size: z.number().int(),
     content: z.array(OrderResponse),
+    numberOfElements: z.number().int(),
     number: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -375,7 +453,23 @@ export const ApiResponseListOrderResponse = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const JsonNode = z.object({}).partial().passthrough();
+export const PayoutSummaryDto = z
+  .object({
+    payoutId: z.string(),
+    amount: z.number(),
+    status: z.string(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+export const BeneficiaryStatusDto = z
+  .object({
+    beneficiaryId: z.string(),
+    verificationStatus: z.string(),
+    active: z.boolean(),
+  })
+  .partial()
+  .passthrough();
 export const RestaurantSummary = z
   .object({
     orders: z.number().int(),
@@ -386,14 +480,60 @@ export const RestaurantSummary = z
     netEarnings: z.number(),
     clawbacks: z.number(),
     pendingBalance: z.number(),
-    lastPayout: JsonNode,
-    beneficiaryStatus: JsonNode,
+    lastPayout: PayoutSummaryDto,
+    beneficiaryStatus: BeneficiaryStatusDto,
   })
   .partial()
   .passthrough();
+export const LedgerStatementLineDto = z
+  .object({
+    transactionId: z.string().uuid(),
+    referenceId: z.string().uuid(),
+    category: z.enum([
+      "DELIVERY_FEE",
+      "PLATFORM_FIXED_FEE",
+      "PLATFORM_BONUS",
+      "FOOD_COST",
+      "SGST",
+      "CGST",
+      "REFUND",
+      "ORDER_TOTAL",
+      "AD_IMPRESSION",
+      "AD_CLICK",
+      "AD_CONVERSION",
+      "AD_WALLET_TOPUP",
+      "CLAWBACK",
+      "PAYOUT_TRANSFER",
+      "CASH_COLLECTED",
+      "CASH_REMITTED",
+      "STORE_CREDIT",
+    ]),
+    amount: z.number(),
+    direction: z.enum(["CREDIT", "DEBIT"]),
+    createdAt: z.string().datetime({ offset: true }),
+    description: z.string(),
+    payoutId: z.string().uuid(),
+    payoutStatus: z.string(),
+    settled: z.boolean(),
+  })
+  .partial()
+  .passthrough();
+export const PageResponseDtoLedgerStatementLineDto = z
+  .object({
+    content: z.array(LedgerStatementLineDto),
+    totalElements: z.number().int(),
+    totalPages: z.number().int(),
+    last: z.boolean(),
+    size: z.number().int(),
+    number: z.number().int(),
+    first: z.boolean(),
+    numberOfElements: z.number().int(),
+    empty: z.boolean(),
+  })
+  .passthrough();
 export const RestaurantOrderEarnings = z
   .object({
-    id: z.string().uuid(),
+    orderId: z.string().uuid(),
     restaurantId: z.string().uuid(),
     foodCost: z.number(),
     platformFee: z.number(),
@@ -412,9 +552,34 @@ export const DriverSummary = z
     cashRemitted: z.number(),
     cashInHand: z.number(),
     pendingBalance: z.number(),
-    lastPayout: JsonNode,
+    lastPayout: PayoutSummaryDto,
   })
   .partial()
+  .passthrough();
+export const CashRemittanceDto = z
+  .object({
+    id: z.string().uuid(),
+    driverId: z.string().uuid(),
+    amount: z.number(),
+    reference: z.string(),
+    recordedBy: z.string().uuid(),
+    ledgerTransactionId: z.string().uuid(),
+    createdAt: z.string().datetime({ offset: true }),
+  })
+  .partial()
+  .passthrough();
+export const PageResponseDtoCashRemittanceDto = z
+  .object({
+    content: z.array(CashRemittanceDto),
+    totalElements: z.number().int(),
+    totalPages: z.number().int(),
+    last: z.boolean(),
+    size: z.number().int(),
+    number: z.number().int(),
+    first: z.boolean(),
+    numberOfElements: z.number().int(),
+    empty: z.boolean(),
+  })
   .passthrough();
 export const ReceiptItem = z
   .object({ name: z.string(), quantity: z.number().int(), price: z.number() })
@@ -423,7 +588,7 @@ export const ReceiptItem = z
 export const CustomerReceipt = z
   .object({
     items: z.array(ReceiptItem),
-    subtotal: z.number(),
+    itemTotal: z.number(),
     deliveryFee: z.number(),
     platformFee: z.number(),
     sgst: z.number(),
@@ -491,8 +656,8 @@ export const Order = z
         "REFUND_FAILED",
       ])
       .optional(),
-    total: z.number(),
-    subtotal: z.number().optional(),
+    totalAmount: z.number(),
+    itemTotal: z.number().optional(),
     customerPlatformFee: z.number().optional(),
     restaurantPlatformFee: z.number().optional(),
     platformBonus: z.number().optional(),
@@ -543,69 +708,40 @@ export const PageOrder = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
-    numberOfElements: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
     size: z.number().int(),
     content: z.array(Order),
+    numberOfElements: z.number().int(),
     number: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
+  .passthrough();
+export const DailyTotalDto = z
+  .object({ orderTotals: z.number() })
+  .partial()
   .passthrough();
 export const PageSupportTicket = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
-    numberOfElements: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
     size: z.number().int(),
     content: z.array(SupportTicket),
+    numberOfElements: z.number().int(),
     number: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();
-export const LedgerStatementLineDto = z
-  .object({
-    transactionId: z.string().uuid(),
-    referenceId: z.string().uuid(),
-    category: z.enum([
-      "DELIVERY_FEE",
-      "PLATFORM_FIXED_FEE",
-      "PLATFORM_BONUS",
-      "FOOD_COST",
-      "SGST",
-      "CGST",
-      "REFUND",
-      "ORDER_TOTAL",
-      "AD_IMPRESSION",
-      "AD_CLICK",
-      "AD_CONVERSION",
-      "AD_WALLET_TOPUP",
-      "CLAWBACK",
-      "PAYOUT_TRANSFER",
-      "CASH_COLLECTED",
-      "CASH_REMITTED",
-      "STORE_CREDIT",
-    ]),
-    amount: z.number(),
-    direction: z.enum(["CREDIT", "DEBIT"]),
-    createdAt: z.string().datetime({ offset: true }),
-    description: z.string(),
-    payoutId: z.string().uuid(),
-    payoutStatus: z.string(),
-    settled: z.boolean(),
-  })
-  .partial()
-  .passthrough();
 export const AdminOrderMoney = z
   .object({
-    id: z.string().uuid(),
-    total: z.number(),
+    orderId: z.string().uuid(),
+    totalAmount: z.number(),
     foodCost: z.number(),
     deliveryFee: z.number(),
     customerPlatformFee: z.number(),
@@ -622,18 +758,47 @@ export const AdminOrderMoney = z
   })
   .partial()
   .passthrough();
-export const PageMapStringObject = z
+export const FailedRefundDto = z
   .object({
+    refundId: z.string().uuid(),
+    orderId: z.string().uuid(),
+    amount: z.number(),
+    status: z.enum([
+      "REQUESTED",
+      "PROCESSING",
+      "COMPLETED",
+      "FAILED",
+      "CANCELLED",
+    ]),
+    errorMessage: z.string(),
+    createdAt: z.string().datetime({ offset: true }),
+    customerName: z.string().uuid(),
+    restaurantId: z.string().uuid(),
+    orderStatus: z.enum([
+      "CREATED",
+      "PENDING_ACCEPTANCE",
+      "AWAITING_DELAY_APPROVAL",
+      "ACCEPTED",
+      "PREPARING",
+      "READY_FOR_PICKUP",
+      "HANDED_OVER",
+      "CANCELLED",
+      "CANCELLED_BY_RESTAURANT",
+    ]),
+    totalAmount: z.number(),
+  })
+  .partial()
+  .passthrough();
+export const PageResponseDtoFailedRefundDto = z
+  .object({
+    content: z.array(FailedRefundDto),
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
-    numberOfElements: z.number().int(),
-    first: z.boolean(),
     last: z.boolean(),
     size: z.number().int(),
-    content: z.array(z.record(z.object({}).partial().passthrough())),
     number: z.number().int(),
+    first: z.boolean(),
+    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -641,14 +806,14 @@ export const PageCustomerAddressDto = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
-    numberOfElements: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
     size: z.number().int(),
     content: z.array(CustomerAddressDto),
+    numberOfElements: z.number().int(),
     number: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();

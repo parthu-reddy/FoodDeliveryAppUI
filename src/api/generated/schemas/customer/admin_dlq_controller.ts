@@ -2,27 +2,55 @@ import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
 import { ApiResponseString } from "./common";
-import { SortObject } from "./common";
-import { PageableObject } from "./common";
 
-export const PageMapStringObject = z
+export const FailedRefundDto = z
   .object({
+    refundId: z.string().uuid(),
+    orderId: z.string().uuid(),
+    amount: z.number(),
+    status: z.enum([
+      "REQUESTED",
+      "PROCESSING",
+      "COMPLETED",
+      "FAILED",
+      "CANCELLED",
+    ]),
+    errorMessage: z.string(),
+    createdAt: z.string().datetime({ offset: true }),
+    customerName: z.string().uuid(),
+    restaurantId: z.string().uuid(),
+    orderStatus: z.enum([
+      "CREATED",
+      "PENDING_ACCEPTANCE",
+      "AWAITING_DELAY_APPROVAL",
+      "ACCEPTED",
+      "PREPARING",
+      "READY_FOR_PICKUP",
+      "HANDED_OVER",
+      "CANCELLED",
+      "CANCELLED_BY_RESTAURANT",
+    ]),
+    totalAmount: z.number(),
+  })
+  .partial()
+  .passthrough();
+export const PageResponseDtoFailedRefundDto = z
+  .object({
+    content: z.array(FailedRefundDto),
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
-    numberOfElements: z.number().int(),
-    first: z.boolean(),
     last: z.boolean(),
     size: z.number().int(),
-    content: z.array(z.record(z.object({}).partial().passthrough())),
     number: z.number().int(),
+    first: z.boolean(),
+    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();
 
 export const schemas = {
-  PageMapStringObject,
+  FailedRefundDto,
+  PageResponseDtoFailedRefundDto,
 };
 
 export const endpoints = makeApi([
@@ -76,7 +104,7 @@ export const endpoints = makeApi([
         schema: z.number().int().optional().default(20),
       },
     ],
-    response: PageMapStringObject,
+    response: PageResponseDtoFailedRefundDto,
   },
 ]);
 

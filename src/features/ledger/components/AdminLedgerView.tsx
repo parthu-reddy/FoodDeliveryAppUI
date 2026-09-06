@@ -4,7 +4,6 @@ import { ledgerApi } from "@/lib/zodiosClients";
 import { Badge, Button, Input, Select } from '@shared/ui';
 import { ArrowRight, Check, ChevronLeft, ChevronRight, Copy, Filter, Search } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { asUntyped, WirePage } from '../../../lib/untypedResponse';
 import { formatINR } from '@shared/money';
 import { ChargeCategory } from '@/types/backend-enums';
 
@@ -33,11 +32,10 @@ export default function AdminLedgerView() {
       if (category) queries.category = category;
       if (direction) queries.direction = direction;
 
-      const res = await ledgerApi.ledger.get('/api/v1/ledger/admin/transactions', { queries: queries as unknown as Parameters<typeof ledgerApi.ledger.get>[1] extends { queries?: infer Q } ? Q : never });
+      const res = await ledgerApi.ledger.get('/api/v1/ledger/admin/transactions', { queries });
       if (res) {
-        const pageData = res.data || res;
-        setEntries(asUntyped<WirePage<unknown>>(pageData).content ?? []);
-        setTotalPages(asUntyped<WirePage<unknown>>(pageData).totalPages ?? 1);
+        setEntries(res.content ?? []);
+        setTotalPages(res.totalPages ?? 1);
       }
     } catch (e: unknown) {
       console.error(e);

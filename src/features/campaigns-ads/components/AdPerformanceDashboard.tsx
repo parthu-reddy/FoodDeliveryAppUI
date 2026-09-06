@@ -7,9 +7,9 @@ export interface CampaignPerformance {
   campaignId: string;
   advertiserId: string;
   date: string;
-  impressions: number;
-  clicks: number;
-  conversions: number;
+  impressions?: number;
+  clicks?: number;
+  conversions?: number;
   spend: number;
 }
 
@@ -36,9 +36,9 @@ export function AdPerformanceDashboard({ performanceData, isLoading }: AdPerform
 
   // Aggregate totals
   const totals = performanceData.reduce((acc, curr) => ({
-    impressions: acc.impressions + curr.impressions,
-    clicks: acc.clicks + curr.clicks,
-    conversions: acc.conversions + curr.conversions,
+    impressions: acc.impressions + (curr.impressions ?? 0),
+    clicks: acc.clicks + (curr.clicks ?? 0),
+    conversions: acc.conversions + (curr.conversions ?? 0),
     spend: acc.spend + curr.spend,
   }), { impressions: 0, clicks: 0, conversions: 0, spend: 0 });
 
@@ -89,9 +89,9 @@ export function AdPerformanceDashboard({ performanceData, isLoading }: AdPerform
             {performanceData.map((data) => (
               <tr key={data.id} className="hover:bg-slate-50/50">
                 <td className="px-4 py-3">{format(new Date(data.date), 'MMM d, yyyy')}</td>
-                <td className="px-4 py-3 text-right">{data.impressions.toLocaleString()}</td>
-                <td className="px-4 py-3 text-right font-medium text-slate-900">{data.clicks.toLocaleString()}</td>
-                <td className="px-4 py-3 text-right text-emerald-600">{data.conversions.toLocaleString()}</td>
+                <td className="px-4 py-3 text-right">{(data.impressions ?? 0).toLocaleString()}</td>
+                <td className="px-4 py-3 text-right font-medium text-slate-900">{(data.clicks ?? 0).toLocaleString()}</td>
+                <td className="px-4 py-3 text-right text-emerald-600">{(data.conversions ?? 0).toLocaleString()}</td>
                 <td className="px-4 py-3 text-right font-medium">{formatINR(data.spend)}</td>
               </tr>
             ))}

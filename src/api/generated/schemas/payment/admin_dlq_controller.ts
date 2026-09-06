@@ -1,17 +1,32 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-export const SortObject = z
-  .object({ empty: z.boolean(), sorted: z.boolean(), unsorted: z.boolean() })
-  .passthrough();
-export const PageableObject = z
+export const WebhookDelivery = z
   .object({
-    sort: SortObject.optional(),
-    paged: z.boolean(),
-    pageNumber: z.number().int(),
-    pageSize: z.number().int(),
-    unpaged: z.boolean(),
-    offset: z.number().int(),
+    id: z.string().uuid(),
+    createdAt: z.string().datetime({ offset: true }),
+    updatedAt: z.string().datetime({ offset: true }),
+    version: z.number().int(),
+    gatewayName: z.enum(["RAZORPAY", "CASHFREE", "VYAPAR"]),
+    eventId: z.string(),
+    eventType: z.string(),
+    payload: z.string(),
+    processingStatus: z.enum(["PENDING", "COMPLETED", "FAILED", "DEAD_LETTER"]),
+    errorLog: z.string(),
+  })
+  .partial()
+  .passthrough();
+export const PageResponseDtoWebhookDelivery = z
+  .object({
+    content: z.array(WebhookDelivery),
+    totalElements: z.number().int(),
+    totalPages: z.number().int(),
+    last: z.boolean(),
+    size: z.number().int(),
+    number: z.number().int(),
+    first: z.boolean(),
+    numberOfElements: z.number().int(),
+    empty: z.boolean(),
   })
   .passthrough();
 export const OutboxEventEntity = z
@@ -33,6 +48,7 @@ export const OutboxEventEntity = z
     eventType: z.enum([
       "ORDER_CREATED",
       "ORDER_PAID",
+      "ORDER_PLACED_COD",
       "ORDER_ACCEPTED",
       "ORDER_PREPARING",
       "ORDER_READY",
@@ -62,12 +78,12 @@ export const OutboxEventEntity = z
       "PAYMENT_FAILED",
       "PAYMENT_REFUNDED",
       "PAYMENT_REFUND_REQUESTED",
+      "PAYMENT_REFUND_FAILED",
+      "REFUND_REQUESTED",
+      "REFUND_FAILED",
       "PAYMENT_PARTIALLY_REFUNDED",
       "ORDER_PARTIALLY_REFUNDED",
       "LEDGER_TRANSACTION_REQUEST",
-      "LEDGER_TRANSACTION_FAILED",
-      "LEDGER_REVERSAL_REQUEST",
-      "LEDGER_BULK_TRANSACTION_REQUEST",
       "OUTLET_ACTIVATED",
       "MENU_UPDATED",
       "OUTLET_DEACTIVATED",
@@ -89,10 +105,6 @@ export const OutboxEventEntity = z
       "AD_WALLET_TOPUP_REQUEST",
       "AD_WALLET_TOPUP_COMPLETED",
       "AD_BUDGET_ALERT",
-      "REFUND_GENERATED",
-      "REVERSAL_GENERATED",
-      "EARNINGS_GENERATED",
-      "PAYOUT_GENERATED",
       "CHAT_REFUND_QUOTE_REQUESTED",
       "CHAT_REFUND_REQUESTED",
       "CHAT_REFUND_QUOTE_RESPONSE",
@@ -110,18 +122,16 @@ export const OutboxEventEntity = z
     new: z.boolean().optional(),
   })
   .passthrough();
-export const PageOutboxEventEntity = z
+export const PageResponseDtoOutboxEventEntity = z
   .object({
-    totalPages: z.number().int(),
-    totalElements: z.number().int(),
-    numberOfElements: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
-    size: z.number().int(),
     content: z.array(OutboxEventEntity),
+    totalElements: z.number().int(),
+    totalPages: z.number().int(),
+    last: z.boolean(),
+    size: z.number().int(),
     number: z.number().int(),
+    first: z.boolean(),
+    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -136,14 +146,28 @@ export const ApiResponseString = z
   .passthrough();
 
 export const schemas = {
-  SortObject,
-  PageableObject,
+  WebhookDelivery,
+  PageResponseDtoWebhookDelivery,
   OutboxEventEntity,
-  PageOutboxEventEntity,
+  PageResponseDtoOutboxEventEntity,
   ApiResponseString,
 };
 
 export const endpoints = makeApi([
+  {
+    method: "post",
+    path: "/api/v1/internal/admin/payments/dlq/webhooks/:eventId/retry",
+    alias: "retryWebhookEvent",
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "eventId",
+        type: "Path",
+        schema: z.string(),
+      },
+    ],
+    response: ApiResponseString,
+  },
   {
     method: "post",
     path: "/api/v1/internal/admin/payments/dlq/retry",
@@ -184,6 +208,25 @@ export const endpoints = makeApi([
   },
   {
     method: "get",
+    path: "/api/v1/internal/admin/payments/dlq/webhooks",
+    alias: "getFailedWebhooks",
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "page",
+        type: "Query",
+        schema: z.number().int().optional().default(0),
+      },
+      {
+        name: "size",
+        type: "Query",
+        schema: z.number().int().optional().default(20),
+      },
+    ],
+    response: PageResponseDtoWebhookDelivery,
+  },
+  {
+    method: "get",
     path: "/api/v1/internal/admin/payments/dlq/outbox",
     alias: "getOutboxDlqEvents",
     requestFormat: "json",
@@ -199,7 +242,7 @@ export const endpoints = makeApi([
         schema: z.number().int().optional().default(20),
       },
     ],
-    response: PageOutboxEventEntity,
+    response: PageResponseDtoOutboxEventEntity,
   },
 ]);
 

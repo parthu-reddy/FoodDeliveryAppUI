@@ -6,8 +6,7 @@ import React from 'react';
 interface CustomerAddressSelectorModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  savedAddresses: any[];
+  savedAddresses: import('@/types').Address[];
   address: string;
   setAddress: (address: string) => void;
   setDeliveryLat: (lat: number) => void;
@@ -16,8 +15,7 @@ interface CustomerAddressSelectorModalProps {
   currentAddressId?: string;
   setShowLocationPrompt: (show: boolean) => void;
   onAddNewAddress: () => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  carts?: any;
+  carts?: Record<string, { items: import('@/types').CartItem[] }>;
   clearCart?: (restaurantId: string) => void;
 }
 
@@ -43,14 +41,13 @@ const CustomerAddressSelectorModal: React.FC<CustomerAddressSelectorModalProps> 
     const isDifferent = id ? id !== currentAddressId : addr !== address;
 
     if (isDifferent) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const hasItems = Object.values(carts || {}).some((cart: any) => cart.items && cart.items.length > 0);
+      const hasItems = Object.values(carts || {}).some((cart: { items: import('@/types').CartItem[] }) => cart.items && cart.items.length > 0);
       if (hasItems) {
         if (!window.confirm("Changing your address will clear your active cart. Do you want to continue?")) {
           return;
         }
         Object.keys(carts || {}).forEach(restaurantId => {
-          if (carts[restaurantId]?.items?.length > 0 && clearCart) {
+          if ((carts?.[restaurantId]?.items?.length ?? 0) > 0 && clearCart) {
             clearCart(restaurantId);
           }
         });

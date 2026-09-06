@@ -1,8 +1,67 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-import { ApiResponseMapStringObject } from "./common";
-
+export const PricingConfigDto = z
+  .object({
+    basePrice: z.number(),
+    perKmRate: z.number(),
+    restMaxContributionPercent: z.number(),
+    fixedPlatformFee: z.number(),
+    platformExcessCutPercent: z.number(),
+    sgstPercent: z.number(),
+    cgstPercent: z.number(),
+  })
+  .partial()
+  .passthrough();
+export const DeliveryPricingDto = z
+  .object({ distanceKm: z.number(), config: PricingConfigDto })
+  .partial()
+  .passthrough();
+export const ApiResponseDeliveryPricingDto = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    errorCode: z.string().optional(),
+    data: DeliveryPricingDto.optional(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
+export const SponsoredListingDTO = z
+  .object({
+    adId: z.string(),
+    campaignId: z.string(),
+    impressionUrl: z.string(),
+    clickUrl: z.string(),
+    adm: z.string(),
+    creativeFormat: z.string(),
+  })
+  .partial()
+  .passthrough();
+export const RestaurantDto = z
+  .object({
+    id: z.string().uuid(),
+    brandId: z.string().uuid(),
+    name: z.string(),
+    description: z.string(),
+    lat: z.number(),
+    lng: z.number(),
+    address: z.string(),
+    rating: z.number(),
+    distance: z.number(),
+    isSponsored: z.boolean(),
+    adData: SponsoredListingDTO,
+  })
+  .partial()
+  .passthrough();
+export const ApiResponseListRestaurantDto = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    errorCode: z.string().optional(),
+    data: z.array(RestaurantDto).optional(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
 export const ApiResponseBoolean = z
   .object({
     success: z.boolean(),
@@ -12,19 +71,15 @@ export const ApiResponseBoolean = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const ApiResponseListObject = z
-  .object({
-    success: z.boolean(),
-    message: z.string(),
-    errorCode: z.string().optional(),
-    data: z.array(z.object({}).partial().passthrough()).optional(),
-    timestamp: z.string().datetime({ offset: true }),
-  })
-  .passthrough();
 
 export const schemas = {
+  PricingConfigDto,
+  DeliveryPricingDto,
+  ApiResponseDeliveryPricingDto,
+  SponsoredListingDTO,
+  RestaurantDto,
+  ApiResponseListRestaurantDto,
   ApiResponseBoolean,
-  ApiResponseListObject,
 };
 
 export const endpoints = makeApi([
@@ -45,7 +100,7 @@ export const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: ApiResponseMapStringObject,
+    response: ApiResponseDeliveryPricingDto,
   },
   {
     method: "get",
@@ -83,7 +138,7 @@ export const endpoints = makeApi([
         schema: z.number().optional().default(5),
       },
     ],
-    response: ApiResponseListObject,
+    response: ApiResponseListRestaurantDto,
   },
   {
     method: "get",
@@ -112,7 +167,7 @@ export const endpoints = makeApi([
         schema: z.number().optional().default(5),
       },
     ],
-    response: ApiResponseListObject,
+    response: ApiResponseListRestaurantDto,
   },
 ]);
 

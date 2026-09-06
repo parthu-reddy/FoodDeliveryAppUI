@@ -6,8 +6,7 @@ interface RestaurantBrandSelectorProps {
   hasOutlets: boolean;
   selectedOutletId: string;
   setSelectedOutletId: (id: string) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  outlets: any[];
+  outlets: import('@/types').Outlet[];
   isCurrentOutletAcceptingOrders: boolean;
 }
 

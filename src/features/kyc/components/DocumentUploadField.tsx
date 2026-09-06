@@ -75,9 +75,8 @@ export default function DocumentUploadField({
 
     } catch (err: unknown) {
       console.error('Error uploading document:', err);
-      // @ts-expect-error auto-migration type suppression
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setError((err as any).response?.data?.message || (err as any).response?.data?.error || err.message || 'Failed to upload document');
+      const axiosErr = err as { response?: { data?: { message?: string, error?: string } }, message?: string };
+      setError(axiosErr.response?.data?.message || axiosErr.response?.data?.error || axiosErr.message || 'Failed to upload document');
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) {

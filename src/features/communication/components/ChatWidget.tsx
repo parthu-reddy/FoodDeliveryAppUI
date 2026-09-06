@@ -6,7 +6,6 @@ import { useChatWebSocket } from "@features/communication/models/useChatWebSocke
 import { Camera, ImagePlus, Loader2, MessageSquare, PhoneCall, PhoneOff, Send, X } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState, useImperativeHandle } from 'react';
 import { formatINR } from '@shared/money';
-import { asUntyped } from '../../../lib/untypedResponse';
 import { RefundRequestModal } from './RefundRequestModal';
 
 export interface ChatParticipant {
@@ -20,8 +19,7 @@ interface ChatWidgetProps {
   orderId: string;
   currentUserType: 'CUSTOMER' | 'RESTAURANT' | 'DELIVERY' | 'ADMIN';
   otherParticipants?: ChatParticipant[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  order?: any; // To pass order details
+  order?: import('@/types').Order; // To pass order details
   onClose?: () => void;
   onBack?: () => void;
 }
@@ -165,13 +163,12 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
           });
 
           if (!data || !data.success || !data.data) throw new Error('Failed to init chat session');
-          const session = asUntyped<{ sessionId: string; participants?: { userId: string }[] }>(data.data);
-          const sid = session.sessionId;
+          const session = data.data;
+          const sid = session.sessionId as string;
           setSessionId(sid);
 
-          if (session.participants) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const otherParticipant = session.participants.find((p: any) => p.userId !== user.id);
+          if ((session).participants) {
+            const otherParticipant = (session).participants.find((p: { userId: string }) => p.userId !== user.id);
             if (otherParticipant) {
               setTargetUserId(otherParticipant.userId);
             }
@@ -180,7 +177,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
           // 2. Load history
           const histData = await chatApi.chatSession.get('/api/v1/chat/sessions/:sessionId/messages', { params: { sessionId: sid } });
           if (histData && histData.success) {
-            setMessages(asUntyped<ChatMessage[]>(histData.data ?? []));
+            setMessages((histData.data?.content as ChatMessage[]) ?? []);
           }
         } catch (error: unknown) {
           console.error("Error initializing chat:", error);
@@ -263,10 +260,9 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
             </h3>
             <div className="flex flex-col text-orange-100 text-sm">
               <span>Order #{orderId.substring(0, 8)}</span>
-              {order && order.items && Array.isArray(order.items) && order.items.length > 0 && (
+              {order && order.items && order.items.length > 0 && (
                 <span className="text-xs opacity-90 truncate max-w-[200px]">
-                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                  {order.items.length} items ({order.items.map((i: any) => i?.item?.name || i?.name || 'Item').join(', ')})
+                  {order.items.length} items ({order.items.map((i: import('@/types').OrderItem) => i?.item?.name || i?.name || 'Item').join(', ')})
                 </span>
               )}
             </div>

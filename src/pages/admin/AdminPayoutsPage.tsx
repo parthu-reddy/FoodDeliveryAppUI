@@ -20,9 +20,9 @@ export default function AdminPayoutsPage() {
   const fetchPayouts = async () => {
     setLoading(true);
     try {
-      const res = await ledgerApi.ledger.get('/api/v1/ledger/payouts/pending');
+      const res = await ledgerApi.payout.get('/api/v1/admin/payouts/pending');
       const data = res ?? [];
-      setPendingPayouts(Array.isArray(data) ? data : []);
+      setPendingPayouts(data);
     } catch (e: unknown) {
       console.error(e);
       showError(parseApiError(e, 'Failed to fetch pending payouts').message);
@@ -41,12 +41,14 @@ export default function AdminPayoutsPage() {
   const handleSettle = async (ownerId: string, ownerType: string, amount: number) => {
     setSettling(ownerId);
     try {
-      // The endpoint is actually /settle, not /mark-paid anymore.
-      await ledgerApi.ledger.post('/api/v1/ledger/payouts/settle', {
-              ownerId,
-              ownerType: ownerType as "CUSTOMER" | "PLATFORM" | "RESTAURANT" | "DRIVER" | "ADVERTISER_WALLET" | "GOVERNMENT",
-              amount
-            });
+      await ledgerApi.payout.post('/api/v1/admin/payouts', {
+              payeeId: ownerId,
+              payeeType: ownerType as "CUSTOMER" | "PLATFORM" | "RESTAURANT" | "DRIVER" | "ADVERTISER_WALLET" | "GOVERNMENT",
+              amount,
+              currency: "INR",
+              reason: "Admin settlement",
+              force: true
+            }, { headers: { "Idempotency-Key": crypto.randomUUID() } });
       showSuccess(`Payout of ${formatINR(amount)} for ${ownerType} settled successfully`);
       fetchPayouts();
     } catch (e: unknown) {
@@ -91,13 +93,13 @@ export default function AdminPayoutsPage() {
               <div key={account.ownerId} className="glass-panel p-6 flex flex-col">
                 <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-200 dark:border-slate-800/50">
                   <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg ${
-                    account.ownerType === 'RESTAURANT' ? 'bg-orange-500 shadow-orange-500/30' : 'bg-indigo-500 shadow-indigo-500/30'
+                    account.ownerType === 'RESTAURANT_PAYABLE' ? 'bg-orange-500 shadow-orange-500/30' : 'bg-indigo-500 shadow-indigo-500/30'
                   }`}>
-                    {account.ownerType === 'RESTAURANT' ? <Store className="w-6 h-6 text-white" /> : <Bike className="w-6 h-6 text-white" />}
+                    {account.ownerType === 'RESTAURANT_PAYABLE' ? <Store className="w-6 h-6 text-white" /> : <Bike className="w-6 h-6 text-white" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">{account.ownerType}</p>
-                    <p className="font-mono text-sm text-slate-700 dark:text-slate-300 truncate" title={account.ownerId}>{account.ownerId.substring(0, 12)}...</p>
+                    <p className="font-mono text-sm text-slate-700 dark:text-slate-300 truncate" title={account.ownerId}>{account.ownerId?.substring(0, 12)}...</p>
                   </div>
                 </div>
                 
@@ -110,7 +112,7 @@ export default function AdminPayoutsPage() {
 
                 <Button
                   variant="primary"
-                  onClick={() => handleSettle(account.ownerId, account.ownerType, account.balance)}
+                  onClick={() => handleSettle(account.ownerId!, account.ownerType || "", account.balance || 0)}
                   disabled={settling === account.ownerId}
                   className="w-full !py-4 text-lg !bg-emerald-500 hover:!bg-emerald-600 shadow-lg shadow-emerald-500/30"
                 >

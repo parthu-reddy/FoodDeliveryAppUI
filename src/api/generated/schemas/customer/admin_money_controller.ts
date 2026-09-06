@@ -1,43 +1,12 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-export const LedgerStatementLineDto = z
-  .object({
-    transactionId: z.string().uuid(),
-    referenceId: z.string().uuid(),
-    category: z.enum([
-      "DELIVERY_FEE",
-      "PLATFORM_FIXED_FEE",
-      "PLATFORM_BONUS",
-      "FOOD_COST",
-      "SGST",
-      "CGST",
-      "REFUND",
-      "ORDER_TOTAL",
-      "AD_IMPRESSION",
-      "AD_CLICK",
-      "AD_CONVERSION",
-      "AD_WALLET_TOPUP",
-      "CLAWBACK",
-      "PAYOUT_TRANSFER",
-      "CASH_COLLECTED",
-      "CASH_REMITTED",
-      "STORE_CREDIT",
-    ]),
-    amount: z.number(),
-    direction: z.enum(["CREDIT", "DEBIT"]),
-    createdAt: z.string().datetime({ offset: true }),
-    description: z.string(),
-    payoutId: z.string().uuid(),
-    payoutStatus: z.string(),
-    settled: z.boolean(),
-  })
-  .partial()
-  .passthrough();
+import { LedgerStatementLineDto } from "./common";
+
 export const AdminOrderMoney = z
   .object({
-    id: z.string().uuid(),
-    total: z.number(),
+    orderId: z.string().uuid(),
+    totalAmount: z.number(),
     foodCost: z.number(),
     deliveryFee: z.number(),
     customerPlatformFee: z.number(),
@@ -56,7 +25,6 @@ export const AdminOrderMoney = z
   .passthrough();
 
 export const schemas = {
-  LedgerStatementLineDto,
   AdminOrderMoney,
 };
 

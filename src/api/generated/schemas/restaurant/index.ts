@@ -7,6 +7,7 @@ export { Restaurant_kyc_controllerApi } from "./restaurant_kyc_controller";
 export { Catalog_admin_controllerApi } from "./catalog_admin_controller";
 export { Image_upload_controllerApi } from "./image_upload_controller";
 export { Restaurant_onboarding_controllerApi } from "./restaurant_onboarding_controller";
+export { Internal_restaurant_beneficiary_controllerApi } from "./internal_restaurant_beneficiary_controller";
 export { Internal_restaurant_controllerApi } from "./internal_restaurant_controller";
 export { Internal_order_controllerApi } from "./internal_order_controller";
 export { Restaurant_sse_controllerApi } from "./restaurant_sse_controller";

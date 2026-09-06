@@ -12,10 +12,8 @@ function getHeaders() {
 }
 
 async function apiGet(url: string) { const res = await window.fetch(url, { headers: getHeaders() }); const json = await res.json(); if (!res.ok) throw new Error('API Error'); return { data: json?.success !== undefined ? json.data : json }; }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function apiPost(url: string, body: any) { const res = await window.fetch(url, { method: 'POST', headers: getHeaders(), body: JSON.stringify(body) }); const json = await res.json(); if (!res.ok) throw new Error('API Error'); return { data: json?.success !== undefined ? json.data : json }; }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function apiPut(url: string, body: any) { const res = await window.fetch(url, { method: 'PUT', headers: getHeaders(), body: JSON.stringify(body) }); const json = await res.json(); if (!res.ok) throw new Error('API Error'); return { data: json?.success !== undefined ? json.data : json }; }
+async function apiPost(url: string, body: unknown) { const res = await window.fetch(url, { method: 'POST', headers: getHeaders(), body: JSON.stringify(body) }); const json = await res.json(); if (!res.ok) throw new Error('API Error'); return { data: json?.success !== undefined ? json.data : json }; }
+async function apiPut(url: string, body: unknown) { const res = await window.fetch(url, { method: 'PUT', headers: getHeaders(), body: JSON.stringify(body) }); const json = await res.json(); if (!res.ok) throw new Error('API Error'); return { data: json?.success !== undefined ? json.data : json }; }
 async function apiDelete(url: string) { const res = await window.fetch(url, { method: 'DELETE', headers: getHeaders() }); if (!res.ok) throw new Error('API Error'); }
 
 // Ensure fetch is absolute or relative properly. Since we serve both on 3000, we can use relative.

@@ -4,7 +4,6 @@ import { getToken, getUserProfile } from "@/lib/tokenStore";
 import { chatApi } from "@/lib/zodiosClients";
 import { Client, IMessage } from '@stomp/stompjs';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { asUntyped } from '../../../lib/untypedResponse';
 
 export interface WebRtcSignal {
   sessionId?: string;
@@ -90,9 +89,9 @@ export const useWebRTC = () => {
   useEffect(() => {
     const fetchIceServers = async () => {
       try {
-                const response = await chatApi.turnCredential.get('/api/v1/chat/webrtc/ice-servers', undefined as unknown as Parameters<typeof chatApi.turnCredential.get>[1]);
-                if (response && (response).iceServers) {
-                    iceServersRef.current = { iceServers: asUntyped<RTCIceServer[]>((response as { iceServers?: unknown }).iceServers) };
+                const response = await chatApi.turnCredential.get('/api/v1/chat/webrtc/ice-servers');
+                if (response && response.iceServers) {
+                    iceServersRef.current = { iceServers: response.iceServers as RTCIceServer[] };
         }
       } catch (error: unknown) {
         console.error("Failed to fetch ICE servers, falling back to STUN", error);
@@ -342,7 +341,7 @@ export const useWebRTC = () => {
         });
       }
 
-            await chatApi.chatAudioUpload.post('/api/v1/chat/sessions/:sessionId/upload-audio', formData as unknown as Parameters<typeof chatApi.chatAudioUpload.post>[1], { params: { sessionId } } as unknown as { params: { sessionId: string } });
+            await chatApi.chatAudioUpload.post('/api/v1/chat/sessions/:sessionId/upload-audio', formData as Parameters<typeof chatApi.chatAudioUpload.post>[1], { params: { sessionId } } as { params: { sessionId: string } });
       console.log("Audio recording uploaded successfully.");
       
       // Clear local storage if successful

@@ -36,7 +36,6 @@ import { useCustomerCart } from '@features/customer-orders/model/useCustomerCart
 import { useCustomerOrders } from '@features/customer-orders/model/useCustomerOrders';
 import CustomerPaymentModal from "@features/payments-wallet/components/CustomerPaymentModal";
 import { Button, CompleteProfileModal, SharedSettingsView } from "@shared/ui";
-import { fromContract } from '../../lib/untypedResponse';
 import { formatINR } from '@shared/money';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const OrderTrackingMap = React.lazy(() => import("@features/maps-tracking/components/OrderTrackingMap"));
@@ -225,7 +224,7 @@ export default function CustomerDashboard({
 
   useEffect(() => {
     let ignore = false;
-    if (selectedRestaurant) {
+    if (selectedRestaurant && selectedRestaurant.id) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsMenuLoading(true);
       getEffectiveMenu(selectedRestaurant.id).then(menu => {
@@ -251,7 +250,7 @@ export default function CustomerDashboard({
     if (selectedRestaurant?.brandId) {
       customerApi.customerRestaurant.get('/api/v1/restaurants/brands/:brandId/outlets', { params: { brandId: selectedRestaurant.brandId }, queries: { lat: deliveryLat ?? 0, lng: deliveryLng ?? 0 } })
         .then(res => {
-          if (!ignore && res && res.data) setBrandOutlets(fromContract(res.data));
+          if (!ignore && res && res.data) setBrandOutlets(res.data);
         })
         .catch(console.error);
     } else {
@@ -343,7 +342,7 @@ export default function CustomerDashboard({
 
   useEffect(() => {
     let ignore = false;
-    if (selectedRestaurant) {
+    if (selectedRestaurant && selectedRestaurant.id) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsDeliveryAvailable(null);
       setDeliveryAvailabilityError(null);
@@ -649,14 +648,24 @@ export default function CustomerDashboard({
               <CustomerFreeDeliveryTracker
                 carts={carts}
                 getCartTotal={getCartTotal}
-                deliveryPricing={selectedRestaurant ? quotes[selectedRestaurant.id] : null}
+                deliveryPricing={((selectedRestaurant ? quotes[selectedRestaurant.id as string] : null))?.data as { total: number } || { total: 0 }}
                 selectedRestaurantId={selectedRestaurant?.id}
               />
               <ErrorBoundary fallbackLabel="Menu View">
                 <CustomerMenuView
                   selectedRestaurant={selectedRestaurant}
                   setSelectedRestaurant={setSelectedRestaurant}
-                  deliveryPricing={selectedRestaurant ? quotes[selectedRestaurant.id] : null}
+                  deliveryPricing={(() => {
+                    const q = selectedRestaurant ? quotes[selectedRestaurant.id as string] : null;
+                    if (!q) return null;
+                    return {
+                      isDeliverable: q.isDeliverable,
+                      error: q.error,
+                      minAmountForFreeDelivery: q.data?.minAmountForFreeDelivery,
+                      distanceKm: q.data?.distanceKm,
+                      total: q.data?.total
+                    };
+                  })()}
                   carts={carts}
                   getCartTotal={getCartTotal}
                   isDeliveryAvailable={isDeliveryAvailable}
@@ -741,7 +750,7 @@ export default function CustomerDashboard({
       <CustomerAddressSelectorModal
         isOpen={isAddressSelectorOpen}
         onClose={() => setIsAddressSelectorOpen(false)}
-        savedAddresses={savedAddresses}
+        savedAddresses={savedAddresses as import('@/types').Address[]}
         address={address}
         setAddress={setAddress}
          
@@ -799,11 +808,11 @@ export default function CustomerDashboard({
         paymentStatus={paymentStatus}
         getCartTotal={() => getCartTotal(checkoutRestaurantId || '')}
         cart={checkoutRestaurantId ? (carts[checkoutRestaurantId]?.items || []) : []}
-        cartRestaurant={checkoutRestaurantId ? carts[checkoutRestaurantId]?.restaurant : undefined}
+        cartRestaurant={checkoutRestaurantId ? (carts[checkoutRestaurantId]?.restaurant as { name: string }) : { name: '' }}
         processPaymentAndOrder={processPaymentAndOrder}
         address={address}
-        deliveryLat={deliveryLat ?? undefined}
-        deliveryLng={deliveryLng ?? undefined}
+        deliveryLat={deliveryLat ?? 0}
+        deliveryLng={deliveryLng ?? 0}
       />
 
       <AnimatePresence>

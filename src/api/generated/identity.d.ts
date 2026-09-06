@@ -229,9 +229,12 @@ export interface components {
             /** Format: date-time */
             timestamp: string;
         };
+        StatusUpdateDTO: {
+            isActive: boolean;
+        };
         RoleRequestDTO: {
-            /** @enum {string} */
-            roleName: "CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN";
+            serviceName: string;
+            roleName: string;
         };
         ApiResponseVoid: {
             success: boolean;
@@ -266,47 +269,29 @@ export interface components {
             roles: ("CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN")[];
             active?: boolean;
         };
-        ApiResponsePageUserDTO: {
+        ApiResponsePageResponseDtoUserDTO: {
             success: boolean;
             message: string;
             errorCode?: string;
-            data?: components["schemas"]["PageUserDTO"];
+            data?: components["schemas"]["PageResponseDtoUserDTO"];
             /** Format: date-time */
             timestamp: string;
         };
-        PageUserDTO: {
-            /** Format: int32 */
-            totalPages: number;
+        PageResponseDtoUserDTO: {
+            content: components["schemas"]["UserDTO"][];
             /** Format: int64 */
             totalElements: number;
             /** Format: int32 */
-            size: number;
-            content: components["schemas"]["UserDTO"][];
+            totalPages: number;
+            last: boolean;
             /** Format: int32 */
-            numberOfElements: number;
+            size: number;
             /** Format: int32 */
             number: number;
             first: boolean;
-            last: boolean;
-            pageable?: components["schemas"]["PageableObject"];
-            sort?: components["schemas"]["SortObject"];
-            empty: boolean;
-        };
-        PageableObject: {
-            /** Format: int64 */
-            offset: number;
-            paged: boolean;
             /** Format: int32 */
-            pageNumber: number;
-            /** Format: int32 */
-            pageSize: number;
-            unpaged: boolean;
-            sort?: components["schemas"]["SortObject"];
-        };
-        SortObject: {
+            numberOfElements: number;
             empty: boolean;
-            sorted: boolean;
-            unsorted: boolean;
         };
         ApiResponseListSessionInfo: {
             success: boolean;
@@ -393,9 +378,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: boolean;
-                };
+                "application/json": components["schemas"]["StatusUpdateDTO"];
             };
         };
         responses: {
@@ -560,7 +543,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponsePageUserDTO"];
+                    "application/json": components["schemas"]["ApiResponsePageResponseDtoUserDTO"];
                 };
             };
         };
@@ -583,7 +566,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponsePageUserDTO"];
+                    "application/json": components["schemas"]["ApiResponsePageResponseDtoUserDTO"];
                 };
             };
         };
