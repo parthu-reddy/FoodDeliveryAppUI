@@ -1,8 +1,17 @@
 import React, { useEffect, useState } from 'react';
 
+interface ReconciliationBreak {
+  id: string;
+  kind: string;
+  expected: string | number;
+  actual: string | number;
+  subjectType: string;
+  subjectId: string;
+  resolvedAt?: string;
+}
+
 export const ReconciliationBreaks = () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const [breaks, setBreaks] = useState<any[]>([]);
+    const [breaks, setBreaks] = useState<ReconciliationBreak[]>([]);
     
     useEffect(() => {
         // eslint-disable-next-line no-restricted-syntax
@@ -27,8 +36,7 @@ export const ReconciliationBreaks = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    {breaks.map((b: any) => (
+                    {breaks.map((b: ReconciliationBreak) => (
                         <tr key={b.id}>
                             <td>{b.id}</td>
                             <td>{b.kind}</td>

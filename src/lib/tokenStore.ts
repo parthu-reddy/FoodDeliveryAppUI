@@ -21,38 +21,46 @@ export const clearToken = () => {
 
 // --- Profile ---
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let memoryProfile: any = null;
+export interface LocalUserProfile {
+  id: string;
+  phone?: string;
+  phoneNumber?: string;
+  role?: string;
+  name?: string;
+  [key: string]: unknown;
+}
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const setUserProfile = (profile: any) => {
+let memoryProfile: LocalUserProfile | null = null;
+
+export const setUserProfile = (profile: LocalUserProfile) => {
   memoryProfile = profile;
   localStorage.setItem('user_profile', JSON.stringify(profile));
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const getUserProfile = (): any | null => {
+export const getUserProfile = (): LocalUserProfile | null => {
   if (memoryProfile) return memoryProfile;
 
   const stored = localStorage.getItem('user_profile');
   if (stored) {
     try {
       memoryProfile = JSON.parse(stored);
-      if (!memoryProfile.id) {
-        const token = getToken();
-        if (token) {
-          const decoded = decodeJwt(token);
-          if (decoded && decoded.sub) {
-            memoryProfile.id = decoded.sub;
-            setUserProfile(memoryProfile);
+      if (memoryProfile) {
+        if (!memoryProfile.id) {
+          const token = getToken();
+          if (token) {
+            const decoded = decodeJwt(token);
+            if (decoded && decoded.sub) {
+              memoryProfile.id = decoded.sub;
+              setUserProfile(memoryProfile);
+            }
           }
         }
+        if (!memoryProfile.phone && memoryProfile.phoneNumber) {
+          memoryProfile.phone = memoryProfile.phoneNumber as string;
+        }
+        
+        return memoryProfile;
       }
-      if (!memoryProfile.phone && memoryProfile.phoneNumber) {
-        memoryProfile.phone = memoryProfile.phoneNumber;
-      }
-      
-      return memoryProfile;
     } catch {
       // a corrupt/absent stored profile is expected; fall through to the null return
     }

@@ -8,7 +8,6 @@ import { asUntyped } from '@/lib/untypedResponse';
  * types the response as `{}`. The payload has a real shape at runtime; the contract just does not
  * describe it.
  *
- // eslint-disable-next-line @typescript-eslint/no-explicit-any
  * This exists so those places are explicit and greppable rather than scattered `as any` casts, and
  * so the list shrinks as controllers gain real return types. It is deliberately not a general
  * escape hatch: every call site is a backend contract gap that should eventually disappear.

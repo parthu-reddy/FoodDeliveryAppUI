@@ -1,22 +1,13 @@
-import { MenuItem } from '@/types';
+import { MenuItem, Restaurant } from '@/types';
+import { CartState } from '@features/customer-orders/model/useCustomerCart';
 import ImageLoader from '@shared/ui/ImageLoader';
 import { motion } from 'framer-motion';
 import { AlertCircle, ArrowLeft, Bike, ChevronDown, Clock, MapPinOff, Minus, Plus, Star } from 'lucide-react';
 import React from 'react';
 
 interface CustomerMenuViewProps {
-  selectedRestaurant: {
-    id: string;
-    name: string;
-    image?: string;
-    cuisine?: string;
-    rating?: number | string;
-    deliveryTime?: number | string;
-    deliveryFee?: number;
-    distance?: number;
-    [key: string]: unknown;
-  };
-  setSelectedRestaurant: (res: unknown | null) => void;
+  selectedRestaurant: Restaurant;
+  setSelectedRestaurant: (res: Restaurant | null) => void;
   deliveryPricing?: {
     isDeliverable?: boolean;
     minAmountForFreeDelivery?: number;
@@ -30,7 +21,7 @@ interface CustomerMenuViewProps {
   setIsOutletSelectorOpen: (isOpen: boolean) => void;
   isMenuLoading: boolean;
   effectiveMenu: MenuItem[];
-  carts: Record<string, { items: { item: { id: string }, quantity: number }[] }>;
+  carts: Record<string, CartState>;
   addToCart: (item: MenuItem) => void;
   removeFromCart: (itemId: string, restaurantId: string) => void;
   isQuoting?: boolean;

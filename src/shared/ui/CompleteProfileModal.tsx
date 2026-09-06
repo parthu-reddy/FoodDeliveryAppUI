@@ -12,8 +12,7 @@ const profileSchema = z.object({
 interface CompleteProfileModalProps {
   isOpen: boolean;
   theme: 'light' | 'dark';
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onComplete: (profile: any) => void;
+  onComplete: (profile: { name: string; email: string }) => void;
   profileId: string;
 }
 
@@ -43,9 +42,8 @@ export default function CompleteProfileModal({ isOpen, theme, onComplete, profil
       }, { headers: { 'X-User-Id': '' } });
       onComplete({ name: name.trim(), email: email.trim() });
     } catch (err: unknown) {
-      // @ts-expect-error auto-migration type suppression
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setError((err as any).response?.data?.message || (err as any).response?.data?.error || err.message || 'Failed to update profile. Please try again.');
+      const errObj = err as { response?: { data?: { message?: string, error?: string } }, message?: string };
+      setError(errObj.response?.data?.message || errObj.response?.data?.error || errObj.message || 'Failed to update profile. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

@@ -28,7 +28,7 @@ function OrderTrackingMapInner({ order, enableLiveTracking = false }: { order: O
   useConfig();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [, setMapInstance] = useState<any>(null);
+  const [, setMapInstance] = useState<any | null>(null);
   const { showError } = useToast();
 
   useEffect(() => {

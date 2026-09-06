@@ -1,8 +1,17 @@
 import React, { useEffect, useState } from 'react';
 
+interface Rejection {
+  id: string;
+  entityType: string;
+  entityId: string;
+  rejectionReason: string;
+  amount: string | number;
+  status: string;
+  createdAt: string;
+}
+
 export const Rejections = () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const [rejections, setRejections] = useState<any[]>([]);
+    const [rejections, setRejections] = useState<Rejection[]>([]);
 
     useEffect(() => {
         // eslint-disable-next-line no-restricted-syntax
@@ -27,8 +36,7 @@ export const Rejections = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    {rejections.map((r: any) => (
+                    {rejections.map((r: Rejection) => (
                         <tr key={r.id}>
                             <td>{r.id}</td>
                             <td>{r.entityType}: {r.entityId}</td>

@@ -1,4 +1,4 @@
-import { MenuItem, Order, VerificationStatus } from "@/types";
+import { MenuItem, Order, VerificationStatus, Brand, Outlet } from "@/types";
 import {
     CheckCircle,
     ChevronLeft,
@@ -18,21 +18,6 @@ import OutletRegistration from '@features/catalog/components/restaurant/OutletRe
 import OutletSettingsEditor from '@features/catalog/components/restaurant/OutletSettingsEditor';
 import OutletShiftEditor from '@features/catalog/components/restaurant/OutletShiftEditor';
 import { OrderHistory } from '@features/restaurant-orders/components/OrderHistory';
-
-interface Brand {
-  id: string;
-  name: string;
-  gstin?: string;
-  kycStatus?: string;
-  pennyDropStatus?: string;
-}
-
-interface Outlet {
-  id: string;
-  name: string;
-  fssaiLicenseNumber?: string;
-  timings?: { openingTime: string; closingTime: string }[];
-}
 
 interface RestaurantSettingsShellProps {
   brands: Brand[];
@@ -180,18 +165,18 @@ export const RestaurantSettingsShell: React.FC<RestaurantSettingsShellProps> = (
                           <span>GSTIN: {b.gstin}</span>
                           <div className="flex gap-2">
                             <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] uppercase tracking-wider ${
-                              b.kycStatus === 'VERIFIED' ? 'bg-emerald-500/10 text-emerald-500' :
-                              b.kycStatus === VerificationStatus.PENDING ? 'bg-amber-500/10 text-amber-500 animate-pulse' :
+                              (b as any).kycStatus === 'VERIFIED' ? 'bg-emerald-500/10 text-emerald-500' :
+                              (b as any).kycStatus === VerificationStatus.PENDING ? 'bg-amber-500/10 text-amber-500 animate-pulse' :
                               'bg-rose-500/10 text-rose-500'
                             }`}>
-                              GSTIN: {b.kycStatus || VerificationStatus.PENDING}
+                              GSTIN: {(b as any).kycStatus || VerificationStatus.PENDING}
                             </span>
                             <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] uppercase tracking-wider ${
-                              b.pennyDropStatus === 'VERIFIED' ? 'bg-emerald-500/10 text-emerald-500' :
-                              b.pennyDropStatus === VerificationStatus.PENDING ? 'bg-amber-500/10 text-amber-500 animate-pulse' :
+                              (b as any).pennyDropStatus === 'VERIFIED' ? 'bg-emerald-500/10 text-emerald-500' :
+                              (b as any).pennyDropStatus === VerificationStatus.PENDING ? 'bg-amber-500/10 text-amber-500 animate-pulse' :
                               'bg-rose-500/10 text-rose-500'
                             }`}>
-                              BANK: {b.pennyDropStatus || VerificationStatus.PENDING}
+                              BANK: {(b as any).pennyDropStatus || VerificationStatus.PENDING}
                             </span>
                           </div>
                         </div>

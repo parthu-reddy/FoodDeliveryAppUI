@@ -18,38 +18,44 @@ export interface ParsedApiError {
 }
 
 export function parseApiError(error: unknown, defaultMessage = 'An unexpected error occurred'): ParsedApiError {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const extractMessageFromData = (data: any): string | undefined => {
+  const extractMessageFromData = (data: unknown): string | undefined => {
     if (!data) return undefined;
     if (typeof data === 'string') return data;
+    if (typeof data !== 'object') return undefined;
+
+    const obj = data as Record<string, unknown>;
 
     // Array of errors (e.g., validation errors)
-    if (Array.isArray(data.errors) && data.errors.length > 0) {
-      if (typeof data.errors[0] === 'string') return data.errors[0];
-      if (data.errors[0].message) return data.errors[0].message;
-      if (data.errors[0].defaultMessage) return data.errors[0].defaultMessage;
+    if (Array.isArray(obj.errors) && obj.errors.length > 0) {
+      const firstErr = obj.errors[0];
+      if (typeof firstErr === 'string') return firstErr;
+      if (firstErr && typeof firstErr === 'object') {
+        const errObj = firstErr as Record<string, unknown>;
+        if (typeof errObj.message === 'string') return errObj.message;
+        if (typeof errObj.defaultMessage === 'string') return errObj.defaultMessage;
+      }
     }
 
     // Spring Boot standard error / Custom ApiResponse
-    if (data.message && typeof data.message === 'string') {
+    if (obj.message && typeof obj.message === 'string') {
       // Check if this is an ApiResponse with a data object containing field errors
-      if (data.data && typeof data.data === 'object' && !Array.isArray(data.data) && Object.keys(data.data).length > 0) {
+      if (obj.data && typeof obj.data === 'object' && !Array.isArray(obj.data) && Object.keys(obj.data).length > 0) {
         try {
-          const detailedErrors = Object.entries(data.data)
+          const detailedErrors = Object.entries(obj.data as Record<string, unknown>)
             .map(([field, err]) => `${field}: ${err}`)
             .join(', ');
-          return `${data.message}: ${detailedErrors}`;
+          return `${obj.message}: ${detailedErrors}`;
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (e: unknown) {
           // fallback to just the message
         }
       }
-      return data.message;
+      return obj.message;
     }
 
-    if (data.error && typeof data.error === 'string') return data.error;
-    if (data.details && typeof data.details === 'string') return data.details;
-    if (data.reason && typeof data.reason === 'string') return data.reason;
+    if (obj.error && typeof obj.error === 'string') return obj.error;
+    if (obj.details && typeof obj.details === 'string') return obj.details;
+    if (obj.reason && typeof obj.reason === 'string') return obj.reason;
 
     return undefined;
   };
@@ -58,22 +64,19 @@ export function parseApiError(error: unknown, defaultMessage = 'An unexpected er
   if (isAxiosError(error)) {
     logger.error('API Error (Axios)', error);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const extractedMessage = extractMessageFromData((error as any).response?.data);
+    const extractedMessage = extractMessageFromData(error.response?.data);
 
     if (extractedMessage) {
       return {
         message: extractedMessage,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        statusCode: (error as any).response?.status,
+        statusCode: error.response?.status,
         originalError: error,
       };
     }
 
     return {
       message: error.message || defaultMessage,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      statusCode: (error as any).response?.status,
+      statusCode: error.response?.status,
       originalError: error,
     };
   }
@@ -92,17 +95,13 @@ export function parseApiError(error: unknown, defaultMessage = 'An unexpected er
     }
 
     // Sometimes Zodios exposes the underlying axios error in .cause
-    // @ts-expect-error auto-migration type suppression
-    if (error.causee && isAxiosError(error.causee)) {
-      // @ts-expect-error auto-migration type suppression
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const causeMsg = extractMessageFromData(error.cause(e as any).response?.data);
-      if (causeMsg) {
-        return {
-          message: causeMsg,
-          originalError: error,
-        };
-      }
+    const causeError = (error as any).cause;
+    const causeMsg = isAxiosError(causeError) ? extractMessageFromData(causeError.response?.data) : undefined;
+    if (causeMsg) {
+      return {
+        message: causeMsg,
+        originalError: error,
+      };
     }
 
     return {

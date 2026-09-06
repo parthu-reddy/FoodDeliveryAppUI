@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getUserProfile } from '../lib/tokenStore';
+import { getUserProfile, LocalUserProfile } from '../lib/tokenStore';
 import { identityApi } from '../lib/zodiosClients';
 
 interface UserProfileData {
@@ -13,8 +13,7 @@ interface UseUserProfileResult {
   profile: UserProfileData | null;
   isProfileIncomplete: boolean;
   isLoading: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  localProfile: any;
+  localProfile: LocalUserProfile | null;
 }
 
 /**

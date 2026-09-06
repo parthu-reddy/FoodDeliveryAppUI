@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { formatINR } from '@shared/money';
 import { z } from 'zod';
 import { Order } from '../../types';
+import { OrderItemResponse } from '@/api/generated/schemas/customer/common';
 
 interface RefundModalProps {
   isOpen: boolean;
@@ -201,10 +202,7 @@ export const RefundModal: React.FC<RefundModalProps> = ({
               <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Select Items</label>
                 <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
-                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                  {order.items.map((cartItem: any) => {
-                    const itemParsed = z.object({ id: z.string(), quantity: z.number().optional(), price: z.number().optional(), name: z.string().optional(), item: z.object({ name: z.string().optional() }).optional() }).safeParse(cartItem);
-                    const item = itemParsed.success ? itemParsed.data : { id: '' };
+                  {order.items.map((item: z.infer<typeof OrderItemResponse>) => {
                     const maxQty = item.quantity || 1;
                     const selectedQty = selectedItems[item.id] || 0;
                     return (
@@ -216,7 +214,7 @@ export const RefundModal: React.FC<RefundModalProps> = ({
                             onChange={(e) => handleItemSelect(item.id, e.target.checked ? maxQty : 0, maxQty)}
                             className="text-orange-600 focus:ring-orange-500 rounded"
                           />
-                          <span className="text-sm text-gray-800 truncate">{item?.item?.name || item?.name || 'Item'}</span>
+                          <span className="text-sm text-gray-800 truncate">{item.name || 'Item'}</span>
                         </div>
                         {selectedQty > 0 && maxQty > 1 && (
                           <select 

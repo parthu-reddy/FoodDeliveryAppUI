@@ -1,5 +1,5 @@
 import { getToken } from '@/lib/tokenStore';
-import { MasterMenuItem, MenuItem, OutletOverride } from '@/types';
+import { MasterMenuItem, MenuItem, OutletOverride, Brand, Outlet } from '@/types';
 
 function getHeaders() {
   const headers: Record<string, string> = {
@@ -17,32 +17,6 @@ async function apiPost(url: string, body: any) { const res = await window.fetch(
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function apiPut(url: string, body: any) { const res = await window.fetch(url, { method: 'PUT', headers: getHeaders(), body: JSON.stringify(body) }); const json = await res.json(); if (!res.ok) throw new Error('API Error'); return { data: json?.success !== undefined ? json.data : json }; }
 async function apiDelete(url: string) { const res = await window.fetch(url, { method: 'DELETE', headers: getHeaders() }); if (!res.ok) throw new Error('API Error'); }
-
-export interface Brand {
-  id: string;
-  name: string;
-  gstin: string;
-  pan: string;
-  cin: string;
-  bankAccountNumber: string;
-  ifscCode: string;
-  logoUrl: string;
-  owner: string;
-  createdAt: string;
-}
-
-export interface Outlet {
-  id: string;
-  brandId: string;
-  name: string;
-  fssaiLicenseNumber: string;
-  lat: number;
-  lng: number;
-  timings?: { openingTime: string; closingTime: string }[];
-  bannerUrl: string;
-  defaultPrepTimeSeconds?: number;
-  createdAt: string;
-}
 
 // Ensure fetch is absolute or relative properly. Since we serve both on 3000, we can use relative.
 const API_BASE = '/api/v1';

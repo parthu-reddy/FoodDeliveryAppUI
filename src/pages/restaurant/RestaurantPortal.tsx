@@ -1,7 +1,8 @@
 import { Order, OrderStatus, RoleName } from "@/types";
 import BrandRegistration from '@features/catalog/components/restaurant/BrandRegistration';
 import OutletRegistration from '@features/catalog/components/restaurant/OutletRegistration';
-import { Brand, getBrands, getOutletsByBrand, Outlet } from '@features/catalog/model/menuStore';
+import { getBrands, getOutletsByBrand } from '@features/catalog/model/menuStore';
+import { Brand, Outlet } from '@/types';
 import React, { useEffect, useState } from 'react';
 import RestaurantDashboard from './RestaurantDashboard';
 
@@ -14,8 +15,7 @@ interface Props {
   userPhone: string;
   onNameUpdate: (name: string) => void;
   activeOrders: Order[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onUpdateOrderStatus: (orderId: string, status: OrderStatus, riderInfo?: any) => void;
+  onUpdateOrderStatus: (orderId: string, status: OrderStatus, riderInfo?: Record<string, unknown>) => void;
   onLogout: () => void;
   theme: 'light' | 'dark';
   onToggleTheme: () => void;

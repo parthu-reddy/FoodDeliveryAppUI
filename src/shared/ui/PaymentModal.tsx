@@ -14,7 +14,7 @@ export interface PaymentModalProps {
   onProcessPayment: (method: PaymentMethodType) => void;
   availableMethods?: PaymentMethodType[];
   amount: number;
-  totals?: { subtotal: number; deliveryFee: number; tax: number; total: number };
+  totals?: { subtotal: number; deliveryFee: number; tax: number; total: number; platformFee?: number };
   title?: string;
   successTitle?: string;
   successSubtitle?: string;
@@ -156,12 +156,10 @@ function PaymentModalInner({
                           <span>Delivery Fee</span>
                           <span className="font-mono">{totals.deliveryFee === 0 ? 'FREE' : `${formatINR(totals.deliveryFee)}`}</span>
                         </div>
-                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                        {(totals as any).platformFee !== undefined && (totals as any).platformFee > 0 && (
+                        {totals.platformFee !== undefined && totals.platformFee > 0 && (
                           <div className="flex justify-between">
                             <span>Platform Fee</span>
-                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                            <span className="font-mono">{formatINR((totals as any).platformFee)}</span>
+                            <span className="font-mono">{formatINR(totals.platformFee)}</span>
                           </div>
                         )}
                         <div className="flex justify-between">

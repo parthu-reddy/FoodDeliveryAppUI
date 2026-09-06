@@ -17,13 +17,14 @@ export default function CustomerRestaurantCard({ restaurant, isLast, lastElement
 
   // IntersectionObserver for Impression Tracking
   useEffect(() => {
-    if (!restaurant.isSponsored || !restaurant.adData) return;
+    const adData = restaurant.adData;
+    if (!restaurant.isSponsored || !adData) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
           // Fire impression tracking via GET using the URL provided by the bidding engine
-          const trackingUrl = restaurant.adData.impressionTrackingUrl;
+          const trackingUrl = adData.impressionTrackingUrl;
           if (trackingUrl) {
             const relativeUrl = trackingUrl.replace('http://event-tracking-service', '');
             window.fetch(import.meta.env.VITE_API_BASE_URL + relativeUrl, { headers: { 'X-Calling-Service': 'CustomerApplication' } }).catch(err => console.error("Tracking failed", err));
@@ -42,9 +43,10 @@ export default function CustomerRestaurantCard({ restaurant, isLast, lastElement
   }, [restaurant]);
 
   const handleCardClick = () => {
-    if (restaurant.isSponsored && restaurant.adData) {
+    const adData = restaurant.adData;
+    if (restaurant.isSponsored && adData) {
       // Fire click tracking via GET using the URL provided by the bidding engine
-      const trackingUrl = restaurant.adData.clickTrackingUrl;
+      const trackingUrl = adData.clickTrackingUrl;
       if (trackingUrl) {
         const relativeUrl = trackingUrl.replace('http://event-tracking-service', '');
         window.fetch(import.meta.env.VITE_API_BASE_URL + relativeUrl, { headers: { 'X-Calling-Service': 'CustomerApplication' } }).catch(err => console.error("Click tracking failed", err));

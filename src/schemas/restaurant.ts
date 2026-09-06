@@ -15,7 +15,10 @@ export const restaurantSchema = z.object({
   brandName: z.string().optional(),
   isSponsored: z.boolean().optional(),
    
-  adData: z.any().optional(),
+  adData: z.object({
+    impressionTrackingUrl: z.string().optional(),
+    clickTrackingUrl: z.string().optional(),
+  }).passthrough().optional(),
 }).passthrough();
 
 export type Restaurant = z.infer<typeof restaurantSchema>;

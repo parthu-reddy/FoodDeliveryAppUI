@@ -60,13 +60,17 @@ function AdminFleetMapInner() {
 
         if (!active) return;
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const extractList = (data: any) => {
+        const extractList = (data: unknown) => {
           if (!data) return [];
           if (Array.isArray(data)) return data;
-          if (Array.isArray(data.data)) return data.data;
-          if (data.data?.content && Array.isArray(data.data.content)) return data.data.content;
-          if (data.content && Array.isArray(data.content)) return data.content;
+          
+          const obj = data as Record<string, unknown>;
+          if (Array.isArray(obj.data)) return obj.data;
+          
+          const objData = obj.data as Record<string, unknown> | undefined;
+          if (objData?.content && Array.isArray(objData.content)) return objData.content;
+          
+          if (obj.content && Array.isArray(obj.content)) return obj.content;
           return [];
         };
 

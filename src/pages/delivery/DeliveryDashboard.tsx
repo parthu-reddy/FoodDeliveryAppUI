@@ -69,8 +69,7 @@ export default function DeliveryDashboard({
     useState(false);
   const [isProfileMandatory, setIsProfileMandatory] = useState(false);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [verificationStatus, setVerificationStatus] = useState<any>(null);
+  const [verificationStatus, setVerificationStatus] = useState<{ allDocsApproved?: boolean; bankApproved?: boolean } | null>(null);
   const [isVerificationLoaded, setIsVerificationLoaded] = useState(false);
 
   const [enteredOtp, setEnteredOtp] = useState("");
@@ -174,8 +173,8 @@ export default function DeliveryDashboard({
           setShowProfileRequiredPrompt(true);
         } else {
           console.error("Profile fetch error:", err);
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          showToast((err as any).response?.data?.message || (err as any).response?.data?.error || err.message || "Failed to load profile");
+          const errObj = err as { response?: { data?: { message?: string, error?: string } }, message?: string };
+          showToast(errObj.response?.data?.message || errObj.response?.data?.error || errObj.message || "Failed to load profile");
         }
       })
       .finally(() => setIsLoadingProfile(false));
@@ -345,11 +344,11 @@ export default function DeliveryDashboard({
       // Revert on error
       setActiveJobId(null);
       // Wait, can't easily revert onUpdateOrderStatus without knowing previous state, but we can rely on polling to fix it soon
-      showToast(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (e as any).response?.data?.message ||
-          "Failed to accept order. Ping expired or order already accepted."
-      );
+        const errObj = e as { response?: { data?: { message?: string } } };
+        showToast(
+          errObj.response?.data?.message ||
+            "Failed to accept order. Ping expired or order already accepted."
+        );
     } finally {
       setPingJob(null);
     }
@@ -391,8 +390,8 @@ export default function DeliveryDashboard({
       console.error("Failed to accept job", e);
       // Revert on error
       setActiveJobId(null);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      showError((e as any).response?.data?.message || "Failed to accept job.");
+      const errObj = e as { response?: { data?: { message?: string } } };
+      showError(errObj.response?.data?.message || "Failed to accept job.");
     }
   };
 
@@ -416,8 +415,8 @@ export default function DeliveryDashboard({
         previousStatus,
         currentJob.deliveryStatus
       );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      showToast((e as any).response?.data?.message || "Failed to update status.");
+      const errObj = e as { response?: { data?: { message?: string } } };
+      showToast(errObj.response?.data?.message || "Failed to update status.");
     }
   };
 
@@ -439,8 +438,8 @@ export default function DeliveryDashboard({
       setActiveJobId(null);
       showToast("Delivery aborted. You will be placed back in the pool.");
     } catch (e: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      showToast((e as any).response?.data?.message || "Failed to abort delivery.");
+      const errObj = e as { response?: { data?: { message?: string } } };
+      showToast(errObj.response?.data?.message || "Failed to abort delivery.");
     }
   };
 
@@ -477,8 +476,8 @@ export default function DeliveryDashboard({
         previousStatus,
         currentJob.deliveryStatus
       );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      showToast((e as any).response?.data?.message || "Failed to mark as unavailable.");
+      const errObj = e as { response?: { data?: { message?: string } } };
+      showToast(errObj.response?.data?.message || "Failed to mark as unavailable.");
     }
   };
 
@@ -518,8 +517,8 @@ export default function DeliveryDashboard({
         previousStatus,
         currentJob.deliveryStatus
       );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setPickupOtpError((e as any).response?.data?.message || "Failed to verify OTP.");
+      const errObj = e as { response?: { data?: { message?: string } } };
+      setPickupOtpError(errObj.response?.data?.message || "Failed to verify OTP.");
     }
   };
 
@@ -569,9 +568,9 @@ export default function DeliveryDashboard({
         previousStatus,
         currentJob.deliveryStatus
       );
+      const errObj = e as { response?: { data?: { message?: string } } };
       setOtpError(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (e as any).response?.data?.message || "Failed to verify Delivery OTP."
+        errObj.response?.data?.message || "Failed to verify Delivery OTP."
       );
     }
   };
@@ -595,8 +594,7 @@ export default function DeliveryDashboard({
   }, [currentJob?.status]);
 
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let interval: any;
+    let interval: ReturnType<typeof setInterval>;
     if (
       isWaitTimerActive &&
       currentJob?.deliveryStatus === DeliveryStatus.OUT_FOR_DELIVERY

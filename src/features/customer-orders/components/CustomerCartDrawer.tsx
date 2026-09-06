@@ -9,15 +9,7 @@ const checkoutSchema = z.object({
   deliveryAddressId: z.string().min(1, "Please select a valid delivery address before checking out.")
 });
 
-interface CartItem {
-  quantity: number;
-  item: { id: string; name: string; price: number; [key: string]: unknown };
-}
-
-interface CartState {
-  restaurant?: { id: string; name: string; [key: string]: unknown } | null;
-  items: CartItem[];
-}
+import { CartState } from '../model/useCustomerCart';
 
 interface CartTotal {
   subtotal: number;
@@ -38,7 +30,8 @@ interface CustomerCartDrawerProps {
   selectedRestaurant?: { id: string; name: string; [key: string]: unknown } | null;
   carts: Record<string, CartState>;
   removeFromCart: (itemId: string, restaurantId: string) => void;
-  addToCart: (item: unknown, restaurant: unknown) => void;
+  clearCart: (restaurantId: string) => void;
+  addToCart: (item: any, restaurant: any) => void;
   getCartTotal: (restaurantId: string) => CartTotal;
   setIsPaymentModalOpen?: (open: boolean) => void;
   isSubmitting?: boolean;
@@ -145,7 +138,7 @@ export default function CustomerCartDrawer({
                             </div>
                             <div className="flex items-center bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-[#f0ede6] rounded-lg font-bold">
                               <button 
-                                onClick={() => removeFromCart(cartItem.item.id, restaurantId)}
+                                onClick={() => removeFromCart(cartItem.item.id as string, restaurantId)}
                                 className="p-1 px-2.5 text-xs hover:text-red-500 cursor-pointer"
                               >
                                 -

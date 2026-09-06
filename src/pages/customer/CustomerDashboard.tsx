@@ -120,8 +120,7 @@ export default function CustomerDashboard({
       params: { customerId: profile.id }
      
     })
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .then((addrRes: any) => {
+      .then((addrRes: { data?: Array<Record<string, unknown>> }) => {
         if (addrRes.data) {
           // eslint-disable-next-line react-hooks/immutability
           setSavedAddresses(addrRes.data);
@@ -167,8 +166,7 @@ export default function CustomerDashboard({
     else localStorage.removeItem('deliveryLng');
     localStorage.setItem('deliveryAddressId', deliveryAddressId);
   }, [address, deliveryLat, deliveryLng, deliveryAddressId]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+  const [savedAddresses, setSavedAddresses] = useState<Record<string, unknown>[]>([]);
   const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
   const [orderSuccessToast, setOrderSuccessToast] = useState<Order | null>(null);
 
@@ -208,8 +206,7 @@ export default function CustomerDashboard({
             localStorage.removeItem('deliveryAddressId');
           } else {
             const currentId = localStorage.getItem('deliveryAddressId');
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const exists = addrRes.data.some((a: any) => a.id === currentId);
+            const exists = addrRes.data.some((a: Record<string, unknown>) => a.id === currentId);
             if (!exists && addrRes.data.length > 0) {
               const first = addrRes.data[0];
               setAddress(`${first.label || 'Address'}: ${first.addressLine1 || ''}, ${first.city || ''}`);
@@ -504,8 +501,7 @@ export default function CustomerDashboard({
           deliveryLng={deliveryLng ?? undefined}
           onSelectDeliveryLocation={(addr: string, lat?: string | number, lng?: string | number) => {
             if (addr !== address) {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const hasItems = Object.values(carts || {}).some((cart: any) => cart.items && cart.items.length > 0);
+              const hasItems = Object.values(carts || {}).some((cart) => cart.items && cart.items.length > 0);
               if (hasItems) {
                 if (!window.confirm("Changing your address will clear your active cart. Do you want to continue?")) {
                   return;
@@ -567,8 +563,7 @@ export default function CustomerDashboard({
                     <span className="text-xs font-mono text-slate-500">#{currentTrackingOrder.id.substring(0, 8).toUpperCase()}</span>
                   </div>
                   <div className="space-y-3 mb-6">
-                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    {currentTrackingOrder.items?.map((item: any, idx: number) => (
+                    {currentTrackingOrder.items?.map((item: { item?: { id?: string, name?: string, price?: number }, name?: string, price?: number, quantity?: number }, idx: number) => (
                       <div key={item.item?.id || idx} className="flex justify-between text-sm text-slate-600 dark:text-slate-300">
                         <span>{item.quantity || 1}x {item.item?.name || item.name || 'Item'}</span>
                         <span>{formatINR(((item.item?.price || item.price || 0) * (item.quantity || 1)))}</span>
@@ -652,8 +647,7 @@ export default function CustomerDashboard({
             /* ------------------- RESTAURANT DETAIL & MENU ------------------- */
             <>
               <CustomerFreeDeliveryTracker
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                carts={carts as any}
+                carts={carts}
                 getCartTotal={getCartTotal}
                 deliveryPricing={selectedRestaurant ? quotes[selectedRestaurant.id] : null}
                 selectedRestaurantId={selectedRestaurant?.id}
@@ -661,11 +655,9 @@ export default function CustomerDashboard({
               <ErrorBoundary fallbackLabel="Menu View">
                 <CustomerMenuView
                   selectedRestaurant={selectedRestaurant}
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  setSelectedRestaurant={setSelectedRestaurant as any}
+                  setSelectedRestaurant={setSelectedRestaurant}
                   deliveryPricing={selectedRestaurant ? quotes[selectedRestaurant.id] : null}
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  carts={carts as any}
+                  carts={carts}
                   getCartTotal={getCartTotal}
                   isDeliveryAvailable={isDeliveryAvailable}
                   deliveryAvailabilityError={deliveryAvailabilityError}
@@ -690,8 +682,7 @@ export default function CustomerDashboard({
                 restaurants={restaurants}
                 isRestaurantsLoading={isRestaurantsLoading}
                 setIsAddressSelectorOpen={setIsAddressSelectorOpen}
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                setSelectedRestaurant={setSelectedRestaurant as any}
+                setSelectedRestaurant={setSelectedRestaurant}
                 onAddApiLog={onAddApiLog}
               />
             </ErrorBoundary>
@@ -760,8 +751,7 @@ export default function CustomerDashboard({
         currentAddressId={deliveryAddressId}
          
         setShowLocationPrompt={setShowLocationPrompt}
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        carts={carts as any}
+        carts={carts}
         clearCart={clearCart}
         onAddNewAddress={() => {
           setView('settings');
@@ -777,13 +767,11 @@ export default function CustomerDashboard({
         onClose={() => setIsOutletSelectorOpen(false)}
         brandOutlets={brandOutlets}
         selectedRestaurant={selectedRestaurant}
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setSelectedRestaurant={setSelectedRestaurant as any}
+        setSelectedRestaurant={setSelectedRestaurant}
         onAddApiLog={onAddApiLog}
         deliveryLat={deliveryLat ?? undefined}
         deliveryLng={deliveryLng ?? undefined}
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        carts={carts as any}
+        carts={carts}
         clearCart={clearCart}
       />
 
@@ -794,11 +782,10 @@ export default function CustomerDashboard({
         isCartOpen={isCartOpen}
         setIsCartOpen={setIsCartOpen}
         selectedRestaurant={selectedRestaurant}
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        carts={carts as any}
+        carts={carts}
         removeFromCart={removeFromCart}
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        addToCart={originalAddToCart as any}
+        clearCart={clearCart}
+        addToCart={addToCart}
         getCartTotal={getCartTotal}
         setIsPaymentModalOpen={setIsPaymentModalOpen}
         isSubmitting={paymentStatus !== 'idle'}

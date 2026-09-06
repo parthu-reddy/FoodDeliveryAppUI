@@ -139,10 +139,8 @@ export default function RestaurantDashboard({
         getOutlets()
       ]);
        
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setBrands(fetchedBrands as any);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setOutlets(fetchedOutlets as any);
+      setBrands(fetchedBrands);
+      setOutlets(fetchedOutlets);
       
       const newAcceptingState: Record<string, boolean> = {};
       fetchedOutlets.forEach((o: unknown) => {

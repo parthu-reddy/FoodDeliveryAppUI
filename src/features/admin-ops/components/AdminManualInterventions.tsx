@@ -7,13 +7,15 @@ import { Shield, Truck } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { asUntyped, WirePage } from '../../../lib/untypedResponse';
 import { formatINR } from '@shared/money';
+import { Order as OrderSchema } from '@/api/generated/schemas/customer/common';
+import { z } from 'zod';
+type Order = z.infer<typeof OrderSchema>;
 
 export default function AdminManualInterventions() {
   const { showSuccess, showError } = useToast();
   const [activeTab, setActiveTab] = useState<'DISPATCH' | 'FINANCIAL'>('DISPATCH');
    
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [selectedIntervention, setSelectedIntervention] = useState<any>(null);
+  const [selectedIntervention, setSelectedIntervention] = useState<Order | Record<string, unknown> | null>(null);
   const [cancelReason, setCancelReason] = useState('');
 
   const [interventionsPage, setInterventionsPage] = useState(0);
@@ -33,14 +35,13 @@ export default function AdminManualInterventions() {
   });
  
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [interventions, setInterventions] = useState<any[]>([]);
+  const [interventions, setInterventions] = useState<Order[]>([]);
   useEffect(() => {
      
     if (interventionsResponse) {
       const content = asUntyped<WirePage<unknown>>(interventionsResponse).content ?? (Array.isArray(interventionsResponse) ? interventionsResponse : []);
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setInterventions(Array.isArray(content) ? content : []);
+      setInterventions(Array.isArray(content) ? content as Order[] : []);
       if (interventionsResponse.totalPages !== undefined) {
         setInterventionsTotalPages(interventionsResponse.totalPages);
       }
@@ -58,14 +59,13 @@ export default function AdminManualInterventions() {
    
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [failedRefunds, setFailedRefunds] = useState<any[]>([]);
+  const [failedRefunds, setFailedRefunds] = useState<Record<string, unknown>[]>([]);
    
   useEffect(() => {
     if (failedRefundsResponse) {
       const content = asUntyped<WirePage<unknown>>(failedRefundsResponse).content ?? (Array.isArray(failedRefundsResponse) ? failedRefundsResponse : []);
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setFailedRefunds(Array.isArray(content) ? content : []);
+      setFailedRefunds(Array.isArray(content) ? content as Record<string, unknown>[] : []);
       if (failedRefundsResponse.totalPages !== undefined) {
         setRefundsTotalPages(failedRefundsResponse.totalPages);
       }
@@ -76,8 +76,7 @@ export default function AdminManualInterventions() {
   // Polling for available drivers
   const { data: driversList, refetch: fetchAvailableDrivers } = usePolling({
     fetchFn: async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const res = await deliveryApi.adminDelivery.get('/api/v1/internal/admin/delivery/drivers/available-with-location', { queries: { cityId: 'all' } } as any);
+      const res = await deliveryApi.adminDelivery.get('/api/v1/internal/admin/delivery/drivers/available-with-location', { queries: { cityId: 'all' } });
       const content = res;
       return Array.isArray(content) ? content : [];
     },
@@ -87,8 +86,7 @@ export default function AdminManualInterventions() {
    
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [availableDrivers, setAvailableDrivers] = useState<any[]>([]);
+  const [availableDrivers, setAvailableDrivers] = useState<Record<string, unknown>[]>([]);
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (driversList) setAvailableDrivers(driversList);
@@ -172,6 +170,7 @@ export default function AdminManualInterventions() {
     }
   };
 
+
   return (
     <div className="flex-1 flex w-full h-full overflow-hidden">
       {/* Live Interventions List */}
@@ -238,7 +237,7 @@ export default function AdminManualInterventions() {
             <>
               {failedRefunds.map(refund => (
                 <button
-                  key={refund.refundId}
+                  key={refund.refundId as string}
                   onClick={() => setSelectedIntervention(refund)}
                   className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all ${selectedIntervention?.refundId === refund.refundId ? 'glass-card !border-blue-500 shadow-md ring-1 ring-blue-500' : 'glass-card hover:border-blue-300'}`}
                 >
@@ -246,8 +245,8 @@ export default function AdminManualInterventions() {
                     <Shield className="w-5 h-5 text-blue-500" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-sm truncate">#{refund.orderId.substring(0, 8)}</p>
-                    <p className="text-xs text-red-500 font-bold">{formatINR(refund.amount)} Failed</p>
+                    <p className="font-bold text-sm truncate">#{(refund.orderId as string).substring(0, 8)}</p>
+                    <p className="text-xs text-red-500 font-bold">{formatINR(refund.amount as number)} Failed</p>
                   </div>
                 </button>
               ))}
@@ -285,7 +284,7 @@ export default function AdminManualInterventions() {
 
                 <h2 className="text-3xl font-black mb-2 flex items-center gap-3">
                   <Shield className="w-8 h-8 text-rose-500" />
-                  Order #{selectedIntervention.id.substring(0, 8)} requires intervention
+                  Order #{(selectedIntervention as Order).id.substring(0, 8)} requires intervention
                 </h2>
                 <p className="text-slate-600 dark:text-slate-400 mb-8">This order failed to dispatch to any driver after multiple attempts.</p>
 
@@ -294,12 +293,12 @@ export default function AdminManualInterventions() {
                     <h3 className="font-bold text-lg border-b border-slate-200 dark:border-slate-700 pb-2">Assign Available Driver</h3>
                     <div className="max-h-64 overflow-y-auto space-y-2 pr-2">
                       {availableDrivers.map(driver => (
-                        <div key={driver.id} className="flex items-center justify-between p-3 glass-card">
+                        <div key={driver.id as string} className="flex items-center justify-between p-3 glass-card">
                           <div className="flex items-center gap-3">
                             <Truck className="w-5 h-5 text-indigo-500" />
-                            <p className="font-bold text-sm">{driver.fullName || 'Driver'}</p>
+                            <p className="font-bold text-sm">{driver.fullName as string || 'Driver'}</p>
                           </div>
-                          <Button variant="success" onClick={() => handleAssignDriverToIntervention(selectedIntervention.id, driver.id)} className="shadow-lg shadow-emerald-500/20">
+                          <Button variant="success" onClick={() => handleAssignDriverToIntervention((selectedIntervention as Order).id, driver.id as string)} className="shadow-lg shadow-emerald-500/20">
                             Force Assign
                           </Button>
                         </div>
@@ -319,7 +318,7 @@ export default function AdminManualInterventions() {
                     />
                     <Button
                       variant="primary"
-                      onClick={() => handleCancelIntervention(selectedIntervention.id)}
+                      onClick={() => handleCancelIntervention((selectedIntervention as Order).id)}
                       className="w-full !py-3 !bg-rose-500 hover:!bg-rose-600 shadow-lg shadow-rose-500/30"
                     >
                       Cancel & Refund (Normal)
@@ -328,7 +327,7 @@ export default function AdminManualInterventions() {
                       <h4 className="text-xs font-bold text-red-500 uppercase mb-2">Dangerous Actions</h4>
                       <Button
                         variant="danger"
-                        onClick={() => handleForceCancel(selectedIntervention.id)}
+                        onClick={() => handleForceCancel((selectedIntervention as Order).id)}
                         className="w-full"
                       >
                         Force Cancel Order (Skip Saga)
@@ -343,7 +342,7 @@ export default function AdminManualInterventions() {
 
                 <h2 className="text-3xl font-black mb-2 flex items-center gap-3">
                   <Shield className="w-8 h-8 text-blue-500" />
-                  Refund Failed for Order #{selectedIntervention.orderId.substring(0, 8)}
+                  Refund Failed for Order #{(selectedIntervention.orderId as string).substring(0, 8)}
                 </h2>
                 <p className="text-slate-600 dark:text-slate-400 mb-8">This refund failed processing and is currently stuck in the DLQ.</p>
 
@@ -351,19 +350,19 @@ export default function AdminManualInterventions() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-slate-500 dark:text-slate-400">Amount</p>
-                      <p className="font-black text-xl text-slate-800 dark:text-white">{formatINR(selectedIntervention.amount)}</p>
+                      <p className="font-black text-xl text-slate-800 dark:text-white">{formatINR(selectedIntervention.amount as number)}</p>
                     </div>
                     <div>
                       <p className="text-sm text-slate-500 dark:text-slate-400">Retry Count</p>
-                      <p className="font-bold text-lg text-slate-800 dark:text-white">{selectedIntervention.retryCount}</p>
+                      <p className="font-bold text-lg text-slate-800 dark:text-white">{selectedIntervention.retryCount as number}</p>
                     </div>
                     <div>
                       <p className="text-sm text-slate-500 dark:text-slate-400">Order Status</p>
-                      <p className="font-bold text-lg text-slate-800 dark:text-white">{selectedIntervention.orderStatus || 'N/A'}</p>
+                      <p className="font-bold text-lg text-slate-800 dark:text-white">{selectedIntervention.orderStatus as string || 'N/A'}</p>
                     </div>
                     <div>
                       <p className="text-sm text-slate-500 dark:text-slate-400">Last Failed</p>
-                      <p className="font-bold text-lg text-slate-800 dark:text-white">{new Date(selectedIntervention.updatedAt).toLocaleString()}</p>
+                      <p className="font-bold text-lg text-slate-800 dark:text-white">{new Date(selectedIntervention.updatedAt as string).toLocaleString()}</p>
                     </div>
                   </div>
                 </div>
@@ -371,7 +370,7 @@ export default function AdminManualInterventions() {
                 <div className="flex flex-col gap-4">
                   <Button
                     variant="primary"
-                    onClick={() => handleRetryRefund(selectedIntervention.refundId)}
+                    onClick={() => handleRetryRefund(selectedIntervention.refundId as string)}
                     className="w-full !py-3 !bg-blue-500 hover:!bg-blue-600 shadow-lg shadow-blue-500/30 text-center"
                   >
                     Retry Refund Now
@@ -380,7 +379,7 @@ export default function AdminManualInterventions() {
                     <h4 className="text-xs font-bold text-red-500 uppercase mb-2">Dangerous Actions</h4>
                     <Button
                       variant="danger"
-                      onClick={() => handleForceRefund(selectedIntervention.orderId)}
+                      onClick={() => handleForceRefund(selectedIntervention.orderId as string)}
                       className="w-full"
                     >
                       Force Refund Order (Skip DLQ)

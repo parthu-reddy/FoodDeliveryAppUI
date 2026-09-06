@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 
-interface ImageLoaderProps {
+interface ImageLoaderProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src?: string;
   alt?: string;
   className?: string;
   containerClassName?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
 }
 
 export default function ImageLoader({ src, alt, className, containerClassName, ...props }: ImageLoaderProps) {

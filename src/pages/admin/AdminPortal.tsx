@@ -16,10 +16,13 @@ import { asUntyped, WirePage } from '../../lib/untypedResponse';
 
 const AdminFleetMap = React.lazy(() => import("@features/maps-tracking/components/AdminFleetMap"));
 
+interface AdminPortalProps {
+  onLogout: () => void;
+}
+
 export default function AdminPortal({
   onLogout,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-}: any) {
+}: AdminPortalProps) {
   const { theme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<'deliveries' | 'users' | 'categories' | 'map' | 'ledger' | 'payouts' | 'interventions' | 'support_tickets'>('map');
 

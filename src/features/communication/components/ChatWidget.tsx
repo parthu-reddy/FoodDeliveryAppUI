@@ -13,6 +13,7 @@ export interface ChatParticipant {
   userId: string;
   entityType: 'CUSTOMER' | 'RESTAURANT' | 'DELIVERY';
   displayName: string;
+  [key: string]: unknown;
 }
 
 interface ChatWidgetProps {
@@ -157,7 +158,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
               {
                 userId: user.id,
                 entityType: currentUserType,
-                displayName: user.name || user.email || user.id
+                displayName: (user.name || user.email || user.id) as string
               },
               ...(otherParticipants || [])
             ]

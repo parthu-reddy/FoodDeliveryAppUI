@@ -2,8 +2,11 @@ import { useToast } from "@/contexts/ToastContext";
 import { usePolling } from "@/hooks/usePolling";
 import { formatINR } from '@shared/money';
 import { parseApiError } from '@/lib/parseApiError';
-import { adminApi } from "@/lib/zodiosClients";
-import { ChatWidget } from "@features/communication/components/ChatWidget";
+import { customerApi } from "@/lib/zodiosClients";
+import { SupportTicket as SupportTicketSchema } from "@/api/generated/schemas/customer/common";
+import { z } from 'zod';
+type SupportTicket = z.infer<typeof SupportTicketSchema>;
+import { ChatWidget, ChatWidgetHandle } from "@features/communication/components/ChatWidget";
 import { Button, Textarea } from '@shared/ui';
 import { ShieldCheck, XCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -13,34 +16,31 @@ export default function AdminSupportTickets() {
   const { showSuccess, showError } = useToast();
   const [activeTab, setActiveTab] = useState<'OPEN' | 'IN_REVIEW' | 'RESOLVED' | 'REJECTED'>('OPEN');
   
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [selectedTicket, setSelectedTicket] = useState<any>(null);
+  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
   const [resolutionNotes, setResolutionNotes] = useState('');
   const [faultType, setFaultType] = useState('UNKNOWN');
   const [overrideAmount, setOverrideAmount] = useState<number | ''>('');
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [showChat, setShowChat] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const chatWidgetRef = useRef<any>(null);
+  const chatWidgetRef = useRef<ChatWidgetHandle>(null);
 
   // Polling for tickets
   const { data: ticketsResponse, refetch: fetchTickets } = usePolling({
     fetchFn: async () => {
-      const res = await adminApi.getRefundTickets({ queries: { page, status: activeTab } });
+      const res = await customerApi.adminRefund.getTickets({ queries: { page, status: activeTab } });
       return res;
     },
     intervalMs: 15000,
     enabled: true
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [tickets, setTickets] = useState<any[]>([]);
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
   useEffect(() => {
     if (ticketsResponse) {
       const content = asUntyped<WirePage<unknown>>(ticketsResponse).content ?? (Array.isArray(ticketsResponse) ? ticketsResponse : []);
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setTickets(Array.isArray(content) ? content : []);
+      setTickets(Array.isArray(content) ? content as SupportTicket[] : []);
       if (ticketsResponse.totalPages !== undefined) {
         setTotalPages(ticketsResponse.totalPages);
       }
@@ -49,12 +49,12 @@ export default function AdminSupportTickets() {
 
   const handleResolveTicket = async (ticketId: string, approved: boolean) => {
     try {
-      await adminApi.resolveRefundTicket({ 
+      await customerApi.adminRefund.resolveTicket({ 
         approved, 
         notes: resolutionNotes,
         faultType,
         overrideAmount: overrideAmount === '' ? undefined : Math.round(Number(overrideAmount) * 100)
-      }, { params: { ticketId } });
+      }, { params: { ticketId }, headers: { 'X-User-Id': '' } });
       
       showSuccess(`Ticket successfully ${approved ? 'approved' : 'rejected'}`);
       setSelectedTicket(null);
@@ -67,9 +67,7 @@ export default function AdminSupportTickets() {
     }
   };
 
-  /** Only the fields this handler reads; responses stay untyped at component level here. */
-  interface OpenChatTicket { resolutionNotes?: string | null; refundAmount?: number | null }
-  const handleOpenChat = (ticket: OpenChatTicket) => {
+  const handleOpenChat = (ticket: SupportTicket) => {
     setSelectedTicket(ticket);
     setShowChat(true);
     setResolutionNotes(ticket.resolutionNotes || '');
@@ -138,9 +136,10 @@ export default function AdminSupportTickets() {
                     }`}
                   >
                     <div className="flex justify-between items-start mb-2">
-                      <div className="text-sm font-bold text-slate-800 dark:text-[#f0ede6]">Order #{ticket.orderId?.substring(0, 8)}</div>
+                      <div className="text-sm font-bold text-slate-800 dark:text-[#f0ede6]">Order #{String(ticket.orderId).substring(0, 8)}</div>
+                      <p className="text-sm font-medium">Customer: {String(ticket.customerId).substring(0, 8)}...</p>
                       <div className="text-xs font-medium px-2 py-1 bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 rounded-full">
-                        {formatINR(ticket.refundAmount)}
+                        {formatINR(ticket.refundAmount || 0)}
                       </div>
                     </div>
                     <div className="text-xs text-slate-500 dark:text-slate-400 mb-3 truncate">
@@ -187,7 +186,7 @@ export default function AdminSupportTickets() {
               <div className="p-6 border-b border-slate-100 dark:border-slate-700/50 flex justify-between items-center">
                 <div>
                   <h2 className="text-xl font-bold text-slate-800 dark:text-[#f0ede6]">Ticket Details</h2>
-                  <p className="text-sm text-slate-500 mt-1">Order ID: {selectedTicket.orderId}</p>
+                  <p className="text-sm text-slate-500 mt-1">Order ID: {String(selectedTicket.orderId)}</p>
                 </div>
                 <div className="flex gap-2">
                   <Button variant="ghost" size="icon" onClick={() => { setSelectedTicket(null); setShowChat(false); }}>
@@ -202,11 +201,7 @@ export default function AdminSupportTickets() {
                 <div className="bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden relative" style={{ minHeight: '400px' }}>
                   {showChat && (
                     <div className="absolute inset-0">
-                      <ChatWidget 
-                        ref={chatWidgetRef}
-                        orderId={selectedTicket.orderId}
-                        currentUserType="ADMIN"
-                      />
+                      <ChatWidget orderId={String(selectedTicket.id)} order={{ id: String(selectedTicket.id) } as any} currentUserType="ADMIN" otherParticipants={[]} onClose={() => setShowChat(false)} ref={chatWidgetRef as any} />
                     </div>
                   )}
                   <OpenChatHelper widgetRef={chatWidgetRef} show={showChat} />
@@ -215,6 +210,7 @@ export default function AdminSupportTickets() {
                 {/* Resolution Controls */}
                 {(activeTab === 'OPEN' || activeTab === 'IN_REVIEW') && (
                   <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-700 shrink-0">
+                    <p className="font-bold text-slate-800 dark:text-white mb-2">{String(selectedTicket.customerId).substring(0, 8)}</p>
                     <h3 className="font-bold text-slate-800 dark:text-[#f0ede6] mb-3">Resolution Action</h3>
                     <Textarea 
                       placeholder="Add admin notes (required for rejection)"
@@ -258,7 +254,7 @@ export default function AdminSupportTickets() {
                                 setOverrideAmount('');
                               } else {
                                 const num = Number(val);
-                                if (num <= selectedTicket.refundAmount) {
+                                if (selectedTicket.refundAmount !== undefined && num <= selectedTicket.refundAmount) {
                                   setOverrideAmount(num);
                                 }
                               }
@@ -267,7 +263,7 @@ export default function AdminSupportTickets() {
                           />
                         </div>
                         <div className="text-xs text-slate-500 dark:text-slate-400">
-                          Original Quote: {formatINR(selectedTicket.refundAmount)}
+                          Original Quote: {formatINR(selectedTicket.refundAmount || 0)}
                         </div>
                       </div>
                     </div>

@@ -15,7 +15,7 @@ import { createPaymentFacade as createPaymentApi } from '../api/generated/schema
 import { createRestaurantFacade as createRestaurantApi } from '../api/generated/schemas/restaurant/facade';
 import { createTrackingFacade as createTrackingApi } from '../api/generated/schemas/tracking/facade';
 import { createWalletFacade as createWalletApi } from '../api/generated/schemas/wallet/facade';
-import { adminApiDef } from '../api/manual-schemas/admin';
+
 
 const BASE_URL = env.VITE_API_BASE_URL || window.location.origin;
 
@@ -32,7 +32,7 @@ export const paymentApi = createPaymentApi(BASE_URL, commonZodiosConfig);
 export const restaurantApi = createRestaurantApi(BASE_URL, commonZodiosConfig);
 export const trackingApi = createTrackingApi(BASE_URL, commonZodiosConfig);
 export const walletApi = createWalletApi(BASE_URL, commonZodiosConfig);
-export const adminApi = new Zodios(BASE_URL, adminApiDef, commonZodiosConfig);
+
 
 // Register the authentication and device headers plugin for all clients
 const facades = [
@@ -41,14 +41,12 @@ const facades = [
 ];
 
 facades.forEach(facade => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Object.values(facade).forEach((client: any) => {
-    if (client && typeof client.use === 'function') {
-      client.use(authPlugin);
+  Object.values(facade).forEach((client: unknown) => {
+    const typedClient = client as { use?: (plugin: typeof authPlugin) => void };
+    if (typedClient && typeof typedClient.use === 'function') {
+      typedClient.use(authPlugin);
     }
   });
 });
 
-if (adminApi && typeof adminApi.use === 'function') {
-  adminApi.use(authPlugin);
-}
+

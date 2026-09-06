@@ -45,10 +45,9 @@ export const authPlugin: ZodiosPlugin = {
   error: async (api, config, error) => {
     // If we get an error response with 401 Unauthorized, and it's not the auth endpoint itself,
     // we should log out the user.
-    // Zodios/Axios attaches the response to (error as any).response if it's an Axios error
+    // Zodios/Axios attaches the response to error.response if it's an Axios error
     if (isAxiosError(error)) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const status = (error as any).response?.status;
+      const status = error.response?.status;
       const url = config.url;
 
       if (status === 401 && !url?.includes('/api/v1/internal/auth/')) {
