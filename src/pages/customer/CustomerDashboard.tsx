@@ -785,7 +785,7 @@ export default function CustomerDashboard({
         carts={carts}
         removeFromCart={removeFromCart}
         clearCart={clearCart}
-        addToCart={addToCart}
+        addToCart={originalAddToCart}
         getCartTotal={getCartTotal}
         setIsPaymentModalOpen={setIsPaymentModalOpen}
         isSubmitting={paymentStatus !== 'idle'}

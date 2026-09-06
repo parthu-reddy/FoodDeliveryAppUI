@@ -165,18 +165,18 @@ export const RestaurantSettingsShell: React.FC<RestaurantSettingsShellProps> = (
                           <span>GSTIN: {b.gstin}</span>
                           <div className="flex gap-2">
                             <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] uppercase tracking-wider ${
-                              (b as any).kycStatus === 'VERIFIED' ? 'bg-emerald-500/10 text-emerald-500' :
-                              (b as any).kycStatus === VerificationStatus.PENDING ? 'bg-amber-500/10 text-amber-500 animate-pulse' :
+                              (b as unknown as Record<string, unknown>).kycStatus === 'VERIFIED' ? 'bg-emerald-500/10 text-emerald-500' :
+                              (b as unknown as Record<string, unknown>).kycStatus === VerificationStatus.PENDING ? 'bg-amber-500/10 text-amber-500 animate-pulse' :
                               'bg-rose-500/10 text-rose-500'
                             }`}>
-                              GSTIN: {(b as any).kycStatus || VerificationStatus.PENDING}
+                              GSTIN: {(b as unknown as Record<string, string>).kycStatus || VerificationStatus.PENDING}
                             </span>
                             <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] uppercase tracking-wider ${
-                              (b as any).pennyDropStatus === 'VERIFIED' ? 'bg-emerald-500/10 text-emerald-500' :
-                              (b as any).pennyDropStatus === VerificationStatus.PENDING ? 'bg-amber-500/10 text-amber-500 animate-pulse' :
+                              (b as unknown as Record<string, unknown>).pennyDropStatus === 'VERIFIED' ? 'bg-emerald-500/10 text-emerald-500' :
+                              (b as unknown as Record<string, unknown>).pennyDropStatus === VerificationStatus.PENDING ? 'bg-amber-500/10 text-amber-500 animate-pulse' :
                               'bg-rose-500/10 text-rose-500'
                             }`}>
-                              BANK: {(b as any).pennyDropStatus || VerificationStatus.PENDING}
+                              BANK: {(b as unknown as Record<string, string>).pennyDropStatus || VerificationStatus.PENDING}
                             </span>
                           </div>
                         </div>

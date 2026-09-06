@@ -2,7 +2,6 @@ import { env } from './env';
 import { authPlugin, commonZodiosConfig } from './zodiosConfig';
 
 // Import the generated client creators
-import { Zodios } from '@zodios/core';
 import { createCampaignFacade as createCampaignApi } from '../api/generated/schemas/campaign/facade';
 import { createChatFacade as createChatApi } from '../api/generated/schemas/chat/facade';
 import { createCustomerFacade as createCustomerApi } from '../api/generated/schemas/customer/facade';

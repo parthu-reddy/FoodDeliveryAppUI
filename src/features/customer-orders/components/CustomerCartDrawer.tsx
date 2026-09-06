@@ -31,7 +31,7 @@ interface CustomerCartDrawerProps {
   carts: Record<string, CartState>;
   removeFromCart: (itemId: string, restaurantId: string) => void;
   clearCart: (restaurantId: string) => void;
-  addToCart: (item: any, restaurant: any) => void;
+  addToCart: (item: Record<string, unknown>, restaurant: Record<string, unknown> | null | undefined) => void;
   getCartTotal: (restaurantId: string) => CartTotal;
   setIsPaymentModalOpen?: (open: boolean) => void;
   isSubmitting?: boolean;
