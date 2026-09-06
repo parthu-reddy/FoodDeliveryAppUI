@@ -1,7 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-const ApiResponseMapStringString = z
+export const ApiResponseMapStringString = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -10,7 +10,7 @@ const ApiResponseMapStringString = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-const TopupWalletRequest = z
+export const TopupWalletRequest = z
   .object({ amount: z.number().gte(0.01), gatewayName: z.string().optional() })
   .passthrough();
 
@@ -19,7 +19,7 @@ export const schemas = {
   TopupWalletRequest,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/internal/advertisers/:advertiserId/wallet/topups",

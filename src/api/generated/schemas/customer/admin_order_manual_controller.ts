@@ -9,7 +9,7 @@ import { Order } from "./common";
 import { PageSupportTicket } from "./common";
 import { SupportTicket } from "./common";
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/internal/admin/orders/intervention/:orderId/force-cancel",

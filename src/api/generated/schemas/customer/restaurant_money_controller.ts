@@ -4,7 +4,7 @@ import { z } from "zod";
 import { JsonNode } from "./common";
 import { RefundView } from "./common";
 
-const RestaurantSummary = z
+export const RestaurantSummary = z
   .object({
     orders: z.number().int(),
     grossFoodCost: z.number(),
@@ -19,7 +19,7 @@ const RestaurantSummary = z
   })
   .partial()
   .passthrough();
-const RestaurantOrderEarnings = z
+export const RestaurantOrderEarnings = z
   .object({
     id: z.string().uuid(),
     restaurantId: z.string().uuid(),
@@ -36,7 +36,7 @@ export const schemas = {
   RestaurantOrderEarnings,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/money/restaurant/:outletId/summary",

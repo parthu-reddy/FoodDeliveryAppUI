@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { ApiResponseString } from "./common";
 
-const SessionInfo = z
+export const SessionInfo = z
   .object({
     sessionId: z.string(),
     deviceInfo: z.string(),
@@ -13,7 +13,7 @@ const SessionInfo = z
     serviceName: z.string(),
   })
   .passthrough();
-const ApiResponseListSessionInfo = z
+export const ApiResponseListSessionInfo = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -22,7 +22,7 @@ const ApiResponseListSessionInfo = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-const ApiResponseVoid = z
+export const ApiResponseVoid = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -38,7 +38,7 @@ export const schemas = {
   ApiResponseVoid,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/internal/auth/verify",

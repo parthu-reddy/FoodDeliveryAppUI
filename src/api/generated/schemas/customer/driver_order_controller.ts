@@ -10,7 +10,7 @@ import { OrderResponse } from "./common";
 import { OrderItemResponse } from "./common";
 import { ApiResponseListOrderResponse } from "./common";
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/delivery/orders/history",

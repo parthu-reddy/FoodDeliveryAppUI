@@ -4,7 +4,7 @@ import { z } from "zod";
 import { MasterMenuItem } from "./common";
 import { ApiResponseListMasterMenuItem } from "./common";
 
-const ApiResponseMasterMenuItem = z
+export const ApiResponseMasterMenuItem = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -13,7 +13,7 @@ const ApiResponseMasterMenuItem = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-const OutletMenuOverride = z
+export const OutletMenuOverride = z
   .object({
     id: z.string().uuid().optional(),
     outletId: z.string().uuid().optional(),
@@ -24,7 +24,7 @@ const OutletMenuOverride = z
     version: z.number().int().optional(),
   })
   .passthrough();
-const ApiResponseOutletMenuOverride = z
+export const ApiResponseOutletMenuOverride = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -33,7 +33,7 @@ const ApiResponseOutletMenuOverride = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-const MenuItemDTO = z
+export const MenuItemDTO = z
   .object({
     id: z.string().uuid(),
     restaurantId: z.string().uuid(),
@@ -47,7 +47,7 @@ const MenuItemDTO = z
     categoryName: z.string().optional(),
   })
   .passthrough();
-const ApiResponseListMenuItemDTO = z
+export const ApiResponseListMenuItemDTO = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -56,7 +56,7 @@ const ApiResponseListMenuItemDTO = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-const ApiResponseListOutletMenuOverride = z
+export const ApiResponseListOutletMenuOverride = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -75,7 +75,7 @@ export const schemas = {
   ApiResponseListOutletMenuOverride,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "put",
     path: "/api/v1/brands/:brandId/master-menu/:itemId",

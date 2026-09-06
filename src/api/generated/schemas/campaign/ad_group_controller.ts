@@ -6,19 +6,19 @@ import { pageable } from "./common";
 import { SortObject } from "./common";
 import { PageableObject } from "./common";
 
-const GeoTargeting = z
+export const GeoTargeting = z
   .object({ regions: z.array(z.string()).max(400) })
   .passthrough();
-const Daypart = z
+export const Daypart = z
   .object({ dayOfWeek: z.string(), startTime: z.string(), endTime: z.string() })
   .passthrough();
-const DaypartingConfig = z
+export const DaypartingConfig = z
   .object({ dayparts: z.array(Daypart).max(400) })
   .passthrough();
-const ContextualKeywords = z
+export const ContextualKeywords = z
   .object({ keywords: z.array(z.string()).max(400) })
   .passthrough();
-const AdGroupRequest = z
+export const AdGroupRequest = z
   .object({
     name: z.string(),
     geoTargeting: GeoTargeting.optional(),
@@ -28,7 +28,7 @@ const AdGroupRequest = z
     active: z.boolean().optional(),
   })
   .passthrough();
-const AdGroupResponse = z
+export const AdGroupResponse = z
   .object({
     id: z.string().uuid(),
     campaignId: z.string().uuid(),
@@ -42,7 +42,7 @@ const AdGroupResponse = z
     updatedAt: z.string().datetime({ offset: true }),
   })
   .passthrough();
-const ApiResponseAdGroupResponse = z
+export const ApiResponseAdGroupResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -51,7 +51,7 @@ const ApiResponseAdGroupResponse = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-const PageAdGroupResponse = z
+export const PageAdGroupResponse = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
@@ -66,7 +66,7 @@ const PageAdGroupResponse = z
     empty: z.boolean(),
   })
   .passthrough();
-const ApiResponsePageAdGroupResponse = z
+export const ApiResponsePageAdGroupResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -88,7 +88,7 @@ export const schemas = {
   ApiResponsePageAdGroupResponse,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/advertisers/:advertiserId/campaigns/:campaignId/ad-groups/:adGroupId",

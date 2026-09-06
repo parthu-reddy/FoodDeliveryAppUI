@@ -1,7 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-const ApiResponseObject = z
+export const ApiResponseObject = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -15,7 +15,7 @@ export const schemas = {
   ApiResponseObject,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "put",
     path: "/api/v1/campaigns/:campaignId/pause",

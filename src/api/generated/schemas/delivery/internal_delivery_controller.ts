@@ -1,7 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/internal/delivery/drivers/:driverId/suspend",

@@ -34,4 +34,7 @@ done
 # tag-file grouping drops schemas shared between tags; restore them before anything imports these
 node scripts/fix-missing-schemas.mjs
 
+# Workaround for openapi-zod-client not exporting shared schemas
+find "$SCHEMA_DIR" -name '*.ts' -exec sed -i '' 's/^const /export const /g' {} +
+
 echo "Done! Generated types in $OUT_DIR and schemas in $SCHEMA_DIR"

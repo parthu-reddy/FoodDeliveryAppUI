@@ -1277,6 +1277,29 @@ export interface components {
             /** Format: int64 */
             timeout?: number;
         };
+        NearbyRestaurantDTO: {
+            /** Format: uuid */
+            id?: string;
+            name?: string;
+            description?: string;
+            image?: string;
+            logoUrl?: string;
+            /** Format: double */
+            rating?: number;
+            /** Format: int32 */
+            reviewCount?: number;
+            /** Format: double */
+            deliveryFee?: number;
+            /** Format: int32 */
+            minDeliveryTime?: number;
+            /** Format: int32 */
+            maxDeliveryTime?: number;
+            /** Format: double */
+            distance?: number;
+            isPromoted?: boolean;
+            isClosed?: boolean;
+            outlets?: components["schemas"]["Outlet"][];
+        };
     };
     responses: never;
     parameters: never;
@@ -2257,7 +2280,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseListMapStringObject"];
+                    "application/json": components["schemas"]["NearbyRestaurantDTO"][];
                 };
             };
         };
@@ -2483,7 +2506,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponsePageMapStringObject"];
+                    "application/json": components["schemas"]["NearbyRestaurantDTO"][];
                 };
             };
         };

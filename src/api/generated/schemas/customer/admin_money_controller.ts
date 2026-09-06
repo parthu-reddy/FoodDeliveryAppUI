@@ -1,7 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-const LedgerStatementLineDto = z
+export const LedgerStatementLineDto = z
   .object({
     transactionId: z.string().uuid(),
     referenceId: z.string().uuid(),
@@ -34,7 +34,7 @@ const LedgerStatementLineDto = z
   })
   .partial()
   .passthrough();
-const AdminOrderMoney = z
+export const AdminOrderMoney = z
   .object({
     id: z.string().uuid(),
     total: z.number(),
@@ -60,7 +60,7 @@ export const schemas = {
   AdminOrderMoney,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/internal/admin/orders/:orderId/money",

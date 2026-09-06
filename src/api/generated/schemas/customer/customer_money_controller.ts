@@ -3,11 +3,11 @@ import { z } from "zod";
 
 import { RefundView } from "./common";
 
-const ReceiptItem = z
+export const ReceiptItem = z
   .object({ name: z.string(), quantity: z.number().int(), price: z.number() })
   .partial()
   .passthrough();
-const CustomerReceipt = z
+export const CustomerReceipt = z
   .object({
     items: z.array(ReceiptItem),
     subtotal: z.number(),
@@ -29,7 +29,7 @@ export const schemas = {
   CustomerReceipt,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/money/customer/refunds",

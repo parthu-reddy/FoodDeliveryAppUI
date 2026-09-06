@@ -1,10 +1,10 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-const SortObject = z
+export const SortObject = z
   .object({ empty: z.boolean(), sorted: z.boolean(), unsorted: z.boolean() })
   .passthrough();
-const PageableObject = z
+export const PageableObject = z
   .object({
     sort: SortObject.optional(),
     paged: z.boolean(),
@@ -14,7 +14,7 @@ const PageableObject = z
     offset: z.number().int(),
   })
   .passthrough();
-const OutboxEventEntity = z
+export const OutboxEventEntity = z
   .object({
     id: z.string().uuid(),
     aggregateType: z.enum([
@@ -110,7 +110,7 @@ const OutboxEventEntity = z
     new: z.boolean().optional(),
   })
   .passthrough();
-const PageOutboxEventEntity = z
+export const PageOutboxEventEntity = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
@@ -125,7 +125,7 @@ const PageOutboxEventEntity = z
     empty: z.boolean(),
   })
   .passthrough();
-const ApiResponseString = z
+export const ApiResponseString = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -143,7 +143,7 @@ export const schemas = {
   ApiResponseString,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/internal/admin/payments/dlq/retry",

@@ -5,7 +5,7 @@ import { ApiResponseString } from "./common";
 import { SortObject } from "./common";
 import { PageableObject } from "./common";
 
-const PageMapStringObject = z
+export const PageMapStringObject = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
@@ -25,7 +25,7 @@ export const schemas = {
   PageMapStringObject,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/internal/admin/orders/dlq/retry",

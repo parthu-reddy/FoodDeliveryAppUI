@@ -3,10 +3,8 @@ import { z } from "zod";
 
 import { ApiResponseVoid } from "./common";
 import { ApiResponseMapStringObject } from "./common";
-import { SortObject } from "./common";
-import { PageableObject } from "./common";
 
-const RestaurantOrder = z
+export const RestaurantOrder = z
   .object({
     id: z.string().uuid(),
     restaurantId: z.string().uuid(),
@@ -69,7 +67,7 @@ const RestaurantOrder = z
     updatedAt: z.string().datetime({ offset: true }).optional(),
   })
   .passthrough();
-const ApiResponseListRestaurantOrder = z
+export const ApiResponseListRestaurantOrder = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -78,7 +76,20 @@ const ApiResponseListRestaurantOrder = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-const PageRestaurantOrder = z
+export const SortObject = z
+  .object({ empty: z.boolean(), sorted: z.boolean(), unsorted: z.boolean() })
+  .passthrough();
+export const PageableObject = z
+  .object({
+    offset: z.number().int(),
+    unpaged: z.boolean(),
+    sort: SortObject.optional(),
+    paged: z.boolean(),
+    pageNumber: z.number().int(),
+    pageSize: z.number().int(),
+  })
+  .passthrough();
+export const PageRestaurantOrder = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
@@ -93,7 +104,7 @@ const PageRestaurantOrder = z
     empty: z.boolean(),
   })
   .passthrough();
-const ApiResponsePageRestaurantOrder = z
+export const ApiResponsePageRestaurantOrder = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -102,7 +113,7 @@ const ApiResponsePageRestaurantOrder = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-const AcceptOrderRequest = z
+export const AcceptOrderRequest = z
   .object({ additionalPrepTime: z.number().int(), delayReason: z.string() })
   .partial()
   .passthrough();
@@ -110,12 +121,14 @@ const AcceptOrderRequest = z
 export const schemas = {
   RestaurantOrder,
   ApiResponseListRestaurantOrder,
+  SortObject,
+  PageableObject,
   PageRestaurantOrder,
   ApiResponsePageRestaurantOrder,
   AcceptOrderRequest,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/restaurants/:restaurantId/fulfillment/orders/:orderId/reject",

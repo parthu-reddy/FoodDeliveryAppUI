@@ -1,14 +1,14 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-const IceServer = z
+export const IceServer = z
   .object({
     urls: z.string(),
     username: z.string().optional(),
     credential: z.string().optional(),
   })
   .passthrough();
-const TurnCredentialsResponse = z
+export const TurnCredentialsResponse = z
   .object({ iceServers: z.array(IceServer) })
   .passthrough();
 
@@ -17,7 +17,7 @@ export const schemas = {
   TurnCredentialsResponse,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/chat/webrtc/ice-servers",

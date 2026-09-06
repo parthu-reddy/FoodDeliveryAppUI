@@ -5,7 +5,7 @@ import { WalletDto } from "./internal_wallet_controller";
 import { SortObject } from "./common";
 import { PageableObject } from "./common";
 
-const WalletTransactionDto = z
+export const WalletTransactionDto = z
   .object({
     id: z.string().uuid(),
     walletId: z.string().uuid(),
@@ -17,7 +17,7 @@ const WalletTransactionDto = z
     metadata: z.string().optional(),
   })
   .passthrough();
-const PageWalletTransactionDto = z
+export const PageWalletTransactionDto = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
@@ -38,7 +38,7 @@ export const schemas = {
   PageWalletTransactionDto,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/wallets/:entityType/:entityId",

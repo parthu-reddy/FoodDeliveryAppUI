@@ -4,7 +4,7 @@ import { z } from "zod";
 import { PageableObject } from "./common";
 import { SortObject } from "./common";
 
-const WalletTransactionDto = z
+export const WalletTransactionDto = z
   .object({
     id: z.string().uuid(),
     walletId: z.string().uuid(),
@@ -16,7 +16,7 @@ const WalletTransactionDto = z
     metadata: z.string().optional(),
   })
   .passthrough();
-const PageWalletTransactionDto = z
+export const PageWalletTransactionDto = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
@@ -47,7 +47,7 @@ export const WalletDto = z
     status: z.enum(["ACTIVE", "SUSPENDED", "CLOSED"]),
   })
   .passthrough();
-const CreateWalletRequest = z
+export const CreateWalletRequest = z
   .object({
     entityId: z.string().uuid().optional(),
     entityType: z
@@ -56,7 +56,7 @@ const CreateWalletRequest = z
     currency: z.string(),
   })
   .passthrough();
-const TransactionRequest = z
+export const TransactionRequest = z
   .object({
     amount: z.number(),
     referenceId: z.string().optional(),
@@ -72,7 +72,7 @@ export const schemas = {
   TransactionRequest,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/internal/wallets",

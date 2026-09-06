@@ -7,7 +7,7 @@ import { SortObject } from "./common";
 import { PageableObject } from "./common";
 import { Order } from "./common";
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/internal/admin/orders/:orderId/reconcile",

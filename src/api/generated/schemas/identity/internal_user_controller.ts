@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { ApiResponseString } from "./common";
 
-const UserDTO = z
+export const UserDTO = z
   .object({
     id: z.string().uuid(),
     phoneNumber: z.string(),
@@ -11,7 +11,7 @@ const UserDTO = z
     active: z.boolean().optional(),
   })
   .passthrough();
-const ApiResponseUserDTO = z
+export const ApiResponseUserDTO = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -20,10 +20,10 @@ const ApiResponseUserDTO = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-const SortObject = z
+export const SortObject = z
   .object({ empty: z.boolean(), sorted: z.boolean(), unsorted: z.boolean() })
   .passthrough();
-const PageableObject = z
+export const PageableObject = z
   .object({
     offset: z.number().int(),
     paged: z.boolean(),
@@ -33,7 +33,7 @@ const PageableObject = z
     sort: SortObject.optional(),
   })
   .passthrough();
-const PageUserDTO = z
+export const PageUserDTO = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
@@ -48,7 +48,7 @@ const PageUserDTO = z
     empty: z.boolean(),
   })
   .passthrough();
-const ApiResponsePageUserDTO = z
+export const ApiResponsePageUserDTO = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -57,7 +57,7 @@ const ApiResponsePageUserDTO = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-const RoleRequestDTO = z
+export const RoleRequestDTO = z
   .object({ roleName: z.enum(["CUSTOMER", "DELIVERY", "RESTAURANT", "ADMIN"]) })
   .passthrough();
 
@@ -71,7 +71,7 @@ export const schemas = {
   RoleRequestDTO,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "put",
     path: "/api/v1/internal/users/admin/:userId/status",

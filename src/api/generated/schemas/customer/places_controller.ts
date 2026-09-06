@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { ApiResponseMapStringObject } from "./common";
 
-const ApiResponseListMapStringObject = z
+export const ApiResponseListMapStringObject = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -17,7 +17,7 @@ export const schemas = {
   ApiResponseListMapStringObject,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/places/reverse-geocode",

@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { RefundView } from "./common";
 
-const ApiResponseListRefundView = z
+export const ApiResponseListRefundView = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -17,7 +17,7 @@ export const schemas = {
   ApiResponseListRefundView,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/internal/restaurants/outlets/:outletId/refund-requests",

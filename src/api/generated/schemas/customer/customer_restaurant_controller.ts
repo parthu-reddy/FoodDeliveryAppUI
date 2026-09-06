@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { ApiResponseMapStringObject } from "./common";
 
-const ApiResponseBoolean = z
+export const ApiResponseBoolean = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -12,7 +12,7 @@ const ApiResponseBoolean = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-const ApiResponseListObject = z
+export const ApiResponseListObject = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -27,7 +27,7 @@ export const schemas = {
   ApiResponseListObject,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/restaurants/:id/delivery-pricing",

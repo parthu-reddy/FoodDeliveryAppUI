@@ -6,7 +6,7 @@ import { SortObject } from "./common";
 import { PageableObject } from "./common";
 import { CustomerAddressDto } from "./common";
 
-const PageCustomerAddressDto = z
+export const PageCustomerAddressDto = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
@@ -21,7 +21,7 @@ const PageCustomerAddressDto = z
     empty: z.boolean(),
   })
   .passthrough();
-const ApiResponsePageCustomerAddressDto = z
+export const ApiResponsePageCustomerAddressDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -36,7 +36,7 @@ export const schemas = {
   ApiResponsePageCustomerAddressDto,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/internal/admin/customers/addresses",

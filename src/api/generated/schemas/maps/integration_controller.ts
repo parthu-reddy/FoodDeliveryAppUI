@@ -1,7 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-const DispatchOrderRequest = z
+export const DispatchOrderRequest = z
   .object({
     cityId: z
       .string()
@@ -17,7 +17,7 @@ const DispatchOrderRequest = z
       ),
   })
   .passthrough();
-const SetAvailabilityRequest = z
+export const SetAvailabilityRequest = z
   .object({
     cityId: z
       .string()
@@ -32,7 +32,7 @@ const SetAvailabilityRequest = z
     available: z.boolean(),
   })
   .passthrough();
-const UpdateLocationRequest = z
+export const UpdateLocationRequest = z
   .object({
     cityId: z
       .string()
@@ -55,7 +55,7 @@ export const schemas = {
   UpdateLocationRequest,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "post",
     path: "/api/logistics/dispatch",

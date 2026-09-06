@@ -5,7 +5,7 @@ import { RefundView } from "./common";
 import { RefundCommand } from "./common";
 import { Item } from "./common";
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/internal/orders/:orderId/partial-refund",

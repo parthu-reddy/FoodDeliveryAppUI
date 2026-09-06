@@ -1,7 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-const LedgerTransactionDto = z
+export const LedgerTransactionDto = z
   .object({
     transactionId: z.string().uuid(),
     category: z.enum([
@@ -30,10 +30,10 @@ const LedgerTransactionDto = z
     date: z.string().datetime({ offset: true }),
   })
   .passthrough();
-const SortObject = z
+export const SortObject = z
   .object({ empty: z.boolean(), sorted: z.boolean(), unsorted: z.boolean() })
   .passthrough();
-const PageableObject = z
+export const PageableObject = z
   .object({
     offset: z.number().int(),
     pageSize: z.number().int(),
@@ -43,7 +43,7 @@ const PageableObject = z
     unpaged: z.boolean(),
   })
   .passthrough();
-const PageLedgerTransactionDto = z
+export const PageLedgerTransactionDto = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
@@ -58,7 +58,7 @@ const PageLedgerTransactionDto = z
     empty: z.boolean(),
   })
   .passthrough();
-const LedgerEntry = z
+export const LedgerEntry = z
   .object({
     id: z.string().uuid(),
     transactionId: z.string().uuid(),
@@ -89,7 +89,7 @@ const LedgerEntry = z
     createdAt: z.string().datetime({ offset: true }),
   })
   .passthrough();
-const PageLedgerEntry = z
+export const PageLedgerEntry = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
@@ -104,7 +104,7 @@ const PageLedgerEntry = z
     empty: z.boolean(),
   })
   .passthrough();
-const PayoutSettlementRequest = z
+export const PayoutSettlementRequest = z
   .object({
     ownerId: z.string().uuid(),
     ownerType: z.enum([
@@ -118,7 +118,7 @@ const PayoutSettlementRequest = z
     amount: z.number(),
   })
   .passthrough();
-const LedgerAccount = z
+export const LedgerAccount = z
   .object({
     id: z.string().uuid(),
     ownerType: z.enum([
@@ -146,7 +146,7 @@ export const schemas = {
   LedgerAccount,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/ledger/payouts/settle",

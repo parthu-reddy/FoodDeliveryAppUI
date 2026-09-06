@@ -4,16 +4,15 @@ import { z } from "zod";
 import { ApiResponseVoid } from "./common";
 import { LocalTime } from "./common";
 import { ApiResponseMapStringObject } from "./common";
-import { SortObject } from "./common";
-import { PageableObject } from "./common";
+import { NearbyRestaurantDTO } from "./common";
 
-const TimingRequest = z
+export const TimingRequest = z
   .object({ openingTime: LocalTime, closingTime: LocalTime })
   .passthrough();
-const OutletTimingsUpdateRequest = z
+export const OutletTimingsUpdateRequest = z
   .object({ timings: z.array(TimingRequest) })
   .passthrough();
-const OutletOnboardRequest = z
+export const OutletOnboardRequest = z
   .object({
     name: z.string(),
     fssaiLicenseNumber: z.string(),
@@ -29,7 +28,7 @@ const OutletOnboardRequest = z
     tags: z.string().optional(),
   })
   .passthrough();
-const OutletTiming = z
+export const OutletTiming = z
   .object({
     id: z.string().uuid(),
     openingTime: LocalTime,
@@ -39,7 +38,7 @@ const OutletTiming = z
     version: z.number().int().optional(),
   })
   .passthrough();
-const Outlet = z
+export const Outlet = z
   .object({
     id: z.string().uuid(),
     brandId: z.string().uuid(),
@@ -59,7 +58,7 @@ const Outlet = z
     version: z.number().int().optional(),
   })
   .passthrough();
-const ApiResponseOutlet = z
+export const ApiResponseOutlet = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -68,7 +67,7 @@ const ApiResponseOutlet = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-const ApiResponseListOutlet = z
+export const ApiResponseListOutlet = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -77,31 +76,7 @@ const ApiResponseListOutlet = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-const PageMapStringObject = z
-  .object({
-    totalPages: z.number().int(),
-    totalElements: z.number().int(),
-    size: z.number().int(),
-    content: z.array(z.record(z.object({}).partial().passthrough())),
-    numberOfElements: z.number().int(),
-    number: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
-    empty: z.boolean(),
-  })
-  .passthrough();
-const ApiResponsePageMapStringObject = z
-  .object({
-    success: z.boolean(),
-    message: z.string(),
-    errorCode: z.string().optional(),
-    data: PageMapStringObject.optional(),
-    timestamp: z.string().datetime({ offset: true }),
-  })
-  .passthrough();
-const ApiResponseListMapStringObject = z
+export const ApiResponseListMapStringObject = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -119,12 +94,10 @@ export const schemas = {
   Outlet,
   ApiResponseOutlet,
   ApiResponseListOutlet,
-  PageMapStringObject,
-  ApiResponsePageMapStringObject,
   ApiResponseListMapStringObject,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "put",
     path: "/api/v1/outlets/:outletId/timings",
@@ -253,7 +226,7 @@ const endpoints = makeApi([
         schema: z.number().optional().default(5),
       },
     ],
-    response: ApiResponseListMapStringObject,
+    response: z.array(NearbyRestaurantDTO),
   },
   {
     method: "get",
@@ -308,7 +281,7 @@ const endpoints = makeApi([
         schema: z.number().int().optional().default(100),
       },
     ],
-    response: ApiResponsePageMapStringObject,
+    response: z.array(NearbyRestaurantDTO),
   },
 ]);
 

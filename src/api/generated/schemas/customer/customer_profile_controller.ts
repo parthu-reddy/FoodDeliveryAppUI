@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { ApiResponseMapStringObject } from "./common";
 
-const Customer = z
+export const Customer = z
   .object({
     id: z.string().uuid(),
     phoneNumber: z.string(),
@@ -11,7 +11,7 @@ const Customer = z
     updatedAt: z.string().datetime({ offset: true }).optional(),
   })
   .passthrough();
-const ApiResponseCustomer = z
+export const ApiResponseCustomer = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -26,7 +26,7 @@ export const schemas = {
   ApiResponseCustomer,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "put",
     path: "/api/v1/customers/:id",

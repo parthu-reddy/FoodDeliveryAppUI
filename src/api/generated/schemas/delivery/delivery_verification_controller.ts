@@ -3,27 +3,27 @@ import { z } from "zod";
 
 import { ApiResponseObject } from "./common";
 
-const RCRequest = z
+export const RCRequest = z
   .object({
     registrationNumber: z.string(),
     documentUrl: z.string().optional(),
   })
   .passthrough();
-const DLRequest = z
+export const DLRequest = z
   .object({
     dlNumber: z.string(),
     dateOfBirth: z.string(),
     documentUrl: z.string().optional(),
   })
   .passthrough();
-const BankRequest = z
+export const BankRequest = z
   .object({
     accountNumber: z.string(),
     ifscCode: z.string(),
     kycFullName: z.string(),
   })
   .passthrough();
-const ApiResponseMapStringString = z
+export const ApiResponseMapStringString = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -40,7 +40,7 @@ export const schemas = {
   ApiResponseMapStringString,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "post",
     path: "/api/delivery/verification/vehicle-rc",

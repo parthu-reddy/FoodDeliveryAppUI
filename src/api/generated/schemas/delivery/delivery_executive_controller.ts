@@ -4,7 +4,7 @@ import { z } from "zod";
 import { DeliveryExecutive } from "./common";
 import { ApiResponseObject } from "./common";
 
-const ApiResponseDeliveryExecutive = z
+export const ApiResponseDeliveryExecutive = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -13,7 +13,7 @@ const ApiResponseDeliveryExecutive = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-const ApiResponseVoid = z
+export const ApiResponseVoid = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -22,7 +22,7 @@ const ApiResponseVoid = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-const ToggleStatusRequest = z
+export const ToggleStatusRequest = z
   .object({
     driverId: z
       .string()
@@ -32,7 +32,7 @@ const ToggleStatusRequest = z
     available: z.boolean(),
   })
   .passthrough();
-const DeliveryOnboardRequest = z
+export const DeliveryOnboardRequest = z
   .object({
     fullName: z.string().min(0).max(100),
     phoneNumber: z
@@ -47,7 +47,7 @@ const DeliveryOnboardRequest = z
       .optional(),
   })
   .passthrough();
-const UpdateOrderStatusRequest = z
+export const UpdateOrderStatusRequest = z
   .object({
     status: z.enum([
       "PENDING",
@@ -65,7 +65,7 @@ const UpdateOrderStatusRequest = z
     goOfflineAfter: z.boolean().optional(),
   })
   .passthrough();
-const ApiResponseListMapStringObject = z
+export const ApiResponseListMapStringObject = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -84,7 +84,7 @@ export const schemas = {
   ApiResponseListMapStringObject,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "post",
     path: "/api/delivery/status",

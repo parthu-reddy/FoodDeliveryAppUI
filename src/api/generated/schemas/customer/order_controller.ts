@@ -10,10 +10,10 @@ import { SortObject } from "./common";
 import { PageableObject } from "./common";
 import { ApiResponseListOrderResponse } from "./common";
 
-const OrderItemRequest = z
+export const OrderItemRequest = z
   .object({ menuItemId: z.string().uuid(), quantity: z.number().int().gte(1) })
   .passthrough();
-const OrderRequest = z
+export const OrderRequest = z
   .object({
     quoteId: z.string().uuid(),
     customerId: z.string().uuid(),
@@ -24,7 +24,7 @@ const OrderRequest = z
     items: z.array(OrderItemRequest),
   })
   .passthrough();
-const ApiResponseOrderResponse = z
+export const ApiResponseOrderResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -33,14 +33,14 @@ const ApiResponseOrderResponse = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-const QuoteRequest = z
+export const QuoteRequest = z
   .object({
     restaurantId: z.string().uuid(),
     deliveryAddressId: z.string().uuid(),
     items: z.array(OrderItemRequest).optional(),
   })
   .passthrough();
-const QuoteResponse = z
+export const QuoteResponse = z
   .object({
     quoteId: z.string().uuid(),
     expiresAt: z.string().datetime({ offset: true }),
@@ -56,7 +56,7 @@ const QuoteResponse = z
     restaurantDeliveryContribution: z.number(),
   })
   .passthrough();
-const ApiResponseQuoteResponse = z
+export const ApiResponseQuoteResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -75,7 +75,7 @@ export const schemas = {
   ApiResponseQuoteResponse,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/orders",

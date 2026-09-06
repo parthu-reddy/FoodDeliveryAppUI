@@ -1,7 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-const PennyDropWebhook = z
+export const PennyDropWebhook = z
   .object({
     brandId: z.string().uuid(),
     beneficiaryName: z.string(),
@@ -10,14 +10,14 @@ const PennyDropWebhook = z
   })
   .partial()
   .passthrough();
-const GstinRequest = z
+export const GstinRequest = z
   .object({
     brandId: z.string().uuid().optional(),
     gstin: z.string(),
     brandName: z.string(),
   })
   .passthrough();
-const BankAccountRequest = z
+export const BankAccountRequest = z
   .object({
     brandId: z.string().uuid().optional(),
     accountNumber: z.string(),
@@ -32,7 +32,7 @@ export const schemas = {
   BankAccountRequest,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/verification/brands/webhooks/penny-drop",

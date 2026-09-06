@@ -1,20 +1,20 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-const RCRequest = z
+export const RCRequest = z
   .object({
     registrationNumber: z.string(),
     documentUrl: z.string().optional(),
   })
   .passthrough();
-const DLRequest = z
+export const DLRequest = z
   .object({
     dlNumber: z.string(),
     dateOfBirth: z.string(),
     documentUrl: z.string().optional(),
   })
   .passthrough();
-const BankRequest = z
+export const BankRequest = z
   .object({
     accountNumber: z.string(),
     ifscCode: z.string(),
@@ -28,7 +28,7 @@ export const schemas = {
   BankRequest,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/verification/vehicle-rc",

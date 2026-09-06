@@ -4,7 +4,7 @@ import { z } from "zod";
 import { PageableObject } from "./common";
 import { SortObject } from "./common";
 
-const OutboxEventEntity = z
+export const OutboxEventEntity = z
   .object({
     id: z.string().uuid(),
     aggregateType: z.enum([
@@ -100,7 +100,7 @@ const OutboxEventEntity = z
     new: z.boolean().optional(),
   })
   .passthrough();
-const PageOutboxEventEntity = z
+export const PageOutboxEventEntity = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
@@ -115,7 +115,7 @@ const PageOutboxEventEntity = z
     empty: z.boolean(),
   })
   .passthrough();
-const ApiResponseString = z
+export const ApiResponseString = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -131,7 +131,7 @@ export const schemas = {
   ApiResponseString,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/internal/admin/wallet/dlq/retry",

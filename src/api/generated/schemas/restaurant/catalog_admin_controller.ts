@@ -4,7 +4,7 @@ import { z } from "zod";
 import { ApiResponseListMasterMenuItem } from "./common";
 import { MasterMenuItem } from "./common";
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/internal/admin/restaurants/:restaurantId/catalog/batch",

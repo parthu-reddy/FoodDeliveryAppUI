@@ -1,7 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-const VerifyOtp200Response = z
+export const VerifyOtp200Response = z
   .object({ success: z.boolean(), data: z.string(), message: z.string() })
   .partial()
   .passthrough();
@@ -10,7 +10,7 @@ export const schemas = {
   VerifyOtp200Response,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/internal/auth/verify",
