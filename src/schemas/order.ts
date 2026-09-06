@@ -13,10 +13,6 @@ export const orderSchema = z.object({
   subtotal: z.number().optional(),
   total: z.number().optional(),
   deliveryExecutiveId: z.string().optional(),
-  restaurantPayout: z.number().optional(),
-  foodCost: z.number().optional(),
-  restaurantPlatformFee: z.number().optional(),
-  restaurantDeliveryContribution: z.number().optional(),
 }).passthrough();
 
 import type { components } from '../api/generated/customer';
@@ -30,12 +26,7 @@ export type Order = Omit<components['schemas']['OrderResponse'], 'status' | 'del
     netPayout: number;
     customerContribution: number;
     restaurantContribution: number;
-    platformBonus: number;
   };
-  restaurantPayout?: number;
-  foodCost?: number;
-  restaurantPlatformFee?: number;
-  restaurantDeliveryContribution?: number;
 };
 
 export const normalizeOrder = (raw: unknown): Order => {

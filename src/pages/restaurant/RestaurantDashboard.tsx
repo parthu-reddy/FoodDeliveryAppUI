@@ -294,10 +294,11 @@ export default function RestaurantDashboard({
 
   // Compute stats
   const totalRevenue = sumPaise(...myOrders.map((o) => {
-    if (o.restaurantPayout == null) {
-      throw new Error(`Missing restaurantPayout for order ${o.id}`);
+    if (o.earnings?.netPayout == null) {
+      // It's possible some active orders don't have earnings computed yet.
+      return 0;
     }
-    return o.restaurantPayout;
+    return o.earnings.netPayout;
   }));
 
   const toggleStock = async (dishId: string, currentStatus: boolean) => {

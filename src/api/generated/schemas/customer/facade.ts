@@ -15,6 +15,7 @@ import { createApiClient as create_driverOrder } from './driver_order_controller
 import { createApiClient as create_internalOrder } from './internal_order_controller';
 import { createApiClient as create_order } from './order_controller';
 import { createApiClient as create_places } from './places_controller';
+import { createApiClient as create_restaurantMoney } from './restaurant_money_controller';
 
 export function createCustomerFacade(baseUrl: string, options?: ZodiosOptions) {
   return {
@@ -34,5 +35,6 @@ export function createCustomerFacade(baseUrl: string, options?: ZodiosOptions) {
   customerTracking: create_customerTracking(baseUrl, options),
   adminCustomer: create_adminCustomer(baseUrl, options),
   driverOrder: create_driverOrder(baseUrl, options),
+  restaurantMoney: create_restaurantMoney(baseUrl, options),
   };
 }

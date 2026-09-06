@@ -1,4 +1,4 @@
-import { restaurantApi } from '@/lib/zodiosClients';
+import { customerApi } from '@/lib/zodiosClients';
 import { Order } from '@/types';
 import { Button } from '@shared/ui';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -25,7 +25,8 @@ export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalPr
       setLoading(true);
       setError(null);
       // Fetch transparent invoice details
-      restaurantApi.fulfillment.get('/api/v1/restaurants/:restaurantId/fulfillment/orders/:orderId/invoice', { params: { restaurantId: order.restaurantId, orderId: order.id } })
+      if (order.restaurantId && order.id) {
+        customerApi.restaurantMoney.getOrderEarnings({ params: { outletId: order.restaurantId, orderId: order.id } })
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .then((res: any) => {
           setInvoice(res);
@@ -37,6 +38,7 @@ export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalPr
         .finally(() => {
           setLoading(false);
         });
+      }
     } else {
       setInvoice(null);
     }
@@ -128,25 +130,19 @@ export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalPr
                       <div className="space-y-2 text-sm pl-2 border-l-2 border-slate-200 dark:border-slate-700">
                         <div className="flex justify-between text-slate-600 dark:text-slate-300">
                           <span>Food Value (Item Total)</span>
-                          <span>{formatINR((data.subtotal || data.foodCost || 0))}</span>
+                          <span>{formatINR((data.foodCost || 0))}</span>
                         </div>
                         <div className="flex justify-between text-rose-500 dark:text-rose-400">
                           <span>Platform Fee (Restaurant)</span>
-                          <span>- {formatINR((data.restaurantPlatformFee || 0))}</span>
+                          <span>- {formatINR((data.platformFee || 0))}</span>
                         </div>
                         <div className="flex justify-between text-rose-500 dark:text-rose-400">
                           <span>Delivery Contribution</span>
-                          <span>- {formatINR((data.restaurantDeliveryContribution || 0))}</span>
+                          <span>- {formatINR((data.deliveryContribution || 0))}</span>
                         </div>
-                        {data.platformBonus > 0 && (
-                          <div className="flex justify-between text-emerald-500 dark:text-emerald-400">
-                            <span>Platform Bonus</span>
-                            <span>+ {formatINR((data.platformBonus || 0))}</span>
-                          </div>
-                        )}
                         <div className="flex justify-between font-bold text-lg text-emerald-600 dark:text-emerald-400 pt-2">
                           <span>Net Restaurant Payout</span>
-                          <span>{formatINR((data.restaurantPayout || 0))}</span>
+                          <span>{formatINR((data.netPayout || 0))}</span>
                         </div>
                       </div>
                     </div>
