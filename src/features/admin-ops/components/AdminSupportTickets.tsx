@@ -201,7 +201,7 @@ export default function AdminSupportTickets() {
                 <div className="bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden relative" style={{ minHeight: '400px' }}>
                   {showChat && (
                     <div className="absolute inset-0">
-                      <ChatWidget orderId={String(selectedTicket.id)} order={{ id: String(selectedTicket.id) } as unknown as Record<string, unknown>} currentUserType="ADMIN" otherParticipants={[]} onClose={() => setShowChat(false)} ref={chatWidgetRef as unknown as React.Ref<unknown>} />
+                      <ChatWidget orderId={String(selectedTicket.id)} order={{ id: String(selectedTicket.id) } as unknown as Record<string, unknown>} currentUserType="ADMIN" otherParticipants={[]} onClose={() => setShowChat(false)} ref={chatWidgetRef} />
                     </div>
                   )}
                   <OpenChatHelper widgetRef={chatWidgetRef} show={showChat} />

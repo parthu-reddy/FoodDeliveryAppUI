@@ -1,5 +1,6 @@
 import { EmptyState } from "@shared/ui";
 import { AlertCircle, ShieldCheck, ShoppingBag, X } from 'lucide-react';
+import { MenuItem, Restaurant } from '@/types';
 import { AnimatePresence, motion } from 'motion/react';
 import React from 'react';
 import { z } from 'zod';
@@ -31,7 +32,7 @@ interface CustomerCartDrawerProps {
   carts: Record<string, CartState>;
   removeFromCart: (itemId: string, restaurantId: string) => void;
   clearCart: (restaurantId: string) => void;
-  addToCart: (item: Record<string, unknown>, restaurant: Record<string, unknown> | null | undefined) => void;
+  addToCart: (item: MenuItem, restaurant: Restaurant | null | undefined) => void;
   getCartTotal: (restaurantId: string) => CartTotal;
   setIsPaymentModalOpen?: (open: boolean) => void;
   isSubmitting?: boolean;
