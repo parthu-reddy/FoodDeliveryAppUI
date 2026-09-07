@@ -34,7 +34,7 @@ export default function AdminLedgerView() {
 
       const res = await ledgerApi.ledger.get('/api/v1/ledger/admin/transactions', { queries });
       if (res) {
-        setEntries((res.content as unknown as LedgerStatementLineDto[]) ?? []);
+        setEntries((res.content as unknown[]) ?? []);
         setTotalPages((res.totalPages as unknown as number) ?? 1);
       }
     } catch (e: unknown) {

@@ -67,9 +67,9 @@ function AdminFleetMapInner() {
         if (!active) return;
 
         //  type suppression
-        setRestaurants((resOutlets.content as unknown as Outlet[]) ?? []);
-        setRiders((resDrivers.content as unknown as DriverLocationDTO[]) ?? []);
-        setCustomers((resCustomers.content as unknown as CustomerAddressDto[]) ?? []);
+        setRestaurants((resOutlets.content as unknown as Restaurant[]) ?? []);
+        setRiders((resDrivers.content as unknown as Rider[]) ?? []);
+        setCustomers((resCustomers.content as unknown as CustomerAddress[]) ?? []);
       } catch (err: unknown) {
         console.error("Failed to fetch map data", err);
       }
