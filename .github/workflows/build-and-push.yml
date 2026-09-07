@@ -111,6 +111,9 @@ jobs:
           VITE_ENABLE_DEV_OTP: 'true'
         run: |
           npm ci
+          npm run typecheck
+          npm run lint
+          npm run test
           npm run build
           
       - name: Set up QEMU
