@@ -15,8 +15,8 @@ export const ReconciliationBreaks = () => {
     const [breaks, setBreaks] = useState<ReconciliationBreak[]>([]);
     
     useEffect(() => {
-        (ledgerApi.ledger as any).get('/api/v1/ledger/admin/reconciliation/breaks')
-            .then((res: any) => setBreaks((res?.content as unknown as ReconciliationBreak[]) || []))
+        (ledgerApi.ledger as unknown as Record<string, Function>).get('/api/v1/ledger/admin/reconciliation/breaks')
+            .then((res: Record<string, unknown>) => setBreaks((res?.content as unknown as ReconciliationBreak[]) || []))
             .catch(console.error);
     }, []);
 

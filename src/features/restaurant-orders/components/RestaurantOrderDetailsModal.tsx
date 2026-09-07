@@ -28,11 +28,11 @@ export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalPr
       setError(null);
       // Fetch transparent invoice details
       if (order.restaurantId && order.id) {
-        (customerApi.restaurantMoney as any).fetchSummary({ params: { outletId: order.restaurantId }, queries: { orderId: order.id } })
-        .then((res: any) => {
+        (customerApi.restaurantMoney as unknown as Record<string, Function>).fetchSummary({ params: { outletId: order.restaurantId }, queries: { orderId: order.id } })
+        .then((res: Record<string, unknown>) => {
           setInvoice(res);
         })
-        .catch((err: any) => {
+        .catch((err: unknown) => {
           console.error("Failed to load invoice:", err);
           setError("Could not load full invoice details. Displaying available data.");
         })

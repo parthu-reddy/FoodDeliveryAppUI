@@ -94,7 +94,7 @@ export default function RiderSettingsView({
           const verRes = await deliveryApi.deliveryVerification.get(`/api/delivery/verification/status`, {});
           if (verRes?.data) {
             setVerificationStatus({
-              allDocsApproved: verRes.data.fullyVerified === true || verRes.data.fullyVerified === 'true' as any,
+              allDocsApproved: verRes.data.fullyVerified === true || verRes.data.fullyVerified === 'true' as unknown as boolean,
               bankApproved: verRes.data.bankStatus === 'APPROVED' || verRes.data.bankStatus === 'VERIFIED'
             });
           }

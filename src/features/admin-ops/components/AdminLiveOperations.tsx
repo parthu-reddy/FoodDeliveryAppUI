@@ -42,9 +42,9 @@ export default function AdminLiveOperations() {
     intervalMs: 15000,
     enabled: true,
     onData: (response) => {
-        const page = response as any;
+        const page = response as unknown as Record<string, unknown>;
         const content = page.content ?? [];
-        setActiveOrders(content as any as AdminOrder[]);
+        setActiveOrders(content as unknown as AdminOrder[]);
         if (page.totalPages !== undefined) {
             setTotalPages(page.totalPages as number);
         }

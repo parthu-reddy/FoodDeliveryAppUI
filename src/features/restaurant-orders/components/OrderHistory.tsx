@@ -68,12 +68,12 @@ interface RawOrder {
               id: o.orderId || o.id, 
               status: s as OrderStatus, 
               items: parsedItems,
-              totalAmount: (o as any).totalAmount || (o as any).total || calculatedTotal,
-              itemTotal: (o as any).itemTotal || (o as any).subtotal || calculatedTotal,
+              totalAmount: (o as Record<string, unknown>).totalAmount || (o as Record<string, unknown>).total || calculatedTotal,
+              itemTotal: (o as Record<string, unknown>).itemTotal || (o as Record<string, unknown>).subtotal || calculatedTotal,
               createdAt: o.createdAt || new Date().toISOString()
             };
           });
-          setOrders(mapped as any as Order[]);
+          setOrders(mapped as unknown as Order[]);
           setTotalPages(res.data.totalPages || 1);
           setTotalElements(res.data.totalElements || mapped.length);
         }
