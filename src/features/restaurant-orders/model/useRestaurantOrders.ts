@@ -80,8 +80,8 @@ export function useRestaurantOrders({
           id: orderData.orderId || orderData.id || '', 
           status: s as OrderStatus, 
           items: parsedItems as Order['items'],
-          totalAmount: (orderData as any).totalAmount || (orderData as any).total || calculatedTotal,
-          itemTotal: (orderData as any).itemTotal || (orderData as any).subtotal || calculatedTotal
+          totalAmount: ((orderData as Record<string, unknown>).totalAmount as number) || ((orderData as Record<string, unknown>).total as number) || calculatedTotal,
+          itemTotal: ((orderData as Record<string, unknown>).itemTotal as number) || ((orderData as Record<string, unknown>).subtotal as number) || calculatedTotal
         };
       });
       return mapped;
@@ -114,7 +114,7 @@ export function useRestaurantOrders({
       const res = await restaurantApi.fulfillment.get('/api/v1/internal/restaurants/outlets/:outletId/refund-requests', {
         params: { outletId: selectedOutletId }
       });
-      return ((res as any).data || res || []) as { id: string; orderId: string; [key: string]: unknown }[];
+      return ((res as Record<string, unknown>).data || res || []) as { id: string; orderId: string; [key: string]: unknown }[];
     } catch (e) {
       console.error('Failed to fetch refund requests', e);
     }

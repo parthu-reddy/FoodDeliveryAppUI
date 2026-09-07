@@ -28,7 +28,7 @@ export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalPr
       setError(null);
       // Fetch transparent invoice details
       if (order.restaurantId && order.id) {
-        (customerApi.restaurantMoney as unknown as Record<string, Function>).fetchSummary({ params: { outletId: order.restaurantId }, queries: { orderId: order.id } })
+        (customerApi.restaurantMoney as unknown as Record<string, (args: unknown) => Promise<Record<string, unknown>>>).fetchSummary({ params: { outletId: order.restaurantId }, queries: { orderId: order.id } })
         .then((res: Record<string, unknown>) => {
           setInvoice(res);
         })

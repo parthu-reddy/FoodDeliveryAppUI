@@ -185,7 +185,7 @@ export default function DeliveryDashboard({
       .then((res) => {
         if (res?.data) {
           setVerificationStatus({
-            allDocsApproved: res.data.fullyVerified === true || res.data.fullyVerified === 'true' as any,
+            allDocsApproved: res.data.fullyVerified === true || (res.data.fullyVerified as unknown) === 'true',
             bankApproved: res.data.bankStatus === 'APPROVED' || res.data.bankStatus === 'VERIFIED'
           });
         }

@@ -191,7 +191,7 @@ export default function CampaignManagement({ advertiserId }: { advertiserId: str
       pollRef.current = setInterval(async () => {
         attempts++;
         try {
-          const res = await (walletApi.wallet as unknown as Record<string, Function>).get('/api/v1/wallets/:entityType/:entityId/topups/:topupId', {
+          const res = await (walletApi.wallet as unknown as Record<string, (url: string, config?: unknown) => Promise<unknown>>).get('/api/v1/wallets/:entityType/:entityId/topups/:topupId', {
             params: { entityType: 'ADVERTISER', entityId: advertiserId, topupId }
           });
           if (res || attempts > 10) {

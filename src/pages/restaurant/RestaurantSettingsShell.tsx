@@ -214,9 +214,9 @@ export const RestaurantSettingsShell: React.FC<RestaurantSettingsShellProps> = (
                         <div className="text-xs text-slate-500 dark:text-slate-300">FSSAI: {o.fssaiLicenseNumber}</div>
                         {o.timings && o.timings.length > 0 && (
                           <div className="mt-1 flex flex-wrap gap-1.5">
-                            {o.timings.map((t: any, i: number) => (
+                            {o.timings.map((t: Record<string, unknown>, i: number) => (
                               <span key={i} className="text-[9px] font-bold font-mono bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">
-                                {typeof t.openingTime === 'string' ? (t.openingTime as string).substring(0,5) : `${String((t.openingTime)?.hour || 0).padStart(2, '0')}:${String((t.openingTime)?.minute || 0).padStart(2, '0')}`} - {typeof t.closingTime === 'string' ? (t.closingTime as string).substring(0,5) : `${String((t.closingTime)?.hour || 0).padStart(2, '0')}:${String((t.closingTime)?.minute || 0).padStart(2, '0')}`}
+                                {typeof t.openingTime === 'string' ? (t.openingTime as string).substring(0,5) : `${String((t.openingTime as { hour?: number })?.hour || 0).padStart(2, '0')}:${String((t.openingTime as { minute?: number })?.minute || 0).padStart(2, '0')}`} - {typeof t.closingTime === 'string' ? (t.closingTime as string).substring(0,5) : `${String((t.closingTime as { hour?: number })?.hour || 0).padStart(2, '0')}:${String((t.closingTime as { minute?: number })?.minute || 0).padStart(2, '0')}`}
                               </span>
                             ))}
                           </div>
