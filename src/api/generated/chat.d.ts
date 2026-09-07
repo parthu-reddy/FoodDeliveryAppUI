@@ -109,7 +109,7 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         CreateSessionRequest: {
-            id: string;
+            orderId: string;
             participants: components["schemas"]["ParticipantDto"][];
         };
         ParticipantDto: {
@@ -135,6 +135,18 @@ export interface components {
             createdAt?: string;
             participants?: components["schemas"]["ParticipantDto"][];
         };
+        ApiResponseUploadResponseDto: {
+            success: boolean;
+            message: string;
+            errorCode?: string;
+            data?: components["schemas"]["UploadResponseDto"];
+            /** Format: date-time */
+            timestamp: string;
+        };
+        UploadResponseDto: {
+            url?: string;
+            messageId?: string;
+        };
         IceServer: {
             urls: string;
             username?: string;
@@ -143,11 +155,11 @@ export interface components {
         TurnCredentialsResponse: {
             iceServers: components["schemas"]["IceServer"][];
         };
-        ApiResponsePageChatMessageDto: {
+        ApiResponsePageResponseDtoChatMessageDto: {
             success: boolean;
             message: string;
             errorCode?: string;
-            data?: components["schemas"]["PageChatMessageDto"];
+            data?: components["schemas"]["PageResponseDtoChatMessageDto"];
             /** Format: date-time */
             timestamp: string;
         };
@@ -165,39 +177,21 @@ export interface components {
             /** Format: date-time */
             timestamp?: string;
         };
-        PageChatMessageDto: {
-            /** Format: int32 */
-            totalPages: number;
+        PageResponseDtoChatMessageDto: {
+            content: components["schemas"]["ChatMessageDto"][];
             /** Format: int64 */
             totalElements: number;
-            sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
-            numberOfElements: number;
+            totalPages: number;
+            last: boolean;
             /** Format: int32 */
             size: number;
-            content: components["schemas"]["ChatMessageDto"][];
             /** Format: int32 */
             number: number;
             first: boolean;
-            last: boolean;
-            empty: boolean;
-        };
-        PageableObject: {
-            unpaged: boolean;
-            sort?: components["schemas"]["SortObject"];
-            paged: boolean;
             /** Format: int32 */
-            pageNumber: number;
-            /** Format: int32 */
-            pageSize: number;
-            /** Format: int64 */
-            offset: number;
-        };
-        SortObject: {
+            numberOfElements: number;
             empty: boolean;
-            sorted: boolean;
-            unsorted: boolean;
         };
     };
     responses: never;
@@ -278,9 +272,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: Record<string, never>;
-                    };
+                    "application/json": components["schemas"]["ApiResponseUploadResponseDto"];
                 };
             };
         };
@@ -309,9 +301,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: Record<string, never>;
-                    };
+                    "application/json": components["schemas"]["ApiResponseUploadResponseDto"];
                 };
             };
         };
@@ -382,7 +372,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponsePageChatMessageDto"];
+                    "application/json": components["schemas"]["ApiResponsePageResponseDtoChatMessageDto"];
                 };
             };
         };

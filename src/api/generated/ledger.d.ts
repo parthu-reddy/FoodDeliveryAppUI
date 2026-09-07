@@ -4,6 +4,38 @@
  */
 
 export interface paths {
+    "/api/v1/ledger/admin/reconciliation/runs/{id}/resolve-breaks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["resolveBreak"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ledger/admin/reconciliation/runs/{id}/execute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["executeRun"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/payouts": {
         parameters: {
             query?: never;
@@ -164,6 +196,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/ledger/admin/reconciliation/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getRuns"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ledger/admin/reconciliation/runs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getRun"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ledger/admin/reconciliation/runs/{id}/breaks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getBreaks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/ledger/admin/entries": {
         parameters: {
             query?: never;
@@ -248,6 +328,21 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        ResolveBreakRequest: {
+            /** Format: uuid */
+            resolvedBy?: string;
+            note?: string;
+        };
+        ReconciliationRun: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: date-time */
+            startedAt?: string;
+            /** Format: date-time */
+            finishedAt?: string;
+            status?: string;
+            summary?: string;
+        };
         CreatePayoutRequest: {
             payeeType?: string;
             /** Format: uuid */
@@ -403,6 +498,68 @@ export interface components {
             numberOfElements: number;
             empty: boolean;
         };
+        Pageable: {
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            sort?: components["schemas"]["SortObject"];
+        };
+        PageReconciliationRun: {
+            /** Format: int32 */
+            totalPages: number;
+            /** Format: int64 */
+            totalElements: number;
+            /** Format: int32 */
+            size: number;
+            content: components["schemas"]["ReconciliationRun"][];
+            /** Format: int32 */
+            numberOfElements: number;
+            /** Format: int32 */
+            number: number;
+            first: boolean;
+            last: boolean;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
+            empty: boolean;
+        };
+        PageReconciliationBreak: {
+            /** Format: int32 */
+            totalPages: number;
+            /** Format: int64 */
+            totalElements: number;
+            /** Format: int32 */
+            size: number;
+            content: components["schemas"]["ReconciliationBreak"][];
+            /** Format: int32 */
+            numberOfElements: number;
+            /** Format: int32 */
+            number: number;
+            first: boolean;
+            last: boolean;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
+            empty: boolean;
+        };
+        ReconciliationBreak: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            runId?: string;
+            /** @enum {string} */
+            kind?: "GATEWAY_VS_LEDGER" | "ORDERS_VS_CLEARING" | "WALLET_VS_LEDGER" | "PAYABLE_VS_ORDERS" | "DOUBLE_ENTRY" | "STUCK";
+            subjectType?: string;
+            /** Format: uuid */
+            subjectId?: string;
+            expected?: number;
+            actual?: number;
+            detail?: string;
+            /** Format: date-time */
+            resolvedAt?: string;
+            /** Format: uuid */
+            resolvedBy?: string;
+            note?: string;
+        };
         ApiResponsePageResponseDtoLedgerEntry: {
             success: boolean;
             message: string;
@@ -413,23 +570,23 @@ export interface components {
         };
         LedgerEntry: {
             /** Format: uuid */
-            id?: string;
+            id: string;
             /** Format: uuid */
-            transactionId?: string;
+            transactionId: string;
             /** Format: uuid */
             referenceId?: string;
             /** Format: uuid */
-            accountId?: string;
+            accountId: string;
             /** @enum {string} */
-            direction?: "CREDIT" | "DEBIT";
+            direction: "CREDIT" | "DEBIT";
             /** @enum {string} */
-            category?: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "CLAWBACK" | "PAYOUT_TRANSFER" | "CASH_COLLECTED" | "CASH_REMITTED" | "STORE_CREDIT";
-            amount?: number;
+            category: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "CLAWBACK" | "PAYOUT_TRANSFER" | "CASH_COLLECTED" | "CASH_REMITTED" | "STORE_CREDIT";
+            amount: number;
             producer?: string;
             description?: string;
             authorizedBy?: string;
             /** Format: date-time */
-            createdAt?: string;
+            createdAt: string;
         };
         PageResponseDtoLedgerEntry: {
             content: components["schemas"]["LedgerEntry"][];
@@ -449,17 +606,17 @@ export interface components {
         };
         LedgerAccount: {
             /** Format: uuid */
-            id?: string;
+            id: string;
             /** @enum {string} */
-            ownerType?: "GATEWAY_RECEIVABLE" | "CASH_RECEIVABLE" | "BANK" | "PLATFORM_CLEARING" | "PLATFORM_REVENUE" | "TAX_PAYABLE" | "PAYOUT_IN_TRANSIT" | "RESTAURANT_PAYABLE" | "DRIVER_PAYABLE" | "CUSTOMER_CREDIT" | "ADVERTISER_PREPAID";
+            ownerType: "GATEWAY_RECEIVABLE" | "CASH_RECEIVABLE" | "BANK" | "PLATFORM_CLEARING" | "PLATFORM_REVENUE" | "TAX_PAYABLE" | "PAYOUT_IN_TRANSIT" | "RESTAURANT_PAYABLE" | "DRIVER_PAYABLE" | "CUSTOMER_CREDIT" | "ADVERTISER_PREPAID";
             /** Format: uuid */
-            ownerId?: string;
+            ownerId: string;
             /** @enum {string} */
             kind?: "EXTERNAL" | "INTERNAL" | "PAYABLE" | "PREPAID";
-            balance?: number;
+            balance: number;
             currency?: string;
             /** Format: int32 */
-            lockVersion?: number;
+            lockVersion: number;
             /** Format: date-time */
             createdAt?: string;
         };
@@ -528,6 +685,54 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    resolveBreak: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResolveBreakRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    executeRun: {
+        parameters: {
+            query?: {
+                date?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReconciliationRun"];
+                };
+            };
+        };
+    };
     getPayouts: {
         parameters: {
             query: {
@@ -784,6 +989,76 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiResponsePageResponseDtoLedgerTransactionDto"];
+                };
+            };
+        };
+    };
+    getRuns: {
+        parameters: {
+            query: {
+                pageable: components["schemas"]["Pageable"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageReconciliationRun"];
+                };
+            };
+        };
+    };
+    getRun: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReconciliationRun"];
+                };
+            };
+        };
+    };
+    getBreaks: {
+        parameters: {
+            query: {
+                kind?: "GATEWAY_VS_LEDGER" | "ORDERS_VS_CLEARING" | "WALLET_VS_LEDGER" | "PAYABLE_VS_ORDERS" | "DOUBLE_ENTRY" | "STUCK";
+                resolved?: boolean;
+                pageable: components["schemas"]["Pageable"];
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageReconciliationBreak"];
                 };
             };
         };

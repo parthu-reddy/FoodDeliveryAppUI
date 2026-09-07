@@ -55,7 +55,7 @@ export const LedgerEntry = z
   .object({
     id: z.string().uuid(),
     transactionId: z.string().uuid(),
-    referenceId: z.string().uuid(),
+    referenceId: z.string().uuid().optional(),
     accountId: z.string().uuid(),
     direction: z.enum(["CREDIT", "DEBIT"]),
     category: z.enum([
@@ -78,12 +78,11 @@ export const LedgerEntry = z
       "STORE_CREDIT",
     ]),
     amount: z.number(),
-    producer: z.string(),
-    description: z.string(),
-    authorizedBy: z.string(),
+    producer: z.string().optional(),
+    description: z.string().optional(),
+    authorizedBy: z.string().optional(),
     createdAt: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 export const PageResponseDtoLedgerEntry = z
   .object({
@@ -124,13 +123,12 @@ export const LedgerAccount = z
       "ADVERTISER_PREPAID",
     ]),
     ownerId: z.string().uuid(),
-    kind: z.enum(["EXTERNAL", "INTERNAL", "PAYABLE", "PREPAID"]),
+    kind: z.enum(["EXTERNAL", "INTERNAL", "PAYABLE", "PREPAID"]).optional(),
     balance: z.number(),
-    currency: z.string(),
+    currency: z.string().optional(),
     lockVersion: z.number().int(),
-    createdAt: z.string().datetime({ offset: true }),
+    createdAt: z.string().datetime({ offset: true }).optional(),
   })
-  .partial()
   .passthrough();
 
 export const schemas = {

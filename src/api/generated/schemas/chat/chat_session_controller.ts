@@ -9,7 +9,7 @@ export const ParticipantDto = z
   })
   .passthrough();
 export const CreateSessionRequest = z
-  .object({ id: z.string(), participants: z.array(ParticipantDto) })
+  .object({ orderId: z.string(), participants: z.array(ParticipantDto) })
   .passthrough();
 export const ChatSessionResponse = z
   .object({
@@ -31,19 +31,6 @@ export const ApiResponseChatSessionResponse = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const SortObject = z
-  .object({ empty: z.boolean(), sorted: z.boolean(), unsorted: z.boolean() })
-  .passthrough();
-export const PageableObject = z
-  .object({
-    unpaged: z.boolean(),
-    sort: SortObject.optional(),
-    paged: z.boolean(),
-    pageNumber: z.number().int(),
-    pageSize: z.number().int(),
-    offset: z.number().int(),
-  })
-  .passthrough();
 export const ChatMessageDto = z
   .object({
     id: z.string().uuid(),
@@ -58,27 +45,25 @@ export const ChatMessageDto = z
   })
   .partial()
   .passthrough();
-export const PageChatMessageDto = z
+export const PageResponseDtoChatMessageDto = z
   .object({
-    totalPages: z.number().int(),
-    totalElements: z.number().int(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
-    numberOfElements: z.number().int(),
-    size: z.number().int(),
     content: z.array(ChatMessageDto),
+    totalElements: z.number().int(),
+    totalPages: z.number().int(),
+    last: z.boolean(),
+    size: z.number().int(),
     number: z.number().int(),
     first: z.boolean(),
-    last: z.boolean(),
+    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();
-export const ApiResponsePageChatMessageDto = z
+export const ApiResponsePageResponseDtoChatMessageDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
     errorCode: z.string().optional(),
-    data: PageChatMessageDto.optional(),
+    data: PageResponseDtoChatMessageDto.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
@@ -88,11 +73,9 @@ export const schemas = {
   CreateSessionRequest,
   ChatSessionResponse,
   ApiResponseChatSessionResponse,
-  SortObject,
-  PageableObject,
   ChatMessageDto,
-  PageChatMessageDto,
-  ApiResponsePageChatMessageDto,
+  PageResponseDtoChatMessageDto,
+  ApiResponsePageResponseDtoChatMessageDto,
 };
 
 export const endpoints = makeApi([
@@ -165,7 +148,7 @@ export const endpoints = makeApi([
         schema: z.number().int().optional().default(50),
       },
     ],
-    response: ApiResponsePageChatMessageDto,
+    response: ApiResponsePageResponseDtoChatMessageDto,
   },
 ]);
 

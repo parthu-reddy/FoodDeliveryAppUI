@@ -69,7 +69,7 @@ export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/money/driver/:driverId/orders/:orderId",
-    alias: "getOrderEarnings_1",
+    alias: "fetchOrderEarnings_1",
     requestFormat: "json",
     parameters: [
       {
@@ -88,7 +88,7 @@ export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/money/driver/summary",
-    alias: "getSummary_1",
+    alias: "fetchSummary_1",
     requestFormat: "json",
     parameters: [
       {
@@ -102,7 +102,7 @@ export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/money/driver/statement",
-    alias: "getStatement_1",
+    alias: "fetchStatement_1",
     requestFormat: "json",
     parameters: [
       {
@@ -121,7 +121,7 @@ export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/money/driver/orders",
-    alias: "getOrders_1",
+    alias: "fetchOrders_1",
     requestFormat: "json",
     parameters: [
       {
@@ -135,7 +135,7 @@ export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/money/driver/orders/:orderId/earnings",
-    alias: "getOrderEarningsInternal_1",
+    alias: "fetchOrderEarningsInternal_1",
     requestFormat: "json",
     parameters: [
       {
@@ -149,7 +149,7 @@ export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/money/driver/cash",
-    alias: "getCash",
+    alias: "fetchCash",
     requestFormat: "json",
     parameters: [
       {

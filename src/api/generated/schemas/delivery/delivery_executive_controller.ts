@@ -2,7 +2,6 @@ import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
 import { DeliveryExecutive } from "./common";
-import { ApiResponseObject } from "./common";
 
 export const ApiResponseDeliveryExecutive = z
   .object({
@@ -10,6 +9,19 @@ export const ApiResponseDeliveryExecutive = z
     message: z.string(),
     errorCode: z.string().optional(),
     data: DeliveryExecutive.optional(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
+export const PendingPingResponse = z
+  .object({ id: z.string(), expiresAt: z.number().int() })
+  .partial()
+  .passthrough();
+export const ApiResponseListPendingPingResponse = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    errorCode: z.string().optional(),
+    data: z.array(PendingPingResponse).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
@@ -63,25 +75,18 @@ export const UpdateOrderStatusRequest = z
     pickupOtp: z.string().min(0).max(10).regex(/^\d+$/).optional(),
     deliveryOtp: z.string().min(0).max(10).regex(/^\d+$/).optional(),
     goOfflineAfter: z.boolean().optional(),
-  })
-  .passthrough();
-export const ApiResponseListMapStringObject = z
-  .object({
-    success: z.boolean(),
-    message: z.string(),
-    errorCode: z.string().optional(),
-    data: z.array(z.record(z.object({}).partial().passthrough())).optional(),
-    timestamp: z.string().datetime({ offset: true }),
+    cashCollectedAmount: z.number().optional(),
   })
   .passthrough();
 
 export const schemas = {
   ApiResponseDeliveryExecutive,
+  PendingPingResponse,
+  ApiResponseListPendingPingResponse,
   ApiResponseVoid,
   ToggleStatusRequest,
   DeliveryOnboardRequest,
   UpdateOrderStatusRequest,
-  ApiResponseListMapStringObject,
 };
 
 export const endpoints = makeApi([
@@ -135,7 +140,7 @@ export const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: ApiResponseObject,
+    response: ApiResponseVoid,
   },
   {
     method: "post",
@@ -213,7 +218,7 @@ export const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: ApiResponseListMapStringObject,
+    response: ApiResponseListPendingPingResponse,
   },
   {
     method: "get",

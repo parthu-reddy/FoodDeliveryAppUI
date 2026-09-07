@@ -1,6 +1,9 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { ApiResponseUploadResponseDto } from "./common";
+import { UploadResponseDto } from "./common";
+
 export const endpoints = makeApi([
   {
     method: "post",
@@ -19,7 +22,7 @@ export const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: z.record(z.object({}).partial().passthrough()),
+    response: ApiResponseUploadResponseDto,
   },
 ]);
 

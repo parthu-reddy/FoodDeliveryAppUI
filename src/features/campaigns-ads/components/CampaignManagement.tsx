@@ -191,9 +191,10 @@ export default function CampaignManagement({ advertiserId }: { advertiserId: str
       pollRef.current = setInterval(async () => {
         attempts++;
         try {
-          // eslint-disable-next-line no-restricted-syntax
-          const res = await fetch(`/api/v1/wallets/ADVERTISER/${advertiserId}/topups/${topupId}`);
-          if (res.ok || attempts > 10) {
+          const res = await walletApi.wallet.get('/api/v1/wallets/:entityType/:entityId/topups/:topupId', {
+            params: { entityType: 'ADVERTISER', entityId: advertiserId, topupId }
+          });
+          if (res || attempts > 10) {
             if (pollRef.current) clearInterval(pollRef.current);
             setPaymentStatus('success');
             setTimeout(() => {

@@ -1,13 +1,11 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-import { ApiResponsePageOrderResponse } from "./common";
+import { ApiResponsePageResponseDtoOrderResponse } from "./common";
 import { pageable } from "./common";
-import { PageOrderResponse } from "./common";
+import { PageResponseDtoOrderResponse } from "./common";
 import { OrderResponse } from "./common";
 import { OrderItemResponse } from "./common";
-import { SortObject } from "./common";
-import { PageableObject } from "./common";
 import { ApiResponseListOrderResponse } from "./common";
 
 export const endpoints = makeApi([
@@ -28,7 +26,7 @@ export const endpoints = makeApi([
         schema: pageable,
       },
     ],
-    response: ApiResponsePageOrderResponse,
+    response: ApiResponsePageResponseDtoOrderResponse,
   },
   {
     method: "get",
@@ -49,7 +47,7 @@ export const endpoints = makeApi([
         schema: pageable,
       },
     ],
-    response: ApiResponsePageOrderResponse,
+    response: ApiResponsePageResponseDtoOrderResponse,
   },
 ]);
 

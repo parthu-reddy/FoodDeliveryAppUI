@@ -2,34 +2,50 @@ import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
 import { MasterMenuItem } from "./common";
-import { ApiResponseListMasterMenuItem } from "./common";
 
-export const ApiResponseMasterMenuItem = z
+export const MasterMenuItemDto = z
+  .object({
+    id: z.string().uuid(),
+    brandId: z.string().uuid(),
+    categoryId: z.string().uuid(),
+    name: z.string(),
+    description: z.string(),
+    imageUrl: z.string(),
+    isVeg: z.boolean(),
+    basePrice: z.number(),
+    packingCharge: z.number(),
+    defaultPrepTimeMinutes: z.number().int(),
+    version: z.number().int(),
+  })
+  .partial()
+  .passthrough();
+export const ApiResponseMasterMenuItemDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
     errorCode: z.string().optional(),
-    data: MasterMenuItem.optional(),
+    data: MasterMenuItemDto.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const OutletMenuOverride = z
+export const OverrideItemDto = z
   .object({
-    id: z.string().uuid().optional(),
-    outletId: z.string().uuid().optional(),
-    masterMenuItemId: z.string().uuid().optional(),
-    overriddenPrice: z.number().optional(),
+    id: z.string().uuid(),
+    outletId: z.string().uuid(),
+    masterMenuItemId: z.string().uuid(),
+    overriddenPrice: z.number(),
     isAvailable: z.boolean(),
-    overriddenPrepTimeMinutes: z.number().int().optional(),
-    version: z.number().int().optional(),
+    overriddenPrepTimeMinutes: z.number().int(),
+    version: z.number().int(),
   })
+  .partial()
   .passthrough();
-export const ApiResponseOutletMenuOverride = z
+export const ApiResponseOverrideItemDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
     errorCode: z.string().optional(),
-    data: OutletMenuOverride.optional(),
+    data: OverrideItemDto.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
@@ -57,23 +73,46 @@ export const ApiResponseListMenuItemDTO = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const ApiResponseListOutletMenuOverride = z
+export const ApiResponseListOverrideItemDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
     errorCode: z.string().optional(),
-    data: z.array(OutletMenuOverride).optional(),
+    data: z.array(OverrideItemDto).optional(),
     timestamp: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
+export const ApiResponseListMasterMenuItemDto = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    errorCode: z.string().optional(),
+    data: z.array(MasterMenuItemDto).optional(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
+export const OutletMenuOverride = z
+  .object({
+    id: z.string().uuid().optional(),
+    outletId: z.string().uuid().optional(),
+    masterMenuItemId: z.string().uuid().optional(),
+    overriddenPrice: z.number().optional(),
+    isAvailable: z.boolean(),
+    overriddenPrepTimeMinutes: z.number().int().optional(),
+    version: z.number().int().optional(),
   })
   .passthrough();
 
 export const schemas = {
-  ApiResponseMasterMenuItem,
-  OutletMenuOverride,
-  ApiResponseOutletMenuOverride,
+  MasterMenuItemDto,
+  ApiResponseMasterMenuItemDto,
+  OverrideItemDto,
+  ApiResponseOverrideItemDto,
   MenuItemDTO,
   ApiResponseListMenuItemDTO,
-  ApiResponseListOutletMenuOverride,
+  ApiResponseListOverrideItemDto,
+  ApiResponseListMasterMenuItemDto,
+  OutletMenuOverride,
 };
 
 export const endpoints = makeApi([
@@ -99,7 +138,7 @@ export const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: ApiResponseMasterMenuItem,
+    response: ApiResponseMasterMenuItemDto,
   },
   {
     method: "post",
@@ -123,7 +162,7 @@ export const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: ApiResponseOutletMenuOverride,
+    response: ApiResponseOverrideItemDto,
   },
   {
     method: "get",
@@ -137,7 +176,7 @@ export const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: ApiResponseListMasterMenuItem,
+    response: ApiResponseListMasterMenuItemDto,
   },
   {
     method: "post",
@@ -156,7 +195,7 @@ export const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: ApiResponseMasterMenuItem,
+    response: ApiResponseMasterMenuItemDto,
   },
   {
     method: "get",
@@ -203,7 +242,7 @@ export const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: ApiResponseListOutletMenuOverride,
+    response: ApiResponseListOverrideItemDto,
   },
 ]);
 

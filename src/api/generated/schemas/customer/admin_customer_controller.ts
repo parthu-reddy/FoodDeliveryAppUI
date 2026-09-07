@@ -3,37 +3,33 @@ import { z } from "zod";
 
 import { pageable } from "./common";
 import { CustomerAddressDto } from "./common";
-import { SortObject } from "./common";
-import { PageableObject } from "./common";
 
-export const PageCustomerAddressDto = z
+export const PageResponseDtoCustomerAddressDto = z
   .object({
+    content: z.array(CustomerAddressDto),
     totalElements: z.number().int(),
     totalPages: z.number().int(),
+    last: z.boolean(),
     size: z.number().int(),
-    content: z.array(CustomerAddressDto),
-    numberOfElements: z.number().int(),
     number: z.number().int(),
     first: z.boolean(),
-    last: z.boolean(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
+    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();
-export const ApiResponsePageCustomerAddressDto = z
+export const ApiResponsePageResponseDtoCustomerAddressDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
     errorCode: z.string().optional(),
-    data: PageCustomerAddressDto.optional(),
+    data: PageResponseDtoCustomerAddressDto.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
 
 export const schemas = {
-  PageCustomerAddressDto,
-  ApiResponsePageCustomerAddressDto,
+  PageResponseDtoCustomerAddressDto,
+  ApiResponsePageResponseDtoCustomerAddressDto,
 };
 
 export const endpoints = makeApi([
@@ -49,7 +45,7 @@ export const endpoints = makeApi([
         schema: pageable,
       },
     ],
-    response: ApiResponsePageCustomerAddressDto,
+    response: ApiResponsePageResponseDtoCustomerAddressDto,
   },
 ]);
 

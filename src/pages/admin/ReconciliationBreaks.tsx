@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { ledgerApi } from '@/lib/zodiosClients';
 
 interface ReconciliationBreak {
   id: string;
@@ -14,10 +15,8 @@ export const ReconciliationBreaks = () => {
     const [breaks, setBreaks] = useState<ReconciliationBreak[]>([]);
     
     useEffect(() => {
-        // eslint-disable-next-line no-restricted-syntax
-        fetch('/api/v1/ledger/admin/reconciliation/breaks')
-            .then(res => res.json())
-            .then(data => setBreaks(data.content || []))
+        ledgerApi.ledger.get('/api/v1/ledger/admin/reconciliation/breaks')
+            .then(res => setBreaks((res.content as unknown as ReconciliationBreak[]) || []))
             .catch(console.error);
     }, []);
 

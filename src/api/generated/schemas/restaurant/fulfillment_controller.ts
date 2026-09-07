@@ -5,6 +5,7 @@ import { ApiResponseVoid } from "./common";
 
 export const RestaurantOrder = z
   .object({
+    orderId: z.string().uuid(),
     restaurantId: z.string().uuid(),
     status: z.enum([
       "CREATED",
@@ -60,7 +61,6 @@ export const RestaurantOrder = z
     restaurantPayout: z.number().optional(),
     createdAt: z.string().datetime({ offset: true }),
     updatedAt: z.string().datetime({ offset: true }).optional(),
-    id: z.string().uuid(),
     deliveryExecutiveName: z.string().optional(),
     total: z.number().optional(),
     items: z.object({}).partial().passthrough().optional(),
@@ -75,41 +75,33 @@ export const ApiResponseListRestaurantOrder = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const SortObject = z
-  .object({ empty: z.boolean(), sorted: z.boolean(), unsorted: z.boolean() })
-  .passthrough();
-export const PageableObject = z
+export const PageResponseDtoRestaurantOrder = z
   .object({
-    offset: z.number().int(),
-    sort: SortObject.optional(),
-    paged: z.boolean(),
-    pageNumber: z.number().int(),
-    pageSize: z.number().int(),
-    unpaged: z.boolean(),
-  })
-  .passthrough();
-export const PageRestaurantOrder = z
-  .object({
-    totalPages: z.number().int(),
-    totalElements: z.number().int(),
-    size: z.number().int(),
     content: z.array(RestaurantOrder),
-    numberOfElements: z.number().int(),
+    totalElements: z.number().int(),
+    totalPages: z.number().int(),
+    last: z.boolean(),
+    size: z.number().int(),
     number: z.number().int(),
     first: z.boolean(),
-    last: z.boolean(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
+    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();
-export const ApiResponsePageRestaurantOrder = z
+export const ApiResponsePageResponseDtoRestaurantOrder = z
   .object({
     success: z.boolean(),
     message: z.string(),
     errorCode: z.string().optional(),
-    data: PageRestaurantOrder.optional(),
+    data: PageResponseDtoRestaurantOrder.optional(),
     timestamp: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
+export const PartialRefundRequestDto = z
+  .object({
+    amount: z.number().gte(0.01),
+    reason: z.string().optional(),
+    items: z.array(z.string()).optional(),
   })
   .passthrough();
 export const AcceptOrderRequest = z
@@ -120,10 +112,9 @@ export const AcceptOrderRequest = z
 export const schemas = {
   RestaurantOrder,
   ApiResponseListRestaurantOrder,
-  SortObject,
-  PageableObject,
-  PageRestaurantOrder,
-  ApiResponsePageRestaurantOrder,
+  PageResponseDtoRestaurantOrder,
+  ApiResponsePageResponseDtoRestaurantOrder,
+  PartialRefundRequestDto,
   AcceptOrderRequest,
 };
 
@@ -156,7 +147,7 @@ export const endpoints = makeApi([
       {
         name: "body",
         type: "Body",
-        schema: z.record(z.object({}).partial().passthrough()),
+        schema: PartialRefundRequestDto,
       },
       {
         name: "restaurantId",
@@ -293,7 +284,7 @@ export const endpoints = makeApi([
         schema: z.number().int().optional().default(10),
       },
     ],
-    response: ApiResponsePageRestaurantOrder,
+    response: ApiResponsePageResponseDtoRestaurantOrder,
   },
   {
     method: "get",

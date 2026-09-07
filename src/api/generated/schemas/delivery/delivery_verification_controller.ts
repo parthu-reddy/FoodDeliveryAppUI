@@ -1,8 +1,43 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-import { ApiResponseObject } from "./common";
-
+export const StatusResponseDto = z
+  .object({
+    status: z.string(),
+    referenceId: z.string(),
+    message: z.string(),
+    valid: z.boolean(),
+  })
+  .partial()
+  .passthrough();
+export const ApiResponseStatusResponseDto = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    errorCode: z.string().optional(),
+    data: StatusResponseDto.optional(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
+export const RiderVerificationStatusDto = z
+  .object({
+    dlStatus: z.string(),
+    rcStatus: z.string(),
+    bankStatus: z.string(),
+    biometricStatus: z.string(),
+    fullyVerified: z.boolean(),
+  })
+  .partial()
+  .passthrough();
+export const ApiResponseRiderVerificationStatusDto = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    errorCode: z.string().optional(),
+    data: RiderVerificationStatusDto.optional(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
 export const RCRequest = z
   .object({
     registrationNumber: z.string(),
@@ -34,6 +69,10 @@ export const ApiResponseMapStringString = z
   .passthrough();
 
 export const schemas = {
+  StatusResponseDto,
+  ApiResponseStatusResponseDto,
+  RiderVerificationStatusDto,
+  ApiResponseRiderVerificationStatusDto,
   RCRequest,
   DLRequest,
   BankRequest,
@@ -53,7 +92,7 @@ export const endpoints = makeApi([
         schema: RCRequest,
       },
     ],
-    response: ApiResponseObject,
+    response: ApiResponseStatusResponseDto,
   },
   {
     method: "post",
@@ -67,7 +106,7 @@ export const endpoints = makeApi([
         schema: DLRequest,
       },
     ],
-    response: ApiResponseObject,
+    response: ApiResponseStatusResponseDto,
   },
   {
     method: "post",
@@ -81,7 +120,7 @@ export const endpoints = makeApi([
         schema: z.object({ selfieUrl: z.string() }).passthrough(),
       },
     ],
-    response: ApiResponseObject,
+    response: ApiResponseStatusResponseDto,
   },
   {
     method: "post",
@@ -95,7 +134,7 @@ export const endpoints = makeApi([
         schema: BankRequest,
       },
     ],
-    response: ApiResponseObject,
+    response: ApiResponseStatusResponseDto,
   },
   {
     method: "get",
@@ -121,7 +160,7 @@ export const endpoints = makeApi([
     path: "/api/delivery/verification/status",
     alias: "getVerificationStatus",
     requestFormat: "json",
-    response: ApiResponseObject,
+    response: ApiResponseRiderVerificationStatusDto,
   },
   {
     method: "get",

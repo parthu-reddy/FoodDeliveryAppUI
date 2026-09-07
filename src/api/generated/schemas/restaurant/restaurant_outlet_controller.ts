@@ -26,42 +26,42 @@ export const OutletOnboardRequest = z
     tags: z.string().optional(),
   })
   .passthrough();
-export const OutletTiming = z
+export const OutletTimingDto = z
   .object({
     id: z.string().uuid(),
+    dayOfWeek: z.number().int(),
     openingTime: LocalTime,
     closingTime: LocalTime,
-    createdAt: z.string().datetime({ offset: true }),
-    updatedAt: z.string().datetime({ offset: true }),
-    version: z.number().int().optional(),
   })
+  .partial()
   .passthrough();
-export const Outlet = z
+export const OutletDto = z
   .object({
     id: z.string().uuid(),
     brandId: z.string().uuid(),
     name: z.string(),
-    fssaiLicenseNumber: z.string().optional(),
-    bannerUrl: z.string().optional(),
-    timings: z.array(OutletTiming).optional(),
-    defaultPrepTimeSeconds: z.number().int().optional(),
-    cuisine: z.string().optional(),
-    rating: z.number().optional(),
-    reviewsCount: z.number().int().optional(),
-    deliveryTime: z.number().int().optional(),
-    deliveryFee: z.number().optional(),
-    tags: z.string().optional(),
-    createdAt: z.string().datetime({ offset: true }).optional(),
-    updatedAt: z.string().datetime({ offset: true }).optional(),
-    version: z.number().int().optional(),
+    fssaiLicenseNumber: z.string(),
+    lat: z.number(),
+    lng: z.number(),
+    bannerUrl: z.string(),
+    isActive: z.boolean(),
+    defaultPrepTimeSeconds: z.number().int(),
+    cuisine: z.string(),
+    rating: z.number(),
+    reviewsCount: z.number().int(),
+    deliveryTime: z.number().int(),
+    deliveryFee: z.number(),
+    tags: z.string(),
+    timings: z.array(OutletTimingDto),
   })
+  .partial()
   .passthrough();
-export const ApiResponseOutlet = z
+export const ApiResponseOutletDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
     errorCode: z.string().optional(),
-    data: Outlet.optional(),
+    data: OutletDto.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
@@ -107,12 +107,12 @@ export const ApiResponseListNearbyRestaurantDTO = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const ApiResponseListOutlet = z
+export const ApiResponseListOutletDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
     errorCode: z.string().optional(),
-    data: z.array(Outlet).optional(),
+    data: z.array(OutletDto).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
@@ -143,13 +143,13 @@ export const schemas = {
   TimingRequest,
   OutletTimingsUpdateRequest,
   OutletOnboardRequest,
-  OutletTiming,
-  Outlet,
-  ApiResponseOutlet,
+  OutletTimingDto,
+  OutletDto,
+  ApiResponseOutletDto,
   NearbyRestaurantDTO,
   ApiResponseNearbyRestaurantDTO,
   ApiResponseListNearbyRestaurantDTO,
-  ApiResponseListOutlet,
+  ApiResponseListOutletDto,
   PageResponseDtoNearbyRestaurantDTO,
   ApiResponsePageResponseDtoNearbyRestaurantDTO,
 };
@@ -226,7 +226,7 @@ export const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: ApiResponseListOutlet,
+    response: ApiResponseListOutletDto,
   },
   {
     method: "post",
@@ -245,7 +245,7 @@ export const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: ApiResponseOutlet,
+    response: ApiResponseOutletDto,
   },
   {
     method: "get",
@@ -319,7 +319,7 @@ export const endpoints = makeApi([
     path: "/api/v1/outlets",
     alias: "getOutlets",
     requestFormat: "json",
-    response: ApiResponseListOutlet,
+    response: ApiResponseListOutletDto,
   },
   {
     method: "get",

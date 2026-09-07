@@ -71,6 +71,8 @@ export const OrderResponse = z
       "CANCELLED",
       "FAILED",
     ]),
+    totalAmount: z.number(),
+    itemTotal: z.number(),
     customerPlatformFee: z.number(),
     sgst: z.number(),
     cgst: z.number(),
@@ -91,8 +93,6 @@ export const OrderResponse = z
     estimatedCompletionTime: z.number().int().optional(),
     remainingPingSeconds: z.number().int().optional(),
     distanceKm: z.number().optional(),
-    total: z.number(),
-    subtotal: z.number(),
     expiresAt: z.number().int().optional(),
   })
   .passthrough();
@@ -407,40 +407,25 @@ export const ApiResponseListPlaceAutocompleteDto = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const SortObject = z
-  .object({ empty: z.boolean(), sorted: z.boolean(), unsorted: z.boolean() })
-  .passthrough();
-export const PageableObject = z
+export const PageResponseDtoOrderResponse = z
   .object({
-    offset: z.number().int(),
-    unpaged: z.boolean(),
-    sort: SortObject.optional(),
-    paged: z.boolean(),
-    pageNumber: z.number().int(),
-    pageSize: z.number().int(),
-  })
-  .passthrough();
-export const PageOrderResponse = z
-  .object({
+    content: z.array(OrderResponse),
     totalElements: z.number().int(),
     totalPages: z.number().int(),
+    last: z.boolean(),
     size: z.number().int(),
-    content: z.array(OrderResponse),
-    numberOfElements: z.number().int(),
     number: z.number().int(),
     first: z.boolean(),
-    last: z.boolean(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
+    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();
-export const ApiResponsePageOrderResponse = z
+export const ApiResponsePageResponseDtoOrderResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
     errorCode: z.string().optional(),
-    data: PageOrderResponse.optional(),
+    data: PageResponseDtoOrderResponse.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
@@ -696,6 +681,9 @@ export const Order = z
     deliveredAt: z.string().datetime({ offset: true }).optional(),
   })
   .passthrough();
+export const SortObject = z
+  .object({ empty: z.boolean(), sorted: z.boolean(), unsorted: z.boolean() })
+  .passthrough();
 export const pageable = z
   .object({
     page: z.number().int().gte(0),
@@ -704,18 +692,28 @@ export const pageable = z
   })
   .partial()
   .passthrough();
+export const PageableObject = z
+  .object({
+    sort: SortObject.optional(),
+    paged: z.boolean(),
+    pageNumber: z.number().int(),
+    pageSize: z.number().int(),
+    unpaged: z.boolean(),
+    offset: z.number().int(),
+  })
+  .passthrough();
 export const PageOrder = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
+    numberOfElements: z.number().int(),
     size: z.number().int(),
     content: z.array(Order),
-    numberOfElements: z.number().int(),
     number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -727,14 +725,14 @@ export const PageSupportTicket = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
+    numberOfElements: z.number().int(),
     size: z.number().int(),
     content: z.array(SupportTicket),
-    numberOfElements: z.number().int(),
     number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -757,6 +755,19 @@ export const AdminOrderMoney = z
     ledgerLines: z.array(LedgerStatementLineDto),
   })
   .partial()
+  .passthrough();
+export const PageResponseDtoSupportTicket = z
+  .object({
+    content: z.array(SupportTicket),
+    totalElements: z.number().int(),
+    totalPages: z.number().int(),
+    last: z.boolean(),
+    size: z.number().int(),
+    number: z.number().int(),
+    first: z.boolean(),
+    numberOfElements: z.number().int(),
+    empty: z.boolean(),
+  })
   .passthrough();
 export const FailedRefundDto = z
   .object({
@@ -802,27 +813,25 @@ export const PageResponseDtoFailedRefundDto = z
     empty: z.boolean(),
   })
   .passthrough();
-export const PageCustomerAddressDto = z
+export const PageResponseDtoCustomerAddressDto = z
   .object({
+    content: z.array(CustomerAddressDto),
     totalElements: z.number().int(),
     totalPages: z.number().int(),
+    last: z.boolean(),
     size: z.number().int(),
-    content: z.array(CustomerAddressDto),
-    numberOfElements: z.number().int(),
     number: z.number().int(),
     first: z.boolean(),
-    last: z.boolean(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
+    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();
-export const ApiResponsePageCustomerAddressDto = z
+export const ApiResponsePageResponseDtoCustomerAddressDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
     errorCode: z.string().optional(),
-    data: PageCustomerAddressDto.optional(),
+    data: PageResponseDtoCustomerAddressDto.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();

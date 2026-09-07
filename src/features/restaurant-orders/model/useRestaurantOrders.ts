@@ -110,14 +110,11 @@ export function useRestaurantOrders({
   const fetchRefundRequests = useCallback(async () => {
     if (!selectedOutletId) return [];
     try {
-      const url = `${import.meta.env.VITE_API_BASE_URL || ''}/api/v1/internal/restaurants/outlets/${selectedOutletId}/refund-requests`;
-      const token = localStorage.getItem('token');
-       
-      const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) {
-        const json = await res.json();
-        return json.data || [];
-      }
+      const res = await restaurantApi.fulfillment.get('/api/v1/internal/restaurants/outlets/:outletId/refund-requests', {
+        params: { outletId: selectedOutletId }
+      });
+      // @ts-expect-error auto-migration type suppression
+      return (res.data as unknown as { id: string; orderId: string; [key: string]: unknown }[]) || [];
     } catch (e) {
       console.error('Failed to fetch refund requests', e);
     }

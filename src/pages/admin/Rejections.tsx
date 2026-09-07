@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { ledgerApi } from '@/lib/zodiosClients';
 
 interface Rejection {
   id: string;
@@ -14,10 +15,8 @@ export const Rejections = () => {
     const [rejections, setRejections] = useState<Rejection[]>([]);
 
     useEffect(() => {
-        // eslint-disable-next-line no-restricted-syntax
-        fetch('/api/v1/ledger/admin/rejections')
-            .then(res => res.json())
-            .then(data => setRejections(data.content || []))
+        ledgerApi.ledger.get('/api/v1/ledger/admin/rejections')
+            .then(res => setRejections((res.content as unknown as Rejection[]) || []))
             .catch(console.error);
     }, []);
 

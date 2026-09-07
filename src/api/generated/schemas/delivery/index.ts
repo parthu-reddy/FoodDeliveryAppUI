@@ -4,4 +4,5 @@ export { Delivery_telemetry_controllerApi } from "./delivery_telemetry_controlle
 export { Delivery_verification_controllerApi } from "./delivery_verification_controller";
 export { Delivery_executive_controllerApi } from "./delivery_executive_controller";
 export { Logistics_controllerApi } from "./logistics_controller";
+export { Internal_driver_beneficiary_controllerApi } from "./internal_driver_beneficiary_controller";
 export { Delivery_order_controllerApi } from "./delivery_order_controller";

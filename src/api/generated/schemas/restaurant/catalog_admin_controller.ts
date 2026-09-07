@@ -1,8 +1,21 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-import { ApiResponseListMasterMenuItem } from "./common";
 import { MasterMenuItem } from "./common";
+
+export const ApiResponseListMasterMenuItem = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    errorCode: z.string().optional(),
+    data: z.array(MasterMenuItem).optional(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
+
+export const schemas = {
+  ApiResponseListMasterMenuItem,
+};
 
 export const endpoints = makeApi([
   {

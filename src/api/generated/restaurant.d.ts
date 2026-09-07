@@ -871,13 +871,36 @@ export interface components {
             /** Format: int32 */
             version?: number;
         };
-        ApiResponseMasterMenuItem: {
+        ApiResponseMasterMenuItemDto: {
             success: boolean;
             message: string;
             errorCode?: string;
-            data?: components["schemas"]["MasterMenuItem"];
+            data?: components["schemas"]["MasterMenuItemDto"];
             /** Format: date-time */
             timestamp: string;
+        };
+        MasterMenuItemDto: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            brandId?: string;
+            /** Format: uuid */
+            categoryId?: string;
+            name?: string;
+            description?: string;
+            imageUrl?: string;
+            isVeg?: boolean;
+            basePrice?: number;
+            packingCharge?: number;
+            /** Format: int32 */
+            defaultPrepTimeMinutes?: number;
+            /** Format: int32 */
+            version?: number;
+        };
+        PartialRefundRequestDto: {
+            amount: number;
+            reason?: string;
+            items?: string[];
         };
         AcceptOrderRequest: {
             /** Format: int32 */
@@ -911,13 +934,27 @@ export interface components {
             /** Format: int32 */
             version?: number;
         };
-        ApiResponseOutletMenuOverride: {
+        ApiResponseOverrideItemDto: {
             success: boolean;
             message: string;
             errorCode?: string;
-            data?: components["schemas"]["OutletMenuOverride"];
+            data?: components["schemas"]["OverrideItemDto"];
             /** Format: date-time */
             timestamp: string;
+        };
+        OverrideItemDto: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            outletId?: string;
+            /** Format: uuid */
+            masterMenuItemId?: string;
+            overriddenPrice?: number;
+            isAvailable?: boolean;
+            /** Format: int32 */
+            overriddenPrepTimeMinutes?: number;
+            /** Format: int32 */
+            version?: number;
         };
         SetOutletCategoryTimingRequest: {
             /** Format: uuid */
@@ -1033,23 +1070,27 @@ export interface components {
             deliveryFee?: number;
             tags?: string;
         };
-        ApiResponseOutlet: {
+        ApiResponseOutletDto: {
             success: boolean;
             message: string;
             errorCode?: string;
-            data?: components["schemas"]["Outlet"];
+            data?: components["schemas"]["OutletDto"];
             /** Format: date-time */
             timestamp: string;
         };
-        Outlet: {
+        OutletDto: {
             /** Format: uuid */
-            id: string;
+            id?: string;
             /** Format: uuid */
-            brandId: string;
-            name: string;
+            brandId?: string;
+            name?: string;
             fssaiLicenseNumber?: string;
+            /** Format: double */
+            lat?: number;
+            /** Format: double */
+            lng?: number;
             bannerUrl?: string;
-            timings?: components["schemas"]["OutletTiming"][];
+            isActive?: boolean;
             /** Format: int32 */
             defaultPrepTimeSeconds?: number;
             cuisine?: string;
@@ -1061,24 +1102,15 @@ export interface components {
             deliveryTime?: number;
             deliveryFee?: number;
             tags?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-            /** Format: int32 */
-            version?: number;
+            timings?: components["schemas"]["OutletTimingDto"][];
         };
-        OutletTiming: {
+        OutletTimingDto: {
             /** Format: uuid */
-            id: string;
-            openingTime: components["schemas"]["LocalTime"];
-            closingTime: components["schemas"]["LocalTime"];
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
+            id?: string;
             /** Format: int32 */
-            version?: number;
+            dayOfWeek?: number;
+            openingTime?: components["schemas"]["LocalTime"];
+            closingTime?: components["schemas"]["LocalTime"];
         };
         SetBrandCategoryTimingRequest: {
             /** Format: uuid */
@@ -1111,6 +1143,8 @@ export interface components {
             timestamp: string;
         };
         RestaurantOrder: {
+            /** Format: uuid */
+            orderId: string;
             /** Format: uuid */
             restaurantId: string;
             /** @enum {string} */
@@ -1148,53 +1182,33 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             updatedAt?: string;
-            /** Format: uuid */
-            id: string;
             deliveryExecutiveName?: string;
             total?: number;
             items?: Record<string, never>;
         };
-        ApiResponsePageRestaurantOrder: {
+        ApiResponsePageResponseDtoRestaurantOrder: {
             success: boolean;
             message: string;
             errorCode?: string;
-            data?: components["schemas"]["PageRestaurantOrder"];
+            data?: components["schemas"]["PageResponseDtoRestaurantOrder"];
             /** Format: date-time */
             timestamp: string;
         };
-        PageRestaurantOrder: {
-            /** Format: int32 */
-            totalPages: number;
+        PageResponseDtoRestaurantOrder: {
+            content: components["schemas"]["RestaurantOrder"][];
             /** Format: int64 */
             totalElements: number;
             /** Format: int32 */
-            size: number;
-            content: components["schemas"]["RestaurantOrder"][];
+            totalPages: number;
+            last: boolean;
             /** Format: int32 */
-            numberOfElements: number;
+            size: number;
             /** Format: int32 */
             number: number;
             first: boolean;
-            last: boolean;
-            sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
-            empty: boolean;
-        };
-        PageableObject: {
-            /** Format: int64 */
-            offset: number;
-            sort?: components["schemas"]["SortObject"];
-            paged: boolean;
             /** Format: int32 */
-            pageNumber: number;
-            /** Format: int32 */
-            pageSize: number;
-            unpaged: boolean;
-        };
-        SortObject: {
+            numberOfElements: number;
             empty: boolean;
-            sorted: boolean;
-            unsorted: boolean;
         };
         ApiResponseListMenuItemDTO: {
             success: boolean;
@@ -1261,19 +1275,19 @@ export interface components {
             /** Format: date-time */
             timestamp: string;
         };
-        ApiResponseListOutlet: {
+        ApiResponseListOutletDto: {
             success: boolean;
             message: string;
             errorCode?: string;
-            data?: components["schemas"]["Outlet"][];
+            data?: components["schemas"]["OutletDto"][];
             /** Format: date-time */
             timestamp: string;
         };
-        ApiResponseListOutletMenuOverride: {
+        ApiResponseListOverrideItemDto: {
             success: boolean;
             message: string;
             errorCode?: string;
-            data?: components["schemas"]["OutletMenuOverride"][];
+            data?: components["schemas"]["OverrideItemDto"][];
             /** Format: date-time */
             timestamp: string;
         };
@@ -1337,6 +1351,14 @@ export interface components {
             message: string;
             errorCode?: string;
             data?: components["schemas"]["Brand"][];
+            /** Format: date-time */
+            timestamp: string;
+        };
+        ApiResponseListMasterMenuItemDto: {
+            success: boolean;
+            message: string;
+            errorCode?: string;
+            data?: components["schemas"]["MasterMenuItemDto"][];
             /** Format: date-time */
             timestamp: string;
         };
@@ -1503,7 +1525,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseMasterMenuItem"];
+                    "application/json": components["schemas"]["ApiResponseMasterMenuItemDto"];
                 };
             };
         };
@@ -1543,9 +1565,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: Record<string, never>;
-                };
+                "application/json": components["schemas"]["PartialRefundRequestDto"];
             };
         };
         responses: {
@@ -1726,7 +1746,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseOutletMenuOverride"];
+                    "application/json": components["schemas"]["ApiResponseOverrideItemDto"];
                 };
             };
         };
@@ -1966,7 +1986,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseListOutlet"];
+                    "application/json": components["schemas"]["ApiResponseListOutletDto"];
                 };
             };
         };
@@ -1992,7 +2012,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseOutlet"];
+                    "application/json": components["schemas"]["ApiResponseOutletDto"];
                 };
             };
         };
@@ -2014,7 +2034,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseListMasterMenuItem"];
+                    "application/json": components["schemas"]["ApiResponseListMasterMenuItemDto"];
                 };
             };
         };
@@ -2040,7 +2060,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseMasterMenuItem"];
+                    "application/json": components["schemas"]["ApiResponseMasterMenuItemDto"];
                 };
             };
         };
@@ -2186,7 +2206,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponsePageRestaurantOrder"];
+                    "application/json": components["schemas"]["ApiResponsePageResponseDtoRestaurantOrder"];
                 };
             };
         };
@@ -2345,7 +2365,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseListOutlet"];
+                    "application/json": components["schemas"]["ApiResponseListOutletDto"];
                 };
             };
         };
@@ -2367,7 +2387,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseListOutletMenuOverride"];
+                    "application/json": components["schemas"]["ApiResponseListOverrideItemDto"];
                 };
             };
         };

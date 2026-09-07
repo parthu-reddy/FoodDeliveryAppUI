@@ -260,6 +260,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/internal/drivers/{driverId}/beneficiary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getBeneficiary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/internal/admin/delivery/drivers/{driverId}": {
         parameters: {
             query?: never;
@@ -514,7 +530,7 @@ export interface components {
             lat: number;
             /** Format: double */
             lng: number;
-            id?: string;
+            orderId?: string;
             /** Format: double */
             speedKmh?: number;
             isMockLocation?: boolean;
@@ -525,13 +541,19 @@ export interface components {
             registrationNumber: string;
             documentUrl?: string;
         };
-        ApiResponseObject: {
+        ApiResponseStatusResponseDto: {
             success: boolean;
             message: string;
             errorCode?: string;
-            data?: Record<string, never>;
+            data?: components["schemas"]["StatusResponseDto"];
             /** Format: date-time */
             timestamp: string;
+        };
+        StatusResponseDto: {
+            status?: string;
+            referenceId?: string;
+            message?: string;
+            valid?: boolean;
         };
         DLRequest: {
             dlNumber: string;
@@ -580,6 +602,14 @@ export interface components {
             pickupOtp?: string;
             deliveryOtp?: string;
             goOfflineAfter?: boolean;
+            cashCollectedAmount?: number;
+        };
+        BeneficiaryResponse: {
+            accountNumberMasked?: string;
+            ifsc?: string;
+            beneficiaryName?: string;
+            verified?: boolean;
+            source?: string;
         };
         Pageable: {
             /** Format: int32 */
@@ -589,10 +619,12 @@ export interface components {
             sort?: components["schemas"]["SortObject"];
         };
         PageDeliveryExecutive: {
-            /** Format: int64 */
-            totalElements: number;
             /** Format: int32 */
             totalPages: number;
+            /** Format: int64 */
+            totalElements: number;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             size: number;
             content: components["schemas"]["DeliveryExecutive"][];
@@ -602,20 +634,18 @@ export interface components {
             number: number;
             first: boolean;
             last: boolean;
-            sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };
         PageableObject: {
-            /** Format: int64 */
-            offset: number;
             sort?: components["schemas"]["SortObject"];
+            unpaged: boolean;
             paged: boolean;
             /** Format: int32 */
             pageNumber: number;
             /** Format: int32 */
             pageSize: number;
-            unpaged: boolean;
+            /** Format: int64 */
+            offset: number;
         };
         SortObject: {
             empty: boolean;
@@ -634,10 +664,12 @@ export interface components {
             status: string;
         };
         PageDriverLocationDTO: {
-            /** Format: int64 */
-            totalElements: number;
             /** Format: int32 */
             totalPages: number;
+            /** Format: int64 */
+            totalElements: number;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             size: number;
             content: components["schemas"]["DriverLocationDTO"][];
@@ -647,8 +679,6 @@ export interface components {
             number: number;
             first: boolean;
             last: boolean;
-            sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };
         JsonNode: Record<string, never>;
@@ -662,15 +692,33 @@ export interface components {
             /** Format: date-time */
             timestamp: string;
         };
-        ApiResponseListMapStringObject: {
+        ApiResponseRiderVerificationStatusDto: {
             success: boolean;
             message: string;
             errorCode?: string;
-            data?: {
-                [key: string]: Record<string, never>;
-            }[];
+            data?: components["schemas"]["RiderVerificationStatusDto"];
             /** Format: date-time */
             timestamp: string;
+        };
+        RiderVerificationStatusDto: {
+            dlStatus?: string;
+            rcStatus?: string;
+            bankStatus?: string;
+            biometricStatus?: string;
+            fullyVerified?: boolean;
+        };
+        ApiResponseListPendingPingResponse: {
+            success: boolean;
+            message: string;
+            errorCode?: string;
+            data?: components["schemas"]["PendingPingResponse"][];
+            /** Format: date-time */
+            timestamp: string;
+        };
+        PendingPingResponse: {
+            id?: string;
+            /** Format: int64 */
+            expiresAt?: number;
         };
         SseEmitter: {
             /** Format: int64 */
@@ -816,7 +864,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseObject"];
+                    "application/json": components["schemas"]["ApiResponseStatusResponseDto"];
                 };
             };
         };
@@ -840,7 +888,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseObject"];
+                    "application/json": components["schemas"]["ApiResponseStatusResponseDto"];
                 };
             };
         };
@@ -864,7 +912,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseObject"];
+                    "application/json": components["schemas"]["ApiResponseStatusResponseDto"];
                 };
             };
         };
@@ -888,7 +936,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseObject"];
+                    "application/json": components["schemas"]["ApiResponseStatusResponseDto"];
                 };
             };
         };
@@ -963,7 +1011,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseObject"];
+                    "application/json": components["schemas"]["ApiResponseVoid"];
                 };
             };
         };
@@ -1058,6 +1106,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    getBeneficiary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                driverId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BeneficiaryResponse"];
                 };
             };
         };
@@ -1259,7 +1329,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseObject"];
+                    "application/json": components["schemas"]["ApiResponseRiderVerificationStatusDto"];
                 };
             };
         };
@@ -1323,7 +1393,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseListMapStringObject"];
+                    "application/json": components["schemas"]["ApiResponseListPendingPingResponse"];
                 };
             };
         };

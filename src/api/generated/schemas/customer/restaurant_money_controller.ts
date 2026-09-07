@@ -51,7 +51,7 @@ export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/money/restaurant/:outletId/summary",
-    alias: "getSummary",
+    alias: "fetchSummary",
     requestFormat: "json",
     parameters: [
       {
@@ -70,7 +70,7 @@ export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/money/restaurant/:outletId/statement",
-    alias: "getStatement",
+    alias: "fetchStatement",
     requestFormat: "json",
     parameters: [
       {
@@ -94,7 +94,7 @@ export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/money/restaurant/:outletId/refunds",
-    alias: "getRestaurantRefunds",
+    alias: "fetchRestaurantRefunds",
     requestFormat: "json",
     parameters: [
       {
@@ -108,7 +108,7 @@ export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/money/restaurant/:outletId/orders",
-    alias: "getOrders",
+    alias: "fetchOrders",
     requestFormat: "json",
     parameters: [
       {
@@ -137,7 +137,7 @@ export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/money/restaurant/:outletId/orders/:orderId",
-    alias: "getOrderEarnings",
+    alias: "fetchOrderEarnings",
     requestFormat: "json",
     parameters: [
       {
@@ -156,7 +156,7 @@ export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/money/restaurant/orders/:orderId/earnings",
-    alias: "getOrderEarningsInternal",
+    alias: "fetchOrderEarningsInternal",
     requestFormat: "json",
     parameters: [
       {

@@ -4,10 +4,8 @@ import { z } from "zod";
 import { OrderResponse } from "./common";
 import { OrderItemResponse } from "./common";
 import { ApiResponseVoid } from "./common";
-import { ApiResponsePageOrderResponse } from "./common";
-import { PageOrderResponse } from "./common";
-import { SortObject } from "./common";
-import { PageableObject } from "./common";
+import { ApiResponsePageResponseDtoOrderResponse } from "./common";
+import { PageResponseDtoOrderResponse } from "./common";
 import { ApiResponseListOrderResponse } from "./common";
 
 export const OrderItemRequest = z
@@ -168,7 +166,7 @@ export const endpoints = makeApi([
         schema: z.number().int().optional().default(10),
       },
     ],
-    response: ApiResponsePageOrderResponse,
+    response: ApiResponsePageResponseDtoOrderResponse,
   },
   {
     method: "get",
@@ -187,7 +185,7 @@ export const endpoints = makeApi([
         schema: z.number().int().optional().default(10),
       },
     ],
-    response: ApiResponsePageOrderResponse,
+    response: ApiResponsePageResponseDtoOrderResponse,
   },
   {
     method: "get",
@@ -220,7 +218,7 @@ export const endpoints = makeApi([
         schema: z.number().int().optional().default(10),
       },
     ],
-    response: ApiResponsePageOrderResponse,
+    response: ApiResponsePageResponseDtoOrderResponse,
   },
 ]);
 

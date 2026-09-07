@@ -93,7 +93,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["getDriverOrderMoneyBatch"];
+        post: operations["fetchDriverOrderMoneyBatch"];
         delete?: never;
         options?: never;
         head?: never;
@@ -539,7 +539,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getSummary"];
+        get: operations["fetchSummary"];
         put?: never;
         post?: never;
         delete?: never;
@@ -555,7 +555,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getStatement"];
+        get: operations["fetchStatement"];
         put?: never;
         post?: never;
         delete?: never;
@@ -571,7 +571,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getRestaurantRefunds"];
+        get: operations["fetchRestaurantRefunds"];
         put?: never;
         post?: never;
         delete?: never;
@@ -587,7 +587,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getOrders"];
+        get: operations["fetchOrders"];
         put?: never;
         post?: never;
         delete?: never;
@@ -603,7 +603,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getOrderEarnings"];
+        get: operations["fetchOrderEarnings"];
         put?: never;
         post?: never;
         delete?: never;
@@ -619,7 +619,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getOrderEarningsInternal"];
+        get: operations["fetchOrderEarningsInternal"];
         put?: never;
         post?: never;
         delete?: never;
@@ -635,7 +635,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getOrderEarnings_1"];
+        get: operations["fetchOrderEarnings_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -651,7 +651,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getSummary_1"];
+        get: operations["fetchSummary_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -667,7 +667,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getStatement_1"];
+        get: operations["fetchStatement_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -683,7 +683,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getOrders_1"];
+        get: operations["fetchOrders_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -699,7 +699,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getOrderEarningsInternal_1"];
+        get: operations["fetchOrderEarningsInternal_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -715,7 +715,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getCash"];
+        get: operations["fetchCash"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1163,6 +1163,8 @@ export interface components {
             status: "CREATED" | "PENDING_ACCEPTANCE" | "AWAITING_DELAY_APPROVAL" | "ACCEPTED" | "PREPARING" | "READY_FOR_PICKUP" | "HANDED_OVER" | "CANCELLED" | "CANCELLED_BY_RESTAURANT";
             /** @enum {string} */
             deliveryStatus: "PENDING" | "SEARCHING_FOR_DRIVER" | "MANUAL_INTERVENTION_REQUIRED" | "ASSIGNED" | "AT_RESTAURANT" | "OUT_FOR_DELIVERY" | "DELIVERED" | "CANCELLED" | "FAILED";
+            totalAmount: number;
+            itemTotal: number;
             customerPlatformFee: number;
             sgst: number;
             cgst: number;
@@ -1191,8 +1193,6 @@ export interface components {
             /** Format: int64 */
             remainingPingSeconds?: number;
             distanceKm?: number;
-            total: number;
-            subtotal: number;
             /** Format: int64 */
             expiresAt?: number;
         };
@@ -1474,47 +1474,29 @@ export interface components {
             /** Format: int64 */
             timeout?: number;
         };
-        ApiResponsePageOrderResponse: {
+        ApiResponsePageResponseDtoOrderResponse: {
             success: boolean;
             message: string;
             errorCode?: string;
-            data?: components["schemas"]["PageOrderResponse"];
+            data?: components["schemas"]["PageResponseDtoOrderResponse"];
             /** Format: date-time */
             timestamp: string;
         };
-        PageOrderResponse: {
+        PageResponseDtoOrderResponse: {
+            content: components["schemas"]["OrderResponse"][];
             /** Format: int64 */
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
+            last: boolean;
             /** Format: int32 */
             size: number;
-            content: components["schemas"]["OrderResponse"][];
-            /** Format: int32 */
-            numberOfElements: number;
             /** Format: int32 */
             number: number;
             first: boolean;
-            last: boolean;
-            sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
-            empty: boolean;
-        };
-        PageableObject: {
-            /** Format: int64 */
-            offset: number;
-            unpaged: boolean;
-            sort?: components["schemas"]["SortObject"];
-            paged: boolean;
             /** Format: int32 */
-            pageNumber: number;
-            /** Format: int32 */
-            pageSize: number;
-        };
-        SortObject: {
+            numberOfElements: number;
             empty: boolean;
-            sorted: boolean;
-            unsorted: boolean;
         };
         ApiResponseListOrderResponse: {
             success: boolean;
@@ -1743,18 +1725,34 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            numberOfElements: number;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["Order"][];
             /** Format: int32 */
-            numberOfElements: number;
-            /** Format: int32 */
             number: number;
             first: boolean;
             last: boolean;
-            sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
+        };
+        PageableObject: {
+            sort?: components["schemas"]["SortObject"];
+            paged: boolean;
+            /** Format: int32 */
+            pageNumber: number;
+            /** Format: int32 */
+            pageSize: number;
+            unpaged: boolean;
+            /** Format: int64 */
+            offset: number;
+        };
+        SortObject: {
+            empty: boolean;
+            sorted: boolean;
+            unsorted: boolean;
         };
         DailyTotalDto: {
             orderTotals?: number;
@@ -1764,17 +1762,17 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            numberOfElements: number;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["SupportTicket"][];
             /** Format: int32 */
-            numberOfElements: number;
-            /** Format: int32 */
             number: number;
             first: boolean;
             last: boolean;
-            sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };
         AdminOrderMoney: {
@@ -1794,6 +1792,22 @@ export interface components {
             sgst?: number;
             cgst?: number;
             ledgerLines?: components["schemas"]["LedgerStatementLineDto"][];
+        };
+        PageResponseDtoSupportTicket: {
+            content: components["schemas"]["SupportTicket"][];
+            /** Format: int64 */
+            totalElements: number;
+            /** Format: int32 */
+            totalPages: number;
+            last: boolean;
+            /** Format: int32 */
+            size: number;
+            /** Format: int32 */
+            number: number;
+            first: boolean;
+            /** Format: int32 */
+            numberOfElements: number;
+            empty: boolean;
         };
         FailedRefundDto: {
             /** Format: uuid */
@@ -1830,30 +1844,28 @@ export interface components {
             numberOfElements: number;
             empty: boolean;
         };
-        ApiResponsePageCustomerAddressDto: {
+        ApiResponsePageResponseDtoCustomerAddressDto: {
             success: boolean;
             message: string;
             errorCode?: string;
-            data?: components["schemas"]["PageCustomerAddressDto"];
+            data?: components["schemas"]["PageResponseDtoCustomerAddressDto"];
             /** Format: date-time */
             timestamp: string;
         };
-        PageCustomerAddressDto: {
+        PageResponseDtoCustomerAddressDto: {
+            content: components["schemas"]["CustomerAddressDto"][];
             /** Format: int64 */
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
+            last: boolean;
             /** Format: int32 */
             size: number;
-            content: components["schemas"]["CustomerAddressDto"][];
-            /** Format: int32 */
-            numberOfElements: number;
             /** Format: int32 */
             number: number;
             first: boolean;
-            last: boolean;
-            sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            numberOfElements: number;
             empty: boolean;
         };
         ApiResponseListCustomerAddressDto: {
@@ -2005,7 +2017,7 @@ export interface operations {
             };
         };
     };
-    getDriverOrderMoneyBatch: {
+    fetchDriverOrderMoneyBatch: {
         parameters: {
             query?: never;
             header?: never;
@@ -2678,7 +2690,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponsePageOrderResponse"];
+                    "application/json": components["schemas"]["ApiResponsePageResponseDtoOrderResponse"];
                 };
             };
         };
@@ -2701,7 +2713,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponsePageOrderResponse"];
+                    "application/json": components["schemas"]["ApiResponsePageResponseDtoOrderResponse"];
                 };
             };
         };
@@ -2746,12 +2758,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponsePageOrderResponse"];
+                    "application/json": components["schemas"]["ApiResponsePageResponseDtoOrderResponse"];
                 };
             };
         };
     };
-    getSummary: {
+    fetchSummary: {
         parameters: {
             query?: {
                 period?: string;
@@ -2775,7 +2787,7 @@ export interface operations {
             };
         };
     };
-    getStatement: {
+    fetchStatement: {
         parameters: {
             query?: {
                 page?: number;
@@ -2800,7 +2812,7 @@ export interface operations {
             };
         };
     };
-    getRestaurantRefunds: {
+    fetchRestaurantRefunds: {
         parameters: {
             query?: never;
             header?: never;
@@ -2822,7 +2834,7 @@ export interface operations {
             };
         };
     };
-    getOrders: {
+    fetchOrders: {
         parameters: {
             query?: {
                 from?: string;
@@ -2848,7 +2860,7 @@ export interface operations {
             };
         };
     };
-    getOrderEarnings: {
+    fetchOrderEarnings: {
         parameters: {
             query?: never;
             header?: never;
@@ -2871,7 +2883,7 @@ export interface operations {
             };
         };
     };
-    getOrderEarningsInternal: {
+    fetchOrderEarningsInternal: {
         parameters: {
             query?: never;
             header?: never;
@@ -2893,7 +2905,7 @@ export interface operations {
             };
         };
     };
-    getOrderEarnings_1: {
+    fetchOrderEarnings_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -2916,7 +2928,7 @@ export interface operations {
             };
         };
     };
-    getSummary_1: {
+    fetchSummary_1: {
         parameters: {
             query?: {
                 period?: string;
@@ -2938,7 +2950,7 @@ export interface operations {
             };
         };
     };
-    getStatement_1: {
+    fetchStatement_1: {
         parameters: {
             query?: {
                 page?: number;
@@ -2961,7 +2973,7 @@ export interface operations {
             };
         };
     };
-    getOrders_1: {
+    fetchOrders_1: {
         parameters: {
             query?: {
                 date?: string;
@@ -2983,7 +2995,7 @@ export interface operations {
             };
         };
     };
-    getOrderEarningsInternal_1: {
+    fetchOrderEarningsInternal_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -3005,7 +3017,7 @@ export interface operations {
             };
         };
     };
-    getCash: {
+    fetchCash: {
         parameters: {
             query?: {
                 page?: number;
@@ -3295,8 +3307,9 @@ export interface operations {
     };
     getActiveOrdersForUser: {
         parameters: {
-            query: {
-                pageable: components["schemas"]["Pageable"];
+            query?: {
+                page?: number;
+                size?: number;
             };
             header?: never;
             path: {
@@ -3312,15 +3325,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PageOrder"];
+                    "application/json": components["schemas"]["ApiResponsePageResponseDtoOrderResponse"];
                 };
             };
         };
     };
     getUnassignedOrders_1: {
         parameters: {
-            query: {
-                pageable: components["schemas"]["Pageable"];
+            query?: {
+                page?: number;
+                size?: number;
             };
             header?: never;
             path?: never;
@@ -3334,7 +3348,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PageOrder"];
+                    "application/json": components["schemas"]["ApiResponsePageResponseDtoOrderResponse"];
                 };
             };
         };
@@ -3357,7 +3371,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PageOrder"];
+                    "application/json": components["schemas"]["PageResponseDtoOrderResponse"];
                 };
             };
         };
@@ -3381,7 +3395,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PageSupportTicket"];
+                    "application/json": components["schemas"]["PageResponseDtoSupportTicket"];
                 };
             };
         };
@@ -3427,7 +3441,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PageOrder"];
+                    "application/json": components["schemas"]["ApiResponsePageResponseDtoOrderResponse"];
                 };
             };
         };
@@ -3449,7 +3463,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponsePageCustomerAddressDto"];
+                    "application/json": components["schemas"]["ApiResponsePageResponseDtoCustomerAddressDto"];
                 };
             };
         };
@@ -3472,7 +3486,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponsePageOrderResponse"];
+                    "application/json": components["schemas"]["ApiResponsePageResponseDtoOrderResponse"];
                 };
             };
         };
@@ -3514,7 +3528,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponsePageOrderResponse"];
+                    "application/json": components["schemas"]["ApiResponsePageResponseDtoOrderResponse"];
                 };
             };
         };

@@ -1,19 +1,6 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-export const SortObject = z
-  .object({ empty: z.boolean(), sorted: z.boolean(), unsorted: z.boolean() })
-  .passthrough();
-export const PageableObject = z
-  .object({
-    sort: SortObject.optional(),
-    paged: z.boolean(),
-    pageNumber: z.number().int(),
-    pageSize: z.number().int(),
-    unpaged: z.boolean(),
-    offset: z.number().int(),
-  })
-  .passthrough();
 export const WalletTransactionDto = z
   .object({
     id: z.string().uuid(),
@@ -26,18 +13,16 @@ export const WalletTransactionDto = z
     metadata: z.string().optional(),
   })
   .passthrough();
-export const PageWalletTransactionDto = z
+export const PageResponseDtoWalletTransactionDto = z
   .object({
+    content: z.array(WalletTransactionDto),
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
-    numberOfElements: z.number().int(),
-    first: z.boolean(),
     last: z.boolean(),
     size: z.number().int(),
-    content: z.array(WalletTransactionDto),
     number: z.number().int(),
+    first: z.boolean(),
+    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -50,30 +35,26 @@ export const WalletDto = z
     currency: z.string(),
     status: z.enum(["ACTIVE", "SUSPENDED", "CLOSED"]),
   })
-  .partial()
   .passthrough();
-export const PageWalletDto = z
+export const PageResponseDtoWalletDto = z
   .object({
+    content: z.array(WalletDto),
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
-    numberOfElements: z.number().int(),
-    first: z.boolean(),
     last: z.boolean(),
     size: z.number().int(),
-    content: z.array(WalletDto),
     number: z.number().int(),
+    first: z.boolean(),
+    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();
 export const CreateWalletRequest = z
   .object({
-    entityId: z.string().uuid(),
-    entityType: z.enum(["CUSTOMER", "ADVERTISER"]),
+    entityId: z.string().uuid().optional(),
+    entityType: z.enum(["CUSTOMER", "ADVERTISER"]).optional(),
     currency: z.string(),
   })
-  .partial()
   .passthrough();
 export const TransactionRequest = z
   .object({
@@ -103,12 +84,10 @@ export const TransactionRequest = z
   .passthrough();
 
 export const schemas = {
-  SortObject,
-  PageableObject,
   WalletTransactionDto,
-  PageWalletTransactionDto,
+  PageResponseDtoWalletTransactionDto,
   WalletDto,
-  PageWalletDto,
+  PageResponseDtoWalletDto,
   CreateWalletRequest,
   TransactionRequest,
 };
@@ -222,7 +201,7 @@ export const endpoints = makeApi([
         schema: z.number().int().optional().default(20),
       },
     ],
-    response: PageWalletTransactionDto,
+    response: PageResponseDtoWalletTransactionDto,
   },
   {
     method: "get",
@@ -252,10 +231,10 @@ export const endpoints = makeApi([
       {
         name: "size",
         type: "Query",
-        schema: z.number().int().optional().default(100),
+        schema: z.number().int().optional().default(50),
       },
     ],
-    response: PageWalletDto,
+    response: PageResponseDtoWalletDto,
   },
 ]);
 

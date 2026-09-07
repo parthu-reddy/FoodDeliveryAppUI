@@ -3,6 +3,20 @@ import { z } from "zod";
 // Schemas shared across tag files. openapi-zod-client's tag-file grouping emits a shared
 // schema into neither file; this restores them. Generated -- do not edit by hand.
 
+export const ResolveBreakRequest = z
+  .object({ resolvedBy: z.string().uuid(), note: z.string() })
+  .partial()
+  .passthrough();
+export const ReconciliationRun = z
+  .object({
+    id: z.string().uuid(),
+    startedAt: z.string().datetime({ offset: true }),
+    finishedAt: z.string().datetime({ offset: true }),
+    status: z.string(),
+    summary: z.string(),
+  })
+  .partial()
+  .passthrough();
 export const Payout = z
   .object({
     id: z.string().uuid(),
@@ -185,11 +199,72 @@ export const ApiResponsePageResponseDtoLedgerTransactionDto = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
+export const pageable = z
+  .object({
+    page: z.number().int().gte(0),
+    size: z.number().int().gte(1),
+    sort: SortObject,
+  })
+  .partial()
+  .passthrough();
+export const PageReconciliationRun = z
+  .object({
+    totalPages: z.number().int(),
+    totalElements: z.number().int(),
+    size: z.number().int(),
+    content: z.array(ReconciliationRun),
+    numberOfElements: z.number().int(),
+    number: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
+    empty: z.boolean(),
+  })
+  .passthrough();
+export const ReconciliationBreak = z
+  .object({
+    id: z.string().uuid(),
+    runId: z.string().uuid(),
+    kind: z.enum([
+      "GATEWAY_VS_LEDGER",
+      "ORDERS_VS_CLEARING",
+      "WALLET_VS_LEDGER",
+      "PAYABLE_VS_ORDERS",
+      "DOUBLE_ENTRY",
+      "STUCK",
+    ]),
+    subjectType: z.string(),
+    subjectId: z.string().uuid(),
+    expected: z.number(),
+    actual: z.number(),
+    detail: z.string(),
+    resolvedAt: z.string().datetime({ offset: true }),
+    resolvedBy: z.string().uuid(),
+    note: z.string(),
+  })
+  .partial()
+  .passthrough();
+export const PageReconciliationBreak = z
+  .object({
+    totalPages: z.number().int(),
+    totalElements: z.number().int(),
+    size: z.number().int(),
+    content: z.array(ReconciliationBreak),
+    numberOfElements: z.number().int(),
+    number: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
+    empty: z.boolean(),
+  })
+  .passthrough();
 export const LedgerEntry = z
   .object({
     id: z.string().uuid(),
     transactionId: z.string().uuid(),
-    referenceId: z.string().uuid(),
+    referenceId: z.string().uuid().optional(),
     accountId: z.string().uuid(),
     direction: z.enum(["CREDIT", "DEBIT"]),
     category: z.enum([
@@ -212,12 +287,11 @@ export const LedgerEntry = z
       "STORE_CREDIT",
     ]),
     amount: z.number(),
-    producer: z.string(),
-    description: z.string(),
-    authorizedBy: z.string(),
+    producer: z.string().optional(),
+    description: z.string().optional(),
+    authorizedBy: z.string().optional(),
     createdAt: z.string().datetime({ offset: true }),
   })
-  .partial()
   .passthrough();
 export const PageResponseDtoLedgerEntry = z
   .object({
@@ -258,13 +332,12 @@ export const LedgerAccount = z
       "ADVERTISER_PREPAID",
     ]),
     ownerId: z.string().uuid(),
-    kind: z.enum(["EXTERNAL", "INTERNAL", "PAYABLE", "PREPAID"]),
+    kind: z.enum(["EXTERNAL", "INTERNAL", "PAYABLE", "PREPAID"]).optional(),
     balance: z.number(),
-    currency: z.string(),
+    currency: z.string().optional(),
     lockVersion: z.number().int(),
-    createdAt: z.string().datetime({ offset: true }),
+    createdAt: z.string().datetime({ offset: true }).optional(),
   })
-  .partial()
   .passthrough();
 export const BeneficiaryResponse = z
   .object({
@@ -303,4 +376,12 @@ export const PageCashRemittance = z
     pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
+  .passthrough();
+export const Pageable = z
+  .object({
+    page: z.number().int().gte(0),
+    size: z.number().int().gte(1),
+    sort: SortObject,
+  })
+  .partial()
   .passthrough();

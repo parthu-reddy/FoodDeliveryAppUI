@@ -2,12 +2,28 @@ import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
 import { ApiResponseString } from "./common";
-import { PageOrder } from "./common";
-import { Order } from "./common";
-import { SortObject } from "./common";
-import { PageableObject } from "./common";
-import { PageSupportTicket } from "./common";
+import { PageResponseDtoOrderResponse } from "./common";
+import { OrderResponse } from "./common";
+import { OrderItemResponse } from "./common";
 import { SupportTicket } from "./common";
+
+export const PageResponseDtoSupportTicket = z
+  .object({
+    content: z.array(SupportTicket),
+    totalElements: z.number().int(),
+    totalPages: z.number().int(),
+    last: z.boolean(),
+    size: z.number().int(),
+    number: z.number().int(),
+    first: z.boolean(),
+    numberOfElements: z.number().int(),
+    empty: z.boolean(),
+  })
+  .passthrough();
+
+export const schemas = {
+  PageResponseDtoSupportTicket,
+};
 
 export const endpoints = makeApi([
   {
@@ -103,7 +119,7 @@ export const endpoints = makeApi([
         schema: z.number().int().optional().default(20),
       },
     ],
-    response: PageOrder,
+    response: PageResponseDtoOrderResponse,
   },
   {
     method: "get",
@@ -127,7 +143,7 @@ export const endpoints = makeApi([
         schema: z.string().optional().default("OPEN"),
       },
     ],
-    response: PageSupportTicket,
+    response: PageResponseDtoSupportTicket,
   },
 ]);
 

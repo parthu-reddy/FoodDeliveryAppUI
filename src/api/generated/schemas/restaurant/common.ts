@@ -33,12 +33,3 @@ export const MasterMenuItem = z
     version: z.number().int().optional(),
   })
   .passthrough();
-export const ApiResponseListMasterMenuItem = z
-  .object({
-    success: z.boolean(),
-    message: z.string(),
-    errorCode: z.string().optional(),
-    data: z.array(MasterMenuItem).optional(),
-    timestamp: z.string().datetime({ offset: true }),
-  })
-  .passthrough();

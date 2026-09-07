@@ -189,19 +189,19 @@ export interface components {
             entityId?: string;
             /** @enum {string} */
             entityType?: "CUSTOMER" | "ADVERTISER";
-            currency?: string;
+            currency: string;
         };
         WalletDto: {
             /** Format: uuid */
-            id?: string;
+            id: string;
             /** Format: uuid */
-            entityId?: string;
+            entityId: string;
             /** @enum {string} */
-            entityType?: "CUSTOMER" | "ADVERTISER";
-            balance?: number;
-            currency?: string;
+            entityType: "CUSTOMER" | "ADVERTISER";
+            balance: number;
+            currency: string;
             /** @enum {string} */
-            status?: "ACTIVE" | "SUSPENDED" | "CLOSED";
+            status: "ACTIVE" | "SUSPENDED" | "CLOSED";
         };
         TransactionRequest: {
             amount: number;
@@ -233,39 +233,21 @@ export interface components {
             /** Format: date-time */
             timestamp: string;
         };
-        PageWalletTransactionDto: {
+        PageResponseDtoWalletTransactionDto: {
+            content: components["schemas"]["WalletTransactionDto"][];
             /** Format: int64 */
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
-            sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
-            /** Format: int32 */
-            numberOfElements: number;
-            first: boolean;
             last: boolean;
             /** Format: int32 */
             size: number;
-            content: components["schemas"]["WalletTransactionDto"][];
             /** Format: int32 */
             number: number;
-            empty: boolean;
-        };
-        PageableObject: {
-            sort?: components["schemas"]["SortObject"];
-            paged: boolean;
+            first: boolean;
             /** Format: int32 */
-            pageNumber: number;
-            /** Format: int32 */
-            pageSize: number;
-            unpaged: boolean;
-            /** Format: int64 */
-            offset: number;
-        };
-        SortObject: {
+            numberOfElements: number;
             empty: boolean;
-            sorted: boolean;
-            unsorted: boolean;
         };
         WalletTransactionDto: {
             /** Format: uuid */
@@ -281,22 +263,20 @@ export interface components {
             createdAt: string;
             metadata?: string;
         };
-        PageWalletDto: {
+        PageResponseDtoWalletDto: {
+            content: components["schemas"]["WalletDto"][];
             /** Format: int64 */
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
-            sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
-            /** Format: int32 */
-            numberOfElements: number;
-            first: boolean;
             last: boolean;
             /** Format: int32 */
             size: number;
-            content: components["schemas"]["WalletDto"][];
             /** Format: int32 */
             number: number;
+            first: boolean;
+            /** Format: int32 */
+            numberOfElements: number;
             empty: boolean;
         };
         OutboxEventEntity: {
@@ -547,7 +527,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PageWalletTransactionDto"];
+                    "application/json": components["schemas"]["PageResponseDtoWalletTransactionDto"];
                 };
             };
         };
@@ -592,7 +572,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PageWalletDto"];
+                    "application/json": components["schemas"]["PageResponseDtoWalletDto"];
                 };
             };
         };

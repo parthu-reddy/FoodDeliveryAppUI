@@ -1,11 +1,10 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-import { PageOrder } from "./common";
-import { pageable } from "./common";
-import { Order } from "./common";
-import { SortObject } from "./common";
-import { PageableObject } from "./common";
+import { ApiResponsePageResponseDtoOrderResponse } from "./common";
+import { PageResponseDtoOrderResponse } from "./common";
+import { OrderResponse } from "./common";
+import { OrderItemResponse } from "./common";
 
 export const endpoints = makeApi([
   {
@@ -53,12 +52,17 @@ export const endpoints = makeApi([
         schema: z.string().uuid(),
       },
       {
-        name: "pageable",
+        name: "page",
         type: "Query",
-        schema: pageable,
+        schema: z.number().int().optional().default(0),
+      },
+      {
+        name: "size",
+        type: "Query",
+        schema: z.number().int().optional().default(20),
       },
     ],
-    response: PageOrder,
+    response: ApiResponsePageResponseDtoOrderResponse,
   },
   {
     method: "get",
@@ -67,12 +71,17 @@ export const endpoints = makeApi([
     requestFormat: "json",
     parameters: [
       {
-        name: "pageable",
+        name: "page",
         type: "Query",
-        schema: pageable,
+        schema: z.number().int().optional().default(0),
+      },
+      {
+        name: "size",
+        type: "Query",
+        schema: z.number().int().optional().default(50),
       },
     ],
-    response: PageOrder,
+    response: ApiResponsePageResponseDtoOrderResponse,
   },
   {
     method: "get",
@@ -91,7 +100,7 @@ export const endpoints = makeApi([
         schema: z.number().int().optional().default(50),
       },
     ],
-    response: PageOrder,
+    response: ApiResponsePageResponseDtoOrderResponse,
   },
 ]);
 

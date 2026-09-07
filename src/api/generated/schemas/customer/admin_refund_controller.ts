@@ -2,10 +2,24 @@ import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
 import { SupportTicket } from "./common";
-import { PageSupportTicket } from "./common";
 import { SortObject } from "./common";
 import { PageableObject } from "./common";
 
+export const PageSupportTicket = z
+  .object({
+    totalElements: z.number().int(),
+    totalPages: z.number().int(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
+    numberOfElements: z.number().int(),
+    size: z.number().int(),
+    content: z.array(SupportTicket),
+    number: z.number().int(),
+    first: z.boolean(),
+    last: z.boolean(),
+    empty: z.boolean(),
+  })
+  .passthrough();
 export const ResolveRequest = z
   .object({
     approved: z.boolean(),
@@ -16,6 +30,7 @@ export const ResolveRequest = z
   .passthrough();
 
 export const schemas = {
+  PageSupportTicket,
   ResolveRequest,
 };
 

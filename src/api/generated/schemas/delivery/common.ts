@@ -54,7 +54,7 @@ export const TelemetryEventRequest = z
       .regex(/^[0-9a-fA-F\-]{36}$/),
     lat: z.number(),
     lng: z.number(),
-    id: z
+    orderId: z
       .string()
       .min(0)
       .max(36)
@@ -71,12 +71,21 @@ export const RCRequest = z
     documentUrl: z.string().optional(),
   })
   .passthrough();
-export const ApiResponseObject = z
+export const StatusResponseDto = z
+  .object({
+    status: z.string(),
+    referenceId: z.string(),
+    message: z.string(),
+    valid: z.boolean(),
+  })
+  .partial()
+  .passthrough();
+export const ApiResponseStatusResponseDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
     errorCode: z.string().optional(),
-    data: z.object({}).partial().passthrough().optional(),
+    data: StatusResponseDto.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
@@ -154,7 +163,18 @@ export const UpdateOrderStatusRequest = z
     pickupOtp: z.string().min(0).max(10).regex(/^\d+$/).optional(),
     deliveryOtp: z.string().min(0).max(10).regex(/^\d+$/).optional(),
     goOfflineAfter: z.boolean().optional(),
+    cashCollectedAmount: z.number().optional(),
   })
+  .passthrough();
+export const BeneficiaryResponse = z
+  .object({
+    accountNumberMasked: z.string(),
+    ifsc: z.string(),
+    beneficiaryName: z.string(),
+    verified: z.boolean(),
+    source: z.string(),
+  })
+  .partial()
   .passthrough();
 export const SortObject = z
   .object({ empty: z.boolean(), sorted: z.boolean(), unsorted: z.boolean() })
@@ -169,26 +189,26 @@ export const pageable = z
   .passthrough();
 export const PageableObject = z
   .object({
-    offset: z.number().int(),
     sort: SortObject.optional(),
+    unpaged: z.boolean(),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
-    unpaged: z.boolean(),
+    offset: z.number().int(),
   })
   .passthrough();
 export const PageDeliveryExecutive = z
   .object({
-    totalElements: z.number().int(),
     totalPages: z.number().int(),
+    totalElements: z.number().int(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
     size: z.number().int(),
     content: z.array(DeliveryExecutive),
     numberOfElements: z.number().int(),
     number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -204,16 +224,16 @@ export const DriverLocationDTO = z
   .passthrough();
 export const PageDriverLocationDTO = z
   .object({
-    totalElements: z.number().int(),
     totalPages: z.number().int(),
+    totalElements: z.number().int(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
     size: z.number().int(),
     content: z.array(DriverLocationDTO),
     numberOfElements: z.number().int(),
     number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -227,12 +247,35 @@ export const ApiResponseMapStringString = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const ApiResponseListMapStringObject = z
+export const RiderVerificationStatusDto = z
+  .object({
+    dlStatus: z.string(),
+    rcStatus: z.string(),
+    bankStatus: z.string(),
+    biometricStatus: z.string(),
+    fullyVerified: z.boolean(),
+  })
+  .partial()
+  .passthrough();
+export const ApiResponseRiderVerificationStatusDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
     errorCode: z.string().optional(),
-    data: z.array(z.record(z.object({}).partial().passthrough())).optional(),
+    data: RiderVerificationStatusDto.optional(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
+export const PendingPingResponse = z
+  .object({ id: z.string(), expiresAt: z.number().int() })
+  .partial()
+  .passthrough();
+export const ApiResponseListPendingPingResponse = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    errorCode: z.string().optional(),
+    data: z.array(PendingPingResponse).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
