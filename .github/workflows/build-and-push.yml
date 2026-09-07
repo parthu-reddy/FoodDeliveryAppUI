@@ -11,6 +11,90 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v5
+
+      - name: Checkout CustomerApplication
+        uses: actions/checkout@v5
+        with:
+          repository: parthu-reddy/CustomerApplication
+          path: ../CustomerApplication
+          token: ${{ secrets.CHECKOUT_TOKEN }}
+
+      - name: Checkout RestaurantApplication
+        uses: actions/checkout@v5
+        with:
+          repository: parthu-reddy/RestaurentApplication
+          path: ../RestaurantApplication
+          token: ${{ secrets.CHECKOUT_TOKEN }}
+
+      - name: Checkout DeliveryExecutiveApplication
+        uses: actions/checkout@v5
+        with:
+          repository: parthu-reddy/DeliveryExecutiveApplication
+          path: ../DeliveryExecutiveApplication
+          token: ${{ secrets.CHECKOUT_TOKEN }}
+
+      - name: Checkout IdentityService
+        uses: actions/checkout@v5
+        with:
+          repository: parthu-reddy/IdentityService
+          path: ../IdentityService
+          token: ${{ secrets.CHECKOUT_TOKEN }}
+
+      - name: Checkout WalletService
+        uses: actions/checkout@v5
+        with:
+          repository: parthu-reddy/WalletService
+          path: ../WalletService
+          token: ${{ secrets.CHECKOUT_TOKEN }}
+
+      - name: Checkout PaymentGatewayIntegration
+        uses: actions/checkout@v5
+        with:
+          repository: parthu-reddy/PaymentService
+          path: ../PaymentGatewayIntegration
+          token: ${{ secrets.CHECKOUT_TOKEN }}
+
+      - name: Checkout MapsIntegration
+        uses: actions/checkout@v5
+        with:
+          repository: parthu-reddy/MapsIntegration
+          path: ../MapsIntegration
+          token: ${{ secrets.CHECKOUT_TOKEN }}
+
+      - name: Checkout CommunicationService
+        uses: actions/checkout@v5
+        with:
+          repository: parthu-reddy/CommunicationService
+          path: ../CommunicationService
+          token: ${{ secrets.CHECKOUT_TOKEN }}
+
+      - name: Checkout CampaignService
+        uses: actions/checkout@v5
+        with:
+          repository: parthu-reddy/CampaignService
+          path: ../CampaignService
+          token: ${{ secrets.CHECKOUT_TOKEN }}
+
+      - name: Checkout GovernmentIDValidationService
+        uses: actions/checkout@v5
+        with:
+          repository: parthu-reddy/GovernmentIDValidationService
+          path: ../GovernmentIDValidationService
+          token: ${{ secrets.CHECKOUT_TOKEN }}
+
+      - name: Checkout LedgerService
+        uses: actions/checkout@v5
+        with:
+          repository: parthu-reddy/LedgerService
+          path: ../LedgerService
+          token: ${{ secrets.CHECKOUT_TOKEN }}
+
+      - name: Checkout UserTrackingService
+        uses: actions/checkout@v5
+        with:
+          repository: parthu-reddy/UserTrackingService
+          path: ../UserTrackingService
+          token: ${{ secrets.CHECKOUT_TOKEN }}
         
       - name: Setup Node
         uses: actions/setup-node@v5
