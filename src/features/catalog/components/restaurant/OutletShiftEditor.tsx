@@ -17,7 +17,7 @@ interface OutletShiftEditorProps {
 export default function OutletShiftEditor({ outlet, onRefresh, onClose }: OutletShiftEditorProps) {
   const [timings, setTimings] = useState<{ openingTime: string; closingTime: string }[]>(
     outlet.timings && outlet.timings.length > 0
-      ? outlet.timings.map((t: unknown) => ({
+      ? outlet.timings.map((t: Record<string, unknown>) => ({
         openingTime: typeof t.openingTime === 'string' ? (t.openingTime as string).substring(0, 5) : String((t.openingTime as { hour?: number }).hour || 0).padStart(2, '0') + ':' + String((t.openingTime as { minute?: number }).minute || 0).padStart(2, '0'),
         closingTime: typeof t.closingTime === 'string' ? (t.closingTime as string).substring(0, 5) : String((t.closingTime as { hour?: number }).hour || 0).padStart(2, '0') + ':' + String((t.closingTime as { minute?: number }).minute || 0).padStart(2, '0'),
       }))
