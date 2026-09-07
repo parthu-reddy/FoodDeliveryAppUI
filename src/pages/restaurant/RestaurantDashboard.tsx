@@ -368,7 +368,7 @@ export default function RestaurantDashboard({
       await restaurantApi.fulfillment.post('/api/v1/restaurants/:restaurantId/fulfillment/orders/:orderId/refund/partial', {
               partialAmount: paiseAmount.toString(),
               reason: reason
-            }, { params: { restaurantId: selectedOutletId, orderId } });
+            } as never, { params: { restaurantId: selectedOutletId, orderId } });
       showSuccess(`Partial refund of ${formatINR(paiseAmount)} initiated successfully`);
       // Let polling refresh the order, or manually trigger refresh if available.
     } catch (e: unknown) {
