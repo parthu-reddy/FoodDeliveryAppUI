@@ -343,7 +343,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
             <div className="pt-4 mt-4 border-t border-dashed border-slate-200 dark:border-slate-700 space-y-2">
               <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
                 <span>Items Total</span>
-                <span>{formatINR(currentTrackingOrder.subtotal ?? 0)}</span>
+                <span>{formatINR(currentTrackingOrder.itemTotal ?? 0)}</span>
               </div>
               <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
                 <span>Delivery Fee</span>
@@ -369,7 +369,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
               )}
               <div className="flex justify-between text-lg font-black text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-slate-700">
                 <span>Total Paid</span>
-                <span>{formatINR(currentTrackingOrder.total ?? 0)}</span>
+                <span>{formatINR(currentTrackingOrder.totalAmount ?? 0)}</span>
               </div>
             </div>
           </div>
@@ -433,7 +433,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
             <div className="pt-4 border-t border-dashed border-rose-500/20 dark:border-slate-700 space-y-2">
               <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
                 <span>Items Total</span>
-                <span>{formatINR(currentTrackingOrder.subtotal ?? 0)}</span>
+                <span>{formatINR(currentTrackingOrder.itemTotal ?? 0)}</span>
               </div>
               <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
                 <span>Delivery Fee {(currentTrackingOrder as {otp?: string, distanceKm?: number}).distanceKm ? `(${(currentTrackingOrder as {otp?: string, distanceKm?: number}).distanceKm} km)` : ''}</span>
@@ -459,7 +459,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
               )}
               <div className="flex justify-between text-lg font-black text-slate-900 dark:text-white pt-2 border-t border-rose-500/20 dark:border-slate-700">
                 <span>{isFailedOrder(currentTrackingOrder) ? 'Total Refunded' : 'Total Paid'}</span>
-                <span className={isFailedOrder(currentTrackingOrder) ? 'text-red-500' : ''}>{formatINR(currentTrackingOrder.total || 0)}</span>
+                <span className={isFailedOrder(currentTrackingOrder) ? 'text-red-500' : ''}>{formatINR(currentTrackingOrder.totalAmount || 0)}</span>
               </div>
             </div>
           </div>

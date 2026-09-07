@@ -68,12 +68,12 @@ interface RawOrder {
               id: o.orderId || o.id, 
               status: s as OrderStatus, 
               items: parsedItems,
-              total: o.total || calculatedTotal,
-              subtotal: o.subtotal || calculatedTotal,
+              totalAmount: (o as any).totalAmount || (o as any).total || calculatedTotal,
+              itemTotal: (o as any).itemTotal || (o as any).subtotal || calculatedTotal,
               createdAt: o.createdAt || new Date().toISOString()
             };
           });
-          setOrders(mapped as Order[]);
+          setOrders(mapped as any as Order[]);
           setTotalPages(res.data.totalPages || 1);
           setTotalElements(res.data.totalElements || mapped.length);
         }
@@ -189,7 +189,7 @@ interface RawOrder {
                     <td className="p-4 whitespace-nowrap">
                       <div className="flex flex-col">
                         <div className="flex items-center gap-1 font-black text-slate-800 dark:text-[#f0ede6]">
-                          {formatINR(order.total || 0)}
+                          {formatINR(order.totalAmount || 0)}
                         </div>
                         {(order.sgst !== undefined || order.cgst !== undefined) && (
                           <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">

@@ -570,7 +570,7 @@ export default function CustomerDashboard({
                     ))}
                     <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300 pt-3 border-t border-slate-200 dark:border-slate-800">
                       <span>Subtotal</span>
-                      <span>{formatINR((currentTrackingOrder.subtotal || currentTrackingOrder.subtotal || 0))}</span>
+                      <span>{formatINR((currentTrackingOrder.itemTotal || 0))}</span>
                     </div>
                     <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300">
                       <span>SGST (2.5%)</span>
@@ -590,7 +590,7 @@ export default function CustomerDashboard({
                     </div>
                     <div className="flex justify-between text-lg font-black text-slate-900 dark:text-[#f0ede6] pt-2 border-t border-slate-200 dark:border-slate-800 mt-2">
                       <span>Total Paid</span>
-                      <span>{formatINR((currentTrackingOrder.total || currentTrackingOrder.total || 0))}</span>
+                      <span>{formatINR((currentTrackingOrder.totalAmount || 0))}</span>
                     </div>
                     <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mt-1">
                       <span>Payment Method</span>

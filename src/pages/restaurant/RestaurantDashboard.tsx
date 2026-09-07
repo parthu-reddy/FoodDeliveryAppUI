@@ -185,7 +185,7 @@ export default function RestaurantDashboard({
 
         const fetchedOutlet = fetchedOutlets.find((o: unknown) => (o as {id: string}).id === selectedOutletId) as Outlet | undefined;
         if (fetchedOutlet) {
-          const fetchedMasterItems = await getMasterMenuItems(fetchedOutlet.brandId);
+          const fetchedMasterItems = await getMasterMenuItems(fetchedOutlet.brandId || '');
           setMasterItems(fetchedMasterItems as unknown[]);
           
           if (fetchedOutlet.defaultPrepTimeSeconds) {

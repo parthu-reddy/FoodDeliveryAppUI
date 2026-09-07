@@ -241,7 +241,7 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
           <div className="flex flex-wrap gap-x-4 gap-y-2 flex-1 min-w-0">
             <div className="space-y-1">
               <span className="text-[9px] text-slate-400 dark:text-slate-300 uppercase font-mono block truncate">Order Value</span>
-              <span className="text-xs font-bold text-slate-850 dark:text-[#f0ede6] font-mono">{formatINR(order.total)}</span>
+              <span className="text-xs font-bold text-slate-850 dark:text-[#f0ede6] font-mono">{formatINR(order.totalAmount || 0)}</span>
             </div>
             <div className="space-y-1">
               <span className="text-[9px] text-slate-400 dark:text-slate-300 uppercase font-mono block truncate">Your Payout</span>

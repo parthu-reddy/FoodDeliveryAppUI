@@ -42,11 +42,11 @@ export default function AdminLiveOperations() {
     intervalMs: 15000,
     enabled: true,
     onData: (response) => {
-        const page = response;
+        const page = response as any;
         const content = page.content ?? [];
-        setActiveOrders(content);
+        setActiveOrders(content as any as AdminOrder[]);
         if (page.totalPages !== undefined) {
-            setTotalPages(page.totalPages);
+            setTotalPages(page.totalPages as number);
         }
     }
   });

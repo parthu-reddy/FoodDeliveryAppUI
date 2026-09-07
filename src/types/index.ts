@@ -10,7 +10,7 @@ import { components as customerComponents } from '../api/generated/customer';
 import { components as deliveryComponents } from '../api/generated/delivery';
 
 export type Brand = restaurantComponents['schemas']['Brand'];
-export type Outlet = restaurantComponents['schemas']['Outlet'];
+export type Outlet = restaurantComponents['schemas']['OutletDto'];
 export type MasterMenuItem = restaurantComponents['schemas']['MasterMenuItem'];
 export type MenuItem = restaurantComponents['schemas']['MenuItemDTO'] & {
     category?: string;

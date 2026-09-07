@@ -80,8 +80,8 @@ export function useRestaurantOrders({
           id: orderData.orderId || orderData.id || '', 
           status: s as OrderStatus, 
           items: parsedItems as Order['items'],
-          total: orderData.total || calculatedTotal,
-          subtotal: orderData.subtotal || calculatedTotal
+          totalAmount: (orderData as any).totalAmount || (orderData as any).total || calculatedTotal,
+          itemTotal: (orderData as any).itemTotal || (orderData as any).subtotal || calculatedTotal
         };
       });
       return mapped;
@@ -110,11 +110,11 @@ export function useRestaurantOrders({
   const fetchRefundRequests = useCallback(async () => {
     if (!selectedOutletId) return [];
     try {
+      // @ts-expect-error missing endpoint from schema
       const res = await restaurantApi.fulfillment.get('/api/v1/internal/restaurants/outlets/:outletId/refund-requests', {
         params: { outletId: selectedOutletId }
       });
-      // @ts-expect-error auto-migration type suppression
-      return (res.data as unknown as { id: string; orderId: string; [key: string]: unknown }[]) || [];
+      return ((res as any).data || res || []) as { id: string; orderId: string; [key: string]: unknown }[];
     } catch (e) {
       console.error('Failed to fetch refund requests', e);
     }

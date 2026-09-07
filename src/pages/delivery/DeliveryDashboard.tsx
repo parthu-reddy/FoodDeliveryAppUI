@@ -183,7 +183,12 @@ export default function DeliveryDashboard({
     deliveryApi.deliveryVerification
       .get("/api/delivery/verification/status", {})
       .then((res) => {
-        if (res?.data) setVerificationStatus(res.data);
+        if (res?.data) {
+          setVerificationStatus({
+            allDocsApproved: res.data.fullyVerified === true || res.data.fullyVerified === 'true' as any,
+            bankApproved: res.data.bankStatus === 'APPROVED' || res.data.bankStatus === 'VERIFIED'
+          });
+        }
       })
       .catch((err) => console.warn("Failed to fetch verification status", err))
       .finally(() => setIsVerificationLoaded(true));

@@ -28,7 +28,7 @@ export default function OutletSettingsEditor({ outlet, onRefresh, onClose }: Out
     try {
       await restaurantApi.restaurantOutlet.put('/api/v1/outlets/:outletId/settings', { 
               defaultPrepTimeSeconds: parseInt(defaultPrepTimeSeconds.toString()) 
-            }, { params: { outletId: outlet.id } });
+            }, { params: { outletId: outlet.id || '' } });
       onRefresh();
       onClose();
     } catch (err: unknown) {

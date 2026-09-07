@@ -77,7 +77,7 @@ export default function AdminUserManagement() {
 
   const fetchUserActiveOrders = async (userId: string) => {
     try {
-      const res = await customerApi.adminOrder.get('/api/v1/internal/admin/orders/user/:userId/active', { params: { userId }, queries: { pageable: { page: 0, size: 20 } } });
+      const res = await customerApi.adminOrder.get('/api/v1/internal/admin/orders/user/:userId/active', { params: { userId }, queries: { page: 0, size: 20 } });
       const data = res.content ?? [];
       setUserActiveOrders(data as unknown as Order[]);
     } catch (e: unknown) {

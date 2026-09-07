@@ -93,7 +93,10 @@ export default function RiderSettingsView({
         try {
           const verRes = await deliveryApi.deliveryVerification.get(`/api/delivery/verification/status`, {});
           if (verRes?.data) {
-            setVerificationStatus(verRes.data);
+            setVerificationStatus({
+              allDocsApproved: verRes.data.fullyVerified === true || verRes.data.fullyVerified === 'true' as any,
+              bankApproved: verRes.data.bankStatus === 'APPROVED' || verRes.data.bankStatus === 'VERIFIED'
+            });
           }
         } catch (verErr: unknown) {
           console.error("Error loading verification status:", verErr);

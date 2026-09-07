@@ -15,8 +15,8 @@ export const Rejections = () => {
     const [rejections, setRejections] = useState<Rejection[]>([]);
 
     useEffect(() => {
-        ledgerApi.ledger.get('/api/v1/ledger/admin/rejections')
-            .then(res => setRejections((res.content as unknown as Rejection[]) || []))
+        (ledgerApi.ledger as any).get('/api/v1/ledger/admin/rejections')
+            .then((res: any) => setRejections((res?.content as unknown as Rejection[]) || []))
             .catch(console.error);
     }, []);
 

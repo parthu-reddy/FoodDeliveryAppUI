@@ -122,7 +122,7 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
                   </div>
                   <div className="text-right">
                     <span className="font-black text-slate-800 dark:text-white text-lg block">
-                      {formatINR(order.total || 0)}
+                      {formatINR(order.totalAmount || 0)}
                     </span>
                   </div>
                 </div>

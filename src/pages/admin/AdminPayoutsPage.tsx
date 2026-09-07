@@ -21,8 +21,13 @@ export default function AdminPayoutsPage() {
     setLoading(true);
     try {
       const res = await ledgerApi.payout.get('/api/v1/admin/payouts/pending');
-      const data = res ?? [];
-      setPendingPayouts(data);
+      const data = (res ?? []).map((p: any) => ({
+        ...p,
+        ownerType: p.payeeType,
+        ownerId: p.payeeId,
+        balance: p.pendingAmount ?? p.balance ?? 0
+      }));
+      setPendingPayouts(data as any[]);
     } catch (e: unknown) {
       console.error(e);
       showError(parseApiError(e, 'Failed to fetch pending payouts').message);
