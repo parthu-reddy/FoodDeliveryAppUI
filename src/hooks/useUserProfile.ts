@@ -27,7 +27,7 @@ export function useUserProfile(): UseUserProfileResult {
   const localProfile = getUserProfile();
 
   useEffect(() => {
-    identityApi.user.get('/api/v1/users/profile', undefined as any)
+    identityApi.user.get('/api/v1/users/profile', undefined as unknown as Record<string, unknown>)
       .then(res => {
         if (res) {
           const p = ('data' in res && typeof res.data === 'object' && res.data !== null)

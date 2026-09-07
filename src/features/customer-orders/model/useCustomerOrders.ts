@@ -20,7 +20,7 @@ export function useCustomerOrders({ onUpdateOrder }: UseCustomerOrdersOptions = 
         if (!ignore && res.data) {
           const content = res.data.content || [];
           setInternalOrders(content.map((o: unknown) => {
-            const orderData = o as any as Order;
+            const orderData = o as unknown as Order;
             return { ...orderData, status: (orderData.status?.toUpperCase() || '') as OrderStatus };
           }));
         }
@@ -56,7 +56,7 @@ export function useCustomerOrders({ onUpdateOrder }: UseCustomerOrdersOptions = 
           }
           const content = res.data.content || [];
           const updatedOrders = content.map((o: unknown) => {
-            const orderData = o as any as Order;
+            const orderData = o as unknown as Order;
             return { ...orderData, status: (orderData.status?.toUpperCase() || '') as OrderStatus };
           });
           
@@ -89,7 +89,7 @@ export function useCustomerOrders({ onUpdateOrder }: UseCustomerOrdersOptions = 
                         (res.data || []).forEach((batchOrder) => {
                             const idx = currentList.findIndex(o => o.id === batchOrder.id);
                             if (idx !== -1 && JSON.stringify(currentList[idx]) !== JSON.stringify(batchOrder)) {
-                               currentList[idx] = batchOrder as any;
+                               currentList[idx] = batchOrder as unknown as Order;
                                batchChanged = true;
                             }
                         });
