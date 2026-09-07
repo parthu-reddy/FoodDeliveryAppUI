@@ -49,7 +49,7 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
           // `customerName`, and this view reads all three -- assigning the raw response left them
           // undefined. That was invisible while Order resolved to `any`.
           setOrders((content as unknown[]).map(normalizeOrder));
-          setTotalPages(res.totalPages || 1);
+          setTotalPages((res.totalPages as any) || 1);
         }
       })
       .catch(err => {

@@ -130,19 +130,19 @@ export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalPr
                       <div className="space-y-2 text-sm pl-2 border-l-2 border-slate-200 dark:border-slate-700">
                         <div className="flex justify-between text-slate-600 dark:text-slate-300">
                           <span>Food Value (Item Total)</span>
-                          <span>{formatINR((data.foodCost || 0))}</span>
+                          <span>{formatINR(((data as any).foodCost || 0))}</span>
                         </div>
                         <div className="flex justify-between text-rose-500 dark:text-rose-400">
                           <span>Platform Fee (Restaurant)</span>
-                          <span>- {formatINR((data.platformFee || 0))}</span>
+                          <span>- {formatINR(((data as any).platformFee || 0))}</span>
                         </div>
                         <div className="flex justify-between text-rose-500 dark:text-rose-400">
                           <span>Delivery Contribution</span>
-                          <span>- {formatINR((data.deliveryContribution || 0))}</span>
+                          <span>- {formatINR(((data as any).deliveryContribution || 0))}</span>
                         </div>
                         <div className="flex justify-between font-bold text-lg text-emerald-600 dark:text-emerald-400 pt-2">
                           <span>Net Restaurant Payout</span>
-                          <span>{formatINR((data.netPayout || 0))}</span>
+                          <span>{formatINR(((data as any).netPayout || 0))}</span>
                         </div>
                       </div>
                     </div>

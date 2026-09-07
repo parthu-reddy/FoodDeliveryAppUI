@@ -66,10 +66,10 @@ function AdminFleetMapInner() {
 
         if (!active) return;
 
-        // @ts-expect-error type suppression
-        setRestaurants(resOutlets.content ?? []);
-        setRiders(resDrivers.content ?? []);
-        setCustomers(resCustomers.content ?? []);
+        //  type suppression
+        setRestaurants((resOutlets.content as any) ?? []);
+        setRiders((resDrivers.content as any) ?? []);
+        setCustomers((resCustomers.content as any) ?? []);
       } catch (err: unknown) {
         console.error("Failed to fetch map data", err);
       }

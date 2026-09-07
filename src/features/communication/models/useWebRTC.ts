@@ -341,7 +341,7 @@ export const useWebRTC = () => {
         });
       }
 
-            await chatApi.chatAudioUpload.post('/api/v1/chat/sessions/:sessionId/upload-audio', formData as Parameters<typeof chatApi.chatAudioUpload.post>[1], { params: { sessionId } } as { params: { sessionId: string } });
+            await chatApi.chatAudioUpload.post('/api/v1/chat/sessions/:sessionId/upload-audio', formData as any, { params: { sessionId } } as { params: { sessionId: string } });
       console.log("Audio recording uploaded successfully.");
       
       // Clear local storage if successful

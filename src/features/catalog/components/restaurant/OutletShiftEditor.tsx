@@ -18,8 +18,8 @@ export default function OutletShiftEditor({ outlet, onRefresh, onClose }: Outlet
   const [timings, setTimings] = useState<{ openingTime: string; closingTime: string }[]>(
     outlet.timings && outlet.timings.length > 0
       ? outlet.timings.map((t) => ({
-        openingTime: typeof t.openingTime === 'string' ? t.openingTime.substring(0, 5) : String((t.openingTime as { hour?: number }).hour || 0).padStart(2, '0') + ':' + String((t.openingTime as { minute?: number }).minute || 0).padStart(2, '0'),
-        closingTime: typeof t.closingTime === 'string' ? t.closingTime.substring(0, 5) : String((t.closingTime as { hour?: number }).hour || 0).padStart(2, '0') + ':' + String((t.closingTime as { minute?: number }).minute || 0).padStart(2, '0'),
+        openingTime: typeof t.openingTime === 'string' ? (t.openingTime as any).substring(0, 5) : String((t.openingTime as { hour?: number }).hour || 0).padStart(2, '0') + ':' + String((t.openingTime as { minute?: number }).minute || 0).padStart(2, '0'),
+        closingTime: typeof t.closingTime === 'string' ? (t.closingTime as any).substring(0, 5) : String((t.closingTime as { hour?: number }).hour || 0).padStart(2, '0') + ':' + String((t.closingTime as { minute?: number }).minute || 0).padStart(2, '0'),
       }))
       : [{ openingTime: '09:00', closingTime: '22:00' }]
   );

@@ -23,14 +23,14 @@ export function parseApiError(error: unknown, defaultMessage = 'An unexpected er
     if (typeof data === 'string') return data;
     if (typeof data !== 'object') return undefined;
 
-    const obj = data as Record<string, unknown>;
+    const obj = data as unknown as Record<string, unknown>;
 
     // Array of errors (e.g., validation errors)
     if (Array.isArray(obj.errors) && obj.errors.length > 0) {
       const firstErr = obj.errors[0];
       if (typeof firstErr === 'string') return firstErr;
       if (firstErr && typeof firstErr === 'object') {
-        const errObj = firstErr as Record<string, unknown>;
+        const errObj = firstErr as unknown as Record<string, unknown>;
         if (typeof errObj.message === 'string') return errObj.message;
         if (typeof errObj.defaultMessage === 'string') return errObj.defaultMessage;
       }
@@ -41,7 +41,7 @@ export function parseApiError(error: unknown, defaultMessage = 'An unexpected er
       // Check if this is an ApiResponse with a data object containing field errors
       if (obj.data && typeof obj.data === 'object' && !Array.isArray(obj.data) && Object.keys(obj.data).length > 0) {
         try {
-          const detailedErrors = Object.entries(obj.data as Record<string, unknown>)
+          const detailedErrors = Object.entries(obj.data as unknown as Record<string, unknown>)
             .map(([field, err]) => `${field}: ${err}`)
             .join(', ');
           return `${obj.message}: ${detailedErrors}`;
@@ -95,7 +95,7 @@ export function parseApiError(error: unknown, defaultMessage = 'An unexpected er
     }
 
     // Sometimes Zodios exposes the underlying axios error in .cause
-    const causeError = (error as Record<string, unknown>)?.cause;
+    const causeError = (error as unknown as Record<string, unknown>)?.cause;
     const causeMsg = isAxiosError(causeError) ? extractMessageFromData(causeError.response?.data) : undefined;
     if (causeMsg) {
       return {

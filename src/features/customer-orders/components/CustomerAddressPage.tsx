@@ -196,7 +196,7 @@ export default function CustomerAddressPage({
             onAddApiLog({ id: 'autocomplete', label: `GET /api/places/autocomplete?input=${encodeURIComponent(addressSearchQuery)}`, method: 'GET' });
          }
          const res = await mapsApi.integration.get('/api/places/autocomplete', { queries: { input: addressSearchQuery } });
-         setSuggestions((res as SearchSuggestion[]) ?? []);
+         setSuggestions((res as any as SearchSuggestion[]) ?? []);
        } catch (e: unknown) {
          console.error(e);
        } finally {

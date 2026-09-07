@@ -41,6 +41,10 @@ done
 node scripts/fix-missing-schemas.mjs
 
 # Workaround for openapi-zod-client not exporting shared schemas
-find "$SCHEMA_DIR" -name '*.ts' -exec sed -i 's/^const /export const /g' {} +
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  find "$SCHEMA_DIR" -name '*.ts' -exec sed -i '' 's/^const /export const /g' {} +
+else
+  find "$SCHEMA_DIR" -name '*.ts' -exec sed -i 's/^const /export const /g' {} +
+fi
 
 echo "Done! Generated types in $OUT_DIR and schemas in $SCHEMA_DIR"
