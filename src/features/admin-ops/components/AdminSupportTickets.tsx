@@ -1,7 +1,6 @@
 import { Order } from "@/types";
 import { useToast } from "@/contexts/ToastContext";
 import { usePolling } from "@/hooks/usePolling";
-import { formatINR } from '@shared/money';
 import { parseApiError } from '@/lib/parseApiError';
 import { customerApi } from "@/lib/zodiosClients";
 import { SupportTicket as SupportTicketSchema } from "@/api/generated/schemas/customer/common";

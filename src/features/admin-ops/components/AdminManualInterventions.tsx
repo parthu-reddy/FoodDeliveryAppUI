@@ -5,7 +5,6 @@ import { customerApi, deliveryApi } from "@/lib/zodiosClients";
 import { Button, Textarea } from '@shared/ui';
 import { Shield, Truck } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { formatINR } from '@shared/money';
 import { Order as OrderSchema } from '@/api/generated/schemas/customer/common';
 import { z } from 'zod';
 type Order = z.infer<typeof OrderSchema>;

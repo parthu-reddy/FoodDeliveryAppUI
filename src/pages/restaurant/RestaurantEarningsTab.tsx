@@ -4,7 +4,7 @@ import { customerApi } from "@/lib/zodiosClients";
 import { Button, Spinner } from '@shared/ui';
 import { formatINR } from '@shared/money';
 import { Download, IndianRupee, Activity, FileText, CheckCircle, XCircle } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { usePolling } from "@/hooks/usePolling";
 
 interface RestaurantEarningsTabProps {
@@ -22,7 +22,10 @@ export default function RestaurantEarningsTab({ restaurantId }: RestaurantEarnin
       });
     },
     intervalMs: 30000,
-    enabled: !!restaurantId
+    enabled: !!restaurantId,
+    // Both polls ignored onError, so a failed fetch left the outlet reading an empty earnings
+    // screen with no indication anything had gone wrong.
+    onError: (e) => showError(parseApiError(e, 'Failed to load earnings summary').message)
   });
 
   const { data: statementPage, isLoading: loadingStatement } = usePolling({
@@ -33,14 +36,15 @@ export default function RestaurantEarningsTab({ restaurantId }: RestaurantEarnin
       });
     },
     intervalMs: 15000,
-    enabled: !!restaurantId
+    enabled: !!restaurantId,
+    onError: (e) => showError(parseApiError(e, 'Failed to load the earnings statement').message)
   });
 
   const downloadCSV = () => {
      if (!statementPage?.content) return;
      const lines = statementPage.content;
      let csv = 'Date,Category,Description,Direction,Amount,Settled\n';
-     lines.forEach((line: any) => {
+     lines.forEach((line) => {
          const date = new Date(String(line.createdAt || '')).toLocaleString();
          const amtStr = formatINR(line.amount || 0);
          csv += `"${date}","${line.category}","${line.description}","${line.direction}","${amtStr}","${line.settled}"\n`;
@@ -129,7 +133,7 @@ export default function RestaurantEarningsTab({ restaurantId }: RestaurantEarnin
                      </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                     {content.map((line: any, idx: number) => (
+                     {content.map((line, idx: number) => (
                          <tr key={String(line.transactionId || idx)}>
                             <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{new Date(String(line.createdAt || '')).toLocaleDateString()}</td>
                             <td className="px-4 py-3 text-slate-700 dark:text-slate-300">

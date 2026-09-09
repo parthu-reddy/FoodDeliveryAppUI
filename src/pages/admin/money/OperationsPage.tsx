@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { z } from 'zod';
 import { Card } from '../../../shared/ui';
 import { Reconciliation_controllerApi, PageReconciliationRun } from '../../../api/generated/schemas/ledger/reconciliation_controller';
@@ -19,11 +19,7 @@ export default function OperationsPage() {
   const [walletOutbox, setWalletOutbox] = useState<z.infer<typeof WalletOutboxPage> | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    fetchData();
-  }, [activeTab]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       if (activeTab === 'rejections') {
@@ -44,7 +40,13 @@ export default function OperationsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeTab]);
+
+  useEffect(() => {
+    // A fetch on mount sets its loading flag synchronously; see PayoutQueue for the same note.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchData();
+  }, [fetchData]);
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -133,7 +135,7 @@ export default function OperationsPage() {
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Recent Reconciliation Runs</h2>
           {reconRuns?.content?.length === 0 ? <p>No runs found.</p> : (
-            reconRuns?.content?.map((run: any) => (
+            reconRuns?.content?.map((run) => (
               <Card key={run.id} className="p-4">
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-mono text-sm text-gray-500">{run.id}</span>
@@ -153,7 +155,7 @@ export default function OperationsPage() {
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Failed Payment Webhooks</h2>
           {paymentWebhooks?.content?.length === 0 ? <p>No failed webhooks found.</p> : (
-            paymentWebhooks?.content?.map((hook: any) => (
+            paymentWebhooks?.content?.map((hook) => (
               <Card key={hook.id} className="p-4">
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-mono text-sm">{hook.eventId}</span>
@@ -180,7 +182,7 @@ export default function OperationsPage() {
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Wallet Outbox DLQ</h2>
           {walletOutbox?.content?.length === 0 ? <p>No wallet outbox events in DLQ.</p> : (
-            walletOutbox?.content?.map((evt: any) => (
+            walletOutbox?.content?.map((evt) => (
               <Card key={evt.id} className="p-4">
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-mono text-sm">{evt.aggregateType} - {evt.eventType}</span>

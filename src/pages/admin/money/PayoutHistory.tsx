@@ -3,11 +3,10 @@ import { useToast } from "@/contexts/ToastContext";
 import { parseApiError } from '@/lib/parseApiError';
 import { ledgerApi } from "@/lib/zodiosClients";
 import { Button, Spinner, Input } from '@shared/ui';
-import { CheckCircle, Clock, Search, Download, History } from 'lucide-react';
+import { Search, Download, History } from 'lucide-react';
 import { useState } from 'react';
 import { formatINR } from '@shared/money';
 
-import { schemas } from "@/api/generated/schemas/ledger/payout_controller";
 import { z } from "zod";
 
 // The list endpoint returns PayoutDto (status is a plain string), not the Payout entity shape.

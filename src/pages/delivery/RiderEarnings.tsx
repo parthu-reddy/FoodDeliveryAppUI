@@ -1,4 +1,3 @@
-import { useToast } from "@/contexts/ToastContext";
 import { customerApi } from "@/lib/zodiosClients";
 import { Button, Spinner } from '@shared/ui';
 import { formatINR } from '@shared/money';
@@ -33,7 +32,7 @@ export default function RiderEarnings() {
      if (!statementPage?.content) return;
      const lines = statementPage.content;
      let csv = 'Date,Category,Description,Direction,Amount,Settled\n';
-     lines.forEach((line: any) => {
+     lines.forEach((line) => {
          const date = new Date(String(line.createdAt || '')).toLocaleString();
          const amtStr = formatINR(line.amount || 0);
          csv += `"${date}","${line.category}","${line.description}","${line.direction}","${amtStr}","${line.settled}"\n`;
@@ -124,7 +123,7 @@ export default function RiderEarnings() {
                      </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                     {content.map((line: any, idx: number) => (
+                     {content.map((line, idx: number) => (
                          <tr key={String(line.transactionId || idx)}>
                             <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{new Date(String(line.createdAt || '')).toLocaleString()}</td>
                             <td className="px-4 py-3 text-slate-700 dark:text-slate-300">

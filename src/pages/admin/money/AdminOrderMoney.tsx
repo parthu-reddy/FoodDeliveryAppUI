@@ -2,8 +2,8 @@ import { useToast } from "@/contexts/ToastContext";
 import { parseApiError } from '@/lib/parseApiError';
 import { customerApi } from "@/lib/zodiosClients";
 import { Spinner } from '@shared/ui';
-import { IndianRupee, Store, Bike, FileText, Activity } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { IndianRupee, Store, Bike, Activity } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import { formatINR } from '@shared/money';
 
 import { schemas } from "@/api/generated/schemas/customer/admin_money_controller";
@@ -16,11 +16,10 @@ export default function AdminOrderMoney({ orderId }: { orderId: string }) {
   const [loading, setLoading] = useState(true);
   const { showError } = useToast();
 
-  useEffect(() => {
-    fetchMoneyData();
-  }, [orderId]);
-
-  const fetchMoneyData = async () => {
+  // Declared before the effect and memoised: as a plain function defined below, it was read before
+  // its declaration and could not be an effect dependency, so the effect silently captured whatever
+  // closure existed on first render.
+  const fetchMoneyData = useCallback(async () => {
     setLoading(true);
     try {
       const res = await customerApi.adminMoney.getOrderMoney({
@@ -33,7 +32,13 @@ export default function AdminOrderMoney({ orderId }: { orderId: string }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [orderId, showError]);
+
+  useEffect(() => {
+    // A fetch on mount sets its loading flag synchronously; see PayoutQueue for the same note.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchMoneyData();
+  }, [fetchMoneyData]);
 
   if (loading) {
      return <div className="p-12 text-center text-slate-500 font-medium flex items-center justify-center gap-3">
@@ -152,7 +157,7 @@ export default function AdminOrderMoney({ orderId }: { orderId: string }) {
                        </tr>
                    </thead>
                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-[#0f111a]">
-                       {data.ledgerLines.map((line: any) => (
+                       {data.ledgerLines.map((line) => (
                            <tr key={String(line.id)}>
                                <td className="p-3 font-mono text-xs text-slate-400" title={String(line.id)}>{String(line.id).substring(0,8)}</td>
                                <td className="p-3">

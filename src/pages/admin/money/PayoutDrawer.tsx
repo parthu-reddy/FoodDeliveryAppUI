@@ -8,8 +8,6 @@ import { useEffect, useState } from 'react';
 import { formatINR } from '@shared/money';
 
 import { PendingPayoutResponse as PendingPayoutResponseSchema } from "@/api/generated/schemas/ledger/common";
-import { schemas as ledgerSchemas } from "@/api/generated/schemas/ledger/ledger_controller";
-import { schemas as payoutSchemas } from "@/api/generated/schemas/ledger/payout_controller";
 import { schemas as ledgerStatementSchemas } from "@/api/generated/schemas/ledger/ledger_statement_controller";
 import { z } from "zod";
 import PayoutCreateDialog from "./PayoutCreateDialog";
@@ -72,6 +70,9 @@ export default function PayoutDrawer({
   };
 
   useEffect(() => {
+    // A fetch on mount sets its loading flag synchronously, which this rule cannot express;
+    // same suppression as AdminLedgerView and the restaurant order components.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account.payeeId]);
@@ -111,8 +112,11 @@ export default function PayoutDrawer({
                    <p className="text-sm text-slate-500 italic">No unsettled lines found.</p>
                ) : (
                    <StatementTable 
-                     rows={statementLines.map(line => ({
-                       id: line.transactionId || String(Math.random()),
+                     rows={statementLines.map((line, index) => ({
+                       // The row index, not Math.random(): a fresh key on every render makes React
+                       // discard and rebuild the row each time, losing selection and scroll. A
+                       // statement line without a transactionId still has a stable position.
+                       id: line.transactionId || `unsettled-line-${index}`,
                        date: line.createdAt || '',
                        description: line.description || '',
                        category: line.category,

@@ -35,6 +35,9 @@ export default function PayoutQueue({ onSelectRow }: { onSelectRow: (payout: Pen
   };
 
   useEffect(() => {
+    // A fetch on mount sets its loading flag synchronously, which this rule cannot express;
+    // same suppression as AdminLedgerView and the restaurant order components.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchPayouts();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

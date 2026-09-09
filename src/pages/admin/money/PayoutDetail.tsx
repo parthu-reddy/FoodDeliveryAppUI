@@ -2,7 +2,7 @@ import { useToast } from "@/contexts/ToastContext";
 import { parseApiError } from '@/lib/parseApiError';
 import { ledgerApi } from "@/lib/zodiosClients";
 import { Button, Spinner, Input } from '@shared/ui';
-import { ArrowLeft, CheckCircle, XCircle, AlertTriangle, FileText, Banknote, Clock } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, FileText, Banknote, Clock } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { formatINR } from '@shared/money';
 
@@ -43,6 +43,9 @@ export default function PayoutDetail({ payoutId, onBack }: { payoutId: string; o
   };
 
   useEffect(() => {
+    // A fetch on mount sets its loading flag synchronously, which this rule cannot express;
+    // same suppression as AdminLedgerView and the restaurant order components.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchPayout();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [payoutId]);
@@ -261,8 +264,10 @@ export default function PayoutDetail({ payoutId, onBack }: { payoutId: string; o
                  </span>
              </div>
              <StatementTable 
-                 rows={(payout.lines ?? []).map(line => ({
-                   id: line.id || line.ledgerEntryId || String(Math.random()),
+                 rows={(payout.lines ?? []).map((line, index) => ({
+                   // Stable across renders; see the note in PayoutDrawer. Math.random() here also
+                   // meant two renders of the same payout never reused a row.
+                   id: line.id || line.ledgerEntryId || `payout-line-${index}`,
                    date: line.entryCreatedAt || '',
                    description: line.category || '',
                    category: line.category,

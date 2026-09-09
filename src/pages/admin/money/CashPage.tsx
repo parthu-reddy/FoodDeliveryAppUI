@@ -2,7 +2,7 @@ import { useToast } from "@/contexts/ToastContext";
 import { parseApiError } from '@/lib/parseApiError';
 import { ledgerApi } from "@/lib/zodiosClients";
 import { Button, Spinner, Input } from '@shared/ui';
-import { Search, IndianRupee, CheckCircle, Clock } from 'lucide-react';
+import { Search, IndianRupee, CheckCircle } from 'lucide-react';
 import { useState } from 'react';
 import { formatINR } from '@shared/money';
 

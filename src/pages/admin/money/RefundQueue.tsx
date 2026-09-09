@@ -3,12 +3,11 @@ import { parseApiError } from '@/lib/parseApiError';
 import { getUserProfile } from '@/lib/tokenStore';
 import { roundRupees } from '@shared/money';
 import { customerApi } from "@/lib/zodiosClients";
-import { Button, Spinner, Textarea } from '@shared/ui';
-import { CheckCircle, XCircle, Search, AlertTriangle, MessageSquare, IndianRupee } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Button, Spinner } from '@shared/ui';
+import { CheckCircle, AlertTriangle, MessageSquare, IndianRupee } from 'lucide-react';
+import { useState } from 'react';
 import { formatINR } from '@shared/money';
 
-import { schemas } from "@/api/generated/schemas/customer/admin_refund_controller";
 import { z } from "zod";
 import { SupportTicket } from "@/api/generated/schemas/customer/common";
 import { usePolling } from "@/hooks/usePolling";
@@ -35,7 +34,8 @@ export default function RefundQueue() {
           queries: { 
               page, 
               size: 20,
-              status: statusFilter === "ALL" ? undefined : statusFilter as any
+              // The generated client types this query as an optional string, so no cast.
+              status: statusFilter === "ALL" ? undefined : statusFilter
           } 
       });
     },

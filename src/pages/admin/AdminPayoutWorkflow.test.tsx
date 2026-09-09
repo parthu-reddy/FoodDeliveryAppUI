@@ -142,7 +142,8 @@ describe('Admin Payout Workflow', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Confirm Payment' }));
 
     await waitFor(() => expect(payoutPost).toHaveBeenCalledTimes(1));
-    const [path, , opts] = payoutPost.mock.calls[0] as [string, unknown, Record<string, any>];
+    const [path, , opts] = payoutPost.mock.calls[0] as
+        [string, unknown, { queries: Record<string, unknown>; headers: Record<string, string> }];
     expect(path).toBe('/api/v1/internal/admin/payouts/:payoutId/mark-paid');
     expect(opts.queries.bankReference).toBe('UTR-99');
     expect(opts.headers['Idempotency-Key']).toBeTruthy();
