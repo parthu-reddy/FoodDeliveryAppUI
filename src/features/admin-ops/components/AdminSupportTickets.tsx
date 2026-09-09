@@ -18,8 +18,6 @@ export default function AdminSupportTickets() {
   
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
   const [resolutionNotes, setResolutionNotes] = useState('');
-  const [faultType, setFaultType] = useState('UNKNOWN');
-  const [overrideAmount, setOverrideAmount] = useState<number | ''>('');
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [showChat, setShowChat] = useState(false);
@@ -28,7 +26,7 @@ export default function AdminSupportTickets() {
   // Polling for tickets
   const { data: ticketsResponse, refetch: fetchTickets } = usePolling({
     fetchFn: async () => {
-      const res = await customerApi.adminRefund.getTickets({ queries: { page, status: activeTab } });
+      const res = await customerApi.adminOrderManual.getOpenSupportTickets({ queries: { status: activeTab, page } });
       return res;
     },
     intervalMs: 15000,
@@ -49,17 +47,14 @@ export default function AdminSupportTickets() {
 
   const handleResolveTicket = async (ticketId: string, approved: boolean) => {
     try {
-      await customerApi.adminRefund.resolveTicket({ 
-        approved, 
-        notes: resolutionNotes,
-        faultType,
-        overrideAmount: overrideAmount === '' ? undefined : Math.round(Number(overrideAmount) * 100)
-      }, { params: { ticketId }, headers: { 'X-User-Id': '' } });
+      await customerApi.adminOrderManual.resolveSupportTicket({ 
+        approved: approved.toString(), 
+        resolutionNotes: resolutionNotes,
+      }, { params: { ticketId } });
       
       showSuccess(`Ticket successfully ${approved ? 'approved' : 'rejected'}`);
       setSelectedTicket(null);
       setResolutionNotes('');
-      setFaultType('UNKNOWN');
       setShowChat(false);
       fetchTickets();
     } catch (error) {
@@ -71,7 +66,6 @@ export default function AdminSupportTickets() {
     setSelectedTicket(ticket);
     setShowChat(true);
     setResolutionNotes(ticket.resolutionNotes || '');
-    setOverrideAmount(ticket.refundAmount || '');
   };
 
   return (
@@ -138,9 +132,6 @@ export default function AdminSupportTickets() {
                     <div className="flex justify-between items-start mb-2">
                       <div className="text-sm font-bold text-slate-800 dark:text-[#f0ede6]">Order #{String(ticket.orderId).substring(0, 8)}</div>
                       <p className="text-sm font-medium">Customer: {String(ticket.customerId).substring(0, 8)}...</p>
-                      <div className="text-xs font-medium px-2 py-1 bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 rounded-full">
-                        {formatINR(ticket.refundAmount || 0)}
-                      </div>
                     </div>
                     <div className="text-xs text-slate-500 dark:text-slate-400 mb-3 truncate">
                       {ticket.reason || 'No reason provided'}
@@ -218,62 +209,13 @@ export default function AdminSupportTickets() {
                       onChange={(e) => setResolutionNotes(e.target.value)}
                       className="mb-4 bg-white dark:bg-slate-800"
                     />
-                    <div className="flex flex-col gap-4 mb-4">
-                      <div className="flex gap-4">
-                        <select 
-                          value={faultType}
-                          onChange={(e) => setFaultType(e.target.value)}
-                          className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-md px-3 py-2 text-sm text-slate-700 dark:text-slate-200"
-                        >
-                          <option value="UNKNOWN">Select Fault Type</option>
-                          <option value="RESTAURANT_FAULT">Restaurant Fault</option>
-                          <option value="RIDER_FAULT">Rider Fault</option>
-                          <option value="PLATFORM_FAULT">Platform Fault</option>
-                          <option value="CUSTOMER_FAULT">Customer Fault</option>
-                        </select>
-                        <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center">
-                          Required for accurate ledger accounting when approving refunds.
-                        </div>
-                      </div>
-                      
-                      <div className="flex gap-4 items-center">
-                        <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                          Override Refund Amount:
-                        </label>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">₹</span>
-                          <input 
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            max={selectedTicket.refundAmount ? selectedTicket.refundAmount / 100 : undefined}
-                            value={overrideAmount}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              if (val === '') {
-                                setOverrideAmount('');
-                              } else {
-                                const num = Number(val);
-                                if (selectedTicket.refundAmount !== undefined && num <= selectedTicket.refundAmount) {
-                                  setOverrideAmount(num);
-                                }
-                              }
-                            }}
-                            className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-md pl-7 pr-3 py-2 text-sm text-slate-700 dark:text-slate-200 w-32"
-                          />
-                        </div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400">
-                          Original Quote: {formatINR(selectedTicket.refundAmount || 0)}
-                        </div>
-                      </div>
-                    </div>
                     <div className="flex gap-3">
                       <Button 
                         variant="primary" 
                         className="flex-1 bg-green-500 hover:bg-green-600 text-white border-transparent"
                         onClick={() => handleResolveTicket(selectedTicket.id, true)}
                       >
-                        Approve Refund
+                        Resolve Ticket
                       </Button>
                       <Button 
                         variant="danger" 

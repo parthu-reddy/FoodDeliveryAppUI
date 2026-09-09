@@ -107,6 +107,20 @@ export const endpoints = makeApi([
   },
   {
     method: "get",
+    path: "/api/v1/money/restaurant/:outletId/refund-requests",
+    alias: "fetchActiveRefundRequests",
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "outletId",
+        type: "Path",
+        schema: z.string().uuid(),
+      },
+    ],
+    response: z.array(RefundView),
+  },
+  {
+    method: "get",
     path: "/api/v1/money/restaurant/:outletId/orders",
     alias: "fetchOrders",
     requestFormat: "json",

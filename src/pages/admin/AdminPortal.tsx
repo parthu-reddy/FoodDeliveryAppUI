@@ -6,10 +6,11 @@ import AdminSupportTickets from "@features/admin-ops/components/AdminSupportTick
 import AdminUserManagement from "@features/admin-ops/components/AdminUserManagement";
 import AdminCategories from '@features/catalog/components/admin/AdminCategories';
 import AdminLedgerView from "@features/ledger/components/AdminLedgerView";
-import AdminPayoutsPage from "./AdminPayoutsPage";
+import AdminPayoutsPage from "./money/AdminPayoutsPage";
+import MoneyOperationsPage from "./money/OperationsPage";
 import { Button, SidebarNav } from '@shared/ui';
 import LaBouffeLogo from '@shared/ui/LaBouffeLogo';
-import { Activity, Database, LogOut, MapPin, Moon, Shield, Sun, Tags, Users, MessageSquare } from 'lucide-react';
+import { Activity, Database, LogOut, MapPin, Moon, Shield, Sun, Tags, Users, MessageSquare, AlertTriangle } from 'lucide-react';
 import React, { useState } from 'react';
 import { usePolling } from '../../hooks/usePolling';
 
@@ -23,7 +24,7 @@ export default function AdminPortal({
   onLogout,
 }: AdminPortalProps) {
   const { theme, toggleTheme } = useTheme();
-  const [activeTab, setActiveTab] = useState<'deliveries' | 'users' | 'categories' | 'map' | 'ledger' | 'payouts' | 'interventions' | 'support_tickets'>('map');
+  const [activeTab, setActiveTab] = useState<'deliveries' | 'users' | 'categories' | 'map' | 'ledger' | 'payouts' | 'money_ops' | 'interventions' | 'support_tickets'>('map');
 
   // Poll for intervention count to show badge on sidebar
     const { data: interventionsCount = 0 } = usePolling({
@@ -49,7 +50,7 @@ export default function AdminPortal({
           <SidebarNav
             activeColor="indigo"
             activeKey={activeTab}
-            onSelect={(key) => setActiveTab(key as 'deliveries' | 'interventions' | 'users' | 'categories' | 'map' | 'ledger' | 'payouts' | 'support_tickets')}
+            onSelect={(key) => setActiveTab(key as 'deliveries' | 'interventions' | 'users' | 'categories' | 'map' | 'ledger' | 'payouts' | 'money_ops' | 'support_tickets')}
             items={[
               { key: 'deliveries', label: 'Live Operations', icon: <Activity className="w-5 h-5" /> },
               { key: 'support_tickets', label: 'Support Tickets', icon: <MessageSquare className="w-5 h-5" /> },
@@ -59,6 +60,7 @@ export default function AdminPortal({
               { key: 'map', label: 'Fleet Map', icon: <MapPin className="w-5 h-5" /> },
               { key: 'ledger', label: 'Ledger Entries', icon: <Database className="w-5 h-5" /> },
               { key: 'payouts', label: 'Pending Payouts', icon: <Database className="w-5 h-5" /> },
+              { key: 'money_ops', label: 'Money Operations', icon: <AlertTriangle className="w-5 h-5" /> },
             ]}
           />
         </div>
@@ -94,6 +96,12 @@ export default function AdminPortal({
         {activeTab === 'payouts' && (
           <div className="flex-1 flex w-full h-full relative overflow-hidden">
             <AdminPayoutsPage />
+          </div>
+        )}
+
+        {activeTab === 'money_ops' && (
+          <div className="flex-1 w-full h-full overflow-y-auto">
+            <MoneyOperationsPage />
           </div>
         )}
 

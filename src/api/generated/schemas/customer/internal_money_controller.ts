@@ -1,6 +1,14 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
-import { RefundView } from "./common";
+
+export const DailyPayableDto = z
+  .object({ restaurantPayable: z.number(), driverPayable: z.number() })
+  .partial()
+  .passthrough();
+
+export const schemas = {
+  DailyPayableDto,
+};
 
 export const endpoints = makeApi([
   {
@@ -19,10 +27,17 @@ export const endpoints = makeApi([
   },
   {
     method: "get",
-    path: "/api/v1/internal/money/admin/refunds",
-    alias: "getRefunds",
+    path: "/api/v1/internal/money/daily-payables",
+    alias: "getDailyPayables",
     requestFormat: "json",
-    response: z.array(RefundView),
+    parameters: [
+      {
+        name: "date",
+        type: "Query",
+        schema: z.string(),
+      },
+    ],
+    response: DailyPayableDto,
   },
 ]);
 

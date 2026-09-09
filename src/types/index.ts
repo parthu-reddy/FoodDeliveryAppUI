@@ -22,6 +22,7 @@ export type NearbyRestaurant = restaurantComponents['schemas']['NearbyRestaurant
 export type Order = Omit<customerComponents['schemas']['OrderResponse'], 'status' | 'deliveryStatus'> & {
     status: OrderStatus;
     deliveryStatus?: DeliveryStatus;
+    paymentMethod?: "CARD" | "UPI" | "WALLET" | "COD";
     earnings?: {
         netPayout: number;
         customerContribution: number;

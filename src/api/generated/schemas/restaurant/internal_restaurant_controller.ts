@@ -17,6 +17,20 @@ export const schemas = {
 
 export const endpoints = makeApi([
   {
+    method: "post",
+    path: "/api/v1/internal/restaurants/outlets/summaries",
+    alias: "getOutletSummaries",
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "body",
+        type: "Body",
+        schema: z.array(z.string().uuid()),
+      },
+    ],
+    response: z.array(z.record(z.string())),
+  },
+  {
     method: "get",
     path: "/api/v1/internal/restaurants/products/:productId/exists",
     alias: "productExists",
@@ -43,6 +57,20 @@ export const endpoints = makeApi([
       },
     ],
     response: z.array(z.string()),
+  },
+  {
+    method: "get",
+    path: "/api/v1/internal/restaurants/outlets/:outletId/summary",
+    alias: "getOutletSummary",
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "outletId",
+        type: "Path",
+        schema: z.string().uuid(),
+      },
+    ],
+    response: z.record(z.string()),
   },
   {
     method: "get",

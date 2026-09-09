@@ -32,7 +32,7 @@ export default function AdminLedgerView() {
       if (category) queries.category = category;
       if (direction) queries.direction = direction;
 
-      const res = await ledgerApi.ledger.get('/api/v1/ledger/admin/transactions', { queries });
+      const res = await ledgerApi.adminLedger.get('/api/v1/internal/admin/ledger/transactions', { queries });
       if (res) {
         setEntries((res.content as unknown[]) ?? []);
         setTotalPages((res.totalPages as unknown as number) ?? 1);

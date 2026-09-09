@@ -10,9 +10,9 @@ import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { Order } from '@/types';
 
-import { schemas as identitySchemas } from '@/api/generated/schemas/identity/internal_user_controller';
+import { UserDTO } from '@/api/generated/schemas/identity/admin_user_controller';
 
-type AdminUser = z.infer<typeof identitySchemas.UserDTO>;
+type AdminUser = z.infer<typeof UserDTO>;
 
 const roleSchema = z.string().min(2, "Role must be at least 2 characters").max(50, "Role cannot exceed 50 characters").regex(/^[A-Z_]+$/, "Role must contain only uppercase letters and underscores");
 
@@ -34,9 +34,9 @@ export default function AdminUserManagement() {
     fetchFn: async () => {
       let res;
       if (roleFilter === 'ALL') {
-          res = await identityApi.internalUser.get('/api/v1/internal/users/admin/all', { queries: { page } });
+          res = await identityApi.adminUser.get('/api/v1/internal/admin/users/all', { queries: { page } });
       } else {
-          res = await identityApi.internalUser.get('/api/v1/internal/users/by-role', { queries: { role: roleFilter as "CUSTOMER"|"DELIVERY"|"RESTAURANT"|"ADMIN", page }, headers: { 'X-Calling-Service': RoleName.ADMIN } });
+          res = await identityApi.adminUser.get('/api/v1/internal/admin/users/by-role', { queries: { role: roleFilter as "CUSTOMER"|"DELIVERY"|"RESTAURANT"|"ADMIN", page }, headers: { 'X-Calling-Service': RoleName.ADMIN } });
       }
       return res.data;
     },
@@ -60,10 +60,9 @@ export default function AdminUserManagement() {
     if (!debouncedSearchQuery) return;
     const fetchUsers = async () => {
       try {
-        const res = await identityApi.internalUser.get('/api/v1/internal/users/:id', { params: { id: debouncedSearchQuery }, headers: { 'X-Calling-Service': RoleName.ADMIN } });
-        // @ts-expect-error auto-migration type suppression
-        if (res && (res as AdminUser).id) {
-          setUsers([res.data?.data as AdminUser]);
+        const res = await identityApi.adminUser.get('/api/v1/internal/admin/users/:id', { params: { id: debouncedSearchQuery }, headers: { 'X-Calling-Service': RoleName.ADMIN } });
+        if (res?.data?.id) {
+          setUsers([res.data as AdminUser]);
         } else {
           setUsers([]);
         }
@@ -113,7 +112,7 @@ export default function AdminUserManagement() {
     setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, roles: [...(u.roles || []), newRoleTyped] } : u));
     
     try {
-      await identityApi.internalUser.post('/api/v1/internal/users/:id/roles', { serviceName: "CustomerApplication", roleName: newRole }, { params: { id: selectedUser.id }, headers: { 'X-Calling-Service': RoleName.ADMIN } });
+      await identityApi.adminUser.post('/api/v1/internal/admin/users/:id/roles', { serviceName: "CustomerApplication", roleName: newRole }, { params: { id: selectedUser.id }, headers: { 'X-Calling-Service': RoleName.ADMIN } });
       setNewRole('');
     } catch (e: unknown) {
       console.error(e);
@@ -131,7 +130,7 @@ export default function AdminUserManagement() {
     setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, roles: u.roles.filter(r => r !== role) } : u));
 
     try {
-      await identityApi.internalUser.delete('/api/v1/internal/users/:id/roles/:roleName', undefined, { params: { id: selectedUser.id, roleName: role as "CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN" }, headers: { 'X-Calling-Service': RoleName.ADMIN } });
+      await identityApi.adminUser.delete('/api/v1/internal/admin/users/:id/roles/:roleName', undefined, { params: { id: selectedUser.id, roleName: role as "CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN" }, headers: { 'X-Calling-Service': RoleName.ADMIN } });
     } catch (e: unknown) {
       console.error(e);
       showError(parseApiError(e, "Failed to remove role").message);
@@ -149,7 +148,7 @@ export default function AdminUserManagement() {
     setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, active: newStatus } : u));
 
     try {
-      await identityApi.internalUser.put('/api/v1/internal/users/admin/:userId/status', { isActive: newStatus }, { params: { userId: selectedUser.id } });
+      await identityApi.adminUser.put('/api/v1/internal/admin/users/:userId/status', { isActive: newStatus }, { params: { userId: selectedUser.id } });
       showSuccess(newStatus ? "User activated" : "User suspended");
     } catch (e: unknown) {
       console.error(e);

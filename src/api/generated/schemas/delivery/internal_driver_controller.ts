@@ -4,33 +4,35 @@ import { z } from "zod";
 export const endpoints = makeApi([
   {
     method: "post",
-    path: "/api/v1/advertiser/register",
-    alias: "registerAdvertiser",
-    requestFormat: "json",
-    response: z.void(),
-  },
-  {
-    method: "get",
-    path: "/api/v1/advertiser/:advertiserId/presigned-url",
-    alias: "getPresignedUrlForUpload",
+    path: "/api/v1/internal/drivers/summaries",
+    alias: "getDriverSummaries",
     requestFormat: "json",
     parameters: [
       {
-        name: "advertiserId",
+        name: "body",
+        type: "Body",
+        schema: z.array(z.string().uuid()),
+      },
+    ],
+    response: z.array(z.record(z.string())),
+  },
+  {
+    method: "get",
+    path: "/api/v1/internal/drivers/:driverId",
+    alias: "getDriverSummary",
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "driverId",
         type: "Path",
         schema: z.string().uuid(),
       },
-      {
-        name: "fileName",
-        type: "Query",
-        schema: z.string(),
-      },
     ],
-    response: z.void(),
+    response: z.record(z.string()),
   },
 ]);
 
-export const Advertiser_portal_controllerApi = new Zodios(endpoints);
+export const Internal_driver_controllerApi = new Zodios(endpoints);
 
 export function createApiClient(baseUrl: string, options?: ZodiosOptions) {
   return new Zodios(baseUrl, endpoints, options);

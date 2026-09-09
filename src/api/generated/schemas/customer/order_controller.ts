@@ -6,7 +6,6 @@ import { OrderItemResponse } from "./common";
 import { ApiResponseVoid } from "./common";
 import { ApiResponsePageResponseDtoOrderResponse } from "./common";
 import { PageResponseDtoOrderResponse } from "./common";
-import { ApiResponseListOrderResponse } from "./common";
 
 export const OrderItemRequest = z
   .object({ menuItemId: z.string().uuid(), quantity: z.number().int().gte(1) })
@@ -63,6 +62,15 @@ export const ApiResponseQuoteResponse = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
+export const ApiResponseListOrderResponse = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    errorCode: z.string().optional(),
+    data: z.array(OrderResponse).optional(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
 
 export const schemas = {
   OrderItemRequest,
@@ -71,6 +79,7 @@ export const schemas = {
   QuoteRequest,
   QuoteResponse,
   ApiResponseQuoteResponse,
+  ApiResponseListOrderResponse,
 };
 
 export const endpoints = makeApi([

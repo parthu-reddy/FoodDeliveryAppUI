@@ -6,7 +6,7 @@ import { Badge, Button, FormField, Input, Modal, TransactionHistoryTable, Wallet
 import { PaymentModal, type PaymentMethodType } from "@shared/ui/PaymentModal";
 import { Calendar, DollarSign, Pause, Plus, TrendingUp, Wallet } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { formatINR } from '@shared/money';
+import { formatINR, roundRupees } from '@shared/money';
 
 interface Campaign {
   id: string;
@@ -88,7 +88,7 @@ export default function CampaignManagement({ advertiserId }: { advertiserId: str
     if (!advertiserId) return;
     setTxLoading(true);
     try {
-      const balanceRes = await walletApi.wallet.get('/api/v1/wallets/:entityType/:entityId', { params: { entityType: 'ADVERTISER', entityId: advertiserId } });
+      const balanceRes = await walletApi.payeeWallet.get('/api/v1/money/advertiser/:entityType/:entityId', { params: { entityType: 'ADVERTISER', entityId: advertiserId } });
       if (balanceRes) setWalletBalance(balanceRes.balance ?? 0);
     } catch (e: unknown) {
       console.error(e);
@@ -101,7 +101,7 @@ export default function CampaignManagement({ advertiserId }: { advertiserId: str
   const loadTransactions = async (page: number) => {
     setTxLoading(true);
     try {
-      const res = await walletApi.wallet.get('/api/v1/wallets/:entityType/:entityId/transactions', { params: { entityType: 'ADVERTISER', entityId: advertiserId }, queries: { page } });
+      const res = await walletApi.payeeWallet.get('/api/v1/money/advertiser/:entityType/:entityId/transactions', { params: { entityType: 'ADVERTISER', entityId: advertiserId }, queries: { page } });
       setTransactions(res.content ?? []);
       setTxTotalPages(res.totalPages ?? 1);
     } catch (err: unknown) {
@@ -172,18 +172,31 @@ export default function CampaignManagement({ advertiserId }: { advertiserId: str
   const processTopupPayment = async (method: PaymentMethodType) => {
     setPaymentStatus('processing');
     try {
+      // One key per attempt. The service dedups on it, so a retry of the same click reaches the
+      // same top-up row instead of charging the advertiser twice. The header is required; the call
+      // below used to omit it behind a @ts-expect-error and was rejected before it reached a gateway.
+      const idempotencyKey = crypto.randomUUID();
       // Map frontend payment method to gateway name
       let gateway = 'RAZORPAY'; // default
       if (method === 'UPI' || method === 'CARD') gateway = 'VYAPAR';
       
-      const topupRes = await walletApi.topup.post(
-        '/api/v1/internal/advertisers/:advertiserId/wallet/topups', 
-        // @ts-expect-error auto-migration type suppression
-        { amount: Math.round(parseFloat(topupAmount) * 100), gatewayName: gateway } as Record<string, unknown>, 
-        { params: { advertiserId: advertiserId } }
+      // Through CampaignService, which checks the signed-in user actually owns this advertiser
+      // before proxying to WalletService. The old call went straight at WalletService's
+      // /api/v1/internal/... path: the gateway routes no such thing, and the endpoint behind it
+      // requires the SERVICE role, so the top-up could not have reached a gateway either way.
+      //
+      // Rupees. TopupWalletRequest.amount is a BigDecimal the service reads as amountInInr, so the
+      // old `* 100` asked the payment gateway to charge a hundred times what the advertiser typed.
+      const topupRes = await campaignApi.campaign.post(
+        '/api/v1/advertisers/:advertiserId/campaigns/wallet/topup',
+        { amount: roundRupees(topupAmount), gatewayName: gateway },
+        { params: { advertiserId: advertiserId }, headers: { "Idempotency-Key": idempotencyKey } }
       );
-      
-      const topupId = topupRes.data?.topupId || 'dummy-id';
+
+      const topupId = topupRes.data?.topupId;
+      if (!topupId) {
+        throw new Error('The top-up was accepted but returned no id to track it by.');
+      }
       
       // Poll topup status
       let attempts = 0;
@@ -191,10 +204,14 @@ export default function CampaignManagement({ advertiserId }: { advertiserId: str
       pollRef.current = setInterval(async () => {
         attempts++;
         try {
-          const res = await (walletApi.wallet as unknown as Record<string, (url: string, config?: unknown) => Promise<unknown>>).get('/api/v1/wallets/:entityType/:entityId/topups/:topupId', {
+          const res = await walletApi.payeeWallet.get('/api/v1/money/advertiser/:entityType/:entityId/topups/:topupId', {
             params: { entityType: 'ADVERTISER', entityId: advertiserId, topupId }
           });
-          if (res || attempts > 10) {
+          // Settled means SUCCESS. The old condition was `res || attempts > 10`, which reported
+          // success on the first reply whatever it said -- including PENDING and FAILED -- and
+          // again on timeout, so a declined card still showed as a completed top-up.
+          const status = (res as { status?: string } | undefined)?.status;
+          if (status === 'SUCCESS') {
             if (pollRef.current) clearInterval(pollRef.current);
             setPaymentStatus('success');
             setTimeout(() => {
@@ -203,6 +220,14 @@ export default function CampaignManagement({ advertiserId }: { advertiserId: str
               setTopupAmount('100');
               loadWalletData();
             }, 2000);
+          } else if (status === 'FAILED') {
+            if (pollRef.current) clearInterval(pollRef.current);
+            setPaymentStatus('idle');
+            showError('The payment did not go through.');
+          } else if (attempts > 10) {
+            if (pollRef.current) clearInterval(pollRef.current);
+            setPaymentStatus('idle');
+            showError('The top-up is still pending. Your balance will update once it settles.');
           }
         } catch (_e) {
           if (attempts > 10 && pollRef.current) clearInterval(pollRef.current);

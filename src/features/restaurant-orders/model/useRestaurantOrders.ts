@@ -1,5 +1,5 @@
 import { usePolling } from '@/hooks/usePolling';
-import { restaurantApi } from '@/lib/zodiosClients';
+import { customerApi, restaurantApi } from '@/lib/zodiosClients';
 import { Order, OrderStatus } from '@/types';
 import { useCallback, useState } from 'react';
 
@@ -110,11 +110,16 @@ export function useRestaurantOrders({
   const fetchRefundRequests = useCallback(async () => {
     if (!selectedOutletId) return [];
     try {
-      // @ts-expect-error missing endpoint from schema
-      const res = await restaurantApi.fulfillment.get('/api/v1/internal/restaurants/outlets/:outletId/refund-requests', {
+      // Owner-scoped, on the routed money surface. This used to call
+      // /api/v1/internal/restaurants/outlets/:outletId/refund-requests through the *restaurant*
+      // client — a CustomerApplication path, behind the gateway's 403 on /api/v1/internal/**, and
+      // absent from every schema, which is what the @ts-expect-error was hiding.
+      const res = await customerApi.restaurantMoney.get('/api/v1/money/restaurant/:outletId/refund-requests', {
         params: { outletId: selectedOutletId }
       });
-      return ((res as Record<string, unknown>).data || res || []) as { id: string; orderId: string; [key: string]: unknown }[];
+      // A plain list, like its COMPLETED sibling /money/restaurant/:outletId/refunds. The old
+      // endpoint wrapped its body in ApiResponse, which is why this used to unwrap `.data`.
+      return (res ?? []) as unknown as { id: string; orderId: string; [key: string]: unknown }[];
     } catch (e) {
       console.error('Failed to fetch refund requests', e);
     }

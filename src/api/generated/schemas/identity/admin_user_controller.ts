@@ -68,7 +68,7 @@ export const schemas = {
 export const endpoints = makeApi([
   {
     method: "put",
-    path: "/api/v1/internal/users/admin/:userId/status",
+    path: "/api/v1/internal/admin/users/:userId/status",
     alias: "updateUserStatus",
     requestFormat: "json",
     parameters: [
@@ -87,7 +87,7 @@ export const endpoints = makeApi([
   },
   {
     method: "post",
-    path: "/api/v1/internal/users/:id/roles",
+    path: "/api/v1/internal/admin/users/:id/roles",
     alias: "addRole",
     requestFormat: "json",
     parameters: [
@@ -111,7 +111,7 @@ export const endpoints = makeApi([
   },
   {
     method: "get",
-    path: "/api/v1/internal/users/:id",
+    path: "/api/v1/internal/admin/users/:id",
     alias: "getUser",
     requestFormat: "json",
     parameters: [
@@ -130,7 +130,7 @@ export const endpoints = makeApi([
   },
   {
     method: "get",
-    path: "/api/v1/internal/users/by-role",
+    path: "/api/v1/internal/admin/users/by-role",
     alias: "getUsersByRole",
     requestFormat: "json",
     parameters: [
@@ -159,7 +159,7 @@ export const endpoints = makeApi([
   },
   {
     method: "get",
-    path: "/api/v1/internal/users/admin/all",
+    path: "/api/v1/internal/admin/users/all",
     alias: "getAllUsers",
     requestFormat: "json",
     parameters: [
@@ -178,7 +178,7 @@ export const endpoints = makeApi([
   },
   {
     method: "delete",
-    path: "/api/v1/internal/users/:id/roles/:roleName",
+    path: "/api/v1/internal/admin/users/:id/roles/:roleName",
     alias: "removeRole",
     requestFormat: "json",
     parameters: [
@@ -202,7 +202,7 @@ export const endpoints = makeApi([
   },
 ]);
 
-export const Internal_user_controllerApi = new Zodios(endpoints);
+export const Admin_user_controllerApi = new Zodios(endpoints);
 
 export function createApiClient(baseUrl: string, options?: ZodiosOptions) {
   return new Zodios(baseUrl, endpoints, options);

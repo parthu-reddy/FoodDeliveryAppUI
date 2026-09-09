@@ -169,7 +169,6 @@ export default function CustomerAddressModal({
             const res = await mapsApi.integration.get('/api/places/reverse-geocode', { queries: { lat: latitude, lng: longitude } });
             if (res && res.address) {
               const description = res.address;
-              // @ts-expect-error auto-migration type suppression
               setAddressSearchQuery(description);
               const parts = String(description ?? '').split(',').map((p: string) => p.trim());
               setAddressForm(prev => ({

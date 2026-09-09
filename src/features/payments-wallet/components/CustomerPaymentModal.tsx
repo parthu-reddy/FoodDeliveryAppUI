@@ -3,7 +3,7 @@ import { PaymentModal, PaymentMethodType } from "@shared/ui/PaymentModal";
 import { MapPin, Store } from 'lucide-react';
 import { formatINR } from '@shared/money';
 import { useEffect, useState } from 'react';
-import { walletApi } from '@/lib/zodiosClients';
+import { customerApi } from '@/lib/zodiosClients';
 import { getUserProfile } from '@/lib/tokenStore';
 
 interface CustomerPaymentModalProps {
@@ -46,11 +46,11 @@ function CustomerPaymentModalInner({
     if (isPaymentModalOpen) {
       const profile = getUserProfile();
       if (profile?.id) {
-        walletApi.wallet.get('/api/v1/wallets/:entityType/:entityId', { 
-          params: { entityType: 'CUSTOMER', entityId: profile.id } 
-        }).then(res => {
-          setWalletBalance((res).balance || 0);
-        }).catch(err => {
+        // The signed-in customer's own wallet: the endpoint derives the id from the principal,
+        // so there is no entity id to pass and none to get wrong.
+        customerApi.customerMoney.get('/api/v1/money/customer/wallet').then((res) => {
+          setWalletBalance(res.balance ?? 0);
+        }).catch((err: unknown) => {
           console.error("Failed to fetch wallet balance", err);
         });
       }

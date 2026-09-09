@@ -474,6 +474,21 @@ export const LedgerStatementLineDto = z
   .object({
     transactionId: z.string().uuid(),
     referenceId: z.string().uuid(),
+    accountId: z.string().uuid(),
+    ownerId: z.string().uuid(),
+    ownerType: z.enum([
+      "GATEWAY_RECEIVABLE",
+      "CASH_RECEIVABLE",
+      "BANK",
+      "PLATFORM_CLEARING",
+      "PLATFORM_REVENUE",
+      "TAX_PAYABLE",
+      "PAYOUT_IN_TRANSIT",
+      "RESTAURANT_PAYABLE",
+      "DRIVER_PAYABLE",
+      "CUSTOMER_CREDIT",
+      "ADVERTISER_PREPAID",
+    ]),
     category: z.enum([
       "DELIVERY_FEE",
       "PLATFORM_FIXED_FEE",
@@ -566,6 +581,29 @@ export const PageResponseDtoCashRemittanceDto = z
     empty: z.boolean(),
   })
   .passthrough();
+export const WalletDto = z
+  .object({
+    id: z.string().uuid(),
+    entityId: z.string().uuid(),
+    entityType: z.enum(["CUSTOMER", "ADVERTISER"]),
+    balance: z.number(),
+    currency: z.string(),
+    status: z.enum(["ACTIVE", "SUSPENDED", "CLOSED"]),
+  })
+  .passthrough();
+export const PageResponseDtoMapStringObject = z
+  .object({
+    content: z.array(z.record(z.object({}).partial().passthrough())),
+    totalElements: z.number().int(),
+    totalPages: z.number().int(),
+    last: z.boolean(),
+    size: z.number().int(),
+    number: z.number().int(),
+    first: z.boolean(),
+    numberOfElements: z.number().int(),
+    empty: z.boolean(),
+  })
+  .passthrough();
 export const ReceiptItem = z
   .object({ name: z.string(), quantity: z.number().int(), price: z.number() })
   .partial()
@@ -585,15 +623,6 @@ export const CustomerReceipt = z
     storeCreditUsed: z.number(),
   })
   .partial()
-  .passthrough();
-export const ApiResponseListRefundView = z
-  .object({
-    success: z.boolean(),
-    message: z.string(),
-    errorCode: z.string().optional(),
-    data: z.array(RefundView).optional(),
-    timestamp: z.string().datetime({ offset: true }),
-  })
   .passthrough();
 export const Order = z
   .object({
@@ -709,16 +738,20 @@ export const PageOrder = z
     sort: SortObject.optional(),
     pageable: PageableObject.optional(),
     numberOfElements: z.number().int(),
-    size: z.number().int(),
-    content: z.array(Order),
-    number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
+    number: z.number().int(),
+    size: z.number().int(),
+    content: z.array(Order),
     empty: z.boolean(),
   })
   .passthrough();
 export const DailyTotalDto = z
   .object({ orderTotals: z.number() })
+  .partial()
+  .passthrough();
+export const DailyPayableDto = z
+  .object({ restaurantPayable: z.number(), driverPayable: z.number() })
   .partial()
   .passthrough();
 export const PageSupportTicket = z
@@ -728,13 +761,28 @@ export const PageSupportTicket = z
     sort: SortObject.optional(),
     pageable: PageableObject.optional(),
     numberOfElements: z.number().int(),
-    size: z.number().int(),
-    content: z.array(SupportTicket),
-    number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
+    number: z.number().int(),
+    size: z.number().int(),
+    content: z.array(SupportTicket),
     empty: z.boolean(),
   })
+  .passthrough();
+export const RefundLine = z
+  .object({
+    id: z.string().uuid(),
+    amount: z.number(),
+    status: z.string(),
+    destination: z.string(),
+    faultType: z.string(),
+    reasonCode: z.string(),
+    gatewayRefundId: z.string(),
+    failureReason: z.string(),
+    requestedAt: z.string().datetime({ offset: true }),
+    completedAt: z.string().datetime({ offset: true }),
+  })
+  .partial()
   .passthrough();
 export const AdminOrderMoney = z
   .object({
@@ -752,6 +800,21 @@ export const AdminOrderMoney = z
     platformBonus: z.number(),
     sgst: z.number(),
     cgst: z.number(),
+    paymentMethod: z.enum(["CARD", "UPI", "WALLET", "COD"]),
+    paymentStatus: z.enum([
+      "INITIATED",
+      "SUCCESS",
+      "FAILED",
+      "PENDING_COLLECTION",
+      "COLLECTED",
+      "PARTIALLY_REFUNDED",
+      "REFUNDED",
+      "REFUND_PENDING",
+      "REFUND_FAILED",
+    ]),
+    gatewayName: z.enum(["RAZORPAY", "CASHFREE", "VYAPAR"]),
+    gatewayOrderId: z.string(),
+    refunds: z.array(RefundLine),
     ledgerLines: z.array(LedgerStatementLineDto),
   })
   .partial()

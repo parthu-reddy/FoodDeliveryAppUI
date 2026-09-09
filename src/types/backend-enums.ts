@@ -40,14 +40,6 @@ export enum DeliveryStatus {
     FAILED = "FAILED",
 }
 
-export enum EntityType {
-    CUSTOMER = "CUSTOMER",
-    RESTAURANT = "RESTAURANT",
-    DRIVER = "DRIVER",
-    PLATFORM = "PLATFORM",
-    ADVERTISER = "ADVERTISER",
-}
-
 export enum FaultType {
     PLATFORM_FAULT = "PLATFORM_FAULT",
     RESTAURANT_FAULT = "RESTAURANT_FAULT",

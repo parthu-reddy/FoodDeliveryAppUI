@@ -12,16 +12,13 @@ type Order = z.infer<typeof OrderSchema>;
 
 export default function AdminManualInterventions() {
   const { showSuccess, showError } = useToast();
-  const [activeTab, setActiveTab] = useState<'DISPATCH' | 'FINANCIAL'>('DISPATCH');
+  const [activeTab, setActiveTab] = useState<'DISPATCH'>('DISPATCH');
    
   const [selectedIntervention, setSelectedIntervention] = useState<Order | Record<string, unknown> | null>(null);
   const [cancelReason, setCancelReason] = useState('');
 
   const [interventionsPage, setInterventionsPage] = useState(0);
   const [interventionsTotalPages, setInterventionsTotalPages] = useState(1);
-
-  const [refundsPage, setRefundsPage] = useState(0);
-  const [refundsTotalPages, setRefundsTotalPages] = useState(1);
 
   // Polling for interventions
   const { data: interventionsResponse, refetch: fetchInterventions } = usePolling({
@@ -46,32 +43,6 @@ export default function AdminManualInterventions() {
       }
     }
   }, [interventionsResponse]);
-
-  // Polling for failed refunds
-  const { data: failedRefundsResponse, refetch: fetchFailedRefunds } = usePolling({
-    fetchFn: async () => {
-      const res = await customerApi.adminDlq.get('/api/v1/internal/admin/orders/dlq/refunds', { queries: { page: refundsPage } });
-      return res;
-    },
-    intervalMs: 15000,
-    enabled: true
-   
-  });
-
-  const [failedRefunds, setFailedRefunds] = useState<Record<string, unknown>[]>([]);
-   
-  useEffect(() => {
-    if (failedRefundsResponse) {
-      const content = failedRefundsResponse.content ?? [];
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setFailedRefunds(content as Record<string, unknown>[]);
-      if (failedRefundsResponse.totalPages !== undefined) {
-        setRefundsTotalPages(failedRefundsResponse.totalPages);
-      }
-    }
-  }, [failedRefundsResponse]);
-
-   
   // Polling for available drivers
   const { data: driversList, refetch: fetchAvailableDrivers } = usePolling({
     fetchFn: async () => {
@@ -123,53 +94,6 @@ export default function AdminManualInterventions() {
       fetchInterventions(); // Revert
     }
   };
-
-  const handleRetryRefund = async (refundId: string) => {
-    // Optimistic UI Update
-    setFailedRefunds(prev => prev.filter(o => o.refundId !== refundId));
-
-    try {
-      await customerApi.adminDlq.post('/api/v1/internal/admin/orders/dlq/refunds/:refundId/retry', undefined, { params: { refundId } });
-      showSuccess("Refund retry initiated successfully!");
-      fetchFailedRefunds();
-      setSelectedIntervention(null);
-    } catch (e) {
-      console.error(e);
-      showError(parseApiError(e, "Failed to retry refund").message);
-      fetchFailedRefunds(); // Revert
-    }
-  };
-
-  const handleForceCancel = async (orderId: string) => {
-    try {
-      await customerApi.adminOrderManual.post('/api/v1/internal/admin/orders/intervention/:orderId/force-cancel', { reason: cancelReason || 'Force Cancelled by Admin' }, { params: { orderId } });
-      showSuccess("Order forcefully cancelled!");
-      fetchInterventions();
-      setSelectedIntervention(null);
-      setCancelReason('');
-    } catch (e) {
-      console.error(e);
-      showError(parseApiError(e, "Failed to force cancel order").message);
-    }
-  };
-
-  const handleForceRefund = async (orderId: string) => {
-    try {
-      await customerApi.adminRefundCommand.post('/api/v1/internal/admin/refunds/request', { 
-        orderId, 
-        refundType: "FULL", 
-        reason: cancelReason || "Admin forced refund from DLQ" 
-      });
-      showSuccess("Force refund requested!");
-      fetchFailedRefunds();
-      setSelectedIntervention(null);
-    } catch (e) {
-      console.error(e);
-      showError(parseApiError(e, "Failed to force refund").message);
-    }
-  };
-
-
   return (
     <div className="flex-1 flex w-full h-full overflow-hidden">
       {/* Live Interventions List */}
@@ -177,7 +101,7 @@ export default function AdminManualInterventions() {
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-col gap-3 bg-white/20 dark:bg-slate-900/30">
           <div className="flex justify-between items-center">
             <h3 className="font-black text-lg text-rose-600 dark:text-rose-400">Interventions</h3>
-            <Button variant="ghost" onClick={() => { fetchInterventions(); fetchAvailableDrivers(); fetchFailedRefunds(); }}>Refresh</Button>
+            <Button variant="ghost" onClick={() => { fetchInterventions(); fetchAvailableDrivers(); }}>Refresh</Button>
           </div>
           <div className="flex bg-slate-200/50 dark:bg-slate-800/50 rounded-lg p-1">
             <button
@@ -185,12 +109,6 @@ export default function AdminManualInterventions() {
               className={`flex-1 py-1 text-xs font-bold rounded-md transition-all ${activeTab === 'DISPATCH' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-800 dark:text-white' : 'text-slate-500 hover:bg-white/50 dark:hover:bg-slate-700/50'}`}
             >
               Dispatch ({interventions.length})
-            </button>
-            <button
-              onClick={() => { setActiveTab('FINANCIAL'); setSelectedIntervention(null); }}
-              className={`flex-1 py-1 text-xs font-bold rounded-md transition-all ${activeTab === 'FINANCIAL' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-800 dark:text-white' : 'text-slate-500 hover:bg-white/50 dark:hover:bg-slate-700/50'}`}
-            >
-              Financial ({failedRefunds.length})
             </button>
           </div>
         </div>
@@ -232,44 +150,7 @@ export default function AdminManualInterventions() {
                 </Button>
               </div>
             </>
-          ) : (
-            <>
-              {failedRefunds.map(refund => (
-                <button
-                  key={refund.refundId as string}
-                  onClick={() => setSelectedIntervention(refund)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all ${selectedIntervention?.refundId === refund.refundId ? 'glass-card !border-blue-500 shadow-md ring-1 ring-blue-500' : 'glass-card hover:border-blue-300'}`}
-                >
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-blue-500/20">
-                    <Shield className="w-5 h-5 text-blue-500" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-sm truncate">#{(refund.orderId as string).substring(0, 8)}</p>
-                    <p className="text-xs text-red-500 font-bold">{formatINR(refund.amount as number)} Failed</p>
-                  </div>
-                </button>
-              ))}
-              {failedRefunds.length === 0 && <p className="text-center text-slate-400 text-sm mt-10">No failed refunds require intervention.</p>}
-
-              <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center mt-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setRefundsPage(p => Math.max(0, p - 1))}
-                  disabled={refundsPage === 0}
-                >
-                  Prev
-                </Button>
-                <span className="text-xs font-bold text-slate-500">Page {refundsPage + 1} of {refundsTotalPages === 0 ? 1 : refundsTotalPages}</span>
-                <Button
-                  variant="outline"
-                  onClick={() => setRefundsPage(p => Math.min(refundsTotalPages - 1, p + 1))}
-                  disabled={refundsPage >= refundsTotalPages - 1}
-                >
-                  Next
-                </Button>
-              </div>
-            </>
-          )}
+          ) : null}
         </div>
       </div>
 
@@ -322,71 +203,10 @@ export default function AdminManualInterventions() {
                     >
                       Cancel & Refund (Normal)
                     </Button>
-                    <div className="pt-4 border-t border-slate-200 dark:border-slate-700 mt-4">
-                      <h4 className="text-xs font-bold text-red-500 uppercase mb-2">Dangerous Actions</h4>
-                      <Button
-                        variant="danger"
-                        onClick={() => handleForceCancel((selectedIntervention as Order).id)}
-                        className="w-full"
-                      >
-                        Force Cancel Order (Skip Saga)
-                      </Button>
-                    </div>
                   </div>
                 </div>
               </div>
-            ) : (
-              <div className="glass-panel border-blue-500/30 p-8 relative overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-blue-500 to-indigo-500" />
-
-                <h2 className="text-3xl font-black mb-2 flex items-center gap-3">
-                  <Shield className="w-8 h-8 text-blue-500" />
-                  Refund Failed for Order #{(selectedIntervention.orderId as string).substring(0, 8)}
-                </h2>
-                <p className="text-slate-600 dark:text-slate-400 mb-8">This refund failed processing and is currently stuck in the DLQ.</p>
-
-                <div className="bg-slate-100 dark:bg-slate-800 rounded-xl p-6 mb-8 space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">Amount</p>
-                      <p className="font-black text-xl text-slate-800 dark:text-white">{formatINR(selectedIntervention.amount as number)}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">Retry Count</p>
-                      <p className="font-bold text-lg text-slate-800 dark:text-white">{selectedIntervention.retryCount as number}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">Order Status</p>
-                      <p className="font-bold text-lg text-slate-800 dark:text-white">{selectedIntervention.orderStatus as string || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">Last Failed</p>
-                      <p className="font-bold text-lg text-slate-800 dark:text-white">{new Date(selectedIntervention.updatedAt as string).toLocaleString()}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-4">
-                  <Button
-                    variant="primary"
-                    onClick={() => handleRetryRefund(selectedIntervention.refundId as string)}
-                    className="w-full !py-3 !bg-blue-500 hover:!bg-blue-600 shadow-lg shadow-blue-500/30 text-center"
-                  >
-                    Retry Refund Now
-                  </Button>
-                  <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
-                    <h4 className="text-xs font-bold text-red-500 uppercase mb-2">Dangerous Actions</h4>
-                    <Button
-                      variant="danger"
-                      onClick={() => handleForceRefund(selectedIntervention.orderId as string)}
-                      className="w-full"
-                    >
-                      Force Refund Order (Skip DLQ)
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
+            ) : null}
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-slate-400">

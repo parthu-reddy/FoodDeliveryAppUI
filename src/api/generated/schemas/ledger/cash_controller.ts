@@ -1,8 +1,9 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-import { SortObject } from "./common";
 import { PageableObject } from "./common";
+import { SortObject } from "./common";
+import { CashSummaryDto } from "./common";
 
 export const CashRemittance = z
   .object({
@@ -18,16 +19,16 @@ export const CashRemittance = z
   .passthrough();
 export const PageCashRemittance = z
   .object({
-    totalPages: z.number().int(),
     totalElements: z.number().int(),
-    size: z.number().int(),
-    content: z.array(CashRemittance),
+    totalPages: z.number().int(),
     numberOfElements: z.number().int(),
     number: z.number().int(),
+    size: z.number().int(),
+    content: z.array(CashRemittance),
     first: z.boolean(),
     last: z.boolean(),
-    sort: SortObject.optional(),
     pageable: PageableObject.optional(),
+    sort: SortObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -49,7 +50,7 @@ export const schemas = {
 export const endpoints = makeApi([
   {
     method: "post",
-    path: "/api/v1/admin/cash/remit",
+    path: "/api/v1/internal/admin/cash/remit",
     alias: "remitCash",
     requestFormat: "json",
     parameters: [
@@ -63,8 +64,8 @@ export const endpoints = makeApi([
   },
   {
     method: "get",
-    path: "/api/v1/admin/cash/drivers/:driverId",
-    alias: "getCashByDriver",
+    path: "/api/v1/internal/admin/cash/drivers/:driverId",
+    alias: "getCashByDriver_2",
     requestFormat: "json",
     parameters: [
       {
@@ -84,6 +85,20 @@ export const endpoints = makeApi([
       },
     ],
     response: PageCashRemittance,
+  },
+  {
+    method: "get",
+    path: "/api/v1/internal/admin/cash/drivers/:driverId/summary",
+    alias: "getCashSummary_2",
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "driverId",
+        type: "Path",
+        schema: z.string().uuid(),
+      },
+    ],
+    response: CashSummaryDto,
   },
 ]);
 

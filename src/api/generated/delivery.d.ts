@@ -4,6 +4,22 @@
  */
 
 export interface paths {
+    "/api/v1/internal/drivers/summaries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["getDriverSummaries"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/internal/delivery/drivers/{driverId}/suspend": {
         parameters: {
             query?: never;
@@ -252,6 +268,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getRoute"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/internal/drivers/{driverId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getDriverSummary"];
         put?: never;
         post?: never;
         delete?: never;
@@ -626,24 +658,24 @@ export interface components {
             sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
-            size: number;
-            content: components["schemas"]["DeliveryExecutive"][];
-            /** Format: int32 */
             numberOfElements: number;
-            /** Format: int32 */
-            number: number;
             first: boolean;
             last: boolean;
+            /** Format: int32 */
+            number: number;
+            /** Format: int32 */
+            size: number;
+            content: components["schemas"]["DeliveryExecutive"][];
             empty: boolean;
         };
         PageableObject: {
             sort?: components["schemas"]["SortObject"];
-            unpaged: boolean;
             paged: boolean;
             /** Format: int32 */
             pageNumber: number;
             /** Format: int32 */
             pageSize: number;
+            unpaged: boolean;
             /** Format: int64 */
             offset: number;
         };
@@ -671,14 +703,14 @@ export interface components {
             sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
-            size: number;
-            content: components["schemas"]["DriverLocationDTO"][];
-            /** Format: int32 */
             numberOfElements: number;
-            /** Format: int32 */
-            number: number;
             first: boolean;
             last: boolean;
+            /** Format: int32 */
+            number: number;
+            /** Format: int32 */
+            size: number;
+            content: components["schemas"]["DriverLocationDTO"][];
             empty: boolean;
         };
         JsonNode: Record<string, never>;
@@ -733,6 +765,32 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getDriverSummaries: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": string[];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    }[];
+                };
+            };
+        };
+    };
     suspendDriver: {
         parameters: {
             query?: never;
@@ -1106,6 +1164,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
+    getDriverSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                driverId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
                 };
             };
         };

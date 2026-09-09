@@ -11,9 +11,11 @@ interface Props {
 
 export function ConfirmMoneyAction({ amount, effectSummary, buttonLabel, onConfirm, isPending }: Props) {
   const [typedAmount, setTypedAmount] = useState('');
-  const requireTyping = amount >= 1000000; // >= ₹10,000 (in paise)
-  
-  const expectedText = (amount / 100).toString();
+  // Amounts are rupees, as the API sends them. This read paise, so the threshold was effectively
+  // ₹10,00,000 and the typed confirmation almost never appeared.
+  const requireTyping = amount >= 10000;
+
+  const expectedText = amount.toString();
   const canSubmit = !isPending && (!requireTyping || typedAmount === expectedText);
   
   const handleSubmit = (e: React.FormEvent) => {

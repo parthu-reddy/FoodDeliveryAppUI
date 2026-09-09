@@ -1,13 +1,28 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-import { SortObject } from "./common";
 import { PageableObject } from "./common";
+import { SortObject } from "./common";
 
 export const LedgerStatementLineDto = z
   .object({
     transactionId: z.string().uuid(),
     referenceId: z.string().uuid(),
+    accountId: z.string().uuid(),
+    ownerId: z.string().uuid(),
+    ownerType: z.enum([
+      "GATEWAY_RECEIVABLE",
+      "CASH_RECEIVABLE",
+      "BANK",
+      "PLATFORM_CLEARING",
+      "PLATFORM_REVENUE",
+      "TAX_PAYABLE",
+      "PAYOUT_IN_TRANSIT",
+      "RESTAURANT_PAYABLE",
+      "DRIVER_PAYABLE",
+      "CUSTOMER_CREDIT",
+      "ADVERTISER_PREPAID",
+    ]),
     category: z.enum([
       "DELIVERY_FEE",
       "PLATFORM_FIXED_FEE",
@@ -39,16 +54,16 @@ export const LedgerStatementLineDto = z
   .passthrough();
 export const PageLedgerStatementLineDto = z
   .object({
-    totalPages: z.number().int(),
     totalElements: z.number().int(),
-    size: z.number().int(),
-    content: z.array(LedgerStatementLineDto),
+    totalPages: z.number().int(),
     numberOfElements: z.number().int(),
     number: z.number().int(),
+    size: z.number().int(),
+    content: z.array(LedgerStatementLineDto),
     first: z.boolean(),
     last: z.boolean(),
-    sort: SortObject.optional(),
     pageable: PageableObject.optional(),
+    sort: SortObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();

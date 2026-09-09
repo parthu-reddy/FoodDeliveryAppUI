@@ -1,41 +1,10 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-export const WalletTransactionDto = z
-  .object({
-    id: z.string().uuid(),
-    walletId: z.string().uuid(),
-    amount: z.number(),
-    transactionType: z.enum(["CREDIT", "DEBIT"]),
-    referenceId: z.string().optional(),
-    description: z.string().optional(),
-    createdAt: z.string().datetime({ offset: true }),
-    metadata: z.string().optional(),
-  })
-  .passthrough();
-export const PageResponseDtoWalletTransactionDto = z
-  .object({
-    content: z.array(WalletTransactionDto),
-    totalElements: z.number().int(),
-    totalPages: z.number().int(),
-    last: z.boolean(),
-    size: z.number().int(),
-    number: z.number().int(),
-    first: z.boolean(),
-    numberOfElements: z.number().int(),
-    empty: z.boolean(),
-  })
-  .passthrough();
-export const WalletDto = z
-  .object({
-    id: z.string().uuid(),
-    entityId: z.string().uuid(),
-    entityType: z.enum(["CUSTOMER", "ADVERTISER"]),
-    balance: z.number(),
-    currency: z.string(),
-    status: z.enum(["ACTIVE", "SUSPENDED", "CLOSED"]),
-  })
-  .passthrough();
+import { WalletDto } from "./common";
+import { PageResponseDtoWalletTransactionDto } from "./common";
+import { WalletTransactionDto } from "./common";
+
 export const PageResponseDtoWalletDto = z
   .object({
     content: z.array(WalletDto),
@@ -84,9 +53,6 @@ export const TransactionRequest = z
   .passthrough();
 
 export const schemas = {
-  WalletTransactionDto,
-  PageResponseDtoWalletTransactionDto,
-  WalletDto,
   PageResponseDtoWalletDto,
   CreateWalletRequest,
   TransactionRequest,
@@ -158,7 +124,7 @@ export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/internal/wallets/:entityType/:entityId",
-    alias: "getWallet",
+    alias: "getWallet_1",
     requestFormat: "json",
     parameters: [
       {
@@ -177,7 +143,7 @@ export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/internal/wallets/:entityType/:entityId/transactions",
-    alias: "getTransactions",
+    alias: "getTransactions_1",
     requestFormat: "json",
     parameters: [
       {

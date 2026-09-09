@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
 import { formatINR } from '@shared/money';
 import { z } from 'zod';
 import { useToast } from '../../contexts/ToastContext';
-import { customerApi, identityApi, walletApi } from '../../lib/zodiosClients';
+import { customerApi, identityApi } from '../../lib/zodiosClients';
 const sharedProfileSchema = z.object({
   name: z.string().min(1, 'Please enter your full name.').max(100, 'Name cannot exceed 100 characters.'),
   email: z.string().min(1, 'Please enter your email address.').email('Please enter a valid email address.').max(255, 'Email cannot exceed 255 characters.')
@@ -126,12 +126,12 @@ export default function SharedSettingsView({
     if (!customerId) return;
     setTxLoading(true);
     try {
-      const balanceRes = await walletApi.wallet.get('/api/v1/wallets/:entityType/:entityId', { params: { entityType: 'CUSTOMER', entityId: customerId } });
+      const balanceRes = await customerApi.customerMoney.get('/api/v1/money/customer/wallet');
       if (balanceRes) setWalletBalance(balanceRes.balance ?? 0);
       
-      const txRes = await walletApi.wallet.get('/api/v1/wallets/:entityType/:entityId/transactions', { params: { entityType: 'CUSTOMER', entityId: customerId }, queries: { page: txPage } });
+      const txRes = await customerApi.customerMoney.get('/api/v1/money/customer/wallet/transactions', { queries: { page: txPage, size: 20 } });
       if (txRes && txRes.content) {
-        setTransactions((txRes.content as WalletTransaction[]) ?? []);
+        setTransactions((txRes.content as unknown as WalletTransaction[]) ?? []);
         setTxTotalPages(txRes.totalPages || 1);
       }
     } catch (e: unknown) {

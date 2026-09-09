@@ -84,6 +84,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/places/geocode": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["geocode"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/places/autocomplete": {
         parameters: {
             query?: never;
@@ -216,6 +232,29 @@ export interface components {
             lat: number;
             /** Format: double */
             lng: number;
+        };
+        ReverseGeocodeResponse: {
+            address?: string;
+        };
+        AutocompleteResponse: {
+            description?: string;
+            placeId?: string;
+        };
+        ApiResponseRoutePolylineDto: {
+            success: boolean;
+            message: string;
+            errorCode?: string;
+            data?: components["schemas"]["RoutePolylineDto"];
+            /** Format: date-time */
+            timestamp: string;
+        };
+        RoutePolylineDto: {
+            polyline?: string;
+            distance?: string;
+            duration?: string;
+            steps?: {
+                [key: string]: Record<string, never>;
+            }[];
         };
     };
     responses: never;
@@ -363,7 +402,31 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": Record<string, never>;
+                    "application/json": components["schemas"]["ReverseGeocodeResponse"];
+                };
+            };
+        };
+    };
+    geocode: {
+        parameters: {
+            query: {
+                address: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: number;
+                    };
                 };
             };
         };
@@ -387,7 +450,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": Record<string, never>;
+                    "application/json": components["schemas"]["AutocompleteResponse"][];
                 };
             };
         };
@@ -410,7 +473,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": Record<string, never>;
+                    "application/json": components["schemas"]["ApiResponseRoutePolylineDto"];
                 };
             };
         };

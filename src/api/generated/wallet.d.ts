@@ -100,7 +100,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/internal/wallets/{entityType}/{entityId}": {
+    "/api/v1/money/advertiser/{entityType}/{entityId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -116,7 +116,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/internal/wallets/{entityType}/{entityId}/transactions": {
+    "/api/v1/money/advertiser/{entityType}/{entityId}/transactions": {
         parameters: {
             query?: never;
             header?: never;
@@ -124,6 +124,54 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getTransactions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/money/advertiser/{entityType}/{entityId}/topups/{topupId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getTopupStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/internal/wallets/{entityType}/{entityId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getWallet_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/internal/wallets/{entityType}/{entityId}/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getTransactions_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -507,6 +555,81 @@ export interface operations {
         };
     };
     getTransactions: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                entityType: "CUSTOMER" | "ADVERTISER";
+                entityId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageResponseDtoWalletTransactionDto"];
+                };
+            };
+        };
+    };
+    getTopupStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entityType: "CUSTOMER" | "ADVERTISER";
+                entityId: string;
+                topupId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: Record<string, never>;
+                    };
+                };
+            };
+        };
+    };
+    getWallet_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entityType: "CUSTOMER" | "ADVERTISER";
+                entityId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WalletDto"];
+                };
+            };
+        };
+    };
+    getTransactions_1: {
         parameters: {
             query?: {
                 page?: number;

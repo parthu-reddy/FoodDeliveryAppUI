@@ -371,6 +371,13 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
                 <span>Total Paid</span>
                 <span>{formatINR(currentTrackingOrder.totalAmount ?? 0)}</span>
               </div>
+              {currentTrackingOrder.paymentMethod && (
+                <div className="flex justify-end pt-1">
+                  <span className="text-xs px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded font-medium border border-slate-200 dark:border-slate-700">
+                    Paid via {currentTrackingOrder.paymentMethod}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </>
@@ -461,6 +468,18 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
                 <span>{isFailedOrder(currentTrackingOrder) ? 'Total Refunded' : 'Total Paid'}</span>
                 <span className={isFailedOrder(currentTrackingOrder) ? 'text-red-500' : ''}>{formatINR(currentTrackingOrder.totalAmount || 0)}</span>
               </div>
+              {currentTrackingOrder.paymentMethod && (
+                <div className="flex justify-end pt-1 text-right">
+                  <div className="flex flex-col items-end">
+                    <span className="text-xs px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded font-medium border border-slate-200 dark:border-slate-700 inline-block mb-1">
+                      {isFailedOrder(currentTrackingOrder) ? 'Refunded to ' : 'Paid via '}{currentTrackingOrder.paymentMethod}
+                    </span>
+                    {isFailedOrder(currentTrackingOrder) && (
+                      <span className="text-[10px] text-slate-400">Refunds may take 3-5 business days to reflect in your account.</span>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

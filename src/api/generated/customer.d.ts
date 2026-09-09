@@ -580,6 +580,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/money/restaurant/{outletId}/refund-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["fetchActiveRefundRequests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/money/restaurant/{outletId}/orders": {
         parameters: {
             query?: never;
@@ -724,6 +740,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/money/customer/wallet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getMyWallet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/money/customer/wallet/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getMyWalletTransactions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/money/customer/refunds": {
         parameters: {
             query?: never;
@@ -764,22 +812,6 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getReceipt"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/internal/restaurants/outlets/{outletId}/refund-requests": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getActiveRefundRequests"];
         put?: never;
         post?: never;
         delete?: never;
@@ -868,14 +900,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/internal/money/admin/refunds": {
+    "/api/v1/internal/money/daily-payables": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["getRefunds"];
+        get: operations["getDailyPayables"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1020,54 +1052,6 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getAllCustomerAddresses"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/delivery/orders/history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getHistoryOrders"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/delivery/orders/available": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getAvailableOrders"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/delivery/orders/active": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getActiveOrders_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1536,6 +1520,12 @@ export interface components {
             transactionId?: string;
             /** Format: uuid */
             referenceId?: string;
+            /** Format: uuid */
+            accountId?: string;
+            /** Format: uuid */
+            ownerId?: string;
+            /** @enum {string} */
+            ownerType?: "GATEWAY_RECEIVABLE" | "CASH_RECEIVABLE" | "BANK" | "PLATFORM_CLEARING" | "PLATFORM_REVENUE" | "TAX_PAYABLE" | "PAYOUT_IN_TRANSIT" | "RESTAURANT_PAYABLE" | "DRIVER_PAYABLE" | "CUSTOMER_CREDIT" | "ADVERTISER_PREPAID";
             /** @enum {string} */
             category?: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "CLAWBACK" | "PAYOUT_TRANSFER" | "CASH_COLLECTED" | "CASH_REMITTED" | "STORE_CREDIT";
             amount?: number;
@@ -1617,6 +1607,36 @@ export interface components {
             numberOfElements: number;
             empty: boolean;
         };
+        WalletDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            entityId: string;
+            /** @enum {string} */
+            entityType: "CUSTOMER" | "ADVERTISER";
+            balance: number;
+            currency: string;
+            /** @enum {string} */
+            status: "ACTIVE" | "SUSPENDED" | "CLOSED";
+        };
+        PageResponseDtoMapStringObject: {
+            content: {
+                [key: string]: Record<string, never>;
+            }[];
+            /** Format: int64 */
+            totalElements: number;
+            /** Format: int32 */
+            totalPages: number;
+            last: boolean;
+            /** Format: int32 */
+            size: number;
+            /** Format: int32 */
+            number: number;
+            first: boolean;
+            /** Format: int32 */
+            numberOfElements: number;
+            empty: boolean;
+        };
         CustomerReceipt: {
             items?: components["schemas"]["ReceiptItem"][];
             itemTotal?: number;
@@ -1636,14 +1656,6 @@ export interface components {
             /** Format: int32 */
             quantity?: number;
             price?: number;
-        };
-        ApiResponseListRefundView: {
-            success: boolean;
-            message: string;
-            errorCode?: string;
-            data?: components["schemas"]["RefundView"][];
-            /** Format: date-time */
-            timestamp: string;
         };
         Order: {
             /** Format: uuid */
@@ -1729,13 +1741,13 @@ export interface components {
             pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             numberOfElements: number;
+            first: boolean;
+            last: boolean;
+            /** Format: int32 */
+            number: number;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["Order"][];
-            /** Format: int32 */
-            number: number;
-            first: boolean;
-            last: boolean;
             empty: boolean;
         };
         PageableObject: {
@@ -1757,6 +1769,10 @@ export interface components {
         DailyTotalDto: {
             orderTotals?: number;
         };
+        DailyPayableDto: {
+            restaurantPayable?: number;
+            driverPayable?: number;
+        };
         PageSupportTicket: {
             /** Format: int64 */
             totalElements: number;
@@ -1766,13 +1782,13 @@ export interface components {
             pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             numberOfElements: number;
+            first: boolean;
+            last: boolean;
+            /** Format: int32 */
+            number: number;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["SupportTicket"][];
-            /** Format: int32 */
-            number: number;
-            first: boolean;
-            last: boolean;
             empty: boolean;
         };
         AdminOrderMoney: {
@@ -1791,7 +1807,30 @@ export interface components {
             platformBonus?: number;
             sgst?: number;
             cgst?: number;
+            /** @enum {string} */
+            paymentMethod?: "CARD" | "UPI" | "WALLET" | "COD";
+            /** @enum {string} */
+            paymentStatus?: "INITIATED" | "SUCCESS" | "FAILED" | "PENDING_COLLECTION" | "COLLECTED" | "PARTIALLY_REFUNDED" | "REFUNDED" | "REFUND_PENDING" | "REFUND_FAILED";
+            /** @enum {string} */
+            gatewayName?: "RAZORPAY" | "CASHFREE" | "VYAPAR";
+            gatewayOrderId?: string;
+            refunds?: components["schemas"]["RefundLine"][];
             ledgerLines?: components["schemas"]["LedgerStatementLineDto"][];
+        };
+        RefundLine: {
+            /** Format: uuid */
+            id?: string;
+            amount?: number;
+            status?: string;
+            destination?: string;
+            faultType?: string;
+            reasonCode?: string;
+            gatewayRefundId?: string;
+            failureReason?: string;
+            /** Format: date-time */
+            requestedAt?: string;
+            /** Format: date-time */
+            completedAt?: string;
         };
         PageResponseDtoSupportTicket: {
             content: components["schemas"]["SupportTicket"][];
@@ -2834,6 +2873,28 @@ export interface operations {
             };
         };
     };
+    fetchActiveRefundRequests: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outletId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RefundView"][];
+                };
+            };
+        };
+    };
     fetchOrders: {
         parameters: {
             query?: {
@@ -3040,6 +3101,49 @@ export interface operations {
             };
         };
     };
+    getMyWallet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WalletDto"];
+                };
+            };
+        };
+    };
+    getMyWalletTransactions: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageResponseDtoMapStringObject"];
+                };
+            };
+        };
+    };
     getMyRefunds: {
         parameters: {
             query?: never;
@@ -3100,28 +3204,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CustomerReceipt"];
-                };
-            };
-        };
-    };
-    getActiveRefundRequests: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                outletId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseListRefundView"];
                 };
             };
         };
@@ -3239,9 +3321,11 @@ export interface operations {
             };
         };
     };
-    getRefunds: {
+    getDailyPayables: {
         parameters: {
-            query?: never;
+            query: {
+                date: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -3254,7 +3338,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RefundView"][];
+                    "application/json": components["schemas"]["DailyPayableDto"];
                 };
             };
         };
@@ -3464,71 +3548,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiResponsePageResponseDtoCustomerAddressDto"];
-                };
-            };
-        };
-    };
-    getHistoryOrders: {
-        parameters: {
-            query: {
-                date?: string;
-                pageable: components["schemas"]["Pageable"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponsePageResponseDtoOrderResponse"];
-                };
-            };
-        };
-    };
-    getAvailableOrders: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseListOrderResponse"];
-                };
-            };
-        };
-    };
-    getActiveOrders_1: {
-        parameters: {
-            query: {
-                pageable: components["schemas"]["Pageable"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponsePageResponseDtoOrderResponse"];
                 };
             };
         };

@@ -1,8 +1,8 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-import { SortObject } from "./common";
 import { PageableObject } from "./common";
+import { SortObject } from "./common";
 
 export const ReconciliationRun = z
   .object({
@@ -16,16 +16,16 @@ export const ReconciliationRun = z
   .passthrough();
 export const PageReconciliationRun = z
   .object({
-    totalPages: z.number().int(),
     totalElements: z.number().int(),
-    size: z.number().int(),
-    content: z.array(ReconciliationRun),
+    totalPages: z.number().int(),
     numberOfElements: z.number().int(),
     number: z.number().int(),
+    size: z.number().int(),
+    content: z.array(ReconciliationRun),
     first: z.boolean(),
     last: z.boolean(),
-    sort: SortObject.optional(),
     pageable: PageableObject.optional(),
+    sort: SortObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -54,16 +54,16 @@ export const ReconciliationBreak = z
   .passthrough();
 export const PageReconciliationBreak = z
   .object({
-    totalPages: z.number().int(),
     totalElements: z.number().int(),
-    size: z.number().int(),
-    content: z.array(ReconciliationBreak),
+    totalPages: z.number().int(),
     numberOfElements: z.number().int(),
     number: z.number().int(),
+    size: z.number().int(),
+    content: z.array(ReconciliationBreak),
     first: z.boolean(),
     last: z.boolean(),
-    sort: SortObject.optional(),
     pageable: PageableObject.optional(),
+    sort: SortObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -92,7 +92,7 @@ export const schemas = {
 export const endpoints = makeApi([
   {
     method: "post",
-    path: "/api/v1/ledger/admin/reconciliation/runs/:id/resolve-breaks",
+    path: "/api/v1/internal/admin/ledger/reconciliation/runs/:id/resolve-breaks",
     alias: "resolveBreak",
     requestFormat: "json",
     parameters: [
@@ -111,7 +111,7 @@ export const endpoints = makeApi([
   },
   {
     method: "post",
-    path: "/api/v1/ledger/admin/reconciliation/runs/:id/execute",
+    path: "/api/v1/internal/admin/ledger/reconciliation/runs/:id/execute",
     alias: "executeRun",
     requestFormat: "json",
     parameters: [
@@ -130,7 +130,7 @@ export const endpoints = makeApi([
   },
   {
     method: "get",
-    path: "/api/v1/ledger/admin/reconciliation/runs",
+    path: "/api/v1/internal/admin/ledger/reconciliation/runs",
     alias: "getRuns",
     requestFormat: "json",
     parameters: [
@@ -144,7 +144,7 @@ export const endpoints = makeApi([
   },
   {
     method: "get",
-    path: "/api/v1/ledger/admin/reconciliation/runs/:id",
+    path: "/api/v1/internal/admin/ledger/reconciliation/runs/:id",
     alias: "getRun",
     requestFormat: "json",
     parameters: [
@@ -158,7 +158,7 @@ export const endpoints = makeApi([
   },
   {
     method: "get",
-    path: "/api/v1/ledger/admin/reconciliation/runs/:id/breaks",
+    path: "/api/v1/internal/admin/ledger/reconciliation/runs/:id/breaks",
     alias: "getBreaks",
     requestFormat: "json",
     parameters: [

@@ -112,7 +112,6 @@ export default function CustomerAddressPage({
                 }
                 const res = await mapsApi.integration.get('/api/places/reverse-geocode', { queries: { lat: center.lat, lng: center.lng } });
                 if (active && res.address) {
-                   // @ts-expect-error auto-migration type suppression
                    setAddress(res.address);
                    const parts = ((res.address as string) ?? '').split(',').map((p: string) => p.trim());
                    let zip = '';

@@ -1,6 +1,25 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
+import { AutocompleteResponse } from "./common";
 
+export const RoutePolylineDto = z
+  .object({
+    polyline: z.string(),
+    distance: z.string(),
+    duration: z.string(),
+    steps: z.array(z.record(z.object({}).partial().passthrough())),
+  })
+  .partial()
+  .passthrough();
+export const ApiResponseRoutePolylineDto = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    errorCode: z.string().optional(),
+    data: RoutePolylineDto.optional(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
 export const DispatchOrderRequest = z
   .object({
     cityId: z
@@ -50,6 +69,8 @@ export const UpdateLocationRequest = z
   .passthrough();
 
 export const schemas = {
+  RoutePolylineDto,
+  ApiResponseRoutePolylineDto,
   DispatchOrderRequest,
   SetAvailabilityRequest,
   UpdateLocationRequest,
@@ -148,7 +169,21 @@ export const endpoints = makeApi([
         schema: z.number(),
       },
     ],
-    response: z.object({}).partial().passthrough(),
+    response: z.object({ address: z.string() }).partial().passthrough(),
+  },
+  {
+    method: "get",
+    path: "/api/places/geocode",
+    alias: "geocode",
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "address",
+        type: "Query",
+        schema: z.string(),
+      },
+    ],
+    response: z.record(z.number()),
   },
   {
     method: "get",
@@ -172,7 +207,7 @@ export const endpoints = makeApi([
         schema: z.number().optional(),
       },
     ],
-    response: z.object({}).partial().passthrough(),
+    response: z.array(AutocompleteResponse),
   },
   {
     method: "get",
@@ -191,7 +226,7 @@ export const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.object({}).partial().passthrough(),
+    response: ApiResponseRoutePolylineDto,
   },
   {
     method: "get",

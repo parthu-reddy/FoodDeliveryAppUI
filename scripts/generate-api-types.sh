@@ -26,13 +26,31 @@ for entry in "${SERVICES[@]}"; do
   name="${entry%% *}"
   path="${entry#* }"
   spec="$SPECS_DIR$path"
-  
+
+  # Every service's OpenApiGenerationTest writes target/openapi.json; the copy at the service root
+  # is what this script used to read. Nothing kept the two in step, so moving an endpoint and
+  # rerunning the test regenerated a client that still had the old path -- the SPEC-DRIFT recorded
+  # in LedgerService's OpenApiGenerationTest, which was worked around by hand-editing "generated"
+  # files. The build output is the source of truth; the root copy is refreshed from it.
+  fresh="${spec%/openapi.json}/target/openapi.json"
+  if [ -s "$fresh" ]; then
+    if ! cmp -s "$fresh" "$spec"; then
+      echo "  refreshing $path from target/openapi.json"
+      cp "$fresh" "$spec"
+    fi
+  fi
+
   if [ ! -s "$spec" ]; then
     echo "ERROR: $spec is empty or missing! Backend failed to generate schema."
     exit 1
   fi
 
   echo "Generating types and schemas for $name from $spec..."
+  # Clear the previous output first. openapi-zod-client writes one file per tag and never removes
+  # files for tags that have gone, so a deleted controller left its client behind: wallet_controller
+  # outlived its spec and four screens kept calling it, and internal_user_controller did the same
+  # after the admin user endpoints moved. Stale files also keep compiling, so nothing flags them.
+  rm -rf "$SCHEMA_DIR/${name}"
   npx openapi-typescript "$spec" -o "$OUT_DIR/${name}.d.ts"
   npx openapi-zod-client "$spec" -o "$SCHEMA_DIR/${name}" --export-schemas --group-strategy tag-file
 done

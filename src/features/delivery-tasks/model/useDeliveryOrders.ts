@@ -3,7 +3,7 @@ import { registerGeolocationWatch, clearGeolocationWatch } from "@/lib/permissio
 import { getToken } from "@/lib/tokenStore";
 import { deliveryApi } from "@/lib/zodiosClients";
 import { DeliveryStatus, Order, OrderStatus } from "@/types";
-import { sumPaise } from '@shared/money';
+import { sumRupees } from '@shared/money';
 import { isActiveOrder } from '@features/customer-orders/model/orderStatus';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { useEffect, useRef, useState } from 'react';
@@ -441,7 +441,7 @@ export function useDeliveryOrders({
     .forEach(job => allHistoryJobsMap.set(job.id, { ...job }));
   const allHistoryJobs = Array.from(allHistoryJobsMap.values());
   const todayHistoryJobs = allHistoryJobs.filter(job => job.createdAt?.startsWith(todayDateString));
-  const todayEarnings = sumPaise(...todayHistoryJobs.map(job => {
+  const todayEarnings = sumRupees(...todayHistoryJobs.map(job => {
     if (job.earnings?.netPayout == null) {
       throw new Error(`Missing earnings.netPayout for job ${job.id}`);
     }

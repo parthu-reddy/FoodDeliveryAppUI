@@ -20,7 +20,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/internal/users/admin/{userId}/status": {
+    "/api/v1/internal/admin/users/{userId}/status": {
         parameters: {
             query?: never;
             header?: never;
@@ -30,22 +30,6 @@ export interface paths {
         get?: never;
         put: operations["updateUserStatus"];
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/internal/users/{id}/roles": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["addRole"];
         delete?: never;
         options?: never;
         head?: never;
@@ -100,48 +84,16 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/internal/users/{id}": {
+    "/api/v1/internal/admin/users/{id}/roles": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["getUser"];
+        get?: never;
         put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/internal/users/by-role": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getUsersByRole"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/internal/users/admin/all": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getAllUsers"];
-        put?: never;
-        post?: never;
+        post: operations["addRole"];
         delete?: never;
         options?: never;
         head?: never;
@@ -180,17 +132,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/internal/users/{id}/roles/{roleName}": {
+    "/api/v1/internal/admin/users/{id}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: operations["getUser"];
         put?: never;
         post?: never;
-        delete: operations["removeRole"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/internal/admin/users/by-role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getUsersByRole"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/internal/admin/users/all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAllUsers"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -207,6 +191,22 @@ export interface paths {
         put?: never;
         post?: never;
         delete: operations["removeSession"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/internal/admin/users/{id}/roles/{roleName}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["removeRole"];
         options?: never;
         head?: never;
         patch?: never;
@@ -232,10 +232,6 @@ export interface components {
         StatusUpdateDTO: {
             isActive: boolean;
         };
-        RoleRequestDTO: {
-            serviceName: string;
-            roleName: string;
-        };
         ApiResponseVoid: {
             success: boolean;
             message: string;
@@ -243,6 +239,10 @@ export interface components {
             data?: Record<string, never>;
             /** Format: date-time */
             timestamp: string;
+        };
+        RoleRequestDTO: {
+            serviceName: string;
+            roleName: string;
         };
         ApiResponseMapStringString: {
             success: boolean;
@@ -253,6 +253,23 @@ export interface components {
             };
             /** Format: date-time */
             timestamp: string;
+        };
+        ApiResponseListSessionInfo: {
+            success: boolean;
+            message: string;
+            errorCode?: string;
+            data?: components["schemas"]["SessionInfo"][];
+            /** Format: date-time */
+            timestamp: string;
+        };
+        SessionInfo: {
+            sessionId: string;
+            deviceInfo: string;
+            os: string;
+            browser: string;
+            /** Format: int64 */
+            lastActive: number;
+            serviceName: string;
         };
         ApiResponseUserDTO: {
             success: boolean;
@@ -292,23 +309,6 @@ export interface components {
             /** Format: int32 */
             numberOfElements: number;
             empty: boolean;
-        };
-        ApiResponseListSessionInfo: {
-            success: boolean;
-            message: string;
-            errorCode?: string;
-            data?: components["schemas"]["SessionInfo"][];
-            /** Format: date-time */
-            timestamp: string;
-        };
-        SessionInfo: {
-            sessionId: string;
-            deviceInfo: string;
-            os: string;
-            browser: string;
-            /** Format: int64 */
-            lastActive: number;
-            serviceName: string;
         };
     };
     responses: never;
@@ -379,34 +379,6 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["StatusUpdateDTO"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseString"];
-                };
-            };
-        };
-    };
-    addRole: {
-        parameters: {
-            query?: never;
-            header: {
-                "X-Calling-Service": string;
-            };
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RoleRequestDTO"];
             };
         };
         responses: {
@@ -498,7 +470,7 @@ export interface operations {
             };
         };
     };
-    getUser: {
+    addRole: {
         parameters: {
             query?: never;
             header: {
@@ -509,7 +481,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoleRequestDTO"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -517,56 +493,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseUserDTO"];
-                };
-            };
-        };
-    };
-    getUsersByRole: {
-        parameters: {
-            query: {
-                role: "CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN";
-                page?: number;
-                size?: number;
-            };
-            header: {
-                "X-Calling-Service": string;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponsePageResponseDtoUserDTO"];
-                };
-            };
-        };
-    };
-    getAllUsers: {
-        parameters: {
-            query?: {
-                page?: number;
-                size?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponsePageResponseDtoUserDTO"];
+                    "application/json": components["schemas"]["ApiResponseString"];
                 };
             };
         };
@@ -640,7 +567,7 @@ export interface operations {
             };
         };
     };
-    removeRole: {
+    getUser: {
         parameters: {
             query?: never;
             header: {
@@ -648,7 +575,6 @@ export interface operations {
             };
             path: {
                 id: string;
-                roleName: "CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN";
             };
             cookie?: never;
         };
@@ -660,7 +586,56 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseString"];
+                    "application/json": components["schemas"]["ApiResponseUserDTO"];
+                };
+            };
+        };
+    };
+    getUsersByRole: {
+        parameters: {
+            query: {
+                role: "CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN";
+                page?: number;
+                size?: number;
+            };
+            header: {
+                "X-Calling-Service": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponsePageResponseDtoUserDTO"];
+                };
+            };
+        };
+    };
+    getAllUsers: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponsePageResponseDtoUserDTO"];
                 };
             };
         };
@@ -686,6 +661,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
+    removeRole: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Calling-Service": string;
+            };
+            path: {
+                id: string;
+                roleName: "CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseString"];
                 };
             };
         };

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { X, User, Phone, Mail, Car, Image as ImageIcon, AlertCircle, LogOut, ShieldCheck, CheckCircle } from 'lucide-react';
-import { deliveryApi, identityApi, walletApi } from "@/lib/zodiosClients";
+import { customerApi, deliveryApi, identityApi } from "@/lib/zodiosClients";
 import { useToast } from '@/contexts/ToastContext';
 import ImageUploadField from "@features/kyc/components/ImageUploadField";
 
@@ -116,12 +116,23 @@ export default function RiderSettingsView({
     if (!userId) return;
     setTxLoading(true);
     try {
-      const balanceRes = await walletApi.wallet.get('/api/v1/wallets/:entityType/:entityId', { params: { entityType: 'DRIVER', entityId: userId } });
-      if (balanceRes) setWalletBalance(balanceRes.balance ?? 0);
-      
-      const txRes = await walletApi.wallet.get('/api/v1/wallets/:entityType/:entityId/transactions', { params: { entityType: 'DRIVER', entityId: userId }, queries: { page } });
+      // A driver has no wallet -- WalletEntityType is CUSTOMER and ADVERTISER only. Their money is
+      // ledger earnings and cash, so this reads the driver money summary and statement. The old
+      // code asked WalletService for a DRIVER wallet, which no route and no handler served; the
+      // catch below turned that into a permanent zero balance and an empty history.
+      const summary = await customerApi.driverMoney.get('/api/v1/money/driver/summary', { queries: { period: 'ALL' } });
+      if (summary) setWalletBalance(summary.pendingBalance ?? 0);
+
+      const txRes = await customerApi.driverMoney.get('/api/v1/money/driver/statement', { queries: { page, size: 20 } });
       if (txRes && txRes.content) {
-        setTransactions((txRes.content as WalletTransaction[]) ?? []);
+        setTransactions(txRes.content.map((line): WalletTransaction => ({
+          id: String(line.transactionId ?? ''),
+          amount: Number(line.amount ?? 0),
+          transactionType: line.direction === 'DEBIT' ? 'DEBIT' : 'CREDIT',
+          referenceId: line.referenceId ? String(line.referenceId) : undefined,
+          description: line.description ?? line.category ?? undefined,
+          createdAt: String(line.createdAt ?? ''),
+        })));
         setTxTotalPages(txRes.totalPages || 1);
       }
     } catch (e: unknown) {

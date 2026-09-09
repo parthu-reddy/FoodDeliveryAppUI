@@ -1,10 +1,39 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-import { SortObject } from "./common";
-import { PageableObject } from "./common";
+import { PageResponseDtoPayoutDto } from "./common";
+import { PayoutDto } from "./common";
+import { BeneficiaryResponse } from "./common";
+import { PayoutLineDto } from "./common";
 import { PendingPayoutResponse } from "./common";
 
+export const PayoutDetailResponse = z
+  .object({
+    id: z.string().uuid(),
+    payeeType: z.string(),
+    payeeId: z.string().uuid(),
+    payeeDisplayName: z.string(),
+    periodFrom: z.string().datetime({ offset: true }),
+    periodTo: z.string().datetime({ offset: true }),
+    amount: z.number(),
+    currency: z.string(),
+    status: z.enum(["DRAFT", "APPROVED", "PAID", "FAILED", "CANCELLED"]),
+    beneficiary: BeneficiaryResponse,
+    beneficiarySnapshot: z.string(),
+    bankReference: z.string(),
+    failureReason: z.string(),
+    createdBy: z.string().uuid(),
+    approvedBy: z.string().uuid(),
+    paidBy: z.string().uuid(),
+    ledgerTransactionId: z.string().uuid(),
+    settledTransactionId: z.string().uuid(),
+    createdAt: z.string().datetime({ offset: true }),
+    approvedAt: z.string().datetime({ offset: true }),
+    paidAt: z.string().datetime({ offset: true }),
+    lines: z.array(PayoutLineDto),
+  })
+  .partial()
+  .passthrough();
 export const Payout = z
   .object({
     id: z.string().uuid(),
@@ -32,21 +61,6 @@ export const Payout = z
   })
   .partial()
   .passthrough();
-export const PagePayout = z
-  .object({
-    totalPages: z.number().int(),
-    totalElements: z.number().int(),
-    size: z.number().int(),
-    content: z.array(Payout),
-    numberOfElements: z.number().int(),
-    number: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
-    empty: z.boolean(),
-  })
-  .passthrough();
 export const CreatePayoutRequest = z
   .object({
     payeeType: z.string(),
@@ -58,16 +72,16 @@ export const CreatePayoutRequest = z
   .passthrough();
 
 export const schemas = {
+  PayoutDetailResponse,
   Payout,
-  PagePayout,
   CreatePayoutRequest,
 };
 
 export const endpoints = makeApi([
   {
     method: "get",
-    path: "/api/v1/admin/payouts",
-    alias: "getPayouts",
+    path: "/api/v1/internal/admin/payouts",
+    alias: "getPayouts_2",
     requestFormat: "json",
     parameters: [
       {
@@ -91,11 +105,11 @@ export const endpoints = makeApi([
         schema: z.number().int().optional().default(20),
       },
     ],
-    response: PagePayout,
+    response: PageResponseDtoPayoutDto,
   },
   {
     method: "post",
-    path: "/api/v1/admin/payouts",
+    path: "/api/v1/internal/admin/payouts",
     alias: "createPayout",
     requestFormat: "json",
     parameters: [
@@ -114,7 +128,7 @@ export const endpoints = makeApi([
   },
   {
     method: "post",
-    path: "/api/v1/admin/payouts/:payoutId/mark-paid",
+    path: "/api/v1/internal/admin/payouts/:payoutId/mark-paid",
     alias: "markPayoutPaid",
     requestFormat: "json",
     parameters: [
@@ -133,7 +147,7 @@ export const endpoints = makeApi([
   },
   {
     method: "post",
-    path: "/api/v1/admin/payouts/:payoutId/fail",
+    path: "/api/v1/internal/admin/payouts/:payoutId/fail",
     alias: "failPayout",
     requestFormat: "json",
     parameters: [
@@ -152,7 +166,7 @@ export const endpoints = makeApi([
   },
   {
     method: "post",
-    path: "/api/v1/admin/payouts/:payoutId/cancel",
+    path: "/api/v1/internal/admin/payouts/:payoutId/cancel",
     alias: "cancelPayout",
     requestFormat: "json",
     parameters: [
@@ -166,7 +180,7 @@ export const endpoints = makeApi([
   },
   {
     method: "post",
-    path: "/api/v1/admin/payouts/:payoutId/approve",
+    path: "/api/v1/internal/admin/payouts/:payoutId/approve",
     alias: "approvePayout",
     requestFormat: "json",
     parameters: [
@@ -180,8 +194,8 @@ export const endpoints = makeApi([
   },
   {
     method: "get",
-    path: "/api/v1/admin/payouts/:payoutId",
-    alias: "getPayout",
+    path: "/api/v1/internal/admin/payouts/:payoutId",
+    alias: "getPayoutDetail_1",
     requestFormat: "json",
     parameters: [
       {
@@ -190,13 +204,25 @@ export const endpoints = makeApi([
         schema: z.string().uuid(),
       },
     ],
-    response: Payout,
+    response: PayoutDetailResponse,
   },
   {
     method: "get",
-    path: "/api/v1/admin/payouts/pending",
+    path: "/api/v1/internal/admin/payouts/pending",
     alias: "getPendingPayouts",
     requestFormat: "json",
+    parameters: [
+      {
+        name: "page",
+        type: "Query",
+        schema: z.number().int().optional().default(0),
+      },
+      {
+        name: "size",
+        type: "Query",
+        schema: z.number().int().optional().default(50),
+      },
+    ],
     response: z.array(PendingPayoutResponse),
   },
 ]);

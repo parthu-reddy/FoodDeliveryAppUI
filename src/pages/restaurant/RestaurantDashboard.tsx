@@ -24,6 +24,9 @@ const SharedSettingsView = lazy(() => import("@shared/ui/SharedSettingsView"));
 const RestaurantSettingsShell = lazy(() => 
   import('./RestaurantSettingsShell').then(module => ({ default: module.RestaurantSettingsShell }))
 );
+const RestaurantEarningsTab = lazy(() => 
+  import('./RestaurantEarningsTab').then(module => ({ default: module.default }))
+);
 
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
@@ -51,7 +54,7 @@ import {
     getOutlets
 } from '@features/catalog/model/menuStore';
 import { isActiveOrder } from '@features/customer-orders/model/orderStatus';
-import { formatINR, sumPaise } from '@shared/money';
+import { formatINR, sumRupees } from '@shared/money';
 
 interface RestaurantDashboardProps {
   restaurantId: string;
@@ -79,7 +82,7 @@ export default function RestaurantDashboard({
     externalOrders,
     externalUpdateStatus
   });
-  const [activeTab, setActiveTab] = useState<'orders' | 'menu' | 'campaigns'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'menu' | 'campaigns' | 'earnings'>('orders');
   const [, setApiPrepSeconds] = useState('15');
 
 
@@ -290,7 +293,7 @@ export default function RestaurantDashboard({
   const completedOrders = historyOrders.filter(o => o.status === OrderStatus.HANDED_OVER);
 
   // Compute stats
-  const totalRevenue = sumPaise(...myOrders.map((o) => {
+  const totalRevenue = sumRupees(...myOrders.map((o) => {
     if (o.earnings?.netPayout == null) {
       // It's possible some active orders don't have earnings computed yet.
       return 0;
@@ -575,6 +578,19 @@ export default function RestaurantDashboard({
             >
               Ad Campaigns
             </button>
+            <button
+              onClick={() => {
+                setActiveTab('earnings');
+                setShowSettings(false);
+              }}
+              className={`flex-1 py-2 text-[10.5px] font-bold rounded-lg cursor-pointer transition-all ${
+                activeTab === 'earnings' && !showSettings
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm shadow-emerald-500/15' 
+                  : 'text-slate-500 dark:text-[#f0ede6] hover:text-slate-700 dark:hover:text-slate-200'
+              }`}
+            >
+              Earnings
+            </button>
           </div>
         </div>
       )}
@@ -633,6 +649,22 @@ export default function RestaurantDashboard({
             <ErrorBoundary fallbackLabel="Campaigns">
               <Suspense fallback={<LoadingSkeleton />}>
                 <CampaignManagement advertiserId={restaurantId} />
+              </Suspense>
+            </ErrorBoundary>
+          </motion.div>
+        )}
+
+        {!showSettings && activeTab === 'earnings' && (
+          <motion.div
+            key="earnings-panel"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="p-5 h-full"
+          >
+            <ErrorBoundary fallbackLabel="Earnings Tab">
+              <Suspense fallback={<LoadingSkeleton />}>
+                <RestaurantEarningsTab restaurantId={restaurantId} />
               </Suspense>
             </ErrorBoundary>
           </motion.div>
