@@ -1,6 +1,6 @@
 import { getUserProfile } from '@/lib/tokenStore';
 import { customerApi } from '@/lib/zodiosClients';
-import { CartItem, MenuItem, Order, Restaurant } from '@/types';
+import { CartItem, MenuItem, Order, PaymentMethodChoice, Restaurant } from '@/types';
 import { useEffect, useRef, useState } from 'react';
 
 interface UseCustomerCartOptions {
@@ -359,7 +359,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
   };
 
   const processPaymentAndOrder = async (
-    paymentMethod: string,
+    paymentMethod: PaymentMethodChoice | undefined,
     deliveryAddressId: string,
 
     onSuccessCb: () => void
@@ -380,6 +380,16 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
     try {
       const items = activeCart.items.map(i => ({ menuItemId: i.item.id, quantity: i.quantity }));
       const profile = getUserProfile();
+
+      // No method, no order. This used to read `paymentMethod || 'WALLET'` at the payload, which
+      // charged a wallet the customer may not have chosen -- the exact behaviour the server's
+      // createOrderWithPayment rejects a null method in order to prevent (M-11).
+      if (!paymentMethod) {
+        setPaymentStatus('idle');
+        setGlobalError('Choose how you would like to pay.');
+        isSubmittingOrderRef.current = false;
+        return;
+      }
 
       const finalAddressId = deliveryAddressId;
       if (!finalAddressId) {
@@ -408,7 +418,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
         restaurantId: activeCart.restaurant.id || checkoutRestaurantId,
         deliveryAddressId: finalAddressId,
         items,
-        paymentMethod: (paymentMethod || 'WALLET') as "WALLET" | "COD" | "UPI" | "CARD"
+        paymentMethod
       };
 
       const res = await customerApi.order.post('/api/v1/orders', orderPayload, {});

@@ -17,6 +17,8 @@ export const RestaurantOrder = z
       "HANDED_OVER",
       "CANCELLED",
       "CANCELLED_BY_RESTAURANT",
+      "CANCELLED_BY_PLATFORM",
+      "DELIVERY_FAILED",
     ]),
     deliveryStatus: z.enum([
       "PENDING",
@@ -53,6 +55,7 @@ export const RestaurantOrder = z
     deliveryOtp: z.string().optional(),
     deliveryExecutiveId: z.string().uuid().optional(),
     customerId: z.string().uuid().optional(),
+    paymentMethod: z.enum(["CARD", "UPI", "WALLET", "COD"]).optional(),
     customerName: z.string().optional(),
     foodCost: z.number().optional(),
     restaurantPlatformFee: z.number().optional(),

@@ -1,7 +1,7 @@
 import { DeliveryStatus, Order } from "@/types";
 import ActiveDeliveryCard from "@features/delivery-tasks/components/ActiveDeliveryCard";
 import OrderTrackingMap from "@features/maps-tracking/components/OrderTrackingMap";
-import { CheckCircle, KeyRound, MapPin, Navigation } from 'lucide-react';
+import { Banknote, CheckCircle, KeyRound, MapPin, Navigation } from 'lucide-react';
 import { motion } from 'motion/react';
 import React from 'react';
 import { formatINR } from '@shared/money';
@@ -20,6 +20,8 @@ interface DeliveryActiveJobProps {
   setEnteredOtp: (otp: string) => void;
   otpError: string;
   isUpdatingDelivery: boolean;
+  cashCollected: string;
+  setCashCollected: (amount: string) => void;
   goOfflineAfter: boolean;
   setGoOfflineAfter: (goOffline: boolean) => void;
   waitTimerSeconds: number;
@@ -40,11 +42,19 @@ export function DeliveryActiveJob({
   setEnteredOtp,
   otpError,
   isUpdatingDelivery,
+  cashCollected,
+  setCashCollected,
   goOfflineAfter,
   setGoOfflineAfter,
   waitTimerSeconds,
   handleCustomerUnavailable
 }: DeliveryActiveJobProps) {
+  // A cash delivery ends with the rider handing money over. DeliveredStateStrategy refuses the
+  // status update without a declared amount ("Declare the cash you collected for this order."), so
+  // before this field every COD delivery ended in a 400 the rider could do nothing about.
+  const isCashOnDelivery = currentJob?.paymentMethod === 'COD';
+  const cashDeclared = cashCollected.trim() !== '' && Number(cashCollected) >= 0;
+  const canConfirmDelivery = !isUpdatingDelivery && (!isCashOnDelivery || cashDeclared);
   return (
     <motion.div
       key="active-job"
@@ -113,6 +123,32 @@ export function DeliveryActiveJob({
               </div>
             </div>
 
+            {isCashOnDelivery && (
+              <div className="space-y-1.5">
+                <label htmlFor="cashCollected" className="text-xs font-bold text-slate-400 dark:text-slate-300 tracking-wider font-mono flex items-center gap-1.5">
+                  <Banknote className="w-4 h-4 text-emerald-500" /> CASH COLLECTED
+                  {currentJob?.totalAmount ? ` — ${formatINR(currentJob.totalAmount)} DUE` : ''}
+                </label>
+                <div className="flex bg-white/20 dark:bg-slate-950/20 border border-rose-500/20 dark:border-rose-500/30 rounded-2xl overflow-hidden focus-within:border-emerald-500 transition-colors">
+                  <input
+                    id="cashCollected"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    inputMode="decimal"
+                    value={cashCollected}
+                    onChange={(e) => setCashCollected(e.target.value)}
+                    placeholder="Amount the customer handed you"
+                    className="flex-1 px-4 py-3 bg-transparent text-slate-800 dark:text-[#f0ede6] outline-none font-mono text-center text-sm placeholder-slate-400"
+                    required
+                  />
+                </div>
+                <p className="text-[10px] text-slate-400 dark:text-slate-300">
+                  Declare what you actually took. A short collection is recorded against you, not the customer.
+                </p>
+              </div>
+            )}
+
             {otpError && (
               <div className="text-xs text-red-400 font-medium bg-red-500/10 border border-red-500/20 p-3 rounded-xl">
                 {otpError}
@@ -134,7 +170,7 @@ export function DeliveryActiveJob({
 
             <button
               type="submit"
-              disabled={isUpdatingDelivery}
+              disabled={!canConfirmDelivery}
               className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black py-4 rounded-2xl shadow-lg hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-white/15 disabled:opacity-70"
             >
               {isUpdatingDelivery ? "Confirming..." : <><CheckCircle className="w-5 h-5" /> Confirm Delivery {currentJob?.deliveryFee ? `& Credit ${formatINR(currentJob.deliveryFee)}` : ''}</>}

@@ -52,7 +52,18 @@ function PaymentModalInner({
   disabledMethods = [],
   methodHints = {}
 }: PaymentModalProps) {
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethodType>(availableMethods[0] || 'CARD');
+  // The first method the customer could actually pick, not simply the first one listed. The old
+  // default was `availableMethods[0]`, which pre-selected a method even when it was disabled: the
+  // tile rendered unselected (isSelected requires !isDisabled) while this state still held it, and
+  // the confirm button below submitted it anyway.
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethodType | undefined>(
+    () => availableMethods.find(m => !disabledMethods.includes(m))
+  );
+
+  // Recomputed every render rather than tracked in an effect: `disabledMethods` arrives late (the
+  // customer modal disables WALLET only once the balance has loaded), so a method that was
+  // selectable when it was clicked can stop being selectable afterwards.
+  const canPay = !!selectedMethod && !disabledMethods.includes(selectedMethod);
 
   const allMethods = [
     { id: 'CARD', icon: CreditCard, label: 'Credit Card', color: 'indigo' },
@@ -190,13 +201,13 @@ function PaymentModalInner({
               {/* Action Button */}
               <div className="pt-2">
                 <Button
-                  onClick={() => onProcessPayment(selectedMethod)}
-                  disabled={status !== 'idle'}
+                  onClick={() => selectedMethod && canPay && onProcessPayment(selectedMethod)}
+                  disabled={status !== 'idle' || !canPay}
                   className="w-full relative group overflow-hidden bg-slate-900 dark:bg-indigo-600 hover:bg-slate-800 dark:hover:bg-indigo-500 text-white rounded-2xl py-4"
                 >
                   <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
                   <div className="flex items-center justify-center gap-2 font-bold text-lg">
-                    {buttonText(selectedMethod, amount)}
+                    {canPay && selectedMethod ? buttonText(selectedMethod, amount) : 'Choose a payment method'}
                     <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </div>
                   <div className="absolute top-1/2 -translate-y-1/2 left-4 text-white/50">

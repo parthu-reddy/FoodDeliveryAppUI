@@ -1,3 +1,4 @@
+import { olaStyleUrl, transformOlaRequest } from '@/lib/olaMaps';
 import { getToken } from "@/lib/tokenStore";
 import { customerApi, mapsApi } from "@/lib/zodiosClients";
 import { MapPin, Search, X } from 'lucide-react';
@@ -87,16 +88,11 @@ export default function CustomerAddressPage({
         
         map = new maplibregl.Map({
              container: mapContainerRef.current!,
-             style: '/olamaps/tiles/vector/v1/styles/default-light-standard/style.json',
+             style: olaStyleUrl(),
              minZoom: 10,
              maxZoom: 17,
              interactive: false,
-             transformRequest: (url, _resourceType) => {
-               if (url.includes('api.olamaps.io')) {
-                 return { url: url.replace('https://api.olamaps.io', '/olamaps') };
-               }
-               return { url };
-             }
+             transformRequest: transformOlaRequest
         });
         
         // @ts-expect-error auto-migration type suppression

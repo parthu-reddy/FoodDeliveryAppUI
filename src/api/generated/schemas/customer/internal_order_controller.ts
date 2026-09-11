@@ -22,6 +22,8 @@ export const Order = z
       "HANDED_OVER",
       "CANCELLED",
       "CANCELLED_BY_RESTAURANT",
+      "CANCELLED_BY_PLATFORM",
+      "DELIVERY_FAILED",
     ]),
     paymentMethod: z.enum(["CARD", "UPI", "WALLET", "COD"]).optional(),
     cashCollectedAmount: z.number().optional(),

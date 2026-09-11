@@ -1,3 +1,4 @@
+import { olaStyleUrl, transformOlaRequest } from '@/lib/olaMaps';
 import { customerApi, deliveryApi, restaurantApi } from "@/lib/zodiosClients";
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -90,15 +91,10 @@ function AdminFleetMapInner() {
     if (!map) {
       map = new maplibregl.Map({
         container: mapContainerRef.current,
-        style: '/olamaps/tiles/vector/v1/styles/default-light-standard/style.json',
+        style: olaStyleUrl(),
         center: [77.670900, 12.990300], // Default center
         zoom: 11,
-        transformRequest: (url, _resourceType) => {
-          if (url.includes('api.olamaps.io')) {
-            return { url: url.replace('https://api.olamaps.io', '/olamaps') };
-          }
-          return { url };
-        }
+        transformRequest: transformOlaRequest
       });
       map.addControl(new maplibregl.NavigationControl(), 'top-right');
       setMapInstance(map);

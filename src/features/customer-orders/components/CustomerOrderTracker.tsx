@@ -9,6 +9,8 @@ import { useCallContext } from '@/contexts/CallContext';
 
 import { Order } from '@/types';
 import { customerApi } from '@/lib/zodiosClients';
+import { terminalHeadline } from '@features/customer-orders/model/orderStatus';
+import { useOrderRefunds } from '@features/customer-orders/model/useOrderRefunds';
 
 interface CustomerOrderTrackerProps {
   currentTrackingOrder: Order;
@@ -36,6 +38,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
   getFriendlyStatusMessage,
 }) => {
   const { startCall } = useCallContext();
+  const refunds = useOrderRefunds(currentTrackingOrder?.id, isFailedOrder(currentTrackingOrder));
   return (
     <motion.div
       key="tracking"
@@ -103,11 +106,19 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
                   {currentTrackingOrder.status === OrderStatus.AWAITING_DELAY_APPROVAL 
                     ? 'Restaurant needs more time to prepare your order. Please wait...'
                     : isFailedOrder(currentTrackingOrder)
-                    ? 'Your order could not be completed and will be refunded.'
+                    // Who ended it, not just that it ended. Before Phase 3 a dispatch failure and a
+                    // restaurant cancellation were the same status and the customer got the same
+                    // sentence for both; only one of them is the restaurant's doing.
+                    ? (terminalHeadline(currentTrackingOrder.status) ?? 'Your order could not be completed and will be refunded.')
                     : currentTrackingOrder.deliveryStatus === DeliveryStatus.FAILED
                     ? 'We are looking for a nearby delivery partner. Thank you for your patience.'
                     : 'Estimated delivery: 15-20 mins'}
                 </p>
+                {currentTrackingOrder.paymentMethod === 'COD' && (
+                  <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400" data-testid="cod-notice">
+                    {`Pay ${formatINR(currentTrackingOrder.totalAmount ?? 0)} in cash on delivery`}
+                  </p>
+                )}
               </div>
               <div className={`p-2.5 rounded-2xl ${isFailedOrder(currentTrackingOrder) ? 'bg-red-500/10 text-red-500' : 'bg-amber-500/10 text-amber-500'}`}>
                 {currentTrackingOrder.status === OrderStatus.AWAITING_DELAY_APPROVAL || isFailedOrder(currentTrackingOrder) ? <Clock className="w-5 h-5 text-red-500" /> : <Timer className="w-5 h-5" />}
@@ -389,6 +400,45 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
             </div>
             <h2 className="text-2xl font-black mb-1 capitalize">{getFriendlyStatusMessage(currentTrackingOrder.status, currentTrackingOrder.deliveryStatus)}</h2>
             <p className="text-sm font-bold text-slate-500 dark:text-slate-400">#{currentTrackingOrder.id.substring(0, 8)}</p>
+
+            {/* Who ended it, and why. Phase 3 made a dispatch failure a different status from a
+                restaurant cancellation because they mean different things to the customer; this is
+                the only place that difference reaches them. */}
+            {terminalHeadline(currentTrackingOrder.status) && (
+              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300" data-testid="terminal-headline">
+                {terminalHeadline(currentTrackingOrder.status)}
+              </p>
+            )}
+            {currentTrackingOrder.cancellationReason && (
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 italic" data-testid="cancellation-reason">
+                {currentTrackingOrder.cancellationReason}
+              </p>
+            )}
+            {currentTrackingOrder.paymentMethod === 'COD' && currentTrackingOrder.deliveryStatus === DeliveryStatus.DELIVERED && (
+              <p className="mt-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400" data-testid="cod-notice">
+                {`Paid ${formatINR(currentTrackingOrder.cashCollectedAmount ?? currentTrackingOrder.totalAmount ?? 0)} in cash on delivery`}
+              </p>
+            )}
+            {refunds.length > 0 && (
+              <div className="mt-3 space-y-1 text-left" data-testid="refund-state">
+                {refunds.map(refund => (
+                  <div key={refund.id} className="text-xs bg-slate-500/5 border border-slate-500/20 rounded-xl p-3 space-y-0.5">
+                    <div className="flex justify-between font-semibold">
+                      <span>Refund {formatINR(refund.amount ?? 0)}</span>
+                      <span>{refund.status}</span>
+                    </div>
+                    <p className="text-slate-400 dark:text-slate-300">
+                      {refund.destination === 'STORE_CREDIT'
+                        ? 'Returned as store credit in your wallet'
+                        : refund.destination === 'NONE'
+                        ? 'Nothing was charged, so there is nothing to return'
+                        : 'Returned to your original payment method'}
+                      {refund.expectedBy ? ` — expected by ${new Date(refund.expectedBy).toLocaleDateString()}` : ''}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
             
             {/* Invoice Details */}
             <div className="mt-4 flex flex-col gap-1 text-[11px] text-slate-500 dark:text-slate-400 font-medium">

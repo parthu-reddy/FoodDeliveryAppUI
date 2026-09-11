@@ -1144,7 +1144,7 @@ export interface components {
             restaurantId: string;
             restaurantName: string;
             /** @enum {string} */
-            status: "CREATED" | "PENDING_ACCEPTANCE" | "AWAITING_DELAY_APPROVAL" | "ACCEPTED" | "PREPARING" | "READY_FOR_PICKUP" | "HANDED_OVER" | "CANCELLED" | "CANCELLED_BY_RESTAURANT";
+            status: "CREATED" | "PENDING_ACCEPTANCE" | "AWAITING_DELAY_APPROVAL" | "ACCEPTED" | "PREPARING" | "READY_FOR_PICKUP" | "HANDED_OVER" | "CANCELLED" | "CANCELLED_BY_RESTAURANT" | "CANCELLED_BY_PLATFORM" | "DELIVERY_FAILED";
             /** @enum {string} */
             deliveryStatus: "PENDING" | "SEARCHING_FOR_DRIVER" | "MANUAL_INTERVENTION_REQUIRED" | "ASSIGNED" | "AT_RESTAURANT" | "OUT_FOR_DELIVERY" | "DELIVERED" | "CANCELLED" | "FAILED";
             totalAmount: number;
@@ -1177,6 +1177,10 @@ export interface components {
             /** Format: int64 */
             remainingPingSeconds?: number;
             distanceKm?: number;
+            /** @enum {string} */
+            paymentMethod?: "CARD" | "UPI" | "WALLET" | "COD";
+            cancellationReason?: string;
+            cashCollectedAmount?: number;
             /** Format: int64 */
             expiresAt?: number;
         };
@@ -1527,7 +1531,7 @@ export interface components {
             /** @enum {string} */
             ownerType?: "GATEWAY_RECEIVABLE" | "CASH_RECEIVABLE" | "BANK" | "PLATFORM_CLEARING" | "PLATFORM_REVENUE" | "TAX_PAYABLE" | "PAYOUT_IN_TRANSIT" | "RESTAURANT_PAYABLE" | "DRIVER_PAYABLE" | "CUSTOMER_CREDIT" | "ADVERTISER_PREPAID";
             /** @enum {string} */
-            category?: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "CLAWBACK" | "PAYOUT_TRANSFER" | "CASH_COLLECTED" | "CASH_REMITTED" | "STORE_CREDIT";
+            category?: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "CLAWBACK" | "PAYOUT_TRANSFER" | "CASH_COLLECTED" | "CASH_SHORTFALL" | "CASH_REMITTED" | "STORE_CREDIT";
             amount?: number;
             /** @enum {string} */
             direction?: "CREDIT" | "DEBIT";
@@ -1667,7 +1671,7 @@ export interface components {
             restaurantId: string;
             restaurantName?: string;
             /** @enum {string} */
-            status: "CREATED" | "PENDING_ACCEPTANCE" | "AWAITING_DELAY_APPROVAL" | "ACCEPTED" | "PREPARING" | "READY_FOR_PICKUP" | "HANDED_OVER" | "CANCELLED" | "CANCELLED_BY_RESTAURANT";
+            status: "CREATED" | "PENDING_ACCEPTANCE" | "AWAITING_DELAY_APPROVAL" | "ACCEPTED" | "PREPARING" | "READY_FOR_PICKUP" | "HANDED_OVER" | "CANCELLED" | "CANCELLED_BY_RESTAURANT" | "CANCELLED_BY_PLATFORM" | "DELIVERY_FAILED";
             /** @enum {string} */
             paymentMethod?: "CARD" | "UPI" | "WALLET" | "COD";
             cashCollectedAmount?: number;
@@ -1864,7 +1868,7 @@ export interface components {
             /** Format: uuid */
             restaurantId?: string;
             /** @enum {string} */
-            orderStatus?: "CREATED" | "PENDING_ACCEPTANCE" | "AWAITING_DELAY_APPROVAL" | "ACCEPTED" | "PREPARING" | "READY_FOR_PICKUP" | "HANDED_OVER" | "CANCELLED" | "CANCELLED_BY_RESTAURANT";
+            orderStatus?: "CREATED" | "PENDING_ACCEPTANCE" | "AWAITING_DELAY_APPROVAL" | "ACCEPTED" | "PREPARING" | "READY_FOR_PICKUP" | "HANDED_OVER" | "CANCELLED" | "CANCELLED_BY_RESTAURANT" | "CANCELLED_BY_PLATFORM" | "DELIVERY_FAILED";
             totalAmount?: number;
         };
         PageResponseDtoFailedRefundDto: {

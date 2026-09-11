@@ -1,3 +1,4 @@
+import { olaStyleUrl, transformOlaRequest } from '@/lib/olaMaps';
 import { useToast } from "@/contexts/ToastContext";
 import { getToken } from "@/lib/tokenStore";
 import { deliveryApi, restaurantApi } from "@/lib/zodiosClients";
@@ -79,18 +80,13 @@ function OrderTrackingMapInner({ order, enableLiveTracking = false }: { order: O
 
         map = new maplibregl.Map({
           container: mapContainerRef.current!,
-          style: '/olamaps/tiles/vector/v1/styles/default-light-standard/style.json',
+          style: olaStyleUrl(),
           center: [cLng, cLat], // Center on delivery location initially
           zoom: 12,
           minZoom: 10, // Prevent zooming out too far
           maxZoom: 17, // Prevent over-zooming to reduce tile fetch
           interactive: false, // Block user interaction with the map itself
-          transformRequest: (url, _resourceType) => {
-            if (url.includes('api.olamaps.io')) {
-              return { url: url.replace('https://api.olamaps.io', '/olamaps') };
-            }
-            return { url };
-          }
+          transformRequest: transformOlaRequest
         });
 
         let rLat = 12.98;

@@ -32,8 +32,12 @@ export function useCustomerOrders({ onUpdateOrder }: UseCustomerOrdersOptions = 
     return () => { ignore = true; };
   }, []);
 
+  // isActiveOrder, not a hand-listed array. The array this replaces omitted
+  // AWAITING_DELAY_APPROVAL while CustomerOrderTracker rendered the delay prompt for exactly that
+  // status: the customer saw the prompt on the poll that delivered it, this string then went
+  // empty, the effect below tore down, and no further poll ever happened (M-10).
   const activeOrderIdsStr = internalOrders
-    .filter(o => [OrderStatus.CREATED, OrderStatus.PENDING_ACCEPTANCE, OrderStatus.ACCEPTED, OrderStatus.PREPARING, OrderStatus.READY_FOR_PICKUP, OrderStatus.HANDED_OVER].includes((o.status?.toUpperCase() as OrderStatus) || ('' as OrderStatus)))
+    .filter(o => isActiveOrder(o))
     .map(o => o.id)
     .sort()
     .join(',');

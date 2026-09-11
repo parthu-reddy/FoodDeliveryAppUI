@@ -19,10 +19,19 @@ export type MenuItem = restaurantComponents['schemas']['MenuItemDTO'] & {
 };
 export type OutletOverride = restaurantComponents['schemas']['MasterMenuItem']; // Fallback
 export type NearbyRestaurant = restaurantComponents['schemas']['NearbyRestaurantDTO'];
+/**
+ * How an order is paid for.
+ *
+ * Derived from the generated schema, not re-spelled here. `Order` used to declare
+ * `paymentMethod?: "CARD" | "UPI" | "WALLET" | "COD"` as a hand-written override, which made the
+ * UI compile against a field `OrderResponse` did not actually send -- so the customer's order view
+ * could never say "pay in cash on delivery" and nothing pointed at why.
+ */
+export type PaymentMethodChoice = NonNullable<customerComponents['schemas']['OrderResponse']['paymentMethod']>;
+
 export type Order = Omit<customerComponents['schemas']['OrderResponse'], 'status' | 'deliveryStatus'> & {
     status: OrderStatus;
     deliveryStatus?: DeliveryStatus;
-    paymentMethod?: "CARD" | "UPI" | "WALLET" | "COD";
     earnings?: {
         netPayout: number;
         customerContribution: number;

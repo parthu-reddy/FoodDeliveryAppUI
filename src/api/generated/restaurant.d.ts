@@ -1180,7 +1180,7 @@ export interface components {
             /** Format: uuid */
             restaurantId: string;
             /** @enum {string} */
-            status: "CREATED" | "PENDING_ACCEPTANCE" | "AWAITING_DELAY_APPROVAL" | "ACCEPTED" | "PREPARING" | "READY_FOR_PICKUP" | "HANDED_OVER" | "CANCELLED" | "CANCELLED_BY_RESTAURANT";
+            status: "CREATED" | "PENDING_ACCEPTANCE" | "AWAITING_DELAY_APPROVAL" | "ACCEPTED" | "PREPARING" | "READY_FOR_PICKUP" | "HANDED_OVER" | "CANCELLED" | "CANCELLED_BY_RESTAURANT" | "CANCELLED_BY_PLATFORM" | "DELIVERY_FAILED";
             /** @enum {string} */
             deliveryStatus: "PENDING" | "SEARCHING_FOR_DRIVER" | "MANUAL_INTERVENTION_REQUIRED" | "ASSIGNED" | "AT_RESTAURANT" | "OUT_FOR_DELIVERY" | "DELIVERED" | "CANCELLED" | "FAILED";
             /** @enum {string} */
@@ -1204,6 +1204,8 @@ export interface components {
             deliveryExecutiveId?: string;
             /** Format: uuid */
             customerId?: string;
+            /** @enum {string} */
+            paymentMethod?: "CARD" | "UPI" | "WALLET" | "COD";
             customerName?: string;
             foodCost?: number;
             restaurantPlatformFee?: number;

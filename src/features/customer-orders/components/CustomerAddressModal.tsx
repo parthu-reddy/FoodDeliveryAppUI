@@ -1,3 +1,4 @@
+import { olaProxyBase, olaStyleUrl, transformOlaRequest } from '@/lib/olaMaps';
 import { useConfig } from "@/contexts/ConfigContext";
 import { useToast } from "@/contexts/ToastContext";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -96,7 +97,7 @@ export default function CustomerAddressModal({
       }
       setIsSearching(true);
       try {
-        const res = await window.fetch(`/olamaps/places/v1/autocomplete?input=${encodeURIComponent(debouncedSearchQuery)}`);
+        const res = await window.fetch(`${olaProxyBase()}/places/v1/autocomplete?input=${encodeURIComponent(debouncedSearchQuery)}`);
         const data = await res.json();
         if (data.predictions) {
           setSearchResults(data.predictions);
@@ -116,7 +117,7 @@ export default function CustomerAddressModal({
 
   const handleSelectPlace = async (placeId: string, description: string) => {
     try {
-      const res = await window.fetch(`/olamaps/places/v1/details?place_id=${placeId}`);
+      const res = await window.fetch(`${olaProxyBase()}/places/v1/details?place_id=${placeId}`);
       const data = await res.json();
       if (data.result && data.result.geometry) {
         const location = data.result.geometry.location;
@@ -235,19 +236,14 @@ export default function CustomerAddressModal({
       
       const map = new maplibregl.Map({
         container: mapContainerRef.current,
-        style: '/olamaps/tiles/vector/v1/styles/default-light-standard/style.json',
+        style: olaStyleUrl(),
         center: [parseFloat(lng), parseFloat(lat)],
         zoom: 12,
         minZoom: 10,
         maxZoom: 17,
         interactive: false,
         attributionControl: false,
-        transformRequest: (url, _resourceType) => {
-          if (url.includes('api.olamaps.io')) {
-            return { url: url.replace('https://api.olamaps.io', '/olamaps') };
-          }
-          return { url };
-        }
+        transformRequest: transformOlaRequest
       });
       map.addControl(new maplibregl.NavigationControl(), 'top-right');
 

@@ -30,34 +30,15 @@ const logsLimiter = rateLimit({
 const PORT = Number(process.env.PORT) || 3000;
 const API_GATEWAY_URL = process.env.API_GATEWAY_URL || 'http://localhost:8080';
 
-// Intercept Ola Maps style.json to remove the sprite URL which is currently returning 404 from Ola Maps
-app.get('/olamaps/tiles/vector/v1/styles/:styleId/style.json', async (req, res) => {
-  try {
-    const styleId = req.params.styleId;
-    const fetchUrl = `${API_GATEWAY_URL}/olamaps/tiles/vector/v1/styles/${styleId}/style.json`;
-    // eslint-disable-next-line no-restricted-syntax
-    const response = await fetch(fetchUrl);
-    if (!response.ok) {
-      return res.status(response.status).send(await response.text());
-    }
-    const data = await response.json() as { sprite?: string };
-    if (data.sprite) {
-      delete data.sprite;
-    }
-    res.json(data);
-  } catch (error) {
-    logger.error({ err: error }, 'Failed to fetch Ola Maps style via API Gateway');
-    res.status(502).json({ success: false, message: 'Failed to fetch Ola Maps style via API Gateway' });
-  }
-});
-
-// Proxy all /olamaps/** requests to the API Gateway
+// Proxy all /olamaps/** requests to the API Gateway, which injects the Ola Maps API key.
+// Mounted at the root with `pathFilter` rather than `app.use('/olamaps', ...)`: Express strips a
+// mount path before the proxy sees it, so mounting would forward /tiles/... and the gateway's
+// Path=/olamaps/** predicate would never match. The key never reaches the browser.
 app.use(
-  '/olamaps',
   createProxyMiddleware({
+    pathFilter: '/olamaps/**',
     target: API_GATEWAY_URL,
     changeOrigin: true,
-    // Do not strip /olamaps since ApiGateway expects it for its routing
     on: {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       error: (err, req, res: any) => {
@@ -96,10 +77,11 @@ app.post('/api/logs', logsLimiter, (req, res) => {
   res.status(200).send({ success: true });
 });
 
-// Proxy all /api/** requests to the API Gateway
+// Proxy all /api/** requests to the API Gateway. Root-mounted with `pathFilter` for the same
+// reason as /olamaps above: a mount path is stripped before the proxy runs.
 app.use(
-  '/api',
   createProxyMiddleware({
+    pathFilter: '/api/**',
     target: API_GATEWAY_URL,
     changeOrigin: true,
       on: {

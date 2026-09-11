@@ -58,6 +58,12 @@ done
 # tag-file grouping drops schemas shared between tags; restore them before anything imports these
 node scripts/fix-missing-schemas.mjs
 
+# The per-service facade zodiosClients.ts imports. openapi-zod-client does not write it, and the
+# rm -rf above deletes the previous one, so without this step `npm run generate:api` leaves the app
+# unable to compile: every `createXFacade` import resolves to a file that is no longer there.
+# scripts/generate-facades.mjs existed for this and nothing called it.
+node scripts/generate-facades.mjs
+
 # Workaround for openapi-zod-client not exporting shared schemas
 if [[ "$OSTYPE" == "darwin"* ]]; then
   find "$SCHEMA_DIR" -name '*.ts' -exec sed -i '' 's/^const /export const /g' {} +

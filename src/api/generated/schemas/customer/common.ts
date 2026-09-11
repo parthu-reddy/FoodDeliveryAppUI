@@ -59,6 +59,8 @@ export const OrderResponse = z
       "HANDED_OVER",
       "CANCELLED",
       "CANCELLED_BY_RESTAURANT",
+      "CANCELLED_BY_PLATFORM",
+      "DELIVERY_FAILED",
     ]),
     deliveryStatus: z.enum([
       "PENDING",
@@ -93,6 +95,9 @@ export const OrderResponse = z
     estimatedCompletionTime: z.number().int().optional(),
     remainingPingSeconds: z.number().int().optional(),
     distanceKm: z.number().optional(),
+    paymentMethod: z.enum(["CARD", "UPI", "WALLET", "COD"]).optional(),
+    cancellationReason: z.string().optional(),
+    cashCollectedAmount: z.number().optional(),
     expiresAt: z.number().int().optional(),
   })
   .passthrough();
@@ -505,6 +510,7 @@ export const LedgerStatementLineDto = z
       "CLAWBACK",
       "PAYOUT_TRANSFER",
       "CASH_COLLECTED",
+      "CASH_SHORTFALL",
       "CASH_REMITTED",
       "STORE_CREDIT",
     ]),
@@ -641,6 +647,8 @@ export const Order = z
       "HANDED_OVER",
       "CANCELLED",
       "CANCELLED_BY_RESTAURANT",
+      "CANCELLED_BY_PLATFORM",
+      "DELIVERY_FAILED",
     ]),
     paymentMethod: z.enum(["CARD", "UPI", "WALLET", "COD"]).optional(),
     cashCollectedAmount: z.number().optional(),
@@ -858,6 +866,8 @@ export const FailedRefundDto = z
       "HANDED_OVER",
       "CANCELLED",
       "CANCELLED_BY_RESTAURANT",
+      "CANCELLED_BY_PLATFORM",
+      "DELIVERY_FAILED",
     ]),
     totalAmount: z.number(),
   })

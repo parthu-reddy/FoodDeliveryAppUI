@@ -2,7 +2,7 @@ import { useToast } from "@/contexts/ToastContext";
 import { getUserProfile } from "@/lib/tokenStore";
 import { customerApi, identityApi } from "@/lib/zodiosClients";
 import { DashboardHeader } from "@/pages/customer/DashboardHeader";
-import { DeliveryStatus, MenuItem, Order, OrderStatus, Restaurant, RoleName } from "@/types";
+import { DeliveryStatus, MenuItem, Order, OrderStatus, PaymentMethodChoice, Restaurant, RoleName } from "@/types";
 import { CustomerMenuView } from '@features/catalog/components/customer/CustomerMenuView';
 import { CustomerRestaurantBrowser } from '@features/catalog/components/customer/CustomerRestaurantBrowser';
 import { getEffectiveMenu } from '@features/catalog/model/menuStore';
@@ -307,7 +307,7 @@ export default function CustomerDashboard({
     return originalGetCartTotal(rId);
   };
 
-  const processPaymentAndOrder = (method: string) => originalProcessPaymentAndOrder(method, deliveryAddressId as string, () => {
+  const processPaymentAndOrder = (method: PaymentMethodChoice) => originalProcessPaymentAndOrder(method, deliveryAddressId as string, () => {
     if (checkoutRestaurantId === selectedRestaurant?.id) {
       setSelectedRestaurant(null);
     }
@@ -850,8 +850,10 @@ export default function CustomerDashboard({
 
       {/* Chat Widget when tracking an active order or delivered < 2 hrs ago */}
       {currentTrackingOrder && (() => {
-        const isCompleted = currentTrackingOrder.deliveryStatus === DeliveryStatus.DELIVERED ||
-          [OrderStatus.CANCELLED, OrderStatus.CANCELLED_BY_RESTAURANT].includes(currentTrackingOrder.status);
+        // One definition of "finished", not a second hand-listed array: this one omitted
+        // CANCELLED_BY_PLATFORM and DELIVERY_FAILED, so a platform cancellation kept offering chat
+        // forever instead of for two hours.
+        const isCompleted = !isActiveOrder(currentTrackingOrder);
         let showChat = !isCompleted;
         if (isCompleted && currentTrackingOrder.updatedAt) {
           const updatedTime = new Date(currentTrackingOrder.updatedAt).getTime();

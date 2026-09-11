@@ -1,3 +1,4 @@
+import { olaStyleUrl, transformOlaRequest } from '@/lib/olaMaps';
 import { useConfig } from "@/contexts/ConfigContext";
 import { restaurantApi } from "@/lib/zodiosClients";
 import { ErrorBoundary } from "@shared/ui";
@@ -76,17 +77,12 @@ function AdminAssignmentMapInner({
         
         map = new maplibregl.Map({
              container: mapContainerRef.current!,
-             style: '/olamaps/tiles/vector/v1/styles/default-light-standard/style.json',
+             style: olaStyleUrl(),
              center: [77.5946, 12.9716], // Default Bangalore
              zoom: 12,
              minZoom: 10,
              maxZoom: 17,
-             transformRequest: (url, _resourceType) => {
-               if (url.includes('api.olamaps.io')) {
-                 return { url: url.replace('https://api.olamaps.io', '/olamaps') };
-               }
-               return { url };
-             }
+             transformRequest: transformOlaRequest
         });
         
         let rLat = 12.98;

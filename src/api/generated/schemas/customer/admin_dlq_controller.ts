@@ -29,6 +29,8 @@ export const FailedRefundDto = z
       "HANDED_OVER",
       "CANCELLED",
       "CANCELLED_BY_RESTAURANT",
+      "CANCELLED_BY_PLATFORM",
+      "DELIVERY_FAILED",
     ]),
     totalAmount: z.number(),
   })

@@ -81,6 +81,7 @@ export default function DeliveryDashboard({
   const [isUpdatingDelivery, setIsUpdatingDelivery] = useState(false);
 
   const [goOfflineAfter, setGoOfflineAfter] = useState(false);
+  const [cashCollected, setCashCollected] = useState("");
   const [waitTimerSeconds, setWaitTimerSeconds] = useState(0);
   const [isWaitTimerActive, setIsWaitTimerActive] = useState(false);
 
@@ -537,6 +538,14 @@ export default function DeliveryDashboard({
     }
 
     if (!currentJob) return;
+
+    // The server refuses a cash delivery with no declared amount, so sending one is not optional.
+    const isCashOnDelivery = currentJob.paymentMethod === 'COD';
+    if (isCashOnDelivery && (cashCollected.trim() === '' || Number(cashCollected) < 0)) {
+      setOtpError("Declare the cash you collected for this order.");
+      return;
+    }
+
     const previousStatus = currentJob.status;
     onUpdateOrderStatus(
       currentJob.id,
@@ -552,6 +561,7 @@ export default function DeliveryDashboard({
           status: DeliveryStatus.DELIVERED,
           deliveryOtp: enteredOtp,
           goOfflineAfter,
+          ...(isCashOnDelivery ? { cashCollectedAmount: Number(cashCollected) } : {}),
         },
         { params: { driverId: deliveryExecutiveId, orderId: currentJob.id } }
       );
@@ -563,6 +573,7 @@ export default function DeliveryDashboard({
       ];
 
       setActiveJobId(null);
+      setCashCollected("");
       if (goOfflineAfter) {
         setIsOnline(false);
       }
@@ -894,6 +905,8 @@ export default function DeliveryDashboard({
                     setEnteredOtp={setEnteredOtp}
                     otpError={otpError}
                     isUpdatingDelivery={isUpdatingDelivery}
+                    cashCollected={cashCollected}
+                    setCashCollected={setCashCollected}
                     goOfflineAfter={goOfflineAfter}
                     setGoOfflineAfter={setGoOfflineAfter}
                     waitTimerSeconds={waitTimerSeconds}
