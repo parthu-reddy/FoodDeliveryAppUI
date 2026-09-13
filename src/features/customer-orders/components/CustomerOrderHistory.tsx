@@ -1,6 +1,7 @@
 import { normalizeOrder } from '../../../schemas/order';
 import { customerApi } from '@/lib/zodiosClients';
-import { Order, OrderStatus } from '@/types';
+import { DeliveryStatus, Order, OrderStatus } from '@/types';
+import { RateOrderModal } from '@features/reviews';
 import { getFriendlyStatusMessage } from '@features/customer-orders/model/statusMessaging';
 import { EmptyState } from "@shared/ui";
 import { AlertCircle, Clock, Package, X } from 'lucide-react';
@@ -8,6 +9,7 @@ import { motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import { formatINR } from '@shared/money';
 import PostDeliverySupportModal from './PostDeliverySupportModal';
+import { Star } from 'lucide-react';
 
 interface CustomerOrderHistoryProps {
   onClose: () => void;
@@ -22,6 +24,9 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedOrderIdForSupport, setSelectedOrderIdForSupport] = useState<string | null>(null);
+  const [orderIdToRate, setOrderIdToRate] = useState<string | null>(null);
+  // Bumped after a submission so the rate affordance re-reads eligibility and flips to "rated".
+  const [reviewedAt, setReviewedAt] = useState<Record<string, number>>({});
 
   const handleSupportRequest = async (orderId: string, reason: string) => {
     await customerApi.customerOrder.post('/api/v1/customer/orders/:orderId/refund-request', { reason }, { params: { orderId } });
@@ -147,18 +152,43 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
                     {getFriendlyStatusMessage(order.status, order.deliveryStatus)}
                   </span>
                   
-                  {/* Report Issue Button for Delivered Orders */}
-                  {order.status === OrderStatus.HANDED_OVER && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedOrderIdForSupport(order.id);
-                      }}
-                      className="ml-auto text-[10px] bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold px-2 py-1 rounded-md hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors"
-                    >
-                      Report Issue / Request Refund
-                    </button>
-                  )}
+                  <div className="ml-auto flex items-center gap-2">
+                    {/* Delivered, from deliveryStatus -- OrderStatus has no DELIVERED value, and
+                        HANDED_OVER only means the rider has the food. This mirrors the server's
+                        own eligibility gate, so the button is never offered for something the
+                        API will refuse. */}
+                    {order.deliveryStatus === DeliveryStatus.DELIVERED && (
+                      <button
+                        key={reviewedAt[order.id as string] ?? 0}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOrderIdToRate(order.id as string);
+                        }}
+                        className="flex items-center gap-1 text-[10px] bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold px-2 py-1 rounded-md hover:bg-amber-100 dark:hover:bg-amber-500/20 transition-colors"
+                      >
+                        <Star className="w-3 h-3" />
+                        Rate this order
+                      </button>
+                    )}
+
+                    {/* Same gate as the rate button, and for the same reason.
+                        CustomerOrderController.requestPostDeliveryRefund rejects anything whose
+                        deliveryStatus is not DELIVERED with a 400 -- so keying this on
+                        HANDED_OVER offered a post-delivery refund while the rider still had the
+                        food, and the customer got "Refund requests can only be made for delivered
+                        orders through this channel." */}
+                    {order.deliveryStatus === DeliveryStatus.DELIVERED && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedOrderIdForSupport(order.id);
+                        }}
+                        className="text-[10px] bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold px-2 py-1 rounded-md hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors"
+                      >
+                        Report Issue / Request Refund
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))
@@ -194,6 +224,15 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
           onClose={() => setSelectedOrderIdForSupport(null)}
           orderId={selectedOrderIdForSupport}
           submitSupportRequest={handleSupportRequest}
+        />
+      )}
+
+      {orderIdToRate && (
+        <RateOrderModal
+          isOpen={!!orderIdToRate}
+          onClose={() => setOrderIdToRate(null)}
+          orderId={orderIdToRate}
+          onSubmitted={() => setReviewedAt(prev => ({ ...prev, [orderIdToRate]: Date.now() }))}
         />
       )}
     </div>

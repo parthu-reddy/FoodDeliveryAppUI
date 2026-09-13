@@ -20,6 +20,7 @@ SERVICES=(
   "governmentId GovernmentIDValidationService/openapi.json"
   "ledger LedgerService/openapi.json"
   "tracking UserTrackingService/openapi.json"
+  "reviews ReviewsService/openapi.json"
 )
 
 for entry in "${SERVICES[@]}"; do

@@ -1,4 +1,4 @@
-import { MenuItem, Order, OrderStatus, VerificationStatus, Brand, Outlet } from "@/types";
+import { DeliveryStatus, MenuItem, Order, OrderStatus, VerificationStatus, Brand, Outlet } from "@/types";
 import {
     MessageSquare,
     Moon,
@@ -34,6 +34,7 @@ import { restaurantApi } from "@/lib/zodiosClients";
 import { RestaurantStatsBar } from "@features/catalog/components/RestaurantStatsBar";
 import { RestaurantBrandSelector } from '@features/catalog/components/restaurant/RestaurantBrandSelector';
 import { RestaurantOrderQueue } from '@features/restaurant-orders/components/RestaurantOrderQueue';
+import { DishRatingsPanel, ReviewsPanel } from '@features/reviews';
 import { useRestaurantOrders } from '@features/restaurant-orders/model/useRestaurantOrders';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { z } from 'zod';
@@ -82,7 +83,7 @@ export default function RestaurantDashboard({
     externalOrders,
     externalUpdateStatus
   });
-  const [activeTab, setActiveTab] = useState<'orders' | 'menu' | 'campaigns' | 'earnings'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'menu' | 'campaigns' | 'earnings' | 'reviews'>('orders');
   const [, setApiPrepSeconds] = useState('15');
 
 
@@ -290,7 +291,12 @@ export default function RestaurantDashboard({
 
   const pendingOrders = myOrders.filter(o => o.status === OrderStatus.PENDING_ACCEPTANCE || o.status === OrderStatus.CREATED);
   const activePreparing = myOrders.filter(o => o.status === OrderStatus.ACCEPTED || o.status === OrderStatus.PREPARING);
-  const completedOrders = historyOrders.filter(o => o.status === OrderStatus.HANDED_OVER);
+  // HANDED_OVER means the rider collected the food, not that it arrived. Everything in
+  // historyOrders has a terminal deliveryStatus by construction (isActiveOrder), so filtering on
+  // status alone counted DELIVERY_FAILED and cancelled deliveries as completed. The restaurant's
+  // "completed" tile was therefore always at least as large as the truth.
+  const completedOrders = historyOrders.filter(
+    o => o.status === OrderStatus.HANDED_OVER && o.deliveryStatus === DeliveryStatus.DELIVERED);
 
   // Compute stats
   const totalRevenue = sumRupees(...myOrders.map((o) => {
@@ -591,6 +597,19 @@ export default function RestaurantDashboard({
             >
               Earnings
             </button>
+            <button
+              onClick={() => {
+                setActiveTab('reviews');
+                setShowSettings(false);
+              }}
+              className={`flex-1 py-2 text-[10.5px] font-bold rounded-lg cursor-pointer transition-all ${
+                activeTab === 'reviews' && !showSettings
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm shadow-amber-500/15'
+                  : 'text-slate-500 dark:text-[#f0ede6] hover:text-slate-700 dark:hover:text-slate-200'
+              }`}
+            >
+              Reviews
+            </button>
           </div>
         </div>
       )}
@@ -666,6 +685,42 @@ export default function RestaurantDashboard({
               <Suspense fallback={<LoadingSkeleton />}>
                 <RestaurantEarningsTab restaurantId={restaurantId} />
               </Suspense>
+            </ErrorBoundary>
+          </motion.div>
+        )}
+
+        {!showSettings && activeTab === 'reviews' && (
+          <motion.div
+            key="reviews-panel"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="p-5 h-full overflow-y-auto"
+          >
+            <ErrorBoundary fallbackLabel="Reviews Tab">
+              {/* Scoped to the outlet currently selected in the header, not the brand: a review is
+                  written about the outlet that cooked the order, and two outlets of one brand can
+                  have very different kitchens. */}
+              {selectedOutletId ? (
+<>
+                  <ReviewsPanel
+                    entityType="RESTAURANT"
+                    entityId={selectedOutletId}
+                    title="What customers said"
+                    emptyTitle="No reviews yet"
+                    emptyDescription="Reviews appear here once customers rate a delivered order from this outlet."
+                  />
+                  {/* Customers rate dishes and see dish ratings on the menu; without this the
+                      kitchen was the only party that could not. Brand-level, because a review of
+                      EntityType.PRODUCT is a review of the brand's dish, not one outlet's copy. */}
+                  <DishRatingsPanel dishes={menuList} className="mt-8" />
+                </>
+              ) : (
+                <EmptyState
+                  title="Select an outlet"
+                  description="Reviews are per outlet. Pick one from the header to see its ratings."
+                />
+              )}
             </ErrorBoundary>
           </motion.div>
         )}

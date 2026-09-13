@@ -9,8 +9,9 @@ import AdminLedgerView from "@features/ledger/components/AdminLedgerView";
 import AdminPayoutsPage from "./money/AdminPayoutsPage";
 import MoneyOperationsPage from "./money/OperationsPage";
 import { Button, SidebarNav } from '@shared/ui';
+import { AdminReviewsView } from '@features/reviews';
 import LaBouffeLogo from '@shared/ui/LaBouffeLogo';
-import { Activity, Database, LogOut, MapPin, Moon, Shield, Sun, Tags, Users, MessageSquare, AlertTriangle } from 'lucide-react';
+import { Activity, AlertTriangle, Database, LogOut, MapPin, MessageSquare, Moon, Shield, Star, Sun, Tags, Users } from 'lucide-react';
 import React, { useState } from 'react';
 import { usePolling } from '../../hooks/usePolling';
 
@@ -24,7 +25,7 @@ export default function AdminPortal({
   onLogout,
 }: AdminPortalProps) {
   const { theme, toggleTheme } = useTheme();
-  const [activeTab, setActiveTab] = useState<'deliveries' | 'users' | 'categories' | 'map' | 'ledger' | 'payouts' | 'money_ops' | 'interventions' | 'support_tickets'>('map');
+  const [activeTab, setActiveTab] = useState<'deliveries' | 'users' | 'categories' | 'map' | 'ledger' | 'payouts' | 'money_ops' | 'interventions' | 'support_tickets' | 'reviews'>('map');
 
   // Poll for intervention count to show badge on sidebar
     const { data: interventionsCount = 0 } = usePolling({
@@ -50,7 +51,7 @@ export default function AdminPortal({
           <SidebarNav
             activeColor="indigo"
             activeKey={activeTab}
-            onSelect={(key) => setActiveTab(key as 'deliveries' | 'interventions' | 'users' | 'categories' | 'map' | 'ledger' | 'payouts' | 'money_ops' | 'support_tickets')}
+            onSelect={(key) => setActiveTab(key as 'deliveries' | 'interventions' | 'users' | 'categories' | 'map' | 'ledger' | 'payouts' | 'money_ops' | 'support_tickets' | 'reviews')}
             items={[
               { key: 'deliveries', label: 'Live Operations', icon: <Activity className="w-5 h-5" /> },
               { key: 'support_tickets', label: 'Support Tickets', icon: <MessageSquare className="w-5 h-5" /> },
@@ -61,6 +62,7 @@ export default function AdminPortal({
               { key: 'ledger', label: 'Ledger Entries', icon: <Database className="w-5 h-5" /> },
               { key: 'payouts', label: 'Pending Payouts', icon: <Database className="w-5 h-5" /> },
               { key: 'money_ops', label: 'Money Operations', icon: <AlertTriangle className="w-5 h-5" /> },
+              { key: 'reviews', label: 'Review Moderation', icon: <Star className="w-5 h-5" /> },
             ]}
           />
         </div>
@@ -84,6 +86,12 @@ export default function AdminPortal({
             <React.Suspense fallback={<div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-500">Loading map...</div>}>
               <AdminFleetMap />
             </React.Suspense>
+          </div>
+        )}
+
+        {activeTab === 'reviews' && (
+          <div className="flex-1 flex w-full h-full relative overflow-hidden">
+            <AdminReviewsView />
           </div>
         )}
 

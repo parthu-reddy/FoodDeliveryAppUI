@@ -1,6 +1,7 @@
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
 import { getUserProfile } from "@/lib/tokenStore";
+import { DriverRatingCard } from "@features/reviews";
 import {
     deliveryApi,
     identityApi
@@ -854,6 +855,10 @@ export default function DeliveryDashboard({
                   </span>
                 </div>
               </button>
+
+              {/* Spans both columns: the comments underneath need the width, and the rating is a
+                  standing figure rather than a today-only one like the two tiles above it. */}
+              <DriverRatingCard driverId={deliveryExecutiveId} className="col-span-2" />
             </div>
 
             <AnimatePresence mode="wait">

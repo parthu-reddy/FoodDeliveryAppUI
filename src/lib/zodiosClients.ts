@@ -12,13 +12,14 @@ import { createLedgerFacade as createLedgerApi } from '../api/generated/schemas/
 import { createMapsFacade as createMapsApi } from '../api/generated/schemas/maps/facade';
 import { createPaymentFacade as createPaymentApi } from '../api/generated/schemas/payment/facade';
 import { createRestaurantFacade as createRestaurantApi } from '../api/generated/schemas/restaurant/facade';
+import { createReviewsFacade as createReviewsApi } from '../api/generated/schemas/reviews/facade';
 import { createTrackingFacade as createTrackingApi } from '../api/generated/schemas/tracking/facade';
 import { createWalletFacade as createWalletApi } from '../api/generated/schemas/wallet/facade';
 
 
 const BASE_URL = env.VITE_API_BASE_URL || window.location.origin;
 
-// Create all 12 API clients
+// Create all 13 API clients
 export const campaignApi = createCampaignApi(BASE_URL, commonZodiosConfig);
 export const chatApi = createChatApi(BASE_URL, commonZodiosConfig);
 export const customerApi = createCustomerApi(BASE_URL, commonZodiosConfig);
@@ -29,6 +30,7 @@ export const ledgerApi = createLedgerApi(BASE_URL, commonZodiosConfig);
 export const mapsApi = createMapsApi(BASE_URL, commonZodiosConfig);
 export const paymentApi = createPaymentApi(BASE_URL, commonZodiosConfig);
 export const restaurantApi = createRestaurantApi(BASE_URL, commonZodiosConfig);
+export const reviewsApi = createReviewsApi(BASE_URL, commonZodiosConfig);
 export const trackingApi = createTrackingApi(BASE_URL, commonZodiosConfig);
 export const walletApi = createWalletApi(BASE_URL, commonZodiosConfig);
 
@@ -36,7 +38,7 @@ export const walletApi = createWalletApi(BASE_URL, commonZodiosConfig);
 // Register the authentication and device headers plugin for all clients
 const facades = [
   campaignApi, chatApi, customerApi, deliveryApi, governmentIdApi, identityApi,
-  ledgerApi, mapsApi, paymentApi, restaurantApi, trackingApi, walletApi
+  ledgerApi, mapsApi, paymentApi, restaurantApi, reviewsApi, trackingApi, walletApi
 ];
 
 facades.forEach(facade => {

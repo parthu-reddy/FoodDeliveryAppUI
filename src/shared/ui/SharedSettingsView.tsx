@@ -2,6 +2,7 @@ import type { Order } from '../../schemas/order';
 /* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
 import CustomerAddressModal from "@features/customer-orders/components/CustomerAddressModal";
 import { getFriendlyStatusMessage } from '@features/customer-orders/model/statusMessaging';
+import { MyReviewsList } from '@features/reviews';
 import { Badge, Button, FormField, Input, TransactionHistoryTable, WalletTransaction, ActiveSessions } from "@shared/ui";
 import { LogOut, MapPin, Trash2, X } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -22,7 +23,7 @@ interface SharedSettingsViewProps {
   showCustomerTabs?: boolean;
   setTrackingOrder?: (order: Order) => void;
   savedAddresses?: unknown[];
-  initialTab?: 'profile' | 'history' | 'addresses' | 'wallet';
+  initialTab?: 'profile' | 'history' | 'addresses' | 'wallet' | 'reviews';
   isAddressModalOpen?: boolean;
   setIsAddressModalOpen?: (isOpen: boolean) => void;
   addressSearchQuery?: string;
@@ -60,7 +61,7 @@ export default function SharedSettingsView({
   onAddressAdded,
   onDeleteAddress
 }: SharedSettingsViewProps) {
-  const [accountTab, setAccountTab] = useState<'profile' | 'history' | 'addresses' | 'wallet'>(initialTab);
+  const [accountTab, setAccountTab] = useState<'profile' | 'history' | 'addresses' | 'wallet' | 'reviews'>(initialTab);
   const { showSuccess, showError } = useToast();
 
   useEffect(() => {
@@ -252,6 +253,12 @@ export default function SharedSettingsView({
             >
               Addresses
             </button>
+            <button
+              onClick={() => setAccountTab('reviews')}
+              className={`flex-1 min-w-[100px] px-3 py-2 rounded-lg text-xs font-bold transition-all shadow-sm border ${accountTab === 'reviews' ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white border-transparent shadow-rose-500/20 shadow-md' : 'bg-white/40 dark:bg-white/10 backdrop-blur-sm text-slate-700 dark:text-slate-200 border-white/50 dark:border-white/10 hover:bg-white/60 dark:hover:bg-white/20'}`}
+            >
+              My Reviews
+            </button>
           </>
         )}
         <button 
@@ -263,6 +270,13 @@ export default function SharedSettingsView({
       </div>
 
       <div className="flex-1 overflow-y-auto overscroll-none pr-1">
+        {showCustomerTabs && accountTab === 'reviews' && (
+          /* Mounted only while the tab is open, so opening Settings does not fetch a review list
+             nobody asked for. Reviews are immutable -- this is the only place a customer can see
+             what they said, including their own driver ratings, which are redacted everywhere else. */
+          <MyReviewsList />
+        )}
+
         {accountTab === 'profile' && (
           <div className="space-y-4">
             <FormField label="Full Name">

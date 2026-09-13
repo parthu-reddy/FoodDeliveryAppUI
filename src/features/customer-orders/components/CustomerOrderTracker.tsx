@@ -1,7 +1,8 @@
 import { DeliveryStatus, OrderStatus } from '@/types/backend-enums';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Check, Clock, Timer, X, XCircle, PhoneCall } from 'lucide-react';
-import React from 'react';
+import { ArrowLeft, Check, Clock, Star, Timer, X, XCircle, PhoneCall } from 'lucide-react';
+import React, { useState } from 'react';
+import { RateOrderModal } from '@features/reviews';
 import { formatINR } from '@shared/money';
 // Use React.lazy for map
 const OrderTrackingMap = React.lazy(() => import("@features/maps-tracking/components/OrderTrackingMap"));
@@ -39,6 +40,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
 }) => {
   const { startCall } = useCallContext();
   const refunds = useOrderRefunds(currentTrackingOrder?.id, isFailedOrder(currentTrackingOrder));
+  const [orderIdToRate, setOrderIdToRate] = useState<string | null>(null);
   return (
     <motion.div
       key="tracking"
@@ -419,6 +421,21 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
                 {`Paid ${formatINR(currentTrackingOrder.cashCollectedAmount ?? currentTrackingOrder.totalAmount ?? 0)} in cash on delivery`}
               </p>
             )}
+            {/* The moment the food has actually arrived is when someone has an opinion worth
+                capturing. Offered once, here, and otherwise left to order history -- a prompt that
+                follows the customer around is nagging, not a feature. */}
+            {currentTrackingOrder.deliveryStatus === DeliveryStatus.DELIVERED && (
+              <button
+                type="button"
+                onClick={() => setOrderIdToRate(currentTrackingOrder.id as string)}
+                data-testid="rate-order-prompt"
+                className="mt-3 w-full flex items-center justify-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2.5 text-sm font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 transition-colors cursor-pointer"
+              >
+                <Star className="w-4 h-4" />
+                How was it? Rate this order
+              </button>
+            )}
+
             {refunds.length > 0 && (
               <div className="mt-3 space-y-1 text-left" data-testid="refund-state">
                 {refunds.map(refund => (
@@ -541,6 +558,14 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
           👉 <strong>How to complete?</strong> You can switch roles from the top menu, navigate to the <strong>Restaurant View</strong> to accept/cook, then to the <strong>Delivery Partner View</strong> to navigate and insert the OTP!
         </p>
       </div>
+
+      {orderIdToRate && (
+        <RateOrderModal
+          isOpen={!!orderIdToRate}
+          onClose={() => setOrderIdToRate(null)}
+          orderId={orderIdToRate}
+        />
+      )}
     </motion.div>
   );
 };

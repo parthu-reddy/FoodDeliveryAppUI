@@ -3,7 +3,8 @@ import { CartState } from '@features/customer-orders/model/useCustomerCart';
 import ImageLoader from '@shared/ui/ImageLoader';
 import { motion } from 'framer-motion';
 import { AlertCircle, ArrowLeft, Bike, ChevronDown, Clock, MapPinOff, Minus, Plus, Star } from 'lucide-react';
-import React from 'react';
+import React, { useState } from 'react';
+import { ReviewsPanel, StarRating, toAverage, useEntityAggregate, useEntityAggregates } from '@features/reviews';
 
 interface CustomerMenuViewProps {
   selectedRestaurant: Restaurant;
@@ -49,6 +50,23 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
 }) => {
   const isDeliverable = deliveryPricing?.isDeliverable ?? isDeliveryAvailable ?? true;
   const showAddressPrompt = !deliveryAddressId;
+  const [showReviews, setShowReviews] = useState(false);
+  // Aggregate only. The list is fetched by ReviewsPanel when the section is opened, so simply
+  // viewing a menu does not pull a page of reviews nobody asked for -- and does not fetch them
+  // twice when it is opened.
+  // One request for the whole menu. PRODUCT reviews were writable from the rating sheet but shown
+  // nowhere, so a customer rated a dish and the rating vanished -- this is the read side of that.
+  const { aggregates: dishRatings } = useEntityAggregates(
+    'PRODUCT',
+    effectiveMenu.map(item => item.id as string),
+    effectiveMenu.length > 0,
+  );
+
+  const { aggregate: outletAggregate } = useEntityAggregate(
+    'RESTAURANT',
+    selectedRestaurant.id as string,
+    Boolean(selectedRestaurant.id),
+  );
 
   return (
     <motion.div
@@ -97,10 +115,23 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
             <h3 className="text-2xl font-black text-slate-900 dark:text-[#f0ede6] tracking-tight">{selectedRestaurant.name}</h3>
             <p className="text-xs text-slate-500 dark:text-[#f0ede6] mt-1">{selectedRestaurant.cuisine}</p>
           </div>
-          <div className="flex items-center gap-1 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-2.5 py-1 rounded-xl text-xs font-bold shadow-md shadow-orange-500/10">
+          <button
+            type="button"
+            onClick={() => setShowReviews(v => !v)}
+            aria-expanded={showReviews}
+            className="flex items-center gap-1 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-2.5 py-1 rounded-xl text-xs font-bold shadow-md shadow-orange-500/10 cursor-pointer hover:brightness-110 transition"
+          >
             <Star className="w-3.5 h-3.5 fill-current" />
-            <span>{selectedRestaurant.rating}</span>
-          </div>
+            {/* The live aggregate rather than Outlet.rating. That column is kept current by the
+                review-events consumer, but it is a denormalised copy refreshed on an event --
+                reading the source means a customer who just submitted a review sees it counted. */}
+            <span>
+              {outletAggregate && outletAggregate.totalReviews > 0
+                ? toAverage(outletAggregate.averageRating).toFixed(1)
+                : 'New'}
+            </span>
+            <ChevronDown className={`w-3 h-3 transition-transform ${showReviews ? 'rotate-180' : ''}`} />
+          </button>
         </div>
 
         {/* Removed static free delivery tracker as it is now global floating */}
@@ -196,6 +227,21 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
                             </span>
                             <h5 className="font-bold text-sm text-slate-900 dark:text-[#f0ede6]">{dish.name}</h5>
                           </div>
+                          {/* Absent until someone has actually rated the dish: "0.0" and an empty
+                              row of stars reads as a bad dish rather than a new one. */}
+                          {(dishRatings[dish.id as string]?.totalReviews ?? 0) > 0 && (
+                            <div className="flex items-center gap-1.5 mt-1">
+                              <StarRating
+                                value={dishRatings[dish.id as string].average}
+                                size="sm"
+                                label={dish.name}
+                              />
+                              <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 tabular-nums">
+                                {dishRatings[dish.id as string].average.toFixed(1)}
+                                <span className="font-normal"> ({dishRatings[dish.id as string].totalReviews})</span>
+                              </span>
+                            </div>
+                          )}
                           <p className="text-xs text-slate-400 dark:text-slate-300 mt-1 line-clamp-2 leading-relaxed">{dish.description}</p>
                         </div>
 
@@ -251,6 +297,18 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
             </div>
           ))}
         </div>
+
+        {showReviews && (
+          <div className="px-5 pb-8 pt-2 border-t border-rose-500/20 dark:border-rose-500/30">
+            <ReviewsPanel
+              entityType="RESTAURANT"
+              entityId={selectedRestaurant.id as string}
+              title="Reviews"
+              emptyTitle="No reviews yet"
+              emptyDescription="Order from here and you can be the first to leave one."
+            />
+          </div>
+        )}
       </div>
     </motion.div>
   );
