@@ -95,6 +95,18 @@ jobs:
           repository: parthu-reddy/UserTrackingService
           path: deps/UserTrackingService
           token: ${{ secrets.CHECKOUT_TOKEN }}
+
+      # Added 2026-09-13. scripts/generate-api-types.sh has listed "reviews ReviewsService/openapi.json"
+      # since the reviews integration landed, but this checkout was never added, so the generator
+      # aborted with "ReviewsService/openapi.json is empty or missing". It stayed hidden because the
+      # UI workflow had not completed since before that work: Actions minutes were exhausted, and
+      # every build workflow was unrunnable for an unrelated reason.
+      - name: Checkout ReviewsService
+        uses: actions/checkout@v5
+        with:
+          repository: parthu-reddy/ReviewsService
+          path: deps/ReviewsService
+          token: ${{ secrets.CHECKOUT_TOKEN }}
         
 
       - name: Move dependencies to parent
