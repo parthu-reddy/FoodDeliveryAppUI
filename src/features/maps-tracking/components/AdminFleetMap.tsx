@@ -68,9 +68,11 @@ function AdminFleetMapInner() {
         if (!active) return;
 
         //  type suppression
-        setRestaurants((resOutlets.content as unknown as Restaurant[]) ?? []);
-        setRiders((resDrivers.content as unknown as Rider[]) ?? []);
-        setCustomers((resCustomers.content as unknown as CustomerAddress[]) ?? []);
+        // @ts-expect-error Zodios schema doesn't correctly model ApiResponse wrapper for these endpoints
+        setRestaurants((resOutlets?.data?.content as unknown as Restaurant[]) ?? []);
+        setRiders((resDrivers?.content as unknown as Rider[]) ?? []);
+        // @ts-expect-error Zodios schema doesn't correctly model ApiResponse wrapper for these endpoints
+        setCustomers((resCustomers?.data?.content as unknown as CustomerAddress[]) ?? []);
       } catch (err: unknown) {
         console.error("Failed to fetch map data", err);
       }
