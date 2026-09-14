@@ -6,7 +6,21 @@ import { AdminReviewsView } from './AdminReviewsView';
 const get = vi.fn();
 
 vi.mock('@/lib/zodiosClients', () => ({
-  reviewsApi: { adminReview: { get: (...args: unknown[]) => get(...args) } },
+  reviewsApi: {
+    review: {
+      get: (...args: unknown[]) => get(...args),
+      post: (...args: unknown[]) => post(...args),
+      getReviews: (...args: unknown[]) => get('/api/v1/reviews', ...args),
+      getAggregate: (...args: unknown[]) => get('/api/v1/reviews/aggregate', ...args),
+      getAggregates: (...args: unknown[]) => get('/api/v1/reviews/aggregates', ...args),
+      getEligibility: (...args: unknown[]) => get('/api/v1/reviews/orders/:orderId/eligibility', ...args),
+      createReviews: (...args: unknown[]) => post('/api/v1/reviews', ...args),
+      getMyReviews: (...args: unknown[]) => get('/api/v1/reviews/me', ...args)
+    },
+    adminReview: {
+      get: (...args: unknown[]) => get(...args)
+    }
+  }
 }));
 
 const USER_ID = '99999999-9999-9999-9999-999999999999';

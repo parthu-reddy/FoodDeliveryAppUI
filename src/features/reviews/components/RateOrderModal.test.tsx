@@ -12,8 +12,17 @@ vi.mock('@/lib/zodiosClients', () => ({
     review: {
       get: (...args: unknown[]) => get(...args),
       post: (...args: unknown[]) => post(...args),
+      getReviews: (...args: unknown[]) => get('/api/v1/reviews', ...args),
+      getAggregate: (...args: unknown[]) => get('/api/v1/reviews/aggregate', ...args),
+      getAggregates: (...args: unknown[]) => get('/api/v1/reviews/aggregates', ...args),
+      getEligibility: (...args: unknown[]) => get('/api/v1/reviews/orders/:orderId/eligibility', ...args),
+      createReviews: (...args: unknown[]) => post('/api/v1/reviews', ...args),
+      getMyReviews: (...args: unknown[]) => get('/api/v1/reviews/me', ...args)
     },
-  },
+    adminReview: {
+      get: (...args: unknown[]) => get(...args)
+    }
+  }
 }));
 
 const ORDER_ID = '55555555-5555-5555-5555-555555555555';
