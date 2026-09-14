@@ -4,36 +4,14 @@ import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useEffect, useRef, useState } from 'react';
 
-interface Restaurant {
-  id: string;
-  name: string;
-  lat: number;
-  lng: number;
-  isActive: boolean;
-  phone?: string;
-  phoneNumber?: string;
-}
+import { z } from 'zod';
+import { NearbyRestaurantDTO } from '@/api/generated/schemas/restaurant/restaurant_outlet_controller';
+import { DriverLocationDTO } from '@/api/generated/schemas/delivery/admin_delivery_controller';
+import { CustomerAddressDto } from '@/api/generated/schemas/customer/common';
 
-interface Rider {
-  id: string;
-  name: string;
-  lat: number;
-  lng: number;
-  status: string;
-  phone?: string;
-  phoneNumber?: string;
-}
-
-interface CustomerAddress {
-  id: string;
-  customerId: string;
-  label: string;
-  addressLine1: string;
-  latitude: number;
-  longitude: number;
-  phone?: string;
-  phoneNumber?: string;
-}
+type Restaurant = z.infer<typeof NearbyRestaurantDTO>;
+type Rider = z.infer<typeof DriverLocationDTO>;
+type CustomerAddress = z.infer<typeof CustomerAddressDto>;
 
 import { ErrorBoundary } from "@shared/ui";
 
@@ -67,40 +45,11 @@ function AdminFleetMapInner() {
 
         if (!active) return;
 
-        // Map the Zodios response types to our local interfaces
-        const out = resOutlets?.data?.content ?? [];
-        setRestaurants(out.map((r: any) => ({
-          id: r.id,
-          name: r.name,
-          lat: r.lat,
-          lng: r.lng,
-          isActive: r.isActive,
-          phone: r.phone,
-          phoneNumber: r.phoneNumber
-        })));
-
-        const drv = resDrivers?.content ?? [];
-        setRiders(drv.map((r: any) => ({
-          id: r.id,
-          name: r.fullName || r.name || 'Unknown Rider',
-          lat: r.lat,
-          lng: r.lng,
-          status: r.status,
-          phone: r.phone,
-          phoneNumber: r.phoneNumber
-        })));
-
-        const cust = resCustomers?.data?.content ?? [];
-        setCustomers(cust.map((c: any) => ({
-          id: c.id,
-          customerId: c.customerId,
-          label: c.label,
-          addressLine1: c.addressLine1,
-          latitude: c.latitude,
-          longitude: c.longitude,
-          phone: c.phone,
-          phoneNumber: c.phoneNumber
-        })));
+        // Since the Zodios schema correctly types the ApiResponse wrapper,
+        // we can safely access the nested data and fallback to an empty array.
+        setRestaurants(resOutlets?.data?.content ?? []);
+        setRiders(resDrivers?.content ?? []);
+        setCustomers(resCustomers?.data?.content ?? []);
       } catch (err: unknown) {
         console.error("Failed to fetch map data", err);
       }
@@ -149,8 +98,8 @@ function AdminFleetMapInner() {
           el.className = 'fleet-marker w-8 h-8 bg-red-600 rounded-full flex items-center justify-center shadow-lg border-2 border-white text-white shadow-red-600/50 cursor-pointer pointer-events-auto';
           el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7"/></svg>';
 
-          if (r.phone || r.phoneNumber) {
-            el.title = `Phone: ${r.phone || r.phoneNumber}`;
+          if (false) { // Placeholder if phone is ever added to Restaurant DTO
+            el.title = `Phone: Unknown`;
           }
 
           el.onclick = () => {
@@ -181,8 +130,8 @@ function AdminFleetMapInner() {
           el.className = `fleet-marker w-10 h-10 ${bgClass} rounded-full border-2 border-white shadow-xl flex items-center justify-center ${shadowClass} cursor-pointer pointer-events-auto`;
           el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 5.5h5l-4-5h-3L8 12M5.5 17.5 8 12M18.5 17.5 15 11.5"/></svg>';
 
-          if (r.phone || r.phoneNumber) {
-            el.title = `Phone: ${r.phone || r.phoneNumber}`;
+          if (r.phoneNumber) {
+            el.title = `Phone: ${r.phoneNumber}`;
           }
 
           el.onclick = () => {
@@ -194,7 +143,7 @@ function AdminFleetMapInner() {
 
           new maplibregl.Marker({ element: el })
             .setLngLat([r.lng, r.lat])
-            .setPopup(new maplibregl.Popup({ offset: 25 }).setHTML(`<strong>Rider:</strong> ${r.name}<br>Status: ${r.status}`))
+            .setPopup(new maplibregl.Popup({ offset: 25 }).setHTML(`<strong>Rider:</strong> ${r.fullName || 'Unknown'}<br>Status: ${r.status}`))
             .addTo(map!);
         }
       });
@@ -209,8 +158,8 @@ function AdminFleetMapInner() {
           el.className = 'fleet-marker w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center shadow-lg border-2 border-white text-white shadow-orange-500/50 cursor-pointer pointer-events-auto';
           el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
 
-          if (c.phone || c.phoneNumber) {
-            el.title = `Phone: ${c.phone || c.phoneNumber}`;
+          if (false) { // Placeholder if phone is ever added to CustomerAddress DTO
+            el.title = `Phone: Unknown`;
           }
 
           el.onclick = () => {
