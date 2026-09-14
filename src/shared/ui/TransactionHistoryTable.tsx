@@ -1,14 +1,8 @@
 import { StatementTable, StatementRow } from '../money/components/StatementTable';
+import { WalletTransactionDto } from '../../api/generated/schemas/wallet/common';
+import { z } from 'zod';
 
-export interface WalletTransaction {
-  id: string;
-  amount: number;
-  transactionType: 'CREDIT' | 'DEBIT' | 'REFUND' | 'HOLD' | 'RELEASE';
-  referenceId?: string;
-  description?: string;
-  metadata?: string;
-  createdAt: string;
-}
+export type WalletTransaction = z.infer<typeof WalletTransactionDto>;
 
 interface TransactionHistoryTableProps {
   transactions: WalletTransaction[];
@@ -27,11 +21,11 @@ export function TransactionHistoryTable({
 }: TransactionHistoryTableProps) {
   
   const rows: StatementRow[] = transactions.map(tx => {
-    const isCredit = tx.transactionType === 'CREDIT' || tx.transactionType === 'REFUND';
+    const isCredit = tx.transactionType === 'CREDIT';
     return {
       id: tx.id,
       date: tx.createdAt,
-      description: tx.transactionType === 'CREDIT' ? 'Credit Received' : tx.transactionType === 'REFUND' ? 'Refund Processed' : 'Deduction',
+      description: isCredit ? 'Credit Received' : 'Deduction',
       referenceId: tx.referenceId,
       debit: isCredit ? 0 : tx.amount,
       credit: isCredit ? tx.amount : 0

@@ -6,6 +6,8 @@ import { getFriendlyStatusMessage } from '@features/customer-orders/model/status
 import { Button, Input } from '@shared/ui';
 import { Navigation, Package, Truck } from 'lucide-react';
 import React, { useState } from 'react';
+import { z } from 'zod';
+import { OrderResponse } from '@/api/generated/schemas/customer/common';
 
 const AdminAssignmentMap = React.lazy(() => import("@features/maps-tracking/components/AdminAssignmentMap"));
 
@@ -16,14 +18,7 @@ interface AdminDriver {
   lng?: number;
 }
 
-interface AdminOrder {
-  id: string;
-  restaurantId: string;
-  restaurantName?: string;
-  status: string;
-  deliveryStatus?: string;
-  deliveryExecutiveId?: string;
-}
+type AdminOrder = z.infer<typeof OrderResponse>;
 
 export default function AdminLiveOperations() {
   const { showSuccess, showError } = useToast();
@@ -42,11 +37,12 @@ export default function AdminLiveOperations() {
     intervalMs: 15000,
     enabled: true,
     onData: (response) => {
-        const page = response as unknown as Record<string, unknown>;
-        const content = page.content ?? [];
-        setActiveOrders(content as unknown as AdminOrder[]);
-        if (page.totalPages !== undefined) {
-            setTotalPages(page.totalPages as number);
+        if (response && response.data) {
+          const content = response.data.content ?? [];
+          setActiveOrders(content);
+          if (response.data.totalPages !== undefined) {
+              setTotalPages(response.data.totalPages);
+          }
         }
     }
   });

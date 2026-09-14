@@ -30,50 +30,36 @@ export function OrderHistory({ restaurantId, onOpenChat }: { restaurantId: strin
         if (res.data) {
 
 
-interface RawOrder {
-  id?: string;
-  orderId?: string;
-  status?: string;
-  items?: unknown[];
-  itemsJson?: string;
-  total?: number;
-  subtotal?: number;
-  customerName?: string;
-  createdAt?: string;
-  estimatedCompletionTime?: string;
-  updatedAt?: string;
-  deliveryStatus?: string;
-  sgst?: number;
-  cgst?: number;
-}
-
-          // @ts-expect-error auto-migration type suppression
-          const mapped = (res.data.content || []).map((o: RawOrder) => {
-            let s = (o.status || '').toUpperCase();
+          const mapped = (res.data.content || []).map((o) => {
+            const raw = o as Record<string, any>;
+            let s = (raw.status || '').toUpperCase();
             if (s === OrderStatus.READY_FOR_PICKUP || s === 'READY') s = OrderStatus.READY_FOR_PICKUP; 
             if (s === OrderStatus.CANCELLED_BY_RESTAURANT) s = OrderStatus.CANCELLED;
             
-            let parsedItems = o.items || [];
-            if (o.itemsJson) {
-                // malformed itemsJson falls back to o.items rather than failing the row
-                try { parsedItems = JSON.parse(o.itemsJson); } catch { /* keep fallback */ }
+            let parsedItems = raw.items || [];
+            if (raw.itemsJson && typeof raw.itemsJson === 'string') {
+                try { parsedItems = JSON.parse(raw.itemsJson); } catch { /* keep fallback */ }
             }
-            const calculatedTotal = parsedItems.reduce((acc: number, it: unknown) => {
-              const item = it as { item?: { price?: number }; price?: number; quantity?: number };
+            const calculatedTotal = Array.isArray(parsedItems) ? parsedItems.reduce((acc: number, item: any) => {
               return acc + (item.item?.price || item.price || 0) * (item.quantity || 1);
-            }, 0);
+            }, 0) : 0;
             
             return {
               ...o, 
-              id: o.orderId || o.id, 
+              id: raw.orderId || raw.id, 
               status: s as OrderStatus, 
               items: parsedItems,
-              totalAmount: (o as Record<string, unknown>).totalAmount || (o as Record<string, unknown>).total || calculatedTotal,
-              itemTotal: (o as Record<string, unknown>).itemTotal || (o as Record<string, unknown>).subtotal || calculatedTotal,
-              createdAt: o.createdAt || new Date().toISOString()
-            };
+              totalAmount: raw.totalAmount || raw.total || calculatedTotal,
+              itemTotal: raw.itemTotal || raw.subtotal || calculatedTotal,
+              createdAt: raw.createdAt || new Date().toISOString(),
+              sgst: raw.sgst || 0,
+              cgst: raw.cgst || 0,
+              deliveryFee: raw.deliveryFee || 0,
+              restaurantName: raw.restaurantName || '',
+              customerPlatformFee: raw.customerPlatformFee || 0,
+            } as Order;
           });
-          setOrders(mapped as unknown as Order[]);
+          setOrders(mapped);
           setTotalPages(res.data.totalPages || 1);
           setTotalElements(res.data.totalElements || mapped.length);
         }

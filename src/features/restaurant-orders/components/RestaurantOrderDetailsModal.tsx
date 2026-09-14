@@ -28,8 +28,8 @@ export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalPr
       setError(null);
       // Fetch transparent invoice details
       if (order.restaurantId && order.id) {
-        (customerApi.restaurantMoney as unknown as Record<string, (args: unknown) => Promise<Record<string, unknown>>>).fetchSummary({ params: { outletId: order.restaurantId }, queries: { orderId: order.id } })
-        .then((res: Record<string, unknown>) => {
+        customerApi.restaurantMoney.fetchOrderEarnings({ params: { outletId: order.restaurantId, orderId: order.id } })
+        .then((res) => {
           setInvoice(res);
         })
         .catch((err: unknown) => {
@@ -47,7 +47,7 @@ export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalPr
 
   if (!order) return null;
 
-  const data = invoice || order;
+  const invoiceData = invoice || {};
 
   const modalContent = (
     <AnimatePresence>
@@ -130,19 +130,19 @@ export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalPr
                       <div className="space-y-2 text-sm pl-2 border-l-2 border-slate-200 dark:border-slate-700">
                         <div className="flex justify-between text-slate-600 dark:text-slate-300">
                           <span>Food Value (Item Total)</span>
-                          <span>{formatINR(((data as unknown as Record<string, number>).foodCost || 0))}</span>
+                          <span>{formatINR(invoiceData.foodCost || 0)}</span>
                         </div>
                         <div className="flex justify-between text-rose-500 dark:text-rose-400">
                           <span>Platform Fee (Restaurant)</span>
-                          <span>- {formatINR(((data as unknown as Record<string, number>).platformFee || 0))}</span>
+                          <span>- {formatINR(invoiceData.platformFee || 0)}</span>
                         </div>
                         <div className="flex justify-between text-rose-500 dark:text-rose-400">
                           <span>Delivery Contribution</span>
-                          <span>- {formatINR(((data as unknown as Record<string, number>).deliveryContribution || 0))}</span>
+                          <span>- {formatINR(invoiceData.deliveryContribution || 0)}</span>
                         </div>
                         <div className="flex justify-between font-bold text-lg text-emerald-600 dark:text-emerald-400 pt-2">
                           <span>Net Restaurant Payout</span>
-                          <span>{formatINR(((data as unknown as Record<string, number>).netPayout || 0))}</span>
+                          <span>{formatINR(invoiceData.netPayout || 0)}</span>
                         </div>
                       </div>
                     </div>

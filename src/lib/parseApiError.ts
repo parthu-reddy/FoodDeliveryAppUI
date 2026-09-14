@@ -3,12 +3,20 @@ import { isAxiosError } from 'axios';
 import { z } from 'zod';
 import { logger } from './logger';
 
-// Schema for backend error response format (e.g., { message: "...", code: "..." })
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const apiErrorSchema = z.object({
+const ErrorDataSchema = z.object({
   message: z.string().optional(),
   code: z.string().optional(),
   error: z.string().optional(),
+  details: z.string().optional(),
+  reason: z.string().optional(),
+  errors: z.array(z.union([
+    z.string(),
+    z.object({
+      message: z.string().optional(),
+      defaultMessage: z.string().optional(),
+    }).passthrough()
+  ])).optional(),
+  data: z.record(z.unknown()).optional(),
 }).passthrough();
 
 export interface ParsedApiError {
@@ -21,18 +29,19 @@ export function parseApiError(error: unknown, defaultMessage = 'An unexpected er
   const extractMessageFromData = (data: unknown): string | undefined => {
     if (!data) return undefined;
     if (typeof data === 'string') return data;
-    if (typeof data !== 'object') return undefined;
-
-    const obj = data as unknown as Record<string, unknown>;
+    
+    const parsed = ErrorDataSchema.safeParse(data);
+    if (!parsed.success) return undefined;
+    
+    const obj = parsed.data;
 
     // Array of errors (e.g., validation errors)
     if (Array.isArray(obj.errors) && obj.errors.length > 0) {
       const firstErr = obj.errors[0];
       if (typeof firstErr === 'string') return firstErr;
       if (firstErr && typeof firstErr === 'object') {
-        const errObj = firstErr as unknown as Record<string, unknown>;
-        if (typeof errObj.message === 'string') return errObj.message;
-        if (typeof errObj.defaultMessage === 'string') return errObj.defaultMessage;
+        if (typeof firstErr.message === 'string') return firstErr.message;
+        if (typeof firstErr.defaultMessage === 'string') return firstErr.defaultMessage;
       }
     }
 
@@ -41,8 +50,8 @@ export function parseApiError(error: unknown, defaultMessage = 'An unexpected er
       // Check if this is an ApiResponse with a data object containing field errors
       if (obj.data && typeof obj.data === 'object' && !Array.isArray(obj.data) && Object.keys(obj.data).length > 0) {
         try {
-          const detailedErrors = Object.entries(obj.data as unknown as Record<string, unknown>)
-            .map(([field, err]) => `${field}: ${err}`)
+          const detailedErrors = Object.entries(obj.data)
+            .map(([field, err]) => `${field}: ${String(err)}`)
             .join(', ');
           return `${obj.message}: ${detailedErrors}`;
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -95,7 +104,10 @@ export function parseApiError(error: unknown, defaultMessage = 'An unexpected er
     }
 
     // Sometimes Zodios exposes the underlying axios error in .cause
-    const causeError = (error as unknown as Record<string, unknown>)?.cause;
+    const causeSchema = z.object({ cause: z.unknown() }).passthrough();
+    const parsedCause = causeSchema.safeParse(error);
+    const causeError = parsedCause.success ? parsedCause.data.cause : undefined;
+    
     const causeMsg = isAxiosError(causeError) ? extractMessageFromData(causeError.response?.data) : undefined;
     if (causeMsg) {
       return {

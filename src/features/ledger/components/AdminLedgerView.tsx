@@ -6,10 +6,13 @@ import { ArrowRight, Check, ChevronLeft, ChevronRight, Copy, Filter, Search } fr
 import React, { useEffect, useState } from 'react';
 import { formatINR } from '@shared/money';
 import { ChargeCategory } from '@/types/backend-enums';
+import { LedgerTransactionDto } from '@/api/generated/schemas/ledger/common';
+import { z } from 'zod';
+
+type AdminLedgerTransaction = z.infer<typeof LedgerTransactionDto>;
 
 export default function AdminLedgerView() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [entries, setEntries] = useState<any[]>([]);
+  const [entries, setEntries] = useState<AdminLedgerTransaction[]>([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -33,9 +36,9 @@ export default function AdminLedgerView() {
       if (direction) queries.direction = direction;
 
       const res = await ledgerApi.adminLedger.get('/api/v1/internal/admin/ledger/transactions', { queries });
-      if (res) {
-        setEntries((res.content as unknown[]) ?? []);
-        setTotalPages((res.totalPages as unknown as number) ?? 1);
+      if (res && res.data) {
+        setEntries(res.data.content ?? []);
+        setTotalPages(res.data.totalPages ?? 1);
       }
     } catch (e: unknown) {
       console.error(e);

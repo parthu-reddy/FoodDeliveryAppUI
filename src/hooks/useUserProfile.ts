@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react';
 import { getUserProfile, LocalUserProfile } from '../lib/tokenStore';
 import { identityApi } from '../lib/zodiosClients';
+import { z } from 'zod';
 
-interface UserProfileData {
-  name: string;
-  email: string;
-  phoneNumber: string;
-  id: string;
-}
+const UserProfileSchema = z.object({
+  name: z.string().default(''),
+  email: z.string().default(''),
+  phoneNumber: z.string().default(''),
+  id: z.string().default(''),
+});
+
+type UserProfileData = z.infer<typeof UserProfileSchema>;
 
 interface UseUserProfileResult {
   profile: UserProfileData | null;
@@ -29,13 +32,15 @@ export function useUserProfile(): UseUserProfileResult {
   useEffect(() => {
     identityApi.user.get('/api/v1/users/profile', undefined as never)
       .then(res => {
-        if (res) {
-          const p = ('data' in res && typeof res.data === 'object' && res.data !== null)
-            ? (res.data as unknown as UserProfileData)
-            : (res as unknown as UserProfileData);
-          setProfile(p);
-          if (!p || !p.name || !p.email || p.name.trim() === '' || p.email.trim() === '') {
-            setIsProfileIncomplete(true);
+        if (res && res.data) {
+          try {
+            const p = UserProfileSchema.parse(res.data);
+            setProfile(p);
+            if (!p.name || !p.email || p.name.trim() === '' || p.email.trim() === '') {
+              setIsProfileIncomplete(true);
+            }
+          } catch (e) {
+            console.error('Failed to parse user profile data:', e);
           }
         }
       })

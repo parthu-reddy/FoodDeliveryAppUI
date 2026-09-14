@@ -10,7 +10,7 @@ import {
 } from './orderStatus';
 
 const order = (status: OrderStatus, deliveryStatus?: DeliveryStatus) =>
-  ({ status, deliveryStatus } as unknown as Order);
+  ({ status, deliveryStatus } as Partial<Order> as Order);
 
 describe('order status classification', () => {
   test('every OrderStatus the backend declares is classified', () => {

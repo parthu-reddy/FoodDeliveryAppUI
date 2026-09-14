@@ -53,7 +53,7 @@ export function useOrderReviewEligibility(
       })
       .then((res) => {
         if (ignore) return;
-        const body = res as unknown as { data?: ReviewEligibility };
+        const body = res as { data?: ReviewEligibility };
         setLoaded({ key, eligibility: body?.data ?? null, error: null });
       })
       .catch((err: unknown) => {

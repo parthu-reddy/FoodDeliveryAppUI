@@ -26,7 +26,7 @@ describe('Customer Receipt & Order Details', () => {
       deliveryStatus: 'DELIVERED' as DeliveryStatus,
       paymentMethod: 'UPI' as const,
       totalAmount: 350
-    } as unknown as Order;
+    } as Partial<Order> as Order;
 
     render(
       <CallProvider>
@@ -45,7 +45,7 @@ describe('Customer Receipt & Order Details', () => {
       status: 'DELIVERED' as OrderStatus,
       paymentMethod: 'CARD' as const,
       totalAmount: 350
-    } as unknown as Order;
+    } as Partial<Order> as Order;
 
     render(
       <CallProvider>

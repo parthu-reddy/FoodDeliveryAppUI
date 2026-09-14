@@ -2,6 +2,10 @@ import { usePolling } from '@/hooks/usePolling';
 import { customerApi, restaurantApi } from '@/lib/zodiosClients';
 import { Order, OrderStatus } from '@/types';
 import { useCallback, useState } from 'react';
+import { z } from 'zod';
+import { RefundView } from '@/api/generated/schemas/customer/common';
+
+type RefundViewType = z.infer<typeof RefundView>;
 
 interface UseRestaurantOrdersOptions {
   restaurantId: string;
@@ -105,28 +109,22 @@ export function useRestaurantOrders({
     onError: (err) => console.error("Failed to poll orders", err)
   });
 
-  const [refundRequests, setRefundRequests] = useState<{ id: string; orderId: string; [key: string]: unknown }[]>([]);
+  const [refundRequests, setRefundRequests] = useState<RefundViewType[]>([]);
 
   const fetchRefundRequests = useCallback(async () => {
     if (!selectedOutletId) return [];
     try {
-      // Owner-scoped, on the routed money surface. This used to call
-      // /api/v1/internal/restaurants/outlets/:outletId/refund-requests through the *restaurant*
-      // client — a CustomerApplication path, behind the gateway's 403 on /api/v1/internal/**, and
-      // absent from every schema, which is what the @ts-expect-error was hiding.
-      const res = await customerApi.restaurantMoney.get('/api/v1/money/restaurant/:outletId/refund-requests', {
+      const res = await customerApi.restaurantMoney.fetchActiveRefundRequests({
         params: { outletId: selectedOutletId }
       });
-      // A plain list, like its COMPLETED sibling /money/restaurant/:outletId/refunds. The old
-      // endpoint wrapped its body in ApiResponse, which is why this used to unwrap `.data`.
-      return (res ?? []) as unknown as { id: string; orderId: string; [key: string]: unknown }[];
+      return res ?? [];
     } catch (e) {
       console.error('Failed to fetch refund requests', e);
     }
     return [];
   }, [selectedOutletId]);
 
-  usePolling<{ id: string; orderId: string; [key: string]: unknown }[]>({
+  usePolling<RefundViewType[]>({
     fetchFn: fetchRefundRequests,
     intervalMs: 10000,
     enabled: !!selectedOutletId,

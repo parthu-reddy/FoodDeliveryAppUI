@@ -19,7 +19,9 @@ vi.mock('@/lib/zodiosClients', () => ({
       getMyReviews: (...args: unknown[]) => get('/api/v1/reviews/me', ...args)
     },
     adminReview: {
-      get: (...args: unknown[]) => get(...args)
+      get: (...args: unknown[]) => get(...args),
+      getReviewsForEntity: (...args: unknown[]) => get('/api/v1/internal/admin/reviews', ...args),
+      getReviewsByUser: (...args: unknown[]) => get('/api/v1/internal/admin/reviews/by-user/:userId', ...args)
     }
   }
 }));

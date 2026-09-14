@@ -46,15 +46,15 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
       onAddApiLog({ id: `fetch_history_${page}`, label: `GET /api/v1/orders/history?page=${page}&size=20`, method: 'GET' });
     }
 
-    customerApi.order.get('/api/v1/orders/history', { queries: { page } })
+    customerApi.order.getOrderHistory({ queries: { page } })
       .then(res => {
-        if (!ignore && res) {
-          const content = res.content ?? [];
+        if (!ignore && res.data) {
+          const content = res.data.content ?? [];
           // Normalise rather than cast. The API sends `total` but no `total`, `subtotal` or
           // `customerName`, and this view reads all three -- assigning the raw response left them
           // undefined. That was invisible while Order resolved to `any`.
-          setOrders((content as unknown[]).map(normalizeOrder));
-          setTotalPages((res.totalPages as unknown as number) || 1);
+          setOrders(content.map(normalizeOrder));
+          setTotalPages(res.data.totalPages || 1);
         }
       })
       .catch(err => {

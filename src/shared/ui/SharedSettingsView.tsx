@@ -11,6 +11,8 @@ import { formatINR } from '@shared/money';
 import { z } from 'zod';
 import { useToast } from '../../contexts/ToastContext';
 import { customerApi, identityApi } from '../../lib/zodiosClients';
+import { WalletTransactionDto } from '../../api/generated/schemas/wallet/common';
+
 const sharedProfileSchema = z.object({
   name: z.string().min(1, 'Please enter your full name.').max(100, 'Name cannot exceed 100 characters.'),
   email: z.string().min(1, 'Please enter your email address.').email('Please enter a valid email address.').max(255, 'Email cannot exceed 255 characters.')
@@ -132,7 +134,8 @@ export default function SharedSettingsView({
       
       const txRes = await customerApi.customerMoney.get('/api/v1/money/customer/wallet/transactions', { queries: { page: txPage, size: 20 } });
       if (txRes && txRes.content) {
-        setTransactions((txRes.content as unknown as WalletTransaction[]) ?? []);
+        const parsedTxs = z.array(WalletTransactionDto).safeParse(txRes.content);
+        setTransactions(parsedTxs.success ? parsedTxs.data : []);
         setTxTotalPages(txRes.totalPages || 1);
       }
     } catch (e: unknown) {

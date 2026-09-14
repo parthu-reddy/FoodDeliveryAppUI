@@ -10,6 +10,10 @@ import {
   Truck
 } from 'lucide-react';
 import React from 'react';
+import { z } from 'zod';
+import { RefundView } from '@/api/generated/schemas/customer/common';
+
+type RefundViewType = z.infer<typeof RefundView>;
 
 // Utility
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -33,7 +37,7 @@ interface RestaurantOrderQueueProps {
   pendingOrders: Order[];
   activePreparing: Order[];
   myOrders: Order[];
-  refundRequests?: { id: string; orderId: string; [key: string]: unknown }[];
+  refundRequests?: RefundViewType[];
 
   cardDelayStatus: Record<string, { minutes: number, reason: string }>;
 

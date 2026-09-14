@@ -8,11 +8,12 @@ import { Button, EmptyState, Input, Select } from '@shared/ui';
 import { Plus, Power, Search, User, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
-import { Order } from '@/types';
 
 import { UserDTO } from '@/api/generated/schemas/identity/admin_user_controller';
+import { OrderResponse } from '@/api/generated/schemas/customer/common';
 
 type AdminUser = z.infer<typeof UserDTO>;
+type ActiveOrder = z.infer<typeof OrderResponse>;
 
 const roleSchema = z.string().min(2, "Role must be at least 2 characters").max(50, "Role cannot exceed 50 characters").regex(/^[A-Z_]+$/, "Role must contain only uppercase letters and underscores");
 
@@ -22,7 +23,7 @@ export default function AdminUserManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [newRole, setNewRole] = useState('');
-  const [userActiveOrders, setUserActiveOrders] = useState<Order[]>([]);
+  const [userActiveOrders, setUserActiveOrders] = useState<ActiveOrder[]>([]);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -62,7 +63,7 @@ export default function AdminUserManagement() {
       try {
         const res = await identityApi.adminUser.get('/api/v1/internal/admin/users/:id', { params: { id: debouncedSearchQuery }, headers: { 'X-Calling-Service': RoleName.ADMIN } });
         if (res?.data?.id) {
-          setUsers([res.data as AdminUser]);
+          if (res.data) setUsers([res.data]);
         } else {
           setUsers([]);
         }
@@ -77,8 +78,8 @@ export default function AdminUserManagement() {
   const fetchUserActiveOrders = async (userId: string) => {
     try {
       const res = await customerApi.adminOrder.get('/api/v1/internal/admin/orders/user/:userId/active', { params: { userId }, queries: { page: 0, size: 20 } });
-      const data = res.content ?? [];
-      setUserActiveOrders(data as unknown as Order[]);
+      const data = res.data?.content ?? [];
+      setUserActiveOrders(data);
     } catch (e: unknown) {
       console.error(e);
       setUserActiveOrders([]);

@@ -87,13 +87,10 @@ export function useEntityReviews(
       .then(([listRes, aggRes]) => {
         if (ignore) return;
 
-        const listBody = listRes as unknown as {
-          data?: { content?: Review[]; page?: { totalPages?: number } };
-        };
-        const content = listBody?.data?.content ?? [];
-        const totalPages = listBody?.data?.page?.totalPages ?? 1;
+        const content = (listRes.data?.content ?? []) as Review[];
+        const totalPages = listRes.data?.page?.totalPages ?? 1;
         const aggregate = aggRes
-          ? ((aggRes as unknown as { data?: ReviewAggregate }).data ?? null)
+          ? ((aggRes.data ?? null) as ReviewAggregate | null)
           : null;
 
         setLoaded((prev) => {

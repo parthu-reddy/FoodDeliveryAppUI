@@ -94,7 +94,7 @@ export default function RiderSettingsView({
           const verRes = await deliveryApi.deliveryVerification.get(`/api/delivery/verification/status`, {});
           if (verRes?.data) {
             setVerificationStatus({
-              allDocsApproved: verRes.data.fullyVerified === true || verRes.data.fullyVerified === 'true' as unknown as boolean,
+              allDocsApproved: verRes.data.fullyVerified === true || String(verRes.data.fullyVerified) === 'true',
               bankApproved: verRes.data.bankStatus === 'APPROVED' || verRes.data.bankStatus === 'VERIFIED'
             });
           }
@@ -127,6 +127,7 @@ export default function RiderSettingsView({
       if (txRes && txRes.content) {
         setTransactions(txRes.content.map((line): WalletTransaction => ({
           id: String(line.transactionId ?? ''),
+          walletId: "00000000-0000-0000-0000-000000000000",
           amount: Number(line.amount ?? 0),
           transactionType: line.direction === 'DEBIT' ? 'DEBIT' : 'CREDIT',
           referenceId: line.referenceId ? String(line.referenceId) : undefined,

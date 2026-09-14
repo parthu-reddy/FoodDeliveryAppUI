@@ -38,15 +38,15 @@ export function AdminReviewsView() {
     try {
       const res =
         mode === 'entity'
-          ? await reviewsApi.adminReview.get('/api/v1/internal/admin/reviews', {
+          ? await reviewsApi.adminReview.getReviewsForEntity({
               queries: { entityType, entityId: entityId.trim(), page: 0, size: 50 },
             })
-          : await reviewsApi.adminReview.get('/api/v1/internal/admin/reviews/by-user/:userId', {
+          : await reviewsApi.adminReview.getReviewsByUser({
               params: { userId: userId.trim() },
               queries: { page: 0, size: 50 },
             });
-      const body = res as unknown as { data?: { content?: ReviewDetail[] } };
-      setReviews(body?.data?.content ?? []);
+      const content = (res.data?.content ?? []) as ReviewDetail[];
+      setReviews(content);
     } catch (err: unknown) {
       setError(parseApiError(err, 'Could not load reviews.').message);
       setReviews(null);

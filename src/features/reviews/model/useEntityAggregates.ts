@@ -60,7 +60,7 @@ export function useEntityAggregates(
       .getAggregates({ queries: { entityType, entityIds: ids } })
       .then((res) => {
         if (ignore) return;
-        const body = res as unknown as { data?: { aggregates?: ReviewAggregate[] } };
+        const body = res as { data?: { aggregates?: ReviewAggregate[] } };
         const map: Record<string, AggregateSummary> = {};
         for (const a of body?.data?.aggregates ?? []) {
           map[a.entityId] = {

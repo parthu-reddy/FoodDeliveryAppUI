@@ -25,7 +25,7 @@ const order = (over: Partial<Order>) => ({
   status: OrderStatus.PREPARING,
   totalAmount: 420,
   ...over,
-} as unknown as Order);
+} as Partial<Order> as Order);
 
 /**
  * The component takes isActiveOrder/isFailedOrder as props, and picks its whole layout from them:

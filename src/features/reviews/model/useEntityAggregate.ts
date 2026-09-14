@@ -47,8 +47,8 @@ export function useEntityAggregate(
       })
       .then((res) => {
         if (ignore) return;
-        const body = res as unknown as { data?: ReviewAggregate };
-        setLoaded({ key, aggregate: body?.data ?? null, error: null });
+        const aggregate = (res.data ?? null) as ReviewAggregate | null;
+        setLoaded({ key, aggregate, error: null });
       })
       .catch((err: unknown) => {
         if (ignore) return;

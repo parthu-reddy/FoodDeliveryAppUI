@@ -19,7 +19,7 @@ const job = (paymentMethod: 'COD' | 'CARD') => ({
   paymentMethod,
   totalAmount: 420,
   deliveryFee: 40,
-} as unknown as Order);
+} as Partial<Order> as Order);
 
 const props = {
   enteredPickupOtp: '',

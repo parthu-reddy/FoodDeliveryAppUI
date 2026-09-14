@@ -28,9 +28,11 @@ export const handlers = [
   }),
   
   http.get('*/api/v1/brands', () => {
-    return HttpResponse.json([
-      { id: '1', name: 'Spicy Kitchen' },
-      { id: '2', name: 'Burger Joint' }
-    ]);
+    return HttpResponse.json({
+      data: [
+        { id: '1', name: 'Spicy Kitchen' },
+        { id: '2', name: 'Burger Joint' }
+      ]
+    });
   }),
 ];

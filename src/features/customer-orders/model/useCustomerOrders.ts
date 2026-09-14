@@ -1,7 +1,21 @@
 import { customerApi } from '@/lib/zodiosClients';
 import { Order, OrderStatus } from '@/types';
+import { DeliveryStatus } from '@/types/backend-enums';
 import { isActiveOrder, isFailedOrder } from '@features/customer-orders/model/orderStatus';
 import { useEffect, useState } from 'react';
+import { z } from 'zod';
+import { OrderResponse } from '@/api/generated/schemas/customer/common';
+
+type OrderResponseType = z.infer<typeof OrderResponse>;
+
+/** Map a Zodios OrderResponse into the UI's Order type. */
+function toOrder(o: OrderResponseType): Order {
+  return {
+    ...o,
+    status: (o.status?.toUpperCase() || '') as OrderStatus,
+    deliveryStatus: o.deliveryStatus as DeliveryStatus,
+  };
+}
 
 interface UseCustomerOrdersOptions {
   onUpdateOrder?: (orderId: string, status: string) => void;
@@ -15,14 +29,11 @@ export function useCustomerOrders({ onUpdateOrder }: UseCustomerOrdersOptions = 
   // Fetch initial active orders
   useEffect(() => {
     let ignore = false;
-    customerApi.order.get('/api/v1/orders/active', { queries: { page: 0, size: 50 } })
+    customerApi.order.getActiveOrders({ queries: { page: 0, size: 50 } })
       .then(res => {
         if (!ignore && res.data) {
           const content = res.data.content || [];
-          setInternalOrders(content.map((o: unknown) => {
-            const orderData = o as unknown as Order;
-            return { ...orderData, status: (orderData.status?.toUpperCase() || '') as OrderStatus };
-          }));
+          setInternalOrders(content.map(toOrder));
         }
       })
       .catch(console.error)
@@ -50,7 +61,7 @@ export function useCustomerOrders({ onUpdateOrder }: UseCustomerOrdersOptions = 
     let retryCount = 0;
 
     const pollOrders = () => {
-      customerApi.order.get('/api/v1/orders/active', { queries: { page: 0, size: 50 } })
+      customerApi.order.getActiveOrders({ queries: { page: 0, size: 50 } })
         .then(res => {
           if (!isSubscribed) return;
           retryCount = 0; // Reset on success
@@ -59,10 +70,7 @@ export function useCustomerOrders({ onUpdateOrder }: UseCustomerOrdersOptions = 
             return;
           }
           const content = res.data.content || [];
-          const updatedOrders = content.map((o: unknown) => {
-            const orderData = o as unknown as Order;
-            return { ...orderData, status: (orderData.status?.toUpperCase() || '') as OrderStatus };
-          });
+          const updatedOrders = content.map(toOrder);
           
           setInternalOrders(prev => {
             const newOrders = [...prev];
@@ -85,7 +93,7 @@ export function useCustomerOrders({ onUpdateOrder }: UseCustomerOrdersOptions = 
             const missingIds = activePrevIds.filter(id => !updatedOrders.find((u: Order) => u.id === id));
             
             if (missingIds.length > 0) {
-               customerApi.order.get('/api/v1/orders/batch', { queries: { ids: missingIds } }).then(res => {
+               customerApi.order.getOrdersBatch({ queries: { ids: missingIds } }).then(res => {
                   if (res.data) {
                      setInternalOrders(curr => {
                         const currentList = [...curr];
@@ -93,7 +101,7 @@ export function useCustomerOrders({ onUpdateOrder }: UseCustomerOrdersOptions = 
                         (res.data || []).forEach((batchOrder) => {
                             const idx = currentList.findIndex(o => o.id === batchOrder.id);
                             if (idx !== -1 && JSON.stringify(currentList[idx]) !== JSON.stringify(batchOrder)) {
-                               currentList[idx] = batchOrder as unknown as Order;
+                               currentList[idx] = toOrder(batchOrder);
                                batchChanged = true;
                             }
                         });

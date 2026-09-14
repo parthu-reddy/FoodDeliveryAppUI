@@ -1,12 +1,15 @@
 import { olaStyleUrl, transformOlaRequest } from '@/lib/olaMaps';
 import { getToken } from "@/lib/tokenStore";
 import { customerApi, mapsApi } from "@/lib/zodiosClients";
+import { AutocompleteResponse } from '@/api/generated/schemas/maps/common';
 import { MapPin, Search, X } from 'lucide-react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
+
+type AutocompleteSuggestion = z.infer<typeof AutocompleteResponse>;
 
 const addressSchema = z.object({
   label: z.string().min(1, 'Label is required').max(50, 'Label cannot exceed 50 characters'),
@@ -20,15 +23,6 @@ const addressSchema = z.object({
 
 window.maplibregl = maplibregl;
 
-interface SearchSuggestion {
-  description: string;
-  geometry?: {
-    location?: {
-      lat: number;
-      lng: number;
-    }
-  }
-}
 
 interface SavedAddress {
   id: string;
@@ -65,7 +59,7 @@ export default function CustomerAddressPage({
 }: CustomerAddressPageProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [mapInstance, setMapInstance] = useState<maplibregl.Map | null>(null);
-  const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
+  const [suggestions, setSuggestions] = useState<AutocompleteSuggestion[]>([]);
   const [, setIsSearching] = useState(false);
 
   const [label, setLabel] = useState('');
@@ -190,8 +184,8 @@ export default function CustomerAddressPage({
          if (onAddApiLog) {
             onAddApiLog({ id: 'autocomplete', label: `GET /api/places/autocomplete?input=${encodeURIComponent(addressSearchQuery)}`, method: 'GET' });
          }
-         const res = await mapsApi.integration.get('/api/places/autocomplete', { queries: { input: addressSearchQuery } });
-         setSuggestions((res as unknown as SearchSuggestion[]) ?? []);
+         const res = await mapsApi.integration.autocomplete({ queries: { input: addressSearchQuery } });
+         setSuggestions(res ?? []);
        } catch (e: unknown) {
          console.error(e);
        } finally {
@@ -203,17 +197,19 @@ export default function CustomerAddressPage({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [addressSearchQuery]);
 
-  const handleSuggestionClick = async (suggestion: SearchSuggestion) => {
-      setAddressSearchQuery(suggestion.description);
+  const handleSuggestionClick = async (suggestion: AutocompleteSuggestion) => {
+      setAddressSearchQuery(suggestion.description ?? '');
       setSuggestions([]);
       const token = getToken();
       let loc = null;
-      if (suggestion.geometry && suggestion.geometry.location) {
-          loc = suggestion.geometry.location;
+      // The passthrough schema may include geometry from server response
+      const geo = (suggestion as Record<string, unknown>).geometry as { location?: { lat: number; lng: number } } | undefined;
+      if (geo?.location) {
+          loc = geo.location;
       } else {
           try {
-              if (onAddApiLog) onAddApiLog({ id: 'geocode', label: `GET /api/places/geocode?address=${encodeURIComponent(suggestion.description)}`, method: 'GET' });
-              const rawRes = await window.fetch(`/api/places/geocode?address=${encodeURIComponent(suggestion.description)}`, { headers: { Authorization: `Bearer ${token}`, 'X-Calling-Service': 'CustomerApplication' } });
+              if (onAddApiLog) onAddApiLog({ id: 'geocode', label: `GET /api/places/geocode?address=${encodeURIComponent(suggestion.description ?? '')}`, method: 'GET' });
+              const rawRes = await window.fetch(`/api/places/geocode?address=${encodeURIComponent(suggestion.description ?? '')}`, { headers: { Authorization: `Bearer ${token}`, 'X-Calling-Service': 'CustomerApplication' } });
               if (!rawRes.ok) throw new Error('API Error');
               const res = await rawRes.json();
               if (res && res.lat && res.lng) {
@@ -226,8 +222,8 @@ export default function CustomerAddressPage({
 
       if (loc && mapInstance) {
          mapInstance.flyTo({ center: [loc.lng, loc.lat], zoom: 16 });
-         setAddress(suggestion.description);
-         const parts = suggestion.description.split(',').map((p: string) => p.trim());
+         setAddress(suggestion.description ?? '');
+         const parts = (suggestion.description ?? '').split(',').map((p: string) => p.trim());
          let zip = '';
          let state = '';
          let city = '';

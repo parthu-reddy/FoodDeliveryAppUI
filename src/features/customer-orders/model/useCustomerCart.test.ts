@@ -8,8 +8,8 @@ import { useCustomerCart } from './useCustomerCart';
 const RESTAURANT_ID = '44444444-4444-4444-4444-444444444444';
 const ADDRESS_ID = '55555555-5555-5555-5555-555555555555';
 
-const restaurant = { id: RESTAURANT_ID, name: 'Test Kitchen' } as unknown as Restaurant;
-const item = { id: '66666666-6666-6666-6666-666666666666', name: 'Dosa', price: 120 } as unknown as MenuItem;
+const restaurant = { id: RESTAURANT_ID, name: 'Test Kitchen' } as Partial<Restaurant> as Restaurant;
+const item = { id: '66666666-6666-6666-6666-666666666666', name: 'Dosa', price: 120 } as Partial<MenuItem> as MenuItem;
 
 describe('useCustomerCart payment method', () => {
   let orderPosts: number;

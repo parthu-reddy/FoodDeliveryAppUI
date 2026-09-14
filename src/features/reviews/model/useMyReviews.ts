@@ -33,8 +33,8 @@ export function useMyReviews(enabled = true): UseMyReviews {
       .getMyReviews({ queries: { page: 0, size: PAGE_SIZE } })
       .then((res) => {
         if (ignore) return;
-        const body = res as unknown as { data?: { content?: ReviewDetail[] } };
-        setLoaded({ reviews: body?.data?.content ?? [], error: null });
+        const content = (res.data?.content ?? []) as ReviewDetail[];
+        setLoaded({ reviews: content, error: null });
       })
       .catch((err: unknown) => {
         if (ignore) return;
