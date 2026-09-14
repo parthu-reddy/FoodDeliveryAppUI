@@ -208,15 +208,16 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
         sgst: qData.sgst || 0,
         tax: (qData.cgst || 0) + (qData.sgst || 0),
         platformFee: qData.platformFee || 0,
-        driverPayout: 0,
         restaurantPayout: 0,
         restaurantDeliveryShare: 0,
+        minAmountForFreeDelivery: qData.minAmountForFreeDelivery,
+        distanceKm: qData.distanceKm
       };
     }
     // Fallback if quote not yet loaded
     const cartState = carts[restaurantId];
     if (!cartState) {
-      return { subtotal: 0, sgst: 0, cgst: 0, tax: 0, deliveryFee: 0, driverPayout: 0, restaurantPayout: 0, restaurantDeliveryShare: 0, total: 0, platformFee: 0, minAmountForFreeDelivery: 0, distanceKm: 0 };
+      return { subtotal: 0, sgst: 0, cgst: 0, tax: 0, deliveryFee: 0, driverPayout: 0, restaurantPayout: 0, restaurantDeliveryShare: 0, total: 0, platformFee: 0, minAmountForFreeDelivery: undefined, distanceKm: undefined };
     }
     const subtotal = cartState.items.reduce((sum, item) => sum + ((item.item.price || 0) * item.quantity), 0);
     let deliveryFee = 0;
@@ -233,12 +234,11 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
       tax: 0,
       deliveryFee,
       platformFee: 0,
-      driverPayout: 0,
       restaurantPayout: 0,
       restaurantDeliveryShare: 0,
       total: subtotal + deliveryFee,
-      minAmountForFreeDelivery: 0,
-      distanceKm: 0,
+      minAmountForFreeDelivery: undefined,
+      distanceKm: undefined,
       isEstimated: true
     };
   };

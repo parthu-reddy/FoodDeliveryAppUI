@@ -653,6 +653,7 @@ export default function CustomerDashboard({
                 getCartTotal={getCartTotal}
                 deliveryPricing={((selectedRestaurant ? quotes[selectedRestaurant.id as string] : null))?.data as { total: number } || { total: 0 }}
                 selectedRestaurantId={selectedRestaurant?.id}
+                isQuoting={isQuoting}
               />
               <ErrorBoundary fallbackLabel="Menu View">
                 <CustomerMenuView
