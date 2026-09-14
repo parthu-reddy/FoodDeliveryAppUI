@@ -67,12 +67,11 @@ function AdminFleetMapInner() {
 
         if (!active) return;
 
-        //  type suppression
-        // @ts-expect-error Zodios schema doesn't correctly model ApiResponse wrapper for these endpoints
-        setRestaurants((resOutlets?.data?.content as unknown as Restaurant[]) ?? []);
-        setRiders((resDrivers?.content as unknown as Rider[]) ?? []);
-        // @ts-expect-error Zodios schema doesn't correctly model ApiResponse wrapper for these endpoints
-        setCustomers((resCustomers?.data?.content as unknown as CustomerAddress[]) ?? []);
+        // Since the Zodios schema correctly types the ApiResponse wrapper,
+        // we can safely access the nested data and fallback to an empty array.
+        setRestaurants(resOutlets?.data?.content ?? []);
+        setRiders(resDrivers?.content ?? []);
+        setCustomers(resCustomers?.data?.content ?? []);
       } catch (err: unknown) {
         console.error("Failed to fetch map data", err);
       }
