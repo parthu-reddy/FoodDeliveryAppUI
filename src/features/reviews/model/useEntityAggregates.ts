@@ -57,7 +57,7 @@ export function useEntityAggregates(
 
     let ignore = false;
     reviewsApi.review
-      .get('/api/v1/reviews/aggregates', { queries: { entityType, entityIds: ids } })
+      .getAggregates({ queries: { entityType, entityIds: ids } })
       .then((res) => {
         if (ignore) return;
         const body = res as unknown as { data?: { aggregates?: ReviewAggregate[] } };

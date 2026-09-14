@@ -69,7 +69,7 @@ export function useEntityReviews(
     let ignore = false;
     const firstPage = page === 0;
 
-    const listPromise = reviewsApi.review.get('/api/v1/reviews', {
+    const listPromise = reviewsApi.review.getReviews({
       queries: {
         entityType: entityType as ReviewEntityType,
         entityId: entityId as string,
@@ -78,7 +78,7 @@ export function useEntityReviews(
       },
     });
     const aggregatePromise = firstPage
-      ? reviewsApi.review.get('/api/v1/reviews/aggregate', {
+      ? reviewsApi.review.getAggregate({
           queries: { entityType: entityType as ReviewEntityType, entityId: entityId as string },
         })
       : Promise.resolve(null);

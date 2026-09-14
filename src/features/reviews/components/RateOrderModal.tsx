@@ -97,7 +97,7 @@ function RateOrderModalInner({ isOpen, onClose, orderId, onSubmitted }: RateOrde
     setSubmitError(null);
 
     try {
-      await reviewsApi.review.post('/api/v1/reviews', { orderId, entries });
+      await reviewsApi.review.submitReviews({ orderId, entries });
       setStatus('success');
       onSubmitted?.();
     } catch (err: unknown) {

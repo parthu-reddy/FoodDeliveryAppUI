@@ -48,7 +48,7 @@ export function useOrderReviewEligibility(
 
     let ignore = false;
     reviewsApi.review
-      .get('/api/v1/reviews/orders/:orderId/eligibility', {
+      .getEligibility({
         params: { orderId: orderId as string },
       })
       .then((res) => {

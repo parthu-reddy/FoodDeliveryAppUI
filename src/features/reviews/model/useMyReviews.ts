@@ -30,7 +30,7 @@ export function useMyReviews(enabled = true): UseMyReviews {
 
     let ignore = false;
     reviewsApi.review
-      .get('/api/v1/reviews/me', { queries: { page: 0, size: PAGE_SIZE } })
+      .getMyReviews({ queries: { page: 0, size: PAGE_SIZE } })
       .then((res) => {
         if (ignore) return;
         const body = res as unknown as { data?: { content?: ReviewDetail[] } };

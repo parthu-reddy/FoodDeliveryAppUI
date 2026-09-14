@@ -248,7 +248,10 @@ export default function CustomerDashboard({
   useEffect(() => {
     let ignore = false;
     if (selectedRestaurant?.brandId) {
-      customerApi.customerRestaurant.get('/api/v1/restaurants/brands/:brandId/outlets', { params: { brandId: selectedRestaurant.brandId }, queries: { lat: deliveryLat ?? 0, lng: deliveryLng ?? 0 } })
+      customerApi.customerRestaurant.getBrandOutlets({
+        params: { brandId: selectedRestaurant.brandId },
+        queries: { lat: deliveryLat ?? 0, lng: deliveryLng ?? 0 }
+      })
         .then(res => {
           if (!ignore && res && res.data) setBrandOutlets(res.data);
         })

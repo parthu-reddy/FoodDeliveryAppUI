@@ -42,7 +42,7 @@ export function useEntityAggregate(
 
     let ignore = false;
     reviewsApi.review
-      .get('/api/v1/reviews/aggregate', {
+      .getAggregate({
         queries: { entityType: entityType as ReviewEntityType, entityId: entityId as string },
       })
       .then((res) => {
