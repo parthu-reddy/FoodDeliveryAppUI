@@ -67,11 +67,40 @@ function AdminFleetMapInner() {
 
         if (!active) return;
 
-        // Since the Zodios schema correctly types the ApiResponse wrapper,
-        // we can safely access the nested data and fallback to an empty array.
-        setRestaurants(resOutlets?.data?.content ?? []);
-        setRiders(resDrivers?.content ?? []);
-        setCustomers(resCustomers?.data?.content ?? []);
+        // Map the Zodios response types to our local interfaces
+        const out = resOutlets?.data?.content ?? [];
+        setRestaurants(out.map((r: any) => ({
+          id: r.id,
+          name: r.name,
+          lat: r.lat,
+          lng: r.lng,
+          isActive: r.isActive,
+          phone: r.phone,
+          phoneNumber: r.phoneNumber
+        })));
+
+        const drv = resDrivers?.content ?? [];
+        setRiders(drv.map((r: any) => ({
+          id: r.id,
+          name: r.fullName || r.name || 'Unknown Rider',
+          lat: r.lat,
+          lng: r.lng,
+          status: r.status,
+          phone: r.phone,
+          phoneNumber: r.phoneNumber
+        })));
+
+        const cust = resCustomers?.data?.content ?? [];
+        setCustomers(cust.map((c: any) => ({
+          id: c.id,
+          customerId: c.customerId,
+          label: c.label,
+          addressLine1: c.addressLine1,
+          latitude: c.latitude,
+          longitude: c.longitude,
+          phone: c.phone,
+          phoneNumber: c.phoneNumber
+        })));
       } catch (err: unknown) {
         console.error("Failed to fetch map data", err);
       }
