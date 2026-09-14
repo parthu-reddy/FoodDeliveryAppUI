@@ -630,6 +630,43 @@ export const CustomerReceipt = z
   })
   .partial()
   .passthrough();
+export const OrderReviewItemDto = z
+  .object({ menuItemId: z.string().uuid(), name: z.string() })
+  .partial()
+  .passthrough();
+export const OrderReviewContextDto = z
+  .object({
+    orderId: z.string().uuid(),
+    customerId: z.string().uuid(),
+    customerName: z.string(),
+    restaurantId: z.string().uuid(),
+    restaurantName: z.string(),
+    deliveryExecutiveId: z.string().uuid(),
+    deliveryStatus: z.enum([
+      "PENDING",
+      "SEARCHING_FOR_DRIVER",
+      "MANUAL_INTERVENTION_REQUIRED",
+      "ASSIGNED",
+      "AT_RESTAURANT",
+      "OUT_FOR_DELIVERY",
+      "DELIVERED",
+      "CANCELLED",
+      "FAILED",
+    ]),
+    deliveredAt: z.string().datetime({ offset: true }),
+    items: z.array(OrderReviewItemDto),
+  })
+  .partial()
+  .passthrough();
+export const ApiResponseOrderReviewContextDto = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    errorCode: z.string().optional(),
+    data: OrderReviewContextDto.optional(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
 export const Order = z
   .object({
     id: z.string().uuid(),
@@ -732,10 +769,10 @@ export const pageable = z
 export const PageableObject = z
   .object({
     sort: SortObject.optional(),
+    unpaged: z.boolean(),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
-    unpaged: z.boolean(),
     offset: z.number().int(),
   })
   .passthrough();
@@ -744,13 +781,13 @@ export const PageOrder = z
     totalElements: z.number().int(),
     totalPages: z.number().int(),
     sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
     numberOfElements: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
+    pageable: PageableObject.optional(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(Order),
+    first: z.boolean(),
+    last: z.boolean(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -767,13 +804,13 @@ export const PageSupportTicket = z
     totalElements: z.number().int(),
     totalPages: z.number().int(),
     sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
     numberOfElements: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
+    pageable: PageableObject.optional(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(SupportTicket),
+    first: z.boolean(),
+    last: z.boolean(),
     empty: z.boolean(),
   })
   .passthrough();

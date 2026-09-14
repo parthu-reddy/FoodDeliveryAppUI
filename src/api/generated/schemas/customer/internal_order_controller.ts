@@ -5,6 +5,43 @@ import { pageable } from "./common";
 import { SortObject } from "./common";
 import { PageableObject } from "./common";
 
+export const OrderReviewItemDto = z
+  .object({ menuItemId: z.string().uuid(), name: z.string() })
+  .partial()
+  .passthrough();
+export const OrderReviewContextDto = z
+  .object({
+    orderId: z.string().uuid(),
+    customerId: z.string().uuid(),
+    customerName: z.string(),
+    restaurantId: z.string().uuid(),
+    restaurantName: z.string(),
+    deliveryExecutiveId: z.string().uuid(),
+    deliveryStatus: z.enum([
+      "PENDING",
+      "SEARCHING_FOR_DRIVER",
+      "MANUAL_INTERVENTION_REQUIRED",
+      "ASSIGNED",
+      "AT_RESTAURANT",
+      "OUT_FOR_DELIVERY",
+      "DELIVERED",
+      "CANCELLED",
+      "FAILED",
+    ]),
+    deliveredAt: z.string().datetime({ offset: true }),
+    items: z.array(OrderReviewItemDto),
+  })
+  .partial()
+  .passthrough();
+export const ApiResponseOrderReviewContextDto = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    errorCode: z.string().optional(),
+    data: OrderReviewContextDto.optional(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
 export const Order = z
   .object({
     id: z.string().uuid(),
@@ -98,23 +135,40 @@ export const PageOrder = z
     totalElements: z.number().int(),
     totalPages: z.number().int(),
     sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
     numberOfElements: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
+    pageable: PageableObject.optional(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(Order),
+    first: z.boolean(),
+    last: z.boolean(),
     empty: z.boolean(),
   })
   .passthrough();
 
 export const schemas = {
+  OrderReviewItemDto,
+  OrderReviewContextDto,
+  ApiResponseOrderReviewContextDto,
   Order,
   PageOrder,
 };
 
 export const endpoints = makeApi([
+  {
+    method: "get",
+    path: "/api/v1/internal/orders/:orderId/review-context",
+    alias: "getOrderReviewContext",
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "orderId",
+        type: "Path",
+        schema: z.string().uuid(),
+      },
+    ],
+    response: ApiResponseOrderReviewContextDto,
+  },
   {
     method: "get",
     path: "/api/v1/internal/orders/:orderId/participants",

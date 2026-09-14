@@ -820,6 +820,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/internal/orders/{orderId}/review-context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getOrderReviewContext"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/internal/orders/{orderId}/participants": {
         parameters: {
             query?: never;
@@ -1661,6 +1677,36 @@ export interface components {
             quantity?: number;
             price?: number;
         };
+        ApiResponseOrderReviewContextDto: {
+            success: boolean;
+            message: string;
+            errorCode?: string;
+            data?: components["schemas"]["OrderReviewContextDto"];
+            /** Format: date-time */
+            timestamp: string;
+        };
+        OrderReviewContextDto: {
+            /** Format: uuid */
+            orderId?: string;
+            /** Format: uuid */
+            customerId?: string;
+            customerName?: string;
+            /** Format: uuid */
+            restaurantId?: string;
+            restaurantName?: string;
+            /** Format: uuid */
+            deliveryExecutiveId?: string;
+            /** @enum {string} */
+            deliveryStatus?: "PENDING" | "SEARCHING_FOR_DRIVER" | "MANUAL_INTERVENTION_REQUIRED" | "ASSIGNED" | "AT_RESTAURANT" | "OUT_FOR_DELIVERY" | "DELIVERED" | "CANCELLED" | "FAILED";
+            /** Format: date-time */
+            deliveredAt?: string;
+            items?: components["schemas"]["OrderReviewItemDto"][];
+        };
+        OrderReviewItemDto: {
+            /** Format: uuid */
+            menuItemId?: string;
+            name?: string;
+        };
         Order: {
             /** Format: uuid */
             id: string;
@@ -1742,26 +1788,26 @@ export interface components {
             /** Format: int32 */
             totalPages: number;
             sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             numberOfElements: number;
-            first: boolean;
-            last: boolean;
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             number: number;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["Order"][];
+            first: boolean;
+            last: boolean;
             empty: boolean;
         };
         PageableObject: {
             sort?: components["schemas"]["SortObject"];
+            unpaged: boolean;
             paged: boolean;
             /** Format: int32 */
             pageNumber: number;
             /** Format: int32 */
             pageSize: number;
-            unpaged: boolean;
             /** Format: int64 */
             offset: number;
         };
@@ -1783,16 +1829,16 @@ export interface components {
             /** Format: int32 */
             totalPages: number;
             sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             numberOfElements: number;
-            first: boolean;
-            last: boolean;
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             number: number;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["SupportTicket"][];
+            first: boolean;
+            last: boolean;
             empty: boolean;
         };
         AdminOrderMoney: {
@@ -3208,6 +3254,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CustomerReceipt"];
+                };
+            };
+        };
+    };
+    getOrderReviewContext: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseOrderReviewContextDto"];
                 };
             };
         };
