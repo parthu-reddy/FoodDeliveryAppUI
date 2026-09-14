@@ -341,7 +341,8 @@ export const useWebRTC = () => {
         });
       }
 
-            await chatApi.chatAudioUpload.post('/api/v1/chat/sessions/:sessionId/upload-audio', formData as any, { params: { sessionId } } as { params: { sessionId: string } });
+            // @ts-expect-error Zodios doesn't support FormData directly
+            await chatApi.chatAudioUpload.post('/api/v1/chat/sessions/:sessionId/upload-audio', formData, { params: { sessionId } } as { params: { sessionId: string } });
       console.log("Audio recording uploaded successfully.");
       
       // Clear local storage if successful

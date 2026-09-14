@@ -31,6 +31,7 @@ export function OrderHistory({ restaurantId, onOpenChat }: { restaurantId: strin
 
 
           const mapped = (res.data.content || []).map((o) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const raw = o as Record<string, any>;
             let s = (raw.status || '').toUpperCase();
             if (s === OrderStatus.READY_FOR_PICKUP || s === 'READY') s = OrderStatus.READY_FOR_PICKUP; 
@@ -40,6 +41,7 @@ export function OrderHistory({ restaurantId, onOpenChat }: { restaurantId: strin
             if (raw.itemsJson && typeof raw.itemsJson === 'string') {
                 try { parsedItems = JSON.parse(raw.itemsJson); } catch { /* keep fallback */ }
             }
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const calculatedTotal = Array.isArray(parsedItems) ? parsedItems.reduce((acc: number, item: any) => {
               return acc + (item.item?.price || item.price || 0) * (item.quantity || 1);
             }, 0) : 0;

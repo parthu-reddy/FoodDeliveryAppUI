@@ -34,10 +34,15 @@ export function useUserProfile(): UseUserProfileResult {
       .then(res => {
         if (res && res.data) {
           try {
-            const p = UserProfileSchema.parse(res.data);
-            setProfile(p);
-            if (!p.name || !p.email || p.name.trim() === '' || p.email.trim() === '') {
-              setIsProfileIncomplete(true);
+            const result = UserProfileSchema.safeParse(res.data);
+            if (result.success) {
+              const p = result.data;
+              setProfile(p);
+              if (!p.name || !p.email || p.name.trim() === '' || p.email.trim() === '') {
+                setIsProfileIncomplete(true);
+              }
+            } else {
+              console.error('Failed to validate user profile data:', result.error);
             }
           } catch (e) {
             console.error('Failed to parse user profile data:', e);
