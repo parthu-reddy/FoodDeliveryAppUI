@@ -103,7 +103,7 @@ function AdminFleetMapInner() {
           }
 
           el.onclick = () => {
-            navigator.clipboard.writeText(r.id).then(() => {
+            navigator.clipboard.writeText(r.id || '').then(() => {
               setToastMsg(`Copied Restaurant ID: ${r.id}`);
               setTimeout(() => setToastMsg(null), 3000);
             }).catch(err => console.error("Failed to copy:", err));
@@ -135,7 +135,7 @@ function AdminFleetMapInner() {
           }
 
           el.onclick = () => {
-            navigator.clipboard.writeText(r.id).then(() => {
+            navigator.clipboard.writeText(r.id || '').then(() => {
               setToastMsg(`Copied Rider ID: ${r.id}`);
               setTimeout(() => setToastMsg(null), 3000);
             }).catch(err => console.error("Failed to copy:", err));
@@ -163,7 +163,7 @@ function AdminFleetMapInner() {
           }
 
           el.onclick = () => {
-            navigator.clipboard.writeText(c.id).then(() => {
+            navigator.clipboard.writeText(c.id || '').then(() => {
               setToastMsg(`Copied Customer Address ID: ${c.id}`);
               setTimeout(() => setToastMsg(null), 3000);
             }).catch(err => console.error("Failed to copy:", err));
