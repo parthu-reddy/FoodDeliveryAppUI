@@ -98,9 +98,7 @@ function AdminFleetMapInner() {
           el.className = 'fleet-marker w-8 h-8 bg-red-600 rounded-full flex items-center justify-center shadow-lg border-2 border-white text-white shadow-red-600/50 cursor-pointer pointer-events-auto';
           el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7"/></svg>';
 
-          if (false) { // Placeholder if phone is ever added to Restaurant DTO
-            el.title = `Phone: Unknown`;
-          }
+
 
           el.onclick = () => {
             navigator.clipboard.writeText(r.id || '').then(() => {
@@ -158,9 +156,7 @@ function AdminFleetMapInner() {
           el.className = 'fleet-marker w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center shadow-lg border-2 border-white text-white shadow-orange-500/50 cursor-pointer pointer-events-auto';
           el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
 
-          if (false) { // Placeholder if phone is ever added to CustomerAddress DTO
-            el.title = `Phone: Unknown`;
-          }
+
 
           el.onclick = () => {
             navigator.clipboard.writeText(c.id || '').then(() => {
