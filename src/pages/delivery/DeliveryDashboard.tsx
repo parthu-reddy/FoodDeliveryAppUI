@@ -1,6 +1,7 @@
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
 import { getUserProfile } from "@/lib/tokenStore";
+import { registerDeliveryPushNotifications } from "@/lib/pushNotifications";
 import { DriverRatingCard } from "@features/reviews";
 import {
     deliveryApi,
@@ -198,6 +199,28 @@ export default function DeliveryDashboard({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [riderPhone]);
 
+  const ensurePushRegistration = async () => {
+    try {
+      const result = await registerDeliveryPushNotifications();
+      if (result === "unconfigured") {
+        showToast("Background push is not configured; in-app dispatch alerts remain active.");
+      } else if (result === "unsupported") {
+        showToast("This browser does not support background push; keep the app open for dispatches.");
+      }
+    } catch (error) {
+      console.error("Failed to register delivery push notifications", error);
+      showToast("Background push registration failed; in-app dispatch alerts remain active.");
+    }
+  };
+
+  useEffect(() => {
+    if (deliveryExecutiveId && "Notification" in window && Notification.permission === "granted") {
+      registerDeliveryPushNotifications().catch(error =>
+        console.error("Failed to refresh delivery push registration", error)
+      );
+    }
+  }, [deliveryExecutiveId]);
+
   const requestPermissionsAndGoOnline = async () => {
     if ("Notification" in window && Notification.permission !== "granted") {
       const notifyPermission = await Notification.requestPermission();
@@ -209,6 +232,7 @@ export default function DeliveryDashboard({
         return;
       }
     }
+    await ensurePushRegistration();
 
     if (!navigator.geolocation) {
       showToast("Geolocation is not supported by your browser");
@@ -285,6 +309,7 @@ export default function DeliveryDashboard({
       }
 
       if (notifyGranted && locationGranted) {
+        await ensurePushRegistration();
         navigator.geolocation.getCurrentPosition(
           async (_position) => {
             try {

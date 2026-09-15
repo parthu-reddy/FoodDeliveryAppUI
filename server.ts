@@ -84,6 +84,7 @@ app.use(
     pathFilter: '/api/**',
     target: API_GATEWAY_URL,
     changeOrigin: true,
+    ws: true,
       on: {
         proxyReq: (proxyReq, req: express.Request) => {
           // Forward original host for CORS

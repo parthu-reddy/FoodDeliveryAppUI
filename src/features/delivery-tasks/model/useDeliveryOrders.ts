@@ -135,6 +135,23 @@ export function useDeliveryOrders({
   enabled: isOnline 
 });
 
+  // FCM foreground messages and service-worker notification clicks are hints to bypass the
+  // five-second polling delay. Order details still come from the authenticated API.
+  useEffect(() => {
+    const refetchFromPush = () => refetchPolling();
+    const onServiceWorkerMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'NEW_ORDER_DISPATCH') {
+        refetchPolling();
+      }
+    };
+    window.addEventListener('delivery-push', refetchFromPush);
+    navigator.serviceWorker?.addEventListener('message', onServiceWorkerMessage);
+    return () => {
+      window.removeEventListener('delivery-push', refetchFromPush);
+      navigator.serviceWorker?.removeEventListener('message', onServiceWorkerMessage);
+    };
+  }, [refetchPolling]);
+
   // History Fetch
   useEffect(() => {
     if (!isOnline || !deliveryExecutiveId) return;
