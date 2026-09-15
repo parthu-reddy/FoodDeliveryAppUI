@@ -66,8 +66,8 @@ export default function CustomerRestaurantCard({ restaurant, isLast, lastElement
     >
       <div className="h-44 w-full relative overflow-hidden bg-transparent">
         <ImageLoader
-          src={restaurant.image}
-          alt={restaurant.name}
+          src={restaurant.image || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80"}
+          alt={restaurant.name || "Restaurant"}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           referrerPolicy="no-referrer"
           containerClassName="w-full h-full"
