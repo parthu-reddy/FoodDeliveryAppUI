@@ -104,6 +104,27 @@ app.use(
   })
 );
 
+// Proxy chat WebSocket connections to the API Gateway. The chat input is intentionally disabled
+// until STOMP connects, so missing this proxy makes every order chat look read-only in local dev.
+app.use(
+  createProxyMiddleware({
+    pathFilter: '/ws/**',
+    target: API_GATEWAY_URL,
+    changeOrigin: true,
+    ws: true,
+    on: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      error: (err, req: express.Request, res: any) => {
+        logger.error({ err }, `[proxy] Error forwarding websocket ${req.url}: ${err.message}`);
+        if (res && res.writeHead) {
+          res.writeHead(502, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, message: 'API Gateway unreachable for websocket: ' + err.message }));
+        }
+      },
+    },
+  })
+);
+
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
@@ -136,6 +157,7 @@ async function startServer() {
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Proxying /api/* → ${API_GATEWAY_URL}`);
+    console.log(`Proxying /ws/* → ${API_GATEWAY_URL}`);
   });
 }
 
