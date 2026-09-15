@@ -51,6 +51,7 @@ const authenticatedFetch = async (url: string, init: RequestInit) => {
   if (!authToken) {
     throw new Error('Cannot register push notifications without an authenticated session');
   }
+  // eslint-disable-next-line no-restricted-syntax
   const response = await fetch(url, {
     ...init,
     headers: {
