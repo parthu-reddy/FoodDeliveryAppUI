@@ -827,7 +827,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getOrderReviewContext"];
+        get: operations["fetchOrderReviewContext"];
         put?: never;
         post?: never;
         delete?: never;
@@ -843,7 +843,23 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getOrderParticipants"];
+        get: operations["fetchOrderParticipants"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/internal/orders/{orderId}/dispatch-details": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["fetchOrderDispatchDetails"];
         put?: never;
         post?: never;
         delete?: never;
@@ -859,7 +875,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getUnassignedOrders"];
+        get: operations["fetchUnassignedOrders"];
         put?: never;
         post?: never;
         delete?: never;
@@ -875,7 +891,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getOrderHistoryForDriver"];
+        get: operations["fetchOrderHistoryForDriver"];
         put?: never;
         post?: never;
         delete?: never;
@@ -891,7 +907,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getActiveOrdersForDriver"];
+        get: operations["fetchActiveOrdersForDriver"];
         put?: never;
         post?: never;
         delete?: never;
@@ -987,7 +1003,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getUnassignedOrders_1"];
+        get: operations["getUnassignedOrders"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1433,6 +1449,21 @@ export interface components {
             address?: string;
             /** Format: double */
             rating?: number;
+            isActive?: boolean;
+            /** Format: int32 */
+            defaultPrepTimeSeconds?: number;
+            isOpen?: boolean;
+            image?: string;
+            logoUrl?: string;
+            cuisine?: string;
+            /** Format: int32 */
+            reviewsCount?: number;
+            /** Format: int32 */
+            deliveryTime?: number;
+            /** Format: double */
+            deliveryFee?: number;
+            tags?: string[];
+            brandName?: string;
             /** Format: double */
             distance?: number;
             isSponsored?: boolean;
@@ -1787,29 +1818,29 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
-            sort?: components["schemas"]["SortObject"];
-            /** Format: int32 */
-            numberOfElements: number;
-            pageable?: components["schemas"]["PageableObject"];
-            /** Format: int32 */
-            number: number;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["Order"][];
-            first: boolean;
+            /** Format: int32 */
+            number: number;
+            sort?: components["schemas"]["SortObject"];
             last: boolean;
+            pageable?: components["schemas"]["PageableObject"];
+            first: boolean;
+            /** Format: int32 */
+            numberOfElements: number;
             empty: boolean;
         };
         PageableObject: {
-            sort?: components["schemas"]["SortObject"];
-            unpaged: boolean;
-            paged: boolean;
-            /** Format: int32 */
-            pageNumber: number;
-            /** Format: int32 */
-            pageSize: number;
             /** Format: int64 */
             offset: number;
+            paged: boolean;
+            sort?: components["schemas"]["SortObject"];
+            unpaged: boolean;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int32 */
+            pageNumber: number;
         };
         SortObject: {
             empty: boolean;
@@ -1828,17 +1859,17 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
-            sort?: components["schemas"]["SortObject"];
-            /** Format: int32 */
-            numberOfElements: number;
-            pageable?: components["schemas"]["PageableObject"];
-            /** Format: int32 */
-            number: number;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["SupportTicket"][];
-            first: boolean;
+            /** Format: int32 */
+            number: number;
+            sort?: components["schemas"]["SortObject"];
             last: boolean;
+            pageable?: components["schemas"]["PageableObject"];
+            first: boolean;
+            /** Format: int32 */
+            numberOfElements: number;
             empty: boolean;
         };
         AdminOrderMoney: {
@@ -3258,7 +3289,7 @@ export interface operations {
             };
         };
     };
-    getOrderReviewContext: {
+    fetchOrderReviewContext: {
         parameters: {
             query?: never;
             header?: never;
@@ -3280,7 +3311,7 @@ export interface operations {
             };
         };
     };
-    getOrderParticipants: {
+    fetchOrderParticipants: {
         parameters: {
             query?: never;
             header?: never;
@@ -3302,7 +3333,31 @@ export interface operations {
             };
         };
     };
-    getUnassignedOrders: {
+    fetchOrderDispatchDetails: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
+    fetchUnassignedOrders: {
         parameters: {
             query?: never;
             header?: never;
@@ -3322,7 +3377,7 @@ export interface operations {
             };
         };
     };
-    getOrderHistoryForDriver: {
+    fetchOrderHistoryForDriver: {
         parameters: {
             query: {
                 date?: string;
@@ -3347,7 +3402,7 @@ export interface operations {
             };
         };
     };
-    getActiveOrdersForDriver: {
+    fetchActiveOrdersForDriver: {
         parameters: {
             query: {
                 pageable: components["schemas"]["Pageable"];
@@ -3486,7 +3541,7 @@ export interface operations {
             };
         };
     };
-    getUnassignedOrders_1: {
+    getUnassignedOrders: {
         parameters: {
             query?: {
                 page?: number;

@@ -134,14 +134,14 @@ export const PageOrder = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    sort: SortObject.optional(),
-    numberOfElements: z.number().int(),
-    pageable: PageableObject.optional(),
-    number: z.number().int(),
     size: z.number().int(),
     content: z.array(Order),
-    first: z.boolean(),
+    number: z.number().int(),
+    sort: SortObject.optional(),
     last: z.boolean(),
+    pageable: PageableObject.optional(),
+    first: z.boolean(),
+    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -158,7 +158,7 @@ export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/internal/orders/:orderId/review-context",
-    alias: "getOrderReviewContext",
+    alias: "fetchOrderReviewContext",
     requestFormat: "json",
     parameters: [
       {
@@ -172,7 +172,7 @@ export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/internal/orders/:orderId/participants",
-    alias: "getOrderParticipants",
+    alias: "fetchOrderParticipants",
     requestFormat: "json",
     parameters: [
       {
@@ -185,15 +185,29 @@ export const endpoints = makeApi([
   },
   {
     method: "get",
+    path: "/api/v1/internal/orders/:orderId/dispatch-details",
+    alias: "fetchOrderDispatchDetails",
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "orderId",
+        type: "Path",
+        schema: z.string().uuid(),
+      },
+    ],
+    response: z.record(z.string()),
+  },
+  {
+    method: "get",
     path: "/api/v1/internal/orders/unassigned",
-    alias: "getUnassignedOrders",
+    alias: "fetchUnassignedOrders",
     requestFormat: "json",
     response: z.array(Order),
   },
   {
     method: "get",
     path: "/api/v1/internal/orders/driver/:driverId/history",
-    alias: "getOrderHistoryForDriver",
+    alias: "fetchOrderHistoryForDriver",
     requestFormat: "json",
     parameters: [
       {
@@ -217,7 +231,7 @@ export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/internal/orders/driver/:driverId/active",
-    alias: "getActiveOrdersForDriver",
+    alias: "fetchActiveOrdersForDriver",
     requestFormat: "json",
     parameters: [
       {

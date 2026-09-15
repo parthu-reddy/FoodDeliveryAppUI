@@ -366,6 +366,17 @@ export const RestaurantDto = z
     lng: z.number(),
     address: z.string(),
     rating: z.number(),
+    isActive: z.boolean(),
+    defaultPrepTimeSeconds: z.number().int(),
+    isOpen: z.boolean(),
+    image: z.string(),
+    logoUrl: z.string(),
+    cuisine: z.string(),
+    reviewsCount: z.number().int(),
+    deliveryTime: z.number().int(),
+    deliveryFee: z.number(),
+    tags: z.array(z.string()),
+    brandName: z.string(),
     distance: z.number(),
     isSponsored: z.boolean(),
     adData: SponsoredListingDTO,
@@ -768,26 +779,26 @@ export const pageable = z
   .passthrough();
 export const PageableObject = z
   .object({
+    offset: z.number().int(),
+    paged: z.boolean(),
     sort: SortObject.optional(),
     unpaged: z.boolean(),
-    paged: z.boolean(),
-    pageNumber: z.number().int(),
     pageSize: z.number().int(),
-    offset: z.number().int(),
+    pageNumber: z.number().int(),
   })
   .passthrough();
 export const PageOrder = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    sort: SortObject.optional(),
-    numberOfElements: z.number().int(),
-    pageable: PageableObject.optional(),
-    number: z.number().int(),
     size: z.number().int(),
     content: z.array(Order),
-    first: z.boolean(),
+    number: z.number().int(),
+    sort: SortObject.optional(),
     last: z.boolean(),
+    pageable: PageableObject.optional(),
+    first: z.boolean(),
+    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -803,14 +814,14 @@ export const PageSupportTicket = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    sort: SortObject.optional(),
-    numberOfElements: z.number().int(),
-    pageable: PageableObject.optional(),
-    number: z.number().int(),
     size: z.number().int(),
     content: z.array(SupportTicket),
-    first: z.boolean(),
+    number: z.number().int(),
+    sort: SortObject.optional(),
     last: z.boolean(),
+    pageable: PageableObject.optional(),
+    first: z.boolean(),
+    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();

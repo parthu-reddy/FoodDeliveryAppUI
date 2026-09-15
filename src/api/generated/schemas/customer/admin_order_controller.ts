@@ -67,7 +67,7 @@ export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/internal/admin/orders/unassigned",
-    alias: "getUnassignedOrders_1",
+    alias: "getUnassignedOrders",
     requestFormat: "json",
     parameters: [
       {
