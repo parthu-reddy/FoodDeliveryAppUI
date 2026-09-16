@@ -1,4 +1,5 @@
 import { usePolling } from "@/hooks/usePolling";
+import { showDeliveryAssignmentNotification } from "@/lib/notificationPermissions";
 import { registerGeolocationWatch, clearGeolocationWatch } from "@/lib/permissionCleanup";
 import { getToken } from "@/lib/tokenStore";
 import { deliveryApi } from "@/lib/zodiosClients";
@@ -59,6 +60,7 @@ export function useDeliveryOrders({
   const [rejectedIds, setRejectedIds] = useState<Set<string>>(new Set());
   const historyRef = useRef<Order[]>([]);
   const lastActiveCountRef = useRef(0);
+  const notifiedAssignmentIdsRef = useRef<Set<string>>(new Set());
 
   // Polling Orders
   const { refetch: refetchPolling } = usePolling({
@@ -118,6 +120,14 @@ export function useDeliveryOrders({
       return Array.from(mergedMap.values());
     });
     if (fetchedAvailableJobs.length > 0) {
+      fetchedAvailableJobs.forEach(job => {
+        if (!notifiedAssignmentIdsRef.current.has(job.id)) {
+          notifiedAssignmentIdsRef.current.add(job.id);
+          void showDeliveryAssignmentNotification(job.id).catch(error =>
+            console.error("Failed to show delivery assignment notification", error)
+          );
+        }
+      });
       setRejectedIds(prev => {
         let changed = false;
         const newSet = new Set(prev);
@@ -134,6 +144,16 @@ export function useDeliveryOrders({
   intervalMs: 5000, 
   enabled: isOnline 
 });
+
+  useEffect(() => {
+    const onNotificationClick = (event: MessageEvent) => {
+      if (event.data?.type === "NEW_ORDER_DISPATCH") {
+        refetchPolling();
+      }
+    };
+    navigator.serviceWorker?.addEventListener("message", onNotificationClick);
+    return () => navigator.serviceWorker?.removeEventListener("message", onNotificationClick);
+  }, [refetchPolling]);
 
   // History Fetch
   useEffect(() => {

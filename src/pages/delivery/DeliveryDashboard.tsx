@@ -1,5 +1,9 @@
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
+import {
+  getNotificationPermission,
+  requestNotificationPermission,
+} from "@/lib/notificationPermissions";
 import { getUserProfile } from "@/lib/tokenStore";
 import { DriverRatingCard } from "@features/reviews";
 import {
@@ -199,6 +203,26 @@ export default function DeliveryDashboard({
   }, [riderPhone]);
 
   const requestPermissionsAndGoOnline = async () => {
+    let notificationPermission;
+    try {
+      notificationPermission = await requestNotificationPermission();
+    } catch (error) {
+      console.error("Failed to request notification permission", error);
+      showToast("Unable to request notification permission on this device.");
+      setShowPermissionsPrompt(false);
+      return;
+    }
+    if (notificationPermission === "unsupported") {
+      showToast("Notifications are not supported in this browser. Install the app or use a supported browser.");
+      setShowPermissionsPrompt(false);
+      return;
+    }
+    if (notificationPermission !== "granted") {
+      showToast("Notification permission is required. Enable it in your device or browser settings.");
+      setShowPermissionsPrompt(false);
+      return;
+    }
+
     if (!navigator.geolocation) {
       showToast("Geolocation is not supported by your browser");
       setShowPermissionsPrompt(false);
@@ -254,6 +278,13 @@ export default function DeliveryDashboard({
       return;
     }
     if (!isOnline) {
+      let notificationGranted = false;
+      try {
+        notificationGranted = (await getNotificationPermission()) === "granted";
+      } catch (error) {
+        console.error("Failed to read notification permission", error);
+      }
+
       let locationGranted = false;
       try {
         if (navigator.permissions) {
@@ -268,7 +299,7 @@ export default function DeliveryDashboard({
         // Fallback or ignore if navigator.permissions is not supported
       }
 
-      if (locationGranted) {
+      if (notificationGranted && locationGranted) {
         navigator.geolocation.getCurrentPosition(
           async (_position) => {
             try {
@@ -1013,14 +1044,14 @@ export default function DeliveryDashboard({
                 </h3>
                 <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-8">
                   To receive order assignments and go on duty, we need your
-                  permission to access your location while you are on duty.
+                  permission to access your location and send notifications.
                 </p>
                 <Button
                   onClick={requestPermissionsAndGoOnline}
                   variant="primary"
                   fullWidth
                 >
-                  Enable Location
+                  Enable Permissions
                 </Button>
               </div>
             </Modal>
