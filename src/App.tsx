@@ -5,7 +5,6 @@ import { ConfigProvider } from './contexts/ConfigContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { logout as authLogout } from './lib/authStore';
-import { unregisterDeliveryPushNotifications } from './lib/pushNotifications';
 import { getUserProfile } from './lib/tokenStore';
 import { RoleName, UserRole } from './types';
 
@@ -46,7 +45,6 @@ function AppContent() {
   };
 
   const handleLogout = async () => {
-    await unregisterDeliveryPushNotifications();
     await authLogout();
     setUserRole(null);
     setPhone('');

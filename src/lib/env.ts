@@ -10,13 +10,6 @@ const envSchema = z.object({
   VITE_APP_ENV: z.enum(['development', 'staging', 'production']).catch('development'),
   VITE_LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).catch('info'),
   VITE_ENABLE_DEV_OTP: z.string().optional().transform(v => v === 'true'),
-  VITE_FIREBASE_API_KEY: z.string().optional(),
-  VITE_FIREBASE_AUTH_DOMAIN: z.string().optional(),
-  VITE_FIREBASE_PROJECT_ID: z.string().optional(),
-  VITE_FIREBASE_STORAGE_BUCKET: z.string().optional(),
-  VITE_FIREBASE_MESSAGING_SENDER_ID: z.string().optional(),
-  VITE_FIREBASE_APP_ID: z.string().optional(),
-  VITE_FIREBASE_VAPID_KEY: z.string().optional(),
   MODE: z.string().default('development'),
   DEV: z.boolean().default(true),
 }).passthrough(); // Allow other Vite env vars

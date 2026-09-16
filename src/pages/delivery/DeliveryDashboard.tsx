@@ -1,7 +1,6 @@
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
 import { getUserProfile } from "@/lib/tokenStore";
-import { registerDeliveryPushNotifications } from "@/lib/pushNotifications";
 import { DriverRatingCard } from "@features/reviews";
 import {
     deliveryApi,
@@ -199,41 +198,7 @@ export default function DeliveryDashboard({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [riderPhone]);
 
-  const ensurePushRegistration = async () => {
-    try {
-      const result = await registerDeliveryPushNotifications();
-      if (result === "unconfigured") {
-        showToast("Background push is not configured; in-app dispatch alerts remain active.");
-      } else if (result === "unsupported") {
-        showToast("This browser does not support background push; keep the app open for dispatches.");
-      }
-    } catch (error) {
-      console.error("Failed to register delivery push notifications", error);
-      showToast("Background push registration failed; in-app dispatch alerts remain active.");
-    }
-  };
-
-  useEffect(() => {
-    if (deliveryExecutiveId && "Notification" in window && Notification.permission === "granted") {
-      registerDeliveryPushNotifications().catch(error =>
-        console.error("Failed to refresh delivery push registration", error)
-      );
-    }
-  }, [deliveryExecutiveId]);
-
   const requestPermissionsAndGoOnline = async () => {
-    if ("Notification" in window && Notification.permission !== "granted") {
-      const notifyPermission = await Notification.requestPermission();
-      if (notifyPermission !== "granted") {
-        showToast(
-          "Notification permission is required. Please enable in browser settings if denied."
-        );
-        setShowPermissionsPrompt(false);
-        return;
-      }
-    }
-    await ensurePushRegistration();
-
     if (!navigator.geolocation) {
       showToast("Geolocation is not supported by your browser");
       setShowPermissionsPrompt(false);
@@ -289,11 +254,6 @@ export default function DeliveryDashboard({
       return;
     }
     if (!isOnline) {
-      let notifyGranted = false;
-      if ("Notification" in window && Notification.permission === "granted") {
-        notifyGranted = true;
-      }
-
       let locationGranted = false;
       try {
         if (navigator.permissions) {
@@ -308,8 +268,7 @@ export default function DeliveryDashboard({
         // Fallback or ignore if navigator.permissions is not supported
       }
 
-      if (notifyGranted && locationGranted) {
-        await ensurePushRegistration();
+      if (locationGranted) {
         navigator.geolocation.getCurrentPosition(
           async (_position) => {
             try {
@@ -1054,14 +1013,14 @@ export default function DeliveryDashboard({
                 </h3>
                 <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-8">
                   To receive order assignments and go on duty, we need your
-                  permission to access your location and send notifications.
+                  permission to access your location while you are on duty.
                 </p>
                 <Button
                   onClick={requestPermissionsAndGoOnline}
                   variant="primary"
                   fullWidth
                 >
-                  Enable Permissions
+                  Enable Location
                 </Button>
               </div>
             </Modal>
