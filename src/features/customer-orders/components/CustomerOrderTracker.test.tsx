@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import React from 'react';
 import { server } from '@/mocks/server';
-import { DeliveryStatus, OrderStatus } from '@/types/backend-enums';
+import { OrderStatus } from '@/types/backend-enums';
 import { Order } from '@/types';
 import { CallProvider } from '@/contexts/CallContext';
 import { CustomerOrderTracker } from './CustomerOrderTracker';
