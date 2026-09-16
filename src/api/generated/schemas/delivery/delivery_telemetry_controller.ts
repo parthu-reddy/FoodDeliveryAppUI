@@ -1,7 +1,8 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
+import { TelemetryEventRequest } from "./common";
 
-const LocationPayload = z
+export const LocationPayload = z
   .object({
     latitude: z.number(),
     longitude: z.number(),
@@ -15,7 +16,7 @@ export const schemas = {
   LocationPayload,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/delivery/telemetry/sync",

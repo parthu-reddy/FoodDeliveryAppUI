@@ -1,7 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-const Customer = z
+export const Customer = z
   .object({
     id: z.string().uuid(),
     phoneNumber: z.string(),
@@ -9,7 +9,7 @@ const Customer = z
     updatedAt: z.string().datetime({ offset: true }).optional(),
   })
   .passthrough();
-const ApiResponseCustomer = z
+export const ApiResponseCustomer = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -18,7 +18,7 @@ const ApiResponseCustomer = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-const ApiResponseMapStringObject = z
+export const ApiResponseMapStringObject = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -34,7 +34,7 @@ export const schemas = {
   ApiResponseMapStringObject,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "put",
     path: "/api/v1/customers/:id",

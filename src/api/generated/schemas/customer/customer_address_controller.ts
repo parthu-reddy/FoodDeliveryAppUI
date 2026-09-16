@@ -4,7 +4,7 @@ import { z } from "zod";
 import { CustomerAddressDto } from "./common";
 import { ApiResponseVoid } from "./common";
 
-const ApiResponseCustomerAddressDto = z
+export const ApiResponseCustomerAddressDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -13,7 +13,7 @@ const ApiResponseCustomerAddressDto = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-const ApiResponseListCustomerAddressDto = z
+export const ApiResponseListCustomerAddressDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -22,7 +22,7 @@ const ApiResponseListCustomerAddressDto = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-const AddressRequest = z
+export const AddressRequest = z
   .object({
     label: z.string(),
     addressLine1: z.string(),
@@ -41,7 +41,7 @@ export const schemas = {
   AddressRequest,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/customers/:customerId/addresses",

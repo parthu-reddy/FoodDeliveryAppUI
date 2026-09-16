@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { ApiResponseString } from "./common";
 
-const FailedRefundDto = z
+export const FailedRefundDto = z
   .object({
     refundId: z.string().uuid(),
     orderId: z.string().uuid(),
@@ -36,7 +36,7 @@ const FailedRefundDto = z
   })
   .partial()
   .passthrough();
-const PageResponseDtoFailedRefundDto = z
+export const PageResponseDtoFailedRefundDto = z
   .object({
     content: z.array(FailedRefundDto),
     totalElements: z.number().int(),
@@ -55,7 +55,7 @@ export const schemas = {
   PageResponseDtoFailedRefundDto,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/internal/admin/orders/dlq/retry",

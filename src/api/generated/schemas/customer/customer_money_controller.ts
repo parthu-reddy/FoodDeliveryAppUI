@@ -3,11 +3,11 @@ import { z } from "zod";
 
 import { RefundView } from "./common";
 
-const ReceiptItem = z
+export const ReceiptItem = z
   .object({ name: z.string(), quantity: z.number().int(), price: z.number() })
   .partial()
   .passthrough();
-const CustomerReceipt = z
+export const CustomerReceipt = z
   .object({
     items: z.array(ReceiptItem),
     itemTotal: z.number(),
@@ -23,7 +23,7 @@ const CustomerReceipt = z
   })
   .partial()
   .passthrough();
-const WalletDto = z
+export const WalletDto = z
   .object({
     id: z.string().uuid(),
     entityId: z.string().uuid(),
@@ -33,7 +33,7 @@ const WalletDto = z
     status: z.enum(["ACTIVE", "SUSPENDED", "CLOSED"]),
   })
   .passthrough();
-const PageResponseDtoMapStringObject = z
+export const PageResponseDtoMapStringObject = z
   .object({
     content: z.array(z.record(z.object({}).partial().passthrough())),
     totalElements: z.number().int(),
@@ -54,7 +54,7 @@ export const schemas = {
   PageResponseDtoMapStringObject,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/money/customer/wallet",

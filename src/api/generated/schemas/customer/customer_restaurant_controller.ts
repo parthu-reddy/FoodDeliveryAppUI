@@ -1,7 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-const PricingConfigDto = z
+export const PricingConfigDto = z
   .object({
     basePrice: z.number(),
     perKmRate: z.number(),
@@ -13,11 +13,11 @@ const PricingConfigDto = z
   })
   .partial()
   .passthrough();
-const DeliveryPricingDto = z
+export const DeliveryPricingDto = z
   .object({ distanceKm: z.number(), config: PricingConfigDto })
   .partial()
   .passthrough();
-const ApiResponseDeliveryPricingDto = z
+export const ApiResponseDeliveryPricingDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -26,7 +26,7 @@ const ApiResponseDeliveryPricingDto = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-const SponsoredListingDTO = z
+export const SponsoredListingDTO = z
   .object({
     adId: z.string(),
     campaignId: z.string(),
@@ -38,7 +38,7 @@ const SponsoredListingDTO = z
   })
   .partial()
   .passthrough();
-const RestaurantDto = z
+export const RestaurantDto = z
   .object({
     id: z.string().uuid(),
     brandId: z.string().uuid(),
@@ -65,7 +65,7 @@ const RestaurantDto = z
   })
   .partial()
   .passthrough();
-const ApiResponseListRestaurantDto = z
+export const ApiResponseListRestaurantDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -74,7 +74,7 @@ const ApiResponseListRestaurantDto = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-const ApiResponseBoolean = z
+export const ApiResponseBoolean = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -94,7 +94,7 @@ export const schemas = {
   ApiResponseBoolean,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/restaurants/:id/delivery-pricing",

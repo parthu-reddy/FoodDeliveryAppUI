@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { LedgerStatementLineDto } from "./common";
 
-const RefundLine = z
+export const RefundLine = z
   .object({
     id: z.string().uuid(),
     amount: z.number(),
@@ -18,7 +18,7 @@ const RefundLine = z
   })
   .partial()
   .passthrough();
-const AdminOrderMoney = z
+export const AdminOrderMoney = z
   .object({
     orderId: z.string().uuid(),
     totalAmount: z.number(),
@@ -57,7 +57,7 @@ export const schemas = {
   AdminOrderMoney,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/internal/admin/orders/:orderId/money",

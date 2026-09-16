@@ -4,7 +4,7 @@ import { z } from "zod";
 import { pageable } from "./common";
 import { CustomerAddressDto } from "./common";
 
-const PageResponseDtoCustomerAddressDto = z
+export const PageResponseDtoCustomerAddressDto = z
   .object({
     content: z.array(CustomerAddressDto),
     totalElements: z.number().int(),
@@ -17,7 +17,7 @@ const PageResponseDtoCustomerAddressDto = z
     empty: z.boolean(),
   })
   .passthrough();
-const ApiResponsePageResponseDtoCustomerAddressDto = z
+export const ApiResponsePageResponseDtoCustomerAddressDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -32,7 +32,7 @@ export const schemas = {
   ApiResponsePageResponseDtoCustomerAddressDto,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/internal/admin/customers/addresses",

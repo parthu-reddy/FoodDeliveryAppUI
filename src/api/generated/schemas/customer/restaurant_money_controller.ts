@@ -4,8 +4,9 @@ import { z } from "zod";
 import { PayoutSummaryDto } from "./common";
 import { PageResponseDtoLedgerStatementLineDto } from "./common";
 import { LedgerStatementLineDto } from "./common";
+import { RefundView } from "./common";
 
-const BeneficiaryStatusDto = z
+export const BeneficiaryStatusDto = z
   .object({
     beneficiaryId: z.string(),
     verificationStatus: z.string(),
@@ -13,7 +14,7 @@ const BeneficiaryStatusDto = z
   })
   .partial()
   .passthrough();
-const RestaurantSummary = z
+export const RestaurantSummary = z
   .object({
     orders: z.number().int(),
     grossFoodCost: z.number(),
@@ -28,7 +29,7 @@ const RestaurantSummary = z
   })
   .partial()
   .passthrough();
-const RestaurantOrderEarnings = z
+export const RestaurantOrderEarnings = z
   .object({
     orderId: z.string().uuid(),
     restaurantId: z.string().uuid(),
@@ -46,7 +47,7 @@ export const schemas = {
   RestaurantOrderEarnings,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/money/restaurant/:outletId/summary",

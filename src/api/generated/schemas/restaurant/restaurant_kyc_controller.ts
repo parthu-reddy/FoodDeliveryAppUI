@@ -3,14 +3,14 @@ import { z } from "zod";
 
 import { ApiResponseVoid } from "./common";
 
-const GstinRequest = z
+export const GstinRequest = z
   .object({
     brandId: z.string().uuid().optional(),
     gstin: z.string(),
     brandName: z.string(),
   })
   .passthrough();
-const BankAccountRequest = z
+export const BankAccountRequest = z
   .object({
     brandId: z.string().uuid().optional(),
     accountNumber: z.string(),
@@ -18,7 +18,7 @@ const BankAccountRequest = z
     brandName: z.string(),
   })
   .passthrough();
-const VerificationCallbackRequest = z
+export const VerificationCallbackRequest = z
   .object({
     verificationType: z.string(),
     status: z.string(),
@@ -27,7 +27,7 @@ const VerificationCallbackRequest = z
     matchScore: z.number().optional(),
   })
   .passthrough();
-const ApiResponseMapStringString = z
+export const ApiResponseMapStringString = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -44,7 +44,7 @@ export const schemas = {
   ApiResponseMapStringString,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/restaurants/verification/brands/gstin",

@@ -1,7 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-const ApiResponseBoolean = z
+export const ApiResponseBoolean = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -15,7 +15,7 @@ export const schemas = {
   ApiResponseBoolean,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/internal/restaurants/outlets/summaries",

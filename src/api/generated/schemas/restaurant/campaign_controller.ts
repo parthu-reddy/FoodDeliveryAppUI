@@ -1,7 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-const CampaignDto = z
+export const CampaignDto = z
   .object({
     id: z.string().uuid(),
     advertiserId: z.string().uuid(),
@@ -13,7 +13,7 @@ const CampaignDto = z
   })
   .partial()
   .passthrough();
-const ApiResponseCampaignDto = z
+export const ApiResponseCampaignDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -22,7 +22,7 @@ const ApiResponseCampaignDto = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-const ApiResponseListCampaignDto = z
+export const ApiResponseListCampaignDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -31,7 +31,7 @@ const ApiResponseListCampaignDto = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-const CampaignRequestDto = z
+export const CampaignRequestDto = z
   .object({
     restaurantId: z.string().uuid(),
     name: z.string(),
@@ -48,7 +48,7 @@ export const schemas = {
   CampaignRequestDto,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "put",
     path: "/api/v1/campaigns/:campaignId/pause",

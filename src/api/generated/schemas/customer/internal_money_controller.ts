@@ -1,7 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-const DailyPayableDto = z
+export const DailyPayableDto = z
   .object({ restaurantPayable: z.number(), driverPayable: z.number() })
   .partial()
   .passthrough();
@@ -10,7 +10,7 @@ export const schemas = {
   DailyPayableDto,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/internal/money/daily-totals",

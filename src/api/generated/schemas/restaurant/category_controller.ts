@@ -3,10 +3,10 @@ import { z } from "zod";
 
 import { LocalTime } from "./common";
 
-const CategoryTimingDTO = z
+export const CategoryTimingDTO = z
   .object({ openingTime: LocalTime, closingTime: LocalTime })
   .passthrough();
-const CategoryDTO = z
+export const CategoryDTO = z
   .object({
     id: z.string().uuid().optional(),
     brandId: z.string().uuid().optional(),
@@ -15,7 +15,7 @@ const CategoryDTO = z
     timings: z.array(CategoryTimingDTO).optional(),
   })
   .passthrough();
-const ApiResponseCategoryDTO = z
+export const ApiResponseCategoryDTO = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -24,13 +24,13 @@ const ApiResponseCategoryDTO = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-const TimingDTO = z
+export const TimingDTO = z
   .object({ openingTime: z.string(), closingTime: z.string() })
   .passthrough();
-const SetOutletCategoryTimingRequest = z
+export const SetOutletCategoryTimingRequest = z
   .object({ categoryId: z.string().uuid(), timings: z.array(TimingDTO) })
   .passthrough();
-const ApiResponseListTimingDTO = z
+export const ApiResponseListTimingDTO = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -39,13 +39,13 @@ const ApiResponseListTimingDTO = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-const SetBrandCategoryTimingRequest = z
+export const SetBrandCategoryTimingRequest = z
   .object({
     categoryId: z.string().uuid(),
     timings: z.array(TimingDTO).optional(),
   })
   .passthrough();
-const ApiResponseListCategoryDTO = z
+export const ApiResponseListCategoryDTO = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -66,7 +66,7 @@ export const schemas = {
   ApiResponseListCategoryDTO,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "put",
     path: "/api/v1/categories/:categoryId",

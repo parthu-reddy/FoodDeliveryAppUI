@@ -5,7 +5,7 @@ import { SupportTicket } from "./common";
 import { SortObject } from "./common";
 import { PageableObject } from "./common";
 
-const PageSupportTicket = z
+export const PageSupportTicket = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
@@ -20,7 +20,7 @@ const PageSupportTicket = z
     empty: z.boolean(),
   })
   .passthrough();
-const ResolveRequest = z
+export const ResolveRequest = z
   .object({
     approved: z.boolean(),
     notes: z.string().optional(),
@@ -34,7 +34,7 @@ export const schemas = {
   ResolveRequest,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/internal/admin/refunds/:ticketId/review",

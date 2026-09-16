@@ -5,7 +5,7 @@ import { PayoutSummaryDto } from "./common";
 import { PageResponseDtoLedgerStatementLineDto } from "./common";
 import { LedgerStatementLineDto } from "./common";
 
-const DriverSummary = z
+export const DriverSummary = z
   .object({
     deliveries: z.number().int(),
     gross: z.number(),
@@ -16,7 +16,7 @@ const DriverSummary = z
   })
   .partial()
   .passthrough();
-const DriverOrderEarnings = z
+export const DriverOrderEarnings = z
   .object({
     orderId: z.string().uuid(),
     driverId: z.string().uuid(),
@@ -35,7 +35,7 @@ export const schemas = {
   DriverOrderEarnings,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/money/driver/:driverId/orders/:orderId",

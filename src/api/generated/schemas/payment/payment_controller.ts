@@ -1,7 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-const RefundRequest = z
+export const RefundRequest = z
   .object({
     gatewayOrderId: z.string(),
     refundId: z.string(),
@@ -9,7 +9,7 @@ const RefundRequest = z
     reason: z.string().optional(),
   })
   .passthrough();
-const CreateOrderRequest = z
+export const CreateOrderRequest = z
   .object({
     internalOrderId: z
       .string()
@@ -27,7 +27,7 @@ export const schemas = {
   CreateOrderRequest,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/payments/refund",

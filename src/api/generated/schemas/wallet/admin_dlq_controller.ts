@@ -1,7 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-const OutboxEventEntity = z
+export const OutboxEventEntity = z
   .object({
     id: z.string().uuid(),
     aggregateType: z.enum([
@@ -94,7 +94,7 @@ const OutboxEventEntity = z
     new: z.boolean().optional(),
   })
   .passthrough();
-const PageResponseDtoOutboxEventEntity = z
+export const PageResponseDtoOutboxEventEntity = z
   .object({
     content: z.array(OutboxEventEntity),
     totalElements: z.number().int(),
@@ -107,7 +107,7 @@ const PageResponseDtoOutboxEventEntity = z
     empty: z.boolean(),
   })
   .passthrough();
-const ApiResponseString = z
+export const ApiResponseString = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -123,7 +123,7 @@ export const schemas = {
   ApiResponseString,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/internal/admin/wallet/dlq/retry",

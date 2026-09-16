@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { MasterMenuItem } from "./common";
 
-const ApiResponseListMasterMenuItem = z
+export const ApiResponseListMasterMenuItem = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -17,7 +17,7 @@ export const schemas = {
   ApiResponseListMasterMenuItem,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/internal/admin/restaurants/:restaurantId/catalog/batch",

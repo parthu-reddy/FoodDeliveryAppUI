@@ -1,7 +1,8 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
+import { AutocompleteResponse } from "./common";
 
-const RoutePolylineDto = z
+export const RoutePolylineDto = z
   .object({
     polyline: z.string(),
     distance: z.string(),
@@ -10,7 +11,7 @@ const RoutePolylineDto = z
   })
   .partial()
   .passthrough();
-const ApiResponseRoutePolylineDto = z
+export const ApiResponseRoutePolylineDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -19,7 +20,7 @@ const ApiResponseRoutePolylineDto = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-const DispatchOrderRequest = z
+export const DispatchOrderRequest = z
   .object({
     cityId: z
       .string()
@@ -35,7 +36,7 @@ const DispatchOrderRequest = z
       ),
   })
   .passthrough();
-const SetAvailabilityRequest = z
+export const SetAvailabilityRequest = z
   .object({
     cityId: z
       .string()
@@ -50,7 +51,7 @@ const SetAvailabilityRequest = z
     available: z.boolean(),
   })
   .passthrough();
-const UpdateLocationRequest = z
+export const UpdateLocationRequest = z
   .object({
     cityId: z
       .string()
@@ -75,7 +76,7 @@ export const schemas = {
   UpdateLocationRequest,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "post",
     path: "/api/logistics/dispatch",

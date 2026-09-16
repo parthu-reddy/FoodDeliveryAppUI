@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { ApiResponseString } from "./common";
 
-const AdvertiserResponse = z
+export const AdvertiserResponse = z
   .object({
     id: z.string().uuid(),
     userId: z.string(),
@@ -14,7 +14,7 @@ const AdvertiserResponse = z
     updatedAt: z.string().datetime({ offset: true }),
   })
   .passthrough();
-const ApiResponseAdvertiserResponse = z
+export const ApiResponseAdvertiserResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -23,7 +23,7 @@ const ApiResponseAdvertiserResponse = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-const AdvertiserRegistrationRequest = z
+export const AdvertiserRegistrationRequest = z
   .object({ companyName: z.string(), externalRef: z.string().optional() })
   .passthrough();
 
@@ -33,7 +33,7 @@ export const schemas = {
   AdvertiserRegistrationRequest,
 };
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/advertisers",

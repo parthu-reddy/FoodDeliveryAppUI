@@ -5,7 +5,7 @@ import { WalletDto } from "./common";
 import { PageResponseDtoWalletTransactionDto } from "./common";
 import { WalletTransactionDto } from "./common";
 
-const endpoints = makeApi([
+export const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/money/advertiser/:entityType/:entityId",
