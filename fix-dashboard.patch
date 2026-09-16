@@ -1,0 +1,11 @@
+--- src/pages/customer/CustomerDashboard.tsx
++++ src/pages/customer/CustomerDashboard.tsx
+@@ -812,7 +812,7 @@
+         paymentStatus={paymentStatus}
+         getCartTotal={() => getCartTotal(checkoutRestaurantId || '')}
+         cart={checkoutRestaurantId ? (carts[checkoutRestaurantId]?.items || []) : []}
+-        cartRestaurant={checkoutRestaurantId ? carts[checkoutRestaurantId]?.restaurant : { name: 'Restaurant', id: '' }}
++        cartRestaurant={checkoutRestaurantId ? (carts[checkoutRestaurantId]?.restaurant as { name: string }) : { name: 'Restaurant' }}
+         processPaymentAndOrder={processPaymentAndOrder}
+         address={deliveryAddressId || ''}
+         deliveryLat={deliveryLat ?? 0}

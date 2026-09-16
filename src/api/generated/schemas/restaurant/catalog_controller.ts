@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { MasterMenuItem } from "./common";
 
-export const MasterMenuItemDto = z
+const MasterMenuItemDto = z
   .object({
     id: z.string().uuid(),
     brandId: z.string().uuid(),
@@ -19,7 +19,7 @@ export const MasterMenuItemDto = z
   })
   .partial()
   .passthrough();
-export const ApiResponseMasterMenuItemDto = z
+const ApiResponseMasterMenuItemDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -28,7 +28,7 @@ export const ApiResponseMasterMenuItemDto = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const OverrideItemDto = z
+const OverrideItemDto = z
   .object({
     id: z.string().uuid(),
     outletId: z.string().uuid(),
@@ -40,7 +40,7 @@ export const OverrideItemDto = z
   })
   .partial()
   .passthrough();
-export const ApiResponseOverrideItemDto = z
+const ApiResponseOverrideItemDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -49,7 +49,7 @@ export const ApiResponseOverrideItemDto = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const MenuItemDTO = z
+const MenuItemDTO = z
   .object({
     id: z.string().uuid(),
     restaurantId: z.string().uuid(),
@@ -64,7 +64,7 @@ export const MenuItemDTO = z
     isVeg: z.boolean().optional(),
   })
   .passthrough();
-export const ApiResponseListMenuItemDTO = z
+const ApiResponseListMenuItemDTO = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -73,7 +73,7 @@ export const ApiResponseListMenuItemDTO = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const ApiResponseListOverrideItemDto = z
+const ApiResponseListOverrideItemDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -82,7 +82,7 @@ export const ApiResponseListOverrideItemDto = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const ApiResponseListMasterMenuItemDto = z
+const ApiResponseListMasterMenuItemDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -91,7 +91,7 @@ export const ApiResponseListMasterMenuItemDto = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const OutletMenuOverride = z
+const OutletMenuOverride = z
   .object({
     id: z.string().uuid().optional(),
     outletId: z.string().uuid().optional(),
@@ -115,7 +115,7 @@ export const schemas = {
   OutletMenuOverride,
 };
 
-export const endpoints = makeApi([
+const endpoints = makeApi([
   {
     method: "put",
     path: "/api/v1/brands/:brandId/master-menu/:itemId",

@@ -812,7 +812,7 @@ export default function CustomerDashboard({
         paymentStatus={paymentStatus}
         getCartTotal={() => getCartTotal(checkoutRestaurantId || '')}
         cart={checkoutRestaurantId ? (carts[checkoutRestaurantId]?.items || []) : []}
-        cartRestaurant={checkoutRestaurantId ? carts[checkoutRestaurantId]?.restaurant : { name: 'Restaurant', id: '' }}
+        cartRestaurant={checkoutRestaurantId ? (carts[checkoutRestaurantId]?.restaurant as { name: string }) : { name: 'Restaurant' }}
         processPaymentAndOrder={processPaymentAndOrder}
         address={deliveryAddressId || ''}
         deliveryLat={deliveryLat ?? 0}

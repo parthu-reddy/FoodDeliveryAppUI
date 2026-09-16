@@ -1,7 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-export const Brand = z
+const Brand = z
   .object({
     id: z.string().uuid(),
     ownerId: z.string().uuid(),
@@ -41,7 +41,7 @@ export const Brand = z
     version: z.number().int().optional(),
   })
   .passthrough();
-export const ApiResponseBrand = z
+const ApiResponseBrand = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -50,7 +50,7 @@ export const ApiResponseBrand = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const ApiResponseListBrand = z
+const ApiResponseListBrand = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -59,7 +59,7 @@ export const ApiResponseListBrand = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const BrandOnboardRequest = z
+const BrandOnboardRequest = z
   .object({
     name: z.string(),
     gstin: z.string(),
@@ -78,7 +78,7 @@ export const schemas = {
   BrandOnboardRequest,
 };
 
-export const endpoints = makeApi([
+const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/brands",

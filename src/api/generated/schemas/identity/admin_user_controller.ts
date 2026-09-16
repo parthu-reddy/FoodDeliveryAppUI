@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { ApiResponseString } from "./common";
 
-export const UserDTO = z
+const UserDTO = z
   .object({
     id: z.string().uuid(),
     phoneNumber: z.string(),
@@ -11,7 +11,7 @@ export const UserDTO = z
     active: z.boolean().optional(),
   })
   .passthrough();
-export const ApiResponseUserDTO = z
+const ApiResponseUserDTO = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -20,7 +20,7 @@ export const ApiResponseUserDTO = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const PageResponseDtoUserDTO = z
+const PageResponseDtoUserDTO = z
   .object({
     content: z.array(UserDTO),
     totalElements: z.number().int(),
@@ -33,7 +33,7 @@ export const PageResponseDtoUserDTO = z
     empty: z.boolean(),
   })
   .passthrough();
-export const ApiResponsePageResponseDtoUserDTO = z
+const ApiResponsePageResponseDtoUserDTO = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -42,7 +42,7 @@ export const ApiResponsePageResponseDtoUserDTO = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const RoleRequestDTO = z
+const RoleRequestDTO = z
   .object({
     serviceName: z
       .string()
@@ -65,7 +65,7 @@ export const schemas = {
   RoleRequestDTO,
 };
 
-export const endpoints = makeApi([
+const endpoints = makeApi([
   {
     method: "put",
     path: "/api/v1/internal/admin/users/:userId/status",

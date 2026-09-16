@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { ApiResponseVoid } from "./common";
 
-export const RestaurantOrder = z
+const RestaurantOrder = z
   .object({
     orderId: z.string().uuid(),
     restaurantId: z.string().uuid(),
@@ -69,7 +69,7 @@ export const RestaurantOrder = z
     items: z.object({}).partial().passthrough().optional(),
   })
   .passthrough();
-export const ApiResponseListRestaurantOrder = z
+const ApiResponseListRestaurantOrder = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -78,7 +78,7 @@ export const ApiResponseListRestaurantOrder = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const PageResponseDtoRestaurantOrder = z
+const PageResponseDtoRestaurantOrder = z
   .object({
     content: z.array(RestaurantOrder),
     totalElements: z.number().int(),
@@ -91,7 +91,7 @@ export const PageResponseDtoRestaurantOrder = z
     empty: z.boolean(),
   })
   .passthrough();
-export const ApiResponsePageResponseDtoRestaurantOrder = z
+const ApiResponsePageResponseDtoRestaurantOrder = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -100,14 +100,14 @@ export const ApiResponsePageResponseDtoRestaurantOrder = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const PartialRefundRequestDto = z
+const PartialRefundRequestDto = z
   .object({
     amount: z.number().gte(0.01),
     reason: z.string().optional(),
     items: z.array(z.string()).optional(),
   })
   .passthrough();
-export const AcceptOrderRequest = z
+const AcceptOrderRequest = z
   .object({ additionalPrepTime: z.number().int(), delayReason: z.string() })
   .partial()
   .passthrough();
@@ -121,7 +121,7 @@ export const schemas = {
   AcceptOrderRequest,
 };
 
-export const endpoints = makeApi([
+const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/restaurants/:restaurantId/fulfillment/orders/:orderId/reject",

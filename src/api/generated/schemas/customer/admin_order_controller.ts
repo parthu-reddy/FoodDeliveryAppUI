@@ -6,7 +6,7 @@ import { PageResponseDtoOrderResponse } from "./common";
 import { OrderResponse } from "./common";
 import { OrderItemResponse } from "./common";
 
-export const endpoints = makeApi([
+const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/internal/admin/orders/:orderId/reconcile",

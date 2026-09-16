@@ -6,19 +6,19 @@ import { pageable } from "./common";
 import { SortObject } from "./common";
 import { PageableObject } from "./common";
 
-export const GeoTargeting = z
+const GeoTargeting = z
   .object({ regions: z.array(z.string()).max(400) })
   .passthrough();
-export const Daypart = z
+const Daypart = z
   .object({ dayOfWeek: z.string(), startTime: z.string(), endTime: z.string() })
   .passthrough();
-export const DaypartingConfig = z
+const DaypartingConfig = z
   .object({ dayparts: z.array(Daypart).max(400) })
   .passthrough();
-export const ContextualKeywords = z
+const ContextualKeywords = z
   .object({ keywords: z.array(z.string()).max(400) })
   .passthrough();
-export const AdGroupRequest = z
+const AdGroupRequest = z
   .object({
     name: z.string(),
     geoTargeting: GeoTargeting.optional(),
@@ -28,7 +28,7 @@ export const AdGroupRequest = z
     active: z.boolean().optional(),
   })
   .passthrough();
-export const AdGroupResponse = z
+const AdGroupResponse = z
   .object({
     id: z.string().uuid(),
     campaignId: z.string().uuid(),
@@ -42,7 +42,7 @@ export const AdGroupResponse = z
     updatedAt: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const ApiResponseAdGroupResponse = z
+const ApiResponseAdGroupResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -51,7 +51,7 @@ export const ApiResponseAdGroupResponse = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const PageAdGroupResponse = z
+const PageAdGroupResponse = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
@@ -66,7 +66,7 @@ export const PageAdGroupResponse = z
     empty: z.boolean(),
   })
   .passthrough();
-export const ApiResponsePageAdGroupResponse = z
+const ApiResponsePageAdGroupResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -88,7 +88,7 @@ export const schemas = {
   ApiResponsePageAdGroupResponse,
 };
 
-export const endpoints = makeApi([
+const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/advertisers/:advertiserId/campaigns/:campaignId/ad-groups/:adGroupId",

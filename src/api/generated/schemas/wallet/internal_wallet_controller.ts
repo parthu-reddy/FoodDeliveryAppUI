@@ -5,7 +5,7 @@ import { WalletDto } from "./common";
 import { PageResponseDtoWalletTransactionDto } from "./common";
 import { WalletTransactionDto } from "./common";
 
-export const PageResponseDtoWalletDto = z
+const PageResponseDtoWalletDto = z
   .object({
     content: z.array(WalletDto),
     totalElements: z.number().int(),
@@ -18,14 +18,14 @@ export const PageResponseDtoWalletDto = z
     empty: z.boolean(),
   })
   .passthrough();
-export const CreateWalletRequest = z
+const CreateWalletRequest = z
   .object({
     entityId: z.string().uuid().optional(),
     entityType: z.enum(["CUSTOMER", "ADVERTISER"]).optional(),
     currency: z.string(),
   })
   .passthrough();
-export const TransactionRequest = z
+const TransactionRequest = z
   .object({
     amount: z.number(),
     referenceId: z.string().uuid(),
@@ -56,7 +56,7 @@ export const schemas = {
   TransactionRequest,
 };
 
-export const endpoints = makeApi([
+const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/internal/wallets",

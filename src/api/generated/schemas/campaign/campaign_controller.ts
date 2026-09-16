@@ -6,7 +6,7 @@ import { pageable } from "./common";
 import { SortObject } from "./common";
 import { PageableObject } from "./common";
 
-export const CampaignResponse = z
+const CampaignResponse = z
   .object({
     id: z.string().uuid(),
     advertiserId: z.string().uuid(),
@@ -29,7 +29,7 @@ export const CampaignResponse = z
     version: z.number().int(),
   })
   .passthrough();
-export const ApiResponseCampaignResponse = z
+const ApiResponseCampaignResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -38,7 +38,7 @@ export const ApiResponseCampaignResponse = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const PageCampaignResponse = z
+const PageCampaignResponse = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
@@ -53,7 +53,7 @@ export const PageCampaignResponse = z
     empty: z.boolean(),
   })
   .passthrough();
-export const ApiResponsePageCampaignResponse = z
+const ApiResponsePageCampaignResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -62,7 +62,7 @@ export const ApiResponsePageCampaignResponse = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const CampaignPerformanceResponse = z
+const CampaignPerformanceResponse = z
   .object({
     id: z.string().uuid(),
     advertiserId: z.string().uuid(),
@@ -74,7 +74,7 @@ export const CampaignPerformanceResponse = z
     spend: z.number(),
   })
   .passthrough();
-export const PageCampaignPerformanceResponse = z
+const PageCampaignPerformanceResponse = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
@@ -89,7 +89,7 @@ export const PageCampaignPerformanceResponse = z
     empty: z.boolean(),
   })
   .passthrough();
-export const ApiResponsePageCampaignPerformanceResponse = z
+const ApiResponsePageCampaignPerformanceResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -98,7 +98,7 @@ export const ApiResponsePageCampaignPerformanceResponse = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const CampaignRequest = z
+const CampaignRequest = z
   .object({
     advertiserId: z.string().uuid(),
     name: z.string().min(0).max(255),
@@ -110,7 +110,7 @@ export const CampaignRequest = z
     frequencyCap: z.number().int().optional(),
   })
   .passthrough();
-export const ApiResponseMapStringString = z
+const ApiResponseMapStringString = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -119,7 +119,7 @@ export const ApiResponseMapStringString = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const TopupWalletRequest = z
+const TopupWalletRequest = z
   .object({
     amount: z.number().gte(0.01),
     paymentMethod: z.enum(["CARD", "UPI", "WALLET"]),
@@ -139,7 +139,7 @@ export const schemas = {
   TopupWalletRequest,
 };
 
-export const endpoints = makeApi([
+const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/advertisers/:advertiserId/campaigns/:id",

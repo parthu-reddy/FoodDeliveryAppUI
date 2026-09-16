@@ -3,10 +3,10 @@ import { z } from "zod";
 
 import { DeliveryExecutive } from "./common";
 
-export const SortObject = z
+const SortObject = z
   .object({ empty: z.boolean(), sorted: z.boolean(), unsorted: z.boolean() })
   .passthrough();
-export const PageableObject = z
+const PageableObject = z
   .object({
     paged: z.boolean(),
     pageNumber: z.number().int(),
@@ -16,7 +16,7 @@ export const PageableObject = z
     offset: z.number().int(),
   })
   .passthrough();
-export const PageDeliveryExecutive = z
+const PageDeliveryExecutive = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
@@ -31,7 +31,7 @@ export const PageDeliveryExecutive = z
     empty: z.boolean(),
   })
   .passthrough();
-export const DriverLocationDTO = z
+const DriverLocationDTO = z
   .object({
     id: z.string().uuid(),
     fullName: z.string().optional(),
@@ -41,7 +41,7 @@ export const DriverLocationDTO = z
     status: z.string(),
   })
   .passthrough();
-export const PageDriverLocationDTO = z
+const PageDriverLocationDTO = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
@@ -56,7 +56,7 @@ export const PageDriverLocationDTO = z
     empty: z.boolean(),
   })
   .passthrough();
-export const pageable = z
+const pageable = z
   .object({
     page: z.number().int().gte(0),
     size: z.number().int().gte(1),
@@ -74,7 +74,7 @@ export const schemas = {
   pageable,
 };
 
-export const endpoints = makeApi([
+const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/internal/admin/delivery/orders/:orderId/assign",

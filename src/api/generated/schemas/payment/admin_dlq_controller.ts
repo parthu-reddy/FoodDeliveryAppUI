@@ -1,7 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-export const WebhookDelivery = z
+const WebhookDelivery = z
   .object({
     id: z.string().uuid(),
     createdAt: z.string().datetime({ offset: true }),
@@ -16,7 +16,7 @@ export const WebhookDelivery = z
   })
   .partial()
   .passthrough();
-export const PageResponseDtoWebhookDelivery = z
+const PageResponseDtoWebhookDelivery = z
   .object({
     content: z.array(WebhookDelivery),
     totalElements: z.number().int(),
@@ -29,7 +29,7 @@ export const PageResponseDtoWebhookDelivery = z
     empty: z.boolean(),
   })
   .passthrough();
-export const OutboxEventEntity = z
+const OutboxEventEntity = z
   .object({
     id: z.string().uuid(),
     aggregateType: z.enum([
@@ -122,7 +122,7 @@ export const OutboxEventEntity = z
     new: z.boolean().optional(),
   })
   .passthrough();
-export const PageResponseDtoOutboxEventEntity = z
+const PageResponseDtoOutboxEventEntity = z
   .object({
     content: z.array(OutboxEventEntity),
     totalElements: z.number().int(),
@@ -135,7 +135,7 @@ export const PageResponseDtoOutboxEventEntity = z
     empty: z.boolean(),
   })
   .passthrough();
-export const ApiResponseString = z
+const ApiResponseString = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -153,7 +153,7 @@ export const schemas = {
   ApiResponseString,
 };
 
-export const endpoints = makeApi([
+const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/internal/admin/payments/dlq/webhooks/:eventId/retry",

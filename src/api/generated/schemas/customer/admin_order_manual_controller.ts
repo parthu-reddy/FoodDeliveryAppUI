@@ -7,7 +7,7 @@ import { OrderResponse } from "./common";
 import { OrderItemResponse } from "./common";
 import { SupportTicket } from "./common";
 
-export const PageResponseDtoSupportTicket = z
+const PageResponseDtoSupportTicket = z
   .object({
     content: z.array(SupportTicket),
     totalElements: z.number().int(),
@@ -25,7 +25,7 @@ export const schemas = {
   PageResponseDtoSupportTicket,
 };
 
-export const endpoints = makeApi([
+const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/internal/admin/orders/intervention/:orderId/force-cancel",

@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { ApiResponseString } from "./common";
 
-export const ApiResponseMapStringString = z
+const ApiResponseMapStringString = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -12,7 +12,7 @@ export const ApiResponseMapStringString = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const UpdateProfileRequest = z
+const UpdateProfileRequest = z
   .object({
     name: z.string().min(0).max(100),
     email: z.string().min(0).max(255).optional(),
@@ -30,7 +30,7 @@ export const schemas = {
   UpdateProfileRequest,
 };
 
-export const endpoints = makeApi([
+const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/users/profile",

@@ -1,7 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-export const StatusResponseDto = z
+const StatusResponseDto = z
   .object({
     status: z.string(),
     referenceId: z.string(),
@@ -10,7 +10,7 @@ export const StatusResponseDto = z
   })
   .partial()
   .passthrough();
-export const ApiResponseStatusResponseDto = z
+const ApiResponseStatusResponseDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -19,7 +19,7 @@ export const ApiResponseStatusResponseDto = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const RiderVerificationStatusDto = z
+const RiderVerificationStatusDto = z
   .object({
     dlStatus: z.string(),
     rcStatus: z.string(),
@@ -29,7 +29,7 @@ export const RiderVerificationStatusDto = z
   })
   .partial()
   .passthrough();
-export const ApiResponseRiderVerificationStatusDto = z
+const ApiResponseRiderVerificationStatusDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -38,27 +38,27 @@ export const ApiResponseRiderVerificationStatusDto = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const RCRequest = z
+const RCRequest = z
   .object({
     registrationNumber: z.string(),
     documentUrl: z.string().optional(),
   })
   .passthrough();
-export const DLRequest = z
+const DLRequest = z
   .object({
     dlNumber: z.string(),
     dateOfBirth: z.string(),
     documentUrl: z.string().optional(),
   })
   .passthrough();
-export const BankRequest = z
+const BankRequest = z
   .object({
     accountNumber: z.string(),
     ifscCode: z.string(),
     kycFullName: z.string(),
   })
   .passthrough();
-export const ApiResponseMapStringString = z
+const ApiResponseMapStringString = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -79,7 +79,7 @@ export const schemas = {
   ApiResponseMapStringString,
 };
 
-export const endpoints = makeApi([
+const endpoints = makeApi([
   {
     method: "post",
     path: "/api/delivery/verification/vehicle-rc",

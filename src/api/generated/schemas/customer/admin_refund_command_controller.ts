@@ -5,7 +5,7 @@ import { RefundView } from "./common";
 import { RefundCommand } from "./common";
 import { Item } from "./common";
 
-export const endpoints = makeApi([
+const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/internal/admin/refunds/request",

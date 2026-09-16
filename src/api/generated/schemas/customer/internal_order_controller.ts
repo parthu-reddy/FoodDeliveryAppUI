@@ -5,11 +5,11 @@ import { pageable } from "./common";
 import { SortObject } from "./common";
 import { PageableObject } from "./common";
 
-export const OrderReviewItemDto = z
+const OrderReviewItemDto = z
   .object({ menuItemId: z.string().uuid(), name: z.string() })
   .partial()
   .passthrough();
-export const OrderReviewContextDto = z
+const OrderReviewContextDto = z
   .object({
     orderId: z.string().uuid(),
     customerId: z.string().uuid(),
@@ -33,7 +33,7 @@ export const OrderReviewContextDto = z
   })
   .partial()
   .passthrough();
-export const ApiResponseOrderReviewContextDto = z
+const ApiResponseOrderReviewContextDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -42,7 +42,7 @@ export const ApiResponseOrderReviewContextDto = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const Order = z
+const Order = z
   .object({
     id: z.string().uuid(),
     customerId: z.string().uuid(),
@@ -129,7 +129,7 @@ export const Order = z
     deliveredAt: z.string().datetime({ offset: true }).optional(),
   })
   .passthrough();
-export const PageOrder = z
+const PageOrder = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
@@ -153,7 +153,7 @@ export const schemas = {
   PageOrder,
 };
 
-export const endpoints = makeApi([
+const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/internal/orders/:orderId/review-context",

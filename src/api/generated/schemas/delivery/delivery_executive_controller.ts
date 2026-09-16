@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { DeliveryExecutive } from "./common";
 
-export const ApiResponseDeliveryExecutive = z
+const ApiResponseDeliveryExecutive = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -12,11 +12,11 @@ export const ApiResponseDeliveryExecutive = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const PendingPingResponse = z
+const PendingPingResponse = z
   .object({ id: z.string(), expiresAt: z.number().int() })
   .partial()
   .passthrough();
-export const ApiResponseListPendingPingResponse = z
+const ApiResponseListPendingPingResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -25,7 +25,7 @@ export const ApiResponseListPendingPingResponse = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const ApiResponseVoid = z
+const ApiResponseVoid = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -34,7 +34,7 @@ export const ApiResponseVoid = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const ToggleStatusRequest = z
+const ToggleStatusRequest = z
   .object({
     driverId: z
       .string()
@@ -44,7 +44,7 @@ export const ToggleStatusRequest = z
     available: z.boolean(),
   })
   .passthrough();
-export const DeliveryOnboardRequest = z
+const DeliveryOnboardRequest = z
   .object({
     fullName: z.string().min(0).max(100),
     phoneNumber: z
@@ -59,7 +59,7 @@ export const DeliveryOnboardRequest = z
       .optional(),
   })
   .passthrough();
-export const UpdateOrderStatusRequest = z
+const UpdateOrderStatusRequest = z
   .object({
     status: z.enum([
       "PENDING",
@@ -88,7 +88,7 @@ export const schemas = {
   UpdateOrderStatusRequest,
 };
 
-export const endpoints = makeApi([
+const endpoints = makeApi([
   {
     method: "post",
     path: "/api/delivery/status",

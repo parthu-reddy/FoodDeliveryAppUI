@@ -1,17 +1,17 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-export const ParticipantDto = z
+const ParticipantDto = z
   .object({
     userId: z.string(),
     entityType: z.string(),
     displayName: z.string().optional(),
   })
   .passthrough();
-export const CreateSessionRequest = z
+const CreateSessionRequest = z
   .object({ orderId: z.string(), participants: z.array(ParticipantDto) })
   .passthrough();
-export const ChatSessionResponse = z
+const ChatSessionResponse = z
   .object({
     sessionId: z.string().uuid(),
     sessionType: z.string(),
@@ -22,7 +22,7 @@ export const ChatSessionResponse = z
   })
   .partial()
   .passthrough();
-export const ApiResponseChatSessionResponse = z
+const ApiResponseChatSessionResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -31,7 +31,7 @@ export const ApiResponseChatSessionResponse = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const ChatMessageDto = z
+const ChatMessageDto = z
   .object({
     id: z.string().uuid(),
     sessionId: z.string().uuid(),
@@ -45,7 +45,7 @@ export const ChatMessageDto = z
   })
   .partial()
   .passthrough();
-export const PageResponseDtoChatMessageDto = z
+const PageResponseDtoChatMessageDto = z
   .object({
     content: z.array(ChatMessageDto),
     totalElements: z.number().int(),
@@ -58,7 +58,7 @@ export const PageResponseDtoChatMessageDto = z
     empty: z.boolean(),
   })
   .passthrough();
-export const ApiResponsePageResponseDtoChatMessageDto = z
+const ApiResponsePageResponseDtoChatMessageDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -78,7 +78,7 @@ export const schemas = {
   ApiResponsePageResponseDtoChatMessageDto,
 };
 
-export const endpoints = makeApi([
+const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/chat/sessions",

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { ApiResponseVoid } from "./common";
 import { ApiResponseString } from "./common";
 
-export const AdCreativeResponse = z
+const AdCreativeResponse = z
   .object({
     id: z.string().uuid(),
     adGroupId: z.string().uuid(),
@@ -16,7 +16,7 @@ export const AdCreativeResponse = z
     updatedAt: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const ApiResponseAdCreativeResponse = z
+const ApiResponseAdCreativeResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -25,7 +25,7 @@ export const ApiResponseAdCreativeResponse = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const ApiResponseListAdCreativeResponse = z
+const ApiResponseListAdCreativeResponse = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -34,7 +34,7 @@ export const ApiResponseListAdCreativeResponse = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const AdCreativeRequest = z
+const AdCreativeRequest = z
   .object({
     format: z.enum(["BANNER", "CAROUSEL", "VIDEO", "VIDEO_VAST", "NATIVE"]),
     assetUrl: z.string().optional(),
@@ -49,7 +49,7 @@ export const schemas = {
   AdCreativeRequest,
 };
 
-export const endpoints = makeApi([
+const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/internal/creatives/:creativeId/audit",

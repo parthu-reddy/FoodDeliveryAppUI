@@ -1,7 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-export const BeneficiaryResponse = z
+const BeneficiaryResponse = z
   .object({
     accountNumberMasked: z.string(),
     ifsc: z.string(),
@@ -16,7 +16,7 @@ export const schemas = {
   BeneficiaryResponse,
 };
 
-export const endpoints = makeApi([
+const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/internal/restaurants/:restaurantId/beneficiary",

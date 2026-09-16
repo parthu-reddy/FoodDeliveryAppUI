@@ -4,13 +4,13 @@ import { z } from "zod";
 import { ApiResponseVoid } from "./common";
 import { LocalTime } from "./common";
 
-export const TimingRequest = z
+const TimingRequest = z
   .object({ openingTime: z.string(), closingTime: z.string() })
   .passthrough();
-export const OutletTimingsUpdateRequest = z
+const OutletTimingsUpdateRequest = z
   .object({ timings: z.array(TimingRequest) })
   .passthrough();
-export const OutletOnboardRequest = z
+const OutletOnboardRequest = z
   .object({
     name: z.string(),
     fssaiLicenseNumber: z.string(),
@@ -26,7 +26,7 @@ export const OutletOnboardRequest = z
     tags: z.string().optional(),
   })
   .passthrough();
-export const OutletTimingDto = z
+const OutletTimingDto = z
   .object({
     id: z.string().uuid(),
     dayOfWeek: z.number().int(),
@@ -35,7 +35,7 @@ export const OutletTimingDto = z
   })
   .partial()
   .passthrough();
-export const OutletDto = z
+const OutletDto = z
   .object({
     id: z.string().uuid(),
     brandId: z.string().uuid(),
@@ -56,7 +56,7 @@ export const OutletDto = z
   })
   .partial()
   .passthrough();
-export const ApiResponseOutletDto = z
+const ApiResponseOutletDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -65,7 +65,7 @@ export const ApiResponseOutletDto = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const NearbyRestaurantDTO = z
+const NearbyRestaurantDTO = z
   .object({
     id: z.string().uuid(),
     name: z.string(),
@@ -89,7 +89,7 @@ export const NearbyRestaurantDTO = z
   })
   .partial()
   .passthrough();
-export const ApiResponseNearbyRestaurantDTO = z
+const ApiResponseNearbyRestaurantDTO = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -98,7 +98,7 @@ export const ApiResponseNearbyRestaurantDTO = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const ApiResponseListNearbyRestaurantDTO = z
+const ApiResponseListNearbyRestaurantDTO = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -107,7 +107,7 @@ export const ApiResponseListNearbyRestaurantDTO = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const ApiResponseListOutletDto = z
+const ApiResponseListOutletDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -116,7 +116,7 @@ export const ApiResponseListOutletDto = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const PageResponseDtoNearbyRestaurantDTO = z
+const PageResponseDtoNearbyRestaurantDTO = z
   .object({
     content: z.array(NearbyRestaurantDTO),
     totalElements: z.number().int(),
@@ -129,7 +129,7 @@ export const PageResponseDtoNearbyRestaurantDTO = z
     empty: z.boolean(),
   })
   .passthrough();
-export const ApiResponsePageResponseDtoNearbyRestaurantDTO = z
+const ApiResponsePageResponseDtoNearbyRestaurantDTO = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -154,7 +154,7 @@ export const schemas = {
   ApiResponsePageResponseDtoNearbyRestaurantDTO,
 };
 
-export const endpoints = makeApi([
+const endpoints = makeApi([
   {
     method: "put",
     path: "/api/v1/outlets/:outletId/timings",

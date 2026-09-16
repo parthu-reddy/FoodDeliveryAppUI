@@ -4,7 +4,7 @@ import { z } from "zod";
 import { ApiResponseUploadResponseDto } from "./common";
 import { UploadResponseDto } from "./common";
 
-export const endpoints = makeApi([
+const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/chat/sessions/:sessionId/upload-audio",

@@ -1,7 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-export const PlaceGeocodeDto = z
+const PlaceGeocodeDto = z
   .object({
     formattedAddress: z.string(),
     placeId: z.string(),
@@ -10,7 +10,7 @@ export const PlaceGeocodeDto = z
   })
   .partial()
   .passthrough();
-export const ApiResponsePlaceGeocodeDto = z
+const ApiResponsePlaceGeocodeDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -19,11 +19,11 @@ export const ApiResponsePlaceGeocodeDto = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const PlaceAutocompleteDto = z
+const PlaceAutocompleteDto = z
   .object({ placeId: z.string(), description: z.string() })
   .partial()
   .passthrough();
-export const ApiResponseListPlaceAutocompleteDto = z
+const ApiResponseListPlaceAutocompleteDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -40,7 +40,7 @@ export const schemas = {
   ApiResponseListPlaceAutocompleteDto,
 };
 
-export const endpoints = makeApi([
+const endpoints = makeApi([
   {
     method: "get",
     path: "/api/v1/places/reverse-geocode",

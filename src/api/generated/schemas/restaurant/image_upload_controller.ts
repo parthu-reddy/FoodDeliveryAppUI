@@ -1,7 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-export const ApiResponseString = z
+const ApiResponseString = z
   .object({
     success: z.boolean(),
     message: z.string(),
@@ -15,7 +15,7 @@ export const schemas = {
   ApiResponseString,
 };
 
-export const endpoints = makeApi([
+const endpoints = makeApi([
   {
     method: "post",
     path: "/api/v1/images/upload",
