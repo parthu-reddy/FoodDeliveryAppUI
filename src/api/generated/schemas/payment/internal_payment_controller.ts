@@ -13,6 +13,11 @@ export const endpoints = makeApi([
         type: "Query",
         schema: z.string(),
       },
+      {
+        name: "gatewayName",
+        type: "Query",
+        schema: z.string().optional(),
+      },
     ],
     response: z.record(z.number()),
   },

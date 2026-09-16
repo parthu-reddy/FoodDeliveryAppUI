@@ -724,22 +724,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/money/driver/cash": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["fetchCash"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/money/customer/wallet": {
         parameters: {
             query?: never;
@@ -1145,8 +1129,11 @@ export interface components {
             restaurantId: string;
             /** Format: uuid */
             deliveryAddressId: string;
-            /** @enum {string} */
-            paymentMethod?: "CARD" | "UPI" | "WALLET" | "COD";
+            /**
+             * @description Prepaid payment method for a new order.
+             * @enum {string}
+             */
+            paymentMethod: "CARD" | "UPI" | "WALLET" | "CARD" | "UPI" | "WALLET";
             items: components["schemas"]["OrderItemRequest"][];
         };
         ApiResponseOrderResponse: {
@@ -1210,9 +1197,8 @@ export interface components {
             remainingPingSeconds?: number;
             distanceKm?: number;
             /** @enum {string} */
-            paymentMethod?: "CARD" | "UPI" | "WALLET" | "COD";
+            paymentMethod?: "CARD" | "UPI" | "WALLET";
             cancellationReason?: string;
-            cashCollectedAmount?: number;
             /** Format: int64 */
             expiresAt?: number;
         };
@@ -1351,7 +1337,7 @@ export interface components {
             /** @enum {string} */
             destination?: "ORIGINAL_METHOD" | "STORE_CREDIT" | "NONE";
             /** @enum {string} */
-            method?: "CARD" | "UPI" | "WALLET" | "COD";
+            method?: "CARD" | "UPI" | "WALLET";
             reasonCode?: string;
             /** Format: date-time */
             requestedAt?: string;
@@ -1476,6 +1462,7 @@ export interface components {
             clickUrl?: string;
             adm?: string;
             creativeFormat?: string;
+            advertiserId?: string;
         };
         ApiResponsePlaceGeocodeDto: {
             success: boolean;
@@ -1576,9 +1563,9 @@ export interface components {
             /** Format: uuid */
             ownerId?: string;
             /** @enum {string} */
-            ownerType?: "GATEWAY_RECEIVABLE" | "CASH_RECEIVABLE" | "BANK" | "PLATFORM_CLEARING" | "PLATFORM_REVENUE" | "TAX_PAYABLE" | "PAYOUT_IN_TRANSIT" | "RESTAURANT_PAYABLE" | "DRIVER_PAYABLE" | "CUSTOMER_CREDIT" | "ADVERTISER_PREPAID";
+            ownerType?: "GATEWAY_RECEIVABLE" | "BANK" | "PLATFORM_CLEARING" | "PLATFORM_REVENUE" | "TAX_PAYABLE" | "PAYOUT_IN_TRANSIT" | "RESTAURANT_PAYABLE" | "DRIVER_PAYABLE" | "CUSTOMER_CREDIT" | "ADVERTISER_PREPAID";
             /** @enum {string} */
-            category?: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "CLAWBACK" | "PAYOUT_TRANSFER" | "CASH_COLLECTED" | "CASH_SHORTFALL" | "CASH_REMITTED" | "STORE_CREDIT";
+            category?: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "CLAWBACK" | "PAYOUT_TRANSFER" | "STORE_CREDIT";
             amount?: number;
             /** @enum {string} */
             direction?: "CREDIT" | "DEBIT";
@@ -1622,41 +1609,8 @@ export interface components {
             gross?: number;
             taxes?: number;
             net?: number;
-            cashCollected?: number;
-            cashRemitted?: number;
-            cashInHand?: number;
             pendingBalance?: number;
             lastPayout?: components["schemas"]["PayoutSummaryDto"];
-        };
-        CashRemittanceDto: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: uuid */
-            driverId?: string;
-            amount?: number;
-            reference?: string;
-            /** Format: uuid */
-            recordedBy?: string;
-            /** Format: uuid */
-            ledgerTransactionId?: string;
-            /** Format: date-time */
-            createdAt?: string;
-        };
-        PageResponseDtoCashRemittanceDto: {
-            content: components["schemas"]["CashRemittanceDto"][];
-            /** Format: int64 */
-            totalElements: number;
-            /** Format: int32 */
-            totalPages: number;
-            last: boolean;
-            /** Format: int32 */
-            size: number;
-            /** Format: int32 */
-            number: number;
-            first: boolean;
-            /** Format: int32 */
-            numberOfElements: number;
-            empty: boolean;
         };
         WalletDto: {
             /** Format: uuid */
@@ -1750,12 +1704,11 @@ export interface components {
             /** @enum {string} */
             status: "CREATED" | "PENDING_ACCEPTANCE" | "AWAITING_DELAY_APPROVAL" | "ACCEPTED" | "PREPARING" | "READY_FOR_PICKUP" | "HANDED_OVER" | "CANCELLED" | "CANCELLED_BY_RESTAURANT" | "CANCELLED_BY_PLATFORM" | "DELIVERY_FAILED";
             /** @enum {string} */
-            paymentMethod?: "CARD" | "UPI" | "WALLET" | "COD";
-            cashCollectedAmount?: number;
+            paymentMethod?: "CARD" | "UPI" | "WALLET";
             /** @enum {string} */
             deliveryStatus?: "PENDING" | "SEARCHING_FOR_DRIVER" | "MANUAL_INTERVENTION_REQUIRED" | "ASSIGNED" | "AT_RESTAURANT" | "OUT_FOR_DELIVERY" | "DELIVERED" | "CANCELLED" | "FAILED";
             /** @enum {string} */
-            paymentStatus?: "INITIATED" | "SUCCESS" | "FAILED" | "PENDING_COLLECTION" | "COLLECTED" | "PARTIALLY_REFUNDED" | "REFUNDED" | "REFUND_PENDING" | "REFUND_FAILED";
+            paymentStatus?: "INITIATED" | "SUCCESS" | "FAILED" | "PARTIALLY_REFUNDED" | "REFUNDED" | "REFUND_PENDING" | "REFUND_FAILED";
             totalAmount: number;
             itemTotal?: number;
             customerPlatformFee?: number;
@@ -1790,6 +1743,9 @@ export interface components {
             /** Format: double */
             deliveryLng?: number;
             deliveryAddress?: string;
+            dispatchCityId?: string;
+            /** Format: double */
+            fleetSearchRadiusKm?: number;
             pickupOtp?: string;
             otp?: string;
             /** Format: int32 */
@@ -1818,29 +1774,29 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             size: number;
             content: components["schemas"]["Order"][];
             /** Format: int32 */
             number: number;
-            sort?: components["schemas"]["SortObject"];
-            last: boolean;
-            pageable?: components["schemas"]["PageableObject"];
             first: boolean;
+            last: boolean;
             /** Format: int32 */
             numberOfElements: number;
             empty: boolean;
         };
         PageableObject: {
-            /** Format: int64 */
-            offset: number;
-            paged: boolean;
             sort?: components["schemas"]["SortObject"];
-            unpaged: boolean;
-            /** Format: int32 */
-            pageSize: number;
+            paged: boolean;
             /** Format: int32 */
             pageNumber: number;
+            /** Format: int32 */
+            pageSize: number;
+            unpaged: boolean;
+            /** Format: int64 */
+            offset: number;
         };
         SortObject: {
             empty: boolean;
@@ -1859,15 +1815,15 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             size: number;
             content: components["schemas"]["SupportTicket"][];
             /** Format: int32 */
             number: number;
-            sort?: components["schemas"]["SortObject"];
-            last: boolean;
-            pageable?: components["schemas"]["PageableObject"];
             first: boolean;
+            last: boolean;
             /** Format: int32 */
             numberOfElements: number;
             empty: boolean;
@@ -1889,9 +1845,9 @@ export interface components {
             sgst?: number;
             cgst?: number;
             /** @enum {string} */
-            paymentMethod?: "CARD" | "UPI" | "WALLET" | "COD";
+            paymentMethod?: "CARD" | "UPI" | "WALLET";
             /** @enum {string} */
-            paymentStatus?: "INITIATED" | "SUCCESS" | "FAILED" | "PENDING_COLLECTION" | "COLLECTED" | "PARTIALLY_REFUNDED" | "REFUNDED" | "REFUND_PENDING" | "REFUND_FAILED";
+            paymentStatus?: "INITIATED" | "SUCCESS" | "FAILED" | "PARTIALLY_REFUNDED" | "REFUNDED" | "REFUND_PENDING" | "REFUND_FAILED";
             /** @enum {string} */
             gatewayName?: "RAZORPAY" | "CASHFREE" | "VYAPAR";
             gatewayOrderId?: string;
@@ -3155,29 +3111,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DriverOrderEarnings"];
-                };
-            };
-        };
-    };
-    fetchCash: {
-        parameters: {
-            query?: {
-                page?: number;
-                size?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PageResponseDtoCashRemittanceDto"];
                 };
             };
         };

@@ -11,38 +11,10 @@ export const DriverSummary = z
     gross: z.number(),
     taxes: z.number(),
     net: z.number(),
-    cashCollected: z.number(),
-    cashRemitted: z.number(),
-    cashInHand: z.number(),
     pendingBalance: z.number(),
     lastPayout: PayoutSummaryDto,
   })
   .partial()
-  .passthrough();
-export const CashRemittanceDto = z
-  .object({
-    id: z.string().uuid(),
-    driverId: z.string().uuid(),
-    amount: z.number(),
-    reference: z.string(),
-    recordedBy: z.string().uuid(),
-    ledgerTransactionId: z.string().uuid(),
-    createdAt: z.string().datetime({ offset: true }),
-  })
-  .partial()
-  .passthrough();
-export const PageResponseDtoCashRemittanceDto = z
-  .object({
-    content: z.array(CashRemittanceDto),
-    totalElements: z.number().int(),
-    totalPages: z.number().int(),
-    last: z.boolean(),
-    size: z.number().int(),
-    number: z.number().int(),
-    first: z.boolean(),
-    numberOfElements: z.number().int(),
-    empty: z.boolean(),
-  })
   .passthrough();
 export const DriverOrderEarnings = z
   .object({
@@ -60,8 +32,6 @@ export const DriverOrderEarnings = z
 
 export const schemas = {
   DriverSummary,
-  CashRemittanceDto,
-  PageResponseDtoCashRemittanceDto,
   DriverOrderEarnings,
 };
 
@@ -145,25 +115,6 @@ export const endpoints = makeApi([
       },
     ],
     response: DriverOrderEarnings,
-  },
-  {
-    method: "get",
-    path: "/api/v1/money/driver/cash",
-    alias: "fetchCash",
-    requestFormat: "json",
-    parameters: [
-      {
-        name: "page",
-        type: "Query",
-        schema: z.number().int().optional().default(0),
-      },
-      {
-        name: "size",
-        type: "Query",
-        schema: z.number().int().optional().default(20),
-      },
-    ],
-    response: PageResponseDtoCashRemittanceDto,
   },
 ]);
 

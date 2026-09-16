@@ -18,7 +18,7 @@ export const CreateOrderRequest = z
       ),
     amountInInr: z.number(),
     customerPhone: z.string().optional(),
-    paymentMethod: z.enum(["CARD", "UPI", "WALLET", "COD"]),
+    paymentMethod: z.enum(["CARD", "UPI", "WALLET"]),
   })
   .passthrough();
 
@@ -64,7 +64,7 @@ export const endpoints = makeApi([
         schema: z.string().optional(),
       },
     ],
-    response: z.void(),
+    response: z.object({}).partial().passthrough(),
   },
 ]);
 

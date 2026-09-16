@@ -75,7 +75,6 @@ export const UpdateOrderStatusRequest = z
     pickupOtp: z.string().min(0).max(10).regex(/^\d+$/).optional(),
     deliveryOtp: z.string().min(0).max(10).regex(/^\d+$/).optional(),
     goOfflineAfter: z.boolean().optional(),
-    cashCollectedAmount: z.number().optional(),
   })
   .passthrough();
 

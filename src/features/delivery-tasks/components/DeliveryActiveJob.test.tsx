@@ -10,13 +10,13 @@ vi.mock('@features/maps-tracking/components/OrderTrackingMap', () => ({
   default: () => <div data-testid="map" />,
 }));
 
-const job = (paymentMethod: 'COD' | 'CARD') => ({
+const job = () => ({
   id: 'aaaaaaaa-1111-2222-3333-444444444444',
   customerId: 'bbbbbbbb-1111-2222-3333-444444444444',
   restaurantId: 'cccccccc-1111-2222-3333-444444444444',
   status: OrderStatus.HANDED_OVER,
   deliveryStatus: DeliveryStatus.OUT_FOR_DELIVERY,
-  paymentMethod,
+  paymentMethod: 'CARD',
   totalAmount: 420,
   deliveryFee: 40,
 } as Partial<Order> as Order);
@@ -42,46 +42,15 @@ const props = {
 
 const confirmButton = () => screen.getByRole('button', { name: /confirm delivery/i });
 
-describe('rider cash declaration', () => {
-  test('a cash job asks for the amount and blocks confirmation until it is given', () => {
-    // Phase 4 made DeliveredStateStrategy refuse a COD delivery with no declared amount
-    // ("Declare the cash you collected for this order."). The rider UI sent no amount at all, so
-    // every cash delivery ended in a 400 the rider could do nothing about.
-    const { rerender } = render(
-      <CallProvider>
-        <DeliveryActiveJob {...props} currentJob={job('COD')} cashCollected="" setCashCollected={() => {}} />
-      </CallProvider>
-    );
-
-    expect(screen.getByLabelText(/cash collected/i)).toBeRequired();
-    expect(confirmButton()).toBeDisabled();
-
-    rerender(
-      <CallProvider>
-        <DeliveryActiveJob {...props} currentJob={job('COD')} cashCollected="400" setCashCollected={() => {}} />
-      </CallProvider>
-    );
-    expect(confirmButton()).toBeEnabled();
-  });
-
-  test('a prepaid job has no cash field and confirms straight away', () => {
+describe('prepaid delivery completion', () => {
+  test('asks only for the delivery OTP and can confirm immediately', () => {
     render(
       <CallProvider>
-        <DeliveryActiveJob {...props} currentJob={job('CARD')} cashCollected="" setCashCollected={() => {}} />
+        <DeliveryActiveJob {...props} currentJob={job()} />
       </CallProvider>
     );
 
     expect(screen.queryByLabelText(/cash collected/i)).not.toBeInTheDocument();
     expect(confirmButton()).toBeEnabled();
-  });
-
-  test('a negative declaration is refused', () => {
-    // The server rejects it too; the rider should not have to discover that from a 400.
-    render(
-      <CallProvider>
-        <DeliveryActiveJob {...props} currentJob={job('COD')} cashCollected="-5" setCashCollected={() => {}} />
-      </CallProvider>
-    );
-    expect(confirmButton()).toBeDisabled();
   });
 });

@@ -42,14 +42,14 @@ export const PageCampaignResponse = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
+    numberOfElements: z.number().int(),
     size: z.number().int(),
     content: z.array(CampaignResponse),
-    numberOfElements: z.number().int(),
     number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -78,14 +78,14 @@ export const PageCampaignPerformanceResponse = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
+    numberOfElements: z.number().int(),
     size: z.number().int(),
     content: z.array(CampaignPerformanceResponse),
-    numberOfElements: z.number().int(),
     number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -120,7 +120,10 @@ export const ApiResponseMapStringString = z
   })
   .passthrough();
 export const TopupWalletRequest = z
-  .object({ amount: z.number(), gatewayName: z.string().optional() })
+  .object({
+    amount: z.number().gte(0.01),
+    paymentMethod: z.enum(["CARD", "UPI", "WALLET"]),
+  })
   .passthrough();
 
 export const schemas = {

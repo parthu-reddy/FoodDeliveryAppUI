@@ -53,7 +53,7 @@ export function DeliveryAvailableJobs({
               <div className="space-y-2 text-xs font-mono text-slate-500 dark:text-slate-300">
                 <p>📍 Pickup: Sector 62 Food Lane</p>
                 <p>🏠 Dropoff: {job.deliveryAddress}</p>
-                <p>📦 Package: {(job.items || []).length} items • Cash on Delivery</p>
+                <p>📦 Package: {(job.items || []).length} items • Prepaid</p>
               </div>
 
               <button

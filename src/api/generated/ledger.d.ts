@@ -132,22 +132,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/internal/admin/cash/remit": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["remitCash"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/ledger/statements/{ownerType}/{ownerId}": {
         parameters: {
             query?: never;
@@ -228,38 +212,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/ledger/cash/drivers/{driverId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getCashByDriver"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/ledger/cash/drivers/{driverId}/summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getCashSummary"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/ledger/accounts/{ownerType}/{ownerId}": {
         parameters: {
             query?: never;
@@ -300,38 +252,6 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getPayeeSummary"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/internal/ledger/cash/drivers/{driverId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getCashByDriver_1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/internal/ledger/cash/drivers/{driverId}/summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getCashSummary_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -500,38 +420,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/internal/admin/cash/drivers/{driverId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getCashByDriver_2"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/internal/admin/cash/drivers/{driverId}/summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getCashSummary_2"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -616,26 +504,6 @@ export interface components {
             status?: string;
             summary?: string;
         };
-        CashRemittanceRequest: {
-            /** Format: uuid */
-            driverId?: string;
-            amount?: number;
-            reference?: string;
-        };
-        CashRemittance: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: uuid */
-            driverId?: string;
-            amount?: number;
-            reference?: string;
-            /** Format: uuid */
-            recordedBy?: string;
-            /** Format: uuid */
-            ledgerTransactionId?: string;
-            /** Format: date-time */
-            createdAt?: string;
-        };
         LedgerStatementLineDto: {
             /** Format: uuid */
             transactionId?: string;
@@ -646,9 +514,9 @@ export interface components {
             /** Format: uuid */
             ownerId?: string;
             /** @enum {string} */
-            ownerType?: "GATEWAY_RECEIVABLE" | "CASH_RECEIVABLE" | "BANK" | "PLATFORM_CLEARING" | "PLATFORM_REVENUE" | "TAX_PAYABLE" | "PAYOUT_IN_TRANSIT" | "RESTAURANT_PAYABLE" | "DRIVER_PAYABLE" | "CUSTOMER_CREDIT" | "ADVERTISER_PREPAID";
+            ownerType?: "GATEWAY_RECEIVABLE" | "BANK" | "PLATFORM_CLEARING" | "PLATFORM_REVENUE" | "TAX_PAYABLE" | "PAYOUT_IN_TRANSIT" | "RESTAURANT_PAYABLE" | "DRIVER_PAYABLE" | "CUSTOMER_CREDIT" | "ADVERTISER_PREPAID";
             /** @enum {string} */
-            category?: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "CLAWBACK" | "PAYOUT_TRANSFER" | "CASH_COLLECTED" | "CASH_REMITTED" | "STORE_CREDIT";
+            category?: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "CLAWBACK" | "PAYOUT_TRANSFER" | "STORE_CREDIT";
             amount?: number;
             /** @enum {string} */
             direction?: "CREDIT" | "DEBIT";
@@ -665,29 +533,29 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
-            /** Format: int32 */
-            numberOfElements: number;
-            /** Format: int32 */
-            number: number;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             size: number;
             content: components["schemas"]["LedgerStatementLineDto"][];
+            /** Format: int32 */
+            number: number;
             first: boolean;
             last: boolean;
-            pageable?: components["schemas"]["PageableObject"];
-            sort?: components["schemas"]["SortObject"];
+            /** Format: int32 */
+            numberOfElements: number;
             empty: boolean;
         };
         PageableObject: {
-            /** Format: int64 */
-            offset: number;
-            /** Format: int32 */
-            pageSize: number;
+            sort?: components["schemas"]["SortObject"];
             paged: boolean;
             /** Format: int32 */
             pageNumber: number;
-            sort?: components["schemas"]["SortObject"];
             unpaged: boolean;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: int64 */
+            offset: number;
         };
         SortObject: {
             empty: boolean;
@@ -761,7 +629,7 @@ export interface components {
             /** Format: uuid */
             referenceId?: string;
             /** @enum {string} */
-            category?: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "CLAWBACK" | "PAYOUT_TRANSFER" | "CASH_COLLECTED" | "CASH_REMITTED" | "STORE_CREDIT";
+            category?: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "CLAWBACK" | "PAYOUT_TRANSFER" | "STORE_CREDIT";
             /** @enum {string} */
             direction?: "CREDIT" | "DEBIT";
             amount?: number;
@@ -769,48 +637,11 @@ export interface components {
             entryCreatedAt?: string;
             active?: boolean;
         };
-        CashRemittanceDto: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: uuid */
-            driverId?: string;
-            amount?: number;
-            reference?: string;
-            /** Format: uuid */
-            recordedBy?: string;
-            /** Format: uuid */
-            ledgerTransactionId?: string;
-            /** Format: date-time */
-            createdAt?: string;
-        };
-        PageResponseDtoCashRemittanceDto: {
-            content: components["schemas"]["CashRemittanceDto"][];
-            /** Format: int64 */
-            totalElements: number;
-            /** Format: int32 */
-            totalPages: number;
-            last: boolean;
-            /** Format: int32 */
-            size: number;
-            /** Format: int32 */
-            number: number;
-            first: boolean;
-            /** Format: int32 */
-            numberOfElements: number;
-            empty: boolean;
-        };
-        CashSummaryDto: {
-            /** Format: uuid */
-            driverId?: string;
-            cashCollected?: number;
-            cashRemitted?: number;
-            cashInHand?: number;
-        };
         LedgerAccount: {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            ownerType: "GATEWAY_RECEIVABLE" | "CASH_RECEIVABLE" | "BANK" | "PLATFORM_CLEARING" | "PLATFORM_REVENUE" | "TAX_PAYABLE" | "PAYOUT_IN_TRANSIT" | "RESTAURANT_PAYABLE" | "DRIVER_PAYABLE" | "CUSTOMER_CREDIT" | "ADVERTISER_PREPAID";
+            ownerType: "GATEWAY_RECEIVABLE" | "BANK" | "PLATFORM_CLEARING" | "PLATFORM_REVENUE" | "TAX_PAYABLE" | "PAYOUT_IN_TRANSIT" | "RESTAURANT_PAYABLE" | "DRIVER_PAYABLE" | "CUSTOMER_CREDIT" | "ADVERTISER_PREPAID";
             /** Format: uuid */
             ownerId: string;
             /** @enum {string} */
@@ -901,7 +732,7 @@ export interface components {
             /** Format: uuid */
             transactionId: string;
             /** @enum {string} */
-            category: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "CLAWBACK" | "PAYOUT_TRANSFER" | "CASH_COLLECTED" | "CASH_REMITTED" | "STORE_CREDIT";
+            category: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "CLAWBACK" | "PAYOUT_TRANSFER" | "STORE_CREDIT";
             /** Format: uuid */
             fromAccountId: string;
             /** Format: uuid */
@@ -954,17 +785,17 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
-            /** Format: int32 */
-            numberOfElements: number;
-            /** Format: int32 */
-            number: number;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             size: number;
             content: components["schemas"]["ReconciliationRun"][];
+            /** Format: int32 */
+            number: number;
             first: boolean;
             last: boolean;
-            pageable?: components["schemas"]["PageableObject"];
-            sort?: components["schemas"]["SortObject"];
+            /** Format: int32 */
+            numberOfElements: number;
             empty: boolean;
         };
         PageReconciliationBreak: {
@@ -972,17 +803,17 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
-            /** Format: int32 */
-            numberOfElements: number;
-            /** Format: int32 */
-            number: number;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             size: number;
             content: components["schemas"]["ReconciliationBreak"][];
+            /** Format: int32 */
+            number: number;
             first: boolean;
             last: boolean;
-            pageable?: components["schemas"]["PageableObject"];
-            sort?: components["schemas"]["SortObject"];
+            /** Format: int32 */
+            numberOfElements: number;
             empty: boolean;
         };
         ReconciliationBreak: {
@@ -1024,7 +855,7 @@ export interface components {
             /** @enum {string} */
             direction: "CREDIT" | "DEBIT";
             /** @enum {string} */
-            category: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "CLAWBACK" | "PAYOUT_TRANSFER" | "CASH_COLLECTED" | "CASH_REMITTED" | "STORE_CREDIT";
+            category: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "CLAWBACK" | "PAYOUT_TRANSFER" | "STORE_CREDIT";
             amount: number;
             producer?: string;
             description?: string;
@@ -1046,24 +877,6 @@ export interface components {
             first: boolean;
             /** Format: int32 */
             numberOfElements: number;
-            empty: boolean;
-        };
-        PageCashRemittance: {
-            /** Format: int64 */
-            totalElements: number;
-            /** Format: int32 */
-            totalPages: number;
-            /** Format: int32 */
-            numberOfElements: number;
-            /** Format: int32 */
-            number: number;
-            /** Format: int32 */
-            size: number;
-            content: components["schemas"]["CashRemittance"][];
-            first: boolean;
-            last: boolean;
-            pageable?: components["schemas"]["PageableObject"];
-            sort?: components["schemas"]["SortObject"];
             empty: boolean;
         };
     };
@@ -1284,30 +1097,6 @@ export interface operations {
             };
         };
     };
-    remitCash: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CashRemittanceRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CashRemittance"];
-                };
-            };
-        };
-    };
     getStatement: {
         parameters: {
             query?: {
@@ -1319,7 +1108,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                ownerType: "GATEWAY_RECEIVABLE" | "CASH_RECEIVABLE" | "BANK" | "PLATFORM_CLEARING" | "PLATFORM_REVENUE" | "TAX_PAYABLE" | "PAYOUT_IN_TRANSIT" | "RESTAURANT_PAYABLE" | "DRIVER_PAYABLE" | "CUSTOMER_CREDIT" | "ADVERTISER_PREPAID";
+                ownerType: "GATEWAY_RECEIVABLE" | "BANK" | "PLATFORM_CLEARING" | "PLATFORM_REVENUE" | "TAX_PAYABLE" | "PAYOUT_IN_TRANSIT" | "RESTAURANT_PAYABLE" | "DRIVER_PAYABLE" | "CUSTOMER_CREDIT" | "ADVERTISER_PREPAID";
                 ownerId: string;
             };
             cookie?: never;
@@ -1431,59 +1220,12 @@ export interface operations {
             };
         };
     };
-    getCashByDriver: {
-        parameters: {
-            query?: {
-                page?: number;
-                size?: number;
-            };
-            header?: never;
-            path: {
-                driverId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PageResponseDtoCashRemittanceDto"];
-                };
-            };
-        };
-    };
-    getCashSummary: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                driverId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CashSummaryDto"];
-                };
-            };
-        };
-    };
     getAccount: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                ownerType: "GATEWAY_RECEIVABLE" | "CASH_RECEIVABLE" | "BANK" | "PLATFORM_CLEARING" | "PLATFORM_REVENUE" | "TAX_PAYABLE" | "PAYOUT_IN_TRANSIT" | "RESTAURANT_PAYABLE" | "DRIVER_PAYABLE" | "CUSTOMER_CREDIT" | "ADVERTISER_PREPAID";
+                ownerType: "GATEWAY_RECEIVABLE" | "BANK" | "PLATFORM_CLEARING" | "PLATFORM_REVENUE" | "TAX_PAYABLE" | "PAYOUT_IN_TRANSIT" | "RESTAURANT_PAYABLE" | "DRIVER_PAYABLE" | "CUSTOMER_CREDIT" | "ADVERTISER_PREPAID";
                 ownerId: string;
             };
             cookie?: never;
@@ -1549,53 +1291,6 @@ export interface operations {
             };
         };
     };
-    getCashByDriver_1: {
-        parameters: {
-            query?: {
-                page?: number;
-                size?: number;
-            };
-            header?: never;
-            path: {
-                driverId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PageResponseDtoCashRemittanceDto"];
-                };
-            };
-        };
-    };
-    getCashSummary_1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                driverId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CashSummaryDto"];
-                };
-            };
-        };
-    };
     getPayoutDetail_1: {
         parameters: {
             query?: never;
@@ -1648,8 +1343,8 @@ export interface operations {
                 size?: number;
                 transactionId?: string;
                 ownerId?: string;
-                ownerType?: "GATEWAY_RECEIVABLE" | "CASH_RECEIVABLE" | "BANK" | "PLATFORM_CLEARING" | "PLATFORM_REVENUE" | "TAX_PAYABLE" | "PAYOUT_IN_TRANSIT" | "RESTAURANT_PAYABLE" | "DRIVER_PAYABLE" | "CUSTOMER_CREDIT" | "ADVERTISER_PREPAID";
-                category?: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "CLAWBACK" | "PAYOUT_TRANSFER" | "CASH_COLLECTED" | "CASH_REMITTED" | "STORE_CREDIT";
+                ownerType?: "GATEWAY_RECEIVABLE" | "BANK" | "PLATFORM_CLEARING" | "PLATFORM_REVENUE" | "TAX_PAYABLE" | "PAYOUT_IN_TRANSIT" | "RESTAURANT_PAYABLE" | "DRIVER_PAYABLE" | "CUSTOMER_CREDIT" | "ADVERTISER_PREPAID";
+                category?: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "CLAWBACK" | "PAYOUT_TRANSFER" | "STORE_CREDIT";
                 direction?: "CREDIT" | "DEBIT";
             };
             header?: never;
@@ -1813,8 +1508,8 @@ export interface operations {
                 size?: number;
                 transactionId?: string;
                 ownerId?: string;
-                ownerType?: "GATEWAY_RECEIVABLE" | "CASH_RECEIVABLE" | "BANK" | "PLATFORM_CLEARING" | "PLATFORM_REVENUE" | "TAX_PAYABLE" | "PAYOUT_IN_TRANSIT" | "RESTAURANT_PAYABLE" | "DRIVER_PAYABLE" | "CUSTOMER_CREDIT" | "ADVERTISER_PREPAID";
-                category?: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "CLAWBACK" | "PAYOUT_TRANSFER" | "CASH_COLLECTED" | "CASH_REMITTED" | "STORE_CREDIT";
+                ownerType?: "GATEWAY_RECEIVABLE" | "BANK" | "PLATFORM_CLEARING" | "PLATFORM_REVENUE" | "TAX_PAYABLE" | "PAYOUT_IN_TRANSIT" | "RESTAURANT_PAYABLE" | "DRIVER_PAYABLE" | "CUSTOMER_CREDIT" | "ADVERTISER_PREPAID";
+                category?: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "CLAWBACK" | "PAYOUT_TRANSFER" | "STORE_CREDIT";
                 direction?: "CREDIT" | "DEBIT";
             };
             header?: never;
@@ -1830,53 +1525,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiResponsePageResponseDtoLedgerEntry"];
-                };
-            };
-        };
-    };
-    getCashByDriver_2: {
-        parameters: {
-            query?: {
-                page?: number;
-                size?: number;
-            };
-            header?: never;
-            path: {
-                driverId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PageCashRemittance"];
-                };
-            };
-        };
-    };
-    getCashSummary_2: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                driverId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CashSummaryDto"];
                 };
             };
         };

@@ -144,26 +144,26 @@ export const pageable = z
   .passthrough();
 export const PageableObject = z
   .object({
-    offset: z.number().int(),
     sort: SortObject.optional(),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
     unpaged: z.boolean(),
+    offset: z.number().int(),
   })
   .passthrough();
 export const PageCampaignResponse = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
+    numberOfElements: z.number().int(),
     size: z.number().int(),
     content: z.array(CampaignResponse),
-    numberOfElements: z.number().int(),
     number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -180,14 +180,14 @@ export const PageAdGroupResponse = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
+    numberOfElements: z.number().int(),
     size: z.number().int(),
     content: z.array(AdGroupResponse),
-    numberOfElements: z.number().int(),
     number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -247,7 +247,10 @@ export const ApiResponseString = z
   })
   .passthrough();
 export const TopupWalletRequest = z
-  .object({ amount: z.number(), gatewayName: z.string().optional() })
+  .object({
+    amount: z.number().gte(0.01),
+    paymentMethod: z.enum(["CARD", "UPI", "WALLET"]),
+  })
   .passthrough();
 export const ApiResponseMapStringString = z
   .object({
@@ -274,14 +277,14 @@ export const PageCampaignPerformanceResponse = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
+    numberOfElements: z.number().int(),
     size: z.number().int(),
     content: z.array(CampaignPerformanceResponse),
-    numberOfElements: z.number().int(),
     number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();

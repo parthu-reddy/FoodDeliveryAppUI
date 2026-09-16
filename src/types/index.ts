@@ -23,9 +23,7 @@ export type NearbyRestaurant = restaurantComponents['schemas']['NearbyRestaurant
  * How an order is paid for.
  *
  * Derived from the generated schema, not re-spelled here. `Order` used to declare
- * `paymentMethod?: "CARD" | "UPI" | "WALLET" | "COD"` as a hand-written override, which made the
- * UI compile against a field `OrderResponse` did not actually send -- so the customer's order view
- * could never say "pay in cash on delivery" and nothing pointed at why.
+ * `paymentMethod` as a hand-written override, which let the UI drift from the backend contract.
  */
 export type PaymentMethodChoice = NonNullable<customerComponents['schemas']['OrderResponse']['paymentMethod']>;
 

@@ -30,7 +30,7 @@ export const OrderRequest = z
     customerName: z.string().optional(),
     restaurantId: z.string().uuid(),
     deliveryAddressId: z.string().uuid(),
-    paymentMethod: z.enum(["CARD", "UPI", "WALLET", "COD"]).optional(),
+    paymentMethod: z.enum(["CARD", "UPI", "WALLET", "CARD", "UPI", "WALLET"]),
     items: z.array(OrderItemRequest),
   })
   .passthrough();
@@ -95,9 +95,8 @@ export const OrderResponse = z
     estimatedCompletionTime: z.number().int().optional(),
     remainingPingSeconds: z.number().int().optional(),
     distanceKm: z.number().optional(),
-    paymentMethod: z.enum(["CARD", "UPI", "WALLET", "COD"]).optional(),
+    paymentMethod: z.enum(["CARD", "UPI", "WALLET"]).optional(),
     cancellationReason: z.string().optional(),
-    cashCollectedAmount: z.number().optional(),
     expiresAt: z.number().int().optional(),
   })
   .passthrough();
@@ -249,7 +248,7 @@ export const RefundView = z
       "CANCELLED",
     ]),
     destination: z.enum(["ORIGINAL_METHOD", "STORE_CREDIT", "NONE"]),
-    method: z.enum(["CARD", "UPI", "WALLET", "COD"]),
+    method: z.enum(["CARD", "UPI", "WALLET"]),
     reasonCode: z.string(),
     requestedAt: z.string().datetime({ offset: true }),
     completedAt: z.string().datetime({ offset: true }),
@@ -353,6 +352,7 @@ export const SponsoredListingDTO = z
     clickUrl: z.string(),
     adm: z.string(),
     creativeFormat: z.string(),
+    advertiserId: z.string(),
   })
   .partial()
   .passthrough();
@@ -494,7 +494,6 @@ export const LedgerStatementLineDto = z
     ownerId: z.string().uuid(),
     ownerType: z.enum([
       "GATEWAY_RECEIVABLE",
-      "CASH_RECEIVABLE",
       "BANK",
       "PLATFORM_CLEARING",
       "PLATFORM_REVENUE",
@@ -520,9 +519,6 @@ export const LedgerStatementLineDto = z
       "AD_WALLET_TOPUP",
       "CLAWBACK",
       "PAYOUT_TRANSFER",
-      "CASH_COLLECTED",
-      "CASH_SHORTFALL",
-      "CASH_REMITTED",
       "STORE_CREDIT",
     ]),
     amount: z.number(),
@@ -565,38 +561,10 @@ export const DriverSummary = z
     gross: z.number(),
     taxes: z.number(),
     net: z.number(),
-    cashCollected: z.number(),
-    cashRemitted: z.number(),
-    cashInHand: z.number(),
     pendingBalance: z.number(),
     lastPayout: PayoutSummaryDto,
   })
   .partial()
-  .passthrough();
-export const CashRemittanceDto = z
-  .object({
-    id: z.string().uuid(),
-    driverId: z.string().uuid(),
-    amount: z.number(),
-    reference: z.string(),
-    recordedBy: z.string().uuid(),
-    ledgerTransactionId: z.string().uuid(),
-    createdAt: z.string().datetime({ offset: true }),
-  })
-  .partial()
-  .passthrough();
-export const PageResponseDtoCashRemittanceDto = z
-  .object({
-    content: z.array(CashRemittanceDto),
-    totalElements: z.number().int(),
-    totalPages: z.number().int(),
-    last: z.boolean(),
-    size: z.number().int(),
-    number: z.number().int(),
-    first: z.boolean(),
-    numberOfElements: z.number().int(),
-    empty: z.boolean(),
-  })
   .passthrough();
 export const WalletDto = z
   .object({
@@ -698,8 +666,7 @@ export const Order = z
       "CANCELLED_BY_PLATFORM",
       "DELIVERY_FAILED",
     ]),
-    paymentMethod: z.enum(["CARD", "UPI", "WALLET", "COD"]).optional(),
-    cashCollectedAmount: z.number().optional(),
+    paymentMethod: z.enum(["CARD", "UPI", "WALLET"]).optional(),
     deliveryStatus: z
       .enum([
         "PENDING",
@@ -718,8 +685,6 @@ export const Order = z
         "INITIATED",
         "SUCCESS",
         "FAILED",
-        "PENDING_COLLECTION",
-        "COLLECTED",
         "PARTIALLY_REFUNDED",
         "REFUNDED",
         "REFUND_PENDING",
@@ -755,6 +720,8 @@ export const Order = z
     deliveryLat: z.number().optional(),
     deliveryLng: z.number().optional(),
     deliveryAddress: z.string().optional(),
+    dispatchCityId: z.string().optional(),
+    fleetSearchRadiusKm: z.number().optional(),
     pickupOtp: z.string().optional(),
     otp: z.string().optional(),
     estimatedPrepTimeMinutes: z.number().int().optional(),
@@ -779,25 +746,25 @@ export const pageable = z
   .passthrough();
 export const PageableObject = z
   .object({
-    offset: z.number().int(),
-    paged: z.boolean(),
     sort: SortObject.optional(),
-    unpaged: z.boolean(),
-    pageSize: z.number().int(),
+    paged: z.boolean(),
     pageNumber: z.number().int(),
+    pageSize: z.number().int(),
+    unpaged: z.boolean(),
+    offset: z.number().int(),
   })
   .passthrough();
 export const PageOrder = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
     size: z.number().int(),
     content: z.array(Order),
     number: z.number().int(),
-    sort: SortObject.optional(),
-    last: z.boolean(),
-    pageable: PageableObject.optional(),
     first: z.boolean(),
+    last: z.boolean(),
     numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
@@ -814,13 +781,13 @@ export const PageSupportTicket = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
     size: z.number().int(),
     content: z.array(SupportTicket),
     number: z.number().int(),
-    sort: SortObject.optional(),
-    last: z.boolean(),
-    pageable: PageableObject.optional(),
     first: z.boolean(),
+    last: z.boolean(),
     numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
@@ -856,13 +823,11 @@ export const AdminOrderMoney = z
     platformBonus: z.number(),
     sgst: z.number(),
     cgst: z.number(),
-    paymentMethod: z.enum(["CARD", "UPI", "WALLET", "COD"]),
+    paymentMethod: z.enum(["CARD", "UPI", "WALLET"]),
     paymentStatus: z.enum([
       "INITIATED",
       "SUCCESS",
       "FAILED",
-      "PENDING_COLLECTION",
-      "COLLECTED",
       "PARTIALLY_REFUNDED",
       "REFUNDED",
       "REFUND_PENDING",

@@ -23,9 +23,6 @@ export enum ChargeCategory {
     AD_WALLET_TOPUP = "AD_WALLET_TOPUP",
     CLAWBACK = "CLAWBACK",
     PAYOUT_TRANSFER = "PAYOUT_TRANSFER",
-    CASH_COLLECTED = "CASH_COLLECTED",
-    CASH_SHORTFALL = "CASH_SHORTFALL",
-    CASH_REMITTED = "CASH_REMITTED",
     STORE_CREDIT = "STORE_CREDIT",
 }
 
@@ -51,7 +48,6 @@ export enum FaultType {
 
 export enum LedgerAccountType {
     GATEWAY_RECEIVABLE = "GATEWAY_RECEIVABLE",
-    CASH_RECEIVABLE = "CASH_RECEIVABLE",
     BANK = "BANK",
     PLATFORM_CLEARING = "PLATFORM_CLEARING",
     PLATFORM_REVENUE = "PLATFORM_REVENUE",
@@ -101,7 +97,6 @@ export enum PaymentMethod {
     CARD = "CARD",
     UPI = "UPI",
     WALLET = "WALLET",
-    COD = "COD",
 }
 
 export enum RefundDestination {

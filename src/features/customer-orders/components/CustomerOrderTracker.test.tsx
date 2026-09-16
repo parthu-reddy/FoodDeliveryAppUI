@@ -44,7 +44,7 @@ const renderTracker = (o: Order, { active, failed }: { active: boolean; failed: 
     </CallProvider>
   );
 
-describe('CustomerOrderTracker terminal and cash copy', () => {
+describe('CustomerOrderTracker terminal and payment copy', () => {
   test('a platform cancellation blames the platform, not the restaurant', async () => {
     // Phase 3 split CANCELLED_BY_RESTAURANT from CANCELLED_BY_PLATFORM precisely because they mean
     // different things to the customer. Before that the tracker said "Your order could not be
@@ -67,26 +67,6 @@ describe('CustomerOrderTracker terminal and cash copy', () => {
 
     expect(await screen.findByText(/the restaurant could not fulfil/i)).toBeInTheDocument();
     expect(screen.getByTestId('cancellation-reason')).toHaveTextContent('Kitchen closed early');
-  });
-
-  test('a cash order is told to have the money ready, and what it paid once delivered', () => {
-    const { unmount } = renderTracker(
-      order({ status: OrderStatus.PREPARING, paymentMethod: 'COD' }),
-      { active: true, failed: false }
-    );
-    expect(screen.getByTestId('cod-notice')).toHaveTextContent(/pay .* in cash on delivery/i);
-    unmount();
-
-    renderTracker(
-      order({
-        status: OrderStatus.HANDED_OVER,
-        deliveryStatus: DeliveryStatus.DELIVERED,
-        paymentMethod: 'COD',
-        cashCollectedAmount: 400,
-      }),
-      { active: false, failed: false }
-    );
-    expect(screen.getByTestId('cod-notice')).toHaveTextContent(/paid .*400/i);
   });
 
   test('a prepaid order is never told to bring cash', () => {

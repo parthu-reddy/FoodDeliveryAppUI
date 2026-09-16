@@ -4,7 +4,8 @@ import ImageLoader from '@shared/ui/ImageLoader';
 import { motion } from 'framer-motion';
 import { AlertCircle, ArrowLeft, Bike, ChevronDown, Clock, MapPinOff, Minus, Plus, Star } from 'lucide-react';
 import React, { useState } from 'react';
-import { ReviewsPanel, StarRating, toAverage, useEntityAggregate, useEntityAggregates } from '@features/reviews';
+import { StarRating, toAverage, useEntityAggregate, useEntityAggregates } from '@features/reviews';
+import { ReviewsPanel } from '@features/reviews/components/ReviewsPanel';
 
 interface CustomerMenuViewProps {
   selectedRestaurant: Restaurant;

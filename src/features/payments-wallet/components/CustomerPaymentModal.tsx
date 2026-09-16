@@ -115,8 +115,6 @@ function CustomerPaymentModalInner({
     methodHints['WALLET'] = `Insufficient balance (${formatINR(walletBalance)})`;
   }
   
-  methodHints['COD'] = "Please keep exact change ready";
-
   return (
     <PaymentModal
       isOpen={isPaymentModalOpen}
@@ -125,7 +123,7 @@ function CustomerPaymentModalInner({
       onProcessPayment={(method) => {
         processPaymentAndOrder(method);
       }}
-      availableMethods={['CARD', 'WALLET', 'COD']}
+      availableMethods={['CARD', 'UPI', 'WALLET']}
       amount={totals.total}
       totals={totals}
       disabledMethods={disabledMethods}
@@ -139,4 +137,3 @@ function CustomerPaymentModalInner({
     />
   );
 }
-

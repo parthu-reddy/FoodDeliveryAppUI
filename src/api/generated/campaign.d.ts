@@ -513,7 +513,8 @@ export interface components {
         };
         TopupWalletRequest: {
             amount: number;
-            gatewayName?: string;
+            /** @enum {string} */
+            paymentMethod: "CARD" | "UPI" | "WALLET";
         };
         ApiResponseMapStringString: {
             success: boolean;
@@ -545,22 +546,20 @@ export interface components {
             totalPages: number;
             /** Format: int64 */
             totalElements: number;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            numberOfElements: number;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["CampaignResponse"][];
             /** Format: int32 */
-            numberOfElements: number;
-            /** Format: int32 */
             number: number;
             first: boolean;
             last: boolean;
-            sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };
         PageableObject: {
-            /** Format: int64 */
-            offset: number;
             sort?: components["schemas"]["SortObject"];
             paged: boolean;
             /** Format: int32 */
@@ -568,6 +567,8 @@ export interface components {
             /** Format: int32 */
             pageSize: number;
             unpaged: boolean;
+            /** Format: int64 */
+            offset: number;
         };
         SortObject: {
             empty: boolean;
@@ -604,17 +605,17 @@ export interface components {
             totalPages: number;
             /** Format: int64 */
             totalElements: number;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            numberOfElements: number;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["CampaignPerformanceResponse"][];
             /** Format: int32 */
-            numberOfElements: number;
-            /** Format: int32 */
             number: number;
             first: boolean;
             last: boolean;
-            sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };
         ApiResponsePageAdGroupResponse: {
@@ -630,17 +631,17 @@ export interface components {
             totalPages: number;
             /** Format: int64 */
             totalElements: number;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            numberOfElements: number;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["AdGroupResponse"][];
             /** Format: int32 */
-            numberOfElements: number;
-            /** Format: int32 */
             number: number;
             first: boolean;
             last: boolean;
-            sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };
         ApiResponseListAdCreativeResponse: {

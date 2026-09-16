@@ -11,7 +11,10 @@ export const ApiResponseMapStringString = z
   })
   .passthrough();
 export const TopupWalletRequest = z
-  .object({ amount: z.number().gte(0.01), gatewayName: z.string().optional() })
+  .object({
+    amount: z.number().gte(0.01),
+    paymentMethod: z.enum(["CARD", "UPI", "WALLET"]),
+  })
   .passthrough();
 
 export const schemas = {

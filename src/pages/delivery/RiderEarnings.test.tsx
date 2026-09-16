@@ -11,7 +11,6 @@ vi.mock('@/lib/zodiosClients', () => ({
     driverMoney: {
       fetchSummary_1: vi.fn().mockResolvedValue({
         net: 45000,
-        cashInHand: 5000,
         pendingBalance: 40000,
         lastPayout: {
           amount: 15000,

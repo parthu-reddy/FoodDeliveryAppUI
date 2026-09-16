@@ -176,10 +176,6 @@ export default function CampaignManagement({ advertiserId }: { advertiserId: str
       // same top-up row instead of charging the advertiser twice. The header is required; the call
       // below used to omit it behind a @ts-expect-error and was rejected before it reached a gateway.
       const idempotencyKey = crypto.randomUUID();
-      // Map frontend payment method to gateway name
-      let gateway = 'RAZORPAY'; // default
-      if (method === 'UPI' || method === 'CARD') gateway = 'VYAPAR';
-      
       // Through CampaignService, which checks the signed-in user actually owns this advertiser
       // before proxying to WalletService. The old call went straight at WalletService's
       // /api/v1/internal/... path: the gateway routes no such thing, and the endpoint behind it
@@ -189,7 +185,7 @@ export default function CampaignManagement({ advertiserId }: { advertiserId: str
       // old `* 100` asked the payment gateway to charge a hundred times what the advertiser typed.
       const topupRes = await campaignApi.campaign.post(
         '/api/v1/advertisers/:advertiserId/campaigns/wallet/topup',
-        { amount: roundRupees(topupAmount), gatewayName: gateway },
+        { amount: roundRupees(topupAmount), paymentMethod: method },
         { params: { advertiserId: advertiserId }, headers: { "Idempotency-Key": idempotencyKey } }
       );
 

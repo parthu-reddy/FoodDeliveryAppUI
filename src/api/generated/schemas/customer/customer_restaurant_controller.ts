@@ -34,6 +34,7 @@ export const SponsoredListingDTO = z
     clickUrl: z.string(),
     adm: z.string(),
     creativeFormat: z.string(),
+    advertiserId: z.string(),
   })
   .partial()
   .passthrough();

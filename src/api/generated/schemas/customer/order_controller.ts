@@ -17,7 +17,7 @@ export const OrderRequest = z
     customerName: z.string().optional(),
     restaurantId: z.string().uuid(),
     deliveryAddressId: z.string().uuid(),
-    paymentMethod: z.enum(["CARD", "UPI", "WALLET", "COD"]).optional(),
+    paymentMethod: z.enum(["CARD", "UPI", "WALLET", "CARD", "UPI", "WALLET"]),
     items: z.array(OrderItemRequest),
   })
   .passthrough();

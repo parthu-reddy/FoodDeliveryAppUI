@@ -116,11 +116,6 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
                     ? 'We are looking for a nearby delivery partner. Thank you for your patience.'
                     : 'Estimated delivery: 15-20 mins'}
                 </p>
-                {currentTrackingOrder.paymentMethod === 'COD' && (
-                  <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400" data-testid="cod-notice">
-                    {`Pay ${formatINR(currentTrackingOrder.totalAmount ?? 0)} in cash on delivery`}
-                  </p>
-                )}
               </div>
               <div className={`p-2.5 rounded-2xl ${isFailedOrder(currentTrackingOrder) ? 'bg-red-500/10 text-red-500' : 'bg-amber-500/10 text-amber-500'}`}>
                 {currentTrackingOrder.status === OrderStatus.AWAITING_DELAY_APPROVAL || isFailedOrder(currentTrackingOrder) ? <Clock className="w-5 h-5 text-red-500" /> : <Timer className="w-5 h-5" />}
@@ -414,11 +409,6 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
             {currentTrackingOrder.cancellationReason && (
               <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 italic" data-testid="cancellation-reason">
                 {currentTrackingOrder.cancellationReason}
-              </p>
-            )}
-            {currentTrackingOrder.paymentMethod === 'COD' && currentTrackingOrder.deliveryStatus === DeliveryStatus.DELIVERED && (
-              <p className="mt-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400" data-testid="cod-notice">
-                {`Paid ${formatINR(currentTrackingOrder.cashCollectedAmount ?? currentTrackingOrder.totalAmount ?? 0)} in cash on delivery`}
               </p>
             )}
             {/* The moment the food has actually arrived is when someone has an opinion worth

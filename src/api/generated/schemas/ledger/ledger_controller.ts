@@ -6,7 +6,6 @@ export const LedgerAccount = z
     id: z.string().uuid(),
     ownerType: z.enum([
       "GATEWAY_RECEIVABLE",
-      "CASH_RECEIVABLE",
       "BANK",
       "PLATFORM_CLEARING",
       "PLATFORM_REVENUE",
@@ -56,7 +55,6 @@ export const endpoints = makeApi([
         type: "Path",
         schema: z.enum([
           "GATEWAY_RECEIVABLE",
-          "CASH_RECEIVABLE",
           "BANK",
           "PLATFORM_CLEARING",
           "PLATFORM_REVENUE",

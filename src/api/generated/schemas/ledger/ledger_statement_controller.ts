@@ -1,8 +1,8 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-import { PageableObject } from "./common";
 import { SortObject } from "./common";
+import { PageableObject } from "./common";
 
 export const LedgerStatementLineDto = z
   .object({
@@ -12,7 +12,6 @@ export const LedgerStatementLineDto = z
     ownerId: z.string().uuid(),
     ownerType: z.enum([
       "GATEWAY_RECEIVABLE",
-      "CASH_RECEIVABLE",
       "BANK",
       "PLATFORM_CLEARING",
       "PLATFORM_REVENUE",
@@ -38,8 +37,6 @@ export const LedgerStatementLineDto = z
       "AD_WALLET_TOPUP",
       "CLAWBACK",
       "PAYOUT_TRANSFER",
-      "CASH_COLLECTED",
-      "CASH_REMITTED",
       "STORE_CREDIT",
     ]),
     amount: z.number(),
@@ -56,14 +53,14 @@ export const PageLedgerStatementLineDto = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    numberOfElements: z.number().int(),
-    number: z.number().int(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
     size: z.number().int(),
     content: z.array(LedgerStatementLineDto),
+    number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
-    pageable: PageableObject.optional(),
-    sort: SortObject.optional(),
+    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -85,7 +82,6 @@ export const endpoints = makeApi([
         type: "Path",
         schema: z.enum([
           "GATEWAY_RECEIVABLE",
-          "CASH_RECEIVABLE",
           "BANK",
           "PLATFORM_CLEARING",
           "PLATFORM_REVENUE",

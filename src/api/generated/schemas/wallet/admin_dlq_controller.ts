@@ -20,7 +20,6 @@ export const OutboxEventEntity = z
     eventType: z.enum([
       "ORDER_CREATED",
       "ORDER_PAID",
-      "ORDER_PLACED_COD",
       "ORDER_ACCEPTED",
       "ORDER_PREPARING",
       "ORDER_READY",
@@ -77,6 +76,7 @@ export const OutboxEventEntity = z
       "AD_WALLET_TOPUP_REQUEST",
       "AD_WALLET_TOPUP_COMPLETED",
       "AD_BUDGET_ALERT",
+      "WALLET_CREDIT_REQUESTED",
       "CHAT_REFUND_QUOTE_REQUESTED",
       "CHAT_REFUND_REQUESTED",
       "CHAT_REFUND_QUOTE_RESPONSE",

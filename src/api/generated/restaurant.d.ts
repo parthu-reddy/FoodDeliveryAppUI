@@ -1184,7 +1184,7 @@ export interface components {
             /** @enum {string} */
             deliveryStatus: "PENDING" | "SEARCHING_FOR_DRIVER" | "MANUAL_INTERVENTION_REQUIRED" | "ASSIGNED" | "AT_RESTAURANT" | "OUT_FOR_DELIVERY" | "DELIVERED" | "CANCELLED" | "FAILED";
             /** @enum {string} */
-            paymentStatus?: "INITIATED" | "SUCCESS" | "FAILED" | "PENDING_COLLECTION" | "COLLECTED" | "PARTIALLY_REFUNDED" | "REFUNDED" | "REFUND_PENDING" | "REFUND_FAILED";
+            paymentStatus?: "INITIATED" | "SUCCESS" | "FAILED" | "PARTIALLY_REFUNDED" | "REFUNDED" | "REFUND_PENDING" | "REFUND_FAILED";
             /** Format: int32 */
             version?: number;
             /** Format: int32 */
@@ -1198,6 +1198,9 @@ export interface components {
             /** Format: double */
             deliveryLng?: number;
             deliveryAddress?: string;
+            dispatchCityId?: string;
+            /** Format: double */
+            fleetSearchRadiusKm?: number;
             pickupOtp?: string;
             deliveryOtp?: string;
             /** Format: uuid */
@@ -1205,7 +1208,7 @@ export interface components {
             /** Format: uuid */
             customerId?: string;
             /** @enum {string} */
-            paymentMethod?: "CARD" | "UPI" | "WALLET" | "COD";
+            paymentMethod?: "CARD" | "UPI" | "WALLET";
             customerName?: string;
             foodCost?: number;
             restaurantPlatformFee?: number;

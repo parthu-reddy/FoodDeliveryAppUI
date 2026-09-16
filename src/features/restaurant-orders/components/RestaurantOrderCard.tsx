@@ -11,7 +11,6 @@ import {
     Flame,
     KeyRound,
     MessageSquare,
-    Banknote,
     Receipt,
     RefreshCw,
     Send,
@@ -137,15 +136,6 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
           <span className="text-[10px] text-slate-400 dark:text-slate-300 font-medium block">{order.createdAt ? new Date(order.createdAt).toLocaleTimeString() : ''}</span>
         </div>
         <div className="flex items-center gap-1.5">
-        {/* Whether the rider collects cash changes what the kitchen packs and what the handover
-            looks like. RestaurantOrder has carried paymentMethod since Phase 4; nothing showed it. */}
-        {order.paymentMethod === 'COD' && (
-          <span data-testid="cod-badge">
-            <Badge variant="success" icon={<Banknote className="w-3 h-3" />}>
-              {`CASH ${formatINR(order.totalAmount ?? 0)}`}
-            </Badge>
-          </span>
-        )}
         <Badge 
           variant={order.status === OrderStatus.AWAITING_DELAY_APPROVAL ? 'danger' : 'primary'} 
           icon={order.status === OrderStatus.PREPARING ? <Flame className="w-3 h-3 text-orange-500 animate-bounce" /> : undefined}

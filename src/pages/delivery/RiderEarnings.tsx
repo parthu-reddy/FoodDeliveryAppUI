@@ -1,7 +1,7 @@
 import { customerApi } from "@/lib/zodiosClients";
 import { Button, Spinner } from '@shared/ui';
 import { formatINR } from '@shared/money';
-import { Download, IndianRupee, Activity, FileText, CheckCircle, Wallet } from 'lucide-react';
+import { Download, IndianRupee, Activity, FileText, CheckCircle } from 'lucide-react';
 import { useState } from 'react';
 import { usePolling } from "@/hooks/usePolling";
 
@@ -52,7 +52,6 @@ export default function RiderEarnings() {
 
   const statCards = [
     { label: "Net Earnings", value: summary?.net || 0, icon: <IndianRupee className="w-5 h-5 text-emerald-500" /> },
-    { label: "Cash In Hand", value: summary?.cashInHand || 0, icon: <Wallet className="w-5 h-5 text-amber-500" /> },
     { label: "Pending Balance", value: summary?.pendingBalance || 0, icon: <Activity className="w-5 h-5 text-indigo-500" /> }
   ];
 
@@ -64,7 +63,7 @@ export default function RiderEarnings() {
       <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">My Earnings</h1>
       
       {/* Summary Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {statCards.map((card, i) => (
           <div key={i} className="bg-white dark:bg-[#0f111a] border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm flex items-center justify-between">
             <div>

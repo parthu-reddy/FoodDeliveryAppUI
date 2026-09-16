@@ -44,8 +44,6 @@ export const TransactionRequest = z
       "AD_WALLET_TOPUP",
       "CLAWBACK",
       "PAYOUT_TRANSFER",
-      "CASH_COLLECTED",
-      "CASH_REMITTED",
       "STORE_CREDIT",
     ]),
     description: z.string().optional(),

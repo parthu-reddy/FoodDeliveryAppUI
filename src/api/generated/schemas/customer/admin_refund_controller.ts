@@ -9,13 +9,13 @@ export const PageSupportTicket = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
     size: z.number().int(),
     content: z.array(SupportTicket),
     number: z.number().int(),
-    sort: SortObject.optional(),
-    last: z.boolean(),
-    pageable: PageableObject.optional(),
     first: z.boolean(),
+    last: z.boolean(),
     numberOfElements: z.number().int(),
     empty: z.boolean(),
   })

@@ -19,8 +19,6 @@ export const LedgerTransactionDto = z
       "AD_WALLET_TOPUP",
       "CLAWBACK",
       "PAYOUT_TRANSFER",
-      "CASH_COLLECTED",
-      "CASH_REMITTED",
       "STORE_CREDIT",
     ]),
     fromAccountId: z.string().uuid(),
@@ -73,8 +71,6 @@ export const LedgerEntry = z
       "AD_WALLET_TOPUP",
       "CLAWBACK",
       "PAYOUT_TRANSFER",
-      "CASH_COLLECTED",
-      "CASH_REMITTED",
       "STORE_CREDIT",
     ]),
     amount: z.number(),
@@ -149,7 +145,6 @@ export const endpoints = makeApi([
         schema: z
           .enum([
             "GATEWAY_RECEIVABLE",
-            "CASH_RECEIVABLE",
             "BANK",
             "PLATFORM_CLEARING",
             "PLATFORM_REVENUE",
@@ -181,8 +176,6 @@ export const endpoints = makeApi([
             "AD_WALLET_TOPUP",
             "CLAWBACK",
             "PAYOUT_TRANSFER",
-            "CASH_COLLECTED",
-            "CASH_REMITTED",
             "STORE_CREDIT",
           ])
           .optional(),
@@ -227,7 +220,6 @@ export const endpoints = makeApi([
         schema: z
           .enum([
             "GATEWAY_RECEIVABLE",
-            "CASH_RECEIVABLE",
             "BANK",
             "PLATFORM_CLEARING",
             "PLATFORM_REVENUE",
@@ -259,8 +251,6 @@ export const endpoints = makeApi([
             "AD_WALLET_TOPUP",
             "CLAWBACK",
             "PAYOUT_TRANSFER",
-            "CASH_COLLECTED",
-            "CASH_REMITTED",
             "STORE_CREDIT",
           ])
           .optional(),

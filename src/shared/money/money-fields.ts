@@ -11,7 +11,6 @@ export const MONEY_FIELDS = [
   'total',
   'total',
   'unsettledAmount',
-  'cashCollectedAmount',
   'refundedAmount',
   'subtotal',
   'platformBonus',

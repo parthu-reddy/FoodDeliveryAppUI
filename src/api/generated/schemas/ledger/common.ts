@@ -109,25 +109,18 @@ export const ReconciliationRun = z
   })
   .partial()
   .passthrough();
-export const CashRemittanceRequest = z
-  .object({
-    driverId: z.string().uuid(),
-    amount: z.number(),
-    reference: z.string(),
-  })
-  .partial()
+export const SortObject = z
+  .object({ empty: z.boolean(), sorted: z.boolean(), unsorted: z.boolean() })
   .passthrough();
-export const CashRemittance = z
+export const PageableObject = z
   .object({
-    id: z.string().uuid(),
-    driverId: z.string().uuid(),
-    amount: z.number(),
-    reference: z.string(),
-    recordedBy: z.string().uuid(),
-    ledgerTransactionId: z.string().uuid(),
-    createdAt: z.string().datetime({ offset: true }),
+    sort: SortObject.optional(),
+    paged: z.boolean(),
+    pageNumber: z.number().int(),
+    unpaged: z.boolean(),
+    pageSize: z.number().int(),
+    offset: z.number().int(),
   })
-  .partial()
   .passthrough();
 export const LedgerStatementLineDto = z
   .object({
@@ -137,7 +130,6 @@ export const LedgerStatementLineDto = z
     ownerId: z.string().uuid(),
     ownerType: z.enum([
       "GATEWAY_RECEIVABLE",
-      "CASH_RECEIVABLE",
       "BANK",
       "PLATFORM_CLEARING",
       "PLATFORM_REVENUE",
@@ -163,8 +155,6 @@ export const LedgerStatementLineDto = z
       "AD_WALLET_TOPUP",
       "CLAWBACK",
       "PAYOUT_TRANSFER",
-      "CASH_COLLECTED",
-      "CASH_REMITTED",
       "STORE_CREDIT",
     ]),
     amount: z.number(),
@@ -177,31 +167,18 @@ export const LedgerStatementLineDto = z
   })
   .partial()
   .passthrough();
-export const SortObject = z
-  .object({ empty: z.boolean(), sorted: z.boolean(), unsorted: z.boolean() })
-  .passthrough();
-export const PageableObject = z
-  .object({
-    offset: z.number().int(),
-    pageSize: z.number().int(),
-    paged: z.boolean(),
-    pageNumber: z.number().int(),
-    sort: SortObject.optional(),
-    unpaged: z.boolean(),
-  })
-  .passthrough();
 export const PageLedgerStatementLineDto = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    numberOfElements: z.number().int(),
-    number: z.number().int(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
     size: z.number().int(),
     content: z.array(LedgerStatementLineDto),
+    number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
-    pageable: PageableObject.optional(),
-    sort: SortObject.optional(),
+    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -226,8 +203,6 @@ export const PayoutLineDto = z
       "AD_WALLET_TOPUP",
       "CLAWBACK",
       "PAYOUT_TRANSFER",
-      "CASH_COLLECTED",
-      "CASH_REMITTED",
       "STORE_CREDIT",
     ]),
     direction: z.enum(["CREDIT", "DEBIT"]),
@@ -241,46 +216,11 @@ export const PayoutDetailDto = z
   .object({ payout: PayoutDto, lines: z.array(PayoutLineDto) })
   .partial()
   .passthrough();
-export const CashRemittanceDto = z
-  .object({
-    id: z.string().uuid(),
-    driverId: z.string().uuid(),
-    amount: z.number(),
-    reference: z.string(),
-    recordedBy: z.string().uuid(),
-    ledgerTransactionId: z.string().uuid(),
-    createdAt: z.string().datetime({ offset: true }),
-  })
-  .partial()
-  .passthrough();
-export const PageResponseDtoCashRemittanceDto = z
-  .object({
-    content: z.array(CashRemittanceDto),
-    totalElements: z.number().int(),
-    totalPages: z.number().int(),
-    last: z.boolean(),
-    size: z.number().int(),
-    number: z.number().int(),
-    first: z.boolean(),
-    numberOfElements: z.number().int(),
-    empty: z.boolean(),
-  })
-  .passthrough();
-export const CashSummaryDto = z
-  .object({
-    driverId: z.string().uuid(),
-    cashCollected: z.number(),
-    cashRemitted: z.number(),
-    cashInHand: z.number(),
-  })
-  .partial()
-  .passthrough();
 export const LedgerAccount = z
   .object({
     id: z.string().uuid(),
     ownerType: z.enum([
       "GATEWAY_RECEIVABLE",
-      "CASH_RECEIVABLE",
       "BANK",
       "PLATFORM_CLEARING",
       "PLATFORM_REVENUE",
@@ -379,8 +319,6 @@ export const LedgerTransactionDto = z
       "AD_WALLET_TOPUP",
       "CLAWBACK",
       "PAYOUT_TRANSFER",
-      "CASH_COLLECTED",
-      "CASH_REMITTED",
       "STORE_CREDIT",
     ]),
     fromAccountId: z.string().uuid(),
@@ -436,14 +374,14 @@ export const PageReconciliationRun = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    numberOfElements: z.number().int(),
-    number: z.number().int(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
     size: z.number().int(),
     content: z.array(ReconciliationRun),
+    number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
-    pageable: PageableObject.optional(),
-    sort: SortObject.optional(),
+    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -474,14 +412,14 @@ export const PageReconciliationBreak = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    numberOfElements: z.number().int(),
-    number: z.number().int(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
     size: z.number().int(),
     content: z.array(ReconciliationBreak),
+    number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
-    pageable: PageableObject.optional(),
-    sort: SortObject.optional(),
+    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -507,8 +445,6 @@ export const LedgerEntry = z
       "AD_WALLET_TOPUP",
       "CLAWBACK",
       "PAYOUT_TRANSFER",
-      "CASH_COLLECTED",
-      "CASH_REMITTED",
       "STORE_CREDIT",
     ]),
     amount: z.number(),
@@ -538,21 +474,6 @@ export const ApiResponsePageResponseDtoLedgerEntry = z
     errorCode: z.string().optional(),
     data: PageResponseDtoLedgerEntry.optional(),
     timestamp: z.string().datetime({ offset: true }),
-  })
-  .passthrough();
-export const PageCashRemittance = z
-  .object({
-    totalElements: z.number().int(),
-    totalPages: z.number().int(),
-    numberOfElements: z.number().int(),
-    number: z.number().int(),
-    size: z.number().int(),
-    content: z.array(CashRemittance),
-    first: z.boolean(),
-    last: z.boolean(),
-    pageable: PageableObject.optional(),
-    sort: SortObject.optional(),
-    empty: z.boolean(),
   })
   .passthrough();
 export const Pageable = z

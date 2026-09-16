@@ -80,13 +80,13 @@ describe('useCustomerCart payment method', () => {
     const { result } = await primedCart();
 
     await act(async () => {
-      await result.current.processPaymentAndOrder('COD', ADDRESS_ID, () => {});
+      await result.current.processPaymentAndOrder('UPI', ADDRESS_ID, () => {});
     });
 
     // Assert the POST and its body, not the absence of an error message: without this the test
     // would pass while the order was rejected two guards later for a completely different reason,
     // and it is the body that carries the point -- the method the customer picked, unrewritten.
     expect(orderPosts).toBe(1);
-    expect(lastOrderBody?.paymentMethod).toBe('COD');
+    expect(lastOrderBody?.paymentMethod).toBe('UPI');
   });
 });

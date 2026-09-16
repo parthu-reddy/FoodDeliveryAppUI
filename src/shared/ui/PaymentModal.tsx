@@ -1,11 +1,11 @@
 import { Button, Modal } from '@shared/ui';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Banknote, Check, ChevronRight, CreditCard, Lock, Phone, ShieldCheck, Store, Wallet } from 'lucide-react';
+import { Check, ChevronRight, CreditCard, Lock, Phone, ShieldCheck, Store, Wallet } from 'lucide-react';
 import React, { useState } from 'react';
 import { ErrorBoundary } from './ErrorBoundary';
 import { formatINR } from '@shared/money';
 
-export type PaymentMethodType = 'CARD' | 'WALLET' | 'COD' | 'UPI';
+export type PaymentMethodType = 'CARD' | 'WALLET' | 'UPI';
 
 export interface PaymentModalProps {
   isOpen: boolean;
@@ -39,7 +39,7 @@ function PaymentModalInner({
   onClose,
   status,
   onProcessPayment,
-  availableMethods = ['CARD', 'WALLET', 'COD'],
+  availableMethods = ['CARD', 'UPI', 'WALLET'],
   amount,
   totals,
   title = "Complete Your Payment",
@@ -47,7 +47,7 @@ function PaymentModalInner({
   successSubtitle = "Your transaction was successful.",
   processingTitle = "Processing Payment...",
   processingSubtitle = "Please wait while we securely process your payment",
-  buttonText = (method, amt) => method === 'COD' ? 'Confirm Cash Order' : `Pay ${formatINR((amt || 0))} Now`,
+  buttonText = (_method, amt) => `Pay ${formatINR((amt || 0))} Now`,
   leftPanelContent,
   disabledMethods = [],
   methodHints = {}
@@ -69,7 +69,6 @@ function PaymentModalInner({
     { id: 'CARD', icon: CreditCard, label: 'Credit Card', color: 'indigo' },
     { id: 'UPI', icon: Phone, label: 'UPI / Netbanking', color: 'indigo' },
     { id: 'WALLET', icon: Wallet, label: 'Wallet', color: 'sky' },
-    { id: 'COD', icon: Banknote, label: 'Cash on Delivery', color: 'emerald' },
   ];
 
   const methods = allMethods.filter(m => availableMethods.includes(m.id as PaymentMethodType));
