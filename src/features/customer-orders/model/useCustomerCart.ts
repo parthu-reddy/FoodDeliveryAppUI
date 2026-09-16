@@ -462,10 +462,10 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
       let errorMsg = err?.response?.data?.message || err?.response?.data?.error || err?.message || "Failed to create order";
       const isQuoteExpired = errorCode === 'QUOTE_EXPIRED';
 
-      if (!isQuoteExpired) {
-        setIsPaymentModalOpen(false);
-      }
-
+      // Do not close the modal here; let the user see the global error or error state.
+      // if (!isQuoteExpired) {
+      //   setIsPaymentModalOpen(false);
+      // }
       // @ts-expect-error auto-migration type suppression
       if (err?.data?.data && Array.isArray(err.data.data) && err.data.data.length > 0) {
         // @ts-expect-error auto-migration type suppression

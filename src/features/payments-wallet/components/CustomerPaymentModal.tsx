@@ -17,6 +17,7 @@ interface CustomerPaymentModalProps {
   address: string;
   deliveryLat: number;
   deliveryLng: number;
+  error?: string | null;
 }
 
 export default function CustomerPaymentModal(props: CustomerPaymentModalProps) {
@@ -37,7 +38,8 @@ function CustomerPaymentModalInner({
   cartRestaurant,
   address,
   deliveryLat,
-  deliveryLng
+  deliveryLng,
+  error
 }: CustomerPaymentModalProps) {
   const totals = getCartTotal ? getCartTotal() : { subtotal: 0, deliveryFee: 0, tax: 0, total: 0 };
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
@@ -134,6 +136,7 @@ function CustomerPaymentModalInner({
       successSubtitle="Your food is being prepared and will be with you shortly."
       processingTitle="Sending Order..."
       processingSubtitle={`Connecting to ${cartRestaurant?.name}`}
+      error={error}
     />
   );
 }

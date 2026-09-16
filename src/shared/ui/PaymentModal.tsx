@@ -24,6 +24,7 @@ export interface PaymentModalProps {
   leftPanelContent?: React.ReactNode;
   disabledMethods?: PaymentMethodType[];
   methodHints?: Partial<Record<PaymentMethodType, React.ReactNode>>;
+  error?: string | null;
 }
 
 export function PaymentModal(props: PaymentModalProps) {
@@ -50,7 +51,8 @@ function PaymentModalInner({
   buttonText = (_method, amt) => `Pay ${formatINR((amt || 0))} Now`,
   leftPanelContent,
   disabledMethods = [],
-  methodHints = {}
+  methodHints = {},
+  error
 }: PaymentModalProps) {
   // The first method the customer could actually pick, not simply the first one listed. The old
   // default was `availableMethods[0]`, which pre-selected a method even when it was disabled: the
@@ -199,6 +201,11 @@ function PaymentModalInner({
 
               {/* Action Button */}
               <div className="pt-2">
+                {error && (
+                  <div className="mb-4 p-3 bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400 text-sm rounded-lg border border-red-200 dark:border-red-500/30">
+                    {error}
+                  </div>
+                )}
                 <Button
                   onClick={() => selectedMethod && canPay && onProcessPayment(selectedMethod)}
                   disabled={status !== 'idle' || !canPay}

@@ -812,11 +812,12 @@ export default function CustomerDashboard({
         paymentStatus={paymentStatus}
         getCartTotal={() => getCartTotal(checkoutRestaurantId || '')}
         cart={checkoutRestaurantId ? (carts[checkoutRestaurantId]?.items || []) : []}
-        cartRestaurant={checkoutRestaurantId ? (carts[checkoutRestaurantId]?.restaurant as { name: string }) : { name: '' }}
+        cartRestaurant={checkoutRestaurantId ? carts[checkoutRestaurantId]?.restaurant : { name: 'Restaurant', id: '' }}
         processPaymentAndOrder={processPaymentAndOrder}
-        address={address}
-        deliveryLat={deliveryLat ?? 0}
-        deliveryLng={deliveryLng ?? 0}
+        address={deliveryAddressId || ''}
+        deliveryLat={activeAddress?.latitude || 0}
+        deliveryLng={activeAddress?.longitude || 0}
+        error={globalError}
       />
 
       <AnimatePresence>
