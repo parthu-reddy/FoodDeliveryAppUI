@@ -4,5 +4,6 @@ export { Reconciliation_controllerApi } from "./reconciliation_controller";
 export { Ledger_statement_controllerApi } from "./ledger_statement_controller";
 export { Payee_payout_controllerApi } from "./payee_payout_controller";
 export { Ledger_controllerApi } from "./ledger_controller";
+export { Internal_ledger_controllerApi } from "./internal_ledger_controller";
 export { Internal_payout_controllerApi } from "./internal_payout_controller";
 export { Admin_ledger_controllerApi } from "./admin_ledger_controller";

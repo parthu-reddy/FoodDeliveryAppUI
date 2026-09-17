@@ -5,6 +5,7 @@ import { createApiClient as create_reconciliation } from './reconciliation_contr
 import { createApiClient as create_ledgerStatement } from './ledger_statement_controller';
 import { createApiClient as create_payeePayout } from './payee_payout_controller';
 import { createApiClient as create_ledger } from './ledger_controller';
+import { createApiClient as create_internalLedger } from './internal_ledger_controller';
 import { createApiClient as create_internalPayout } from './internal_payout_controller';
 import { createApiClient as create_adminLedger } from './admin_ledger_controller';
 
@@ -16,6 +17,7 @@ export function createLedgerFacade(baseUrl: string, options?: ZodiosOptions) {
   ledgerStatement: create_ledgerStatement(baseUrl, options),
   payeePayout: create_payeePayout(baseUrl, options),
   ledger: create_ledger(baseUrl, options),
+  internalLedger: create_internalLedger(baseUrl, options),
   internalPayout: create_internalPayout(baseUrl, options),
   adminLedger: create_adminLedger(baseUrl, options),
   };

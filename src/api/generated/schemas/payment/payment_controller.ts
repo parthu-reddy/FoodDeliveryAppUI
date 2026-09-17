@@ -30,7 +30,7 @@ export const schemas = {
 export const endpoints = makeApi([
   {
     method: "post",
-    path: "/api/v1/payments/refund",
+    path: "/api/v1/internal/payments/refund",
     alias: "refundOrder",
     requestFormat: "json",
     parameters: [
@@ -49,7 +49,7 @@ export const endpoints = makeApi([
   },
   {
     method: "post",
-    path: "/api/v1/payments/create-order",
+    path: "/api/v1/internal/payments/create-order",
     alias: "createOrder",
     requestFormat: "json",
     parameters: [

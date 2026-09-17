@@ -84,22 +84,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/money/driver/{driverId}/orders:batch": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["fetchDriverOrderMoneyBatch"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/internal/orders/{orderId}/partial-refund": {
         parameters: {
             query?: never;
@@ -110,6 +94,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["initiatePartialRefund"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/internal/money/driver/{driverId}/orders:batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["fetchDriverOrderMoneyBatch"];
         delete?: never;
         options?: never;
         head?: never;
@@ -628,22 +628,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/money/restaurant/orders/{orderId}/earnings": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["fetchOrderEarningsInternal"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/money/driver/{driverId}/orders/{orderId}": {
         parameters: {
             query?: never;
@@ -700,22 +684,6 @@ export interface paths {
             cookie?: never;
         };
         get: operations["fetchOrders_1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/money/driver/orders/{orderId}/earnings": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["fetchOrderEarningsInternal_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -892,6 +860,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["fetchActiveOrdersForDriver"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/internal/money/restaurant/orders/{orderId}/earnings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["fetchRestaurantOrderEarningsInternal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/internal/money/driver/orders/{orderId}/earnings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["fetchDriverOrderEarningsInternal"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1244,18 +1244,6 @@ export interface components {
             driverPayout: number;
             restaurantDeliveryContribution: number;
         };
-        DriverOrderEarnings: {
-            /** Format: uuid */
-            orderId?: string;
-            /** Format: uuid */
-            driverId?: string;
-            grossPayout?: number;
-            taxes?: number;
-            netPayout?: number;
-            customerContribution?: number;
-            restaurantContribution?: number;
-            platformBonus?: number;
-        };
         Item: {
             /** Format: uuid */
             orderItemId?: string;
@@ -1290,6 +1278,18 @@ export interface components {
             data?: string;
             /** Format: date-time */
             timestamp: string;
+        };
+        DriverOrderEarnings: {
+            /** Format: uuid */
+            orderId?: string;
+            /** Format: uuid */
+            driverId?: string;
+            grossPayout?: number;
+            taxes?: number;
+            netPayout?: number;
+            customerContribution?: number;
+            restaurantContribution?: number;
+            platformBonus?: number;
         };
         ReviewRequest: {
             notes?: string;
@@ -2093,32 +2093,6 @@ export interface operations {
             };
         };
     };
-    fetchDriverOrderMoneyBatch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                driverId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": string[];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DriverOrderEarnings"][];
-                };
-            };
-        };
-    };
     initiatePartialRefund: {
         parameters: {
             query?: never;
@@ -2141,6 +2115,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiResponseString"];
+                };
+            };
+        };
+    };
+    fetchDriverOrderMoneyBatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                driverId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": string[];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DriverOrderEarnings"][];
                 };
             };
         };
@@ -2981,28 +2981,6 @@ export interface operations {
             };
         };
     };
-    fetchOrderEarningsInternal: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                orderId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RestaurantOrderEarnings"];
-                };
-            };
-        };
-    };
     fetchOrderEarnings_1: {
         parameters: {
             query?: never;
@@ -3089,28 +3067,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DriverOrderEarnings"][];
-                };
-            };
-        };
-    };
-    fetchOrderEarningsInternal_1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                orderId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DriverOrderEarnings"];
                 };
             };
         };
@@ -3355,6 +3311,50 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PageOrder"];
+                };
+            };
+        };
+    };
+    fetchRestaurantOrderEarningsInternal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestaurantOrderEarnings"];
+                };
+            };
+        };
+    };
+    fetchDriverOrderEarningsInternal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DriverOrderEarnings"];
                 };
             };
         };

@@ -385,13 +385,20 @@ export default function DeliveryDashboard({
         undefined,
         { params: { driverId: deliveryExecutiveId, orderId: jobId } }
       );
-    } catch (_e: unknown) {
-      // Revert on error (optional, mostly fire and forget)
+    } catch (e: unknown) {
+      // Not fire-and-forget. The backend reverts its Redis state when it cannot record the decline
+      // and answers 503, which means this ping WILL come back on the next poll. Silently undoing
+      // the optimistic update made that reappearance look like the app had ignored the tap.
       setRejectedIds((prev) => {
         const n = new Set(prev);
         n.delete(jobId);
         return n;
       });
+      const errObj = e as { response?: { data?: { message?: string } } };
+      showToast(
+        errObj.response?.data?.message ||
+          "Could not record the decline. This order may appear again."
+      );
     }
   };
 

@@ -1,6 +1,7 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+import { DriverOrderEarnings } from "./common";
 import { PayoutSummaryDto } from "./common";
 import { PageResponseDtoLedgerStatementLineDto } from "./common";
 import { LedgerStatementLineDto } from "./common";
@@ -16,23 +17,9 @@ export const DriverSummary = z
   })
   .partial()
   .passthrough();
-export const DriverOrderEarnings = z
-  .object({
-    orderId: z.string().uuid(),
-    driverId: z.string().uuid(),
-    grossPayout: z.number(),
-    taxes: z.number(),
-    netPayout: z.number(),
-    customerContribution: z.number(),
-    restaurantContribution: z.number(),
-    platformBonus: z.number(),
-  })
-  .partial()
-  .passthrough();
 
 export const schemas = {
   DriverSummary,
-  DriverOrderEarnings,
 };
 
 export const endpoints = makeApi([
@@ -101,20 +88,6 @@ export const endpoints = makeApi([
       },
     ],
     response: z.array(DriverOrderEarnings),
-  },
-  {
-    method: "get",
-    path: "/api/v1/money/driver/orders/:orderId/earnings",
-    alias: "fetchOrderEarningsInternal_1",
-    requestFormat: "json",
-    parameters: [
-      {
-        name: "orderId",
-        type: "Path",
-        schema: z.string().uuid(),
-      },
-    ],
-    response: DriverOrderEarnings,
   },
 ]);
 

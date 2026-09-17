@@ -151,19 +151,6 @@ export const ApiResponseQuoteResponse = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const DriverOrderEarnings = z
-  .object({
-    orderId: z.string().uuid(),
-    driverId: z.string().uuid(),
-    grossPayout: z.number(),
-    taxes: z.number(),
-    netPayout: z.number(),
-    customerContribution: z.number(),
-    restaurantContribution: z.number(),
-    platformBonus: z.number(),
-  })
-  .partial()
-  .passthrough();
 export const Item = z
   .object({ orderItemId: z.string().uuid(), quantity: z.number().int() })
   .partial()
@@ -206,6 +193,19 @@ export const ApiResponseString = z
     data: z.string().optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
+  .passthrough();
+export const DriverOrderEarnings = z
+  .object({
+    orderId: z.string().uuid(),
+    driverId: z.string().uuid(),
+    grossPayout: z.number(),
+    taxes: z.number(),
+    netPayout: z.number(),
+    customerContribution: z.number(),
+    restaurantContribution: z.number(),
+    platformBonus: z.number(),
+  })
+  .partial()
   .passthrough();
 export const ReviewRequest = z.object({ notes: z.string() }).partial().passthrough();
 export const SupportTicket = z

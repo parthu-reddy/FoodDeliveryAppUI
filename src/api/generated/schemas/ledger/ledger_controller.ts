@@ -32,20 +32,6 @@ export const schemas = {
 export const endpoints = makeApi([
   {
     method: "get",
-    path: "/api/v1/ledger/orders/:orderId/total",
-    alias: "getOrderLedgerAmount",
-    requestFormat: "json",
-    parameters: [
-      {
-        name: "orderId",
-        type: "Path",
-        schema: z.string(),
-      },
-    ],
-    response: z.void(),
-  },
-  {
-    method: "get",
     path: "/api/v1/ledger/accounts/:ownerType/:ownerId",
     alias: "getAccount",
     requestFormat: "json",

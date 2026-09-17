@@ -126,20 +126,6 @@ export const endpoints = makeApi([
     ],
     response: PageLedgerStatementLineDto,
   },
-  {
-    method: "get",
-    path: "/api/v1/ledger/statements/references/:referenceId",
-    alias: "getStatementByReference",
-    requestFormat: "json",
-    parameters: [
-      {
-        name: "referenceId",
-        type: "Path",
-        schema: z.string().uuid(),
-      },
-    ],
-    response: z.array(LedgerStatementLineDto),
-  },
 ]);
 
 export const Ledger_statement_controllerApi = new Zodios(endpoints);

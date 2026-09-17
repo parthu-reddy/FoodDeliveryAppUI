@@ -184,16 +184,23 @@ export function useDeliveryOrders({
   useEffect(() => {
     if (isOnline && !activeJobId && !pingJob) {
       const jobs = activeOrders.filter(o => !o.deliveryExecutiveId && !rejectedIds.has(o.id));
-      if (jobs.length > 0) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setPingJob(jobs[0]);
-        if ((jobs[0]).remainingPingSeconds !== undefined) {
-          setPingTimer((jobs[0]).remainingPingSeconds);
-        } else if ((jobs[0]).expiresAt) {
-          const remainingSecs = Math.max(0, Math.floor((new Date((jobs[0]).expiresAt).getTime() - Date.now()) / 1000));
+      // The server is the authority on how long is left: /orders/available computes
+      // remainingPingSeconds from the ping deadline and now withholds the job entirely once the
+      // window has closed. A job that arrives with no expiry information is therefore not a live
+      // ping, and inventing 60 seconds for it showed the rider a countdown for an order the
+      // backend would refuse — which is what "accept does nothing" looked like.
+      const withExpiry = jobs.filter(
+        j => j.remainingPingSeconds !== undefined || j.expiresAt
+      );
+      if (withExpiry.length > 0) {
+        const job = withExpiry[0];
+        const remainingSecs = job.remainingPingSeconds !== undefined
+          ? job.remainingPingSeconds
+          : Math.max(0, Math.floor((new Date(job.expiresAt!).getTime() - Date.now()) / 1000));
+        if (remainingSecs > 0) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          setPingJob(job);
           setPingTimer(remainingSecs);
-        } else {
-          setPingTimer(60);
         }
       }
     }

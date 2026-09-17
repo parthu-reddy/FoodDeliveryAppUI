@@ -52,7 +52,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/payments/refund": {
+    "/api/v1/internal/payments/refund": {
         parameters: {
             query?: never;
             header?: never;
@@ -68,7 +68,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/payments/create-order": {
+    "/api/v1/internal/payments/create-order": {
         parameters: {
             query?: never;
             header?: never;

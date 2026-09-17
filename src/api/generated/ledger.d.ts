@@ -148,22 +148,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/ledger/statements/references/{referenceId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getStatementByReference"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/ledger/payouts/{payeeType}/{payeeId}": {
         parameters: {
             query?: never;
@@ -196,22 +180,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/ledger/orders/{orderId}/total": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getOrderLedgerAmount"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/ledger/accounts/{ownerType}/{ownerId}": {
         parameters: {
             query?: never;
@@ -220,6 +188,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getAccount"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/internal/ledger/statements/references/{referenceId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getStatementByReference"];
         put?: never;
         post?: never;
         delete?: never;
@@ -252,6 +236,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getPayeeSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/internal/ledger/orders/{orderId}/total": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getOrderLedgerAmount"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1126,28 +1126,6 @@ export interface operations {
             };
         };
     };
-    getStatementByReference: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                referenceId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LedgerStatementLineDto"][];
-                };
-            };
-        };
-    };
     getPayouts: {
         parameters: {
             query?: {
@@ -1198,28 +1176,6 @@ export interface operations {
             };
         };
     };
-    getOrderLedgerAmount: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                orderId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": number;
-                };
-            };
-        };
-    };
     getAccount: {
         parameters: {
             query?: never;
@@ -1239,6 +1195,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LedgerAccount"];
+                };
+            };
+        };
+    };
+    getStatementByReference: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                referenceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LedgerStatementLineDto"][];
                 };
             };
         };
@@ -1287,6 +1265,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PayeeMoneySummaryDto"];
+                };
+            };
+        };
+    };
+    getOrderLedgerAmount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": number;
                 };
             };
         };

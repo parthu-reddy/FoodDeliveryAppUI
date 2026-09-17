@@ -4,6 +4,7 @@ import { z } from "zod";
 import { PayoutSummaryDto } from "./common";
 import { PageResponseDtoLedgerStatementLineDto } from "./common";
 import { LedgerStatementLineDto } from "./common";
+import { RestaurantOrderEarnings } from "./common";
 import { RefundView } from "./common";
 
 export const BeneficiaryStatusDto = z
@@ -29,22 +30,10 @@ export const RestaurantSummary = z
   })
   .partial()
   .passthrough();
-export const RestaurantOrderEarnings = z
-  .object({
-    orderId: z.string().uuid(),
-    restaurantId: z.string().uuid(),
-    foodCost: z.number(),
-    platformFee: z.number(),
-    deliveryContribution: z.number(),
-    netPayout: z.number(),
-  })
-  .partial()
-  .passthrough();
 
 export const schemas = {
   BeneficiaryStatusDto,
   RestaurantSummary,
-  RestaurantOrderEarnings,
 };
 
 export const endpoints = makeApi([
@@ -159,20 +148,6 @@ export const endpoints = makeApi([
         type: "Path",
         schema: z.string().uuid(),
       },
-      {
-        name: "orderId",
-        type: "Path",
-        schema: z.string().uuid(),
-      },
-    ],
-    response: RestaurantOrderEarnings,
-  },
-  {
-    method: "get",
-    path: "/api/v1/money/restaurant/orders/:orderId/earnings",
-    alias: "fetchOrderEarningsInternal",
-    requestFormat: "json",
-    parameters: [
       {
         name: "orderId",
         type: "Path",
