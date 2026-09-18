@@ -180,7 +180,7 @@ describe('RateOrderModal', () => {
     expect(screen.getByText(/Quick and hot/)).toBeInTheDocument();
     // Nothing to submit, so the sheet offers only a way out.
     expect(screen.queryByRole('button', { name: /submit/i })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /close/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Close dialog' })).toBeInTheDocument();
   });
 
   it('reports a transport failure with a way to retry', async () => {

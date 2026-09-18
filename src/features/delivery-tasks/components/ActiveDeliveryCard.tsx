@@ -2,6 +2,7 @@ import { DeliveryStatus, Order } from "@/types";
 import { KeyRound, PhoneCall } from 'lucide-react';
 import { useCallContext } from '@/contexts/CallContext';
 import React from 'react';
+import { Input, Surface } from '@shared/ui';
 
 interface ActiveDeliveryCardProps {
   currentJob: Order;
@@ -25,7 +26,7 @@ export default function ActiveDeliveryCard({
   const { startCall } = useCallContext();
 
   return (
-    <div className="glass-card rounded-3xl p-5 space-y-4">
+    <Surface variant="glass-chrome" elevation={3} radius="lg" className="rounded-3xl p-5 space-y-4">
       <div className="space-y-1">
         <h5 className="font-bold text-sm text-slate-400 font-mono tracking-wider">NAVIGATIONAL STEPS</h5>
         <p className="text-base font-bold text-slate-900 dark:text-[#f0ede6]">
@@ -44,7 +45,7 @@ export default function ActiveDeliveryCard({
                 <button
                   type="button"
                   onClick={() => startCall(currentJob.restaurantId!, currentJob.id)}
-                  className="p-1.5 rounded-full bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-500/20 dark:text-orange-400 transition-colors"
+                  className="p-1.5 rounded-full bg-amber-100 text-amber-600 hover:bg-amber-200 dark:bg-amber-500/20 dark:text-amber-400 transition-colors"
                   title={`Call ${currentJob.restaurantName}`}
                 >
                   <PhoneCall className="w-4 h-4" />
@@ -55,7 +56,7 @@ export default function ActiveDeliveryCard({
         </div>
 
         <div className="flex gap-3">
-          <div className="w-5 h-5 rounded bg-emerald-500/10 text-emerald-500 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">B</div>
+          <div className="w-5 h-5 rounded bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">B</div>
           <div className="flex-1">
             <span className="text-[10px] text-slate-400 block font-mono">DELIVERY ADDRESS</span>
             <div className="flex justify-between items-center w-full">
@@ -64,7 +65,7 @@ export default function ActiveDeliveryCard({
                 <button
                   type="button"
                   onClick={() => startCall(currentJob.customerId!, currentJob.id)}
-                  className="p-1.5 rounded-full bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-500/20 dark:text-orange-400 transition-colors"
+                  className="p-1.5 rounded-full bg-amber-100 text-amber-600 hover:bg-amber-200 dark:bg-amber-500/20 dark:text-amber-400 transition-colors"
                   title={`Call Customer`}
                 >
                   <PhoneCall className="w-4 h-4" />
@@ -93,12 +94,12 @@ export default function ActiveDeliveryCard({
                 <KeyRound className="w-4 h-4 text-amber-500" /> RESTAURANT HANDOVER OTP
               </label>
               <div className="flex rounded-2xl overflow-hidden">
-                <input
+                <Input
                   type="password"
                   value={enteredPickupOtp}
-                  onChange={(e) => setEnteredPickupOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEnteredPickupOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
                   placeholder="Enter 6-digit pickup OTP"
-                  className="glass-input flex-1 px-4 py-3 outline-none font-mono text-center tracking-widest text-sm"
+                  className="flex-1 px-4 py-3 outline-none font-mono text-center tracking-widest text-sm"
                   required
                 />
               </div>
@@ -107,15 +108,15 @@ export default function ActiveDeliveryCard({
             <button
               type="submit"
               disabled={isUpdatingPickup}
-              className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 rounded-2xl shadow-[0_4px_16px_rgba(245,158,11,0.4)] transition-all cursor-pointer disabled:opacity-50"
+              className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 rounded-2xl shadow-[0_4px_16px_rgba(245,158,11,0.4)] transition cursor-pointer disabled:opacity-50"
             >
               {isUpdatingPickup ? 'Confirming...' : 'Confirm Pickup'}
             </button>
           </form>
         </div>
       ) : (
-        <div className="pt-2 text-emerald-500 font-bold text-center">Package Picked Up</div>
+        <div className="pt-2 text-amber-500 font-bold text-center">Package Picked Up</div>
       )}
-    </div>
+    </Surface>
   );
 }

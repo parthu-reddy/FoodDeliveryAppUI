@@ -2,17 +2,18 @@ import { Restaurant } from '@/types';
 import ImageLoader from '@shared/ui/ImageLoader';
 import { Bike, Clock, Heart, Megaphone, Star } from 'lucide-react';
 import React, { useEffect, useRef } from 'react';
+import { surfaceStyle } from '@shared/ui';
 
 interface CustomerRestaurantCardProps {
   key?: React.Key;
   restaurant: Restaurant;
   isLast: boolean;
-  lastElementRef: (node: HTMLDivElement | null) => void;
+  lastElementRef: (node: HTMLButtonElement | null) => void;
   onClick: (restaurant: Restaurant) => void;
 }
 
 export default function CustomerRestaurantCard({ restaurant, isLast, lastElementRef, onClick }: CustomerRestaurantCardProps) {
-  const cardRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLButtonElement>(null);
 
   // IntersectionObserver for Impression Tracking
   useEffect(() => {
@@ -55,14 +56,15 @@ export default function CustomerRestaurantCard({ restaurant, isLast, lastElement
   };
 
   return (
-    <div
+    <button type="button"
       ref={(node) => {
         // Handle both the infinite scroll ref and our local intersection observer ref
         if (isLast && lastElementRef) lastElementRef(node);
         cardRef.current = node;
       }}
       onClick={handleCardClick}
-      className={`group flex flex-col transition-all duration-300 relative overflow-hidden cursor-pointer hover:-translate-y-1.5 glass-card ${restaurant.isSponsored ? 'hover:shadow-[0_0_15px_rgba(234,179,8,0.5)] border-amber-400/40 hover:border-amber-400/60' : 'hover:shadow-[0_0_12px_rgba(255,255,255,0.4)] hover:border-white/50'} text-left`}
+      style={surfaceStyle({ variant: 'glass-chrome', elevation: 3, radius: 'lg' })}
+      className={`group flex flex-col transition duration-300 relative overflow-hidden cursor-pointer hover:-translate-y-1.5 ${restaurant.isSponsored ? 'hover:shadow-[0_0_15px_rgba(234,179,8,0.5)] border-amber-400/40 hover:border-amber-400/60' : 'hover:shadow-[0_0_12px_rgba(255,255,255,0.4)] hover:border-white/50'} text-left`}
     >
       <div className="h-44 w-full relative overflow-hidden bg-transparent">
         <ImageLoader
@@ -78,7 +80,7 @@ export default function CustomerRestaurantCard({ restaurant, isLast, lastElement
             Sponsored
           </div>
         )}
-        <div className="absolute top-3 right-3 bg-slate-950/20 backdrop-blur-sm p-1.5 rounded-full text-white/80 hover:text-red-500 border border-rose-500/30">
+        <div className="absolute top-3 right-3 bg-slate-950/20 backdrop-blur-sm p-1.5 rounded-full text-white/80 hover:text-rose-500 border border-rose-500/30">
           <Heart className="w-4 h-4" />
         </div>
       </div>
@@ -86,7 +88,7 @@ export default function CustomerRestaurantCard({ restaurant, isLast, lastElement
       <div className="p-4.5 space-y-2">
         <div className="flex items-center justify-between">
           <h5 className="font-bold text-base text-slate-900 dark:text-[#f0ede6] group-hover:text-amber-500 transition-colors">{restaurant.brandName || restaurant.name}</h5>
-          <div className="flex items-center gap-1 bg-orange-500/10 text-orange-600 dark:text-orange-400 px-2 py-0.5 rounded-lg text-xs font-bold">
+          <div className="flex items-center gap-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-lg text-xs font-bold">
             <Star className="w-3.5 h-3.5 fill-current" />
             <span>{restaurant.rating}</span>
           </div>
@@ -96,10 +98,10 @@ export default function CustomerRestaurantCard({ restaurant, isLast, lastElement
 
         <div className="flex items-center gap-3.5 pt-2 text-xs text-slate-500 dark:text-slate-300 font-mono border-t border-rose-500/20 dark:border-rose-500/30">
           <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-amber-500" /> {restaurant.deliveryTime}m</span>
-          <span className="flex items-center gap-1"><Bike className="w-3.5 h-3.5 text-emerald-500" /> ₹{restaurant.deliveryFee} fee</span>
+          <span className="flex items-center gap-1"><Bike className="w-3.5 h-3.5 text-amber-500" /> ₹{restaurant.deliveryFee} fee</span>
           <span>{restaurant.distance} km</span>
         </div>
       </div>
-    </div>
+    </button>
   );
 }

@@ -39,7 +39,7 @@ export function DeliveryHistoryPanel({
           <button onClick={() => setShowHistory(false)} className="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full text-slate-500 dark:text-slate-300 transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h4 className="font-bold text-lg text-slate-800 dark:text-[#f0ede6] flex items-center gap-2"><Clock className="w-5 h-5 text-indigo-500" /> Completed Deliveries</h4>
+          <h4 className="font-bold text-lg text-slate-800 dark:text-[#f0ede6] flex items-center gap-2"><Clock className="w-5 h-5 text-rose-500" /> Completed Deliveries</h4>
         </div>
 
         <div className="flex items-center gap-2">
@@ -63,10 +63,10 @@ export function DeliveryHistoryPanel({
           </div>
         ) : (
           paginatedHistoryJobs.map(job => (
-            <div 
+            <button type="button" 
               key={job.id} 
               onClick={() => setSelectedJob(job)}
-              className="bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-3xl p-5 shadow-sm flex flex-col gap-3 transition-all hover:border-indigo-500/30 hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] cursor-pointer"
+              className="bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-3xl p-5 shadow-sm flex flex-col gap-3 transition hover:border-rose-500/30 hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] cursor-pointer text-left w-full"
             >
               <div className="flex justify-between items-start">
                 <div>
@@ -75,15 +75,15 @@ export function DeliveryHistoryPanel({
                   <p className="text-[10px] text-slate-500 dark:text-slate-300 mt-0.5">{job.createdAt ? new Date(job.createdAt).toLocaleString() : ""}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-black text-emerald-500 text-lg">+{job.earnings?.netPayout != null ? formatINR(job.earnings.netPayout) : '---'}</p>
+                  <p className="font-black text-amber-500 text-lg">+{job.earnings?.netPayout != null ? formatINR(job.earnings.netPayout) : '---'}</p>
                   <p className="text-[10px] text-slate-400 dark:text-slate-300 font-mono uppercase">Payout</p>
                 </div>
               </div>
               <div className="flex items-center justify-between pt-3 border-t border-rose-500/20 dark:border-rose-500/30 text-xs text-slate-500 dark:text-slate-300">
                 <div className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> {job.deliveryAddress}</div>
-                <div className="flex items-center gap-1.5 text-emerald-500 font-bold"><Check className="w-3.5 h-3.5" /> Delivered</div>
+                <div className="flex items-center gap-1.5 text-amber-500 font-bold"><Check className="w-3.5 h-3.5" /> Delivered</div>
               </div>
-            </div>
+            </button>
           ))
         )}
         {totalHistoryPages > 1 && (

@@ -10,10 +10,10 @@ const PREMIUM_FOOD_SHOT = {
 
 // Interactive floating food ingredients for high-end feel
 const FLOATING_INGREDIENTS = [
-  { icon: Leaf, color: 'text-emerald-500/40', size: 28, left: '8%', delay: 0, duration: 25, yStart: '110%', rotate: 360 },
-  { icon: Flame, color: 'text-orange-500/30', size: 22, left: '25%', delay: 4, duration: 22, yStart: '110%', rotate: -180 },
+  { icon: Leaf, color: 'text-amber-500/40', size: 28, left: '8%', delay: 0, duration: 25, yStart: '110%', rotate: 360 },
+  { icon: Flame, color: 'text-amber-500/30', size: 22, left: '25%', delay: 4, duration: 22, yStart: '110%', rotate: -180 },
   { icon: Sparkles, color: 'text-amber-300/40', size: 20, left: '75%', delay: 2, duration: 20, yStart: '110%', rotate: 180 },
-  { icon: Trophy, color: 'text-yellow-500/30', size: 24, left: '90%', delay: 8, duration: 28, yStart: '110%', rotate: -90 },
+  { icon: Trophy, color: 'text-amber-500/30', size: 24, left: '90%', delay: 8, duration: 28, yStart: '110%', rotate: -90 },
 ];
 
 interface CinematicFoodBackgroundProps {
@@ -38,8 +38,8 @@ export default function CinematicFoodBackground({ theme = 'light' }: CinematicFo
       <div 
         className={`absolute inset-0 transition-colors duration-1000 ${
           theme === 'dark'
-            ? 'bg-gradient-to-br from-indigo-950/80 via-purple-900/70 to-slate-950/90 mix-blend-multiply'
-            : 'bg-gradient-to-br from-blue-100/80 via-purple-100/70 to-slate-50/90'
+            ? 'bg-gradient-to-br from-rose-950/80 via-rose-900/70 to-slate-950/90 mix-blend-multiply'
+            : 'bg-gradient-to-br from-blue-100/80 via-rose-100/70 to-slate-50/90'
         }`}
       />
 

@@ -1,4 +1,4 @@
-import { ErrorBoundary } from "@shared/ui";
+import { ErrorBoundary, Surface } from "@shared/ui";
 import { PaymentModal, PaymentMethodType } from "@shared/ui/PaymentModal";
 import { MapPin, Store } from 'lucide-react';
 import { formatINR } from '@shared/money';
@@ -61,8 +61,8 @@ function CustomerPaymentModalInner({
 
   const leftContent = (
     <>
-      <div className="glass-card p-4 flex gap-4 items-center group relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-rose-500/10 to-orange-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+      <Surface variant="glass-chrome" elevation={3} radius="lg" className="p-4 flex gap-4 items-center group relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-rose-500/10 to-amber-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
         <div className="w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-500/20 flex items-center justify-center shrink-0">
           <MapPin className="w-6 h-6 text-rose-500" />
         </div>
@@ -70,7 +70,7 @@ function CustomerPaymentModalInner({
           <h4 className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-0.5">Delivering To</h4>
           <p className="text-sm font-semibold text-slate-800 dark:text-white line-clamp-2">{address || 'No address selected'}</p>
         </div>
-      </div>
+      </Surface>
 
       {deliveryLat && deliveryLng && (
         <div className="h-32 w-full rounded-xl overflow-hidden border border-white/20 relative my-4">
@@ -88,9 +88,9 @@ function CustomerPaymentModalInner({
         </div>
       )}
 
-      <div className="glass-card p-4">
+      <Surface variant="glass-chrome" elevation={3} radius="lg" className="p-4">
         <div className="flex items-center gap-2 mb-4 pb-3 border-b border-white/20 dark:border-white/10">
-          <Store className="w-4 h-4 text-indigo-500" />
+          <Store className="w-4 h-4 text-rose-500" />
           <h3 className="font-bold text-slate-800 dark:text-white">{cartRestaurant?.name || 'Restaurant'}</h3>
         </div>
 
@@ -105,7 +105,7 @@ function CustomerPaymentModalInner({
             </div>
           ))}
         </div>
-      </div>
+      </Surface>
     </>
   );
 

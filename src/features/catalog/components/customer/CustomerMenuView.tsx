@@ -1,11 +1,12 @@
 import { MenuItem, Restaurant } from '@/types';
 import { CartState } from '@features/customer-orders/model/useCustomerCart';
 import ImageLoader from '@shared/ui/ImageLoader';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { AlertCircle, ArrowLeft, Bike, ChevronDown, Clock, MapPinOff, Minus, Plus, Star } from 'lucide-react';
 import React, { useState } from 'react';
 import { StarRating, toAverage, useEntityAggregate, useEntityAggregates } from '@features/reviews';
 import { ReviewsPanel } from '@features/reviews/components/ReviewsPanel';
+import { VegMarker } from '@features/catalog/components/VegMarker';
 
 interface CustomerMenuViewProps {
   selectedRestaurant: Restaurant;
@@ -120,7 +121,7 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
             type="button"
             onClick={() => setShowReviews(v => !v)}
             aria-expanded={showReviews}
-            className="flex items-center gap-1 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-2.5 py-1 rounded-xl text-xs font-bold shadow-md shadow-orange-500/10 cursor-pointer hover:brightness-110 transition"
+            className="flex items-center gap-1 bg-gradient-to-r from-amber-500 to-amber-500 text-white px-2.5 py-1 rounded-xl text-xs font-bold shadow-md shadow-amber-500/10 cursor-pointer hover:brightness-110 transition"
           >
             <Star className="w-3.5 h-3.5 fill-current" />
             {/* The live aggregate rather than Outlet.rating. That column is kept current by the
@@ -138,7 +139,7 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
         {/* Removed static free delivery tracker as it is now global floating */}
 
         {!isDeliverable ? (
-          <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 font-bold text-sm">
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 font-bold text-sm">
             <MapPinOff className="w-5 h-5 shrink-0" />
             <span>
               {(deliveryPricing?.error === 'NO_DELIVERY_PARTNER_NEARBY' || deliveryAvailabilityError === 'NO_DELIVERY_PARTNER_NEARBY')
@@ -150,7 +151,7 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
 
         <div className="flex items-center gap-4 mt-3 text-xs text-slate-500 dark:text-slate-300 font-mono">
           <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-amber-500" /> {selectedRestaurant.deliveryTime} mins</span>
-          <span className="flex items-center gap-1"><Bike className="w-3.5 h-3.5 text-emerald-500" /> {isQuoting ? '...' : (() => {
+          <span className="flex items-center gap-1"><Bike className="w-3.5 h-3.5 text-amber-500" /> {isQuoting ? '...' : (() => {
             const minOrder = deliveryPricing?.minAmountForFreeDelivery;
             return minOrder != null ? ((getCartTotal().subtotal) >= minOrder ? 'Free Delivery' : 'Dynamic Fee') : `₹${selectedRestaurant.deliveryFee} Base`;
           })()}</span>
@@ -208,7 +209,7 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
                   return (
                     <div 
                       key={dish.id}
-                      className="bg-white/20 dark:bg-white/5 border border-rose-500/20 dark:border-rose-500/30 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:bg-white/20 dark:hover:bg-white/10 hover:border-orange-400/30 dark:hover:border-orange-500/50 hover:shadow-[0_8px_30px_rgb(249,115,22,0.1)] dark:hover:shadow-[0_0_30px_rgba(249,115,22,0.15)] backdrop-blur-md rounded-[2rem] p-4 flex gap-4 transition-all duration-300 relative text-left hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] transition-all"
+                      className="bg-white/20 dark:bg-white/5 border border-rose-500/20 dark:border-rose-500/30 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:bg-white/20 dark:hover:bg-white/10 hover:border-amber-400/30 dark:hover:border-amber-500/50 hover:shadow-[0_8px_30px_rgb(249,115,22,0.1)] dark:hover:shadow-[0_0_30px_rgba(249,115,22,0.15)] backdrop-blur-md rounded-[2rem] p-4 flex gap-4 transition duration-300 relative text-left hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] transition"
                     >
                       <div className="w-20 h-20 rounded-xl bg-transparent overflow-hidden shrink-0">
                         <ImageLoader 
@@ -223,9 +224,7 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
                       <div className="flex-1 flex flex-col justify-between">
                         <div>
                           <div className="flex items-center gap-1.5">
-                            <span className={`w-3.5 h-3.5 border-2 rounded flex items-center justify-center p-0.5 ${dish.isVeg ? 'border-emerald-500' : 'border-red-500'}`}>
-                              <span className={`w-1.5 h-1.5 rounded-full ${dish.isVeg ? 'bg-emerald-500' : 'bg-red-500'}`} />
-                            </span>
+                            <VegMarker item={dish} />
                             <h5 className="font-bold text-sm text-slate-900 dark:text-[#f0ede6]">{dish.name}</h5>
                           </div>
                           {/* Absent until someone has actually rated the dish: "0.0" and an empty
@@ -258,7 +257,7 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
                           </div>
                           
                           {dish.isAvailable === false ? (
-                            <span className="px-3 py-1 bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 text-xs font-bold rounded-xl border border-red-200/20">
+                            <span className="px-3 py-1 bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 text-xs font-bold rounded-xl border border-rose-200/20">
                               Out of Stock
                             </span>
                           ) : !isDeliverable ? (
@@ -266,17 +265,17 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
                               Unavailable Here
                             </span>
                           ) : cartQty > 0 ? (
-                            <div className="flex items-center bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl overflow-hidden font-bold shadow-md shadow-orange-500/15">
+                            <div className="flex items-center bg-gradient-to-r from-amber-500 to-amber-500 text-white rounded-xl overflow-hidden font-bold shadow-md shadow-amber-500/15">
                               <button 
                                 onClick={() => removeFromCart(dish.id as string, selectedRestaurant.id as string)}
-                                className="px-3 py-1.5 hover:bg-orange-600 cursor-pointer"
+                                className="px-3 py-1.5 hover:bg-amber-600 cursor-pointer"
                               >
                                 <Minus className="w-3.5 h-3.5" />
                               </button>
                               <span className="px-2 text-sm">{cartQty}</span>
                               <button 
                                 onClick={() => addToCart(dish)}
-                                className="px-3 py-1.5 hover:bg-orange-600 cursor-pointer"
+                                className="px-3 py-1.5 hover:bg-amber-600 cursor-pointer"
                               >
                                 <Plus className="w-3.5 h-3.5" />
                               </button>
@@ -284,7 +283,7 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
                           ) : (
                             <button
                               onClick={() => addToCart(dish)}
-                              className="px-4 py-1.5 bg-white/20 dark:bg-slate-800/20 backdrop-blur-sm hover:bg-gradient-to-r hover:from-orange-500 hover:to-amber-500 hover:text-white rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer border border-rose-500/20 dark:border-rose-500/30 hover:border-orange-500 hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] transition-all"
+                              className="px-4 py-1.5 bg-white/20 dark:bg-slate-800/20 backdrop-blur-sm hover:bg-gradient-to-r hover:from-amber-500 hover:to-amber-500 hover:text-white rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer border border-rose-500/20 dark:border-rose-500/30 hover:border-amber-500 hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] transition"
                             >
                               <Plus className="w-3.5 h-3.5" /> Add
                             </button>

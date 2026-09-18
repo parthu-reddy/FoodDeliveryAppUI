@@ -1,5 +1,5 @@
 import { useConfig } from "@/contexts/ConfigContext";
-import { Modal } from '@shared/ui';
+import { Modal, useConfirm } from '@shared/ui';
 import { Check, MapPin, Navigation } from 'lucide-react';
 import React from 'react';
 
@@ -34,8 +34,9 @@ const CustomerAddressSelectorModal: React.FC<CustomerAddressSelectorModalProps> 
   carts,
   clearCart
 }) => {
+  const confirm = useConfirm();
   useConfig();
-  const handleAddressSelect = (addr: string, lat?: number, lng?: number, id?: string) => {
+  const handleAddressSelect = async (addr: string, lat?: number, lng?: number, id?: string) => {
     // If id is provided (saved address), check if it's different from current
     // If no id (GPS), check if the address string is different
     const isDifferent = id ? id !== currentAddressId : addr !== address;
@@ -43,9 +44,13 @@ const CustomerAddressSelectorModal: React.FC<CustomerAddressSelectorModalProps> 
     if (isDifferent) {
       const hasItems = Object.values(carts || {}).some((cart: { items: import('@/types').CartItem[] }) => cart.items && cart.items.length > 0);
       if (hasItems) {
-        if (!window.confirm("Changing your address will clear your active cart. Do you want to continue?")) {
-          return;
-        }
+        const proceed = await confirm({
+          title: 'Change delivery address?',
+          description: 'Your active cart is tied to your current address and will be cleared.',
+          confirmLabel: 'Change address',
+          tone: 'danger',
+        });
+        if (!proceed) return;
         Object.keys(carts || {}).forEach(restaurantId => {
           if ((carts?.[restaurantId]?.items?.length ?? 0) > 0 && clearCart) {
             clearCart(restaurantId);
@@ -63,7 +68,7 @@ const CustomerAddressSelectorModal: React.FC<CustomerAddressSelectorModalProps> 
     onClose();
   };
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Select Delivery Location" size="md">
+    <Modal open={isOpen} onClose={onClose} title="Select Delivery Location" size="md">
       <div className="p-4 space-y-3 pb-8">
         <button
           onClick={() => {
@@ -90,17 +95,17 @@ const CustomerAddressSelectorModal: React.FC<CustomerAddressSelectorModalProps> 
             }
           }}
           className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-colors text-left cursor-pointer ${!currentAddressId
-              ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/20'
-              : 'border-indigo-100 dark:border-indigo-500/20 hover:bg-indigo-50 dark:hover:bg-indigo-500/20'
+              ? 'border-rose-500 bg-rose-50/50 dark:bg-rose-500/20'
+              : 'border-rose-100 dark:border-rose-500/20 hover:bg-rose-50 dark:hover:bg-rose-500/20'
             }`}
         >
-          <Navigation className={`w-5 h-5 shrink-0 ${!currentAddressId ? 'text-indigo-600 dark:text-indigo-400' : 'text-indigo-500'}`} />
+          <Navigation className={`w-5 h-5 shrink-0 ${!currentAddressId ? 'text-rose-600 dark:text-rose-400' : 'text-rose-500'}`} />
           <div className="flex-1">
-            <p className={`font-bold ${!currentAddressId ? 'text-indigo-700 dark:text-indigo-300' : 'text-indigo-600 dark:text-indigo-400'}`}>Use Current Location</p>
-            <p className="text-xs text-indigo-500/80 dark:text-indigo-400/80">Using GPS</p>
+            <p className={`font-bold ${!currentAddressId ? 'text-rose-700 dark:text-rose-300' : 'text-rose-600 dark:text-rose-400'}`}>Use Current Location</p>
+            <p className="text-xs text-rose-500/80 dark:text-rose-400/80">Using GPS</p>
           </div>
           {!currentAddressId && (
-            <div className="w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center shrink-0">
+            <div className="w-5 h-5 rounded-full bg-rose-500 flex items-center justify-center shrink-0">
               <Check className="w-3 h-3 text-white" />
             </div>
           )}

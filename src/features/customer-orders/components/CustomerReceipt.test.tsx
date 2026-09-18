@@ -4,7 +4,8 @@ import React from 'react';
 import { CustomerOrderTracker } from './CustomerOrderTracker';
 import { OrderStatus, DeliveryStatus } from '@/types/backend-enums';
 import { Order } from '@/types';
-import { CallProvider } from '../../../contexts/CallContext';
+import { CallProvider } from '../../../contexts/CallContext'
+import { ToastProvider } from '@/contexts/ToastContext';
 
 describe('Customer Receipt & Order Details', () => {
   const defaultProps = {
@@ -29,9 +30,9 @@ describe('Customer Receipt & Order Details', () => {
     } as Partial<Order> as Order;
 
     render(
-      <CallProvider>
+      <ToastProvider><CallProvider>
         <CustomerOrderTracker {...defaultProps} currentTrackingOrder={order} />
-      </CallProvider>
+      </CallProvider></ToastProvider>
     );
 
     expect(screen.getByText('Paid via UPI')).toBeInTheDocument();
@@ -48,9 +49,9 @@ describe('Customer Receipt & Order Details', () => {
     } as Partial<Order> as Order;
 
     render(
-      <CallProvider>
+      <ToastProvider><CallProvider>
         <CustomerOrderTracker {...defaultProps} isFailedOrder={() => true} currentTrackingOrder={order} isActiveOrder={() => false} />
-      </CallProvider>
+      </CallProvider></ToastProvider>
     );
 
     expect(screen.getByText('Refunded to CARD')).toBeInTheDocument();

@@ -244,13 +244,13 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
       className="w-full flex-1 flex flex-col justify-between bg-transparent pt-0 px-0 pb-4 sm:pt-0 sm:pb-6 relative overflow-y-auto overflow-x-hidden"
     >
       {/* Background ambient blurs */}
-      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-orange-400/10 rounded-full blur-3xl pointer-events-none z-0" />
-      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-64 h-64 bg-yellow-400/10 rounded-full blur-3xl pointer-events-none z-0" />
+      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-amber-400/10 rounded-full blur-3xl pointer-events-none z-0" />
+      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-64 h-64 bg-amber-400/10 rounded-full blur-3xl pointer-events-none z-0" />
 
       {/* Sticky Shrinking Logo Header (only shown when selecting roles) */}
       {!selectedRole && (
         <div
-          className={`sticky top-0 left-0 right-0 z-30 transition-all duration-300 flex flex-col items-center justify-center text-center pb-5 px-4 sm:px-6 rounded-b-3xl border-b backdrop-blur-xl ${theme === 'dark'
+          className={`sticky top-0 left-0 right-0 z-30 transition duration-300 flex flex-col items-center justify-center text-center pb-5 px-4 sm:px-6 rounded-b-3xl border-b backdrop-blur-xl ${theme === 'dark'
               ? 'bg-slate-900/20 border-rose-500/30/40 shadow-[0_10px_30px_rgba(0,0,0,0.2)]'
               : 'bg-white/20 border-white/30 shadow-[0_4px_20px_rgba(0,0,0,0.02)]'
             }`}
@@ -261,9 +261,9 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
           {/* Theme Toggle inside Sticky Header */}
           <button
             onClick={toggleTheme}
-            className={`absolute right-6 sm:right-8 top-1/2 -translate-y-1/2 p-2.5 rounded-xl border backdrop-blur-xl transition-all cursor-pointer z-40 ${theme === 'dark'
+            className={`absolute right-6 sm:right-8 top-1/2 -translate-y-1/2 p-2.5 rounded-xl border backdrop-blur-xl transition cursor-pointer z-40 ${theme === 'dark'
                 ? 'bg-slate-900/20 border-rose-500/30/40 text-amber-400 hover:text-amber-300 shadow-[0_4px_20px_rgba(0,0,0,0.15)]'
-                : 'bg-white/20 border-white/30 text-indigo-600 hover:text-indigo-800 shadow-sm'
+                : 'bg-white/20 border-white/30 text-rose-600 hover:text-rose-800 shadow-sm'
               }`}
             style={{
               right: 'calc(1.5rem + env(safe-area-inset-right, 0px))'
@@ -275,7 +275,7 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
 
           {/* Smoothly scaling logo wrapper */}
           <div
-            className="transition-all duration-300 transform origin-center"
+            className="transition duration-300 transform origin-center"
             style={{
               transform: `scale(${Math.max(0.72, Math.min(1.0, 1 - scrollY / 300))})`,
               opacity: Math.max(0.9, Math.min(1.0, 1 - scrollY / 550))
@@ -300,21 +300,21 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
             initial={{ opacity: 0, y: -80, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -80, scale: 0.95 }}
-            className="absolute left-4 right-4 max-w-md mx-auto backdrop-blur-2xl bg-white/20 dark:bg-slate-900/20 border border-rose-500/20 dark:border-rose-500/30 text-slate-800 dark:text-[#f0ede6] p-4 rounded-2xl shadow-[0_15px_30px_rgba(249,115,22,0.1)] z-50 flex items-start gap-3 cursor-pointer hover:border-orange-500/50 transition-all hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all"
+            className="absolute left-4 right-4 max-w-md mx-auto backdrop-blur-2xl bg-white/20 dark:bg-slate-900/20 border border-rose-500/20 dark:border-rose-500/30 text-slate-800 dark:text-[#f0ede6] p-4 rounded-2xl shadow-[0_15px_30px_rgba(249,115,22,0.1)] z-50 flex items-start gap-3 cursor-pointer hover:border-amber-500/50 transition hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition"
             style={{
               top: 'calc(1rem + env(safe-area-inset-top, 16px))'
             }}
             onClick={autofillOtp}
           >
-            <div className="bg-orange-500 p-2 rounded-xl text-white shrink-0">
+            <div className="bg-amber-500 p-2 rounded-xl text-white shrink-0">
               <MessageSquare className="w-5 h-5" />
             </div>
             <div className="flex-1">
               <div className="flex justify-between items-center">
-                <span className="font-bold text-xs text-orange-600 dark:text-orange-400 font-mono tracking-wider">SMS GATEWAY</span>
+                <span className="font-bold text-xs text-amber-600 dark:text-amber-400 font-mono tracking-wider">SMS GATEWAY</span>
                 <span className="text-[10px] text-slate-300 dark:text-slate-300">Just now</span>
               </div>
-              <p className="text-sm font-semibold mt-1 text-slate-800 dark:text-[#f0ede6]">Your La Bouffe Login OTP is <span className="text-orange-600 dark:text-orange-400 font-mono text-base font-bold underline decoration-dotted">{generatedOtp}</span></p>
+              <p className="text-sm font-semibold mt-1 text-slate-800 dark:text-[#f0ede6]">Your La Bouffe Login OTP is <span className="text-amber-600 dark:text-amber-400 font-mono text-base font-bold underline decoration-dotted">{generatedOtp}</span></p>
               <span className="text-[10px] text-slate-500 dark:text-[#f0ede6] mt-0.5 block">Tap this notification to autofill and proceed.</span>
             </div>
           </motion.div>
@@ -331,7 +331,7 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
         >
           <button
             onClick={handleBack}
-            className={`p-2.5 rounded-xl transition-all border cursor-pointer backdrop-blur-md ${theme === 'dark' ? 'bg-slate-900 border-rose-500/30 text-slate-300 hover:bg-slate-800' : 'bg-white/20 border-rose-500/20 text-slate-600 dark:text-slate-300 hover:bg-white/20'
+            className={`p-2.5 rounded-xl transition border cursor-pointer backdrop-blur-md ${theme === 'dark' ? 'bg-slate-900 border-rose-500/30 text-slate-300 hover:bg-slate-800' : 'bg-white/20 border-rose-500/20 text-slate-600 dark:text-slate-300 hover:bg-white/20'
               }`}
           >
             <ArrowLeft className="w-5 h-5" />
@@ -342,9 +342,9 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
           </div>
           <button
             onClick={toggleTheme}
-            className={`p-2.5 rounded-xl border transition-all cursor-pointer backdrop-blur-md ${theme === 'dark'
+            className={`p-2.5 rounded-xl border transition cursor-pointer backdrop-blur-md ${theme === 'dark'
                 ? 'bg-slate-900 border-rose-500/30 text-amber-400 hover:text-amber-300'
-                : 'bg-white/20 border-rose-500/20 text-indigo-600 hover:bg-white/20'
+                : 'bg-white/20 border-rose-500/20 text-rose-600 hover:bg-white/20'
               }`}
             title="Toggle Light/Dark Mode"
           >
@@ -459,8 +459,8 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
           <span>•</span>
           <span>BIOMETRIC READY</span>
         </div>
-        <div className="flex items-center justify-center gap-1.5 mt-1 sm:mt-2 text-[9px] font-mono tracking-wider text-orange-500 font-semibold bg-orange-500/10 px-2 py-0.5 rounded-full w-fit mx-auto border border-orange-500/15">
-          <span className="w-1 h-1 rounded-full bg-orange-500 animate-pulse" />
+        <div className="flex items-center justify-center gap-1.5 mt-1 sm:mt-2 text-[9px] font-mono tracking-wider text-amber-500 font-semibold bg-amber-500/10 px-2 py-0.5 rounded-full w-fit mx-auto border border-amber-500/15">
+          <span className="w-1 h-1 rounded-full bg-amber-500 animate-pulse" />
           <span>TODAY'S SPECIAL: {foodNames[currentBgIndex].toUpperCase()}</span>
         </div>
       </div>

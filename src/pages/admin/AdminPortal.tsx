@@ -69,7 +69,7 @@ export default function AdminPortal({
 
         <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <Button variant="ghost" size="icon" onClick={toggleTheme}>
-            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
+            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-rose-500" />}
           </Button>
           {onLogout && (
             <Button variant="danger" size="icon" onClick={onLogout}>

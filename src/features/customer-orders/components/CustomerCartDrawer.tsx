@@ -1,7 +1,6 @@
-import { EmptyState } from "@shared/ui";
+import { EmptyState, Overlay, Surface } from '@shared/ui';
 import { AlertCircle, ShieldCheck, ShoppingBag, X } from 'lucide-react';
 import { MenuItem, Restaurant } from '@/types';
-import { AnimatePresence, motion } from 'motion/react';
 import React from 'react';
 import { z } from 'zod';
 import { formatINR } from '@shared/money';
@@ -82,25 +81,18 @@ export default function CustomerCartDrawer({
   return (
     <>
       {/* ------------------- CART DRAWER ------------------- */}
-      <AnimatePresence>
-        {isCartOpen && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsCartOpen(false)}
-              className="fixed inset-0 bg-black z-40"
-            />
-            
-            {/* Drawer */}
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed bottom-0 sm:bottom-auto sm:top-1/2 left-0 right-0 sm:-translate-y-1/2 max-w-[412px] mx-auto bg-white/20 dark:bg-slate-950/20 backdrop-blur-2xl border-t border-rose-500/20 dark:border-rose-500/30 rounded-t-[32px] sm:rounded-[32px] p-6 pb-8 z-50 shadow-2xl space-y-5"
+      <Overlay
+        open={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        label="Your cart"
+        placement="bottom"
+        className="w-full max-w-[412px]"
+      >
+            <Surface
+              variant="glass-overlay"
+              elevation={4}
+              radius="xl"
+              className="p-6 pb-8 space-y-5"
             >
               <div className="flex justify-between items-center">
                 <div>
@@ -140,14 +132,14 @@ export default function CustomerCartDrawer({
                             <div className="flex items-center bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-[#f0ede6] rounded-lg font-bold">
                               <button 
                                 onClick={() => removeFromCart(cartItem.item.id as string, restaurantId)}
-                                className="p-1 px-2.5 text-xs hover:text-red-500 cursor-pointer"
+                                className="p-1 px-2.5 text-xs hover:text-rose-500 cursor-pointer"
                               >
                                 -
                               </button>
                               <span className="px-1 text-xs">{cartItem.quantity}</span>
                               <button 
                                 onClick={() => addToCart(cartItem.item, selectedRestaurant?.id === restaurantId ? selectedRestaurant : cartState.restaurant)}
-                                className="p-1 px-2.5 text-xs hover:text-emerald-500 cursor-pointer"
+                                className="p-1 px-2.5 text-xs hover:text-amber-500 cursor-pointer"
                               >
                                 +
                               </button>
@@ -170,7 +162,7 @@ export default function CustomerCartDrawer({
                         )}
                         <div className="flex justify-between text-slate-500 dark:text-slate-400">
                           <span>Delivery Fee</span>
-                          <span>{total.deliveryFee === 0 ? <span className="text-emerald-500 font-bold">FREE</span> : `${formatINR(total.deliveryFee)}`}</span>
+                          <span>{total.deliveryFee === 0 ? <span className="text-amber-500 font-bold">FREE</span> : `${formatINR(total.deliveryFee)}`}</span>
                         </div>
                         <div className="flex justify-between text-slate-500 dark:text-slate-400">
                           <span>SGST (2.5%)</span>
@@ -189,7 +181,7 @@ export default function CustomerCartDrawer({
                       <button
                         onClick={() => onCheckoutClick(restaurantId)}
                         disabled={isSubmitting || isQuoting}
-                        className="w-full mt-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white py-3 rounded-xl font-bold shadow-md shadow-orange-500/20 hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full mt-2 bg-gradient-to-r from-amber-500 to-amber-500 text-white py-3 rounded-xl font-bold shadow-md shadow-amber-500/20 hover:brightness-110 active:scale-98 transition flex items-center justify-center gap-2 cursor-pointer border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <ShieldCheck className="w-4 h-4" />
                         {isSubmitting ? 'Processing...' : isQuoting ? 'Calculating Quote...' : `Checkout ${cartState.restaurant?.name}`}
@@ -200,14 +192,14 @@ export default function CustomerCartDrawer({
               </div>
 
               {/* Address indicator */}
-              <div 
+              <button type="button" 
                 onClick={() => {
                   if (setIsAddressModalOpen) {
                     setIsAddressModalOpen(true);
                     setIsCartOpen(false);
                   }
                 }}
-                className="p-3 bg-white/20 dark:bg-slate-900/45 backdrop-blur-sm border border-rose-500/20 dark:border-rose-500/30 rounded-xl space-y-1 cursor-pointer hover:bg-white/30 dark:hover:bg-slate-900/60 transition-colors flex justify-between items-center"
+                className="p-3 bg-white/20 dark:bg-slate-900/45 backdrop-blur-sm border border-rose-500/20 dark:border-rose-500/30 rounded-xl space-y-1 cursor-pointer hover:bg-white/30 dark:hover:bg-slate-900/60 transition-colors flex justify-between items-center text-left w-full"
               >
                 <div>
                   <span className="text-[10px] text-slate-500 dark:text-[#f0ede6] font-bold block uppercase font-mono">Delivering To</span>
@@ -216,17 +208,15 @@ export default function CustomerCartDrawer({
                   </div>
                 </div>
                 <div className="text-[10px] font-bold text-rose-500 bg-rose-500/10 px-2 py-1 rounded-md shrink-0">Change</div>
-              </div>
+              </button>
               {error && (
-                <div className="flex items-center gap-2 p-2 rounded-xl bg-red-500/10 text-red-500 text-xs font-bold">
+                <div className="flex items-center gap-2 p-2 rounded-xl bg-rose-500/10 text-rose-500 text-xs font-bold">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   {error}
                 </div>
               )}
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+            </Surface>
+      </Overlay>
 
     </>
   );

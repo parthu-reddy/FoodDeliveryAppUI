@@ -90,7 +90,7 @@ export default function AdminSupportTickets() {
                 }}
                 className={`px-4 py-2 text-sm font-semibold rounded-md transition-colors ${
                   activeTab === tab 
-                    ? 'bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400' 
+                    ? 'bg-rose-50 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400' 
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
                 }`}
               >
@@ -119,13 +119,13 @@ export default function AdminSupportTickets() {
                 </div>
               ) : (
                 tickets.map(ticket => (
-                  <div 
+                  <button type="button" 
                     key={ticket.id}
                     onClick={() => handleOpenChat(ticket)}
-                    className={`p-4 rounded-xl border transition-all cursor-pointer ${
+                    className={`p-4 rounded-xl border transition cursor-pointer ${
                       selectedTicket?.id === ticket.id
-                        ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/10'
-                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700'
+                        ? 'border-rose-500 bg-rose-50/50 dark:bg-rose-500/10'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-rose-300 dark:hover:border-rose-700'
                     }`}
                   >
                     <div className="flex justify-between items-start mb-2">
@@ -137,11 +137,11 @@ export default function AdminSupportTickets() {
                     </div>
                     <div className="flex items-center justify-between text-xs text-slate-400">
                       <span>{new Date(ticket.createdAt).toLocaleString()}</span>
-                      <Button variant="ghost" size="sm" className="h-6 text-indigo-500">
+                      <Button variant="ghost" size="sm" className="h-6 text-rose-500">
                         View Details
                       </Button>
                     </div>
-                  </div>
+                  </button>
                 ))
               )}
             </div>
@@ -211,7 +211,7 @@ export default function AdminSupportTickets() {
                     <div className="flex gap-3">
                       <Button 
                         variant="primary" 
-                        className="flex-1 bg-green-500 hover:bg-green-600 text-white border-transparent"
+                        className="flex-1 bg-amber-500 hover:bg-amber-600 text-white border-transparent"
                         onClick={() => handleResolveTicket(selectedTicket.id, true)}
                       >
                         Resolve Ticket

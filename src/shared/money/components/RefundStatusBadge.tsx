@@ -8,7 +8,7 @@ export function RefundStatusBadge({ status }: Props) {
   const config = {
     PENDING: { label: 'Pending', className: 'bg-slate-100 text-slate-700' },
     PROCESSING: { label: 'Processing', className: 'bg-amber-100 text-amber-700' },
-    COMPLETED: { label: 'Completed', className: 'bg-emerald-100 text-emerald-700' },
+    COMPLETED: { label: 'Completed', className: 'bg-amber-100 text-amber-700' },
     FAILED: { label: 'Failed', className: 'bg-rose-100 text-rose-700' }
   }[status];
 

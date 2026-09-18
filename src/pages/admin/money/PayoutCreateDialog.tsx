@@ -1,7 +1,7 @@
 import { useToast } from "@/contexts/ToastContext";
 import { parseApiError } from '@/lib/parseApiError';
 import { ledgerApi } from "@/lib/zodiosClients";
-import { Button } from '@shared/ui';
+import { Button, Modal } from '@shared/ui';
 import { AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
 import { formatINR } from '@shared/money';
@@ -54,10 +54,8 @@ export default function PayoutCreateDialog({
   const showWarning = !account.displayName || !isVerified;
 
   return (
-      <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-6 w-full max-w-md border border-slate-200 dark:border-slate-800">
-              <h3 className="text-xl font-bold mb-4">Create Payout</h3>
-              
+      <Modal open onClose={onClose} title="Create Payout" size="md">
+          <div className="p-6">
               <div className="mb-6 space-y-4">
                   <div className="flex justify-between">
                       <span className="text-slate-500">Payee</span>
@@ -113,6 +111,6 @@ export default function PayoutCreateDialog({
                   </div>
               )}
           </div>
-      </div>
+      </Modal>
   );
 }

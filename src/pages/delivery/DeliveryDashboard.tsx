@@ -20,7 +20,7 @@ import { DeliveryOnlineToggle } from "@features/delivery-tasks/components/Delive
 import RiderOnboardingWizard from "@features/delivery-tasks/components/RiderOnboardingWizard";
 import RiderSettingsView from "@features/delivery-tasks/components/RiderSettingsView";
 import { useDeliveryOrders } from "@features/delivery-tasks/model/useDeliveryOrders";
-import { Button, ErrorBoundary, Modal } from "@shared/ui";
+import { Button, ErrorBoundary, Modal, Spinner, Surface, surfaceStyle, useConfirm } from '@shared/ui';
 import ImageLoader from '@shared/ui/ImageLoader';
 import LaBouffeLogo from '@shared/ui/LaBouffeLogo';
 import {
@@ -67,6 +67,7 @@ export default function DeliveryDashboard({
 }: DeliveryDashboardProps) {
   const { theme, toggleTheme } = useTheme();
   const { showError } = useToast();
+  const confirm = useConfirm();
   const [user] = useState(getUserProfile());
   const [isOnline, setIsOnline] = useState(false);
   const [showPermissionsPrompt, setShowPermissionsPrompt] = useState(false);
@@ -450,12 +451,13 @@ export default function DeliveryDashboard({
 
   const handleAbortJob = async () => {
     if (!currentJob) return;
-    if (
-      !confirm(
-        "Are you sure you want to abort this delivery? This will impact your rating."
-      )
-    )
-      return;
+    const proceed = await confirm({
+      title: 'Abort this delivery?',
+      description: 'The order goes back to the pool and this will affect your rating.',
+      confirmLabel: 'Abort delivery',
+      tone: 'danger',
+    });
+    if (!proceed) return;
 
     try {
       await deliveryApi.deliveryExecutive.post(
@@ -473,12 +475,13 @@ export default function DeliveryDashboard({
 
   const handleCustomerUnavailable = async () => {
     if (!currentJob) return;
-    if (
-      !confirm(
-        "Are you sure the customer is unavailable? You should try calling them first."
-      )
-    )
-      return;
+    const proceed = await confirm({
+      title: 'Mark customer unavailable?',
+      description: 'Try calling them first. This is recorded against the order.',
+      confirmLabel: 'Mark unavailable',
+      tone: 'danger',
+    });
+    if (!proceed) return;
 
     const previousStatus = currentJob.status;
     onUpdateOrderStatus(
@@ -644,7 +647,7 @@ export default function DeliveryDashboard({
   if (isLoadingProfile) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center min-h-0 bg-transparent h-full">
-        <div className="w-8 h-8 rounded-full border-2 border-rose-500/20 border-t-rose-500 animate-spin" />
+        <Spinner size="md" color="var(--color-action)" />
       </div>
     );
   }
@@ -652,7 +655,7 @@ export default function DeliveryDashboard({
   if (!isVerificationLoaded) {
     return (
       <div className="flex-1 flex flex-col w-full h-[100dvh] items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-500">
-        <div className="w-8 h-8 border-4 border-rose-500 border-t-transparent rounded-full animate-spin"></div>
+        <Spinner size="md" color="var(--color-action)" />
         <p className="mt-4 text-xs font-bold uppercase tracking-widest">
           Verifying Account
         </p>
@@ -758,25 +761,25 @@ export default function DeliveryDashboard({
               onClick={() =>
                 view === "settings" ? setView("home") : setView("settings")
               }
-              className={`p-2.5 rounded-xl transition-all cursor-pointer ${
+              className={`p-2.5 rounded-xl transition cursor-pointer ${
                 view === "settings"
-                  ? "bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 shadow-sm shadow-indigo-500/10"
+                  ? "bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 shadow-sm shadow-rose-500/10"
                   : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6]"
               }`}
               title="Profile Settings"
             >
-              <User className="w-4 h-4 text-indigo-500" />
+              <User className="w-4 h-4 text-rose-500" />
             </button>
 
             <button
               onClick={toggleTheme}
-              className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6] transition-all cursor-pointer"
+              className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6] transition cursor-pointer"
               title="Toggle Light/Dark Mode"
             >
               {theme === "dark" ? (
                 <Sun className="w-4 h-4 text-amber-400" />
               ) : (
-                <Moon className="w-4 h-4 text-indigo-500" />
+                <Moon className="w-4 h-4 text-rose-500" />
               )}
             </button>
           </div>
@@ -833,8 +836,8 @@ export default function DeliveryDashboard({
           <>
             {/* Driver Statistics Panel */}
             <div className="p-5 grid grid-cols-2 gap-4 shrink-0">
-              <div className="glass-card p-4 flex items-center gap-3">
-                <div className="p-2.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl">
+              <Surface variant="glass-chrome" elevation={3} radius="lg" className="p-4 flex items-center gap-3">
+                <div className="p-2.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-xl">
                   <DollarSign className="w-5 h-5" />
                 </div>
                 <div>
@@ -845,17 +848,18 @@ export default function DeliveryDashboard({
                     {formatINR(todayEarnings)}
                   </span>
                 </div>
-              </div>
+              </Surface>
 
               <button
                 onClick={() => setShowHistory(true)}
-                className={`glass-card p-4 flex items-center gap-3 text-left transition-all cursor-pointer hover:border-indigo-500/30 ${
+                style={surfaceStyle({ variant: 'glass-chrome', elevation: 3, radius: 'lg' })}
+                className={`p-4 flex items-center gap-3 text-left transition cursor-pointer hover:border-rose-500/30 ${
                   showHistory
-                    ? "ring-2 ring-indigo-500 border-transparent dark:border-transparent"
+                    ? "ring-2 ring-rose-500 border-transparent dark:border-transparent"
                     : ""
                 }`}
               >
-                <div className="p-2.5 bg-orange-500/10 text-orange-600 dark:text-orange-400 rounded-xl">
+                <div className="p-2.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-xl">
                   <Check className="w-5 h-5" />
                 </div>
                 <div>
@@ -946,21 +950,21 @@ export default function DeliveryDashboard({
                   exit={{ opacity: 0, y: 50 }}
                   className="fixed inset-x-4 bottom-4 z-50 bg-slate-900 border border-rose-500/30 p-5 rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] overflow-hidden"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent pointer-events-none" />
                   <div className="relative flex justify-between items-start mb-4">
                     <div>
                       <h3 className="text-white font-black text-lg uppercase flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                        <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
                         New Dispatch
                       </h3>
-                      <p className="text-emerald-400 text-xs font-mono font-bold mt-1">
+                      <p className="text-amber-400 text-xs font-mono font-bold mt-1">
                         Est. Delivery Fee:{" "}
                         {pingJob.deliveryFee
                           ? `${formatINR(pingJob.deliveryFee)}`
                           : "Calculating..."}
                       </p>
                     </div>
-                    <div className="w-10 h-10 rounded-full border-2 border-emerald-500/50 flex items-center justify-center text-emerald-400 font-bold font-mono text-sm relative">
+                    <div className="w-10 h-10 rounded-full border-2 border-amber-500/50 flex items-center justify-center text-amber-400 font-bold font-mono text-sm relative">
                       <svg className="absolute inset-0 w-full h-full -rotate-90">
                         <circle
                           cx="18"
@@ -971,7 +975,7 @@ export default function DeliveryDashboard({
                           strokeWidth="2"
                           strokeDasharray="100"
                           strokeDashoffset={100 - (pingTimer / 60) * 100}
-                          className="text-emerald-500 transition-all duration-1000 ease-linear"
+                          className="text-amber-500 transition duration-1000 ease-linear"
                         />
                       </svg>
                       {pingTimer}s
@@ -979,8 +983,8 @@ export default function DeliveryDashboard({
                   </div>
                   <div className="space-y-3 mb-5 relative">
                     <div className="flex items-start gap-3">
-                      <div className="mt-1 w-6 h-6 rounded bg-emerald-500/20 flex items-center justify-center shrink-0">
-                        <Store className="w-3.5 h-3.5 text-emerald-400" />
+                      <div className="mt-1 w-6 h-6 rounded bg-amber-500/20 flex items-center justify-center shrink-0">
+                        <Store className="w-3.5 h-3.5 text-amber-400" />
                       </div>
                       <div>
                         <span className="block text-[10px] text-slate-400 dark:text-slate-300 font-bold uppercase tracking-wider">
@@ -992,8 +996,8 @@ export default function DeliveryDashboard({
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
-                      <div className="mt-1 w-6 h-6 rounded bg-indigo-500/20 flex items-center justify-center shrink-0">
-                        <MapPinOff className="w-3.5 h-3.5 text-indigo-400" />
+                      <div className="mt-1 w-6 h-6 rounded bg-rose-500/20 flex items-center justify-center shrink-0">
+                        <MapPinOff className="w-3.5 h-3.5 text-rose-400" />
                       </div>
                       <div>
                         <span className="block text-[10px] text-slate-400 dark:text-slate-300 font-bold uppercase tracking-wider">
@@ -1009,14 +1013,14 @@ export default function DeliveryDashboard({
                     <Button
                       onClick={() => handleRejectPing(pingJob.id)}
                       variant="outline"
-                      className="flex-1 !py-3.5 !rounded-xl !border-rose-500/30 !text-slate-400 dark:!text-slate-300 hover:!bg-slate-800 transition-colors hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:!border-rose-500/50 transition-all !text-xs"
+                      className="flex-1 !py-3.5 !rounded-xl !border-rose-500/30 !text-slate-400 dark:!text-slate-300 hover:!bg-slate-800 transition-colors hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:!border-rose-500/50 transition !text-xs"
                     >
                       Decline
                     </Button>
                     <Button
                       onClick={() => handleAcceptPing(pingJob)}
                       variant="success"
-                      className="flex-[2] !py-3.5 !rounded-xl !bg-emerald-500 !text-slate-950 uppercase tracking-wide hover:!bg-emerald-400 transition-colors shadow-lg shadow-emerald-500/20"
+                      className="flex-[2] !py-3.5 !rounded-xl !bg-amber-500 !text-slate-950 uppercase tracking-wide hover:!bg-amber-400 transition-colors shadow-lg shadow-amber-500/20"
                     >
                       Accept Order
                     </Button>
@@ -1026,9 +1030,11 @@ export default function DeliveryDashboard({
             </AnimatePresence>
 
             <Modal
-              isOpen={showPermissionsPrompt}
+              open={showPermissionsPrompt}
               onClose={() => setShowPermissionsPrompt(false)}
               size="sm"
+              title="Permissions required"
+              headerless
             >
               <div className="p-8 pb-6 flex flex-col items-center text-center">
                 <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center mb-6 text-blue-500">
@@ -1052,9 +1058,11 @@ export default function DeliveryDashboard({
             </Modal>
 
             <Modal
-              isOpen={showProfileRequiredPrompt}
+              open={showProfileRequiredPrompt}
               onClose={() => setShowProfileRequiredPrompt(false)}
               size="sm"
+              title="Profile required"
+              headerless
             >
               <div className="p-8 pb-6 flex flex-col items-center text-center">
                 <div className="w-16 h-16 rounded-full bg-rose-500/10 flex items-center justify-center mb-6 text-rose-500">

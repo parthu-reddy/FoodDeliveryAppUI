@@ -50,7 +50,7 @@ function OrderTrackingMapInner({ order, enableLiveTracking = false }: { order: O
 
     const createRiderMarker = () => {
       const el = document.createElement('div');
-      el.className = 'w-10 h-10 bg-indigo-600 rounded-full border-2 border-white shadow-xl flex items-center justify-center shadow-indigo-500/50 cursor-pointer pointer-events-auto';
+      el.className = 'w-10 h-10 bg-rose-600 rounded-full border-2 border-white shadow-xl flex items-center justify-center shadow-rose-500/50 cursor-pointer pointer-events-auto';
       // Bike icon
       el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 5.5h5l-4-5h-3L8 12M5.5 17.5 8 12M18.5 17.5 15 11.5"/></svg>';
       return el;
@@ -118,7 +118,7 @@ function OrderTrackingMapInner({ order, enableLiveTracking = false }: { order: O
 
           // Customer delivery location
           const homePopup = new maplibregl.Popup({ offset: 25, closeButton: false, closeOnClick: false })
-            .setHTML('<div class="text-xs font-semibold text-center cursor-pointer text-blue-600">Customer<br/><span class="text-gray-500 font-normal">Click for Google Maps</span></div>');
+            .setHTML('<div class="text-xs font-semibold text-center cursor-pointer text-blue-600">Customer<br/><span class="text-slate-500 font-normal">Click for Google Maps</span></div>');
 
           const homeMarker = new maplibregl.Marker({ element: createHomeMarker(cLat, cLng) })
             .setLngLat([cLng, cLat])
@@ -143,7 +143,7 @@ function OrderTrackingMapInner({ order, enableLiveTracking = false }: { order: O
 
           // Actual restaurant location
           const restPopup = new maplibregl.Popup({ offset: 25, closeButton: false, closeOnClick: false })
-            .setHTML('<div class="text-xs font-semibold text-center cursor-pointer text-rose-600">Restaurant<br/><span class="text-gray-500 font-normal">Click for Google Maps</span></div>');
+            .setHTML('<div class="text-xs font-semibold text-center cursor-pointer text-rose-600">Restaurant<br/><span class="text-slate-500 font-normal">Click for Google Maps</span></div>');
 
           const restMarker = new maplibregl.Marker({ element: createRestaurantMarker(rLat, rLng) })
             .setLngLat([rLng, rLat])

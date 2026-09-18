@@ -56,7 +56,7 @@ export function DeliveryActiveJob({
     >
       <div className="flex items-center justify-between">
         <h4 className="font-bold text-lg flex items-center gap-1.5 text-amber-500">
-          <Navigation className="w-5 h-5 animate-spin" /> Active Contract
+          <Navigation className="w-5 h-5" /> Active Contract
         </h4>
         <span className="text-xs font-mono bg-slate-200 dark:bg-slate-900 px-2 py-0.5 rounded">#{currentJob.id}</span>
       </div>
@@ -65,7 +65,7 @@ export function DeliveryActiveJob({
       <div className="relative w-full h-64 bg-slate-200/50 dark:bg-slate-800/50 rounded-xl mb-6 overflow-hidden border border-slate-200 dark:border-slate-700/50">
         <OrderTrackingMap order={currentJob} />
         <div className="absolute top-2 right-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-2.5 py-1 rounded-lg text-[10px] font-bold text-slate-600 dark:text-slate-300 shadow-sm border border-slate-200/50 dark:border-slate-700/50 flex items-center gap-1.5 pointer-events-none">
-          <MapPin className="w-3 h-3 text-indigo-500" />
+          <MapPin className="w-3 h-3 text-rose-500" />
           Tap markers for Google Maps
         </div>
       </div>
@@ -100,7 +100,7 @@ export function DeliveryActiveJob({
               <label className="text-xs font-bold text-slate-400 dark:text-slate-300 tracking-wider font-mono flex items-center gap-1.5">
                 <KeyRound className="w-4 h-4 text-amber-500" /> SECURE CUSTOMER VERIFICATION OTP
               </label>
-              <div className="flex bg-white/20 dark:bg-slate-950/20 border border-rose-500/20 dark:border-rose-500/30 rounded-2xl overflow-hidden focus-within:border-orange-500 transition-colors">
+              <div className="flex bg-white/20 dark:bg-slate-950/20 border border-rose-500/20 dark:border-rose-500/30 rounded-2xl overflow-hidden focus-within:border-amber-500 transition-colors">
                 <input
                   type="password"
                   pattern="[0-9]*"
@@ -115,7 +115,7 @@ export function DeliveryActiveJob({
             </div>
 
             {otpError && (
-              <div className="text-xs text-red-400 font-medium bg-red-500/10 border border-red-500/20 p-3 rounded-xl">
+              <div className="text-xs text-rose-400 font-medium bg-rose-500/10 border border-rose-500/20 p-3 rounded-xl">
                 {otpError}
               </div>
             )}
@@ -126,7 +126,7 @@ export function DeliveryActiveJob({
                 id="goOfflineAfter" 
                 checked={goOfflineAfter}
                 onChange={(e) => setGoOfflineAfter(e.target.checked)}
-                className="w-4 h-4 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500 cursor-pointer"
+                className="w-4 h-4 rounded border-slate-300 text-amber-500 focus:ring-amber-500 cursor-pointer"
               />
               <label htmlFor="goOfflineAfter" className="text-xs font-medium text-slate-400 dark:text-slate-300 cursor-pointer">
                 Go offline after delivery
@@ -136,7 +136,7 @@ export function DeliveryActiveJob({
             <button
               type="submit"
               disabled={!canConfirmDelivery}
-              className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black py-4 rounded-2xl shadow-lg hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-white/15 disabled:opacity-70"
+              className="w-full bg-gradient-to-r from-amber-500 to-slate-500 text-slate-950 font-black py-4 rounded-2xl shadow-lg hover:brightness-110 active:scale-[0.98] transition flex items-center justify-center gap-1.5 cursor-pointer border border-white/15 disabled:opacity-70"
             >
               {isUpdatingDelivery ? "Confirming..." : <><CheckCircle className="w-5 h-5" /> Confirm Delivery {currentJob?.deliveryFee ? `& Credit ${formatINR(currentJob.deliveryFee)}` : ''}</>}
             </button>

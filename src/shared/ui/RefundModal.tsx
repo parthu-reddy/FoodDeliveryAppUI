@@ -1,9 +1,13 @@
-import { Loader2, X } from 'lucide-react';
+import { useToast } from '@/contexts/ToastContext';
+import { X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { formatINR } from '@shared/money';
 import { z } from 'zod';
 import { Order } from '../../types';
 import { OrderItemResponse } from '@/api/generated/schemas/customer/common';
+import { Select } from './form/Select';
+import { Spinner } from './feedback/Spinner';
+import { Modal } from './overlay/Modal';
 
 interface RefundModalProps {
   isOpen: boolean;
@@ -29,6 +33,7 @@ export const RefundModal: React.FC<RefundModalProps> = ({
   refundError,
   isSubmitting,
 }) => {
+  const { showError } = useToast();
   const [refundType, setRefundType] = useState<'FULL' | 'PARTIAL' | null>(null);
   const [selectedItems, setSelectedItems] = useState<{ [itemId: string]: number }>({});
   const [reason, setReason] = useState('');
@@ -96,7 +101,7 @@ export const RefundModal: React.FC<RefundModalProps> = ({
         quantity,
       }));
       if (itemsPayload.length === 0) {
-        alert('Please select at least one item for a partial refund.');
+        showError('Select at least one item for a partial refund.');
         return;
       }
     }
@@ -112,24 +117,24 @@ export const RefundModal: React.FC<RefundModalProps> = ({
   // If a quote has been received, show the confirmation screen
   if (quoteAmount !== null) {
     return (
-      <div className="fixed inset-0 bg-black/50 z-[70] flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
-          <div className="bg-orange-600 text-white p-4 flex justify-between items-center">
+      <Modal open onClose={onClose} title="Confirm refund request" size="md" headerless>
+        <div className="w-full overflow-hidden">
+          <div className="bg-amber-600 text-white p-4 flex justify-between items-center">
             <h3 className="font-bold">Confirm Refund Request</h3>
-            <button onClick={onClose} className="hover:bg-orange-700 p-1 rounded-full"><X size={20} /></button>
+            <button onClick={onClose} className="hover:bg-amber-700 p-1 rounded-full"><X size={20} /></button>
           </div>
           <div className="p-6">
-            <p className="text-gray-600 mb-4">Based on your selection, the calculated refund amount is:</p>
-            <div className="text-3xl font-bold text-center text-orange-600 mb-6">
+            <p className="text-slate-600 mb-4">Based on your selection, the calculated refund amount is:</p>
+            <div className="text-3xl font-bold text-center text-amber-600 mb-6">
               {formatINR(quoteAmount)}
             </div>
-            <p className="text-sm text-gray-500 mb-6 text-center">
+            <p className="text-sm text-slate-500 mb-6 text-center">
               This request will be submitted as a Support Ticket and reviewed by our team. The responsible party may be asked to provide their comments.
             </p>
             <div className="flex space-x-3">
               <button 
                 onClick={onClose}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium"
+                className="flex-1 px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 font-medium"
                 disabled={isSubmitting}
               >
                 Cancel
@@ -141,93 +146,95 @@ export const RefundModal: React.FC<RefundModalProps> = ({
                   throttleTimeoutRef.current = setTimeout(() => setIsThrottled(false), 2000);
                   onSubmitFinalRefund();
                 }}
-                className="flex-1 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium flex justify-center items-center"
+                className="flex-1 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium flex justify-center items-center"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Confirm Request'}
+                {isSubmitting ? <Spinner size="sm" label="" /> : 'Confirm Request'}
               </button>
             </div>
           </div>
         </div>
-      </div>
+      </Modal>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-[70] flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
-        <div className="bg-orange-600 text-white p-4 flex justify-between items-center shrink-0">
+    <Modal open={isOpen} onClose={onClose} title="Request refund" size="md" headerless>
+      <div className="w-full overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="bg-amber-600 text-white p-4 flex justify-between items-center shrink-0">
           <h3 className="font-bold">Request Refund</h3>
-          <button onClick={onClose} className="hover:bg-orange-700 p-1 rounded-full"><X size={20} /></button>
+          <button onClick={onClose} className="hover:bg-amber-700 p-1 rounded-full"><X size={20} /></button>
         </div>
         
         {isSubmitting && quoteAmount === null ? (
           <div className="p-6 flex flex-col items-center justify-center space-y-4">
-            <Loader2 className="w-10 h-10 animate-spin text-orange-500" />
-            <p className="text-gray-600 font-medium animate-pulse">Calculating refund quote...</p>
+            <Spinner size="lg" color="var(--color-amber-500)" />
+            <p className="text-slate-600 font-medium animate-pulse">Calculating refund quote...</p>
             <div className="w-full space-y-3 mt-4">
-              <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-5/6"></div>
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-4/6"></div>
+              <div className="h-4 bg-slate-200 rounded animate-pulse"></div>
+              <div className="h-4 bg-slate-200 rounded animate-pulse w-5/6"></div>
+              <div className="h-4 bg-slate-200 rounded animate-pulse w-4/6"></div>
             </div>
           </div>
         ) : (
           <>
             <div className="p-4 overflow-y-auto flex-1">
               {displayError && (
-            <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm rounded">
+            <div className="mb-4 p-3 bg-rose-50 border-l-4 border-rose-500 text-rose-700 text-sm rounded">
               <span className="font-bold">Error:</span> {displayError}
             </div>
           )}
           <form id="refundForm" onSubmit={handleQuoteRequest} className="space-y-4">
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Refund Type</label>
-              <select 
-                value={refundType || ''} 
-                onChange={e => {
-                  setRefundType(e.target.value as 'FULL' | 'PARTIAL');
+              <label className="block text-sm font-medium text-slate-700 mb-1">Refund Type</label>
+              <Select
+                aria-label="Refund Type"
+                placeholder="Select refund type…"
+                value={refundType || ''}
+                onChange={(value: string) => {
+                  setRefundType(value as 'FULL' | 'PARTIAL');
                   setSelectedItems({});
                 }}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-orange-500"
-                required
-              >
-                <option value="" disabled>Select refund type...</option>
-                <option value="FULL">Full Order Refund</option>
-                <option value="PARTIAL">Partial Refund (Specific Items)</option>
-              </select>
+                options={[
+                  { value: 'FULL', label: 'Full Order Refund' },
+                  { value: 'PARTIAL', label: 'Partial Refund (Specific Items)' },
+                ]}
+              />
             </div>
 
             {refundType === 'PARTIAL' && order?.items && (
-              <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Select Items</label>
+              <div className="border border-slate-200 rounded-lg p-3 bg-slate-50">
+                <label className="block text-sm font-medium text-slate-700 mb-2">Select Items</label>
                 <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
                   {order.items.map((item: z.infer<typeof OrderItemResponse>) => {
                     const maxQty = item.quantity || 1;
                     const selectedQty = selectedItems[item.id] || 0;
                     return (
-                      <div key={item.id} className="flex items-center justify-between bg-white p-2 rounded border border-gray-100">
+                      <div key={item.id} className="flex items-center justify-between bg-white p-2 rounded border border-slate-100">
                         <div className="flex items-center space-x-2 flex-1">
                           <input 
                             type="checkbox" 
                             checked={selectedQty > 0}
                             onChange={(e) => handleItemSelect(item.id, e.target.checked ? maxQty : 0, maxQty)}
-                            className="text-orange-600 focus:ring-orange-500 rounded"
+                            className="text-amber-600 focus:ring-amber-500 rounded"
                           />
-                          <span className="text-sm text-gray-800 truncate">{item.name || 'Item'}</span>
+                          <span className="text-sm text-slate-800 truncate">{item.name || 'Item'}</span>
                         </div>
                         {selectedQty > 0 && maxQty > 1 && (
-                          <select 
-                            value={selectedQty}
-                            onChange={(e) => handleItemSelect(item.id, parseInt(e.target.value), maxQty)}
-                            className="text-xs border border-gray-300 rounded px-1 py-1"
-                          >
-                            {Array.from({ length: maxQty }, (_, i) => i + 1).map(n => (
-                              <option key={n} value={n}>{n}</option>
-                            ))}
-                          </select>
+                          <Select
+                            selectSize="sm"
+                            aria-label={`Quantity for ${item.name || 'item'}`}
+                            className="w-20"
+                            value={String(selectedQty)}
+                            onChange={(qty: string) => handleItemSelect(item.id, parseInt(qty, 10), maxQty)}
+                            options={Array.from({ length: maxQty }, (_, i) => ({
+                              value: String(i + 1),
+                              label: String(i + 1),
+                            }))}
+                          />
                         )}
-                        <span className="text-sm font-medium text-gray-600 ml-2">
+                        <span className="text-sm font-medium text-slate-600 ml-2">
                           {formatINR(item.price)}
                         </span>
                       </div>
@@ -238,48 +245,48 @@ export const RefundModal: React.FC<RefundModalProps> = ({
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Reason Category</label>
-              <select 
-                value={reason} 
-                onChange={e => setReason(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-orange-500"
-                required
-              >
-                <option value="" disabled>Select reason...</option>
-                <option value="MISSING_ITEM">Missing Item</option>
-                <option value="WRONG_ITEM">Wrong Item Received</option>
-                <option value="DAMAGED_FOOD">Spilled / Damaged Food</option>
-                <option value="DELAYED_DELIVERY">Delayed Delivery</option>
-                <option value="OTHER">Other</option>
-              </select>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Reason Category</label>
+              <Select
+                aria-label="Reason Category"
+                placeholder="Select reason…"
+                value={reason}
+                onChange={setReason}
+                options={[
+                  { value: 'MISSING_ITEM', label: 'Missing Item' },
+                  { value: 'WRONG_ITEM', label: 'Wrong Item Received' },
+                  { value: 'DAMAGED_FOOD', label: 'Spilled / Damaged Food' },
+                  { value: 'DELAYED_DELIVERY', label: 'Delayed Delivery' },
+                  { value: 'OTHER', label: 'Other' },
+                ]}
+              />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Description (Optional)</label>
               <textarea 
                 value={description}
                 onChange={e => setDescription(e.target.value)}
                 placeholder="Please provide more details..."
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-orange-500 resize-none h-20"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:border-amber-500 resize-none h-20"
               />
             </div>
             
           </form>
         </div>
         
-        <div className="p-4 border-t border-gray-200 bg-gray-50 shrink-0">
+        <div className="p-4 border-t border-slate-200 bg-slate-50 shrink-0">
           <button 
             type="submit" 
             form="refundForm"
-            className="w-full py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium flex justify-center items-center"
+            className="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-medium flex justify-center items-center"
             disabled={isSubmitting || !refundType || !reason}
           >
-            {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Request Quote'}
+            {isSubmitting ? <Spinner size="sm" label="" /> : 'Request Quote'}
           </button>
         </div>
         </>
         )}
       </div>
-    </div>
+    </Modal>
   );
 };

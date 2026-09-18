@@ -72,8 +72,9 @@ describe('AdminReviewsView', () => {
     get.mockResolvedValue(envelope([review]));
     render(<AdminReviewsView />);
 
-    fireEvent.change(screen.getByRole('combobox', { name: /look up by/i }),
-      { target: { value: 'user' } });
+    // Select is a listbox now, not a native <select>: open it and choose the option.
+    fireEvent.click(screen.getByRole('combobox', { name: /look up by/i }));
+    fireEvent.click(screen.getByRole('option', { name: 'Author' }));
     fireEvent.change(await screen.findByLabelText('Author user ID'), { target: { value: USER_ID } });
     fireEvent.click(screen.getByRole('button', { name: /search/i }));
 

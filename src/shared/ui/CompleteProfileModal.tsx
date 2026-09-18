@@ -60,14 +60,15 @@ export default function CompleteProfileModal({ isOpen, theme, onComplete, profil
 
   return (
     <Modal
-      isOpen={isOpen}
+      title="Complete your profile"
+      open={isOpen}
       onClose={() => { }}
       size="md"
       header={header}
     >
       <div className="p-6 pt-2">
         {error && (
-          <div className="mb-4 p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs flex items-center gap-2">
+          <div className="mb-4 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span className="font-bold">{error}</span>
           </div>

@@ -1,7 +1,7 @@
 import { useToast } from "@/contexts/ToastContext";
 import { parseApiError } from '@/lib/parseApiError';
 import { ledgerApi } from "@/lib/zodiosClients";
-import { Badge, Button, Input, Select } from '@shared/ui';
+import { Badge, Button, Input, Select, Spinner, Surface } from '@shared/ui';
 import { ArrowRight, Check, ChevronLeft, ChevronRight, Copy, Filter, Search } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { formatINR } from '@shared/money';
@@ -99,9 +99,9 @@ export default function AdminLedgerView() {
       </div>
 
       {/* Filters */}
-      <form onSubmit={handleFilter} className="glass-panel p-4 mb-6">
+      <Surface as="form" variant="glass-overlay" elevation={4} radius="xl" onSubmit={handleFilter} className="p-4 mb-6">
         <div className="flex items-center gap-2 mb-4">
-            <Filter className="w-5 h-5 text-indigo-500" />
+            <Filter className="w-5 h-5 text-rose-500" />
             <h3 className="font-bold">Filters</h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -153,10 +153,10 @@ export default function AdminLedgerView() {
             Clear
           </Button>
         </div>
-      </form>
+      </Surface>
 
       {/* Table */}
-      <div className="flex-1 glass-panel flex flex-col overflow-hidden">
+      <Surface variant="glass-overlay" elevation={4} radius="xl" className="flex-1 flex flex-col overflow-hidden">
         <div className="overflow-x-auto flex-1">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -173,7 +173,7 @@ export default function AdminLedgerView() {
                 <tr>
                   <td colSpan={5} className="p-8 text-center text-slate-500 font-medium">
                     <div className="flex justify-center items-center gap-3">
-                      <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                      <Spinner size="sm" color="var(--color-action)" />
                       Loading transactions...
                     </div>
                   </td>
@@ -186,7 +186,7 @@ export default function AdminLedgerView() {
                 </tr>
               ) : (
                 groupedTransactions.map(tx => (
-                  <tr key={tx.transactionId} className="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-all group">
+                  <tr key={tx.transactionId} className="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition group">
                     <td className="p-4 align-middle">
                       <div className="flex flex-col">
                         <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
@@ -202,16 +202,16 @@ export default function AdminLedgerView() {
                         <Badge variant="neutral">
                           {tx.category.replace(/_/g, ' ')}
                         </Badge>
-                        <div className="flex items-center gap-1.5 group/copy cursor-pointer" onClick={() => handleCopy(tx.transactionId)}>
+                        <button type="button" className="flex items-center gap-1.5 group/copy cursor-pointer text-left w-full" onClick={() => handleCopy(tx.transactionId)}>
                           <span className="font-mono text-xs text-slate-500 dark:text-slate-400 truncate max-w-[120px]" title={tx.transactionId}>
                             {tx.transactionId.substring(0, 8)}...{tx.transactionId.substring(tx.transactionId.length - 4)}
                           </span>
                           {copiedTxnId === tx.transactionId ? (
-                            <Check className="w-3.5 h-3.5 text-emerald-500" />
+                            <Check className="w-3.5 h-3.5 text-amber-500" />
                           ) : (
                             <Copy className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover/copy:opacity-100 transition-opacity" />
                           )}
-                        </div>
+                        </button>
                       </div>
                     </td>
                     <td className="p-4 align-middle">
@@ -230,7 +230,7 @@ export default function AdminLedgerView() {
                       </div>
                       {tx.toAccountId ? (
                         <div className="flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]"></span>
+                          <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]"></span>
                           <span className="font-mono text-xs text-slate-600 dark:text-slate-300">{tx.toAccountId}</span>
                         </div>
                       ) : (
@@ -269,7 +269,7 @@ export default function AdminLedgerView() {
                 <ChevronRight className="w-5 h-5" />
             </Button>
         </div>
-      </div>
+      </Surface>
     </div>
   );
 }

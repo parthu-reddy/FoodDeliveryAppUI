@@ -1,9 +1,11 @@
 import { Button, Modal } from '@shared/ui';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'motion/react';
 import { Check, ChevronRight, CreditCard, Lock, Phone, ShieldCheck, Store, Wallet } from 'lucide-react';
 import React, { useState } from 'react';
 import { ErrorBoundary } from './ErrorBoundary';
 import { formatINR } from '@shared/money';
+import { Spinner } from './feedback/Spinner';
+import { Surface } from "./surface/Surface";
 
 export type PaymentMethodType = 'CARD' | 'WALLET' | 'UPI';
 
@@ -77,7 +79,7 @@ function PaymentModalInner({
 
   return (
     <Modal
-      isOpen={isOpen}
+      open={isOpen}
       onClose={() => status === 'idle' && onClose()}
       size="lg"
       title={status === 'idle' ? title : status === 'processing' ? "Processing..." : "Success"}
@@ -86,8 +88,8 @@ function PaymentModalInner({
         {/* Abstract Background Elements inside Modal */}
         {status === 'idle' && (
           <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl opacity-20 dark:opacity-40">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3"></div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-rose-500 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-amber-500 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3"></div>
           </div>
         )}
 
@@ -111,7 +113,7 @@ function PaymentModalInner({
                 {/* Right Column: Payment & Totals */}
                 <div className="space-y-4">
                   {/* Payment Method Selector */}
-                  <div className="glass-card p-4">
+                  <Surface variant="glass-chrome" elevation={3} radius="lg" className="p-4">
                     <h4 className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3">Payment Method</h4>
                     <div className="space-y-2">
                       {methods.map((method) => {
@@ -125,23 +127,23 @@ function PaymentModalInner({
                             <button
                               onClick={() => !isDisabled && setSelectedMethod(method.id as PaymentMethodType)}
                               disabled={isDisabled}
-                              className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all ${
+                              className={`w-full flex items-center justify-between p-3 rounded-xl border transition ${
                                 isDisabled 
                                   ? 'opacity-50 cursor-not-allowed border-white/20 dark:border-white/5 bg-slate-50 dark:bg-slate-900/50 grayscale'
                                   : isSelected
-                                    ? 'border-indigo-500 bg-indigo-50/80 dark:bg-indigo-500/20 shadow-md'
+                                    ? 'border-rose-500 bg-rose-50/80 dark:bg-rose-500/20 shadow-md'
                                     : 'border-white/40 dark:border-white/10 bg-white/20 dark:bg-white/5 hover:bg-white/40 dark:hover:bg-white/10'
                                 }`}
                             >
                               <div className="flex items-center gap-3">
-                                <div className={`p-2 rounded-lg ${isSelected ? 'bg-indigo-100 dark:bg-indigo-500/30 text-indigo-600 dark:text-indigo-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+                                <div className={`p-2 rounded-lg ${isSelected ? 'bg-rose-100 dark:bg-rose-500/30 text-rose-600 dark:text-rose-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
                                   <Icon className="w-4 h-4" />
                                 </div>
-                                <span className={`font-semibold text-sm ${isSelected ? 'text-indigo-900 dark:text-indigo-100' : 'text-slate-600 dark:text-slate-300'}`}>
+                                <span className={`font-semibold text-sm ${isSelected ? 'text-rose-900 dark:text-rose-100' : 'text-slate-600 dark:text-slate-300'}`}>
                                   {method.label}
                                 </span>
                               </div>
-                              <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${isSelected ? 'border-indigo-500 bg-indigo-500' : 'border-slate-300 dark:border-slate-600'}`}>
+                              <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${isSelected ? 'border-rose-500 bg-rose-500' : 'border-slate-300 dark:border-slate-600'}`}>
                                 {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white"></div>}
                               </div>
                             </button>
@@ -154,10 +156,10 @@ function PaymentModalInner({
                         );
                       })}
                     </div>
-                  </div>
+                  </Surface>
 
                   {/* Totals Box */}
-                  <div className="glass-card p-4 bg-slate-900 dark:bg-black/40 border-none shadow-xl text-white">
+                  <Surface variant="glass-chrome" elevation={3} radius="lg" className="p-4 bg-slate-900 dark:bg-black/40 border-none shadow-xl text-white">
                     {totals ? (
                       <div className="space-y-2 text-sm text-slate-300 mb-4">
                         <div className="flex justify-between">
@@ -195,21 +197,21 @@ function PaymentModalInner({
                       <span className="text-slate-200">{totals ? 'Total to Pay' : 'Total Amount'}</span>
                       <span className="font-mono text-2xl font-black">{formatINR((amount || 0))}</span>
                     </div>
-                  </div>
+                  </Surface>
                 </div>
               </div>
 
               {/* Action Button */}
               <div className="pt-2">
                 {error && (
-                  <div className="mb-4 p-3 bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400 text-sm rounded-lg border border-red-200 dark:border-red-500/30">
+                  <div className="mb-4 p-3 bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400 text-sm rounded-lg border border-rose-200 dark:border-rose-500/30">
                     {error}
                   </div>
                 )}
                 <Button
                   onClick={() => selectedMethod && canPay && onProcessPayment(selectedMethod)}
                   disabled={status !== 'idle' || !canPay}
-                  className="w-full relative group overflow-hidden bg-slate-900 dark:bg-indigo-600 hover:bg-slate-800 dark:hover:bg-indigo-500 text-white rounded-2xl py-4"
+                  className="w-full relative group overflow-hidden bg-slate-900 dark:bg-rose-600 hover:bg-slate-800 dark:hover:bg-rose-500 text-white rounded-2xl py-4"
                 >
                   <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
                   <div className="flex items-center justify-center gap-2 font-bold text-lg">
@@ -236,10 +238,10 @@ function PaymentModalInner({
               className="py-16 flex flex-col items-center justify-center text-center"
             >
               <div className="relative">
-                <div className="w-24 h-24 rounded-full border-4 border-indigo-100 dark:border-slate-800 flex items-center justify-center">
-                  <Store className="w-10 h-10 text-indigo-500 animate-pulse" />
+                <div className="w-24 h-24 rounded-full border-4 border-rose-100 dark:border-slate-800 flex items-center justify-center">
+                  <Store className="w-10 h-10 text-rose-500 animate-pulse" />
                 </div>
-                <div className="absolute inset-0 rounded-full border-4 border-indigo-500 border-t-transparent animate-spin"></div>
+                <Spinner size="lg" color="var(--color-action)" label="" className="absolute inset-0" />
               </div>
               <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-6">{processingTitle}</h3>
               <p className="text-slate-500 dark:text-slate-400 mt-2">{processingSubtitle}</p>
@@ -253,17 +255,17 @@ function PaymentModalInner({
               animate={{ opacity: 1, scale: 1 }}
               className="py-16 flex flex-col items-center justify-center text-center"
             >
-              <div className="w-24 h-24 rounded-full bg-emerald-500/20 flex items-center justify-center mb-6 relative">
+              <div className="w-24 h-24 rounded-full bg-amber-500/20 flex items-center justify-center mb-6 relative">
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", bounce: 0.5 }}
-                  className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-xl shadow-emerald-500/30"
+                  className="w-16 h-16 bg-amber-500 rounded-full flex items-center justify-center text-white shadow-xl shadow-amber-500/30"
                 >
                   <Check className="w-8 h-8" />
                 </motion.div>
                 {/* Confetti effect placeholder */}
-                <div className="absolute inset-0 animate-ping opacity-20 rounded-full border border-emerald-500"></div>
+                <div className="absolute inset-0 animate-ping opacity-20 rounded-full border border-amber-500"></div>
               </div>
               <h3 className="text-3xl font-black text-slate-900 dark:text-white">{successTitle}</h3>
               <p className="text-slate-500 dark:text-slate-400 mt-3 text-lg">{successSubtitle}</p>

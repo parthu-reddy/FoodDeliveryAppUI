@@ -2,7 +2,7 @@ import * as ledgerCommon from "@/api/generated/schemas/ledger/common";
 import { useToast } from "@/contexts/ToastContext";
 import { parseApiError } from '@/lib/parseApiError';
 import { ledgerApi } from "@/lib/zodiosClients";
-import { Button, Spinner } from '@shared/ui';
+import { Button, Overlay, Spinner, Surface } from '@shared/ui';
 import { X, ExternalLink, Activity } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { formatINR } from '@shared/money';
@@ -79,8 +79,8 @@ export default function PayoutDrawer({
 
   return (
     <>
-      <div className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40" onClick={onClose} />
-      <div className="fixed top-0 right-0 h-full w-full max-w-xl bg-white dark:bg-[#0f111a] shadow-2xl z-50 flex flex-col transform transition-transform border-l border-slate-200 dark:border-slate-800">
+      <Overlay open onClose={onClose} label={account.displayName || 'Payout account'} placement="right" className="h-full w-full max-w-xl">
+      <Surface variant="solid" elevation={4} radius="none" className="h-full flex flex-col">
         <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
            <div>
                <h2 className="text-xl font-bold text-slate-900 dark:text-white">{account.displayName || 'Unknown Payee'}</h2>
@@ -90,7 +90,7 @@ export default function PayoutDrawer({
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
-           <div className="glass-panel p-6 mb-8 text-center flex flex-col items-center">
+           <Surface variant="glass-overlay" elevation={4} radius="xl" className="p-6 mb-8 text-center flex flex-col items-center">
                <p className="text-sm text-slate-500 mb-1">Unsettled Balance</p>
                <h3 className="text-4xl font-black text-slate-900 dark:text-white mb-4">{formatINR(account.unsettledAmount ?? 0)}</h3>
                <Button 
@@ -100,11 +100,11 @@ export default function PayoutDrawer({
                >
                    Create Payout for Balance
                </Button>
-           </div>
+           </Surface>
 
            <div className="mb-8">
                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                   <Activity className="w-5 h-5 text-indigo-500" /> Unsettled Lines
+                   <Activity className="w-5 h-5 text-rose-500" /> Unsettled Lines
                </h3>
                {loading ? (
                    <div className="flex justify-center p-4"><Spinner size="sm" /></div>
@@ -155,7 +155,8 @@ export default function PayoutDrawer({
                )}
            </div>
         </div>
-      </div>
+      </Surface>
+      </Overlay>
       
       {showCreate && (
           <PayoutCreateDialog 

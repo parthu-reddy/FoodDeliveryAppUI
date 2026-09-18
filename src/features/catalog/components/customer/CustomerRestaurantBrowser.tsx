@@ -33,7 +33,7 @@ export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps>
   }, [debouncedSearchQuery, selectedCategory, restaurants]);
 
   const observerRef = useRef<IntersectionObserver | null>(null);
-  const lastElementRef = useCallback((node: HTMLDivElement | null) => {
+  const lastElementRef = useCallback((node: HTMLButtonElement | null) => {
     if (observerRef.current) observerRef.current.disconnect();
     observerRef.current = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting) {
@@ -60,12 +60,12 @@ export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps>
       className="p-5 space-y-6"
     >
       {/* Promo banner */}
-      <div className="bg-gradient-to-r from-orange-500/90 to-amber-500/90 border border-white/25 backdrop-blur-md text-white p-5 rounded-3xl relative overflow-hidden shadow-lg shadow-orange-500/10">
+      <div className="bg-gradient-to-r from-amber-500/90 to-amber-500/90 border border-white/25 backdrop-blur-md text-white p-5 rounded-3xl relative overflow-hidden shadow-lg shadow-amber-500/10">
         <div className="absolute right-0 bottom-0 top-0 w-1/3 bg-[radial-gradient(circle,_transparent_30%,_rgba(0,0,0,0.1)_70%)] pointer-events-none" />
         <div className="relative z-10 space-y-2 max-w-[240px]">
           <span className="text-[9px] uppercase font-bold tracking-wider bg-white/30 text-white px-2 py-0.5 rounded-full border border-white/20">FLAT 50% OFF</span>
           <h3 className="text-xl font-black tracking-tight leading-none text-white">Craving pizza or juicy burgers?</h3>
-          <p className="text-xs text-orange-50 font-semibold">Free delivery on your first three gourmet meals.</p>
+          <p className="text-xs text-amber-50 font-semibold">Free delivery on your first three gourmet meals.</p>
         </div>
       </div>
 
@@ -77,9 +77,9 @@ export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps>
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat === 'All' ? null : cat)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer border ${(cat === 'All' && !selectedCategory) || selectedCategory === cat
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 border-transparent text-white shadow-md shadow-orange-500/15'
-                  : 'bg-white/20 dark:bg-white/5 backdrop-blur-sm border-rose-500/20 dark:border-rose-500/30 text-slate-500 dark:text-[#f0ede6] hover:border-orange-500/30 dark:hover:border-orange-500/50 hover:bg-white/20 dark:hover:bg-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)]'
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer border ${(cat === 'All' && !selectedCategory) || selectedCategory === cat
+                  ? 'bg-gradient-to-r from-amber-500 to-amber-500 border-transparent text-white shadow-md shadow-amber-500/15'
+                  : 'bg-white/20 dark:bg-white/5 backdrop-blur-sm border-rose-500/20 dark:border-rose-500/30 text-slate-500 dark:text-[#f0ede6] hover:border-amber-500/30 dark:hover:border-amber-500/50 hover:bg-white/20 dark:hover:bg-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)]'
                 }`}
             >
               {cat}
@@ -89,7 +89,7 @@ export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps>
       </div>
 
       {/* Search Bar */}
-      <div className="sticky top-[69px] z-20 flex items-center bg-white/20 dark:bg-white/5 border border-rose-500/20 dark:border-rose-500/30 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:bg-white/20 dark:hover:bg-white/10 focus-within:bg-white/20 dark:focus-within:bg-white/10 backdrop-blur-md rounded-[2rem] px-4 py-3 focus-within:border-orange-500/50 dark:focus-within:border-orange-500/50 transition-all hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50">
+      <div className="sticky top-[69px] z-20 flex items-center bg-white/20 dark:bg-white/5 border border-rose-500/20 dark:border-rose-500/30 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:bg-white/20 dark:hover:bg-white/10 focus-within:bg-white/20 dark:focus-within:bg-white/10 backdrop-blur-md rounded-[2rem] px-4 py-3 focus-within:border-amber-500/50 dark:focus-within:border-amber-500/50 transition hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50">
         <Search className="w-4.5 h-4.5 text-slate-400 dark:text-slate-300 mr-2 shrink-0" />
         <input
           type="text"

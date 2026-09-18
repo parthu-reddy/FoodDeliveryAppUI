@@ -52,14 +52,14 @@ export default function SessionManagementModal({ isOpen, onClose, sessions, phon
 
   const getDeviceIcon = (os: string) => {
     const lower = os.toLowerCase();
-    if (lower.includes('mac') || lower.includes('win') || lower.includes('linux')) return <Monitor className="w-5 h-5 text-indigo-500" />;
-    return <Smartphone className="w-5 h-5 text-emerald-500" />;
+    if (lower.includes('mac') || lower.includes('win') || lower.includes('linux')) return <Monitor className="w-5 h-5 text-rose-500" />;
+    return <Smartphone className="w-5 h-5 text-amber-500" />;
   };
 
   const header = (
     <div className="flex items-center gap-3">
-      <div className="p-3 bg-red-500/10 rounded-2xl">
-        <AlertTriangle className="w-6 h-6 text-red-500" />
+      <div className="p-3 bg-rose-500/10 rounded-2xl">
+        <AlertTriangle className="w-6 h-6 text-rose-500" />
       </div>
       <div>
         <h3 className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
@@ -74,7 +74,8 @@ export default function SessionManagementModal({ isOpen, onClose, sessions, phon
 
   return (
     <Modal
-      isOpen={isOpen}
+      title="Active sessions"
+      open={isOpen}
       onClose={onClose}
       size="lg"
       header={header}
@@ -82,7 +83,7 @@ export default function SessionManagementModal({ isOpen, onClose, sessions, phon
     >
       <div className="p-6 pt-2">
         {error && (
-          <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
+          <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-sm">
             {error}
           </div>
         )}
@@ -92,7 +93,7 @@ export default function SessionManagementModal({ isOpen, onClose, sessions, phon
           {sessions.map((session, idx) => (
             <div
               key={session.sessionId}
-              className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${theme === 'dark' ? 'bg-slate-800/20 border-slate-700 hover:border-slate-600' : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+              className={`flex items-center justify-between p-4 rounded-2xl border transition ${theme === 'dark' ? 'bg-slate-800/20 border-slate-700 hover:border-slate-600' : 'bg-slate-50 border-slate-200 hover:border-slate-300'
                 }`}
             >
               <div className="flex items-center gap-4">

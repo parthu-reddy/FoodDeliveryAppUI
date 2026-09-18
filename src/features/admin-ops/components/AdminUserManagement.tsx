@@ -4,7 +4,7 @@ import { usePolling } from "@/hooks/usePolling";
 import { parseApiError } from '@/lib/parseApiError';
 import { customerApi, identityApi } from "@/lib/zodiosClients";
 import { RoleName } from "@/types";
-import { Button, EmptyState, Input, Select } from '@shared/ui';
+import { Button, EmptyState, Input, Select, Surface, surfaceStyle } from '@shared/ui';
 import { Plus, Power, Search, User, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
@@ -161,7 +161,7 @@ export default function AdminUserManagement() {
 
   return (
     <div className="flex-1 flex p-6 gap-6 h-full overflow-hidden">
-        <div className="w-1/3 flex flex-col glass-panel p-4 shrink-0">
+        <Surface variant="glass-overlay" elevation={4} radius="xl" className="w-1/3 flex flex-col p-4 shrink-0">
         <div className="flex gap-2 mb-4 border-b border-slate-200 dark:border-slate-800 pb-4">
             <Select 
               value={roleFilter} 
@@ -187,16 +187,17 @@ export default function AdminUserManagement() {
                 <button 
                     key={user.id}
                     onClick={() => setSelectedUser(user)}
-                    className={`w-full text-left p-4 mb-2 transition-all duration-300 ${selectedUser?.id === user.id ? 'glass-card !bg-indigo-500/80 !border-indigo-500 text-white shadow-lg shadow-indigo-500/30' : 'glass-card hover:border-indigo-300/50'}`}
+                    style={surfaceStyle({ variant: 'glass-chrome', elevation: 3, radius: 'lg' })}
+                    className={`w-full text-left p-4 mb-2 transition duration-300 ${selectedUser?.id === user.id ? '!bg-rose-500/80 !border-rose-500 text-white shadow-lg shadow-rose-500/30' : 'hover:border-rose-300/50'}`}
                 >
                     <div className="flex items-center justify-between">
                         <p className="font-bold">{user.id.substring(0, 8)}...</p>
-                        {user.active === false && <span className="text-xs px-2 py-1 bg-red-500 text-white rounded-full">Suspended</span>}
+                        {user.active === false && <span className="text-xs px-2 py-1 bg-rose-500 text-white rounded-full">Suspended</span>}
                     </div>
-                    <p className={`text-sm mb-1 ${selectedUser?.id === user.id ? 'text-indigo-100' : 'text-slate-500'}`}>{user.phoneNumber}</p>
+                    <p className={`text-sm mb-1 ${selectedUser?.id === user.id ? 'text-rose-100' : 'text-slate-500'}`}>{user.phoneNumber}</p>
                     <div className="flex gap-1 flex-wrap">
                         {(user.roles || []).map((r: string) => (
-                            <span key={r} className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold">{r}</span>
+                            <span key={r} className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold">{r}</span>
                         ))}
                     </div>
                 </button>
@@ -228,9 +229,9 @@ export default function AdminUserManagement() {
                 Next
             </Button>
         </div>
-        </div>
+        </Surface>
 
-        <div className="flex-1 glass-panel p-8 overflow-y-auto">
+        <Surface variant="glass-overlay" elevation={4} radius="xl" className="flex-1 p-8 overflow-y-auto">
         {selectedUser ? (
             <div className="max-w-2xl mx-auto space-y-8">
                 <div className="flex items-center justify-between pb-6 border-b border-slate-200 dark:border-slate-800">
@@ -242,29 +243,29 @@ export default function AdminUserManagement() {
                         variant={selectedUser.active !== false ? 'danger' : 'outline'}
                         onClick={handleToggleStatus}
                         icon={<Power className="w-4 h-4" />}
-                        className={selectedUser.active === false ? '!bg-emerald-500/10 !text-emerald-500 hover:!bg-emerald-500/20' : ''}
+                        className={selectedUser.active === false ? '!bg-amber-500/10 !text-amber-500 hover:!bg-amber-500/20' : ''}
                     >
                         {selectedUser.active !== false ? 'Suspend User' : 'Activate User'}
                     </Button>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mb-8">
-                    <div className="glass-card p-4">
+                    <Surface variant="glass-chrome" elevation={3} radius="lg" className="p-4">
                         <p className="text-sm text-slate-500 mb-1">ID</p>
                         <p className="font-mono text-sm">{selectedUser.id}</p>
-                    </div>
-                    <div className="glass-card p-4">
+                    </Surface>
+                    <Surface variant="glass-chrome" elevation={3} radius="lg" className="p-4">
                         <p className="text-sm text-slate-500 mb-1">Status</p>
                         <p className="font-mono text-sm">
-                            <span className={selectedUser.active !== false ? 'text-emerald-500' : 'text-rose-500'}>
+                            <span className={selectedUser.active !== false ? 'text-amber-500' : 'text-rose-500'}>
                                 {selectedUser.active !== false ? 'Active' : 'Suspended'}
                             </span>
                         </p>
-                    </div>
-                    <div className="glass-card p-4">
+                    </Surface>
+                    <Surface variant="glass-chrome" elevation={3} radius="lg" className="p-4">
                         <p className="text-sm text-slate-500 mb-1">Phone</p>
                         <p className="font-bold">{selectedUser.phoneNumber}</p>
-                    </div>
+                    </Surface>
                 </div>
 
                 <div>
@@ -297,16 +298,16 @@ export default function AdminUserManagement() {
                     {userActiveOrders.length > 0 ? (
                         <div className="space-y-3">
                             {userActiveOrders.map(order => (
-                                <div key={order.id} className="glass-card p-4">
+                                <Surface variant="glass-chrome" elevation={3} radius="lg" key={order.id} className="p-4">
                                     <div className="flex justify-between items-start mb-2">
                                         <p className="font-bold text-sm">#{order.id?.substring(0, 8)}</p>
-                                        <span className="text-xs font-bold px-2 py-1 bg-indigo-500/20 text-indigo-400 rounded-md">{order.status}</span>
+                                        <span className="text-xs font-bold px-2 py-1 bg-rose-500/20 text-rose-400 rounded-md">{order.status}</span>
                                     </div>
                                     <p className="text-sm text-slate-500">{order.restaurantName}</p>
                                     { }
                                     {/* eslint-disable-next-line react-hooks/purity */}
                                     <p className="text-xs text-slate-500 mt-2">Placed: {new Date(order.createdAt || Date.now()).toLocaleString()}</p>
-                                </div>
+                                </Surface>
                             ))}
                         </div>
                     ) : (
@@ -321,7 +322,7 @@ export default function AdminUserManagement() {
                 <p>Select a user to view details and manage roles.</p>
             </div>
         )}
-        </div>
+        </Surface>
     </div>
   );
 }

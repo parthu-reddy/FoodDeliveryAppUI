@@ -3,7 +3,8 @@ import { render, screen } from '@testing-library/react';
 import React from 'react';
 import { DeliveryStatus, OrderStatus } from '@/types/backend-enums';
 import { Order } from '@/types';
-import { CallProvider } from '@/contexts/CallContext';
+import { CallProvider } from '@/contexts/CallContext'
+import { ToastProvider } from '@/contexts/ToastContext';
 import { DeliveryActiveJob } from './DeliveryActiveJob';
 
 vi.mock('@features/maps-tracking/components/OrderTrackingMap', () => ({
@@ -45,9 +46,9 @@ const confirmButton = () => screen.getByRole('button', { name: /confirm delivery
 describe('prepaid delivery completion', () => {
   test('asks only for the delivery OTP and can confirm immediately', () => {
     render(
-      <CallProvider>
+      <ToastProvider><CallProvider>
         <DeliveryActiveJob {...props} currentJob={job()} />
-      </CallProvider>
+      </CallProvider></ToastProvider>
     );
 
     expect(screen.queryByLabelText(/cash collected/i)).not.toBeInTheDocument();

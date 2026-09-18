@@ -57,7 +57,7 @@ function PostDeliverySupportModalInner({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} size="md">
+    <Modal open={isOpen} onClose={handleClose} size="md" title="Request support" headerless>
       <div className="flex flex-col items-center text-center px-4 py-2">
         {status === 'idle' || status === 'error' ? (
           <>
@@ -82,7 +82,7 @@ function PostDeliverySupportModalInner({
                 }}
               />
               {status === 'error' && (
-                <div className="flex items-center text-red-500 text-sm mt-2">
+                <div className="flex items-center text-rose-500 text-sm mt-2">
                   <AlertCircle className="w-4 h-4 mr-1" />
                   {errorMessage}
                 </div>
@@ -120,7 +120,7 @@ function PostDeliverySupportModalInner({
 
         {status === 'success' && (
           <div className="py-8 flex flex-col items-center">
-            <div className="w-16 h-16 rounded-full bg-emerald-500 flex items-center justify-center text-white mb-6 animate-[bounce_0.5s_ease-out]">
+            <div className="w-16 h-16 rounded-full bg-amber-500 flex items-center justify-center text-white mb-6 animate-[bounce_0.5s_ease-out]">
               <Check className="w-8 h-8" />
             </div>
             <h3 className="text-lg font-bold text-slate-900 dark:text-[#f0ede6]">Request Submitted!</h3>

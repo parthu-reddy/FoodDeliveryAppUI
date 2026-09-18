@@ -1,4 +1,5 @@
 import React from 'react';
+import { surfaceStyle } from './surface/surfaceStyle';
 
 type StatColor = 'emerald' | 'blue' | 'rose' | 'amber' | 'indigo';
 
@@ -11,17 +12,18 @@ interface StatCardProps {
 }
 
 const iconBgColors: Record<StatColor, string> = {
-  emerald: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+  emerald: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
   blue: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
   rose: 'bg-rose-500/10 text-rose-600 dark:text-rose-400',
   amber: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
-  indigo: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400',
+  indigo: 'bg-rose-500/10 text-rose-600 dark:text-rose-400',
 };
 
 export function StatCard({ icon, label, value, color = 'emerald', className = '' }: StatCardProps) {
   return (
     <div
-      className={`glass-card p-4 flex items-center gap-3 ${className}`}
+      style={surfaceStyle({ variant: 'glass-chrome', elevation: 3, radius: 'lg' })}
+      className={`p-4 flex items-center gap-3 ${className}`}
     >
       <div className={`p-3 rounded-xl ${iconBgColors[color]}`}>
         {icon}

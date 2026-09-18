@@ -5,7 +5,7 @@ import { customerApi, deliveryApi, identityApi } from "@/lib/zodiosClients";
 import { useToast } from '@/contexts/ToastContext';
 import ImageUploadField from "@features/kyc/components/ImageUploadField";
 
-import { TransactionHistoryTable, WalletTransaction } from "@shared/ui";
+import { Select, TransactionHistoryTable, WalletTransaction } from '@shared/ui';
 import { ActiveSessions } from "@shared/ui/ActiveSessions";
 import { z } from 'zod';
 
@@ -215,7 +215,7 @@ export default function RiderSettingsView({
         {!isProfileMandatory && (
           <button
             onClick={onBack}
-            className="p-2 rounded-xl bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 text-slate-500 dark:text-slate-300 hover:text-slate-900 hover:bg-white dark:hover:text-white cursor-pointer transition-all shadow-sm"
+            className="p-2 rounded-xl bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 text-slate-500 dark:text-slate-300 hover:text-slate-900 hover:bg-white dark:hover:text-white cursor-pointer transition shadow-sm"
           >
             <X className="w-5 h-5" />
           </button>
@@ -232,9 +232,9 @@ export default function RiderSettingsView({
         <form onSubmit={saveProfile} className="space-y-4">
           
           {errorMsg && (
-            <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-              <p className="text-[11px] font-bold text-red-600 dark:text-red-400 leading-relaxed">{errorMsg}</p>
+            <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+              <p className="text-[11px] font-bold text-rose-600 dark:text-rose-400 leading-relaxed">{errorMsg}</p>
             </div>
           )}
 
@@ -298,16 +298,18 @@ export default function RiderSettingsView({
             <label className="text-xs font-bold text-slate-500 dark:text-slate-300 flex items-center gap-1">
                <Car className="w-3.5 h-3.5" /> Vehicle Type
             </label>
-            <select
+            <Select
+              selectSize="lg"
+              aria-label="Vehicle Type"
               value={editVehicleType}
-              onChange={(e) => setEditVehicleType(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md text-sm font-medium text-slate-900 dark:text-[#f0ede6] outline-none transition-colors focus:border-rose-500/50 focus:bg-white/40 dark:focus:bg-slate-900/40 appearance-none"
-            >
-              <option value="BICYCLE">Bicycle (No License Required)</option>
-              <option value="EV_TWO_WHEELER">EV Two-Wheeler</option>
-              <option value="MCWG">Motorcycle / Scooter (MCWG)</option>
-              <option value="LMV">Light Motor Vehicle (Car)</option>
-            </select>
+              onChange={setEditVehicleType}
+              options={[
+                { value: 'BICYCLE', label: 'Bicycle (No License Required)' },
+                { value: 'EV_TWO_WHEELER', label: 'EV Two-Wheeler' },
+                { value: 'MCWG', label: 'Motorcycle / Scooter (MCWG)' },
+                { value: 'LMV', label: 'Light Motor Vehicle (Car)' },
+              ]}
+            />
           </div>
 
           <div className="space-y-1.5">
@@ -326,7 +328,7 @@ export default function RiderSettingsView({
             <button 
               type="submit"
               disabled={isSaving}
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 text-white font-bold text-sm shadow-md shadow-rose-500/20 active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer"
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 text-white font-bold text-sm shadow-md shadow-rose-500/20 active:scale-[0.98] transition disabled:opacity-50 cursor-pointer"
             >
               {isSaving ? 'Saving...' : 'Save Profile Changes'}
             </button>
@@ -336,18 +338,18 @@ export default function RiderSettingsView({
         <div className="pt-8 mt-8 border-t border-rose-500/20 space-y-6">
           <div>
             <h4 className="text-sm font-bold text-slate-900 dark:text-[#f0ede6] flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-emerald-500" /> Document Verification
+              <ShieldCheck className="w-4 h-4 text-amber-500" /> Document Verification
             </h4>
             <div className="mt-4 p-4 rounded-xl bg-white/10 dark:bg-slate-900/10 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
               <div>
                 <p className="text-sm font-bold text-slate-800 dark:text-[#f0ede6]">Verification Status</p>
                 <p className="text-xs text-slate-500 mt-1">
-                  Documents: {verificationStatus?.allDocsApproved ? <span className="text-emerald-500 font-bold">Approved</span> : <span className="text-amber-500 font-bold">Pending</span>} | 
-                  Bank: {verificationStatus?.bankApproved ? <span className="text-emerald-500 font-bold">Approved</span> : <span className="text-amber-500 font-bold">Pending</span>}
+                  Documents: {verificationStatus?.allDocsApproved ? <span className="text-amber-500 font-bold">Approved</span> : <span className="text-amber-500 font-bold">Pending</span>} | 
+                  Bank: {verificationStatus?.bankApproved ? <span className="text-amber-500 font-bold">Approved</span> : <span className="text-amber-500 font-bold">Pending</span>}
                 </p>
               </div>
               <div className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-500">
-                {verificationStatus?.allDocsApproved && verificationStatus?.bankApproved ? <CheckCircle className="w-5 h-5 text-emerald-500" /> : <AlertCircle className="w-5 h-5 text-amber-500" />}
+                {verificationStatus?.allDocsApproved && verificationStatus?.bankApproved ? <CheckCircle className="w-5 h-5 text-amber-500" /> : <AlertCircle className="w-5 h-5 text-amber-500" />}
               </div>
             </div>
           </div>
@@ -375,7 +377,7 @@ export default function RiderSettingsView({
         <div className="pt-4 mt-8">
           <button 
             onClick={onLogout}
-            className="w-full py-3 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20 font-bold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full py-3 rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 font-bold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >
             <LogOut className="w-4 h-4" /> Sign Out
           </button>

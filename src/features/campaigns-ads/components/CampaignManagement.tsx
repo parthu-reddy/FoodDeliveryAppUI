@@ -2,7 +2,7 @@ import { useToast } from "@/contexts/ToastContext";
 import { parseApiError } from "@/lib/parseApiError";
 import { campaignApi, walletApi } from "@/lib/zodiosClients";
 import { AdPerformanceDashboard, CampaignPerformance } from "@features/campaigns-ads/components/AdPerformanceDashboard";
-import { Badge, Button, FormField, Input, Modal, TransactionHistoryTable, WalletTransaction } from "@shared/ui";
+import { Badge, Button, FormField, Input, Modal, TransactionHistoryTable, WalletTransaction, Surface } from "@shared/ui";
 import { PaymentModal, type PaymentMethodType } from "@shared/ui/PaymentModal";
 import { Calendar, DollarSign, Pause, Plus, TrendingUp, Wallet } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
@@ -238,9 +238,9 @@ export default function CampaignManagement({ advertiserId }: { advertiserId: str
   };
 
   const paymentLeftContent = (
-    <div className="glass-card p-6 h-full flex flex-col justify-center items-center text-center space-y-4">
-      <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center shrink-0">
-        <Wallet className="w-8 h-8 text-emerald-500" />
+    <Surface variant="glass-chrome" elevation={3} radius="lg" className="p-6 h-full flex flex-col justify-center items-center text-center space-y-4">
+      <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center shrink-0">
+        <Wallet className="w-8 h-8 text-amber-500" />
       </div>
       <div>
         <h4 className="font-bold text-slate-800 dark:text-white text-lg mb-1">Add Funds to Wallet</h4>
@@ -248,7 +248,7 @@ export default function CampaignManagement({ advertiserId }: { advertiserId: str
           Current Balance: <span className="font-bold text-slate-700 dark:text-slate-300">{formatINR(walletBalance)}</span>
         </p>
       </div>
-    </div>
+    </Surface>
   );
 
   return (
@@ -256,7 +256,7 @@ export default function CampaignManagement({ advertiserId }: { advertiserId: str
       {/* Metrics Row */}
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-2xl p-4 flex items-center gap-3 shadow-sm">
-          <div className="p-3 bg-emerald-500/10 text-emerald-650 dark:text-emerald-400 rounded-xl">
+          <div className="p-3 bg-amber-500/10 text-amber-650 dark:text-amber-400 rounded-xl">
             <DollarSign className="w-5 h-5" />
           </div>
           <div>
@@ -350,7 +350,7 @@ export default function CampaignManagement({ advertiserId }: { advertiserId: str
         />
       </div>
 
-      <Modal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} title="New Ad Campaign" size="md">
+      <Modal open={showCreateModal} onClose={() => setShowCreateModal(false)} title="New Ad Campaign" size="md">
         <div className="p-6">
           <form onSubmit={handleCreate} className="space-y-4">
             <FormField label="Campaign Name" required>
@@ -389,7 +389,7 @@ export default function CampaignManagement({ advertiserId }: { advertiserId: str
         </div>
       </Modal>
 
-      <Modal isOpen={showAmountModal} onClose={() => setShowAmountModal(false)} title="Top Up Wallet" size="sm">
+      <Modal open={showAmountModal} onClose={() => setShowAmountModal(false)} title="Top Up Wallet" size="sm">
         <div className="p-6">
           <form onSubmit={(e) => {
             e.preventDefault();

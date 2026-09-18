@@ -26,7 +26,7 @@ export function PayoutTimeline({ status }: Props) {
             {idx > 0 && <div className={`w-8 h-0.5 mx-2 ${state === 'completed' || state === 'failed' ? 'bg-slate-300' : 'bg-slate-100'}`} />}
             <div className="flex flex-col items-center gap-1">
               {state === 'completed' ? (
-                <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                <CheckCircle2 className="w-5 h-5 text-amber-500" />
               ) : state === 'failed' ? (
                 <AlertCircle className="w-5 h-5 text-rose-500" />
               ) : (

@@ -1,36 +1,57 @@
-// UI Primitives — single import point for all shared components
-// Usage: import { Button, Input, Modal, Badge } from '@shared/ui';
+// UI primitives — the single import point for shared components.
+// Usage: import { Button, Select, Modal, Surface } from '@shared/ui';
+//
+// Nothing outside shared/ui may reference a design token directly, hand-roll an overlay,
+// portal, or render a native <select>, alert() or confirm(). The Phase 2 gate checks all of it:
+//   python3 RandomDocuments/UIRedesign_2026-09-18/tools/validate_phase2.py
 
+// --- surface: the only owner of elevation / glass / blur / radius tokens -------------
+export { Surface } from './surface/Surface';
+export { surfaceStyle } from './surface/surfaceStyle';
+export type { SurfaceElevation, SurfaceRadius, SurfaceVariant } from './surface/surfaceStyle';
+
+// --- overlay: the only portal, focus trap and scroll lock in the app ------------------
+export { Overlay } from './overlay/Overlay';
+export type { OverlayPlacement } from './overlay/Overlay';
+export { Modal } from './overlay/Modal';
+export { ConfirmProvider, useConfirm } from './overlay/ConfirmDialog';
+export { ToastRegion } from './overlay/ToastRegion';
+export type { ToastItem, ToastType } from './overlay/ToastRegion';
+export type { ConfirmOptions, ConfirmTone } from './overlay/ConfirmDialog';
+
+// --- action ---------------------------------------------------------------------------
+export { Button } from './action/Button';
+
+// --- form -----------------------------------------------------------------------------
+export { Select } from './form/Select';
+export type { SelectOption } from './form/Select';
+
+// --- feedback ---------------------------------------------------------------------------
+export { Spinner } from './feedback/Spinner';
+export { StatusPill } from './feedback/StatusPill';
+export type { StatusTone } from './feedback/StatusPill';
+
+// --- not yet migrated to the new layout (phases 3-4) -----------------------------------
 export { AlertBanner } from './AlertBanner';
 export { Badge } from './Badge';
-export { Button } from './Button';
 export { Card } from './Card';
-export { ConfirmDialog } from './ConfirmDialog';
 export { FormField } from './FormField';
-export { GlassCard } from './GlassCard';
 export { Input } from './Input';
-export { Modal } from './Modal';
 export { SearchInput } from './SearchInput';
-export { Select } from './Select';
 export { SidebarNav } from './SidebarNav';
-export { Spinner } from './Spinner';
 export { StatCard } from './StatCard';
 export { Textarea } from './Textarea';
-
-// Re-exported from shared/ (presentation primitives)
 export { default as CinematicFoodBackground } from './CinematicFoodBackground';
 export { EmptyState } from './EmptyState';
 export { LoadingSkeleton, MenuCategorySkeleton, RestaurantCardSkeleton, Skeleton } from './Skeleton';
-export { TransactionHistoryTable } from "./TransactionHistoryTable";
-export type { WalletTransaction } from "./TransactionHistoryTable";
-
-// Auto-added remaining shared components
-export { default as CompleteProfileModal } from "./CompleteProfileModal";
-export { ErrorBoundary } from "./ErrorBoundary";
-export { default as NamePromptModal } from "./NamePromptModal";
-export { PaymentModal } from "./PaymentModal";
-export { RefundModal } from "./RefundModal";
-export { default as SharedSettingsView } from "./SharedSettingsView";
-export { ZodErrorBoundary } from "./ZodErrorBoundary";
-export { default as ZodiosSmokeTest } from "./ZodiosSmokeTest";
-export { ActiveSessions } from "./ActiveSessions";
+export { TransactionHistoryTable } from './TransactionHistoryTable';
+export type { WalletTransaction } from './TransactionHistoryTable';
+export { default as CompleteProfileModal } from './CompleteProfileModal';
+export { ErrorBoundary } from './ErrorBoundary';
+export { default as NamePromptModal } from './NamePromptModal';
+export { PaymentModal } from './PaymentModal';
+export { RefundModal } from './RefundModal';
+export { default as SharedSettingsView } from './SharedSettingsView';
+export { ZodErrorBoundary } from './ZodErrorBoundary';
+export { default as ZodiosSmokeTest } from './ZodiosSmokeTest';
+export { ActiveSessions } from './ActiveSessions';

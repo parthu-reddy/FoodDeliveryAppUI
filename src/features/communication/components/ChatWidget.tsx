@@ -1,12 +1,14 @@
 import { useCallContext } from "@/contexts/CallContext";
+import { useToast } from "@/contexts/ToastContext";
 import { getToken, getUserProfile } from "@/lib/tokenStore";
 import { chatApi } from "@/lib/zodiosClients";
 import { type ChatMessage, type TypingIndicator } from "@/types";
 import { useChatWebSocket } from "@features/communication/models/useChatWebSocket";
-import { Camera, ImagePlus, Loader2, MessageSquare, PhoneCall, PhoneOff, Send, X } from 'lucide-react';
+import { Camera, ImagePlus, MessageSquare, PhoneCall, PhoneOff, Send, X } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState, useImperativeHandle } from 'react';
 import { formatINR } from '@shared/money';
 import { RefundRequestModal } from './RefundRequestModal';
+import { Spinner } from '@shared/ui';
 
 export interface ChatParticipant {
   userId: string;
@@ -30,6 +32,7 @@ export interface ChatWidgetHandle {
 }
 
 export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({ orderId, order, currentUserType, otherParticipants, onClose, onBack }, ref) => {
+  const { showError } = useToast();
   const token = getToken();
   const user = getUserProfile();
   const [isOpen, setIsOpen] = useState(false);
@@ -209,14 +212,14 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
     if (cameraInputRef.current) cameraInputRef.current.value = '';
 
     if (uploadedImageCount >= 4) {
-      alert("You have reached the maximum limit of 4 images for this chat session.");
+      showError("You can attach at most 4 images to a chat session.");
       return;
     }
 
     setIsLoading(true);
     const imageUrl = await sendImage(file);
     if (!imageUrl) {
-      alert("Failed to upload image. Please try again or ensure it is under 5MB.");
+      showError("Could not upload that image. Check it is under 5MB and try again.");
     }
     setIsLoading(false);
   };
@@ -230,12 +233,12 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
           setIsOpen(true);
           setUnreadCount(0);
         }}
-        className="fixed bottom-6 right-6 bg-orange-600 hover:bg-orange-700 text-white px-5 py-4 rounded-full shadow-lg transition-transform hover:scale-105 z-50 flex items-center justify-center space-x-2"
+        className="fixed bottom-6 right-6 bg-amber-600 hover:bg-amber-700 text-white px-5 py-4 rounded-full shadow-lg transition-transform hover:scale-105 z-50 flex items-center justify-center space-x-2"
       >
         <MessageSquare className="w-6 h-6" />
         <span className="font-bold text-sm">#{orderId.substring(0, 6)}</span>
         {unreadCount > 0 && (
-          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full animate-bounce">
+          <span className="absolute -top-2 -right-2 bg-rose-500 text-white text-xs font-bold px-2 py-1 rounded-full animate-bounce">
             {unreadCount}
           </span>
         )}
@@ -245,12 +248,12 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
 
   // The open chat window
   return (
-    <div className="fixed bottom-0 right-0 sm:bottom-6 sm:right-6 w-full sm:w-96 h-[100dvh] sm:h-[500px] max-h-[100dvh] sm:max-h-[calc(100vh-6rem)] bg-white sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden z-[60] sm:border sm:border-gray-100">
+    <div className="fixed bottom-0 right-0 sm:bottom-6 sm:right-6 w-full sm:w-96 h-[100dvh] sm:h-[500px] max-h-[100dvh] sm:max-h-[calc(100vh-6rem)] bg-white sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden z-[60] sm:border sm:border-slate-100">
       {/* Header */}
-      <div className="bg-orange-600 text-white p-4 flex justify-between items-center shrink-0">
+      <div className="bg-amber-600 text-white p-4 flex justify-between items-center shrink-0">
         <div className="flex items-center gap-2">
           {onBack && (
-            <button onClick={onBack} className="hover:bg-orange-700 p-1.5 rounded-full transition-colors mr-1">
+            <button onClick={onBack} className="hover:bg-amber-700 p-1.5 rounded-full transition-colors mr-1">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
             </button>
           )}
@@ -258,7 +261,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
             <h3 className="font-semibold text-lg truncate max-w-[160px] sm:max-w-[200px]">
               {otherParticipants?.length ? otherParticipants.map(p => p.displayName).join(', ') : 'Order Chat'}
             </h3>
-            <div className="flex flex-col text-orange-100 text-sm">
+            <div className="flex flex-col text-amber-100 text-sm">
               <span>Order #{orderId.substring(0, 8)}</span>
               {order && order.items && order.items.length > 0 && (
                 <span className="text-xs opacity-90 truncate max-w-[200px]">
@@ -273,7 +276,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
             <button
               key={p.userId}
               onClick={() => startCall(p.userId, sessionId)}
-              className="text-white hover:bg-orange-700 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 bg-orange-600/80"
+              className="text-white hover:bg-amber-700 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 bg-amber-600/80"
               title={`Call ${p.displayName}`}
             >
               <PhoneCall className="w-4 h-4" />
@@ -283,7 +286,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
             targetUserId && sessionId && (
               <button
                 onClick={() => startCall(targetUserId, sessionId)}
-                className="text-white hover:bg-orange-700 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 bg-orange-600/80"
+                className="text-white hover:bg-amber-700 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 bg-amber-600/80"
                 title="Start Audio Call"
               >
                 <PhoneCall className="w-4 h-4" />
@@ -296,7 +299,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
               setIsOpen(false);
               if (onClose) onClose();
             }}
-            className="text-white hover:bg-orange-700 p-2 rounded-full transition-colors"
+            className="text-white hover:bg-amber-700 p-2 rounded-full transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -305,21 +308,21 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
 
       {/* Connection Status */}
       {(!isConnected && sessionId && !isLoading) && (
-        <div className="bg-yellow-50 text-yellow-800 text-xs text-center py-1 font-medium shrink-0">
+        <div className="bg-amber-50 text-amber-800 text-xs text-center py-1 font-medium shrink-0">
           Reconnecting to chat server...
         </div>
       )}
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-400">
-            <Loader2 className="w-8 h-8 animate-spin mb-2" />
+          <div className="flex flex-col items-center justify-center h-full text-slate-400">
+            <Spinner size="md" className="mb-2" />
             <p>Loading chat...</p>
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-400 text-sm text-center">
-            <MessageSquare className="w-12 h-12 mb-3 text-gray-300" />
+          <div className="flex flex-col items-center justify-center h-full text-slate-400 text-sm text-center">
+            <MessageSquare className="w-12 h-12 mb-3 text-slate-300" />
             <p>No messages yet.</p>
             <p>Send a message to start the conversation.</p>
           </div>
@@ -338,18 +341,18 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
             return (
               <div key={msg.id || idx} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                 {showHeader && (
-                  <span className="text-xs text-gray-500 mb-1 ml-1 mr-1">
+                  <span className="text-xs text-slate-500 mb-1 ml-1 mr-1">
                     {isMe ? 'You' : `${msg.senderName} (${typeLabel})`}
                   </span>
                 )}
                 <div
                   className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${isMe
-                      ? 'bg-orange-600 text-white rounded-tr-sm'
-                      : 'bg-white border border-gray-200 text-gray-800 rounded-tl-sm shadow-sm'
+                      ? 'bg-amber-600 text-white rounded-tr-sm'
+                      : 'bg-white border border-slate-200 text-slate-800 rounded-tl-sm shadow-sm'
                     }`}
                 >
                   {msg.content === '[SYSTEM_MISSED_CALL]' ? (
-                    <div className="flex items-center space-x-2 font-semibold text-red-500">
+                    <div className="flex items-center space-x-2 font-semibold text-rose-500">
                       <PhoneOff className="w-4 h-4" />
                       <span>Missed Voice Call</span>
                     </div>
@@ -369,8 +372,8 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
                     try {
                       const payload = JSON.parse(msg.content);
                       return (
-                        <div className={`flex flex-col space-y-3 p-2 min-w-[220px] ${isMe ? 'text-white' : 'text-gray-800'}`}>
-                          <div className={`flex items-center space-x-2 border-b pb-2 ${isMe ? 'border-orange-400' : 'border-gray-200'}`}>
+                        <div className={`flex flex-col space-y-3 p-2 min-w-[220px] ${isMe ? 'text-white' : 'text-slate-800'}`}>
+                          <div className={`flex items-center space-x-2 border-b pb-2 ${isMe ? 'border-amber-400' : 'border-slate-200'}`}>
                             <span className="text-xl">💰</span>
                             <span className="font-semibold">Refund Quote</span>
                           </div>
@@ -383,10 +386,10 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
                             onClick={() => {
                               sendMessage(JSON.stringify({ orderId, reason: "Customer requested", refundType: payload.refundType, customerId: user?.id }), 'REFUND_REQUEST');
                             }}
-                            className={`w-full font-semibold py-2 rounded-xl transition-all shadow-sm ${
+                            className={`w-full font-semibold py-2 rounded-xl transition shadow-sm ${
                               isMe 
-                                ? 'bg-white text-orange-600 hover:bg-orange-50' 
-                                : 'bg-orange-600 text-white hover:bg-orange-700 hover:shadow-md'
+                                ? 'bg-white text-amber-600 hover:bg-amber-50' 
+                                : 'bg-amber-600 text-white hover:bg-amber-700 hover:shadow-md'
                             }`}
                           >
                             Accept & Process Refund
@@ -401,7 +404,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
                       const payload = JSON.parse(msg.content);
                       return (
                         <div className="flex flex-col space-y-2 p-2">
-                          <div className="flex items-center space-x-2 text-green-600 font-bold">
+                          <div className="flex items-center space-x-2 text-amber-600 font-bold">
                             <span className="text-lg">✅</span>
                             <span>Refund Request Submitted</span>
                           </div>
@@ -418,7 +421,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
                     } catch { /* ignore */ }
                     return (
                       <div className="flex flex-col space-y-1 p-2">
-                        <div className="flex items-center space-x-2 text-red-500 font-bold">
+                        <div className="flex items-center space-x-2 text-rose-500 font-bold">
                           <span>❌</span>
                           <span>Request Failed</span>
                         </div>
@@ -427,7 +430,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
                     );
                   })() : msg.messageType === 'REFUND_QUOTE_REQUEST' || msg.messageType === 'REFUND_REQUEST' ? (
                     <div className="flex items-center space-x-2 p-1 opacity-90">
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Spinner size="sm" label="" />
                       <span className="text-sm font-medium">
                         {msg.messageType === 'REFUND_QUOTE_REQUEST' ? 'Requesting quote...' : 'Processing refund...'}
                       </span>
@@ -443,11 +446,11 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
 
         {/* Typing indicators */}
         {Object.entries(isTyping).filter(([_, isT]) => isT).length > 0 && (
-          <div className="flex items-center text-xs text-gray-500 space-x-1">
+          <div className="flex items-center text-xs text-slate-500 space-x-1">
             <div className="flex space-x-1">
-              <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-              <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-              <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+              <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+              <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
             </div>
             <span>Someone is typing...</span>
           </div>
@@ -457,8 +460,8 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
       </div>
 
       {/* Input Area */}
-      <form onSubmit={handleSend} className="p-3 bg-white border-t border-gray-200 shrink-0">
-        <div className="flex items-center space-x-2 bg-gray-100 rounded-full px-4 py-2">
+      <form onSubmit={handleSend} className="p-3 bg-white border-t border-slate-200 shrink-0">
+        <div className="flex items-center space-x-2 bg-slate-100 rounded-full px-4 py-2">
           {/* Hidden file inputs: one for camera capture, one for gallery */}
           <input
             type="file"
@@ -480,7 +483,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
             onClick={() => cameraInputRef.current?.click()}
             disabled={isImageUploadDisabled}
             title={uploadedImageCount >= 4 ? "Maximum 4 images allowed per session" : "Take Photo"}
-            className="p-1.5 text-gray-500 hover:text-orange-600 transition-colors disabled:opacity-50"
+            className="p-1.5 text-slate-500 hover:text-amber-600 transition-colors disabled:opacity-50"
           >
             <Camera className="w-5 h-5" />
           </button>
@@ -489,7 +492,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
             onClick={() => fileInputRef.current?.click()}
             disabled={isImageUploadDisabled}
             title={uploadedImageCount >= 4 ? "Maximum 4 images allowed per session" : "Upload from Gallery"}
-            className="p-1.5 text-gray-500 hover:text-orange-600 transition-colors disabled:opacity-50"
+            className="p-1.5 text-slate-500 hover:text-amber-600 transition-colors disabled:opacity-50"
           >
             <ImagePlus className="w-5 h-5" />
           </button>
@@ -524,8 +527,8 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
             type="submit"
             disabled={!inputText.trim() || !isConnected}
             className={`p-1.5 rounded-full transition-colors ${inputText.trim() && isConnected
-                ? 'bg-orange-600 text-white hover:bg-orange-700'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                ? 'bg-amber-600 text-white hover:bg-amber-700'
+                : 'bg-slate-300 text-slate-500 cursor-not-allowed'
               }`}
           >
             <Send className="w-4 h-4" />

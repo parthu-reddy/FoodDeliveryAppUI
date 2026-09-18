@@ -59,7 +59,7 @@ export function AdminReviewsView() {
     <div className="flex-1 overflow-y-auto p-6">
       <header className="mb-5">
         <h2 className="flex items-center gap-2 text-xl font-black text-slate-800 dark:text-[#f0ede6]">
-          <ShieldAlert className="h-5 w-5 text-indigo-500" />
+          <ShieldAlert className="h-5 w-5 text-rose-500" />
           Review Moderation
         </h2>
         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">

@@ -1,6 +1,6 @@
 import { ChevronDown, Star } from 'lucide-react';
 import { useState } from 'react';
-import { AlertBanner } from '@shared/ui';
+import { AlertBanner, surfaceStyle } from '@shared/ui';
 import { RatingSummary } from './RatingSummary';
 import { ReviewList } from './ReviewList';
 import { useEntityReviews } from '../model/useEntityReviews';
@@ -35,7 +35,7 @@ export function DriverRatingCard({ driverId, className = '' }: DriverRatingCardP
   const reviewCount = aggregate?.totalReviews ?? 0;
 
   return (
-    <div className={`glass-card ${className}`}>
+    <div style={surfaceStyle({ variant: 'glass-chrome', elevation: 3, radius: 'lg' })} className={className}>
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}

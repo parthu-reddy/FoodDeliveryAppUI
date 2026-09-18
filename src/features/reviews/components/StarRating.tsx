@@ -110,7 +110,7 @@ export function StarRating({
         }
 
         return (
-          <span
+          <button type="button"
             key={star}
             id={`${groupId}-${star}`}
             role="radio"
@@ -121,10 +121,10 @@ export function StarRating({
             tabIndex={-1}
             onClick={() => onChange?.(star)}
             onMouseEnter={() => setHovered(star)}
-            className="transition-transform hover:scale-110 active:scale-95"
+            className="transition-transform hover:scale-110 active:scale-95 text-left w-full"
           >
             {starGlyph}
-          </span>
+          </button>
         );
       })}
     </div>

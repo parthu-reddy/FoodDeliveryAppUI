@@ -3,7 +3,7 @@ import { parseApiError } from '@/lib/parseApiError';
 import { deliveryApi, identityApi } from "@/lib/zodiosClients";
 import DocumentUploadField from "@features/kyc/components/DocumentUploadField";
 import ImageUploadField from "@features/kyc/components/ImageUploadField";
-import { Button, CinematicFoodBackground, FormField, Input, Spinner } from "@shared/ui";
+import { Button, CinematicFoodBackground, FormField, Input, Select, Spinner } from '@shared/ui';
 import { AlertCircle, Car, CheckCircle, ChevronRight, FileText, Landmark, LogOut, UserSquare } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useState } from 'react';
@@ -194,12 +194,18 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
               <Input type="text" value={name} onChange={e => setName(e.target.value)} disabled={!!initialName} />
             </FormField>
             <FormField label="Vehicle Type" required>
-              <select value={vehicleType} onChange={e => setVehicleType(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-rose-500/20 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md text-sm font-bold text-slate-900 dark:text-white outline-none focus:border-rose-500/50">
-                <option value="BICYCLE">Bicycle</option>
-                <option value="EV_TWO_WHEELER">EV Two-Wheeler</option>
-                <option value="MCWG">Motorcycle / Scooter</option>
-                <option value="LMV">Car / LMV</option>
-              </select>
+              <Select
+                selectSize="lg"
+                aria-label="Vehicle Type"
+                value={vehicleType}
+                onChange={setVehicleType}
+                options={[
+                  { value: 'BICYCLE', label: 'Bicycle' },
+                  { value: 'EV_TWO_WHEELER', label: 'EV Two-Wheeler' },
+                  { value: 'MCWG', label: 'Motorcycle / Scooter' },
+                  { value: 'LMV', label: 'Car / LMV' },
+                ]}
+              />
             </FormField>
             <FormField label="Vehicle Number (if applicable)">
               <Input type="text" value={vehicle} onChange={e => setVehicle(e.target.value)} />
@@ -217,8 +223,8 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
         if (verificationStatus?.dlApproved) {
           return (
             <div className="py-12 flex flex-col items-center justify-center text-center space-y-4">
-              <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center">
-                <CheckCircle className="w-8 h-8 text-emerald-500" />
+              <div className="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-8 h-8 text-amber-500" />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white">Driving License Approved</h3>
@@ -249,8 +255,8 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
         if (verificationStatus?.rcApproved) {
           return (
             <div className="py-12 flex flex-col items-center justify-center text-center space-y-4">
-              <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center">
-                <CheckCircle className="w-8 h-8 text-emerald-500" />
+              <div className="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-8 h-8 text-amber-500" />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white">Vehicle RC Approved</h3>
@@ -278,8 +284,8 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
         if (verificationStatus?.bankApproved) {
           return (
             <div className="py-12 flex flex-col items-center justify-center text-center space-y-4">
-              <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center">
-                <CheckCircle className="w-8 h-8 text-emerald-500" />
+              <div className="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-8 h-8 text-amber-500" />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white">Bank Verified</h3>
@@ -343,7 +349,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
         )}
 
         <div className="text-center mb-8 shrink-0 mt-4 md:mt-0">
-          <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-orange-500 mb-2">Partner Onboarding</h2>
+          <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-amber-500 mb-2">Partner Onboarding</h2>
           <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Complete your KYC to start delivering</p>
         </div>
 
@@ -356,7 +362,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
             const isPast = currentStep > idx;
             return (
               <div key={step.id} className="flex flex-col items-center">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-500 shadow-sm ${isActive ? 'bg-rose-500 text-white scale-110' : isPast ? 'bg-emerald-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'}`}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-500 shadow-sm ${isActive ? 'bg-rose-500 text-white scale-110' : isPast ? 'bg-amber-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'}`}>
                   {isPast ? <CheckCircle className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
                 </div>
               </div>
@@ -365,7 +371,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
         </div>
 
         {errorMsg && (
-          <div className="mb-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs flex items-start gap-2 shrink-0">
+          <div className="mb-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs flex items-start gap-2 shrink-0">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             <span className="font-bold leading-relaxed">{errorMsg}</span>
           </div>

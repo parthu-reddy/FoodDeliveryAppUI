@@ -60,11 +60,11 @@ function AdminAssignmentMapInner({
       el.innerHTML = `
         <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 mb-2 flex flex-col items-center gap-1 min-w-[100px] pointer-events-auto">
             <span class="text-xs font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">${driverName || 'Driver'}</span>
-            <button class="assign-btn w-full py-1 px-2 bg-indigo-500/20 hover:bg-indigo-500 text-indigo-700 dark:text-indigo-300 hover:text-white dark:hover:text-white rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors border border-indigo-500/30">
+            <button class="assign-btn w-full py-1 px-2 bg-rose-500/20 hover:bg-rose-500 text-rose-700 dark:text-rose-300 hover:text-white dark:hover:text-white rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors border border-rose-500/30">
                 Assign
             </button>
         </div>
-        <div class="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center shadow-lg border-2 border-white text-white shadow-indigo-600/50 cursor-pointer">
+        <div class="w-8 h-8 bg-rose-600 rounded-full flex items-center justify-center shadow-lg border-2 border-white text-white shadow-rose-600/50 cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>
         </div>
       `;

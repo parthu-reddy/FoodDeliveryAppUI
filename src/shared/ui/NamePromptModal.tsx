@@ -30,8 +30,8 @@ export default function NamePromptModal({ theme, onSubmit }: NamePromptModalProp
 
   const header = (
     <div className="flex items-center gap-3 w-full mt-2">
-      <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center shrink-0">
-        <User className="w-5 h-5 text-orange-500" />
+      <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
+        <User className="w-5 h-5 text-amber-500" />
       </div>
       <div>
         <h3 className={`font-bold text-lg ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
@@ -46,7 +46,8 @@ export default function NamePromptModal({ theme, onSubmit }: NamePromptModalProp
 
   return (
     <Modal
-      isOpen={true}
+      title="What should we call you?"
+      open={true}
       onClose={() => {}}
       size="sm"
       header={header}
@@ -54,7 +55,7 @@ export default function NamePromptModal({ theme, onSubmit }: NamePromptModalProp
       <div className="p-6 pt-2">
         <form onSubmit={handleSubmit} className="space-y-4">
           <FormField label="YOUR NAME" error={error}>
-            <div className={`flex items-center border rounded-xl overflow-hidden focus-within:border-orange-500 transition-colors ${
+            <div className={`flex items-center border rounded-xl overflow-hidden focus-within:border-amber-500 transition-colors ${
               theme === 'dark'
                 ? 'bg-slate-900/20 border-slate-700'
                 : 'bg-slate-50 border-slate-200'
@@ -79,7 +80,7 @@ export default function NamePromptModal({ theme, onSubmit }: NamePromptModalProp
           </FormField>
           
           <FormField label="EMAIL ADDRESS">
-            <div className={`flex items-center border rounded-xl overflow-hidden focus-within:border-orange-500 transition-colors ${
+            <div className={`flex items-center border rounded-xl overflow-hidden focus-within:border-amber-500 transition-colors ${
               theme === 'dark'
                 ? 'bg-slate-900/20 border-slate-700'
                 : 'bg-slate-50 border-slate-200'

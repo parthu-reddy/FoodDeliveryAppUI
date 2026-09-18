@@ -63,7 +63,7 @@ export function StatementTable({ rows, isLoading }: StatementTableProps) {
               <td className="px-4 py-3 text-right text-rose-600 font-medium">
                 {row.debit > 0 ? <Money value={row.debit} sign="never" /> : '-'}
               </td>
-              <td className="px-4 py-3 text-right text-emerald-600 font-medium">
+              <td className="px-4 py-3 text-right text-amber-600 font-medium">
                 {row.credit > 0 ? <Money value={row.credit} sign="never" /> : '-'}
               </td>
               <td className="px-4 py-3 text-right text-slate-900 font-medium whitespace-nowrap">

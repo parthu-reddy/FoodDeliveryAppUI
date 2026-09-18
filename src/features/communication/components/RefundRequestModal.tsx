@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { formatINR } from '@shared/money';
 import { X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@shared/ui';
+import { Button, Overlay, Select, Surface } from '@shared/ui';
 import { customerApi } from '@/lib/zodiosClients';
 import type { Order } from '@/types';
 
@@ -85,22 +84,17 @@ export const RefundRequestModal: React.FC<RefundRequestModalProps> = ({
   const isFormValid = Object.keys(selectedItems).length > 0 && reason.trim().length > 0;
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
-            onClick={onClose}
-          />
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh]"
+    <Overlay
+      open={isOpen}
+      onClose={onClose}
+      label="Request refund quote"
+      className="w-full max-w-lg"
+    >
+          <Surface
+            variant="solid"
+            elevation={4}
+            radius="xl"
+            className="w-full overflow-hidden flex flex-col max-h-[90vh]"
           >
             <div className="p-6 border-b border-slate-100 dark:border-slate-800/50 flex items-center justify-between">
               <h3 className="text-xl font-bold text-slate-900 dark:text-white">Request Refund Quote</h3>
@@ -154,17 +148,17 @@ export const RefundRequestModal: React.FC<RefundRequestModalProps> = ({
                             {isSelected && (
                               <div className="flex items-center gap-2">
                                 <span className="text-xs text-slate-500">Qty:</span>
-                                <select
-                                  value={selectedItems[itemId]}
-                                  onChange={(e) => updateQuantity(itemId, parseInt(e.target.value, 10))}
-                                  className="text-sm border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800"
-                                >
-                                  {Array.from({ length: maxQuantity }).map((_, i) => (
-                                    <option key={i + 1} value={i + 1}>
-                                      {i + 1}
-                                    </option>
-                                  ))}
-                                </select>
+                                <Select
+                                  selectSize="sm"
+                                  aria-label="Quantity to refund"
+                                  className="w-20"
+                                  value={String(selectedItems[itemId])}
+                                  onChange={(qty: string) => updateQuantity(itemId, parseInt(qty, 10))}
+                                  options={Array.from({ length: maxQuantity }, (_, i) => ({
+                                    value: String(i + 1),
+                                    label: String(i + 1),
+                                  }))}
+                                />
                               </div>
                             )}
                           </div>
@@ -196,9 +190,7 @@ export const RefundRequestModal: React.FC<RefundRequestModalProps> = ({
                 Request Quote
               </Button>
             </div>
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
+          </Surface>
+    </Overlay>
   );
 };

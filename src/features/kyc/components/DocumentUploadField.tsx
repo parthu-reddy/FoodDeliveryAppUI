@@ -1,5 +1,6 @@
-import { AlertCircle, CheckCircle, Loader2, Upload } from 'lucide-react';
+import { AlertCircle, CheckCircle, Upload } from 'lucide-react';
 import React, { useRef, useState } from 'react';
+import { Spinner } from '@shared/ui';
 
 interface DocumentUploadFieldProps {
   value: string;
@@ -90,17 +91,17 @@ export default function DocumentUploadField({
     if (file) processFile(file);
   };
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDragOver = (e: React.DragEvent<HTMLButtonElement>) => {
     e.preventDefault();
     setIsDragging(true);
   };
 
-  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDragLeave = (e: React.DragEvent<HTMLButtonElement>) => {
     e.preventDefault();
     setIsDragging(false);
   };
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDrop = (e: React.DragEvent<HTMLButtonElement>) => {
     e.preventDefault();
     setIsDragging(false);
     const file = e.dataTransfer.files?.[0];
@@ -110,7 +111,7 @@ export default function DocumentUploadField({
   return (
     <div className="w-full">
       <div className="flex items-center space-x-3">
-        <div
+        <button type="button"
           onClick={() => {
             if (!isUploading) {
               setError('');
@@ -121,20 +122,20 @@ export default function DocumentUploadField({
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           className={`flex-1 flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed ${isDragging ? 'border-rose-500 bg-rose-500/10' :
-              error ? 'border-red-500/50 bg-red-500/5'
-                : value ? 'border-emerald-500/30 bg-emerald-500/10'
+              error ? 'border-rose-500/50 bg-rose-500/5'
+                : value ? 'border-amber-500/30 bg-amber-500/10'
                   : 'border-rose-500/30 bg-white/10 dark:bg-slate-900/10'
-            } backdrop-blur-md cursor-pointer hover:bg-white/20 dark:hover:bg-slate-900/20 transition-all`}
+            } backdrop-blur-md cursor-pointer hover:bg-white/20 dark:hover:bg-slate-900/20 transition`}
         >
           {isUploading ? (
             <div className="flex flex-col items-center space-y-2">
-              <Loader2 className="h-8 w-8 text-rose-500 animate-spin" />
+              <Spinner size="md" color="var(--color-action)" />
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Uploading securely...</span>
             </div>
           ) : value ? (
             <div className="flex flex-col items-center space-y-2">
-              <CheckCircle className="h-8 w-8 text-emerald-500" />
-              <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">Document Uploaded</span>
+              <CheckCircle className="h-8 w-8 text-amber-500" />
+              <span className="text-sm font-bold text-amber-600 dark:text-amber-400">Document Uploaded</span>
               <span className="text-xs text-slate-500 dark:text-slate-400 text-center px-4 truncate w-full">Click to replace</span>
             </div>
           ) : (
@@ -148,7 +149,7 @@ export default function DocumentUploadField({
               <span className="text-xs text-slate-500 dark:text-slate-400">{placeholder} (Max: 5MB)</span>
             </div>
           )}
-        </div>
+        </button>
       </div>
 
       <input
@@ -160,7 +161,7 @@ export default function DocumentUploadField({
       />
 
       {error && (
-        <div className="mt-2 flex items-center text-[11px] font-medium text-red-500">
+        <div className="mt-2 flex items-center text-[11px] font-medium text-rose-500">
           <AlertCircle className="h-3 w-3 mr-1" /> {error}
         </div>
       )}

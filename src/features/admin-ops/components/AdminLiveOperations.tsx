@@ -3,7 +3,7 @@ import { usePolling } from "@/hooks/usePolling";
 import { parseApiError } from '@/lib/parseApiError';
 import { customerApi, deliveryApi, restaurantApi } from "@/lib/zodiosClients";
 import { getFriendlyStatusMessage } from '@features/customer-orders/model/statusMessaging';
-import { Button, Input } from '@shared/ui';
+import { Button, Input, Surface, surfaceStyle } from '@shared/ui';
 import { Navigation, Package, Truck } from 'lucide-react';
 import React, { useState } from 'react';
 import { z } from 'zod';
@@ -145,14 +145,15 @@ export default function AdminLiveOperations() {
         <div className="flex-1 overflow-y-auto p-3 space-y-2">
             {activeOrders.map(order => {
                 const isUnassigned = !order.deliveryExecutiveId;
-                const statusColor = isUnassigned ? 'text-amber-500' : 'text-emerald-500';
+                const statusColor = isUnassigned ? 'text-amber-500' : 'text-amber-500';
                 return (
                     <button 
                         key={order.id} 
                         onClick={() => setSelectedOrder(order)} 
-                        className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all ${selectedOrder?.id === order.id ? 'glass-card !border-indigo-500 shadow-md ring-1 ring-indigo-500' : 'glass-card hover:border-indigo-300'}`}
+                        style={surfaceStyle({ variant: 'glass-chrome', elevation: 3, radius: 'lg' })}
+                        className={`w-full flex items-center gap-3 p-3 text-left transition ${selectedOrder?.id === order.id ? '!border-rose-500 shadow-md ring-1 ring-rose-500' : 'hover:border-rose-300'}`}
                     >
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isUnassigned ? 'bg-amber-500/20' : 'bg-emerald-500/20'}`}>
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isUnassigned ? 'bg-amber-500/20' : 'bg-amber-500/20'}`}>
                             <Package className={`w-5 h-5 ${statusColor}`} />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -203,11 +204,11 @@ export default function AdminLiveOperations() {
                     </React.Suspense>
                 </div>
                 {/* Assignment Panel */}
-                <div className="absolute bottom-6 left-6 right-6 glass-panel p-6 z-10 flex gap-6">
+                <Surface variant="glass-overlay" elevation={4} radius="xl" className="absolute bottom-6 left-6 right-6 p-6 z-10 flex gap-6">
                     <div className="flex-1 border-r border-slate-200 dark:border-slate-700 pr-6">
                         <h2 className="text-2xl font-black mb-1">Order #{selectedOrder.id.substring(0, 8)}</h2>
                         <p className="text-slate-600 dark:text-slate-400 font-medium">Restaurant: {selectedOrder.restaurantName}</p>
-                        <p className="text-slate-600 dark:text-slate-400 font-medium mt-1">Status: <span className="text-indigo-500 font-bold">{getFriendlyStatusMessage(selectedOrder.status, selectedOrder.deliveryStatus)}</span></p>
+                        <p className="text-slate-600 dark:text-slate-400 font-medium mt-1">Status: <span className="text-rose-500 font-bold">{getFriendlyStatusMessage(selectedOrder.status, selectedOrder.deliveryStatus)}</span></p>
                     </div>
                     
                     <div className="flex-1 border-r border-slate-200 dark:border-slate-700 px-6">
@@ -244,26 +245,26 @@ export default function AdminLiveOperations() {
                         <h3 className="font-bold text-lg mb-3">Available Drivers ({availableDrivers.length})</h3>
                         <div className="max-h-32 overflow-y-auto space-y-2 pr-2">
                             {availableDrivers.map(driver => (
-                                <div key={driver.id} className="flex items-center justify-between p-3 glass-card">
+                                <Surface variant="glass-chrome" elevation={3} radius="lg" key={driver.id} className="flex items-center justify-between p-3">
                                     <div className="flex items-center gap-3">
-                                        <Truck className="w-5 h-5 text-indigo-500" />
+                                        <Truck className="w-5 h-5 text-rose-500" />
                                         <div>
                                             <p className="font-bold text-sm">{driver.fullName || 'Unknown Driver'}</p>
                                         </div>
                                     </div>
-                                    <Button variant="success" onClick={() => handleAssignDriver(selectedOrder.id, driver.id)} className="shadow-lg shadow-emerald-500/20">
+                                    <Button variant="success" onClick={() => handleAssignDriver(selectedOrder.id, driver.id)} className="shadow-lg shadow-amber-500/20">
                                         Assign
                                     </Button>
-                                </div>
+                                </Surface>
                             ))}
                             {availableDrivers.length === 0 && <p className="text-sm text-slate-500">No available drivers nearby.</p>}
                         </div>
                     </div>
-                </div>
+                </Surface>
             </div>
         ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-slate-400">
-                <Navigation className="w-16 h-16 mb-4 opacity-30 text-indigo-500" />
+                <Navigation className="w-16 h-16 mb-4 opacity-30 text-rose-500" />
                 <h2 className="text-2xl font-black mb-2 text-slate-800 dark:text-[#f0ede6]">Live Operations</h2>
                 <p>Select an active order from the left pane to monitor it or assign a driver.</p>
             </div>

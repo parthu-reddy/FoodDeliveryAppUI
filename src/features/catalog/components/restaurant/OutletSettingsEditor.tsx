@@ -1,6 +1,7 @@
 import { restaurantApi } from '@/lib/zodiosClients';
 import { AlertCircle, CheckCircle, Settings, X } from 'lucide-react';
 import React, { useState } from 'react';
+import { Overlay, Surface } from '@shared/ui';
 
 interface OutletSettingsEditorProps {
   outlet: import('@/types').Outlet;
@@ -40,11 +41,11 @@ export default function OutletSettingsEditor({ outlet, onRefresh, onClose }: Out
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/20 dark:bg-slate-950/20 backdrop-blur-sm p-4">
-      <div className="bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
+    <Overlay open onClose={onClose} label="Outlet settings" className="w-full max-w-sm">
+      <Surface variant="glass-overlay" elevation={4} radius="xl" className="w-full overflow-hidden">
         <div className="flex justify-between items-center p-4 border-b border-slate-200 dark:border-slate-800">
           <h3 className="font-extrabold text-sm text-slate-800 dark:text-[#f0ede6] flex items-center gap-2">
-            <Settings className="w-4 h-4 text-orange-500" />
+            <Settings className="w-4 h-4 text-amber-500" />
             Outlet Settings
           </h3>
           <button onClick={onClose} className="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
@@ -70,7 +71,7 @@ export default function OutletSettingsEditor({ outlet, onRefresh, onClose }: Out
                 step="60"
                 value={defaultPrepTimeSeconds}
                 onChange={e => setDefaultPrepTimeSeconds(parseInt(e.target.value, 10) || 0)}
-                className="w-full bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                className="w-full bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-amber-500/50"
               />
               <p className="text-[10px] text-slate-400 mt-1 px-1">
                 E.g. 900 seconds = 15 minutes
@@ -90,7 +91,7 @@ export default function OutletSettingsEditor({ outlet, onRefresh, onClose }: Out
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white text-xs font-black rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              className="flex-1 py-2 bg-gradient-to-r from-amber-500 to-rose-500 text-white text-xs font-black rounded-xl shadow-md hover:shadow-lg transition flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {isSubmitting ? 'Saving...' : (
                 <>
@@ -101,7 +102,7 @@ export default function OutletSettingsEditor({ outlet, onRefresh, onClose }: Out
             </button>
           </div>
         </form>
-      </div>
-    </div>
+      </Surface>
+    </Overlay>
   );
 }

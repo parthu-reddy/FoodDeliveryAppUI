@@ -467,17 +467,17 @@ export default function RestaurantDashboard({
           <button
             onClick={toggleOutletStatus}
 
-            className="flex items-center gap-1.5 p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 transition-all cursor-pointer"
+            className="flex items-center gap-1.5 p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 transition cursor-pointer"
             title="Toggle Outlet Status"
           >
             {isCurrentOutletAcceptingOrders ? (
               <>
-                <ToggleRight className="w-4 h-4 text-emerald-500" />
+                <ToggleRight className="w-4 h-4 text-amber-500" />
                 <span className="text-[10px] font-bold text-slate-600 dark:text-[#f0ede6] uppercase tracking-wide">Active</span>
               </>
             ) : (
               <>
-                <ToggleLeft className="w-4 h-4 text-red-500" />
+                <ToggleLeft className="w-4 h-4 text-rose-500" />
                 <span className="text-[10px] font-bold text-slate-600 dark:text-[#f0ede6] uppercase tracking-wide">Inactive</span>
               </>
             )}
@@ -485,10 +485,10 @@ export default function RestaurantDashboard({
           
           <button
             onClick={toggleTheme}
-            className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6] transition-all cursor-pointer"
+            className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6] transition cursor-pointer"
             title="Toggle Light/Dark Mode"
           >
-            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-550" />}
+            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-rose-550" />}
           </button>
 
           <button
@@ -500,14 +500,14 @@ export default function RestaurantDashboard({
                 setShowSettings(false);
               }
             }}
-            className={`p-2.5 rounded-xl transition-all cursor-pointer ${
+            className={`p-2.5 rounded-xl transition cursor-pointer ${
               view === 'settings' 
-                ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 shadow-sm shadow-indigo-500/10' 
+                ? 'bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 shadow-sm shadow-rose-500/10' 
                 : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6]'
             }`}
             title="Profile Settings"
           >
-            <User className="w-4 h-4 text-indigo-500" />
+            <User className="w-4 h-4 text-rose-500" />
           </button>
 
           <button
@@ -515,9 +515,9 @@ export default function RestaurantDashboard({
               setShowSettings(!showSettings);
               if (view === 'settings') setView('home');
             }}
-            className={`p-2.5 rounded-xl transition-all cursor-pointer ${
+            className={`p-2.5 rounded-xl transition cursor-pointer ${
               showSettings 
-                ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white shadow-sm shadow-rose-500/15' 
+                ? 'bg-gradient-to-r from-rose-500 to-amber-500 text-white shadow-sm shadow-rose-500/15' 
                 : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6]'
             }`}
             title="Restaurant Registration & Menu Settings"
@@ -551,9 +551,9 @@ export default function RestaurantDashboard({
                 setActiveTab('orders');
                 setShowSettings(false);
               }}
-              className={`flex-1 py-2 text-[10.5px] font-bold rounded-lg cursor-pointer transition-all ${
+              className={`flex-1 py-2 text-[10.5px] font-bold rounded-lg cursor-pointer transition ${
                 activeTab === 'orders' && !showSettings
-                  ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white shadow-sm shadow-rose-500/15' 
+                  ? 'bg-gradient-to-r from-rose-500 to-amber-500 text-white shadow-sm shadow-rose-500/15' 
                   : 'text-slate-500 dark:text-[#f0ede6] hover:text-slate-700 dark:hover:text-slate-200'
               }`}
             >
@@ -564,9 +564,9 @@ export default function RestaurantDashboard({
                 setActiveTab('menu');
                 setShowSettings(false);
               }}
-              className={`flex-1 py-2 text-[10.5px] font-bold rounded-lg cursor-pointer transition-all ${
+              className={`flex-1 py-2 text-[10.5px] font-bold rounded-lg cursor-pointer transition ${
                 activeTab === 'menu' && !showSettings
-                  ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white shadow-sm shadow-rose-500/15' 
+                  ? 'bg-gradient-to-r from-rose-500 to-amber-500 text-white shadow-sm shadow-rose-500/15' 
                   : 'text-slate-500 dark:text-[#f0ede6] hover:text-slate-700 dark:hover:text-slate-200'
               }`}
             >
@@ -577,9 +577,9 @@ export default function RestaurantDashboard({
                 setActiveTab('campaigns');
                 setShowSettings(false);
               }}
-              className={`flex-1 py-2 text-[10.5px] font-bold rounded-lg cursor-pointer transition-all ${
+              className={`flex-1 py-2 text-[10.5px] font-bold rounded-lg cursor-pointer transition ${
                 activeTab === 'campaigns' && !showSettings
-                  ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white shadow-sm shadow-rose-500/15' 
+                  ? 'bg-gradient-to-r from-rose-500 to-amber-500 text-white shadow-sm shadow-rose-500/15' 
                   : 'text-slate-500 dark:text-[#f0ede6] hover:text-slate-700 dark:hover:text-slate-200'
               }`}
             >
@@ -590,9 +590,9 @@ export default function RestaurantDashboard({
                 setActiveTab('earnings');
                 setShowSettings(false);
               }}
-              className={`flex-1 py-2 text-[10.5px] font-bold rounded-lg cursor-pointer transition-all ${
+              className={`flex-1 py-2 text-[10.5px] font-bold rounded-lg cursor-pointer transition ${
                 activeTab === 'earnings' && !showSettings
-                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm shadow-emerald-500/15' 
+                  ? 'bg-gradient-to-r from-amber-500 to-slate-500 text-white shadow-sm shadow-amber-500/15' 
                   : 'text-slate-500 dark:text-[#f0ede6] hover:text-slate-700 dark:hover:text-slate-200'
               }`}
             >
@@ -603,9 +603,9 @@ export default function RestaurantDashboard({
                 setActiveTab('reviews');
                 setShowSettings(false);
               }}
-              className={`flex-1 py-2 text-[10.5px] font-bold rounded-lg cursor-pointer transition-all ${
+              className={`flex-1 py-2 text-[10.5px] font-bold rounded-lg cursor-pointer transition ${
                 activeTab === 'reviews' && !showSettings
-                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm shadow-amber-500/15'
+                  ? 'bg-gradient-to-r from-amber-500 to-amber-500 text-white shadow-sm shadow-amber-500/15'
                   : 'text-slate-500 dark:text-[#f0ede6] hover:text-slate-700 dark:hover:text-slate-200'
               }`}
             >
@@ -796,14 +796,14 @@ export default function RestaurantDashboard({
       )}
 
       {showChatList && !selectedChatOrder && (
-        <div className="fixed bottom-0 right-0 sm:bottom-6 sm:right-6 w-full sm:w-96 h-[100dvh] sm:h-[500px] max-h-[100dvh] sm:max-h-[calc(100vh-6rem)] bg-white sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden z-[50] sm:border sm:border-gray-200">
+        <div className="fixed bottom-0 right-0 sm:bottom-6 sm:right-6 w-full sm:w-96 h-[100dvh] sm:h-[500px] max-h-[100dvh] sm:max-h-[calc(100vh-6rem)] bg-white sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden z-[50] sm:border sm:border-slate-200">
           <div className="bg-slate-800 text-white p-4 flex justify-between items-center shrink-0">
             <h3 className="font-semibold text-lg">Active Chats</h3>
             <Button variant="ghost" onClick={() => setShowChatList(false)} size="icon" className="!text-white hover:!bg-slate-700">
               <X className="w-5 h-5" />
             </Button>
           </div>
-          <div className="flex-1 overflow-y-auto p-4 bg-gray-50 space-y-2">
+          <div className="flex-1 overflow-y-auto p-4 bg-slate-50 space-y-2">
             {myOrders.length === 0 ? (
               <div className="h-full pt-10">
                 <EmptyState 
@@ -820,7 +820,7 @@ export default function RestaurantDashboard({
                     setSelectedChatOrder(order);
                     setShowChatList(false);
                   }}
-                  className="w-full text-left bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex justify-between items-center group"
+                  className="w-full text-left bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow flex justify-between items-center group"
                 >
                   <div className="flex flex-col overflow-hidden pr-2">
                     <span className="font-bold text-slate-800">Order #{order.id.substring(0,8)}</span>

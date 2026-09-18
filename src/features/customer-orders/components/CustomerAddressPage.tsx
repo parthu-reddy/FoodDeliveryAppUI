@@ -265,7 +265,7 @@ export default function CustomerAddressPage({
       <div className="flex items-center gap-3 shrink-0 mb-4">
         <button
           onClick={() => setView('settings')}
-          className="p-2 rounded-xl bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 text-slate-500 dark:text-slate-300 hover:text-slate-900 hover:bg-white dark:hover:text-white cursor-pointer transition-all"
+          className="p-2 rounded-xl bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 text-slate-500 dark:text-slate-300 hover:text-slate-900 hover:bg-white dark:hover:text-white cursor-pointer transition"
         >
           <X className="w-5 h-5" />
         </button>
@@ -295,13 +295,13 @@ export default function CustomerAddressPage({
             {suggestions.length > 0 && (
               <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 max-h-64 overflow-y-auto z-10">
                 {suggestions.map((s, idx) => (
-                  <div 
+                  <button type="button" 
                     key={idx} 
                     onClick={() => handleSuggestionClick(s)}
-                    className="px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer border-b last:border-b-0 border-slate-100 dark:border-slate-700"
+                    className="px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer border-b last:border-b-0 border-slate-100 dark:border-slate-700 text-left w-full"
                   >
                     <p className="text-sm text-slate-800 dark:text-[#f0ede6] truncate">{s.description}</p>
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
@@ -417,7 +417,7 @@ export default function CustomerAddressPage({
                    }
                    setView('settings');
                  }}
-                 className="w-full py-3.5 bg-rose-500 text-white rounded-xl font-bold shadow-lg shadow-rose-500/20 active:scale-95 transition-all"
+                 className="w-full py-3.5 bg-rose-500 text-white rounded-xl font-bold shadow-lg shadow-rose-500/20 active:scale-95 transition"
                >
                  Confirm Location
                </button>

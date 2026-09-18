@@ -1,3 +1,4 @@
+import { useToast } from '@/contexts/ToastContext';
 import { Camera, ImagePlus, Send } from 'lucide-react';
 import React, { useCallback, useRef, useState } from 'react';
 
@@ -20,6 +21,7 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
   onTyping,
   onImageUpload,
 }) => {
+  const { showError } = useToast();
   const [inputText, setInputText] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -58,7 +60,7 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
     if (cameraInputRef.current) cameraInputRef.current.value = '';
     
     if (uploadedImageCount >= 4) {
-      alert("You have reached the maximum limit of 4 images for this chat session.");
+      showError("You can attach at most 4 images to a chat session.");
       return;
     }
 
@@ -66,8 +68,8 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
   };
 
   return (
-    <form onSubmit={handleSend} className="p-3 bg-white border-t border-gray-200 shrink-0">
-      <div className="flex items-center space-x-2 bg-gray-100 rounded-full px-4 py-2">
+    <form onSubmit={handleSend} className="p-3 bg-white border-t border-slate-200 shrink-0">
+      <div className="flex items-center space-x-2 bg-slate-100 rounded-full px-4 py-2">
         <input 
           type="file" 
           accept="image/*" 
@@ -88,7 +90,7 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
           onClick={() => cameraInputRef.current?.click()}
           disabled={isImageUploadDisabled}
           title={uploadedImageCount >= 4 ? "Maximum 4 images allowed per session" : "Take Photo"}
-          className="p-1.5 text-gray-500 hover:text-orange-600 transition-colors disabled:opacity-50"
+          className="p-1.5 text-slate-500 hover:text-amber-600 transition-colors disabled:opacity-50"
         >
           <Camera className="w-5 h-5" />
         </button>
@@ -97,7 +99,7 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
           onClick={() => fileInputRef.current?.click()}
           disabled={isImageUploadDisabled}
           title={uploadedImageCount >= 4 ? "Maximum 4 images allowed per session" : "Upload from Gallery"}
-          className="p-1.5 text-gray-500 hover:text-orange-600 transition-colors disabled:opacity-50"
+          className="p-1.5 text-slate-500 hover:text-amber-600 transition-colors disabled:opacity-50"
         >
           <ImagePlus className="w-5 h-5" />
         </button>
@@ -133,8 +135,8 @@ export const ChatInput: React.FC<ChatInputProps> = React.memo(({
           disabled={!inputText.trim() || !isConnected || isLoading}
           className={`p-1.5 rounded-full transition-colors ${
             inputText.trim() && isConnected && !isLoading
-              ? 'bg-orange-600 text-white hover:bg-orange-700' 
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              ? 'bg-amber-600 text-white hover:bg-amber-700' 
+              : 'bg-slate-300 text-slate-500 cursor-not-allowed'
           }`}
         >
           <Send className="w-4 h-4" />

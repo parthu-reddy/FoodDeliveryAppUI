@@ -1,7 +1,7 @@
 import { useToast } from "@/contexts/ToastContext";
 import { parseApiError } from '@/lib/parseApiError';
 import { customerApi } from "@/lib/zodiosClients";
-import { Spinner } from '@shared/ui';
+import { Spinner, Surface } from '@shared/ui';
 import { IndianRupee, Store, Bike, Activity } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { formatINR } from '@shared/money';
@@ -54,11 +54,11 @@ export default function AdminOrderMoney({ orderId }: { orderId: string }) {
     <div className="space-y-6">
        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
            {/* Customer Summary */}
-           <div className="glass-panel p-6 bg-indigo-50/50 dark:bg-indigo-900/10 border-indigo-100 dark:border-indigo-900/30">
-               <h3 className="font-bold flex items-center gap-2 mb-4 text-indigo-700 dark:text-indigo-400">
+           <Surface variant="glass-overlay" elevation={4} radius="xl" className="p-6 bg-rose-50/50 dark:bg-rose-900/10 border-rose-100 dark:border-rose-900/30">
+               <h3 className="font-bold flex items-center gap-2 mb-4 text-rose-700 dark:text-rose-400">
                    <IndianRupee className="w-5 h-5" /> Customer Paid
                </h3>
-               <div className="space-y-2 text-sm mb-4 border-b border-indigo-100 dark:border-indigo-900/30 pb-4">
+               <div className="space-y-2 text-sm mb-4 border-b border-rose-100 dark:border-rose-900/30 pb-4">
                    <div className="flex justify-between">
                        <span className="text-slate-500">Food Cost</span>
                        <span>{formatINR(data.foodCost ?? 0)}</span>
@@ -80,14 +80,14 @@ export default function AdminOrderMoney({ orderId }: { orderId: string }) {
                    <span>Total</span>
                    <span>{formatINR(data.totalAmount ?? 0)}</span>
                </div>
-           </div>
+           </Surface>
 
            {/* Restaurant Summary */}
-           <div className="glass-panel p-6 bg-orange-50/50 dark:bg-orange-900/10 border-orange-100 dark:border-orange-900/30">
-               <h3 className="font-bold flex items-center gap-2 mb-4 text-orange-700 dark:text-orange-400">
+           <Surface variant="glass-overlay" elevation={4} radius="xl" className="p-6 bg-amber-50/50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-900/30">
+               <h3 className="font-bold flex items-center gap-2 mb-4 text-amber-700 dark:text-amber-400">
                    <Store className="w-5 h-5" /> Restaurant Payout
                </h3>
-               <div className="space-y-2 text-sm mb-4 border-b border-orange-100 dark:border-orange-900/30 pb-4">
+               <div className="space-y-2 text-sm mb-4 border-b border-amber-100 dark:border-amber-900/30 pb-4">
                    <div className="flex justify-between">
                        <span className="text-slate-500">Food Cost</span>
                        <span>{formatINR(data.foodCost ?? 0)}</span>
@@ -103,16 +103,16 @@ export default function AdminOrderMoney({ orderId }: { orderId: string }) {
                </div>
                <div className="flex justify-between font-black text-lg">
                    <span>Net Payout</span>
-                   <span className="text-emerald-600">{formatINR(data.restaurantPayout ?? 0)}</span>
+                   <span className="text-amber-600">{formatINR(data.restaurantPayout ?? 0)}</span>
                </div>
-           </div>
+           </Surface>
 
            {/* Rider Summary */}
-           <div className="glass-panel p-6 bg-emerald-50/50 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-900/30">
-               <h3 className="font-bold flex items-center gap-2 mb-4 text-emerald-700 dark:text-emerald-400">
+           <Surface variant="glass-overlay" elevation={4} radius="xl" className="p-6 bg-amber-50/50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-900/30">
+               <h3 className="font-bold flex items-center gap-2 mb-4 text-amber-700 dark:text-amber-400">
                    <Bike className="w-5 h-5" /> Rider Payout
                </h3>
-               <div className="space-y-2 text-sm mb-4 border-b border-emerald-100 dark:border-emerald-900/30 pb-4">
+               <div className="space-y-2 text-sm mb-4 border-b border-amber-100 dark:border-amber-900/30 pb-4">
                    <div className="flex justify-between">
                        <span className="text-slate-500">Base Payout (Gross)</span>
                        <span>{formatINR(data.driverGrossPayout ?? 0)}</span>
@@ -124,19 +124,19 @@ export default function AdminOrderMoney({ orderId }: { orderId: string }) {
                    {!!data.platformBonus && (
                        <div className="flex justify-between">
                            <span className="text-slate-500">Platform Bonus</span>
-                           <span className="text-emerald-500">+{formatINR(data.platformBonus)}</span>
+                           <span className="text-amber-500">+{formatINR(data.platformBonus)}</span>
                        </div>
                    )}
                </div>
                <div className="flex justify-between font-black text-lg">
                    <span>Net Payout</span>
-                   <span className="text-emerald-600">{formatINR(data.driverNetPayout ?? 0)}</span>
+                   <span className="text-amber-600">{formatINR(data.driverNetPayout ?? 0)}</span>
                </div>
-           </div>
+           </Surface>
        </div>
 
        {/* Ledger Lines */}
-       <div className="glass-panel overflow-hidden mt-8">
+       <Surface variant="glass-overlay" elevation={4} radius="xl" className="overflow-hidden mt-8">
            <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex justify-between items-center">
                <h3 className="font-bold flex items-center gap-2 text-slate-700 dark:text-slate-300">
                    <Activity className="w-4 h-4" /> Ledger Trace
@@ -167,7 +167,7 @@ export default function AdminOrderMoney({ orderId }: { orderId: string }) {
                                <td className="p-3">
                                    <span className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-xs">{line.category}</span>
                                </td>
-                               <td className={`p-3 text-right font-medium ${line.direction === 'CREDIT' ? 'text-emerald-500' : 'text-rose-500'}`}>
+                               <td className={`p-3 text-right font-medium ${line.direction === 'CREDIT' ? 'text-amber-500' : 'text-rose-500'}`}>
                                    {line.direction === 'CREDIT' ? '+' : '-'}{formatINR(line.amount ?? 0)}
                                </td>
                                <td className="p-3 text-xs text-slate-500">
@@ -180,7 +180,7 @@ export default function AdminOrderMoney({ orderId }: { orderId: string }) {
            ) : (
                <div className="p-8 text-center text-slate-500">No ledger entries found for this order.</div>
            )}
-       </div>
+       </Surface>
     </div>
   );
 }

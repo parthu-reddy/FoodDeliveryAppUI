@@ -1,6 +1,6 @@
 import { useTheme } from "@/contexts/ThemeContext";
 import { RoleName, UserRole } from "@/types";
-import { Button, Input } from '@shared/ui';
+import { Button, Input, Surface, surfaceStyle } from '@shared/ui';
 import { AlertCircle, Bike, KeyRound, Shield, Smartphone, Store, Utensils } from 'lucide-react';
 import { motion } from 'motion/react';
 import React from 'react';
@@ -58,11 +58,11 @@ export function AuthForm({
     switch (selectedRole) {
       case RoleName.CUSTOMER:
       case RoleName.RESTAURANT:
-        return 'bg-orange-500/10 text-orange-600 border-orange-500/20';
+        return 'bg-amber-500/10 text-amber-600 border-amber-500/20';
       case RoleName.ADMIN:
-        return 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20';
+        return 'bg-rose-500/10 text-rose-600 border-rose-500/20';
       default:
-        return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20';
+        return 'bg-amber-500/10 text-amber-600 border-amber-500/20';
     }
   };
 
@@ -75,7 +75,7 @@ export function AuthForm({
       transition={{ duration: 0.3 }}
       className="max-w-xl mx-auto w-full"
     >
-      <div className="glass-card p-8 sm:p-10 space-y-6 relative overflow-hidden">
+      <Surface variant="glass-chrome" elevation={3} radius="lg" className="p-8 sm:p-10 space-y-6 relative overflow-hidden">
         {/* Subtle inner highlight */}
         <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent pointer-events-none" />
         
@@ -95,7 +95,7 @@ export function AuthForm({
         </div>
 
         {error && (
-          <div className="relative z-10 p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs flex items-center gap-2">
+          <div className="relative z-10 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
@@ -105,7 +105,7 @@ export function AuthForm({
           <form onSubmit={onSendOtp} className="space-y-4 relative z-10">
             <div className="space-y-1.5">
               <label className={`text-xs font-bold tracking-wider font-mono ${theme === 'dark' ? 'text-slate-300' : 'text-slate-500 dark:text-slate-300'}`}>PHONE NUMBER</label>
-              <div className={`flex glass-input rounded-2xl overflow-hidden focus-within:border-rose-400 transition-colors`}>
+              <div style={surfaceStyle({ variant: 'glass-chrome', elevation: 1, radius: 'lg' })} className="flex overflow-hidden focus-within:border-rose-400 transition-colors">
                 <div className="px-4 flex items-center border-r border-white/10 font-mono text-sm bg-white/5">
                   +91
                 </div>
@@ -135,7 +135,7 @@ export function AuthForm({
           <form onSubmit={onVerifyOtp} className="space-y-4 relative z-10">
             <div className="space-y-1.5">
               <label className={`text-xs font-bold tracking-wider font-mono ${theme === 'dark' ? 'text-slate-300' : 'text-slate-500 dark:text-slate-300'}`}>ENTER SECURE CODE</label>
-              <div className={`flex glass-input rounded-2xl overflow-hidden focus-within:border-rose-400 transition-colors`}>
+              <div style={surfaceStyle({ variant: 'glass-chrome', elevation: 1, radius: 'lg' })} className="flex overflow-hidden focus-within:border-rose-400 transition-colors">
                 <div className="px-4 flex items-center border-r border-white/10 bg-white/5">
                   <KeyRound className="w-4 h-4 text-rose-400" />
                 </div>
@@ -180,7 +180,7 @@ export function AuthForm({
             </Button>
           </form>
         )}
-      </div>
+      </Surface>
     </motion.div>
   );
 }

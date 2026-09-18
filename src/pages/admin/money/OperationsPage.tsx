@@ -54,25 +54,25 @@ export default function OperationsPage() {
       
       <div className="flex space-x-4 mb-6 border-b pb-2">
         <button 
-          className={`px-4 py-2 font-medium ${activeTab === 'rejections' ? 'text-primary border-b-2 border-primary' : 'text-gray-500'}`}
+          className={`px-4 py-2 font-medium ${activeTab === 'rejections' ? 'text-primary border-b-2 border-primary' : 'text-slate-500'}`}
           onClick={() => setActiveTab('rejections')}
         >
           Ledger Rejections
         </button>
         <button 
-          className={`px-4 py-2 font-medium ${activeTab === 'reconciliation' ? 'text-primary border-b-2 border-primary' : 'text-gray-500'}`}
+          className={`px-4 py-2 font-medium ${activeTab === 'reconciliation' ? 'text-primary border-b-2 border-primary' : 'text-slate-500'}`}
           onClick={() => setActiveTab('reconciliation')}
         >
           Reconciliation Runs
         </button>
         <button 
-          className={`px-4 py-2 font-medium ${activeTab === 'payment_dlq' ? 'text-primary border-b-2 border-primary' : 'text-gray-500'}`}
+          className={`px-4 py-2 font-medium ${activeTab === 'payment_dlq' ? 'text-primary border-b-2 border-primary' : 'text-slate-500'}`}
           onClick={() => setActiveTab('payment_dlq')}
         >
           Payment DLQ
         </button>
         <button 
-          className={`px-4 py-2 font-medium ${activeTab === 'wallet_dlq' ? 'text-primary border-b-2 border-primary' : 'text-gray-500'}`}
+          className={`px-4 py-2 font-medium ${activeTab === 'wallet_dlq' ? 'text-primary border-b-2 border-primary' : 'text-slate-500'}`}
           onClick={() => setActiveTab('wallet_dlq')}
         >
           Wallet DLQ
@@ -89,12 +89,12 @@ export default function OperationsPage() {
               <Card key={r.id} className="p-4">
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-mono text-sm">{r.producer} · {r.eventId}</span>
-                  <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-bold">
+                  <span className="bg-rose-100 text-rose-800 px-2 py-1 rounded text-xs font-bold">
                     {r.ageMinutes != null ? `${r.ageMinutes} min unresolved` : 'unresolved'}
                   </span>
                 </div>
-                <p className="text-sm font-semibold text-red-700 mt-1">{r.reason}</p>
-                <pre className="text-xs font-mono bg-gray-100 p-2 rounded mt-2 overflow-x-auto whitespace-pre-wrap">{r.payload}</pre>
+                <p className="text-sm font-semibold text-rose-700 mt-1">{r.reason}</p>
+                <pre className="text-xs font-mono bg-slate-100 p-2 rounded mt-2 overflow-x-auto whitespace-pre-wrap">{r.payload}</pre>
                 {resolvingId === r.id ? (
                   <div className="mt-3 flex gap-2 items-center">
                     <input
@@ -115,7 +115,7 @@ export default function OperationsPage() {
                     >
                       Confirm
                     </button>
-                    <button className="px-3 py-1 text-sm text-gray-500" onClick={() => setResolvingId(null)}>Cancel</button>
+                    <button className="px-3 py-1 text-sm text-slate-500" onClick={() => setResolvingId(null)}>Cancel</button>
                   </div>
                 ) : (
                   <button
@@ -138,13 +138,13 @@ export default function OperationsPage() {
             reconRuns?.content?.map((run) => (
               <Card key={run.id} className="p-4">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="font-mono text-sm text-gray-500">{run.id}</span>
-                  <span className={`px-2 py-1 rounded text-xs font-bold ${run.status === 'SUCCESS' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                  <span className="font-mono text-sm text-slate-500">{run.id}</span>
+                  <span className={`px-2 py-1 rounded text-xs font-bold ${run.status === 'SUCCESS' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'}`}>
                     {run.status}
                   </span>
                 </div>
                 <p className="text-sm">Summary: {run.summary}</p>
-                <p className="text-sm text-gray-500 mt-2">Started: {new Date(run.startedAt ?? '').toLocaleString()}</p>
+                <p className="text-sm text-slate-500 mt-2">Started: {new Date(run.startedAt ?? '').toLocaleString()}</p>
               </Card>
             ))
           )}
@@ -159,7 +159,7 @@ export default function OperationsPage() {
               <Card key={hook.id} className="p-4">
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-mono text-sm">{hook.eventId}</span>
-                  <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-bold">{hook.processingStatus}</span>
+                  <span className="bg-rose-100 text-rose-800 px-2 py-1 rounded text-xs font-bold">{hook.processingStatus}</span>
                 </div>
                 <p className="text-sm">Gateway: {hook.gatewayName}</p>
                 <p className="text-sm font-semibold mt-1">Error: {hook.errorLog}</p>
@@ -186,10 +186,10 @@ export default function OperationsPage() {
               <Card key={evt.id} className="p-4">
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-mono text-sm">{evt.aggregateType} - {evt.eventType}</span>
-                  <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-bold">{evt.status}</span>
+                  <span className="bg-rose-100 text-rose-800 px-2 py-1 rounded text-xs font-bold">{evt.status}</span>
                 </div>
                 <p className="text-sm">Aggregate ID: {evt.aggregateId}</p>
-                <p className="text-sm text-red-600 mt-1">{evt.errorMessage}</p>
+                <p className="text-sm text-rose-600 mt-1">{evt.errorMessage}</p>
                 <button 
                   className="mt-3 px-3 py-1 bg-primary text-white rounded text-sm hover:bg-primary-dark"
                   onClick={async () => {

@@ -1,5 +1,5 @@
 import { Restaurant } from '@/types';
-import { Modal } from '@shared/ui';
+import { Modal, useConfirm } from '@shared/ui';
 import { Check } from 'lucide-react';
 import React from 'react';
 
@@ -28,22 +28,28 @@ const CustomerOutletSelectorModal: React.FC<CustomerOutletSelectorModalProps> = 
    
   clearCart
 }) => {
+  const confirm = useConfirm();
 
   if (!brandOutlets) return null;
  
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Select Outlet Location" size="md">
+    <Modal open={isOpen} onClose={onClose} title="Select Outlet Location" size="md">
       <div className="p-4 space-y-3 pb-8">
         {brandOutlets.map(outlet => {
           const displayDistance = outlet.distance;
           return (
             <button
               key={outlet.id}
-              onClick={() => {
+              onClick={async () => {
                 const hasActiveCart = selectedRestaurant && selectedRestaurant.id && (carts?.[selectedRestaurant.id]?.items?.length ?? 0) > 0;
                 if (hasActiveCart && selectedRestaurant.id !== outlet.id) {
-                  if (window.confirm(`You have items in your cart from ${selectedRestaurant.name}. Switching outlets will clear your active cart. Continue?`)) {
+                  if (await confirm({
+                    title: 'Switch outlet?',
+                    description: `Your cart from ${selectedRestaurant.name} will be cleared.`,
+                    confirmLabel: 'Switch outlet',
+                    tone: 'danger',
+                  })) {
                     if (clearCart) clearCart(selectedRestaurant.id as string);
                     setSelectedRestaurant(outlet);
                     if (onAddApiLog) {

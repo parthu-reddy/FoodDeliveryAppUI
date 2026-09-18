@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'motion/react';
 import { Bike, CheckCircle2 } from 'lucide-react';
 import React from 'react';
 import { CartState } from '../model/useCustomerCart';
@@ -67,28 +67,28 @@ export const CustomerFreeDeliveryTracker: React.FC<CustomerFreeDeliveryTrackerPr
       >
         <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-800/50 shadow-2xl rounded-2xl p-3 pointer-events-auto">
           <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-full ${isFreeDelivery ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400'}`}>
+            <div className={`p-2 rounded-full ${isFreeDelivery ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400' : 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400'}`}>
               {isFreeDelivery ? <CheckCircle2 className="w-5 h-5" /> : <Bike className="w-5 h-5" />}
             </div>
             <div className="flex-1">
               {isFreeDelivery ? (
                 <>
-                  <h4 className="text-sm font-bold text-emerald-700 dark:text-emerald-400 tracking-tight">Free Delivery Unlocked! 🎉</h4>
-                  <p className="text-[10px] text-emerald-600/80 dark:text-emerald-400/80 mt-0.5">You only pay the platform fee</p>
+                  <h4 className="text-sm font-bold text-amber-700 dark:text-amber-400 tracking-tight">Free Delivery Unlocked! 🎉</h4>
+                  <p className="text-[10px] text-amber-600/80 dark:text-amber-400/80 mt-0.5">You only pay the platform fee</p>
                 </>
               ) : (
                 <>
-                  <h4 className="text-sm font-bold text-orange-700 dark:text-orange-400 tracking-tight">
+                  <h4 className="text-sm font-bold text-amber-700 dark:text-amber-400 tracking-tight">
                     Add {formatINR((minOrder - subtotal))} for Free Delivery!
                   </h4>
-                  <p className="text-[10px] text-orange-600/80 dark:text-orange-400/80 mt-0.5">Save on variable delivery fees</p>
+                  <p className="text-[10px] text-amber-600/80 dark:text-amber-400/80 mt-0.5">Save on variable delivery fees</p>
                 </>
               )}
             </div>
           </div>
           <div className="mt-2 h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
             <motion.div
-              className={`h-full rounded-full ${isFreeDelivery ? 'bg-gradient-to-r from-emerald-400 to-teal-400' : 'bg-gradient-to-r from-orange-400 to-amber-400'}`}
+              className={`h-full rounded-full ${isFreeDelivery ? 'bg-gradient-to-r from-amber-400 to-slate-400' : 'bg-gradient-to-r from-amber-400 to-amber-400'}`}
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.5, ease: "easeOut" }}

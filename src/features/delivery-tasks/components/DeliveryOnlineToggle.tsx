@@ -16,7 +16,7 @@ export function DeliveryOnlineToggle({
     <button
       onClick={handleToggleOnline}
       disabled={!deliveryExecutiveId || isProfileMandatory}
-      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
         isOnline 
           ? 'bg-rose-500 text-white shadow-[0_0_10px_rgba(244,63,94,0.3)]' 
           : (!deliveryExecutiveId || isProfileMandatory)

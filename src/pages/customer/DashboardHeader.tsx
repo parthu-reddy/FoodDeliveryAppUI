@@ -43,21 +43,21 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       <div className="flex items-center gap-2 shrink-0">
         <button
           onClick={() => view === 'settings' ? setView('home') : setView('settings')}
-          className={`p-2.5 rounded-xl transition-all cursor-pointer ${
+          className={`p-2.5 rounded-xl transition cursor-pointer ${
             view === 'settings' 
-              ? 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 shadow-sm shadow-indigo-500/10' 
+              ? 'bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 shadow-sm shadow-rose-500/10' 
               : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6]'
           }`}
           title="Profile Settings"
         >
-          <User className="w-4 h-4 text-indigo-500" />
+          <User className="w-4 h-4 text-rose-500" />
         </button>
         <button
           onClick={toggleTheme}
-          className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6] transition-all cursor-pointer"
+          className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6] transition cursor-pointer"
           title="Toggle Light/Dark Mode"
         >
-          {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
+          {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-rose-500" />}
         </button>
       </div>
     </header>

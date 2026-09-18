@@ -77,12 +77,12 @@ export const RestaurantMenuTogglesView: React.FC<RestaurantMenuTogglesViewProps>
                       className="cursor-pointer transition-colors p-1"
                     >
                       {available ? (
-                        <div className="flex items-center gap-1.5 text-emerald-500 font-bold text-xs font-mono">
+                        <div className="flex items-center gap-1.5 text-amber-500 font-bold text-xs font-mono">
                           <span>ACTIVE</span>
                           <ToggleRight className="w-10 h-10" />
                         </div>
                       ) : (
-                        <div className="flex items-center gap-1.5 text-red-400 font-bold text-xs font-mono">
+                        <div className="flex items-center gap-1.5 text-rose-400 font-bold text-xs font-mono">
                           <span>PAUSED</span>
                           <ToggleLeft className="w-10 h-10" />
                         </div>

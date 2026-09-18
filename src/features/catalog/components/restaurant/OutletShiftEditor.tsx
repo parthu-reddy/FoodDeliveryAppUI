@@ -2,6 +2,7 @@ import { restaurantApi } from '@/lib/zodiosClients';
 import { AlertCircle, CheckCircle, Clock, Plus, Trash2, X } from 'lucide-react';
 import React, { useState } from 'react';
 import { z } from 'zod';
+import { Input, Overlay, Surface } from '@shared/ui';
 
 const shiftSchema = z.object({
   openingTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid opening time format'),
@@ -80,11 +81,11 @@ export default function OutletShiftEditor({ outlet, onRefresh, onClose }: Outlet
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/20 dark:bg-slate-950/20 backdrop-blur-sm p-4">
-      <div className="glass-panel rounded-2xl w-full max-w-md overflow-hidden">
+    <Overlay open onClose={onClose} label={`Edit shifts for ${outlet.name}`} className="w-full max-w-md">
+      <Surface variant="glass-overlay" elevation={4} radius="xl" className="w-full overflow-hidden">
         <div className="flex justify-between items-center p-4 border-b border-slate-200 dark:border-slate-800">
           <h3 className="font-extrabold text-sm text-slate-800 dark:text-[#f0ede6] flex items-center gap-2">
-            <Clock className="w-4 h-4 text-orange-500" />
+            <Clock className="w-4 h-4 text-amber-500" />
             Edit Shifts for {outlet.name}
           </h3>
           <button onClick={onClose} className="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
@@ -105,7 +106,7 @@ export default function OutletShiftEditor({ outlet, onRefresh, onClose }: Outlet
             <button
               type="button"
               onClick={addTiming}
-              className="text-xs font-bold text-orange-500 hover:text-orange-600 dark:text-orange-400 flex items-center gap-1 bg-orange-50 dark:bg-orange-950/30 px-2 py-1 rounded-lg"
+              className="text-xs font-bold text-amber-500 hover:text-amber-600 dark:text-amber-400 flex items-center gap-1 bg-amber-50 dark:bg-amber-950/30 px-2 py-1 rounded-lg"
             >
               <Plus className="w-3 h-3" /> Add Shift
             </button>
@@ -117,22 +118,24 @@ export default function OutletShiftEditor({ outlet, onRefresh, onClose }: Outlet
                 <div className="flex-1 grid grid-cols-2 gap-3">
                   <div>
                     <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase px-1">Opens</label>
-                    <input
+                    <Input
+                      inputSize="sm"
                       type="time"
                       required
                       value={timing.openingTime}
-                      onChange={e => updateTiming(index, 'openingTime', e.target.value)}
-                      className="glass-input w-full rounded-lg px-2 py-2 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateTiming(index, 'openingTime', e.target.value)}
+                      className="font-bold"
                     />
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase px-1">Closes</label>
-                    <input
+                    <Input
+                      inputSize="sm"
                       type="time"
                       required
                       value={timing.closingTime}
-                      onChange={e => updateTiming(index, 'closingTime', e.target.value)}
-                      className="glass-input w-full rounded-lg px-2 py-2 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateTiming(index, 'closingTime', e.target.value)}
+                      className="font-bold"
                     />
                   </div>
                 </div>
@@ -162,7 +165,7 @@ export default function OutletShiftEditor({ outlet, onRefresh, onClose }: Outlet
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white text-xs font-black rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              className="flex-1 py-2 bg-gradient-to-r from-amber-500 to-rose-500 text-white text-xs font-black rounded-xl shadow-md hover:shadow-lg transition flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {isSubmitting ? 'Saving...' : (
                 <>
@@ -173,7 +176,7 @@ export default function OutletShiftEditor({ outlet, onRefresh, onClose }: Outlet
             </button>
           </div>
         </form>
-      </div>
-    </div>
+      </Surface>
+    </Overlay>
   );
 }

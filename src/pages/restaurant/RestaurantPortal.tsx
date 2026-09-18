@@ -9,6 +9,7 @@ import RestaurantDashboard from './RestaurantDashboard';
 import PartnerAccountModal from "@features/catalog/components/PartnerAccountModal";
 import LaBouffeLogo from '@shared/ui/LaBouffeLogo';
 import { Moon, Store, Sun, User } from 'lucide-react';
+import { Spinner } from '@shared/ui';
 
 interface Props {
   userName: string;
@@ -70,18 +71,18 @@ export default function RestaurantPortal(props: Props) {
       <div className="flex items-center gap-2 self-end sm:self-auto">
         <button
           onClick={props.onToggleTheme}
-          className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6] transition-all cursor-pointer"
+          className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6] transition cursor-pointer"
           title="Toggle Light/Dark Mode"
         >
-          {props.theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
+          {props.theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-rose-500" />}
         </button>
 
         <button 
           onClick={() => setShowProfile(true)}
-          className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6] transition-all cursor-pointer"
+          className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6] transition cursor-pointer"
           title="Profile & Settings"
         >
-          <User className="w-4 h-4 text-indigo-500" />
+          <User className="w-4 h-4 text-rose-500" />
         </button>
       </div>
     </header>
@@ -109,7 +110,7 @@ export default function RestaurantPortal(props: Props) {
   if (loading) {
     return (
       <div className="w-full h-full flex justify-center items-center backdrop-blur-md bg-white/30 dark:bg-black/30">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+        <Spinner size="lg" color="var(--color-amber-500)" />
       </div>
     );
   }

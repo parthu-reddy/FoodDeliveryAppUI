@@ -1,7 +1,7 @@
 import { useToast } from "@/contexts/ToastContext";
 import { parseApiError } from '@/lib/parseApiError';
 import { ledgerApi } from "@/lib/zodiosClients";
-import { Button, Spinner, Input } from '@shared/ui';
+import { Button, Input, Modal, Spinner, Surface } from '@shared/ui';
 import { ArrowLeft, AlertTriangle, FileText, Banknote, Clock } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { formatINR } from '@shared/money';
@@ -146,7 +146,7 @@ export default function PayoutDetail({ payoutId, onBack }: { payoutId: string; o
             )}
             {payout.status === 'APPROVED' && (
                 <>
-                    <Button variant="primary" className="!bg-emerald-500 hover:!bg-emerald-600" disabled={!!actionLoading} onClick={() => setShowMarkPaidDialog(true)}>
+                    <Button variant="primary" className="!bg-amber-500 hover:!bg-amber-600" disabled={!!actionLoading} onClick={() => setShowMarkPaidDialog(true)}>
                        {actionLoading === 'mark-paid' ? <Spinner size="sm" /> : <Banknote className="w-4 h-4 mr-2" />}
                        Mark Paid
                     </Button>
@@ -161,7 +161,7 @@ export default function PayoutDetail({ payoutId, onBack }: { payoutId: string; o
 
       <div className="flex-1 overflow-y-auto p-6 max-w-4xl w-full mx-auto">
          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-             <div className="glass-panel p-6">
+             <Surface variant="glass-overlay" elevation={4} radius="xl" className="p-6">
                  <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
                      <FileText className="w-4 h-4" /> Overview
                  </h3>
@@ -180,9 +180,9 @@ export default function PayoutDetail({ payoutId, onBack }: { payoutId: string; o
                          <div className="text-xs text-slate-500 mt-1">{payout.payeeType}</div>
                      </div>
                  </div>
-             </div>
+             </Surface>
 
-             <div className="glass-panel p-6">
+             <Surface variant="glass-overlay" elevation={4} radius="xl" className="p-6">
                  <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
                      <Clock className="w-4 h-4" /> Timeline
                  </h3>
@@ -202,29 +202,29 @@ export default function PayoutDetail({ payoutId, onBack }: { payoutId: string; o
                      {payout.paidAt && (
                          <div>
                              <p className="text-xs text-slate-500 mb-1">Paid At</p>
-                             <div className="font-medium text-sm text-emerald-600">{new Date(payout.paidAt).toLocaleString()}</div>
+                             <div className="font-medium text-sm text-amber-600">{new Date(payout.paidAt).toLocaleString()}</div>
                          </div>
                      )}
                  </div>
-             </div>
+             </Surface>
          </div>
          
          {payout.bankReference && (
-             <div className="glass-panel p-6 mb-6">
+             <Surface variant="glass-overlay" elevation={4} radius="xl" className="p-6 mb-6">
                  <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Bank Reference</h3>
                  <p className="font-mono bg-slate-100 dark:bg-slate-800 p-2 rounded">{payout.bankReference}</p>
-             </div>
+             </Surface>
          )}
          
          {payout.failureReason && (
-             <div className="glass-panel p-6 mb-6 border-l-4 border-rose-500">
+             <Surface variant="glass-overlay" elevation={4} radius="xl" className="p-6 mb-6 border-l-4 border-rose-500">
                  <h3 className="text-sm font-bold text-rose-500 uppercase tracking-wider mb-2">Failure Reason</h3>
                  <p className="text-slate-700 dark:text-slate-300">{payout.failureReason}</p>
-             </div>
+             </Surface>
          )}
 
          {payout.beneficiary && (
-             <div className="glass-panel p-6 mb-6">
+             <Surface variant="glass-overlay" elevation={4} radius="xl" className="p-6 mb-6">
                  <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">
                      Beneficiary as recorded when this payout was raised
                  </h3>
@@ -243,15 +243,15 @@ export default function PayoutDetail({ payoutId, onBack }: { payoutId: string; o
                      </div>
                      <div>
                          <p className="text-xs text-slate-500 mb-1">Verified</p>
-                         <p className={payout.beneficiary.verified ? 'text-emerald-600 font-bold' : 'text-rose-600 font-bold'}>
+                         <p className={payout.beneficiary.verified ? 'text-amber-600 font-bold' : 'text-rose-600 font-bold'}>
                              {payout.beneficiary.verified ? 'Yes' : 'No'}
                          </p>
                      </div>
                  </div>
-             </div>
+             </Surface>
          )}
          
-         <div className="glass-panel p-6">
+         <Surface variant="glass-overlay" elevation={4} radius="xl" className="p-6">
              <div className="flex items-baseline justify-between mb-4">
                  <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider">
                      Settled Lines ({payout.lines?.length ?? 0})
@@ -278,13 +278,11 @@ export default function PayoutDetail({ payoutId, onBack }: { payoutId: string; o
                    credit: line.direction === 'CREDIT' ? (line.amount || 0) : 0,
                  } as StatementRow))}
              />
-         </div>
+         </Surface>
       </div>
 
-      {showMarkPaidDialog && (
-          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-6 w-full max-w-md border border-slate-200 dark:border-slate-800">
-                  <h3 className="text-xl font-bold mb-4">Mark Payout as Paid</h3>
+      <Modal open={showMarkPaidDialog} onClose={() => setShowMarkPaidDialog(false)} title="Mark Payout as Paid" size="md">
+              <div className="p-6">
                   <p className="text-sm text-slate-500 mb-4">Enter the bank reference or UTR number for this transaction.</p>
                   <Input 
                      placeholder="e.g. UTR-123456789" 
@@ -305,13 +303,10 @@ export default function PayoutDetail({ payoutId, onBack }: { payoutId: string; o
                       <Button variant="ghost" onClick={() => setShowMarkPaidDialog(false)}>Cancel</Button>
                   </div>
               </div>
-          </div>
-      )}
+      </Modal>
 
-      {showFailDialog && (
-          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-6 w-full max-w-md border border-slate-200 dark:border-slate-800">
-                  <h3 className="text-xl font-bold mb-4 text-rose-500">Fail Payout</h3>
+      <Modal open={showFailDialog} onClose={() => setShowFailDialog(false)} title="Fail Payout" size="md">
+              <div className="p-6">
                   <p className="text-sm text-slate-500 mb-4">Why did this payout fail?</p>
                   <Input 
                      placeholder="e.g. Invalid bank account" 
@@ -332,8 +327,7 @@ export default function PayoutDetail({ payoutId, onBack }: { payoutId: string; o
                       <Button variant="ghost" onClick={() => setShowFailDialog(false)}>Cancel</Button>
                   </div>
               </div>
-          </div>
-      )}
+      </Modal>
     </div>
   );
 }

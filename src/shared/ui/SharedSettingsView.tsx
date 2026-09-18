@@ -225,7 +225,7 @@ export default function SharedSettingsView({
       <div className="flex items-center gap-3 shrink-0 mb-2">
         <button
           onClick={onBack}
-          className="p-2 rounded-xl bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 text-slate-500 dark:text-slate-300 hover:text-slate-900 hover:bg-white dark:hover:text-white cursor-pointer transition-all shadow-sm"
+          className="p-2 rounded-xl bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 text-slate-500 dark:text-slate-300 hover:text-slate-900 hover:bg-white dark:hover:text-white cursor-pointer transition shadow-sm"
         >
           <X className="w-5 h-5" />
         </button>
@@ -238,7 +238,7 @@ export default function SharedSettingsView({
       <div className="flex gap-2 mb-4 shrink-0 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md p-1.5 rounded-xl border border-rose-500/20 dark:border-rose-500/30 overflow-x-auto whitespace-nowrap">
         <button 
           onClick={() => setAccountTab('profile')}
-          className={`flex-1 min-w-[80px] px-3 py-2 rounded-lg text-xs font-bold transition-all shadow-sm border ${accountTab === 'profile' ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white border-transparent shadow-rose-500/20 shadow-md' : 'bg-white/40 dark:bg-white/10 backdrop-blur-sm text-slate-700 dark:text-slate-200 border-white/50 dark:border-white/10 hover:bg-white/60 dark:hover:bg-white/20'}`}
+          className={`flex-1 min-w-[80px] px-3 py-2 rounded-lg text-xs font-bold transition shadow-sm border ${accountTab === 'profile' ? 'bg-gradient-to-r from-rose-500 to-amber-500 text-white border-transparent shadow-rose-500/20 shadow-md' : 'bg-white/40 dark:bg-white/10 backdrop-blur-sm text-slate-700 dark:text-slate-200 border-white/50 dark:border-white/10 hover:bg-white/60 dark:hover:bg-white/20'}`}
         >
           Profile
         </button>
@@ -246,19 +246,19 @@ export default function SharedSettingsView({
           <>
             <button 
               onClick={() => setAccountTab('history')}
-              className={`flex-1 min-w-[100px] px-3 py-2 rounded-lg text-xs font-bold transition-all shadow-sm border ${accountTab === 'history' ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white border-transparent shadow-rose-500/20 shadow-md' : 'bg-white/40 dark:bg-white/10 backdrop-blur-sm text-slate-700 dark:text-slate-200 border-white/50 dark:border-white/10 hover:bg-white/60 dark:hover:bg-white/20'}`}
+              className={`flex-1 min-w-[100px] px-3 py-2 rounded-lg text-xs font-bold transition shadow-sm border ${accountTab === 'history' ? 'bg-gradient-to-r from-rose-500 to-amber-500 text-white border-transparent shadow-rose-500/20 shadow-md' : 'bg-white/40 dark:bg-white/10 backdrop-blur-sm text-slate-700 dark:text-slate-200 border-white/50 dark:border-white/10 hover:bg-white/60 dark:hover:bg-white/20'}`}
             >
               History
             </button>
             <button 
               onClick={() => setAccountTab('addresses')}
-              className={`flex-1 min-w-[100px] px-3 py-2 rounded-lg text-xs font-bold transition-all shadow-sm border ${accountTab === 'addresses' ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white border-transparent shadow-rose-500/20 shadow-md' : 'bg-white/40 dark:bg-white/10 backdrop-blur-sm text-slate-700 dark:text-slate-200 border-white/50 dark:border-white/10 hover:bg-white/60 dark:hover:bg-white/20'}`}
+              className={`flex-1 min-w-[100px] px-3 py-2 rounded-lg text-xs font-bold transition shadow-sm border ${accountTab === 'addresses' ? 'bg-gradient-to-r from-rose-500 to-amber-500 text-white border-transparent shadow-rose-500/20 shadow-md' : 'bg-white/40 dark:bg-white/10 backdrop-blur-sm text-slate-700 dark:text-slate-200 border-white/50 dark:border-white/10 hover:bg-white/60 dark:hover:bg-white/20'}`}
             >
               Addresses
             </button>
             <button
               onClick={() => setAccountTab('reviews')}
-              className={`flex-1 min-w-[100px] px-3 py-2 rounded-lg text-xs font-bold transition-all shadow-sm border ${accountTab === 'reviews' ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white border-transparent shadow-rose-500/20 shadow-md' : 'bg-white/40 dark:bg-white/10 backdrop-blur-sm text-slate-700 dark:text-slate-200 border-white/50 dark:border-white/10 hover:bg-white/60 dark:hover:bg-white/20'}`}
+              className={`flex-1 min-w-[100px] px-3 py-2 rounded-lg text-xs font-bold transition shadow-sm border ${accountTab === 'reviews' ? 'bg-gradient-to-r from-rose-500 to-amber-500 text-white border-transparent shadow-rose-500/20 shadow-md' : 'bg-white/40 dark:bg-white/10 backdrop-blur-sm text-slate-700 dark:text-slate-200 border-white/50 dark:border-white/10 hover:bg-white/60 dark:hover:bg-white/20'}`}
             >
               My Reviews
             </button>
@@ -266,7 +266,7 @@ export default function SharedSettingsView({
         )}
         <button 
           onClick={() => setAccountTab('wallet')}
-          className={`flex-1 min-w-[100px] px-3 py-2 rounded-lg text-xs font-bold transition-all shadow-sm border ${accountTab === 'wallet' ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white border-transparent shadow-rose-500/20 shadow-md' : 'bg-white/40 dark:bg-white/10 backdrop-blur-sm text-slate-700 dark:text-slate-200 border-white/50 dark:border-white/10 hover:bg-white/60 dark:hover:bg-white/20'}`}
+          className={`flex-1 min-w-[100px] px-3 py-2 rounded-lg text-xs font-bold transition shadow-sm border ${accountTab === 'wallet' ? 'bg-gradient-to-r from-rose-500 to-amber-500 text-white border-transparent shadow-rose-500/20 shadow-md' : 'bg-white/40 dark:bg-white/10 backdrop-blur-sm text-slate-700 dark:text-slate-200 border-white/50 dark:border-white/10 hover:bg-white/60 dark:hover:bg-white/20'}`}
         >
           {showCustomerTabs ? 'Store Credit' : 'Wallet / Earnings'}
         </button>
@@ -345,10 +345,10 @@ export default function SharedSettingsView({
               <div className="text-center text-slate-500 text-sm py-8">No order history found.</div>
             ) : (
               paginatedOrders.map((order: Order) => (
-                <div 
+                <button type="button" 
                   key={order.id} 
                   onClick={() => setTrackingOrder && setTrackingOrder(order)}
-                  className="p-4 rounded-2xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md cursor-pointer hover:bg-white/40 dark:hover:bg-slate-900/40 transition-colors"
+                  className="p-4 rounded-2xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md cursor-pointer hover:bg-white/40 dark:hover:bg-slate-900/40 transition-colors text-left w-full"
                 >
                   <div className="flex justify-between items-start mb-2">
                     <div>
@@ -371,7 +371,7 @@ export default function SharedSettingsView({
                     )}
                   </div>
                   {/* Buttons removed for simplified history view */}
-                </div>
+                </button>
               ))
             )}
             {hasMoreOrders && !isLoadingOrders && (

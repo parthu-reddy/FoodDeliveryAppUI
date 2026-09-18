@@ -33,7 +33,7 @@ export default function OrderQueue({ orders, onAcceptOrder, onRejectOrder }: Ord
             <p className="font-black text-rose-500">{formatINR(order.totalAmount || 0)}</p>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => onAcceptOrder(order.id)} className="flex-1 py-2 bg-indigo-500 text-white rounded-xl font-bold flex justify-center items-center gap-2">
+            <button onClick={() => onAcceptOrder(order.id)} className="flex-1 py-2 bg-rose-500 text-white rounded-xl font-bold flex justify-center items-center gap-2">
               <Check className="w-4 h-4" /> Accept
             </button>
             <button onClick={() => onRejectOrder(order.id)} className="flex-1 py-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl font-bold">

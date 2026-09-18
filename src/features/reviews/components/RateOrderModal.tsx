@@ -124,7 +124,7 @@ function RateOrderModalInner({ isOpen, onClose, orderId, onSubmitted }: RateOrde
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Rate your order" size="lg">
+    <Modal open={isOpen} onClose={handleClose} title="Rate your order" size="lg">
       {isLoading && (
         <div className="flex justify-center py-12">
           <Spinner size="lg" />
@@ -156,7 +156,7 @@ function RateOrderModalInner({ isOpen, onClose, orderId, onSubmitted }: RateOrde
 
       {!isLoading && !error && status === 'success' && (
         <div className="flex flex-col items-center px-4 py-10 text-center">
-          <div className="mb-5 flex h-16 w-16 animate-[bounce_0.5s_ease-out] items-center justify-center rounded-full bg-emerald-500 text-white">
+          <div className="mb-5 flex h-16 w-16 animate-[bounce_0.5s_ease-out] items-center justify-center rounded-full bg-amber-500 text-white">
             <Check className="h-8 w-8" />
           </div>
           <h3 className="text-lg font-bold text-slate-900 dark:text-[#f0ede6]">Thanks for that</h3>

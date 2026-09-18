@@ -53,7 +53,7 @@ export default function AddressSelectionModal({
 
   return (
     <Modal
-      isOpen={isOpen}
+      open={isOpen}
       onClose={onClose}
       size="md"
       title="Select Delivery Address"

@@ -123,7 +123,7 @@ describe('OperationsPage', () => {
     fireEvent.click(screen.getByText('Reconciliation Runs'));
 
     const status = await screen.findByText('PARTIAL');
-    expect(status.className).toContain('bg-red-100');
+    expect(status.className).toContain('bg-rose-100');
   });
 
   it('shows a successful run in green', async () => {
@@ -135,7 +135,7 @@ describe('OperationsPage', () => {
     fireEvent.click(screen.getByText('Reconciliation Runs'));
 
     const status = await screen.findByText('SUCCESS');
-    expect(status.className).toContain('bg-green-100');
+    expect(status.className).toContain('bg-amber-100');
   });
 
   it('says when there is nothing stuck rather than showing a blank panel', async () => {

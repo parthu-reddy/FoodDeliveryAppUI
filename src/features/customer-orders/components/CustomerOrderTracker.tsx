@@ -1,5 +1,5 @@
 import { DeliveryStatus, OrderStatus } from '@/types/backend-enums';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { ArrowLeft, Check, Clock, Star, Timer, X, XCircle, PhoneCall } from 'lucide-react';
 import React, { useState } from 'react';
 import { RateOrderModal } from '@features/reviews';
@@ -12,6 +12,7 @@ import { Order } from '@/types';
 import { customerApi } from '@/lib/zodiosClients';
 import { terminalHeadline } from '@features/customer-orders/model/orderStatus';
 import { useOrderRefunds } from '@features/customer-orders/model/useOrderRefunds';
+import { Select } from '@shared/ui';
 
 interface CustomerOrderTrackerProps {
   currentTrackingOrder: Order;
@@ -59,20 +60,19 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
         <h3 className="font-bold text-lg flex items-center gap-2">
           {isActiveOrder(currentTrackingOrder) ? 'Order Tracking' : 'Order Details'}
           {activeOrders.filter(o => isActiveOrder(o)).length > 1 ? (
-            <select
-              className="text-xs font-mono bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded text-slate-500 dark:text-slate-300 border-none outline-none cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors font-semibold hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition-all"
+            <Select
+              selectSize="sm"
+              aria-label="Which order to track"
+              className="w-56"
               value={currentTrackingOrder.id}
-              onChange={(e) => {
-                const order = activeOrders.find((o) => o.id === e.target.value);
+              onChange={(id: string) => {
+                const order = activeOrders.find((o) => o.id === id);
                 if (order) setTrackingOrder(order);
               }}
-            >
-              {activeOrders.filter(o => isActiveOrder(o)).map((o) => (
-                <option key={o.id} value={o.id}>
-                  #{o.id} - {o.status}
-                </option>
-              ))}
-            </select>
+              options={activeOrders
+                .filter((o) => isActiveOrder(o))
+                .map((o) => ({ value: o.id, label: `#${o.id} - ${o.status}` }))}
+            />
           ) : (
             <span className="text-xs font-mono bg-slate-100 dark:bg-slate-900 px-2 py-0.5 rounded text-slate-500 dark:text-slate-300">#{currentTrackingOrder.id}</span>
           )}
@@ -117,8 +117,8 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
                     : 'Estimated delivery: 15-20 mins'}
                 </p>
               </div>
-              <div className={`p-2.5 rounded-2xl ${isFailedOrder(currentTrackingOrder) ? 'bg-red-500/10 text-red-500' : 'bg-amber-500/10 text-amber-500'}`}>
-                {currentTrackingOrder.status === OrderStatus.AWAITING_DELAY_APPROVAL || isFailedOrder(currentTrackingOrder) ? <Clock className="w-5 h-5 text-red-500" /> : <Timer className="w-5 h-5" />}
+              <div className={`p-2.5 rounded-2xl ${isFailedOrder(currentTrackingOrder) ? 'bg-rose-500/10 text-rose-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                {currentTrackingOrder.status === OrderStatus.AWAITING_DELAY_APPROVAL || isFailedOrder(currentTrackingOrder) ? <Clock className="w-5 h-5 text-rose-500" /> : <Timer className="w-5 h-5" />}
               </div>
             </div>
 
@@ -161,7 +161,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
                       console.error("Failed to reject delay", e);
                     }
                   }}
-                  className="flex-1 py-3 bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400 font-bold rounded-2xl hover:bg-red-200 dark:hover:bg-red-500/20 transition-all text-sm"
+                  className="flex-1 py-3 bg-rose-100 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold rounded-2xl hover:bg-rose-200 dark:hover:bg-rose-500/20 transition text-sm"
                 >
                   Cancel Order
                 </button>
@@ -176,7 +176,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
                     setInternalOrders(prev => prev.filter(o => o.id !== currentTrackingOrder.id));
                     setTrackingOrder(null);
                   }}
-                  className="flex-1 py-3 bg-red-500 text-white font-bold rounded-2xl hover:bg-red-600 transition-all text-sm shadow-xl shadow-red-500/20"
+                  className="flex-1 py-3 bg-rose-500 text-white font-bold rounded-2xl hover:bg-rose-600 transition text-sm shadow-xl shadow-rose-500/20"
                 >
                   Dismiss
                 </button>
@@ -209,7 +209,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
                       }
                     }
                   }}
-                  className="flex-1 py-3 bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400 font-bold rounded-2xl hover:bg-red-200 dark:hover:bg-red-500/20 transition-all text-sm"
+                  className="flex-1 py-3 bg-rose-100 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold rounded-2xl hover:bg-rose-200 dark:hover:bg-rose-500/20 transition text-sm"
                 >
                   Cancel Order
                 </button>
@@ -217,7 +217,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
             )}
 
             {currentTrackingOrder.estimatedCompletionTime && !isFailedOrder(currentTrackingOrder) && (
-              <div className="bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-indigo-500/20 dark:border-indigo-500/30 p-4 rounded-2xl flex items-center justify-between mb-4">
+              <div className="bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 p-4 rounded-2xl flex items-center justify-between mb-4">
                 <div>
                   <span className="text-[10px] text-slate-500 dark:text-[#f0ede6] font-bold block uppercase font-mono tracking-wider">Estimated Time of Arrival</span>
                   <span className="text-sm font-semibold">Arriving at {new Date(currentTrackingOrder.estimatedCompletionTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -231,7 +231,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
                   <span className="text-[10px] text-slate-500 dark:text-[#f0ede6] font-bold block uppercase font-mono tracking-wider">Secure Delivery Verification</span>
                   <span className="text-sm font-semibold">Share OTP with Rider at delivery</span>
                 </div>
-                <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white font-mono text-xl font-black px-4 py-2 rounded-xl tracking-wider shadow-md">
+                <div className="bg-gradient-to-r from-amber-500 to-amber-500 text-white font-mono text-xl font-black px-4 py-2 rounded-xl tracking-wider shadow-md">
                   {(currentTrackingOrder as {otp?: string, distanceKm?: number}).otp}
                 </div>
               </div>
@@ -267,13 +267,13 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
                         {/* Vertical line connector */}
                         {!isLast && (
                           <div className={`absolute left-3 top-6 bottom-[-6px] w-[2px] -ml-[1px] ${
-                            isDone ? 'bg-emerald-500' : 'bg-rose-500/10 dark:bg-rose-500/20'
+                            isDone ? 'bg-amber-500' : 'bg-rose-500/10 dark:bg-rose-500/20'
                           }`} />
                         )}
                         
                         <div className={`w-6 h-6 rounded-full shrink-0 flex items-center justify-center border text-[10px] font-bold z-10 transition-colors ${
                           isDone 
-                            ? 'bg-emerald-500 border-emerald-500 text-slate-950 shadow-[0_0_10px_rgba(16,185,129,0.3)]' 
+                            ? 'bg-amber-500 border-amber-500 text-slate-950 shadow-[0_0_10px_rgba(16,185,129,0.3)]' 
                             : isCurrent
                               ? 'bg-amber-500 border-amber-500 text-slate-950 shadow-[0_0_10px_rgba(245,158,11,0.3)] ring-4 ring-amber-500/20'
                               : 'bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border-rose-500/30 dark:border-rose-500/30 text-slate-400 dark:text-slate-500'
@@ -317,7 +317,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
                 {currentTrackingOrder.restaurantId && (
                   <button 
                     onClick={() => startCall(currentTrackingOrder.restaurantId!, currentTrackingOrder.id)}
-                    className="p-1.5 rounded-full bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-500/20 dark:text-orange-400 dark:hover:bg-orange-500/30 transition-colors"
+                    className="p-1.5 rounded-full bg-amber-100 text-amber-600 hover:bg-amber-200 dark:bg-amber-500/20 dark:text-amber-400 dark:hover:bg-amber-500/30 transition-colors"
                     title={`Call ${currentTrackingOrder.restaurantName}`}
                   >
                     <PhoneCall className="w-4 h-4" />
@@ -330,7 +330,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
                 <span>Rider Assigned</span>
                 <button 
                   onClick={() => startCall(currentTrackingOrder.deliveryExecutiveId!, currentTrackingOrder.id)}
-                  className="p-1.5 rounded-full bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-500/20 dark:text-orange-400 dark:hover:bg-orange-500/30 transition-colors"
+                  className="p-1.5 rounded-full bg-amber-100 text-amber-600 hover:bg-amber-200 dark:bg-amber-500/20 dark:text-amber-400 dark:hover:bg-amber-500/30 transition-colors"
                   title={`Call Rider`}
                 >
                   <PhoneCall className="w-4 h-4" />
@@ -393,7 +393,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
         <div className="bg-white/20 dark:bg-slate-900/20 backdrop-blur-xl border border-rose-500/20 dark:border-rose-500/30 rounded-3xl p-6 shadow-[0_8px_32px_rgba(251,146,60,0.05)] space-y-6">
           <div className="text-center pb-4 border-b border-rose-500/10 dark:border-slate-800">
             <div className="inline-flex w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 items-center justify-center mb-3">
-              <X className="w-6 h-6 text-red-500" />
+              <X className="w-6 h-6 text-rose-500" />
             </div>
             <h2 className="text-2xl font-black mb-1 capitalize">{getFriendlyStatusMessage(currentTrackingOrder.status, currentTrackingOrder.deliveryStatus)}</h2>
             <p className="text-sm font-bold text-slate-500 dark:text-slate-400">#{currentTrackingOrder.id.substring(0, 8)}</p>
@@ -476,7 +476,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
               {currentTrackingOrder.restaurantId && (
                 <button 
                   onClick={() => startCall(currentTrackingOrder.restaurantId!, currentTrackingOrder.id)}
-                  className="p-1.5 rounded-full bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-500/20 dark:text-orange-400 dark:hover:bg-orange-500/30 transition-colors"
+                  className="p-1.5 rounded-full bg-amber-100 text-amber-600 hover:bg-amber-200 dark:bg-amber-500/20 dark:text-amber-400 dark:hover:bg-amber-500/30 transition-colors"
                   title={`Call ${currentTrackingOrder.restaurantName}`}
                 >
                   <PhoneCall className="w-4 h-4" />
@@ -523,7 +523,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
               )}
               <div className="flex justify-between text-lg font-black text-slate-900 dark:text-white pt-2 border-t border-rose-500/20 dark:border-slate-700">
                 <span>{isFailedOrder(currentTrackingOrder) ? 'Total Refunded' : 'Total Paid'}</span>
-                <span className={isFailedOrder(currentTrackingOrder) ? 'text-red-500' : ''}>{formatINR(currentTrackingOrder.totalAmount || 0)}</span>
+                <span className={isFailedOrder(currentTrackingOrder) ? 'text-rose-500' : ''}>{formatINR(currentTrackingOrder.totalAmount || 0)}</span>
               </div>
               {currentTrackingOrder.paymentMethod && (
                 <div className="flex justify-end pt-1 text-right">

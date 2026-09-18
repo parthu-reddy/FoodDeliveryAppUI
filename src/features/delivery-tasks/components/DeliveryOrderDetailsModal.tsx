@@ -1,6 +1,5 @@
 import { Order } from "@/types";
-import { Button } from '@shared/ui';
-import { AnimatePresence, motion } from 'framer-motion';
+import { Button, Modal } from '@shared/ui';
 import { CheckCircle2, MapPin, Receipt, X } from 'lucide-react';
 import React from 'react';
 import { formatINR } from '@shared/money';
@@ -15,19 +14,19 @@ export const DeliveryOrderDetailsModal: React.FC<DeliveryOrderDetailsModalProps>
   if (!isOpen || !order) return null;
 
   return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh]"
-        >
+    <Modal
+      open={isOpen}
+      onClose={onClose}
+      title={`Order #${order.id?.substring(0, 8) ?? ''}`}
+      size="lg"
+      headerless
+    >
+        <div className="flex flex-col max-h-[90vh]">
           {/* Header */}
           <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl z-10">
             <div>
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-                <Receipt className="w-6 h-6 text-indigo-500" />
+                <Receipt className="w-6 h-6 text-rose-500" />
                 Earnings Breakdown
               </h2>
               <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 font-mono">
@@ -50,7 +49,7 @@ export const DeliveryOrderDetailsModal: React.FC<DeliveryOrderDetailsModalProps>
               <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Delivery Route</h3>
               <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 space-y-4">
                 <div className="flex gap-3">
-                  <div className="mt-1"><CheckCircle2 className="w-4 h-4 text-emerald-500" /></div>
+                  <div className="mt-1"><CheckCircle2 className="w-4 h-4 text-amber-500" /></div>
                   <div>
                     <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Pickup</p>
                     <p className="font-semibold text-slate-900 dark:text-white mt-0.5">{order.restaurantName}</p>
@@ -58,7 +57,7 @@ export const DeliveryOrderDetailsModal: React.FC<DeliveryOrderDetailsModalProps>
                 </div>
                 <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 ml-2" />
                 <div className="flex gap-3">
-                  <div className="mt-1"><MapPin className="w-4 h-4 text-indigo-500" /></div>
+                  <div className="mt-1"><MapPin className="w-4 h-4 text-rose-500" /></div>
                   <div>
                     <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Drop-off</p>
                     <p className="font-semibold text-slate-900 dark:text-white mt-0.5">{order.deliveryAddress}</p>
@@ -86,7 +85,7 @@ export const DeliveryOrderDetailsModal: React.FC<DeliveryOrderDetailsModalProps>
                 {/* Total Net Payout */}
                 <div className="flex justify-between items-center">
                   <span className="font-bold text-slate-900 dark:text-white">Total Earnings</span>
-                  <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">
+                  <span className="text-2xl font-black text-rose-600 dark:text-rose-400">
                     {formatINR((order.deliveryFee || 0))}
                   </span>
                 </div>
@@ -100,8 +99,7 @@ export const DeliveryOrderDetailsModal: React.FC<DeliveryOrderDetailsModalProps>
                Close
              </Button>
           </div>
-        </motion.div>
-      </div>
-    </AnimatePresence>
+        </div>
+    </Modal>
   );
 };

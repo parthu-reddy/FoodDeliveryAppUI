@@ -12,7 +12,7 @@ interface Props {
 
 export function PayoutCard({ payoutId, amount, status, createdAt, onClick }: Props) {
   return (
-    <div 
+    <button type="button" 
       onClick={onClick}
       className={`bg-white border border-slate-200 rounded-xl p-5 ${onClick ? 'cursor-pointer hover:border-blue-300 transition-colors' : ''}`}
     >
@@ -30,6 +30,6 @@ export function PayoutCard({ payoutId, amount, status, createdAt, onClick }: Pro
       <div className="pt-4 border-t border-slate-100">
         <PayoutTimeline status={status} />
       </div>
-    </div>
+    </button>
   );
 }

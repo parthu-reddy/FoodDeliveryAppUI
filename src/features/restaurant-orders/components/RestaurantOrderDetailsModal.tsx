@@ -1,10 +1,8 @@
 import { customerApi } from '@/lib/zodiosClients';
 import { Order } from '@/types';
-import { Button } from '@shared/ui';
-import { AnimatePresence, motion } from 'framer-motion';
+import { Button, Modal, Spinner } from '@shared/ui';
 import { CheckCircle2, Receipt, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { formatINR } from '@shared/money';
 import { RestaurantOrderEarnings } from '@/api/generated/schemas/customer/common';
 import { z } from 'zod';
@@ -49,21 +47,20 @@ export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalPr
 
   const invoiceData = invoice || {};
 
-  const modalContent = (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh]"
-          >
+  return (
+    <Modal
+      open={isOpen}
+      onClose={onClose}
+      title={`Order #${order.id.substring(0, 8)}`}
+      size="lg"
+      headerless
+    >
+          <div className="flex flex-col max-h-[90vh]">
             {/* Header */}
             <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl z-10">
               <div>
                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-                  <Receipt className="w-6 h-6 text-emerald-500" />
+                  <Receipt className="w-6 h-6 text-amber-500" />
                   Order #{order.id.substring(0, 8)}
                 </h2>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
@@ -82,7 +79,7 @@ export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalPr
             <div className="p-6 overflow-y-auto custom-scrollbar">
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-12">
-                  <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                  <Spinner size="md" color="var(--color-amber-500)" />
                   <p className="mt-4 text-slate-500 dark:text-slate-400 font-medium">Loading precise invoice data...</p>
                 </div>
               ) : (
@@ -117,7 +114,7 @@ export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalPr
 
                 {/* Transparent Financial Breakdown */}
                 <div>
-                  <h3 className="text-sm font-semibold text-emerald-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <h3 className="text-sm font-semibold text-amber-500 uppercase tracking-wider mb-4 flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4" />
                     Transparent Financial Breakdown
                   </h3>
@@ -140,7 +137,7 @@ export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalPr
                           <span>Delivery Contribution</span>
                           <span>- {formatINR(invoiceData.deliveryContribution || 0)}</span>
                         </div>
-                        <div className="flex justify-between font-bold text-lg text-emerald-600 dark:text-emerald-400 pt-2">
+                        <div className="flex justify-between font-bold text-lg text-amber-600 dark:text-amber-400 pt-2">
                           <span>Net Restaurant Payout</span>
                           <span>{formatINR(invoiceData.netPayout || 0)}</span>
                         </div>
@@ -158,12 +155,7 @@ export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalPr
                  Close Details
                </Button>
             </div>
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
+          </div>
+    </Modal>
   );
-
-  if (typeof document === 'undefined') return null;
-  return createPortal(modalContent, document.body);
 };

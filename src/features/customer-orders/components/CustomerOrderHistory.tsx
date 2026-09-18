@@ -3,9 +3,8 @@ import { customerApi } from '@/lib/zodiosClients';
 import { DeliveryStatus, Order, OrderStatus } from '@/types';
 import { RateOrderModal } from '@features/reviews';
 import { getFriendlyStatusMessage } from '@features/customer-orders/model/statusMessaging';
-import { EmptyState } from "@shared/ui";
+import { EmptyState, Overlay, Spinner, Surface } from '@shared/ui';
 import { AlertCircle, Clock, Package, X } from 'lucide-react';
-import { motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import { formatINR } from '@shared/money';
 import PostDeliverySupportModal from './PostDeliverySupportModal';
@@ -74,17 +73,13 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
   }, [page]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm sm:p-6 sm:items-start sm:pt-20">
-      <motion.div 
-        initial={{ opacity: 0, y: 20, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-        className="w-full max-w-2xl glass-panel rounded-3xl shadow-2xl overflow-hidden border border-white/50 dark:border-white/10 flex flex-col max-h-[85vh]"
-      >
+    <Overlay open onClose={onClose} label="Order history" className="w-full max-w-2xl">
+      <div className="w-full overflow-hidden flex flex-col max-h-[85vh]">
+      <Surface variant="glass-overlay" elevation={4} radius="xl" className="flex flex-col overflow-hidden h-full">
         <div className="p-4 sm:p-6 border-b border-white/20 dark:border-white/10 flex items-center justify-between sticky top-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md z-10">
           <div>
             <h2 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
-              <Clock className="w-5 h-5 text-indigo-500" />
+              <Clock className="w-5 h-5 text-rose-500" />
               Order History
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Your past orders and refunds</p>
@@ -100,11 +95,11 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-12">
-              <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-500 rounded-full animate-spin"></div>
+              <Spinner size="lg" color="var(--color-action)" />
               <p className="mt-4 text-sm font-medium text-slate-500 dark:text-slate-400">Loading your history...</p>
             </div>
           ) : error ? (
-            <div className="bg-red-50/80 dark:bg-red-500/10 text-red-600 dark:text-red-400 p-6 rounded-2xl flex flex-col items-center text-center backdrop-blur-sm border border-red-200 dark:border-red-500/20">
+            <div className="bg-rose-50/80 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 p-6 rounded-2xl flex flex-col items-center text-center backdrop-blur-sm border border-rose-200 dark:border-rose-500/20">
               <AlertCircle className="w-10 h-10 mb-2" />
               <h3 className="font-bold">Oops!</h3>
               <p className="text-sm">{error}</p>
@@ -117,7 +112,7 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
             />
           ) : (
             orders.map(order => (
-              <div key={order.id} className="border border-white/40 dark:border-white/10 bg-white/20 dark:bg-black/10 backdrop-blur-sm rounded-2xl p-4 flex flex-col gap-3 hover:border-indigo-300 dark:hover:border-indigo-500/50 transition-colors shadow-sm">
+              <div key={order.id} className="border border-white/40 dark:border-white/10 bg-white/20 dark:bg-black/10 backdrop-blur-sm rounded-2xl p-4 flex flex-col gap-3 hover:border-rose-300 dark:hover:border-rose-500/50 transition-colors shadow-sm">
                 <div className="flex justify-between items-start">
                   <div>
                     <h4 className="font-bold text-slate-800 dark:text-white">{order.restaurantName}</h4>
@@ -137,7 +132,7 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
                   { }
                   {order.items?.map((item: import('@/types').OrderItem, idx: number) => (
                     <div key={idx} className="flex gap-2">
-                      <span className="font-semibold text-indigo-600 dark:text-indigo-400">{item.quantity || 1}x</span>
+                      <span className="font-semibold text-rose-600 dark:text-rose-400">{item.quantity || 1}x</span>
                       <span className="truncate">{item.item?.name || item.name || 'Item'}</span>
                     </div>
                   ))}
@@ -147,7 +142,7 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
                   <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider uppercase border ${
                     order.status === OrderStatus.CANCELLED || order.status === OrderStatus.CANCELLED_BY_RESTAURANT 
                       ? 'bg-rose-50/80 dark:bg-rose-500/10 text-rose-600 border-rose-200 dark:border-rose-500/20'
-                      : 'bg-emerald-50/80 dark:bg-emerald-500/10 text-emerald-600 border-emerald-200 dark:border-emerald-500/20'
+                      : 'bg-amber-50/80 dark:bg-amber-500/10 text-amber-600 border-amber-200 dark:border-amber-500/20'
                   }`}>
                     {getFriendlyStatusMessage(order.status, order.deliveryStatus)}
                   </span>
@@ -183,7 +178,7 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
                           e.stopPropagation();
                           setSelectedOrderIdForSupport(order.id);
                         }}
-                        className="text-[10px] bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold px-2 py-1 rounded-md hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors"
+                        className="text-[10px] bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold px-2 py-1 rounded-md hover:bg-rose-100 dark:hover:bg-rose-500/20 transition-colors"
                       >
                         Report Issue / Request Refund
                       </button>
@@ -216,7 +211,8 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
             </div>
           )}
         </div>
-      </motion.div>
+      </Surface>
+      </div>
       
       {selectedOrderIdForSupport && (
         <PostDeliverySupportModal
@@ -235,6 +231,6 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
           onSubmitted={() => setReviewedAt(prev => ({ ...prev, [orderIdToRate]: Date.now() }))}
         />
       )}
-    </div>
+    </Overlay>
   );
 }

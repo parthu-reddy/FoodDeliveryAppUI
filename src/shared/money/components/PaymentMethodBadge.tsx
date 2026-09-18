@@ -8,8 +8,8 @@ interface Props {
 export function PaymentMethodBadge({ method }: Props) {
   const config = {
     UPI: { icon: Smartphone, label: 'UPI', className: 'bg-blue-50 text-blue-700 border-blue-200' },
-    CARD: { icon: CreditCard, label: 'Card', className: 'bg-purple-50 text-purple-700 border-purple-200' },
-    WALLET: { icon: Wallet, label: 'Store Credit', className: 'bg-emerald-50 text-emerald-700 border-emerald-200' }
+    CARD: { icon: CreditCard, label: 'Card', className: 'bg-rose-50 text-rose-700 border-rose-200' },
+    WALLET: { icon: Wallet, label: 'Store Credit', className: 'bg-amber-50 text-amber-700 border-amber-200' }
   }[method];
 
   if (!config) return null;

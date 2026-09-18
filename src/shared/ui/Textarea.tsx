@@ -20,8 +20,8 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           w-full bg-slate-100 dark:bg-slate-800
           text-slate-800 dark:text-[#f0ede6]
           placeholder:text-slate-400 dark:placeholder:text-slate-500
-          border ${error ? 'border-red-400 dark:border-red-500' : 'border-transparent'}
-          focus:outline-none focus:ring-2 ${error ? 'focus:ring-red-400' : 'focus:ring-rose-400 dark:focus:ring-rose-500'}
+          border ${error ? 'border-rose-400 dark:border-rose-500' : 'border-transparent'}
+          focus:outline-none focus:ring-2 ${error ? 'focus:ring-rose-400' : 'focus:ring-rose-400 dark:focus:ring-rose-500'}
           transition-colors resize-none
           ${sizeStyles[textareaSize]}
           ${className}

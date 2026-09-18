@@ -5,7 +5,8 @@ import React from 'react';
 import { server } from '@/mocks/server';
 import { OrderStatus } from '@/types/backend-enums';
 import { Order } from '@/types';
-import { CallProvider } from '@/contexts/CallContext';
+import { CallProvider } from '@/contexts/CallContext'
+import { ToastProvider } from '@/contexts/ToastContext';
 import { CustomerOrderTracker } from './CustomerOrderTracker';
 
 const ORDER_ID = '77777777-7777-7777-7777-777777777777';
@@ -34,14 +35,14 @@ const order = (over: Partial<Order>) => ({
  */
 const renderTracker = (o: Order, { active, failed }: { active: boolean; failed: boolean }) =>
   render(
-    <CallProvider>
+    <ToastProvider><CallProvider>
       <CustomerOrderTracker
         {...baseProps}
         currentTrackingOrder={o}
         isActiveOrder={() => active}
         isFailedOrder={() => failed}
       />
-    </CallProvider>
+    </CallProvider></ToastProvider>
   );
 
 describe('CustomerOrderTracker terminal and payment copy', () => {

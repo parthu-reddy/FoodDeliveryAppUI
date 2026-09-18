@@ -52,17 +52,32 @@ describe('AdminLedgerView', () => {
 
     // The screen once carried a hand-written category list that drifted from the enum, so filters
     // named categories the ledger had never booked and silently returned nothing.
-    // The value is what is sent to the service; the label is cosmetic (underscores become spaces).
-    const options = Array.from(document.querySelectorAll('option'))
-      .map((o) => (o as HTMLOptionElement).value)
-      .filter(Boolean);
+    //
+    // Select is a listbox now rather than a native <select>, so its options exist only while it
+    // is open. Open each filter in turn and read the values it actually offers. The placeholder
+    // is the trigger's text, not an option, so it no longer appears in this set.
+    const readOptions = (name: string) => {
+      const trigger = screen.getByRole('combobox', { name });
+      fireEvent.click(trigger);
+      const values = screen
+        .getAllByRole('option')
+        .map((o) => o.getAttribute('data-value'))
+        .filter((v): v is string => Boolean(v));
+      fireEvent.keyDown(trigger, { key: 'Escape' });
+      return values;
+    };
+
+    const options = [
+      ...readOptions('All Owner Types'),
+      ...readOptions('All Categories'),
+      ...readOptions('All Directions'),
+    ];
 
     const ownerTypes = ['CUSTOMER', 'RESTAURANT', 'DRIVER', 'PLATFORM'];
     const directions = ['DEBIT', 'CREDIT'];
-    const placeholders = ['All Owner Types', 'All Categories', 'All Directions'];
     const categories = Object.values(ChargeCategory) as string[];
 
-    const allowed = new Set([...ownerTypes, ...directions, ...placeholders, ...categories]);
+    const allowed = new Set([...ownerTypes, ...directions, ...categories]);
     expect(options.filter((o) => !allowed.has(o))).toEqual([]);
     // and every enum value is actually offered
     expect(categories.filter((c) => !options.includes(c))).toEqual([]);

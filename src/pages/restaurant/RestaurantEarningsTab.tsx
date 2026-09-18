@@ -63,9 +63,9 @@ export default function RestaurantEarningsTab({ restaurantId }: RestaurantEarnin
   }
 
   const statCards = [
-    { label: "Net Earnings", value: summary?.netEarnings || 0, icon: <IndianRupee className="w-5 h-5 text-emerald-500" /> },
+    { label: "Net Earnings", value: summary?.netEarnings || 0, icon: <IndianRupee className="w-5 h-5 text-amber-500" /> },
     { label: "Pending Balance", value: summary?.pendingBalance || 0, icon: <Activity className="w-5 h-5 text-amber-500" /> },
-    { label: "Clawbacks", value: summary?.clawbacks || 0, icon: <XCircle className="w-5 h-5 text-red-500" /> }
+    { label: "Clawbacks", value: summary?.clawbacks || 0, icon: <XCircle className="w-5 h-5 text-rose-500" /> }
   ];
 
   const totalPages = statementPage?.totalPages || 1;
@@ -90,15 +90,15 @@ export default function RestaurantEarningsTab({ restaurantId }: RestaurantEarnin
       
       {/* Payout Details */}
       {summary?.lastPayout && (
-          <div className="bg-white dark:bg-[#0f111a] border border-emerald-500/20 rounded-xl p-5 shadow-sm">
+          <div className="bg-white dark:bg-[#0f111a] border border-amber-500/20 rounded-xl p-5 shadow-sm">
              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-2">Last Payout</h3>
              <div className="flex items-center justify-between">
                 <div>
-                   <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{formatINR(summary.lastPayout.amount || 0)}</p>
+                   <p className="text-lg font-bold text-amber-600 dark:text-amber-400">{formatINR(summary.lastPayout.amount || 0)}</p>
                    <p className="text-xs text-slate-500">Completed on {new Date(String(summary.lastPayout.createdAt || '')).toLocaleDateString()}</p>
                 </div>
                 {summary.lastPayout.status === 'COMPLETED' ? 
-                   <CheckCircle className="text-emerald-500 w-6 h-6" /> : 
+                   <CheckCircle className="text-amber-500 w-6 h-6" /> : 
                    <Activity className="text-amber-500 w-6 h-6" />
                 }
              </div>
@@ -109,7 +109,7 @@ export default function RestaurantEarningsTab({ restaurantId }: RestaurantEarnin
       <div className="bg-white dark:bg-[#0f111a] border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
         <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
           <h3 className="font-bold flex items-center gap-2">
-              <FileText className="w-4 h-4 text-indigo-500" /> Account Statement
+              <FileText className="w-4 h-4 text-rose-500" /> Account Statement
           </h3>
           <Button variant="outline" size="sm" onClick={downloadCSV} className="flex items-center gap-2">
              <Download className="w-4 h-4" /> Export CSV
@@ -138,18 +138,18 @@ export default function RestaurantEarningsTab({ restaurantId }: RestaurantEarnin
                             <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{new Date(String(line.createdAt || '')).toLocaleDateString()}</td>
                             <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
                                {String(line.description || '-')}
-                               {line.direction === 'DEBIT' && <span className="ml-2 text-xs bg-red-100 text-red-600 px-1 rounded uppercase">Debit</span>}
-                               {line.direction === 'CREDIT' && <span className="ml-2 text-xs bg-emerald-100 text-emerald-600 px-1 rounded uppercase">Credit</span>}
+                               {line.direction === 'DEBIT' && <span className="ml-2 text-xs bg-rose-100 text-rose-600 px-1 rounded uppercase">Debit</span>}
+                               {line.direction === 'CREDIT' && <span className="ml-2 text-xs bg-amber-100 text-amber-600 px-1 rounded uppercase">Credit</span>}
                             </td>
                             <td className="px-4 py-3">
                                <span className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-xs">{String(line.category || '-')}</span>
                             </td>
-                            <td className={`px-4 py-3 text-right font-bold ${line.direction === 'CREDIT' ? 'text-emerald-500' : 'text-slate-700 dark:text-slate-300'}`}>
+                            <td className={`px-4 py-3 text-right font-bold ${line.direction === 'CREDIT' ? 'text-amber-500' : 'text-slate-700 dark:text-slate-300'}`}>
                                {(() => { const amtStr = formatINR(line.amount || 0); return `${line.direction === 'DEBIT' ? '-' : '+'}${amtStr}`; })()}
                             </td>
                             <td className="px-4 py-3 text-center">
                                {line.settled ? 
-                                 <CheckCircle className="w-4 h-4 text-emerald-500 mx-auto" /> : 
+                                 <CheckCircle className="w-4 h-4 text-amber-500 mx-auto" /> : 
                                  <Activity className="w-4 h-4 text-amber-500 mx-auto" />
                                }
                             </td>

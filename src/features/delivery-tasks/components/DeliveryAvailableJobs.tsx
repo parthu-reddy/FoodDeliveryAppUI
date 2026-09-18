@@ -23,7 +23,7 @@ export function DeliveryAvailableJobs({
     >
       <div className="flex justify-between items-center">
         <h4 className="font-bold text-sm tracking-wide text-slate-400 dark:text-slate-300 uppercase font-mono">Trips available</h4>
-        <span className="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-lg font-bold font-mono">AUTO SCANNING</span>
+        <span className="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-1 rounded-lg font-bold font-mono">AUTO SCANNING</span>
       </div>
 
       {availableJobs.length === 0 ? (
@@ -46,7 +46,7 @@ export function DeliveryAvailableJobs({
                 </div>
                 <div className="text-right">
                   <span className="text-xs text-slate-400 dark:text-slate-300 block font-mono">PAYOUT</span>
-                  <span className="text-lg font-black text-emerald-500">{job.deliveryFee ? formatINR(job.deliveryFee) : '—'}</span>
+                  <span className="text-lg font-black text-amber-500">{job.deliveryFee ? formatINR(job.deliveryFee) : '—'}</span>
                 </div>
               </div>
 
@@ -58,7 +58,7 @@ export function DeliveryAvailableJobs({
 
               <button
                 onClick={() => handleAcceptJob(job)}
-                className="w-full bg-gradient-to-r from-rose-500 to-orange-500 text-white font-bold py-3 rounded-2xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-rose-500/10 border border-rose-500/30"
+                className="w-full bg-gradient-to-r from-rose-500 to-amber-500 text-white font-bold py-3 rounded-2xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-rose-500/10 border border-rose-500/30"
               >
                 <Play className="w-4 h-4 fill-current" /> Accept & Open Map
               </button>

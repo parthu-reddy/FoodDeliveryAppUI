@@ -1,9 +1,8 @@
 import { useToast } from "@/contexts/ToastContext";
 import { identityApi } from "@/lib/zodiosClients";
 import { RoleName } from "@/types";
-import { Badge, Button, FormField, Input } from '@shared/ui';
+import { Badge, Button, FormField, Input, Overlay, Surface } from '@shared/ui';
 import { LogOut, X } from 'lucide-react';
-import { AnimatePresence, motion } from 'motion/react';
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 
@@ -107,31 +106,24 @@ interface DeviceSession {
   };
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 z-[100] flex justify-end">
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm cursor-pointer"
-          />
-
-          {/* Slide-in Panel */}
-          <motion.div
-            initial={{ x: '100%', opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: '100%', opacity: 0 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="relative w-full max-w-md h-full bg-white/20 dark:bg-slate-950/20 backdrop-blur-2xl shadow-2xl border-l border-white/20 dark:border-white/10 flex flex-col"
+    <Overlay
+      open={isOpen}
+      onClose={onClose}
+      label="Partner account"
+      placement="right"
+      className="w-full max-w-md h-full"
+    >
+          <Surface
+            variant="glass-overlay"
+            elevation={4}
+            radius="none"
+            className="w-full h-full flex flex-col"
           >
             <div className="flex-1 overflow-y-auto w-full p-5 flex flex-col space-y-4 bg-transparent">
               <div className="flex items-center gap-3 shrink-0 mb-4">
                 <button
                   onClick={onClose}
-                  className="p-2 rounded-xl bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 text-slate-500 dark:text-slate-300 hover:text-slate-900 hover:bg-white dark:hover:text-white cursor-pointer transition-all"
+                  className="p-2 rounded-xl bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 text-slate-500 dark:text-slate-300 hover:text-slate-900 hover:bg-white dark:hover:text-white cursor-pointer transition"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -224,9 +216,7 @@ interface DeviceSession {
                 </div>
               </div>
             </div>
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
+          </Surface>
+    </Overlay>
   );
 }

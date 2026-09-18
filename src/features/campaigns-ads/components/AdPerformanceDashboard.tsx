@@ -55,13 +55,13 @@ export function AdPerformanceDashboard({ performanceData, isLoading }: AdPerform
         </div>
         <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
           <div className="flex items-center gap-2 text-slate-500 mb-2 text-sm font-medium">
-            <MousePointerClick className="w-4 h-4 text-violet-500" /> Clicks
+            <MousePointerClick className="w-4 h-4 text-rose-500" /> Clicks
           </div>
           <div className="text-2xl font-bold text-slate-900">{totals.clicks.toLocaleString()}</div>
         </div>
         <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
           <div className="flex items-center gap-2 text-slate-500 mb-2 text-sm font-medium">
-            <CheckCircle className="w-4 h-4 text-emerald-500" /> Conversions
+            <CheckCircle className="w-4 h-4 text-amber-500" /> Conversions
           </div>
           <div className="text-2xl font-bold text-slate-900">{totals.conversions.toLocaleString()}</div>
         </div>
@@ -91,7 +91,7 @@ export function AdPerformanceDashboard({ performanceData, isLoading }: AdPerform
                 <td className="px-4 py-3">{format(new Date(data.date), 'MMM d, yyyy')}</td>
                 <td className="px-4 py-3 text-right">{(data.impressions ?? 0).toLocaleString()}</td>
                 <td className="px-4 py-3 text-right font-medium text-slate-900">{(data.clicks ?? 0).toLocaleString()}</td>
-                <td className="px-4 py-3 text-right text-emerald-600">{(data.conversions ?? 0).toLocaleString()}</td>
+                <td className="px-4 py-3 text-right text-amber-600">{(data.conversions ?? 0).toLocaleString()}</td>
                 <td className="px-4 py-3 text-right font-medium">{formatINR(data.spend)}</td>
               </tr>
             ))}

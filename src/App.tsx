@@ -1,4 +1,4 @@
-import { CinematicFoodBackground, ZodErrorBoundary } from "@shared/ui";
+import { CinematicFoodBackground, ConfirmProvider, Spinner, ZodErrorBoundary, Surface } from '@shared/ui';
 import React, { Suspense, useState } from 'react';
 import { CallProvider } from './contexts/CallContext';
 import { ConfigProvider } from './contexts/ConfigContext';
@@ -53,10 +53,10 @@ function AppContent() {
 
   const renderFallback = () => (
     <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative items-center justify-center">
-      <div className="glass-panel px-6 py-4 rounded-2xl flex flex-col items-center gap-3">
-        <div className="w-8 h-8 border-3 border-rose-500 border-t-transparent rounded-full animate-spin" />
+      <Surface variant="glass-overlay" elevation={4} radius="xl" className="px-6 py-4 rounded-2xl flex flex-col items-center gap-3">
+        <Spinner size="md" color="var(--color-action)" />
         <span className="text-xs font-bold tracking-wider uppercase">Loading Workspace...</span>
-      </div>
+      </Surface>
     </div>
   );
 
@@ -121,7 +121,9 @@ export default function App() {
     <ThemeProvider>
       <ConfigProvider>
         <ToastProvider>
-          <AppContent />
+          <ConfirmProvider>
+            <AppContent />
+          </ConfirmProvider>
         </ToastProvider>
       </ConfigProvider>
     </ThemeProvider>

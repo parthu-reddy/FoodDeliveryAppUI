@@ -1,31 +1,44 @@
 import React from 'react';
 
+/**
+ * Text input, built on the design tokens.
+ *
+ * Previously carried the `glass-input` class, which put a blurred translucent surface behind
+ * every text field in the app. Glass is a layer role for chrome that floats over scrolling
+ * content; a form field is content. It is a recessed solid surface now, which is also what
+ * makes it read as something you type into.
+ */
+
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  /** Visual size variant */
+  /** Visual size variant. md and lg clear the 44px touch-target floor. */
   inputSize?: 'sm' | 'md' | 'lg';
   /** Whether the input has a validation error */
   error?: boolean;
 }
 
-const sizeStyles: Record<string, string> = {
-  sm: 'px-2.5 py-1.5 text-xs rounded-lg',
-  md: 'px-3 py-2.5 text-sm rounded-xl',
-  lg: 'px-4 py-3 text-base rounded-xl',
+const SIZE: Record<string, React.CSSProperties> = {
+  sm: { minHeight: 36, fontSize: 12, padding: '0 10px', borderRadius: 'var(--radius-sm)' },
+  md: { minHeight: 44, fontSize: 14, padding: '0 12px', borderRadius: 'var(--radius-md)' },
+  lg: { minHeight: 50, fontSize: 15, padding: '0 14px', borderRadius: 'var(--radius-md)' },
 };
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ inputSize = 'md', error, className = '', ...rest }, ref) => {
+  ({ inputSize = 'md', error, className = '', style, ...rest }, ref) => {
     return (
       <input
         ref={ref}
-        className={`
-          w-full glass-input
-          focus:outline-none focus:ring-0
-          transition-colors
-          ${error ? 'border-red-400 focus:border-red-500' : 'focus:border-white/40'}
-          ${sizeStyles[inputSize]}
-          ${className}
-        `}
+        aria-invalid={error || undefined}
+        className={`w-full focus:outline-none ${className}`}
+        style={{
+          ...SIZE[inputSize],
+          background: 'var(--color-paper-sunken)',
+          color: 'var(--color-ink)',
+          border: `1px solid ${error ? 'var(--color-danger)' : 'var(--color-paper-line)'}`,
+          transitionProperty: 'border-color, box-shadow',
+          transitionDuration: 'var(--duration-fast)',
+          transitionTimingFunction: 'var(--ease-out)',
+          ...style,
+        }}
         {...rest}
       />
     );

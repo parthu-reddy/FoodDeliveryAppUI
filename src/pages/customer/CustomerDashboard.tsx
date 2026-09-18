@@ -10,7 +10,7 @@ import CustomerActiveOrdersCarousel from '@features/customer-orders/components/C
 import { CustomerFreeDeliveryTracker } from '@features/customer-orders/components/CustomerFreeDeliveryTracker';
 import { CustomerOrderTracker } from '@features/customer-orders/components/CustomerOrderTracker';
 import { getFriendlyStatusMessage } from '@features/customer-orders/model/statusMessaging';
-import { ErrorBoundary } from "@shared/ui";
+import { ErrorBoundary, Overlay, Surface, useConfirm } from '@shared/ui';
 import {
   AlertCircle,
   ArrowLeft,
@@ -63,6 +63,7 @@ export default function CustomerDashboard({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { theme, toggleTheme } = useTheme();
   const { showError, showSuccess, showInfo } = useToast();
+  const confirm = useConfirm();
   // Extracted Hooks
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { internalOrders, setInternalOrders, activeOrders: internalActiveOrders, isInitialLoad } = useCustomerOrders({
@@ -437,7 +438,7 @@ export default function CustomerDashboard({
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
             className="fixed top-12 left-0 right-0 mx-auto max-w-sm z-[100] px-4"
           >
-            <div className="bg-emerald-500/95 backdrop-blur-xl border border-emerald-500/50 shadow-2xl rounded-2xl p-4 flex flex-col gap-3">
+            <div className="bg-amber-500/95 backdrop-blur-xl border border-amber-500/50 shadow-2xl rounded-2xl p-4 flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
@@ -445,7 +446,7 @@ export default function CustomerDashboard({
                   </div>
                   <div>
                     <p className="text-white font-bold text-sm">Order Placed Successfully!</p>
-                    <p className="text-emerald-100 text-[10px] mt-0.5">{orderSuccessToast.restaurantName}</p>
+                    <p className="text-amber-100 text-[10px] mt-0.5">{orderSuccessToast.restaurantName}</p>
                   </div>
                 </div>
                 <button onClick={() => setOrderSuccessToast(null)} className="text-white/70 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors">
@@ -458,7 +459,7 @@ export default function CustomerDashboard({
                     setTrackingOrder(orderSuccessToast);
                     setOrderSuccessToast(null);
                   }}
-                  className="px-4 py-2 bg-white text-emerald-600 rounded-lg text-xs font-bold shadow-sm hover:shadow transition-all hover:bg-emerald-50 w-full"
+                  className="px-4 py-2 bg-white text-amber-600 rounded-lg text-xs font-bold shadow-sm hover:shadow transition hover:bg-amber-50 w-full"
                 >
                   Track Order
                 </button>
@@ -501,13 +502,17 @@ export default function CustomerDashboard({
           onDeleteAddress={handleDeleteAddress}
           deliveryLat={deliveryLat ?? undefined}
           deliveryLng={deliveryLng ?? undefined}
-          onSelectDeliveryLocation={(addr: string, lat?: string | number, lng?: string | number) => {
+          onSelectDeliveryLocation={async (addr: string, lat?: string | number, lng?: string | number) => {
             if (addr !== address) {
               const hasItems = Object.values(carts || {}).some((cart) => cart.items && cart.items.length > 0);
               if (hasItems) {
-                if (!window.confirm("Changing your address will clear your active cart. Do you want to continue?")) {
-                  return;
-                }
+                const proceed = await confirm({
+                  title: 'Change delivery address?',
+                  description: 'Your active cart is tied to your current address and will be cleared.',
+                  confirmLabel: 'Change address',
+                  tone: 'danger',
+                });
+                if (!proceed) return;
                 Object.keys(carts).forEach(restaurantId => {
                   if (carts[restaurantId]?.items?.length > 0) {
                     clearCart(restaurantId);
@@ -549,12 +554,12 @@ export default function CustomerDashboard({
                   </h3>
                 </div>
 
-                <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-3xl p-6 text-center space-y-2">
-                  <div className="w-16 h-16 bg-emerald-500 rounded-full mx-auto flex items-center justify-center shadow-lg shadow-emerald-500/30 mb-4">
+                <div className="bg-amber-500/10 border border-amber-500/20 rounded-3xl p-6 text-center space-y-2">
+                  <div className="w-16 h-16 bg-amber-500 rounded-full mx-auto flex items-center justify-center shadow-lg shadow-amber-500/30 mb-4">
                     <Check className="w-8 h-8 text-white" />
                   </div>
-                  <h4 className="font-bold text-2xl text-emerald-600 dark:text-emerald-400">Order Delivered! 🎉</h4>
-                  <p className="text-sm text-emerald-700/70 dark:text-emerald-400/70">
+                  <h4 className="font-bold text-2xl text-amber-600 dark:text-amber-400">Order Delivered! 🎉</h4>
+                  <p className="text-sm text-amber-700/70 dark:text-amber-400/70">
                     Enjoy your food from {currentTrackingOrder.restaurantName}.
                   </p>
                 </div>
@@ -732,14 +737,14 @@ export default function CustomerDashboard({
             onClick={() => setIsCartOpen(true)}
             variant="warning"
             fullWidth
-            className="justify-between !py-4 !rounded-2xl shadow-2xl border border-white/20 !border-solid bg-orange-500/90 backdrop-blur-md"
+            className="justify-between !py-4 !rounded-2xl shadow-2xl border border-white/20 !border-solid bg-amber-500/90 backdrop-blur-md"
           >
             <div className="flex items-center gap-2">
               <ShoppingBag className="w-5 h-5" />
               <div className="flex flex-col items-start text-left leading-tight">
                 <span className="font-bold">{totalCartItems} Item{totalCartItems > 1 ? 's' : ''} in Cart</span>
                 {activeCartCount > 1 && (
-                  <span className="text-xs text-orange-100/90 font-medium">{activeCartCount} restaurants</span>
+                  <span className="text-xs text-amber-100/90 font-medium">{activeCartCount} restaurants</span>
                 )}
               </div>
             </div>
@@ -820,22 +825,15 @@ export default function CustomerDashboard({
         error={globalError}
       />
 
-      <AnimatePresence>
-        {showLocationPrompt && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-sm"
-          >
-            <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="bg-white/20 dark:bg-slate-900/20 backdrop-blur-md rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl border border-slate-100 dark:border-slate-800"
-            >
-              <div className="w-16 h-16 bg-red-100 dark:bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <MapPinOff className="w-8 h-8 text-red-500" />
+      <Overlay
+        open={showLocationPrompt}
+        onClose={() => setShowLocationPrompt(false)}
+        label="Location required"
+        className="w-full max-w-sm"
+      >
+            <Surface variant="glass-overlay" elevation={4} radius="xl" className="p-6 w-full text-center">
+              <div className="w-16 h-16 bg-rose-100 dark:bg-rose-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MapPinOff className="w-8 h-8 text-rose-500" />
               </div>
               <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Location Required</h2>
               <p className="text-slate-500 dark:text-slate-400 mb-6">
@@ -848,10 +846,8 @@ export default function CustomerDashboard({
               >
                 Understood
               </Button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </Surface>
+      </Overlay>
 
       {/* Chat Widget when tracking an active order or delivered < 2 hrs ago */}
       {currentTrackingOrder && (() => {

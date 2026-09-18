@@ -4,6 +4,7 @@ import { getToken, getUserProfile } from "@/lib/tokenStore";
 import { chatApi } from "@/lib/zodiosClients";
 import { Client, IMessage } from '@stomp/stompjs';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useToast } from '@/contexts/ToastContext';
 
 export interface WebRtcSignal {
   sessionId?: string;
@@ -20,6 +21,7 @@ export type CallState = 'IDLE' | 'CALLING' | 'RINGING' | 'CONNECTED';
 export type CallEndReason = 'DECLINED' | 'TIMEOUT' | 'ENDED' | 'MISSED' | null;
 
 export const useWebRTC = () => {
+  const { showError } = useToast();
   const token = getToken();
   const user = getUserProfile();
   
@@ -454,7 +456,7 @@ export const useWebRTC = () => {
 
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        alert("Your browser blocks microphone access on insecure connections (HTTP). Please access this site via HTTPS or localhost to make calls.");
+        showError("Calls need a secure connection. Open this site over HTTPS or on localhost to use the microphone.");
         throw new Error("Media devices API not available. HTTPS is required.");
       }
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
@@ -471,7 +473,7 @@ export const useWebRTC = () => {
     } catch (err: unknown) {
       console.error('Error accessing microphone:', err);
       if (err instanceof Error && err.name !== 'Error') {
-         alert("Could not access microphone: " + err.message);
+         showError(`Could not access the microphone: ${err.message}`);
       }
       pc.close();
       return null;

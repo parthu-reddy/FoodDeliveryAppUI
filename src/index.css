@@ -1,13 +1,35 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
-@import "tailwindcss";
+/* source(none) disables Tailwind v4's automatic project-root scanning, so ONLY the two
+   @source globs below are scanned.
+
+   Without it Tailwind also reads the ~20 stale eslint-report-*.json / lint-results*.json
+   scratch files in the package root. Those contain snippets of pre-codemod source, so the
+   build kept emitting utilities for classes no component uses any more: 39 emerald, 44 indigo,
+   30 red, 14 gray. Dead CSS, and it made the built stylesheet a false signal of what the app
+   actually uses. */
+@import "tailwindcss" source(none);
 @source "./**/*.{js,ts,jsx,tsx}";
 @source "../index.html";
 
 @variant dark (&:where(.dark, .dark *));
 
+/* ===========================================================================
+   La Bouffe design tokens.
 
-@theme {
-  /* Core Brand Colors */
+   Nothing outside this file may invent a surface, shadow, radius, blur or
+   duration. Components compose these.
+
+   The 18-family colour alias block that used to live here is gone. It mapped
+   every Tailwind palette onto rose/amber/slate, which collapsed six semantic
+   states into four -- success and warning resolved to the identical hex, and
+   `blue` (the one family never aliased) was the only off-brand colour on
+   screen. Call sites were rewritten mechanically by
+   RandomDocuments/UIRedesign_2026-09-18/tools/codemod_phase1.py, so appearance
+   is unchanged and the palette is free.
+   =========================================================================== */
+
+@theme static {
+  /* --- brand ramps: the La Bouffe identity, unchanged -------------------- */
   --color-rose-50: #fce9ec;
   --color-rose-100: #f8cdd6;
   --color-rose-200: #f2a1b1;
@@ -46,243 +68,178 @@
   --color-slate-900: #1a222e;
   --color-slate-950: #16202c;
 
-  /* Red Brand Aliases */
-  --color-red-50: var(--color-rose-50);
-  --color-red-100: var(--color-rose-100);
-  --color-red-200: var(--color-rose-200);
-  --color-red-300: var(--color-rose-300);
-  --color-red-400: var(--color-rose-400);
-  --color-red-500: var(--color-rose-500);
-  --color-red-600: var(--color-rose-600);
-  --color-red-700: var(--color-rose-700);
-  --color-red-800: var(--color-rose-800);
-  --color-red-900: var(--color-rose-900);
-  --color-red-950: var(--color-rose-950);
-  --color-pink-50: var(--color-rose-50);
-  --color-pink-100: var(--color-rose-100);
-  --color-pink-200: var(--color-rose-200);
-  --color-pink-300: var(--color-rose-300);
-  --color-pink-400: var(--color-rose-400);
-  --color-pink-500: var(--color-rose-500);
-  --color-pink-600: var(--color-rose-600);
-  --color-pink-700: var(--color-rose-700);
-  --color-pink-800: var(--color-rose-800);
-  --color-pink-900: var(--color-rose-900);
-  --color-pink-950: var(--color-rose-950);
-  --color-fuchsia-50: var(--color-rose-50);
-  --color-fuchsia-100: var(--color-rose-100);
-  --color-fuchsia-200: var(--color-rose-200);
-  --color-fuchsia-300: var(--color-rose-300);
-  --color-fuchsia-400: var(--color-rose-400);
-  --color-fuchsia-500: var(--color-rose-500);
-  --color-fuchsia-600: var(--color-rose-600);
-  --color-fuchsia-700: var(--color-rose-700);
-  --color-fuchsia-800: var(--color-rose-800);
-  --color-fuchsia-900: var(--color-rose-900);
-  --color-fuchsia-950: var(--color-rose-950);
-  --color-purple-50: var(--color-rose-50);
-  --color-purple-100: var(--color-rose-100);
-  --color-purple-200: var(--color-rose-200);
-  --color-purple-300: var(--color-rose-300);
-  --color-purple-400: var(--color-rose-400);
-  --color-purple-500: var(--color-rose-500);
-  --color-purple-600: var(--color-rose-600);
-  --color-purple-700: var(--color-rose-700);
-  --color-purple-800: var(--color-rose-800);
-  --color-purple-900: var(--color-rose-900);
-  --color-purple-950: var(--color-rose-950);
-  --color-indigo-50: var(--color-rose-50);
-  --color-indigo-100: var(--color-rose-100);
-  --color-indigo-200: var(--color-rose-200);
-  --color-indigo-300: var(--color-rose-300);
-  --color-indigo-400: var(--color-rose-400);
-  --color-indigo-500: var(--color-rose-500);
-  --color-indigo-600: var(--color-rose-600);
-  --color-indigo-700: var(--color-rose-700);
-  --color-indigo-800: var(--color-rose-800);
-  --color-indigo-900: var(--color-rose-900);
-  --color-indigo-950: var(--color-rose-950);
-  --color-violet-50: var(--color-rose-50);
-  --color-violet-100: var(--color-rose-100);
-  --color-violet-200: var(--color-rose-200);
-  --color-violet-300: var(--color-rose-300);
-  --color-violet-400: var(--color-rose-400);
-  --color-violet-500: var(--color-rose-500);
-  --color-violet-600: var(--color-rose-600);
-  --color-violet-700: var(--color-rose-700);
-  --color-violet-800: var(--color-rose-800);
-  --color-violet-900: var(--color-rose-900);
-  --color-violet-950: var(--color-rose-950);
+  /* --- blue: the info hue, now an actual brand ramp ----------------------
+     `blue` was the ONE family the old alias block never touched, so every
+     blue on screen was stock Tailwind and the only off-brand colour in the
+     app. The app genuinely needs an info hue (52 call sites), so blue is
+     defined properly rather than aliased away.
 
-  /* Orange Brand Aliases */
-  --color-orange-50: var(--color-amber-50);
-  --color-orange-100: var(--color-amber-100);
-  --color-orange-200: var(--color-amber-200);
-  --color-orange-300: var(--color-amber-300);
-  --color-orange-400: var(--color-amber-400);
-  --color-orange-500: var(--color-amber-500);
-  --color-orange-600: var(--color-amber-600);
-  --color-orange-700: var(--color-amber-700);
-  --color-orange-800: var(--color-amber-800);
-  --color-orange-900: var(--color-amber-900);
-  --color-orange-950: var(--color-amber-950);
-  --color-yellow-50: var(--color-amber-50);
-  --color-yellow-100: var(--color-amber-100);
-  --color-yellow-200: var(--color-amber-200);
-  --color-yellow-300: var(--color-amber-300);
-  --color-yellow-400: var(--color-amber-400);
-  --color-yellow-500: var(--color-amber-500);
-  --color-yellow-600: var(--color-amber-600);
-  --color-yellow-700: var(--color-amber-700);
-  --color-yellow-800: var(--color-amber-800);
-  --color-yellow-900: var(--color-amber-900);
-  --color-yellow-950: var(--color-amber-950);
-  --color-lime-50: var(--color-amber-50);
-  --color-lime-100: var(--color-amber-100);
-  --color-lime-200: var(--color-amber-200);
-  --color-lime-300: var(--color-amber-300);
-  --color-lime-400: var(--color-amber-400);
-  --color-lime-500: var(--color-amber-500);
-  --color-lime-600: var(--color-amber-600);
-  --color-lime-700: var(--color-amber-700);
-  --color-lime-800: var(--color-amber-800);
-  --color-lime-900: var(--color-amber-900);
-  --color-lime-950: var(--color-amber-950);
-  --color-green-50: var(--color-amber-50);
-  --color-green-100: var(--color-amber-100);
-  --color-green-200: var(--color-amber-200);
-  --color-green-300: var(--color-amber-300);
-  --color-green-400: var(--color-amber-400);
-  --color-green-500: var(--color-amber-500);
-  --color-green-600: var(--color-amber-600);
-  --color-green-700: var(--color-amber-700);
-  --color-green-800: var(--color-amber-800);
-  --color-green-900: var(--color-amber-900);
-  --color-green-950: var(--color-amber-950);
-  --color-emerald-50: var(--color-amber-50);
-  --color-emerald-100: var(--color-amber-100);
-  --color-emerald-200: var(--color-amber-200);
-  --color-emerald-300: var(--color-amber-300);
-  --color-emerald-400: var(--color-amber-400);
-  --color-emerald-500: var(--color-amber-500);
-  --color-emerald-600: var(--color-amber-600);
-  --color-emerald-700: var(--color-amber-700);
-  --color-emerald-800: var(--color-amber-800);
-  --color-emerald-900: var(--color-amber-900);
-  --color-emerald-950: var(--color-amber-950);
+     Anchored so blue-600 == --color-info (#1d4ed8, 6.68:1 on paper), which is
+     the shade `text-blue-600` already used most. */
+  --color-blue-50: #eff4fe;
+  --color-blue-100: #dbe6fd;
+  --color-blue-200: #bed1fb;
+  --color-blue-300: #92b3f7;
+  --color-blue-400: #5e8bf1;
+  --color-blue-500: #3a66e6;
+  --color-blue-600: #1d4ed8;
+  --color-blue-700: #1a41b0;
+  --color-blue-800: #1a388f;
+  --color-blue-900: #1a3272;
+  --color-blue-950: #142046;
 
-  /* Navy Brand Aliases */
-  --color-sky-50: var(--color-slate-50);
-  --color-sky-100: var(--color-slate-100);
-  --color-sky-200: var(--color-slate-200);
-  --color-sky-300: var(--color-slate-300);
-  --color-sky-400: var(--color-slate-400);
-  --color-sky-500: var(--color-slate-500);
-  --color-sky-600: var(--color-slate-600);
-  --color-sky-700: var(--color-slate-700);
-  --color-sky-800: var(--color-slate-800);
-  --color-sky-900: var(--color-slate-900);
-  --color-sky-950: var(--color-slate-950);
-  --color-cyan-50: var(--color-slate-50);
-  --color-cyan-100: var(--color-slate-100);
-  --color-cyan-200: var(--color-slate-200);
-  --color-cyan-300: var(--color-slate-300);
-  --color-cyan-400: var(--color-slate-400);
-  --color-cyan-500: var(--color-slate-500);
-  --color-cyan-600: var(--color-slate-600);
-  --color-cyan-700: var(--color-slate-700);
-  --color-cyan-800: var(--color-slate-800);
-  --color-cyan-900: var(--color-slate-900);
-  --color-cyan-950: var(--color-slate-950);
-  --color-teal-50: var(--color-slate-50);
-  --color-teal-100: var(--color-slate-100);
-  --color-teal-200: var(--color-slate-200);
-  --color-teal-300: var(--color-slate-300);
-  --color-teal-400: var(--color-slate-400);
-  --color-teal-500: var(--color-slate-500);
-  --color-teal-600: var(--color-slate-600);
-  --color-teal-700: var(--color-slate-700);
-  --color-teal-800: var(--color-slate-800);
-  --color-teal-900: var(--color-slate-900);
-  --color-teal-950: var(--color-slate-950);
-  --color-gray-50: var(--color-slate-50);
-  --color-gray-100: var(--color-slate-100);
-  --color-gray-200: var(--color-slate-200);
-  --color-gray-300: var(--color-slate-300);
-  --color-gray-400: var(--color-slate-400);
-  --color-gray-500: var(--color-slate-500);
-  --color-gray-600: var(--color-slate-600);
-  --color-gray-700: var(--color-slate-700);
-  --color-gray-800: var(--color-slate-800);
-  --color-gray-900: var(--color-slate-900);
-  --color-gray-950: var(--color-slate-950);
-  --color-zinc-50: var(--color-slate-50);
-  --color-zinc-100: var(--color-slate-100);
-  --color-zinc-200: var(--color-slate-200);
-  --color-zinc-300: var(--color-slate-300);
-  --color-zinc-400: var(--color-slate-400);
-  --color-zinc-500: var(--color-slate-500);
-  --color-zinc-600: var(--color-slate-600);
-  --color-zinc-700: var(--color-slate-700);
-  --color-zinc-800: var(--color-slate-800);
-  --color-zinc-900: var(--color-slate-900);
-  --color-zinc-950: var(--color-slate-950);
-  --color-neutral-50: var(--color-slate-50);
-  --color-neutral-100: var(--color-slate-100);
-  --color-neutral-200: var(--color-slate-200);
-  --color-neutral-300: var(--color-slate-300);
-  --color-neutral-400: var(--color-slate-400);
-  --color-neutral-500: var(--color-slate-500);
-  --color-neutral-600: var(--color-slate-600);
-  --color-neutral-700: var(--color-slate-700);
-  --color-neutral-800: var(--color-slate-800);
-  --color-neutral-900: var(--color-slate-900);
-  --color-neutral-950: var(--color-slate-950);
-  --color-stone-50: var(--color-slate-50);
-  --color-stone-100: var(--color-slate-100);
-  --color-stone-200: var(--color-slate-200);
-  --color-stone-300: var(--color-slate-300);
-  --color-stone-400: var(--color-slate-400);
-  --color-stone-500: var(--color-slate-500);
-  --color-stone-600: var(--color-slate-600);
-  --color-stone-700: var(--color-slate-700);
-  --color-stone-800: var(--color-slate-800);
-  --color-stone-900: var(--color-slate-900);
-  --color-stone-950: var(--color-slate-950);
-}
-@theme {
+  /* --- ground and ink ---------------------------------------------------- */
+  /* Warm paper rather than white: appetite, and less clinical.
+     Contrast against --color-paper, computed, not estimated:
+       ink   4.5:1+   ink-2  5.88:1   ink-3  3.97:1 (large text and icons ONLY) */
+  --color-paper: #fffcf8;
+  --color-paper-sunken: #f7f2ec;
+  --color-paper-line: #efe7dd;
+  --color-ink: #12161c;
+  --color-ink-2: #5a6472;
+  --color-ink-3: #8b95a3;
+
+  /* --- action ------------------------------------------------------------ */
+  /* action     fills carrying white text        4.79:1
+     action-ink rose TEXT on a light ground      6.60:1
+     the gradient pair is darker than rose-400 because #e44365 only reaches
+     3.97:1 against white at the top of the ramp */
+  --color-action: #dc2448;
+  --color-action-ink: #b51c38;
+  --color-action-from: #d02243;
+  --color-action-to: #a8182f;
+
+  /* --- semantic state ---------------------------------------------------- */
+  /* Four genuinely distinct hues. An order moving through its states cannot be
+     represented in the three the brand ramps provide. */
+  --color-success: #047857;
+  --color-success-bg: #e7f5f0;
+  --color-success-line: #b9e3d6;
+  --color-warning: #9e5b0b;
+  --color-warning-bg: #fef5e8;
+  --color-warning-line: #f7dcb4;
+  --color-info: #1d4ed8;
+  --color-info-bg: #e8eefc;
+  --color-info-line: #c2d4f8;
+  --color-danger: #b51c38;
+  --color-danger-bg: #fce9ec;
+  --color-danger-line: #f6c3cd;
+  /* fills and indicators only, never text */
+  --color-live: #10b981;
+
+  /* --- type -------------------------------------------------------------- */
   --font-sans: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* --- radius: six steps, replacing eleven ad-hoc values ------------------ */
+  --radius-xs: 8px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 26px;
+  --radius-full: 999px;
 }
 
-/* Hide scrollbars on elements with scrollbar-none utility */
-.scrollbar-none::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
+/* ---------------------------------------------------------------------------
+   Composite tokens.
+
+   These live in a plain :root rule rather than @theme on purpose: Tailwind
+   prunes theme variables nothing references, and an elevation ramp is consumed
+   by components rather than by generated utilities. A plain rule is always
+   emitted, so the Phase 1 gate can read them out of the built stylesheet.
+   --------------------------------------------------------------------------- */
+:root {
+  /* --- elevation ---------------------------------------------------------
+     Each step is a contact shadow + a diffuse shadow + a 1px inset highlight.
+     The inset is the part that makes a surface read as RAISED rather than
+     merely shadowed -- it is the light source. Drop it and depth disappears,
+     which is why the gate asserts every step still carries one. */
+  --elevation-0: none;
+  --elevation-1:
+    0 1px 2px rgba(18, 22, 28, .06),
+    inset 0 1px 0 rgba(255, 255, 255, .9);
+  --elevation-2:
+    0 2px 4px rgba(18, 22, 28, .06),
+    0 4px 12px rgba(18, 22, 28, .08),
+    inset 0 1px 0 rgba(255, 255, 255, .9);
+  --elevation-3:
+    0 4px 8px rgba(18, 22, 28, .08),
+    0 12px 28px rgba(18, 22, 28, .14),
+    inset 0 1px 0 rgba(255, 255, 255, .85);
+  --elevation-4:
+    0 8px 16px rgba(18, 22, 28, .10),
+    0 24px 48px rgba(18, 22, 28, .20),
+    inset 0 1px 0 rgba(255, 255, 255, .8);
+  /* tinted ring matched to the action fill: what makes a button feel physical */
+  --elevation-press:
+    0 4px 12px rgba(168, 24, 47, .32),
+    inset 0 1px 0 rgba(255, 255, 255, .26);
+
+  /* --- blur: two tiers, replacing four ---------------------------------- */
+  --blur-chrome: blur(22px) saturate(180%);
+  --blur-overlay: blur(28px) saturate(185%);
+
+  /* --- glass ------------------------------------------------------------
+     Glass is a LAYER ROLE, not a texture: it belongs only on surfaces that
+     float over scrolling content. Content surfaces stay opaque. */
+  --glass-chrome-bg: rgba(255, 252, 248, .80);
+  --glass-chrome-line: rgba(18, 22, 28, .07);
+  --glass-overlay-bg: rgba(255, 252, 248, .86);
+  --glass-overlay-line: rgba(255, 255, 255, .55);
+
+  /* --- motion ------------------------------------------------------------ */
+  --duration-instant: 90ms;   /* press feedback, toggles */
+  --duration-fast: 160ms;     /* hover, colour, small reveals */
+  --duration-base: 240ms;     /* enter/exit, sheets, list items */
+  --duration-slow: 380ms;     /* route transitions, large surfaces */
+  --ease-out: cubic-bezier(.2, .8, .25, 1);
+  --ease-in: cubic-bezier(.5, 0, .75, 0);
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+  --motion-reduced: 0;
 }
-.scrollbar-none {
-  -ms-overflow-style: none !important;
-  /* IE and Edge */
-  scrollbar-width: none !important;
-  /* Firefox */
-}
-/* Optional global scrollbar styling to make layout seamless if no scrollbar is ever desired */
-* {
-  scrollbar-width: none !important; /* Firefox */
-  -ms-overflow-style: none !important; /* IE 10+ */
-}
-*::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
+
+.dark {
+  --color-paper: #12161c;
+  --color-paper-sunken: #1b212a;
+  --color-paper-line: rgba(255, 255, 255, .09);
+  --color-ink: #ffffff;
+  --color-ink-2: #a2aab5;
+  --color-ink-3: #758190;
+
+  --color-success-bg: rgba(4, 120, 87, .16);
+  --color-success-line: rgba(4, 120, 87, .42);
+  --color-warning-bg: rgba(158, 91, 11, .16);
+  --color-warning-line: rgba(247, 182, 89, .32);
+  --color-info-bg: rgba(29, 78, 216, .16);
+  --color-info-line: rgba(29, 78, 216, .42);
+  --color-danger-bg: rgba(181, 28, 56, .16);
+  --color-danger-line: rgba(181, 28, 56, .42);
+
+  --elevation-1: 0 1px 2px rgba(0, 0, 0, .4), inset 0 1px 0 rgba(255, 255, 255, .06);
+  --elevation-2:
+    0 2px 4px rgba(0, 0, 0, .34),
+    0 4px 12px rgba(0, 0, 0, .40),
+    inset 0 1px 0 rgba(255, 255, 255, .07);
+  --elevation-3:
+    0 4px 8px rgba(0, 0, 0, .38),
+    0 12px 28px rgba(0, 0, 0, .46),
+    inset 0 1px 0 rgba(255, 255, 255, .08);
+  --elevation-4:
+    0 8px 16px rgba(0, 0, 0, .42),
+    0 24px 48px rgba(0, 0, 0, .54),
+    inset 0 1px 0 rgba(255, 255, 255, .09);
+
+  --glass-chrome-bg: rgba(18, 22, 28, .74);
+  --glass-chrome-line: rgba(255, 255, 255, .09);
+  --glass-overlay-bg: rgba(18, 22, 28, .86);
+  --glass-overlay-line: rgba(255, 255, 255, .12);
 }
 
 @layer base {
   body {
     @apply bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen relative;
   }
-  
+
   h1, h2, h3, h4, h5, h6 {
     @apply text-slate-900 dark:text-white;
   }
@@ -290,31 +247,80 @@
 
 @layer components {
   .app-background {
-    @apply transition-colors duration-500;
-    background: radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15), transparent 45%),
-                radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.15), transparent 45%),
-                radial-gradient(circle at 50% 80%, rgba(14, 165, 233, 0.15), transparent 45%),
-                #f8fafc;
+    transition: background-color var(--duration-slow) var(--ease-out);
+    background:
+      radial-gradient(circle at 15% 50%, rgba(220, 36, 72, .12), transparent 45%),
+      radial-gradient(circle at 85% 30%, rgba(244, 152, 25, .14), transparent 45%),
+      radial-gradient(circle at 50% 80%, rgba(181, 28, 56, .10), transparent 45%),
+      #fffcf8;
     background-attachment: fixed;
   }
+
   .dark .app-background {
-    background: radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.25), transparent 45%),
-                radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.25), transparent 45%),
-                radial-gradient(circle at 50% 80%, rgba(14, 165, 233, 0.25), transparent 45%),
-                #0f172a;
+    background:
+      radial-gradient(circle at 15% 50%, rgba(220, 36, 72, .20), transparent 45%),
+      radial-gradient(circle at 85% 30%, rgba(244, 152, 25, .18), transparent 45%),
+      radial-gradient(circle at 50% 80%, rgba(181, 28, 56, .16), transparent 45%),
+      #12161c;
   }
 
-  .glass-panel {
-    @apply bg-white/40 dark:bg-slate-900/40 backdrop-blur-2xl border border-white/60 dark:border-white/10 shadow-2xl rounded-3xl;
-  }
-  .glass-card {
-    @apply bg-white/30 dark:bg-slate-900/30 backdrop-blur-xl border border-white/50 dark:border-white/20 shadow-xl rounded-2xl;
-  }
-  .glass-input {
-    @apply bg-white/50 dark:bg-black/30 backdrop-blur-md border border-white/50 dark:border-white/10 focus:border-rose-400 dark:focus:border-rose-500/50 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 rounded-xl;
-  }
-  .glass-button {
-    @apply bg-white/60 dark:bg-white/10 backdrop-blur-md border border-white/60 dark:border-white/20 hover:bg-white/80 dark:hover:bg-white/20 transition-all text-slate-800 dark:text-white shadow-md hover:shadow-lg rounded-xl;
-  }
 }
 
+/* ---------------------------------------------------------------------------
+   Press feedback.
+
+   An inline style cannot express :active, and press travel is most of what makes a control
+   feel responsive. It lives here rather than at any call site; Button is the only thing that
+   sets the class. Phase 5 builds the rest of the interaction motion on this.
+   --------------------------------------------------------------------------- */
+.lb-button:active:not(:disabled) {
+  transform: translateY(1px) scale(0.985);
+}
+
+/* ---------------------------------------------------------------------------
+   Scrollbars.
+
+   The previous `* { scrollbar-width: none }` rule hid EVERY scrollbar in the
+   app, removing the only scroll affordance desktop users get. Hiding is now
+   opt-in, for horizontal carousels.
+   --------------------------------------------------------------------------- */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Reduced motion.
+
+   Reduced motion means NO motion, not slower motion, and the layout must be
+   identical either way -- only the transition disappears.
+
+   --motion-reduced is a marker the Phase 1 gate looks for. maplibre-gl ships
+   its own prefers-reduced-motion rule, so testing the built stylesheet for the
+   bare media query passes on somebody else's CSS. JS-driven animation reads
+   this via useReducedMotion() in Phase 5.
+   --------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-reduced: 1;
+    --duration-instant: 0.01ms;
+    --duration-fast: 0.01ms;
+    --duration-base: 0.01ms;
+    --duration-slow: 0.01ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

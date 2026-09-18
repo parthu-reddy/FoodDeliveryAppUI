@@ -1,7 +1,7 @@
 import { useToast } from '@/contexts/ToastContext';
 import { usePolling } from '@/hooks/usePolling';
 import { restaurantApi } from '@/lib/zodiosClients';
-import { Button, Input, Textarea } from '@shared/ui';
+import { Button, Input, Textarea, Surface } from '@shared/ui';
 import { Pencil, Plus, Tags, X } from 'lucide-react';
 import React, { useState } from 'react';
 import { z } from 'zod';
@@ -74,11 +74,11 @@ export default function AdminCategories() {
 
   return (
     <div className="flex-1 flex p-6 gap-6 h-full overflow-hidden">
-        <div className="w-1/3 flex flex-col glass-panel p-4 shrink-0 overflow-y-auto">
+        <Surface variant="glass-overlay" elevation={4} radius="xl" className="w-1/3 flex flex-col p-4 shrink-0 overflow-y-auto">
             <h3 className="font-black text-xl mb-4 px-2">Existing Categories</h3>
             <div className="space-y-2">
                 {categories.map((cat: Category) => (
-                    <div key={cat.id} className="glass-card p-4 flex justify-between items-center group">
+                    <Surface variant="glass-chrome" elevation={3} radius="lg" key={cat.id} className="p-4 flex justify-between items-center group">
                         <div>
                             <p className="font-bold text-slate-800 dark:text-[#f0ede6]">{cat.name}</p>
                             <p className="text-sm text-slate-500 truncate max-w-[200px]">{cat.description || 'No description'}</p>
@@ -86,17 +86,17 @@ export default function AdminCategories() {
                         <Button variant="ghost" size="icon" onClick={() => handleEditClick(cat)} className="opacity-0 group-hover:opacity-100 transition-opacity">
                             <Pencil className="w-4 h-4" />
                         </Button>
-                    </div>
+                    </Surface>
                 ))}
                 {categories.length === 0 && (
                     <p className="text-sm text-slate-500 p-4">No categories found.</p>
                 )}
             </div>
-        </div>
+        </Surface>
 
-      <div className="flex-1 glass-panel p-8 overflow-y-auto">
+      <Surface variant="glass-overlay" elevation={4} radius="xl" className="flex-1 p-8 overflow-y-auto">
         <div className="flex items-center gap-4 mb-8 border-b border-slate-200 dark:border-slate-700 pb-6">
-            <div className="w-16 h-16 rounded-2xl bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-500/30">
+            <div className="w-16 h-16 rounded-2xl bg-rose-500 text-white flex items-center justify-center shadow-lg shadow-rose-500/30">
                 <Tags className="w-8 h-8" />
             </div>
             <div className="flex-1">
@@ -123,7 +123,7 @@ export default function AdminCategories() {
                 {editingCategory ? 'Update Category' : 'Create Category'}
             </Button>
         </form>
-      </div>
+      </Surface>
     </div>
   );
 }

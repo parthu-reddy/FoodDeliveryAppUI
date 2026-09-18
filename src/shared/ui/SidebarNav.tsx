@@ -18,9 +18,9 @@ interface SidebarNavProps {
 }
 
 const activeColorStyles: Record<string, string> = {
-  indigo: 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30',
+  indigo: 'bg-rose-500 text-white shadow-lg shadow-rose-500/30',
   rose: 'bg-rose-500 text-white shadow-lg shadow-rose-500/30',
-  emerald: 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30',
+  emerald: 'bg-amber-500 text-white shadow-lg shadow-amber-500/30',
   amber: 'bg-amber-500 text-white shadow-lg shadow-amber-500/30',
 };
 
@@ -40,7 +40,7 @@ export function SidebarNav({
             key={item.key}
             onClick={() => onSelect(item.key)}
             className={`
-              w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all cursor-pointer
+              w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition cursor-pointer
               ${isActive
                 ? activeColorStyles[activeColor]
                 : 'text-slate-600 dark:text-slate-300 hover:bg-white/20 dark:hover:bg-slate-800/40'

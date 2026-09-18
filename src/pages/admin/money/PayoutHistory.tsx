@@ -2,12 +2,13 @@ import * as ledgerCommon from "@/api/generated/schemas/ledger/common";
 import { useToast } from "@/contexts/ToastContext";
 import { parseApiError } from '@/lib/parseApiError';
 import { ledgerApi } from "@/lib/zodiosClients";
-import { Button, Spinner, Input } from '@shared/ui';
+import { Button, Input, Select, Spinner, StatusPill, Surface } from '@shared/ui';
 import { Search, Download, History } from 'lucide-react';
 import { useState } from 'react';
 import { formatINR } from '@shared/money';
 
 import { z } from "zod";
+import { payoutStatus } from '@features/ledger/model/payoutStatus';
 
 // The list endpoint returns PayoutDto (status is a plain string), not the Payout entity shape.
 type Payout = z.infer<typeof ledgerCommon.PayoutDto>;
@@ -49,14 +50,8 @@ export default function PayoutHistory({ onSelectPayout }: { onSelectPayout: (pay
   };
 
   const getStatusBadge = (status?: string) => {
-    switch (status) {
-      case 'DRAFT': return <span className="px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded font-medium">DRAFT</span>;
-      case 'APPROVED': return <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded font-medium">APPROVED</span>;
-      case 'PAID': return <span className="px-2 py-1 bg-emerald-100 text-emerald-700 text-xs rounded font-medium">PAID</span>;
-      case 'FAILED': return <span className="px-2 py-1 bg-rose-100 text-rose-700 text-xs rounded font-medium">FAILED</span>;
-      case 'CANCELLED': return <span className="px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded font-medium">CANCELLED</span>;
-      default: return <span className="px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded font-medium">{status}</span>;
-    }
+    const { label, tone } = payoutStatus(status);
+    return <StatusPill label={label} tone={tone} />;
   };
 
   const handleExport = () => {
@@ -76,34 +71,36 @@ export default function PayoutHistory({ onSelectPayout }: { onSelectPayout: (pay
     <div className="flex flex-col h-full bg-slate-50 dark:bg-[#0f111a] text-slate-800 dark:text-[#f0ede6] p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-black flex items-center gap-2">
-          <History className="w-6 h-6 text-indigo-500" /> Payout History
+          <History className="w-6 h-6 text-rose-500" /> Payout History
         </h2>
         {payouts.length > 0 && (
             <Button variant="secondary" onClick={handleExport}><Download className="w-4 h-4 mr-2" /> Export CSV</Button>
         )}
       </div>
 
-      <div className="glass-panel p-4 mb-6 flex items-end gap-4">
+      <Surface variant="glass-overlay" elevation={4} radius="xl" className="p-4 mb-6 flex items-end gap-4">
           <div className="flex-1 max-w-xs">
               <label className="block text-xs font-bold text-slate-500 mb-1">Payee ID (UUID)</label>
               <Input value={searchPayeeId} onChange={e => setSearchPayeeId(e.target.value)} placeholder="Enter UUID..." />
           </div>
           <div>
               <label className="block text-xs font-bold text-slate-500 mb-1">Payee Type</label>
-              <select 
-                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              <Select
+                  aria-label="Payee Type"
+                  className="w-40"
                   value={searchPayeeType}
-                  onChange={e => setSearchPayeeType(e.target.value)}
-              >
-                  <option value="RESTAURANT">Restaurant</option>
-                  <option value="DRIVER">Driver</option>
-              </select>
+                  onChange={setSearchPayeeType}
+                  options={[
+                    { value: 'RESTAURANT', label: 'Restaurant' },
+                    { value: 'DRIVER', label: 'Driver' },
+                  ]}
+              />
           </div>
           <Button variant="primary" onClick={() => fetchPayouts(0)} disabled={loading || !searchPayeeId}>
               {loading ? <Spinner size="sm" /> : <Search className="w-4 h-4 mr-2" />}
               Search
           </Button>
-      </div>
+      </Surface>
 
       <div className="flex-1 overflow-y-auto">
         {loading && payouts.length === 0 ? (
@@ -114,13 +111,13 @@ export default function PayoutHistory({ onSelectPayout }: { onSelectPayout: (pay
             </div>
           </div>
         ) : payouts.length === 0 ? (
-          <div className="glass-panel p-12 text-center">
+          <Surface variant="glass-overlay" elevation={4} radius="xl" className="p-12 text-center">
             <Search className="w-16 h-16 text-slate-300 dark:text-slate-700 mx-auto mb-4" />
             <h3 className="text-xl font-bold mb-2">Search Payouts</h3>
             <p className="text-slate-500">Enter a payee ID above to view their payout history.</p>
-          </div>
+          </Surface>
         ) : (
-          <div className="glass-panel overflow-hidden">
+          <Surface variant="glass-overlay" elevation={4} radius="xl" className="overflow-hidden">
              <table className="w-full text-left border-collapse">
                 <thead>
                    <tr className="border-b border-slate-200 dark:border-slate-700/50">
@@ -168,7 +165,7 @@ export default function PayoutHistory({ onSelectPayout }: { onSelectPayout: (pay
                    <Button variant="ghost" disabled={page === totalPages - 1} onClick={() => fetchPayouts(page + 1)}>Next</Button>
                 </div>
              )}
-          </div>
+          </Surface>
         )}
       </div>
     </div>
