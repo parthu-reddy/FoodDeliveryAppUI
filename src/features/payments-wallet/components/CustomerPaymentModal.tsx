@@ -63,10 +63,12 @@ function CustomerPaymentModalInner({
     <>
       <Surface variant="glass-chrome" elevation={3} radius="lg" className="p-4 flex gap-4 items-center group relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-rose-500/10 to-amber-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-        <div className="w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-500/20 flex items-center justify-center shrink-0">
+        {/* Both `relative`: the hover gradient above is `absolute inset-0`, so without a
+            position of their own these two paint UNDER it and the address tints on hover. */}
+        <div className="relative w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-500/20 flex items-center justify-center shrink-0">
           <MapPin className="w-6 h-6 text-rose-500" />
         </div>
-        <div className="flex-1">
+        <div className="relative flex-1">
           <h4 className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-0.5">Delivering To</h4>
           <p className="text-sm font-semibold text-slate-800 dark:text-white line-clamp-2">{address || 'No address selected'}</p>
         </div>

@@ -223,7 +223,10 @@ function PaymentModalInner({
                   className="w-full relative group overflow-hidden bg-slate-900 dark:bg-rose-600 hover:bg-slate-800 dark:hover:bg-rose-500 text-white rounded-2xl py-4"
                 >
                   <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
-                  <div className="flex items-center justify-center gap-2 font-bold text-lg">
+                  {/* `relative` so the shimmer overlay above sweeps BEHIND this label
+                      rather than across it -- an unpositioned sibling paints under a
+                      positioned one. */}
+                  <div className="relative flex items-center justify-center gap-2 font-bold text-lg">
                     {canPay && selectedMethod ? buttonText(selectedMethod, amount) : 'Choose a payment method'}
                     <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </div>
