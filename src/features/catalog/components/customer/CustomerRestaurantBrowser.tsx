@@ -63,10 +63,10 @@ export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps>
       key="feed" {...presets.fade}
       className="p-5 space-y-6"
     >
-      {/* Reorder first, then the promo, then browse -- the order `Main.dc.html` specifies.
-          The promotional banner used to hold this slot, which put a campaign above the path
-          most customers actually take. The strip renders nothing when there is no history,
-          so a first-time customer still lands on discovery. */}
+      {/* Reorder first, then browse -- the order `Main.dc.html` specifies. A promotional
+          banner used to hold this slot, which put a campaign above the path most customers
+          actually take. The strip renders nothing when there is no history, so a first-time
+          customer still lands on discovery. */}
       <ReorderStrip
         suggestions={suggestions}
         onReorder={(s) => {
@@ -75,30 +75,15 @@ export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps>
         }}
       />
 
-      {/* Promo banner. A coloured panel keeps its colour and takes shape and depth from
-          Surface; it is not chrome, so it carries no blur and no white translucency. */}
-      <Surface
-        radius="lg"
-        elevation={2}
-        className="text-white p-5 relative overflow-hidden"
-        style={{
-          background: 'linear-gradient(140deg, var(--color-amber-700), var(--color-amber-900))',
-          border: 'none',
-        }}
-      >
-        <div className="absolute right-0 bottom-0 top-0 w-1/3 bg-[radial-gradient(circle,_transparent_30%,_rgba(0,0,0,0.1)_70%)] pointer-events-none" />
-        <div className="relative z-10 space-y-2 max-w-[240px]">
-          <span
-            className="text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full"
-            style={{ background: 'var(--color-amber-500)', color: 'var(--color-ink)' }}
-          >
-            FLAT 50% OFF
-          </span>
-          <h3 className="text-xl font-black tracking-tight leading-none text-white">Craving pizza or juicy burgers?</h3>
-          <p className="text-xs text-amber-50 font-semibold">Free delivery on your first three gourmet meals.</p>
-        </div>
-      </Surface>
-
+      {/* The promotional banner that used to sit here is gone.
+          Three reasons, in order of weight: `Main.dc.html` has no such section -- the home is
+          search, "Order it again", then "Open now near you"; its copy ("FLAT 50% OFF",
+          "Craving pizza or juicy burgers?") was hardcoded filler wired to no campaign data,
+          so it advertised an offer that does not exist; and it rendered as
+          amber-700 -> amber-900, which is brown. The dark end of the ramp was forced by the
+          white text on it, so the one appetising colour in the palette came out as mud at the
+          top of the appetite-led screen. A real campaign surface belongs here when
+          CampaignService feeds it. */}
       {/* Categories Selector */}
       <div className="space-y-2">
         <h4 className="font-bold text-sm tracking-wide text-slate-400 dark:text-slate-300 uppercase font-mono">Filter by Cravings</h4>

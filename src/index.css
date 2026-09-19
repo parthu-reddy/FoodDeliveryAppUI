@@ -246,21 +246,29 @@
 }
 
 @layer components {
+  /* The paper ground: --color-paper with three FAINT brand accents.
+     "Faint" is the whole point, and the previous values were not faint on a phone.
+     A radial gradient's `45%` extent is a share of the gradient BOX, so on a 338px-wide
+     portrait viewport all three circles grew relative to the width, overlapped, and tinted
+     the entire page pink -- measured on the deployed app at 338px on 2026-09-19. At 1440px
+     the same rule looks like three subtle accents, which is why it survived desk-width
+     review. Halved alphas and a tighter 32% extent keep them accents at every width. */
   .app-background {
     transition: background-color var(--duration-slow) var(--ease-out);
     background:
-      radial-gradient(circle at 15% 50%, rgba(220, 36, 72, .12), transparent 45%),
-      radial-gradient(circle at 85% 30%, rgba(244, 152, 25, .14), transparent 45%),
-      radial-gradient(circle at 50% 80%, rgba(181, 28, 56, .10), transparent 45%),
+      radial-gradient(circle at 15% 50%, rgba(220, 36, 72, .05), transparent 32%),
+      radial-gradient(circle at 85% 30%, rgba(244, 152, 25, .06), transparent 32%),
+      radial-gradient(circle at 50% 80%, rgba(181, 28, 56, .04), transparent 32%),
       #fffcf8;
     background-attachment: fixed;
   }
 
+  /* Same correction on the dark ground, where the overlap read as a red haze. */
   .dark .app-background {
     background:
-      radial-gradient(circle at 15% 50%, rgba(220, 36, 72, .20), transparent 45%),
-      radial-gradient(circle at 85% 30%, rgba(244, 152, 25, .18), transparent 45%),
-      radial-gradient(circle at 50% 80%, rgba(181, 28, 56, .16), transparent 45%),
+      radial-gradient(circle at 15% 50%, rgba(220, 36, 72, .09), transparent 32%),
+      radial-gradient(circle at 85% 30%, rgba(244, 152, 25, .08), transparent 32%),
+      radial-gradient(circle at 50% 80%, rgba(181, 28, 56, .07), transparent 32%),
       #12161c;
   }
 
