@@ -225,6 +225,7 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
      isNewPlaced={isNewPlaced}
      isRefundRequest={isRefundRequest}
      isSubmitting={isSubmitting}
+     setIsSubmitting={setIsSubmitting}
      showOtp={showOtp}
      setShowOtp={setShowOtp}
      setActiveModal={setActiveModal}

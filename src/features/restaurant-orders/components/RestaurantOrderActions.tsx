@@ -13,8 +13,38 @@ import { formatINR } from '@shared/money';
  * they live together — the set is one decision, not five independent buttons.
  */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Props = Record<string, any> & { order: Order };
+/**
+ * Typed, deliberately.
+ *
+ * This was `Record<string, any> & { order: Order }`, which made every prop optional and of
+ * type `any`. `RestaurantOrderCard` never passed `setIsSubmitting`, so it was `undefined`
+ * here, and `onClick={() => { setIsSubmitting(true); handleStatusTransition(order); }}` threw
+ * `TypeError: setIsSubmitting is not a function` on its FIRST line -- before the transition
+ * ever ran. Accept Order, Start Cooking and Mark Ready were all dead, silently: the throw
+ * happens inside a React event handler, so nothing reached the user but a button that did
+ * nothing. Confirmed live on 2026-09-19 against a real PENDING_ACCEPTANCE order.
+ *
+ * The `any` bag is what hid it. With these types, omitting a prop is a compile error.
+ */
+type ModalKind = 'none' | 'cancel' | 'delay' | 'refund';
+
+interface Props {
+  order: Order;
+  isCooking?: boolean;
+  isNewPlaced?: boolean;
+  isRefundRequest?: boolean;
+  isPrepared?: boolean;
+  isBeingDelivered?: boolean;
+  isSubmitting: boolean;
+  showOtp: boolean;
+  activeModal: ModalKind;
+  setShowOtp: React.Dispatch<React.SetStateAction<boolean>>;
+  setShowDetails: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsSubmitting: React.Dispatch<React.SetStateAction<boolean>>;
+  setActiveModal: React.Dispatch<React.SetStateAction<ModalKind>>;
+  setSelectedChatOrder: (order: Order) => void;
+  handleStatusTransition: (order: Order) => void;
+}
 
 export function RestaurantOrderActions(props: Props) {
   const {
