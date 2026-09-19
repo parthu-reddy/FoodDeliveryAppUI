@@ -5,6 +5,8 @@ import { motion } from 'motion/react';
 import { useMotionPresets } from '@shared/ui';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import CustomerRestaurantCard from './CustomerRestaurantCard';
+import { ReorderStrip } from '@features/customer-orders/components/ReorderStrip';
+import { useReorderSuggestions } from '@features/customer-orders/model/useReorderSuggestions';
 
 interface CustomerRestaurantBrowserProps {
   categories: string[];
@@ -27,6 +29,9 @@ export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps>
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [visibleCount, setVisibleCount] = useState(6);
+  // Reorder-first. `Main.dc.html` is titled "Home — reorder first"; this data was already
+  // being fetched, but only from Settings → History, three taps deep.
+  const { suggestions } = useReorderSuggestions();
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -58,6 +63,18 @@ export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps>
       key="feed" {...presets.fade}
       className="p-5 space-y-6"
     >
+      {/* Reorder first, then the promo, then browse -- the order `Main.dc.html` specifies.
+          The promotional banner used to hold this slot, which put a campaign above the path
+          most customers actually take. The strip renders nothing when there is no history,
+          so a first-time customer still lands on discovery. */}
+      <ReorderStrip
+        suggestions={suggestions}
+        onReorder={(s) => {
+          const match = restaurants.find((r) => r.id === s.restaurantId);
+          if (match) setSelectedRestaurant(match);
+        }}
+      />
+
       {/* Promo banner. A coloured panel keeps its colour and takes shape and depth from
           Surface; it is not chrome, so it carries no blur and no white translucency. */}
       <Surface
@@ -119,7 +136,7 @@ export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps>
       {/* Restaurants Feed */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h4 className="font-bold text-lg text-slate-900 dark:text-[#f0ede6]">Premium Kitchens</h4>
+          <h4 className="font-bold text-lg text-slate-900 dark:text-[#f0ede6]">Open now near you</h4>
           <span className="text-xs font-mono text-slate-400 dark:text-slate-300">{filteredRestaurants.length} open</span>
         </div>
 
