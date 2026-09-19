@@ -114,7 +114,7 @@ export const RestaurantOrderQueue = React.memo(function RestaurantOrderQueue({
    that is what a kanban is for, and scrolling it sideways at 1024px was a phone
    layout that happened to be wide.
  */}
- <div className="flex gap-4 pb-6 w-full overflow-x-auto touch-pan-x snap-x snap-mandatory scrollbar-thin scrollbar-thumb-rose-500/30 scrollbar-track-transparent md:grid md:grid-cols-2 md:overflow-visible md:snap-none lg:grid-cols-3 xl:grid-cols-6">
+ <div className="flex gap-4 pb-6 w-full overflow-x-auto touch-pan-x snap-x snap-mandatory scrollbar-thin scrollbar-thumb-rose-500/30 scrollbar-track-transparent md:grid md:overflow-visible md:snap-none md:[grid-template-columns:repeat(auto-fit,minmax(310px,1fr))]">
 
  <KanbanColumn
  title="New Placed"
