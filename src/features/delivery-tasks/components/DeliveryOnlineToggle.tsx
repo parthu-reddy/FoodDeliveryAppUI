@@ -1,3 +1,13 @@
+import { Button } from '@shared/ui';
+
+/**
+ * On duty or off. The single most consequential control on the rider's screen — it is what
+ * makes their phone start ringing — so it is a 48px target and it states which way it is.
+ *
+ * Was a hand-rolled `<button>` with three branches of raw slate utilities and a hard-coded
+ * rose glow. It carried no accessible state at all: a screen reader read "Online Duty" with
+ * no indication of whether that was the current state or the thing the button would do.
+ */
 
 interface DeliveryOnlineToggleProps {
   isOnline: boolean;
@@ -10,21 +20,20 @@ export function DeliveryOnlineToggle({
   isOnline,
   deliveryExecutiveId,
   isProfileMandatory,
-  handleToggleOnline
+  handleToggleOnline,
 }: DeliveryOnlineToggleProps) {
+  const blocked = !deliveryExecutiveId || isProfileMandatory;
+
   return (
-    <button
+    <Button
+      size="touch"
+      variant={isOnline ? 'success' : 'secondary'}
       onClick={handleToggleOnline}
-      disabled={!deliveryExecutiveId || isProfileMandatory}
-      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
-        isOnline 
-          ? 'bg-rose-500 text-white shadow-[0_0_10px_rgba(244,63,94,0.3)]' 
-          : (!deliveryExecutiveId || isProfileMandatory)
-            ? 'bg-slate-100 dark:bg-slate-900 text-slate-400 dark:text-slate-600 opacity-60 cursor-not-allowed'
-            : 'bg-slate-200 dark:bg-slate-900 text-slate-500 dark:text-[#f0ede6]'
-      }`}
+      disabled={blocked}
+      aria-pressed={isOnline}
+      title={blocked ? 'Complete your profile before going on duty' : undefined}
     >
       {isOnline ? 'Online Duty' : 'Offline'}
-    </button>
+    </Button>
   );
 }

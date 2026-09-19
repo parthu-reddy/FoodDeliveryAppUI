@@ -1,4 +1,5 @@
-import { MenuItem, Order, VerificationStatus, Brand, Outlet } from "@/types";
+import { Surface, Tabs } from '@shared/ui';
+import { Order, VerificationStatus, Brand, Outlet } from "@/types";
 import {
  CheckCircle,
  ChevronLeft,
@@ -9,6 +10,7 @@ import {
  Store, Utensils
 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useMotionPresets } from '@shared/ui';
 import React, { useState } from 'react';
 
 import BrandMasterMenu from '@features/catalog/components/restaurant/BrandMasterMenu';
@@ -22,7 +24,6 @@ import { OrderHistory } from '@features/restaurant-orders/components/OrderHistor
 interface RestaurantSettingsShellProps {
  brands: Brand[];
  outlets: Outlet[];
- menuList: MenuItem[];
  selectedOutletId: string;
  restaurantId: string;
  loadData: () => void;
@@ -34,7 +35,6 @@ interface RestaurantSettingsShellProps {
 export const RestaurantSettingsShell: React.FC<RestaurantSettingsShellProps> = ({
  brands,
  outlets,
- menuList,
  selectedOutletId,
  restaurantId,
  loadData,
@@ -54,19 +54,17 @@ export const RestaurantSettingsShell: React.FC<RestaurantSettingsShellProps> = (
  }
  }, [outlets.length]);
 
+ const presets = useMotionPresets();
  return (
  <>
  <motion.div
- key="settings-panel"
- initial={{ opacity: 0, y: 10 }}
- animate={{ opacity: 1, y: 0 }}
- exit={{ opacity: 0, y: -10 }}
+ key="settings-panel" {...presets.rise}
  className="p-5 space-y-6"
  >
  {/* Settings Header Block */}
- <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/40 dark:bg-slate-900/40 border border-rose-500/20 dark:border-rose-500/30 p-5 rounded-3xl backdrop-blur-md">
+ <Surface radius="xl" elevation={0} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5">
  <div className="flex items-center gap-3">
- <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-500 to-amber-500 flex items-center justify-center text-white shadow-md shadow-rose-500/10 shrink-0">
+ <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-500 to-amber-500 flex items-center justify-center text-white shrink-0">
  <Settings className="w-5 h-5 animate-[spin_8s_linear_infinite]" />
  </div>
  <div>
@@ -82,53 +80,33 @@ export const RestaurantSettingsShell: React.FC<RestaurantSettingsShellProps> = (
  <ChevronLeft className="w-4 h-4" />
  <span>Back to Kitchen Feed</span>
  </button>
- </div>
- <div className="flex bg-slate-100/80 dark:bg-slate-950/45 p-1 rounded-2xl border border-rose-500/20 dark:border-rose-500/30/30 gap-1.5 max-w-md mb-6">
- <button
- onClick={() => setSettingsTab("outlets")}
- className={`flex-1 py-2 px-3 text-xs font-bold rounded-xl cursor-pointer transition flex items-center justify-center gap-1.5 ${
- settingsTab === "outlets"
- ? "bg-white/50 dark:bg-slate-900/50 text-slate-900 dark:text-[#f0ede6] shadow-sm border border-rose-500/20 dark:border-rose-500/30 backdrop-blur-md" 
- : "text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-slate-200"
- }`}
- >
- <Store className="w-4 h-4 text-rose-500" />
- <span>Outlet Management</span>
- </button>
- <button
- disabled={outlets.length === 0}
- onClick={() => setSettingsTab("menu-editor")}
- className={`flex-1 py-2 px-3 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 ${
- outlets.length === 0 ? "opacity-50 cursor-not-allowed grayscale" : "cursor-pointer"
- } ${
- settingsTab === "menu-editor"
- ? "bg-white/50 dark:bg-slate-900/50 text-slate-900 dark:text-[#f0ede6] shadow-sm border border-rose-500/20 dark:border-rose-500/30 backdrop-blur-md" 
- : "text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-slate-200"
- }`}
- >
- <Utensils className="w-4 h-4 text-amber-500" />
- <span>Menu Catalog Editor</span>
- </button>
-
- <button
- disabled={outlets.length === 0}
- onClick={() => setSettingsTab("history")}
- className={`flex-1 py-2 px-3 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 ${
- outlets.length === 0 ? "opacity-50 cursor-not-allowed grayscale" : "cursor-pointer"
- } ${
- settingsTab === "history"
- ? "bg-white/50 dark:bg-slate-900/50 text-slate-900 dark:text-[#f0ede6] shadow-sm border border-rose-500/20 dark:border-rose-500/30 backdrop-blur-md" 
- : "text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-slate-200"
- }`}
- >
- <History className="w-4 h-4 text-amber-500" />
- <span>Order History</span>
- </button>
- </div>
+ </Surface>
+ <Tabs
+ label="Restaurant settings sections"
+ value={settingsTab}
+ onChange={setSettingsTab}
+ className="max-w-md mb-6"
+ items={[
+ {
+ key: "outlets" as const,
+ label: <span className="flex items-center justify-center gap-1.5"><Store className="w-4 h-4 text-rose-500" /><span>Outlet Management</span></span>,
+ },
+ {
+ key: "menu-editor" as const,
+ label: <span className="flex items-center justify-center gap-1.5"><Utensils className="w-4 h-4 text-amber-500" /><span>Menu Catalog Editor</span></span>,
+ disabled: outlets.length === 0,
+ },
+ {
+ key: "history" as const,
+ label: <span className="flex items-center justify-center gap-1.5"><History className="w-4 h-4 text-amber-500" /><span>Order History</span></span>,
+ disabled: outlets.length === 0,
+ },
+ ]}
+ />
 
  {settingsTab === "outlets" && (
  <div className="space-y-6 ">
- <div className="bg-gradient-to-r from-rose-500/10 to-amber-500/10 dark:from-rose-500/5 dark:to-amber-500/5 border border-rose-500/15 p-5 rounded-3xl space-y-2">
+ <div className="bg-gradient-to-r from-rose-500/10 to-amber-500/10 dark:from-rose-500/5 dark:to-amber-500/5 border border-rose-500/15 p-5 rounded-2xl space-y-2">
  <div className="flex items-center gap-2 text-rose-500">
  <Sparkles className="w-5 h-5 animate-pulse" />
  <h4 className="font-extrabold text-sm tracking-tight uppercase font-sans">Hierarchy Onboarding</h4>
@@ -142,7 +120,7 @@ export const RestaurantSettingsShell: React.FC<RestaurantSettingsShellProps> = (
  {brands.length === 0 ? (
  <BrandRegistration onRefresh={loadData} />
  ) : (
- <div className="p-4 border border-amber-500/20 rounded-2xl bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 flex flex-col gap-1 shadow-sm">
+ <div className="p-4 border border-amber-500/20 rounded-2xl bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 flex flex-col gap-1">
  <p className="font-bold text-sm flex items-center gap-2"><CheckCircle className="w-4 h-4" /> Brand Registered Successfully</p>
  <p className="text-xs">You have completed brand registration. You can now add an outlet.</p>
  </div>
@@ -152,11 +130,11 @@ export const RestaurantSettingsShell: React.FC<RestaurantSettingsShellProps> = (
  )}
  </div>
  <div className="space-y-6">
- <div className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 p-5 rounded-[2rem] shadow-sm">
+ <Surface radius="xl" elevation={1} className="p-5">
  <h5 className="font-extrabold text-xs text-slate-800 dark:text-[#f0ede6] uppercase tracking-wider mb-4 border-b border-rose-500/20 dark:border-rose-500/30 pb-3">Your Brands</h5>
  <div className="space-y-3">
  {brands.map(b => (
- <div key={b.id} className="p-3 bg-white/70 dark:bg-slate-950/45 border border-rose-500/20 dark:border-rose-500/30 rounded-2xl flex flex-col gap-2 shadow-sm">
+ <Surface radius="lg" elevation={1} className="p-3 flex flex-col gap-2" key={b.id}>
  <div className="flex justify-between items-center">
  <span className="font-extrabold text-sm text-slate-800 dark:text-[#f0ede6]">{b.name}</span>
  <span className="text-[10px] font-mono text-slate-400 dark:text-slate-300">ID: {b.id}</span>
@@ -180,15 +158,15 @@ export const RestaurantSettingsShell: React.FC<RestaurantSettingsShellProps> = (
  </span>
  </div>
  </div>
- </div>
+ </Surface>
  ))}
  </div>
- </div>
- <div className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 p-5 rounded-[2rem] shadow-sm">
+ </Surface>
+ <Surface radius="xl" elevation={1} className="p-5">
  <h5 className="font-extrabold text-xs text-slate-800 dark:text-[#f0ede6] uppercase tracking-wider mb-4 border-b border-rose-500/20 dark:border-rose-500/30 pb-3">Your Outlets</h5>
  <div className="space-y-3">
  {outlets.map(o => (
- <div key={o.id} className="p-3 bg-white/70 dark:bg-slate-950/45 border border-rose-500/20 dark:border-rose-500/30 rounded-2xl flex flex-col gap-2 shadow-sm">
+ <Surface radius="lg" elevation={1} className="p-3 flex flex-col gap-2" key={o.id}>
  <div className="flex justify-between items-start">
  <div>
  <span className="font-extrabold text-sm text-slate-800 dark:text-[#f0ede6]">{o.name}</span>
@@ -221,14 +199,14 @@ export const RestaurantSettingsShell: React.FC<RestaurantSettingsShellProps> = (
  ))}
  </div>
  )}
- </div>
+ </Surface>
  ))}
  </div>
- </div>
+ </Surface>
  {brands.length > 0 && (
- <div className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 p-5 rounded-[2rem] shadow-sm mt-6">
+ <Surface radius="xl" elevation={1} className="p-5 mt-6">
  <BrandMasterMenu brandId={brands[0].id} onRefresh={loadData} />
- </div>
+ </Surface>
  )}
  </div>
  </div>
@@ -239,13 +217,12 @@ export const RestaurantSettingsShell: React.FC<RestaurantSettingsShellProps> = (
  <OutletMenuEditor
  restaurantId={selectedOutletId || restaurantId}
  brandId={brands.length > 0 ? brands[0].id : ''}
- menuList={menuList}
  onRefresh={loadData}
  />
  </div>
  )}
  {settingsTab === "history" && selectedOutletId && (
- <div className="bg-white/40 dark:bg-slate-900/40 p-6 rounded-3xl border border-amber-500/20 dark:border-amber-500/30 backdrop-blur-md shadow-sm">
+ <Surface radius="xl" elevation={1} className="p-6">
  <OrderHistory 
  restaurantId={selectedOutletId} 
  onOpenChat={(id) => {
@@ -253,7 +230,7 @@ export const RestaurantSettingsShell: React.FC<RestaurantSettingsShellProps> = (
  if (o) setSelectedChatOrder(o);
  }}
  />
- </div>
+ </Surface>
  )}
  </motion.div>
 

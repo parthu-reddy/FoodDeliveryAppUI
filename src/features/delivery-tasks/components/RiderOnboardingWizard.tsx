@@ -1,12 +1,11 @@
-import { useToast } from "@/contexts/ToastContext";
-import { parseApiError } from '@/lib/parseApiError';
-import { deliveryApi, identityApi } from "@/lib/zodiosClients";
+import { Surface, surfaceStyle } from '@shared/ui';
+import { STEP_COUNT, useRiderOnboarding } from '@features/delivery-tasks/model/useRiderOnboarding';
 import DocumentUploadField from "@features/kyc/components/DocumentUploadField";
 import ImageUploadField from "@features/kyc/components/ImageUploadField";
 import { Button, CinematicFoodBackground, FormField, Input, Select, Spinner } from '@shared/ui';
 import { AlertCircle, Car, CheckCircle, ChevronRight, FileText, Landmark, LogOut, UserSquare } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
-import { useEffect, useState } from 'react';
+import { useMotionPresets } from '@shared/ui';
 
 interface RiderOnboardingWizardProps {
   riderPhone: string;
@@ -17,6 +16,7 @@ interface RiderOnboardingWizardProps {
   onLogout?: () => void;
 }
 
+// One entry per step the hook counts; STEP_COUNT asserts they stay in step.
 const steps = [
   { id: 'profile', title: 'Basic Profile', icon: UserSquare, description: 'Personal details & photo' },
   { id: 'dl', title: 'Driving License', icon: FileText, description: 'Verify your license' },
@@ -25,165 +25,21 @@ const steps = [
   { id: 'selfie', title: 'Face Match', icon: UserSquare, description: 'Biometric verification' }
 ];
 
+if (steps.length !== STEP_COUNT) {
+  throw new Error(`steps and STEP_COUNT disagree: ${steps.length} vs ${STEP_COUNT}`);
+}
+
 export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, userId, initialName, onLogout }: RiderOnboardingWizardProps) {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { showSuccess, showError } = useToast();
+  const {
+    currentStep, errorMsg, isSubmitting, verificationStatus,
+    name, setName, photo, setPhoto, vehicle, setVehicle, vehicleType, setVehicleType,
+    dlNumber, setDlNumber, dob, setDob, dlDoc, setDlDoc,
+    rcNumber, setRcNumber, rcDoc, setRcDoc,
+    bankAccount, setBankAccount, ifsc, setIfsc, selfieDoc, setSelfieDoc,
+    handleNext, submitProfile, submitDL, submitRC, submitBank, submitSelfie,
+  } = useRiderOnboarding({ riderPhone, initialName, userId, onComplete });
 
-  const [verificationStatus, setVerificationStatus] = useState<Record<string, unknown> | null>(null);
 
-  // Form State
-  const [name, setName] = useState(initialName || '');
-  const [photo, setPhoto] = useState('');
-  const [vehicle, setVehicle] = useState('');
-  const [vehicleType, setVehicleType] = useState('BICYCLE');
-
-  const [dlNumber, setDlNumber] = useState('');
-  const [dob, setDob] = useState('');
-  const [dlDoc, setDlDoc] = useState('');
-
-  const [rcNumber, setRcNumber] = useState('');
-  const [rcDoc, setRcDoc] = useState('');
-
-  const [bankAccount, setBankAccount] = useState('');
-  const [ifsc, setIfsc] = useState('');
-
-  const [selfieDoc, setSelfieDoc] = useState('');
-
-  useEffect(() => {
-     
-    // eslint-disable-next-line react-hooks/immutability
-    loadStatus();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const loadStatus = async () => {
-    try {
-      const verRes = await deliveryApi.deliveryVerification.get(`/api/delivery/verification/status`, {});
-      if (verRes?.data) {
-        setVerificationStatus(verRes.data);
-      }
-
-      const deliveryRes = await deliveryApi.deliveryExecutive.get('/api/delivery/profile', { queries: { phoneNumber: "" }, headers: { "X-User-Id": userId } });
-      if (deliveryRes?.data) {
-        setVehicle(deliveryRes.data.vehicleNumber || '');
-        setVehicleType(deliveryRes.data.vehicleType || 'BICYCLE');
-        setPhoto(deliveryRes.data.photoUrl || '');
-        if (deliveryRes.data.fullName && !name) setName(deliveryRes.data.fullName);
-      }
-    } catch (e: unknown) {
-      console.error("Error loading onboarding status", e);
-    }
-  };
-
-  const handleNext = () => {
-    setErrorMsg('');
-    setCurrentStep(s => Math.min(steps.length - 1, s + 1));
-  };
-
-  const submitProfile = async () => {
-    if (!name || !vehicle) {
-      setErrorMsg('Please fill in all required fields.');
-      return;
-    }
-    setIsSubmitting(true);
-    try {
-      if (!initialName && userId) {
-        await identityApi.user.put('/api/v1/users/profile', { id: userId, name, phone: riderPhone }, { headers: { "X-User-Id": userId } });
-      }
-      await deliveryApi.deliveryExecutive.post('/api/delivery/onboard', {
-        phoneNumber: riderPhone,
-        fullName: name,
-        vehicleNumber: vehicle,
-        vehicleType: vehicleType as "BICYCLE" | "EV_TWO_WHEELER" | "MCWG" | "LMV",
-        photoUrl: photo
-      }, {});
-      showSuccess('Profile saved');
-      handleNext();
-    } catch (e: unknown) {
-      const axiosErr = e as { response?: { data?: { message?: string, error?: string } }, message?: string };
-      setErrorMsg(axiosErr.response?.data?.message || axiosErr.response?.data?.error || axiosErr.message || 'Failed to save profile');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const submitDL = async () => {
-    if (!dlNumber || !dob || !dlDoc) {
-      setErrorMsg('Please complete all DL fields.');
-      return;
-    }
-    setIsSubmitting(true);
-    try {
-      // @ts-expect-error auto-migration type suppression
-      await deliveryApi.deliveryVerification.post(`/api/delivery/verification/driving-license`, { dlNumber, documentUrl: dlDoc, dob: dob });
-      showSuccess('Driving License submitted');
-      await loadStatus();
-      handleNext();
-    } catch (e: unknown) {
-      const axiosErr = e as { response?: { data?: { error?: string } } };
-      setErrorMsg(axiosErr.response?.data?.error || 'Failed to verify DL');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const submitRC = async () => {
-    if (!rcNumber || !rcDoc) {
-      setErrorMsg('Please complete all RC fields.');
-      return;
-    }
-    setIsSubmitting(true);
-    try {
-      await deliveryApi.deliveryVerification.post(`/api/delivery/verification/vehicle-rc`, { registrationNumber: rcNumber, documentUrl: rcDoc });
-      showSuccess('Vehicle RC submitted');
-      await loadStatus();
-      handleNext();
-    } catch (e: unknown) {
-      const axiosErr = e as { response?: { data?: { error?: string } } };
-      setErrorMsg(axiosErr.response?.data?.error || 'Failed to verify RC');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const submitBank = async () => {
-    if (!bankAccount || !ifsc) {
-      setErrorMsg('Please complete all bank fields.');
-      return;
-    }
-    setIsSubmitting(true);
-    try {
-      await deliveryApi.deliveryVerification.post(`/api/delivery/verification/bank-account`, { accountNumber: bankAccount, ifscCode: ifsc, kycFullName: name });
-      showSuccess('Bank Verification Initiated (Penny Drop)');
-      await loadStatus();
-      handleNext();
-    } catch (e: unknown) {
-      setErrorMsg(parseApiError(e, 'Failed to verify bank').message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const submitSelfie = async () => {
-    if (!selfieDoc) {
-      setErrorMsg('Please upload a selfie.');
-      return;
-    }
-    setIsSubmitting(true);
-    try {
-      await deliveryApi.deliveryVerification.post(`/api/delivery/verification/biometric`, { selfieUrl: selfieDoc });
-      showSuccess('Biometric check complete!');
-      await loadStatus();
-      onComplete(); // Done!
-    } catch (e: unknown) {
-      setErrorMsg(parseApiError(e, 'Face match failed').message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -213,7 +69,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
             <FormField label="Profile Photo" required>
               <ImageUploadField value={photo} onChange={setPhoto} folderId={userId || 'onboarding'} placeholder="Upload clear profile photo" />
             </FormField>
-            <Button onClick={submitProfile} disabled={isSubmitting} variant="primary" fullWidth className="!mt-4 !py-3.5 shadow-md">
+            <Button onClick={submitProfile} disabled={isSubmitting} size="touch" variant="primary" fullWidth className="!mt-4">
               {isSubmitting ? <Spinner size="xs" /> : <ChevronRight className="w-4 h-4" />}
               Save & Continue
             </Button>
@@ -230,7 +86,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white">Driving License Approved</h3>
                 <p className="text-sm text-slate-500">Your DL has been verified successfully.</p>
               </div>
-              <Button onClick={handleNext} variant="primary" fullWidth>Continue</Button>
+              <Button onClick={handleNext} size="touch" variant="primary" fullWidth>Continue</Button>
             </div>
           );
         }
@@ -245,7 +101,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
             <FormField label="Upload DL Image" required>
               <DocumentUploadField value={dlDoc} onChange={setDlDoc} docType="DRIVING_LICENSE" placeholder="Upload Front of DL" />
             </FormField>
-            <Button onClick={submitDL} disabled={isSubmitting} variant="primary" fullWidth className="!mt-4 !py-3.5 shadow-md">
+            <Button onClick={submitDL} disabled={isSubmitting} size="touch" variant="primary" fullWidth className="!mt-4">
               {isSubmitting ? <Spinner size="xs" /> : <ChevronRight className="w-4 h-4" />}
               Verify License
             </Button>
@@ -262,7 +118,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white">Vehicle RC Approved</h3>
                 <p className="text-sm text-slate-500">Your vehicle registration is verified.</p>
               </div>
-              <Button onClick={handleNext} variant="primary" fullWidth>Continue</Button>
+              <Button onClick={handleNext} size="touch" variant="primary" fullWidth>Continue</Button>
             </div>
           );
         }
@@ -274,7 +130,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
             <FormField label="Upload RC Document" required>
               <DocumentUploadField value={rcDoc} onChange={setRcDoc} docType="RC" placeholder="Upload RC PDF/Image" />
             </FormField>
-            <Button onClick={submitRC} disabled={isSubmitting} variant="primary" fullWidth className="!mt-4 !py-3.5 shadow-md">
+            <Button onClick={submitRC} disabled={isSubmitting} size="touch" variant="primary" fullWidth className="!mt-4">
               {isSubmitting ? <Spinner size="xs" /> : <ChevronRight className="w-4 h-4" />}
               Verify Vehicle
             </Button>
@@ -291,7 +147,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white">Bank Verified</h3>
                 <p className="text-sm text-slate-500">Penny drop successful. Name matches.</p>
               </div>
-              <Button onClick={handleNext} variant="primary" fullWidth>Continue</Button>
+              <Button onClick={handleNext} size="touch" variant="primary" fullWidth>Continue</Button>
             </div>
           );
         }
@@ -303,7 +159,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
             <FormField label="IFSC Code" required>
               <Input type="text" value={ifsc} onChange={e => setIfsc(e.target.value)} />
             </FormField>
-            <Button onClick={submitBank} disabled={isSubmitting} variant="primary" fullWidth className="!mt-4 !py-3.5 shadow-md">
+            <Button onClick={submitBank} disabled={isSubmitting} size="touch" variant="primary" fullWidth className="!mt-4">
               {isSubmitting ? <Spinner size="xs" /> : <ChevronRight className="w-4 h-4" />}
               Initiate Penny Drop
             </Button>
@@ -316,7 +172,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
             <FormField label="Upload Selfie" required>
               <DocumentUploadField value={selfieDoc} onChange={setSelfieDoc} docType="SELFIE" placeholder="Take a clear selfie" />
             </FormField>
-            <Button onClick={submitSelfie} disabled={isSubmitting} variant="success" fullWidth className="!mt-4 !py-3.5 shadow-md">
+            <Button onClick={submitSelfie} disabled={isSubmitting} size="touch" variant="success" fullWidth className="!mt-4">
               {isSubmitting ? <Spinner size="xs" /> : <CheckCircle className="w-4 h-4" />}
               Complete Verification
             </Button>
@@ -327,21 +183,21 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
     }
   };
 
+  const presets = useMotionPresets();
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0 z-0">
         <CinematicFoodBackground theme={theme} />
-        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+        <Surface elevation={0} className="absolute inset-0" />
       </div>
 
-      <motion.div
-        initial={{ y: 40, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className={`w-full max-w-xl z-10 p-6 md:p-8 rounded-3xl shadow-2xl border ${theme === 'dark' ? 'bg-slate-900/90 border-slate-800' : 'bg-white/95 border-white'} backdrop-blur-xl relative flex flex-col max-h-[90vh]`}
+      <motion.div {...presets.rise}
+        className="w-full max-w-xl z-10 p-6 md:p-8 relative flex flex-col max-h-[90vh]"
+        style={surfaceStyle({ variant: 'glass-overlay', radius: 'lg', elevation: 4 })}
       >
         {onLogout && (
           <div className="absolute top-4 right-4 md:top-6 md:right-6 z-20">
-            <Button onClick={onLogout} variant="danger" title="Logout">
+            <Button onClick={onLogout} size="touch" variant="danger" title="Logout">
               <LogOut className="w-4 h-4" />
               <span>Logout</span>
             </Button>
@@ -362,7 +218,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
             const isPast = currentStep > idx;
             return (
               <div key={step.id} className="flex flex-col items-center">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-500 shadow-sm ${isActive ? 'bg-rose-500 text-white scale-110' : isPast ? 'bg-amber-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'}`}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-500 ${isActive ? 'bg-rose-500 text-white scale-110' : isPast ? 'bg-amber-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'}`}>
                   {isPast ? <CheckCircle className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
                 </div>
               </div>
@@ -380,10 +236,7 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
         <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
           <AnimatePresence mode="wait">
             <motion.div
-              key={currentStep}
-              initial={{ x: 20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -20, opacity: 0 }}
+              key={currentStep} {...presets.slideInX}
               transition={{ duration: 0.2 }}
             >
               <div className="mb-6">

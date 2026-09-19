@@ -1,3 +1,4 @@
+import { Surface } from '@shared/ui';
 import { customerApi } from '@/lib/zodiosClients';
 import { Order } from '@/types';
 import { Button, Modal, Spinner } from '@shared/ui';
@@ -57,7 +58,7 @@ export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalPr
     >
           <div className="flex flex-col max-h-[90vh]">
             {/* Header */}
-            <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl z-10">
+            <Surface variant="glass-chrome" elevation={0} className="p-6 border-b flex justify-between items-center sticky top-0 z-10">
               <div>
                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
                   <Receipt className="w-6 h-6 text-amber-500" />
@@ -73,7 +74,7 @@ export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalPr
               >
                 <X className="w-5 h-5" />
               </button>
-            </div>
+            </Surface>
 
             {/* Content */}
             <div className="p-6 overflow-y-auto custom-scrollbar">

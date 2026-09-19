@@ -1,3 +1,4 @@
+import { Surface } from '@shared/ui';
 import { useTheme } from "@/contexts/ThemeContext";
 import { customerApi } from "@/lib/zodiosClients";
 import AdminLiveOperations from "@features/admin-ops/components/AdminLiveOperations";
@@ -41,7 +42,7 @@ export default function AdminPortal({
   return (
     <div className="flex w-full h-full bg-transparent overflow-hidden">
       {/* Sidebar Navigation */}
-      <div className="w-64 bg-white/20 dark:bg-slate-900/40 backdrop-blur-xl border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 shadow-2xl z-20">
+      <Surface elevation={2} className="w-64 border-r flex flex-col shrink-0 z-20">
         <div className="p-6 flex items-center gap-3 border-b border-rose-500/20">
           <LaBouffeLogo showText={false} iconSize="w-8 h-8" textColorClass="text-slate-800 dark:text-[#f0ede6]" subColorClass="text-rose-500" />
           <h1 className="font-black text-xl tracking-tight text-slate-800 dark:text-[#f0ede6]">Admin</h1>
@@ -49,7 +50,6 @@ export default function AdminPortal({
 
         <div className="flex-1 p-4 overflow-y-auto">
           <SidebarNav
-            activeColor="indigo"
             activeKey={activeTab}
             onSelect={(key) => setActiveTab(key as 'deliveries' | 'interventions' | 'users' | 'categories' | 'map' | 'ledger' | 'payouts' | 'money_ops' | 'support_tickets' | 'reviews')}
             items={[
@@ -77,7 +77,7 @@ export default function AdminPortal({
             </Button>
           )}
         </div>
-      </div>
+      </Surface>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 bg-transparent text-slate-800 dark:text-[#f0ede6]">

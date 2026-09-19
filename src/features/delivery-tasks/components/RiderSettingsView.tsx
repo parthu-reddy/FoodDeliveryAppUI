@@ -1,23 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { motion } from 'motion/react';
-import { X, User, Phone, Mail, Car, Image as ImageIcon, AlertCircle, LogOut, ShieldCheck, CheckCircle } from 'lucide-react';
-import { customerApi, deliveryApi, identityApi } from "@/lib/zodiosClients";
-import { useToast } from '@/contexts/ToastContext';
 import ImageUploadField from "@features/kyc/components/ImageUploadField";
-
-import { Select, TransactionHistoryTable, WalletTransaction } from '@shared/ui';
+import { RiderWalletSection } from '@features/delivery-tasks/components/RiderWalletSection';
+import { useRiderSettingsForm } from '@features/delivery-tasks/model/useRiderSettingsForm';
+import { Button, Input, Select, Surface } from '@shared/ui';
 import { ActiveSessions } from "@shared/ui/ActiveSessions";
-import { z } from 'zod';
-
-import { formatINR } from '@shared/money';
-
-const riderProfileSchema = z.object({
-  name: z.string().min(1, 'Please enter your full name.').max(100, 'Name cannot exceed 100 characters.'),
-  email: z.string().min(1, 'Please enter your email address.').email('Please enter a valid email address.').max(255, 'Email cannot exceed 255 characters.'),
-  vehicle: z.string().min(1, 'Please enter your vehicle registration.').max(50, 'Vehicle registration cannot exceed 50 characters.'),
-  vehicleType: z.string().min(1, 'Please select your vehicle type.'),
-  photoUrl: z.string().url('Please enter a valid URL for your profile photo.').max(1000, 'URL cannot exceed 1000 characters.').optional().or(z.literal(''))
-});
+import { AlertCircle, Car, CheckCircle, Image as ImageIcon, LogOut, Mail, Phone, ShieldCheck, User, X } from 'lucide-react';
+import { motion } from 'motion/react';
+import { useMotionPresets } from '@shared/ui';
+import React from 'react';
 
 interface RiderSettingsViewProps {
   onBack: () => void;
@@ -35,190 +24,42 @@ export default function RiderSettingsView({
   riderPhone,
   onProfileUpdated
 }: RiderSettingsViewProps) {
-  // Identity Service Profile
-  const [editName, setEditName] = useState('');
-  const [editEmail, setEditEmail] = useState('');
-  const [userId, setUserId] = useState('');
-  const [initialName, setInitialName] = useState('');
-  const [initialEmail, setInitialEmail] = useState('');
-
-  // Delivery Profile
-  const [editVehicle, setEditVehicle] = useState('');
-  const [editVehicleType, setEditVehicleType] = useState('BICYCLE');
-  const [editPhoto, setEditPhoto] = useState('');
-
-  // Document Verification State
-
-  const [verificationStatus, setVerificationStatus] = useState<{ allDocsApproved?: boolean; bankApproved?: boolean } | null>(null);
-
-  // State
-  const [isSaving, setIsSaving] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
-
-  const { showSuccess } = useToast();
+  const {
+    editName, setEditName,
+    editEmail, setEditEmail,
+    editVehicle, setEditVehicle,
+    editVehicleType, setEditVehicleType,
+    editPhoto, setEditPhoto,
+    userId,
+    initialName,
+    initialEmail,
+    verificationStatus,
+    isSaving,
+    errorMsg,
+    saveProfile,
+  } = useRiderSettingsForm({ riderPhone, onProfileUpdated });
   
-  // Wallet State
-  const [walletBalance, setWalletBalance] = useState<number>(0);
-  const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
-  const [txPage, setTxPage] = useState(0);
-  const [txTotalPages, setTxTotalPages] = useState(1);
-  const [txLoading, setTxLoading] = useState(false);
-
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        // Load Identity Profile
-        const identityRes = await identityApi.user.get('/api/v1/users/profile', { headers: { "X-User-Id": riderPhone || "" } });
-        if (identityRes?.data) {
-          setEditName(identityRes.data.name || '');
-          setInitialName(identityRes.data.name || '');
-          setEditEmail(identityRes.data.email || '');
-          setInitialEmail(identityRes.data.email || '');
-          setUserId(identityRes.data.id || '');
-        }
-
-        // Load Delivery Profile
-        const deliveryRes = await deliveryApi.deliveryExecutive.get('/api/delivery/profile', { queries: { phoneNumber: riderPhone || "" }, headers: { "X-User-Id": riderPhone || "" } });
-        if (deliveryRes && deliveryRes.data) {
-          const profile = deliveryRes.data;
-          setEditVehicle(profile.vehicleNumber || '');
-          setEditVehicleType(profile.vehicleType || 'BICYCLE');
-          setEditPhoto(profile.photoUrl || '');
-          if (profile.fullName && !identityRes?.data?.name) {
-             setEditName(profile.fullName);
-             setInitialName(profile.fullName);
-          }
-        }
-
-        // Load Verification Status
-        try {
-          const verRes = await deliveryApi.deliveryVerification.get(`/api/delivery/verification/status`, {});
-          if (verRes?.data) {
-            setVerificationStatus({
-              allDocsApproved: verRes.data.fullyVerified === true || String(verRes.data.fullyVerified) === 'true',
-              bankApproved: verRes.data.bankStatus === 'APPROVED' || verRes.data.bankStatus === 'VERIFIED'
-            });
-          }
-        } catch (verErr: unknown) {
-          console.error("Error loading verification status:", verErr);
-        }
-      } catch (e: unknown) {
-        // @ts-expect-error auto-migration type suppression
-        if (e?.status !== 404) {
-          console.error("Error loading profile:", e);
-        }
-      }
-    };
-
-    loadData();
-  }, [riderPhone]);
-
-  const loadWalletData = useCallback(async (page: number) => {
-    if (!userId) return;
-    setTxLoading(true);
-    try {
-      // A driver has no wallet -- WalletEntityType is CUSTOMER and ADVERTISER only. Their money is
-      // ledger earnings and cash, so this reads the driver money summary and statement. The old
-      // code asked WalletService for a DRIVER wallet, which no route and no handler served; the
-      // catch below turned that into a permanent zero balance and an empty history.
-      const summary = await customerApi.driverMoney.get('/api/v1/money/driver/summary', { queries: { period: 'ALL' } });
-      if (summary) setWalletBalance(summary.pendingBalance ?? 0);
-
-      const txRes = await customerApi.driverMoney.get('/api/v1/money/driver/statement', { queries: { page, size: 20 } });
-      if (txRes && txRes.content) {
-        setTransactions(txRes.content.map((line): WalletTransaction => ({
-          id: String(line.transactionId ?? ''),
-          walletId: "00000000-0000-0000-0000-000000000000",
-          amount: Number(line.amount ?? 0),
-          transactionType: line.direction === 'DEBIT' ? 'DEBIT' : 'CREDIT',
-          referenceId: line.referenceId ? String(line.referenceId) : undefined,
-          description: line.description ?? line.category ?? undefined,
-          createdAt: String(line.createdAt ?? ''),
-        })));
-        setTxTotalPages(txRes.totalPages || 1);
-      }
-    } catch (e: unknown) {
-      console.warn("Error loading wallet data:", e);
-    } finally {
-      setTxLoading(false);
-    }
-  }, [userId]);
-
-  useEffect(() => {
-    if (userId) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      loadWalletData(txPage);
-    }
-  }, [userId, txPage, loadWalletData]);
-
-  const saveProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMsg('');
-    
-    const validation = riderProfileSchema.safeParse({
-      name: editName.trim(),
-      email: editEmail.trim(),
-      vehicle: editVehicle.trim(),
-      vehicleType: editVehicleType,
-      photoUrl: editPhoto.trim()
-    });
-
-    if (!validation.success) {
-      setErrorMsg(validation.error.issues[0].message);
-      return;
-    }
-
-    setIsSaving(true);
-    
-    try {
-      // 1. Update Identity Profile if not set
-      if (!initialName || !initialEmail) {
-         await identityApi.user.put('/api/v1/users/profile', {
-                    id: userId,
-                    name: editName,
-                    email: editEmail,
-                    phone: riderPhone
-                  }, { headers: { "X-User-Id": userId || riderPhone || "" } });
-      }
-
-      // 2. Onboard/Update Delivery Profile
-      await deliveryApi.deliveryExecutive.post('/api/delivery/onboard', {
-              phoneNumber: riderPhone,
-              fullName: editName,
-              vehicleNumber: editVehicle,
-              vehicleType: editVehicleType as "BICYCLE" | "EV_TWO_WHEELER" | "MCWG" | "LMV",
-              photoUrl: editPhoto
-            });
-
-      // Refresh unified profile data in parent dashboard
-      onProfileUpdated();
-      showSuccess('Profile updated successfully');
-
-    } catch (e: unknown) {
-      console.error(e);
-      const typedErr = e as { response?: { data?: { error?: string } }, message?: string };
-      setErrorMsg(typedErr.response?.data?.error || typedErr.message || 'Failed to update profile');
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
 
+
+
+
+
+  const presets = useMotionPresets();
   return (
-    <motion.div 
-      initial={{ opacity: 0 }} 
-      animate={{ opacity: 1 }} 
-      exit={{ opacity: 0 }} 
+    <motion.div {...presets.fade} 
       className="flex-1 overflow-y-auto w-full p-5 flex flex-col space-y-4 bg-transparent max-w-3xl mx-auto mt-2"
     >
       <div className="flex items-center gap-3 shrink-0 mb-2">
         {!isProfileMandatory && (
-          <button
+          <Button
+            variant="secondary"
+            size="touch-icon"
+            aria-label="Close settings"
             onClick={onBack}
-            className="p-2 rounded-xl bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 text-slate-500 dark:text-slate-300 hover:text-slate-900 hover:bg-white dark:hover:text-white cursor-pointer transition shadow-sm"
           >
             <X className="w-5 h-5" />
-          </button>
+          </Button>
         )}
         <div>
           <h4 className="font-bold text-xl text-slate-900 dark:text-[#f0ede6]">Rider Settings</h4>
@@ -242,14 +83,15 @@ export default function RiderSettingsView({
             <label className="text-xs font-bold text-slate-500 dark:text-slate-300 flex items-center gap-1">
                <User className="w-3.5 h-3.5" /> Full Name
             </label>
-            <input 
-              type="text" 
+            <Input
+              type="text"
+              inputSize="lg"
               required
               placeholder="e.g. John Doe"
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
               disabled={!!initialName}
-              className={`w-full px-4 py-3 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md text-sm font-medium text-slate-900 dark:text-[#f0ede6] outline-none transition-colors ${initialName ? 'opacity-70 cursor-not-allowed' : 'focus:border-rose-500/50 focus:bg-white/40 dark:focus:bg-slate-900/40'}`}
+              className="font-medium focus:ring-2 focus:ring-rose-500/50 disabled:opacity-70 disabled:cursor-not-allowed"
             />
           </div>
 
@@ -257,14 +99,15 @@ export default function RiderSettingsView({
             <label className="text-xs font-bold text-slate-500 dark:text-slate-300 flex items-center gap-1">
                <Mail className="w-3.5 h-3.5" /> Email Address
             </label>
-            <input 
-              type="email" 
+            <Input
+              type="email"
+              inputSize="lg"
               required
               placeholder="rider@example.com"
               value={editEmail}
               onChange={(e) => setEditEmail(e.target.value)}
               disabled={!!initialEmail}
-              className={`w-full px-4 py-3 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md text-sm font-medium text-slate-900 dark:text-[#f0ede6] outline-none transition-colors ${initialEmail ? 'opacity-70 cursor-not-allowed' : 'focus:border-rose-500/50 focus:bg-white/40 dark:focus:bg-slate-900/40'}`}
+              className="font-medium focus:ring-2 focus:ring-rose-500/50 disabled:opacity-70 disabled:cursor-not-allowed"
             />
           </div>
 
@@ -272,11 +115,12 @@ export default function RiderSettingsView({
             <label className="text-xs font-bold text-slate-500 dark:text-slate-300 flex items-center gap-1">
                <Phone className="w-3.5 h-3.5" /> Phone Number
             </label>
-            <input 
-              type="tel" 
+            <Input
+              type="tel"
+              inputSize="lg"
               value={riderPhone}
               disabled
-              className="w-full px-4 py-3 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/10 dark:bg-slate-900/10 backdrop-blur-md text-sm font-medium text-slate-500 dark:text-slate-400 opacity-60 cursor-not-allowed"
+              className="font-medium opacity-60 cursor-not-allowed"
             />
           </div>
 
@@ -284,13 +128,14 @@ export default function RiderSettingsView({
             <label className="text-xs font-bold text-slate-500 dark:text-slate-300 flex items-center gap-1">
                <Car className="w-3.5 h-3.5" /> Vehicle Registration
             </label>
-            <input 
-              type="text" 
+            <Input
+              type="text"
+              inputSize="lg"
               required
               placeholder="e.g. KA01AB1234"
               value={editVehicle}
               onChange={(e) => setEditVehicle(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md text-sm font-medium text-slate-900 dark:text-[#f0ede6] outline-none transition-colors focus:border-rose-500/50 focus:bg-white/40 dark:focus:bg-slate-900/40"
+              className="font-medium focus:ring-2 focus:ring-rose-500/50"
             />
           </div>
 
@@ -325,13 +170,9 @@ export default function RiderSettingsView({
           </div>
 
           <div className="pt-4">
-            <button 
-              type="submit"
-              disabled={isSaving}
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 text-white font-bold text-sm shadow-md shadow-rose-500/20 active:scale-[0.98] transition disabled:opacity-50 cursor-pointer"
-            >
-              {isSaving ? 'Saving...' : 'Save Profile Changes'}
-            </button>
+            <Button type="submit" size="touch" fullWidth loading={isSaving}>
+              Save Profile Changes
+            </Button>
           </div>
         </form>
 
@@ -340,7 +181,7 @@ export default function RiderSettingsView({
             <h4 className="text-sm font-bold text-slate-900 dark:text-[#f0ede6] flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-amber-500" /> Document Verification
             </h4>
-            <div className="mt-4 p-4 rounded-xl bg-white/10 dark:bg-slate-900/10 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <Surface radius="md" elevation={0} className="mt-4 p-4 flex items-center justify-between">
               <div>
                 <p className="text-sm font-bold text-slate-800 dark:text-[#f0ede6]">Verification Status</p>
                 <p className="text-xs text-slate-500 mt-1">
@@ -351,7 +192,7 @@ export default function RiderSettingsView({
               <div className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-500">
                 {verificationStatus?.allDocsApproved && verificationStatus?.bankApproved ? <CheckCircle className="w-5 h-5 text-amber-500" /> : <AlertCircle className="w-5 h-5 text-amber-500" />}
               </div>
-            </div>
+            </Surface>
           </div>
         </div>
 
@@ -359,28 +200,18 @@ export default function RiderSettingsView({
           <ActiveSessions callingService="DeliveryExecutiveApplication" />
         </div>
 
-        {/* Wallet Transactions */}
-        <div className="pt-8 mt-8 border-t border-rose-500/20">
-          <div className="flex justify-between items-center mb-4">
-            <h4 className="text-sm font-bold text-slate-900 dark:text-[#f0ede6]">Earnings Wallet</h4>
-            <span className="font-black text-slate-900 dark:text-[#f0ede6] text-lg">{formatINR(walletBalance)}</span>
-          </div>
-          <TransactionHistoryTable 
-            transactions={transactions}
-            isLoading={txLoading}
-            page={txPage}
-            totalPages={txTotalPages}
-            onPageChange={setTxPage}
-          />
-        </div>
+        <RiderWalletSection userId={userId} />
         
         <div className="pt-4 mt-8">
-          <button 
+          <Button
+            variant="secondary"
+            size="touch"
+            fullWidth
             onClick={onLogout}
-            className="w-full py-3 rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 font-bold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
+            icon={<LogOut className="w-4 h-4" />}
           >
-            <LogOut className="w-4 h-4" /> Sign Out
-          </button>
+            Sign Out
+          </Button>
         </div>
 
       </div>

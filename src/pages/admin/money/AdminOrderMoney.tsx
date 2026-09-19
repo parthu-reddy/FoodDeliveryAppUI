@@ -54,7 +54,7 @@ export default function AdminOrderMoney({ orderId }: { orderId: string }) {
     <div className="space-y-6">
        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
            {/* Customer Summary */}
-           <Surface variant="glass-overlay" elevation={4} radius="xl" className="p-6 bg-rose-50/50 dark:bg-rose-900/10 border-rose-100 dark:border-rose-900/30">
+           <Surface elevation={2} radius="xl" className="p-6 bg-rose-50/50 dark:bg-rose-900/10 border-rose-100 dark:border-rose-900/30">
                <h3 className="font-bold flex items-center gap-2 mb-4 text-rose-700 dark:text-rose-400">
                    <IndianRupee className="w-5 h-5" /> Customer Paid
                </h3>
@@ -83,7 +83,7 @@ export default function AdminOrderMoney({ orderId }: { orderId: string }) {
            </Surface>
 
            {/* Restaurant Summary */}
-           <Surface variant="glass-overlay" elevation={4} radius="xl" className="p-6 bg-amber-50/50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-900/30">
+           <Surface elevation={2} radius="xl" className="p-6 bg-amber-50/50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-900/30">
                <h3 className="font-bold flex items-center gap-2 mb-4 text-amber-700 dark:text-amber-400">
                    <Store className="w-5 h-5" /> Restaurant Payout
                </h3>
@@ -108,7 +108,7 @@ export default function AdminOrderMoney({ orderId }: { orderId: string }) {
            </Surface>
 
            {/* Rider Summary */}
-           <Surface variant="glass-overlay" elevation={4} radius="xl" className="p-6 bg-amber-50/50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-900/30">
+           <Surface elevation={2} radius="xl" className="p-6 bg-amber-50/50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-900/30">
                <h3 className="font-bold flex items-center gap-2 mb-4 text-amber-700 dark:text-amber-400">
                    <Bike className="w-5 h-5" /> Rider Payout
                </h3>
@@ -136,7 +136,7 @@ export default function AdminOrderMoney({ orderId }: { orderId: string }) {
        </div>
 
        {/* Ledger Lines */}
-       <Surface variant="glass-overlay" elevation={4} radius="xl" className="overflow-hidden mt-8">
+       <Surface elevation={2} radius="xl" className="overflow-hidden mt-8">
            <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex justify-between items-center">
                <h3 className="font-bold flex items-center gap-2 text-slate-700 dark:text-slate-300">
                    <Activity className="w-4 h-4" /> Ledger Trace

@@ -1,62 +1,32 @@
-import { DeliveryStatus, MenuItem, Order, OrderStatus, VerificationStatus, Brand, Outlet } from "@/types";
+import { Tabs } from '@shared/ui';
+import { DeliveryStatus, Order, OrderStatus } from "@/types";
 import {
-    MessageSquare,
-    Moon,
-    Settings,
-    Sun,
-    ToggleLeft, ToggleRight,
-    User,
-    X
+    MessageSquare
 } from 'lucide-react';
-import { AnimatePresence, motion } from 'motion/react';
-import { Suspense, lazy, useCallback, useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 
 import { CallOverlay } from "@features/communication/components/CallOverlay";
-import { ChatWidget } from "@features/communication/components/ChatWidget";
-import { CompleteProfileModal, EmptyState, ErrorBoundary } from "@shared/ui";
+import { CompleteProfileModal, ErrorBoundary } from "@shared/ui";
 import { useUserProfile } from '../../hooks/useUserProfile';
 
-import { RestaurantMenuTogglesView } from '@features/catalog/components/restaurant/RestaurantMenuTogglesView';
-import { Badge, Button, LoadingSkeleton } from "@shared/ui";
+import { Button, LoadingSkeleton } from "@shared/ui";
 
-const CampaignManagement = lazy(() => import("@features/campaigns-ads/components/CampaignManagement"));
 const SharedSettingsView = lazy(() => import("@shared/ui/SharedSettingsView"));
-const RestaurantSettingsShell = lazy(() => 
-  import('./RestaurantSettingsShell').then(module => ({ default: module.RestaurantSettingsShell }))
-);
-const RestaurantEarningsTab = lazy(() => 
-  import('./RestaurantEarningsTab').then(module => ({ default: module.default }))
-);
 
 import { useTheme } from "@/contexts/ThemeContext";
 import { useToast } from "@/contexts/ToastContext";
-import { restaurantApi } from "@/lib/zodiosClients";
-import { RestaurantStatsBar } from "@features/catalog/components/RestaurantStatsBar";
-import { RestaurantBrandSelector } from '@features/catalog/components/restaurant/RestaurantBrandSelector';
-import { RestaurantOrderQueue } from '@features/restaurant-orders/components/RestaurantOrderQueue';
-import { DishRatingsPanel } from '@features/reviews';
-import { ReviewsPanel } from '@features/reviews/components/ReviewsPanel';
+import { RestaurantHeaderBar } from '@features/restaurant-orders/components/RestaurantHeaderBar';
+import { RestaurantChatList } from '@features/restaurant-orders/components/RestaurantChatList';
+import { RestaurantOrderChat } from '@features/restaurant-orders/components/RestaurantOrderChat';
+import { RestaurantShell } from '@shared/ui';
+import { RestaurantTabPanels } from '@features/restaurant-orders/components/RestaurantTabPanels';
+import { useBrandKycStream } from '@features/restaurant-orders/model/useBrandKycStream';
+import { useRestaurantCatalog } from '@features/restaurant-orders/model/useRestaurantCatalog';
+import { useRestaurantOrderActions } from '@features/restaurant-orders/model/useRestaurantOrderActions';
 import { useRestaurantOrders } from '@features/restaurant-orders/model/useRestaurantOrders';
-import { fetchEventSource } from '@microsoft/fetch-event-source';
-import { z } from 'zod';
 
-
-
-
-const delaySchema = z.object({
-  additionalPrepTime: z.number().int().positive().max(120, 'Delay cannot exceed 120 minutes'),
-  delayReason: z.string().max(255, 'Reason must be under 255 characters').optional()
-});
-
-import {
-    getBrands,
-    getEffectiveMenu,
-    getMasterMenuItems,
-    getOutletOverrides,
-    getOutlets
-} from '@features/catalog/model/menuStore';
 import { isActiveOrder } from '@features/customer-orders/model/orderStatus';
-import { formatINR, sumRupees } from '@shared/money';
+import { sumRupees } from '@shared/money';
 
 interface RestaurantDashboardProps {
   restaurantId: string;
@@ -65,7 +35,6 @@ interface RestaurantDashboardProps {
   onLogout: () => void;
   onAddApiLog?: (log: unknown) => void;
 }
-
 
 export default function RestaurantDashboard({
   restaurantId,
@@ -87,7 +56,6 @@ export default function RestaurantDashboard({
   const [activeTab, setActiveTab] = useState<'orders' | 'menu' | 'campaigns' | 'earnings' | 'reviews'>('orders');
   const [, setApiPrepSeconds] = useState('15');
 
-
   const [showSettings, setShowSettings] = useState(false);
   const [selectedOutletId, setSelectedOutletId] = useState<string>(() => {
     return localStorage.getItem('restaurant_selectedOutletId') || '';
@@ -99,14 +67,18 @@ export default function RestaurantDashboard({
     }
   }, [selectedOutletId]);
 
+  const {
+    menuList, brands, outlets, setBrands,
+    stockStatus, hasOutlets, isCurrentOutletAcceptingOrders, myRestaurantName,
+    loadData, toggleOutletStatus, toggleStock,
+  } = useRestaurantCatalog({ selectedOutletId, setSelectedOutletId, setApiPrepSeconds, showError });
+
   const [showCompleteProfileModal, setShowCompleteProfileModal] = useState(false);
   const [view, setView] = useState<'home' | 'settings'>('home');
   const [, setEditName] = useState('');
   const [, setEditEmail] = useState('');
   const [editPhone, setEditPhone] = useState('');
 
-    
-        
   // Chat state
   const [selectedChatOrder, setSelectedChatOrder] = useState<Order | null>(null);
   const [showChatList, setShowChatList] = useState(false);
@@ -128,164 +100,13 @@ export default function RestaurantDashboard({
     if (isProfileIncomplete) setShowCompleteProfileModal(true);
   }, [fetchedProfile, isProfileIncomplete]);
 
-
-  const [menuList, setMenuList] = useState<MenuItem[]>([]);
-  const [brands, setBrands] = useState<Brand[]>([]);
-  const [outlets, setOutlets] = useState<Outlet[]>([]);
-  const [, setMasterItems] = useState<unknown[]>([]);
-  const [, setOverrides] = useState<unknown[]>([]);
-
   // Function to load all data
-  const loadData = async () => {
-    try {
-      const [fetchedBrands, fetchedOutlets] = await Promise.all([
-        getBrands(),
-        getOutlets()
-      ]);
-       
-      setBrands(fetchedBrands);
-      setOutlets(fetchedOutlets);
-      
-      const newAcceptingState: Record<string, boolean> = {};
-      fetchedOutlets.forEach((o: unknown) => {
-        const outlet = o as { id: string, isActive?: boolean };
-         
-        newAcceptingState[outlet.id] = outlet.isActive !== false;
-      });
-      // eslint-disable-next-line react-hooks/immutability
-      setIsAcceptingOrders(newAcceptingState);
 
-      if (fetchedOutlets.length === 0) {
-        if (selectedOutletId) {
-          setSelectedOutletId('');
-          localStorage.removeItem('restaurant_selectedOutletId');
-          return;
-        }
-      }
-      if (!selectedOutletId && fetchedOutlets.length > 0) {
-        const firstOutletId = (fetchedOutlets[0] as {id: string}).id;
-        setSelectedOutletId(firstOutletId);
-        localStorage.setItem('restaurant_selectedOutletId', firstOutletId);
-        return; // will re-trigger useEffect
-      } else if (selectedOutletId && fetchedOutlets.length > 0 && !fetchedOutlets.find((o: unknown) => (o as {id: string}).id === selectedOutletId)) {
-        const firstOutletId = (fetchedOutlets[0] as {id: string}).id;
-        setSelectedOutletId(firstOutletId);
-        localStorage.setItem('restaurant_selectedOutletId', firstOutletId);
-        return; // replace stale id with first available
-      } else if (selectedOutletId && fetchedOutlets.length === 0) {
-        setSelectedOutletId('');
-        localStorage.removeItem('restaurant_selectedOutletId');
-        return;
-      } else if (selectedOutletId) {
-        localStorage.setItem('restaurant_selectedOutletId', selectedOutletId);
-      }
-
-      if (selectedOutletId) {
-        const [fetchedEffective, fetchedOverrides] = await Promise.all([
-          getEffectiveMenu(selectedOutletId),
-          getOutletOverrides(selectedOutletId)
-        ]);
-        setMenuList(fetchedEffective);
-        setOverrides(fetchedOverrides);
-
-        const fetchedOutlet = fetchedOutlets.find((o: unknown) => (o as {id: string}).id === selectedOutletId) as Outlet | undefined;
-        if (fetchedOutlet) {
-          const fetchedMasterItems = await getMasterMenuItems(fetchedOutlet.brandId || '');
-          setMasterItems(fetchedMasterItems as unknown[]);
-          
-          if (fetchedOutlet.defaultPrepTimeSeconds) {
-            setApiPrepSeconds(fetchedOutlet.defaultPrepTimeSeconds.toString());
-          }
-        } else {
-          setMasterItems([]);
-        }
-      }
-    } catch {
-      // best effort: failure here must not break the dashboard render
-    }
-  };
-
-  // Listen for brand updates (KYC status) via SSE
-  useEffect(() => {
-    const abortController = new AbortController();
-    const hasPendingVerifications = brands.some(
-      b => b.kycStatus === VerificationStatus.PENDING || b.pennyDropStatus === VerificationStatus.PENDING
-    );
-
-    if (hasPendingVerifications) {
-      const startSse = async () => {
-        try {
-          const url = `${import.meta.env.VITE_API_BASE_URL || ''}/api/v1/brands/stream`;
-          await fetchEventSource(url, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`,
-              'Accept': 'text/event-stream',
-              'X-Calling-Service': 'RestaurantApplication'
-            },
-            signal: abortController.signal,
-            onmessage(msg) {
-              if (msg.event === 'brands-update') {
-                try {
-                  const fetchedBrands = JSON.parse(msg.data);
-                  setBrands(fetchedBrands);
-                } catch (e: unknown) {
-                  console.error('Error parsing brand SSE data', e);
-                }
-              }
-            },
-            onclose() {
-              console.log('SSE connection closed');
-            },
-            onerror(err) {
-              console.error('SSE connection error:', err);
-              // Avoid auto-reconnecting on unrecoverable errors like 401/403
-              throw err; 
-            }
-          });
-        } catch (e: unknown) {
-          console.error("Failed to start SSE for brand updates:", e);
-        }
-      };
-      
-      startSse();
-    }
-
-    return () => {
-      abortController.abort();
-    };
-  }, [brands]);
-
-   
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedOutletId]);
-
-  const [stockStatus, setStockStatus] = useState<Record<string, boolean>>({});
-  const [isAcceptingOrders, setIsAcceptingOrders] = useState<Record<string, boolean>>({});
-  const hasOutlets = outlets.length > 0;
-  const isCurrentOutletAcceptingOrders = hasOutlets && (isAcceptingOrders[selectedOutletId] ?? true);
-
-  const toggleOutletStatus = async () => {
-    if (!selectedOutletId) return;
-    const newStatus = !isCurrentOutletAcceptingOrders;
-    // Optimistic UI update
-    setIsAcceptingOrders(prev => ({ ...prev, [selectedOutletId]: newStatus }));
-    try {
-        await restaurantApi.restaurantOutlet.put('/api/v1/outlets/:outletId/status', { isActive: newStatus }, { params: { outletId: selectedOutletId } });
-    } catch (err: unknown) {
-        // Revert on error
-        setIsAcceptingOrders(prev => ({ ...prev, [selectedOutletId]: !newStatus }));
-        const typedErr = err as { response?: { data?: { message?: string, error?: string } }, message?: string };
-        showError(typedErr.response?.data?.message || typedErr.response?.data?.error || typedErr.message || "Failed to update outlet status");
-    }
-  };
+  useBrandKycStream(brands, setBrands);
 
   // Filter orders meant for this restaurant
   const allRestaurantOrders = activeOrders.filter(o => o.restaurantId === selectedOutletId);
-  
+
   // Separate into active and history
   const myOrders = allRestaurantOrders.filter(o => isActiveOrder(o));
   const historyOrders = allRestaurantOrders.filter(o => !isActiveOrder(o));
@@ -308,226 +129,66 @@ export default function RestaurantDashboard({
     return o.earnings.netPayout;
   }));
 
-  const toggleStock = async (dishId: string, currentStatus: boolean) => {
-    const key = `${selectedOutletId}_${dishId}`;
-    const newStockStatus = !currentStatus;
-    
-    setStockStatus(prev => ({
-      ...prev,
-      [key]: newStockStatus
-    }));
-
-    try {
-      await restaurantApi.catalog.post('/api/v1/outlets/:outletId/menu-overrides/:masterMenuItemId', {
-              isAvailable: newStockStatus
-            }, { params: { outletId: selectedOutletId, masterMenuItemId: dishId } });
-    } catch (e: unknown) {
-      console.error('Failed to update stock', e);
-      setStockStatus(prev => ({
-        ...prev,
-        [key]: currentStatus
-      }));
-      showError('Failed to update stock status.');
-    }
-  };
-
-
   // States for inline delay requests on Kanban cards
         const [cardDelayStatus, setCardDelayStatus] = useState<Record<string, { minutes: number; reason: string }>>({});
 
-
-  const handleStatusTransition = useCallback((order: Order) => {
-    if (order.status === OrderStatus.PENDING_ACCEPTANCE || order.status === OrderStatus.AWAITING_DELAY_APPROVAL || order.status === OrderStatus.CREATED) {
-      onUpdateOrderStatus(order.id, OrderStatus.ACCEPTED);
-    } else if (order.status === OrderStatus.ACCEPTED) {
-      onUpdateOrderStatus(order.id, OrderStatus.PREPARING);
-    } else if (order.status === OrderStatus.PREPARING) {
-      onUpdateOrderStatus(order.id, OrderStatus.READY_FOR_PICKUP);
-    }
-  }, [onUpdateOrderStatus]);
-
-  const handleCardCancelSubmit = async (orderId: string, reason: string) => {
-    const orderStatus = internalOrders.find(o => o.id === orderId)?.status;
-    const targetStatus = (orderStatus === OrderStatus.PENDING_ACCEPTANCE || orderStatus === OrderStatus.AWAITING_DELAY_APPROVAL || orderStatus === OrderStatus.CREATED) 
-      ? OrderStatus.CANCELLED_BY_RESTAURANT 
-      : OrderStatus.CANCELLED;
-    
-    try {
-      // cleared locally in card component
-      await onUpdateOrderStatus(orderId, targetStatus, { reason });
-    } catch (e: unknown) {
-      console.error('Failed to cancel order', e);
-      const typedErr = e as { response?: { data?: { message?: string } }, message?: string };
-      showError('Failed to cancel order: ' + (typedErr.response?.data?.message || typedErr.message || 'Unknown error'));
-    }
-  };
-
-  const handleCardPartialRefundSubmit = async (orderId: string, amountStr: string, reason: string) => {
-    const amount = amountStr ? parseFloat(amountStr) : 0;
-    
-    if (isNaN(amount) || amount <= 0) {
-      showError('Please enter a valid positive refund amount');
-      return;
-    }
-    
-    // Phase 6: Ensure amount is converted to paise integer
-    const paiseAmount = Math.round(amount * 100);
-
-    try {
-      // cleared locally in card component
-      await restaurantApi.fulfillment.post('/api/v1/restaurants/:restaurantId/fulfillment/orders/:orderId/refund/partial', {
-              partialAmount: paiseAmount.toString(),
-              reason: reason
-            } as never, { params: { restaurantId: selectedOutletId, orderId } });
-      showSuccess(`Partial refund of ${formatINR(paiseAmount)} initiated successfully`);
-      // Let polling refresh the order, or manually trigger refresh if available.
-    } catch (e: unknown) {
-      console.error('Failed to initiate partial refund', e);
-      const typedErr = e as { response?: { data?: { message?: string } }, message?: string };
-      showError('Failed to refund: ' + (typedErr.response?.data?.message || typedErr.message || 'Unknown error'));
-    }
-  };
-
-
-  const handleCardDelaySubmit = async (orderId: string, minutesStr: string, reason: string) => {
-    const minutes = parseInt(minutesStr || '15', 10);
-
-
-    const endpoint = `/api/v1/restaurants/:restaurantId/fulfillment/orders/:orderId/accept`;
-    const body = {
-      additionalPrepTime: minutes,
-      delayReason: reason
-    };
-
-    const validation = delaySchema.safeParse(body);
-    if (!validation.success) {
-      showError(validation.error.issues[0].message);
-      return;
-    }
-
-    try {
-      // cleared locally in card component
-      setCardDelayStatus(prev => ({
-        ...prev,
-        [orderId]: { minutes, reason }
-      }));
-      
-      if (minutes > 10) {
-        // Optimistic update
-        setInternalOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: OrderStatus.AWAITING_DELAY_APPROVAL } : o));
-        if (externalUpdateStatus) externalUpdateStatus(orderId, OrderStatus.AWAITING_DELAY_APPROVAL);
-      } else {
-        // Accept right away if <= 10 mins
-        setInternalOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: OrderStatus.ACCEPTED } : o));
-        if (externalUpdateStatus) externalUpdateStatus(orderId, OrderStatus.ACCEPTED);
-      }
-
-      await restaurantApi.fulfillment.post('/api/v1/restaurants/:restaurantId/fulfillment/orders/:orderId/accept', body, { params: { restaurantId: selectedOutletId, orderId } });
-      
-      if (onAddApiLog) {
-        onAddApiLog({
-          id: `api-${Date.now()}`,
-          method: 'POST',
-          endpoint,
-          payload: body,
-          status: 200,
-          timestamp: new Date().toISOString()
-        });
-      }
-    } catch (e: unknown) {
-      console.error('Failed to submit delay request', e);
-      const typedErr = e as { response?: { data?: { message?: string } }, message?: string };
-      showError('Failed to submit delay request: ' + (typedErr.response?.data?.message || typedErr.message || 'Unknown error'));
-    }
-    
-    // handled locally in card
-  };
-
-  const myRestaurantName = outlets.length > 0 
-    ? (outlets.find(r => r.id === selectedOutletId)?.name || 'My Restaurant') 
-    : 'No Outlet Registered';
-
-
+  const {
+    handleStatusTransition,
+    handleCardCancelSubmit,
+    handleCardPartialRefundSubmit,
+    handleCardDelaySubmit,
+  } = useRestaurantOrderActions({
+    selectedOutletId,
+    internalOrders,
+    setInternalOrders,
+    setCardDelayStatus,
+    onUpdateOrderStatus,
+    externalUpdateStatus,
+    onAddApiLog,
+    showError,
+    showSuccess,
+  });
 
   return (
-    <div className="flex-1 flex flex-col w-full overflow-y-auto overflow-x-hidden min-h-0 bg-transparent text-slate-800 dark:text-[#f0ede6] h-full pb-20">
-      
-      {/* Header Area */}
-      <header className="sticky top-0 bg-white/20 dark:bg-white/5 backdrop-blur-xl px-5 py-3 flex flex-col sm:flex-row sm:items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 z-30 shrink-0 shadow-[0_2px_15px_rgba(0,0,0,0.01)] gap-3">
-        <RestaurantBrandSelector 
-          myRestaurantName={myRestaurantName}
-          hasOutlets={hasOutlets}
-          selectedOutletId={selectedOutletId}
-          setSelectedOutletId={setSelectedOutletId}
-          outlets={outlets}
-          isCurrentOutletAcceptingOrders={isCurrentOutletAcceptingOrders}
+    <RestaurantShell
+      header={<RestaurantHeaderBar
+        myRestaurantName={myRestaurantName}
+        hasOutlets={hasOutlets}
+        selectedOutletId={selectedOutletId}
+        setSelectedOutletId={setSelectedOutletId}
+        outlets={outlets}
+        acceptingOrders={isCurrentOutletAcceptingOrders}
+        onToggleAccepting={toggleOutletStatus}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        inProfile={view === 'settings'}
+        onToggleProfile={() => {
+          if (view === 'settings') setView('home');
+          else { setView('settings'); setShowSettings(false); }
+        }}
+        inSettings={showSettings}
+        onToggleSettings={() => {
+          setShowSettings(!showSettings);
+          if (view === 'settings') setView('home');
+        }}
+      />}
+      nav={!showSettings && view !== 'settings' ? (
+        <Tabs
+          label="Restaurant sections"
+          orientation="responsive"
+          className="lg:flex-col lg:gap-1 lg:p-3"
+          value={activeTab}
+          onChange={(key: typeof activeTab) => { setActiveTab(key); setShowSettings(false); }}
+          items={[
+            { key: 'orders', label: `Live Kitchen Feed (${myOrders.length})` },
+            { key: 'menu', label: 'Menu Stock Toggles' },
+            { key: 'campaigns', label: 'Ad Campaigns' },
+            { key: 'earnings', label: 'Earnings' },
+            { key: 'reviews', label: 'Reviews' },
+          ]}
         />
-
-        <div className="flex items-center gap-2 self-end sm:self-auto">
-          <button
-            onClick={toggleOutletStatus}
-
-            className="flex items-center gap-1.5 p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 transition cursor-pointer"
-            title="Toggle Outlet Status"
-          >
-            {isCurrentOutletAcceptingOrders ? (
-              <>
-                <ToggleRight className="w-4 h-4 text-amber-500" />
-                <span className="text-[10px] font-bold text-slate-600 dark:text-[#f0ede6] uppercase tracking-wide">Active</span>
-              </>
-            ) : (
-              <>
-                <ToggleLeft className="w-4 h-4 text-rose-500" />
-                <span className="text-[10px] font-bold text-slate-600 dark:text-[#f0ede6] uppercase tracking-wide">Inactive</span>
-              </>
-            )}
-          </button>
-          
-          <button
-            onClick={toggleTheme}
-            className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6] transition cursor-pointer"
-            title="Toggle Light/Dark Mode"
-          >
-            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-rose-550" />}
-          </button>
-
-          <button
-            onClick={() => {
-              if (view === 'settings') {
-                setView('home');
-              } else {
-                setView('settings');
-                setShowSettings(false);
-              }
-            }}
-            className={`p-2.5 rounded-xl transition cursor-pointer ${
-              view === 'settings' 
-                ? 'bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 shadow-sm shadow-rose-500/10' 
-                : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6]'
-            }`}
-            title="Profile Settings"
-          >
-            <User className="w-4 h-4 text-rose-500" />
-          </button>
-
-          <button
-            onClick={() => {
-              setShowSettings(!showSettings);
-              if (view === 'settings') setView('home');
-            }}
-            className={`p-2.5 rounded-xl transition cursor-pointer ${
-              showSettings 
-                ? 'bg-gradient-to-r from-rose-500 to-amber-500 text-white shadow-sm shadow-rose-500/15' 
-                : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6]'
-            }`}
-            title="Restaurant Registration & Menu Settings"
-          >
-            <Settings className="w-4 h-4" />
-          </button>
-
-        </div>
-      </header>
-
+      ) : undefined}
+    >
       {view === 'settings' ? (
         <div className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-y-auto overflow-x-hidden min-h-0 text-slate-800 dark:text-[#f0ede6] h-full mt-4">
           <ErrorBoundary fallbackLabel="Profile Settings">
@@ -542,210 +203,32 @@ export default function RestaurantDashboard({
         </div>
       ) : (
         <>
-          {/* Tabs Switcher */}
-          {!showSettings && (
-            <div className="px-5 pt-4">
-          <div className="flex bg-white/40 dark:bg-slate-900/40 backdrop-blur-md p-1 rounded-xl border border-rose-500/20 dark:border-rose-500/30 gap-1.5">
-            <button
-              onClick={() => {
-                setActiveTab('orders');
-                setShowSettings(false);
-              }}
-              className={`flex-1 py-2 text-[10.5px] font-bold rounded-lg cursor-pointer transition ${
-                activeTab === 'orders' && !showSettings
-                  ? 'bg-gradient-to-r from-rose-500 to-amber-500 text-white shadow-sm shadow-rose-500/15' 
-                  : 'text-slate-500 dark:text-[#f0ede6] hover:text-slate-700 dark:hover:text-slate-200'
-              }`}
-            >
-              Live Kitchen Feed ({myOrders.length})
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab('menu');
-                setShowSettings(false);
-              }}
-              className={`flex-1 py-2 text-[10.5px] font-bold rounded-lg cursor-pointer transition ${
-                activeTab === 'menu' && !showSettings
-                  ? 'bg-gradient-to-r from-rose-500 to-amber-500 text-white shadow-sm shadow-rose-500/15' 
-                  : 'text-slate-500 dark:text-[#f0ede6] hover:text-slate-700 dark:hover:text-slate-200'
-              }`}
-            >
-              Menu Stock Toggles
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab('campaigns');
-                setShowSettings(false);
-              }}
-              className={`flex-1 py-2 text-[10.5px] font-bold rounded-lg cursor-pointer transition ${
-                activeTab === 'campaigns' && !showSettings
-                  ? 'bg-gradient-to-r from-rose-500 to-amber-500 text-white shadow-sm shadow-rose-500/15' 
-                  : 'text-slate-500 dark:text-[#f0ede6] hover:text-slate-700 dark:hover:text-slate-200'
-              }`}
-            >
-              Ad Campaigns
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab('earnings');
-                setShowSettings(false);
-              }}
-              className={`flex-1 py-2 text-[10.5px] font-bold rounded-lg cursor-pointer transition ${
-                activeTab === 'earnings' && !showSettings
-                  ? 'bg-gradient-to-r from-amber-500 to-slate-500 text-white shadow-sm shadow-amber-500/15' 
-                  : 'text-slate-500 dark:text-[#f0ede6] hover:text-slate-700 dark:hover:text-slate-200'
-              }`}
-            >
-              Earnings
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab('reviews');
-                setShowSettings(false);
-              }}
-              className={`flex-1 py-2 text-[10.5px] font-bold rounded-lg cursor-pointer transition ${
-                activeTab === 'reviews' && !showSettings
-                  ? 'bg-gradient-to-r from-amber-500 to-amber-500 text-white shadow-sm shadow-amber-500/15'
-                  : 'text-slate-500 dark:text-[#f0ede6] hover:text-slate-700 dark:hover:text-slate-200'
-              }`}
-            >
-              Reviews
-            </button>
-          </div>
-        </div>
-      )}
-
-      <AnimatePresence mode="wait">
-        {!showSettings && activeTab === 'orders' && (
-          <motion.div
-            key="orders-panel"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="p-5 space-y-5"
-          >
-            <RestaurantStatsBar 
-              totalRevenue={totalRevenue} 
-              completedOrdersCount={completedOrders.length} 
-            />
-            <ErrorBoundary fallbackLabel="Order Queue">
-              <RestaurantOrderQueue 
-                totalRevenue={totalRevenue}
-                completedOrders={completedOrders}
-                pendingOrders={pendingOrders}
-                activePreparing={activePreparing}
-                myOrders={internalOrders}
-                refundRequests={refundRequests}
-                cardDelayStatus={cardDelayStatus}
-                handleCardCancelSubmit={handleCardCancelSubmit}
-                handleCardDelaySubmit={handleCardDelaySubmit}
-                handleCardPartialRefundSubmit={handleCardPartialRefundSubmit}
-                handleStatusTransition={handleStatusTransition}
-                setSelectedChatOrder={setSelectedChatOrder}
-              />
-            </ErrorBoundary>
-          </motion.div>
-        )}
-
-        {!showSettings && activeTab === 'menu' && (
-          /* ------------------- MENU STOCK TOGGLES ------------------- */
-          <ErrorBoundary fallbackLabel="Menu Stock Toggles">
-            <RestaurantMenuTogglesView
-              menuList={menuList}
-              stockStatus={stockStatus}
-              toggleStock={toggleStock}
-              selectedOutletId={selectedOutletId}
-            />
-          </ErrorBoundary>
-        )}
-
-        {!showSettings && activeTab === 'campaigns' && (
-          <motion.div
-            key="campaigns-panel"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-          >
-            <ErrorBoundary fallbackLabel="Campaigns">
-              <Suspense fallback={<LoadingSkeleton />}>
-                <CampaignManagement advertiserId={restaurantId} />
-              </Suspense>
-            </ErrorBoundary>
-          </motion.div>
-        )}
-
-        {!showSettings && activeTab === 'earnings' && (
-          <motion.div
-            key="earnings-panel"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="p-5 h-full"
-          >
-            <ErrorBoundary fallbackLabel="Earnings Tab">
-              <Suspense fallback={<LoadingSkeleton />}>
-                <RestaurantEarningsTab restaurantId={restaurantId} />
-              </Suspense>
-            </ErrorBoundary>
-          </motion.div>
-        )}
-
-        {!showSettings && activeTab === 'reviews' && (
-          <motion.div
-            key="reviews-panel"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="p-5 h-full overflow-y-auto"
-          >
-            <ErrorBoundary fallbackLabel="Reviews Tab">
-              {/* Scoped to the outlet currently selected in the header, not the brand: a review is
-                  written about the outlet that cooked the order, and two outlets of one brand can
-                  have very different kitchens. */}
-              {selectedOutletId ? (
-<>
-                  <ReviewsPanel
-                    entityType="RESTAURANT"
-                    entityId={selectedOutletId}
-                    title="What customers said"
-                    emptyTitle="No reviews yet"
-                    emptyDescription="Reviews appear here once customers rate a delivered order from this outlet."
-                  />
-                  {/* Customers rate dishes and see dish ratings on the menu; without this the
-                      kitchen was the only party that could not. Brand-level, because a review of
-                      EntityType.PRODUCT is a review of the brand's dish, not one outlet's copy. */}
-                  <DishRatingsPanel dishes={menuList} className="mt-8" />
-                </>
-              ) : (
-                <EmptyState
-                  title="Select an outlet"
-                  description="Reviews are per outlet. Pick one from the header to see its ratings."
-                />
-              )}
-            </ErrorBoundary>
-          </motion.div>
-        )}
-
-        {showSettings && (
-          /* ------------------- RESTAURANT SETTINGS CONSOLE ------------------- */
-          <ErrorBoundary fallbackLabel="Restaurant Settings">
-            <Suspense fallback={<LoadingSkeleton />}>
-              <RestaurantSettingsShell
-                brands={brands}
-                outlets={outlets}
-                menuList={menuList}
-                selectedOutletId={selectedOutletId}
-                restaurantId={restaurantId}
-                loadData={loadData}
-                activeOrders={activeOrders}
-                setSelectedChatOrder={setSelectedChatOrder}
-                setShowSettings={setShowSettings}
-              />
-            </Suspense>
-          </ErrorBoundary>
-        )}
-      </AnimatePresence>
-
+          <RestaurantTabPanels
+        activeTab={activeTab}
+        showSettings={showSettings}
+        setShowSettings={setShowSettings}
+        restaurantId={restaurantId}
+        selectedOutletId={selectedOutletId}
+        menuList={menuList}
+        brands={brands}
+        outlets={outlets}
+        stockStatus={stockStatus}
+        toggleStock={toggleStock}
+        activeOrders={activeOrders}
+        refundRequests={refundRequests}
+        internalOrders={internalOrders}
+        pendingOrders={pendingOrders}
+        activePreparing={activePreparing}
+        completedOrders={completedOrders}
+        cardDelayStatus={cardDelayStatus}
+        totalRevenue={totalRevenue}
+        loadData={loadData}
+        setSelectedChatOrder={setSelectedChatOrder}
+        handleStatusTransition={handleStatusTransition}
+        handleCardCancelSubmit={handleCardCancelSubmit}
+        handleCardPartialRefundSubmit={handleCardPartialRefundSubmit}
+        handleCardDelaySubmit={handleCardDelaySubmit}
+      />
 
       <CompleteProfileModal 
         isOpen={showCompleteProfileModal} 
@@ -757,38 +240,20 @@ export default function RestaurantDashboard({
           setShowCompleteProfileModal(false);
         }} 
       />
-      
 
       {selectedChatOrder && (
-        <ChatWidget 
-          orderId={selectedChatOrder.id} 
+        <RestaurantOrderChat
           order={selectedChatOrder}
-          currentUserType="RESTAURANT" 
-          otherParticipants={[
-            ...(selectedChatOrder.customerId ? [{
-              userId: selectedChatOrder.customerId,
-              entityType: 'CUSTOMER' as const,
-              displayName: 'Customer'
-            }] : []),
-            ...(selectedChatOrder.deliveryExecutiveId ? [{
-              userId: selectedChatOrder.deliveryExecutiveId,
-              entityType: 'DELIVERY' as const,
-              displayName: 'Rider'
-            }] : [])
-          ]}
           onClose={() => setSelectedChatOrder(null)}
-          onBack={() => {
-            setSelectedChatOrder(null);
-            setShowChatList(true);
-          }}
+          onBack={() => { setSelectedChatOrder(null); setShowChatList(true); }}
         />
       )}
-      
+
       {!selectedChatOrder && (
         <Button
           onClick={() => setShowChatList(true)}
           variant="secondary"
-          className="fixed bottom-6 right-6 !bg-slate-800 hover:!bg-slate-700 !text-white px-5 !py-4 !rounded-full shadow-lg transition-transform hover:scale-105 z-40 flex items-center justify-center space-x-2"
+          className="fixed bottom-6 right-6 !bg-slate-800 hover:!bg-slate-700 !text-white px-5 !py-4 !rounded-full transition-transform hover:scale-105 z-40 flex items-center justify-center space-x-2"
         >
           <MessageSquare className="w-6 h-6" />
           <span className="font-bold hidden sm:inline">Messages</span>
@@ -796,49 +261,16 @@ export default function RestaurantDashboard({
       )}
 
       {showChatList && !selectedChatOrder && (
-        <div className="fixed bottom-0 right-0 sm:bottom-6 sm:right-6 w-full sm:w-96 h-[100dvh] sm:h-[500px] max-h-[100dvh] sm:max-h-[calc(100vh-6rem)] bg-white sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden z-[50] sm:border sm:border-slate-200">
-          <div className="bg-slate-800 text-white p-4 flex justify-between items-center shrink-0">
-            <h3 className="font-semibold text-lg">Active Chats</h3>
-            <Button variant="ghost" onClick={() => setShowChatList(false)} size="icon" className="!text-white hover:!bg-slate-700">
-              <X className="w-5 h-5" />
-            </Button>
-          </div>
-          <div className="flex-1 overflow-y-auto p-4 bg-slate-50 space-y-2">
-            {myOrders.length === 0 ? (
-              <div className="h-full pt-10">
-                <EmptyState 
-                  title="No active orders"
-                  description="Chats will appear here when you have active orders."
-                  icon={<MessageSquare className="w-12 h-12" />}
-                />
-              </div>
-            ) : (
-              myOrders.map(order => (
-                <button
-                  key={order.id}
-                  onClick={() => {
-                    setSelectedChatOrder(order);
-                    setShowChatList(false);
-                  }}
-                  className="w-full text-left bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow flex justify-between items-center group"
-                >
-                  <div className="flex flex-col overflow-hidden pr-2">
-                    <span className="font-bold text-slate-800">Order #{order.id.substring(0,8)}</span>
-                    <span className="text-sm text-slate-500 truncate">Customer</span>
-                  </div>
-                  <Badge variant="warning" className="group-hover:!bg-amber-600 group-hover:!text-white transition-colors">
-                    Chat
-                  </Badge>
-                </button>
-              ))
-            )}
-          </div>
-        </div>
+        <RestaurantChatList
+          orders={myOrders}
+          onSelect={setSelectedChatOrder}
+          onClose={() => setShowChatList(false)}
+        />
       )}
-      
+
       <CallOverlay />
-    </>
+        </>
       )}
-    </div>
+    </RestaurantShell>
   );
 }

@@ -1,7 +1,9 @@
 import { useToast } from "@/contexts/ToastContext";
 import { parseApiError } from '@/lib/parseApiError';
 import { ledgerApi } from "@/lib/zodiosClients";
-import { Button, Input, Modal, Spinner, Surface } from '@shared/ui';
+import { PayoutActionDialogs } from './PayoutActionDialogs';
+import { PayoutLinesPanel } from './PayoutLinesPanel';
+import { Button, Spinner, Surface } from '@shared/ui';
 import { ArrowLeft, AlertTriangle, FileText, Banknote, Clock } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { formatINR } from '@shared/money';
@@ -10,7 +12,6 @@ import { schemas } from "@/api/generated/schemas/ledger/payout_controller";
 import { z } from "zod";
 import { getUserProfile } from "@/lib/tokenStore";
 import { ConfirmMoneyAction } from "@/shared/money/components/ConfirmMoneyAction";
-import { StatementTable, StatementRow } from "@/shared/money/components/StatementTable";
 
 type PayoutDetail = z.infer<typeof schemas.PayoutDetailResponse>;
 
@@ -106,8 +107,6 @@ export default function PayoutDetail({ payoutId, onBack }: { payoutId: string; o
     );
   }
 
-  const linesTotal = (payout.lines ?? []).reduce(
-    (sum, l) => sum + (l.direction === 'CREDIT' ? (l.amount ?? 0) : -(l.amount ?? 0)), 0);
 
   return (
     <div className="flex flex-col h-full bg-slate-50 dark:bg-[#0f111a] text-slate-800 dark:text-[#f0ede6]">
@@ -161,7 +160,7 @@ export default function PayoutDetail({ payoutId, onBack }: { payoutId: string; o
 
       <div className="flex-1 overflow-y-auto p-6 max-w-4xl w-full mx-auto">
          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-             <Surface variant="glass-overlay" elevation={4} radius="xl" className="p-6">
+             <Surface elevation={2} radius="xl" className="p-6">
                  <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
                      <FileText className="w-4 h-4" /> Overview
                  </h3>
@@ -182,7 +181,7 @@ export default function PayoutDetail({ payoutId, onBack }: { payoutId: string; o
                  </div>
              </Surface>
 
-             <Surface variant="glass-overlay" elevation={4} radius="xl" className="p-6">
+             <Surface elevation={2} radius="xl" className="p-6">
                  <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2">
                      <Clock className="w-4 h-4" /> Timeline
                  </h3>
@@ -210,21 +209,21 @@ export default function PayoutDetail({ payoutId, onBack }: { payoutId: string; o
          </div>
          
          {payout.bankReference && (
-             <Surface variant="glass-overlay" elevation={4} radius="xl" className="p-6 mb-6">
+             <Surface elevation={2} radius="xl" className="p-6 mb-6">
                  <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">Bank Reference</h3>
                  <p className="font-mono bg-slate-100 dark:bg-slate-800 p-2 rounded">{payout.bankReference}</p>
              </Surface>
          )}
          
          {payout.failureReason && (
-             <Surface variant="glass-overlay" elevation={4} radius="xl" className="p-6 mb-6 border-l-4 border-rose-500">
+             <Surface elevation={2} radius="xl" className="p-6 mb-6 border-l-4 border-rose-500">
                  <h3 className="text-sm font-bold text-rose-500 uppercase tracking-wider mb-2">Failure Reason</h3>
                  <p className="text-slate-700 dark:text-slate-300">{payout.failureReason}</p>
              </Surface>
          )}
 
          {payout.beneficiary && (
-             <Surface variant="glass-overlay" elevation={4} radius="xl" className="p-6 mb-6">
+             <Surface elevation={2} radius="xl" className="p-6 mb-6">
                  <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">
                      Beneficiary as recorded when this payout was raised
                  </h3>
@@ -251,83 +250,22 @@ export default function PayoutDetail({ payoutId, onBack }: { payoutId: string; o
              </Surface>
          )}
          
-         <Surface variant="glass-overlay" elevation={4} radius="xl" className="p-6">
-             <div className="flex items-baseline justify-between mb-4">
-                 <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider">
-                     Settled Lines ({payout.lines?.length ?? 0})
-                 </h3>
-                 <span className="text-sm text-slate-500">
-                     Lines total <span className="font-bold text-slate-800 dark:text-white">{formatINR(linesTotal)}</span>
-                     {payout.amount !== undefined && Math.abs(linesTotal - payout.amount) > 0.005 && (
-                        <span className="ml-2 text-rose-600 font-bold">does not match the payout amount</span>
-                     )}
-                 </span>
-             </div>
-             <StatementTable 
-                 rows={(payout.lines ?? []).map((line, index) => ({
-                   // Stable across renders; see the note in PayoutDrawer. Math.random() here also
-                   // meant two renders of the same payout never reused a row.
-                   id: line.id || line.ledgerEntryId || `payout-line-${index}`,
-                   date: line.entryCreatedAt || '',
-                   description: line.category || '',
-                   category: line.category,
-                   referenceId: line.referenceId,
-                   // Every payout line references the order it came from.
-                   referenceLink: line.referenceId ? `/admin/orders/${line.referenceId}/money` : undefined,
-                   debit: line.direction === 'DEBIT' ? (line.amount || 0) : 0,
-                   credit: line.direction === 'CREDIT' ? (line.amount || 0) : 0,
-                 } as StatementRow))}
-             />
-         </Surface>
+        <PayoutLinesPanel lines={payout.lines ?? []} amount={payout.amount} />
       </div>
 
-      <Modal open={showMarkPaidDialog} onClose={() => setShowMarkPaidDialog(false)} title="Mark Payout as Paid" size="md">
-              <div className="p-6">
-                  <p className="text-sm text-slate-500 mb-4">Enter the bank reference or UTR number for this transaction.</p>
-                  <Input 
-                     placeholder="e.g. UTR-123456789" 
-                     value={bankRef} 
-                     onChange={(e) => setBankRef(e.target.value)} 
-                     className="mb-6 w-full"
-                  />
-                  <div className="mt-4">
-                      <ConfirmMoneyAction
-                          amount={payout.amount ?? 0}
-                          effectSummary="Mark payout as completed with bank reference"
-                          buttonLabel="Confirm Payment"
-                          onConfirm={(idempotencyKey) => handleAction('mark-paid', idempotencyKey)}
-                          isPending={actionLoading === 'mark-paid'}
-                      />
-                  </div>
-                  <div className="flex justify-end gap-3 mt-4">
-                      <Button variant="ghost" onClick={() => setShowMarkPaidDialog(false)}>Cancel</Button>
-                  </div>
-              </div>
-      </Modal>
-
-      <Modal open={showFailDialog} onClose={() => setShowFailDialog(false)} title="Fail Payout" size="md">
-              <div className="p-6">
-                  <p className="text-sm text-slate-500 mb-4">Why did this payout fail?</p>
-                  <Input 
-                     placeholder="e.g. Invalid bank account" 
-                     value={failReason} 
-                     onChange={(e) => setFailReason(e.target.value)} 
-                     className="mb-6 w-full"
-                  />
-                  <div className="mt-4">
-                      <ConfirmMoneyAction
-                          amount={payout.amount ?? 0}
-                          effectSummary="Mark payout as failed"
-                          buttonLabel="Mark Failed"
-                          onConfirm={(idempotencyKey) => handleAction('fail', idempotencyKey)}
-                          isPending={actionLoading === 'fail'}
-                      />
-                  </div>
-                  <div className="flex justify-end gap-3 mt-4">
-                      <Button variant="ghost" onClick={() => setShowFailDialog(false)}>Cancel</Button>
-                  </div>
-              </div>
-      </Modal>
+      <PayoutActionDialogs
+        amount={payout.amount ?? 0}
+        bankRef={bankRef}
+        setBankRef={setBankRef}
+        failReason={failReason}
+        setFailReason={setFailReason}
+        showMarkPaidDialog={showMarkPaidDialog}
+        setShowMarkPaidDialog={setShowMarkPaidDialog}
+        showFailDialog={showFailDialog}
+        setShowFailDialog={setShowFailDialog}
+        actionLoading={actionLoading}
+        onAction={handleAction}
+      />
     </div>
   );
 }

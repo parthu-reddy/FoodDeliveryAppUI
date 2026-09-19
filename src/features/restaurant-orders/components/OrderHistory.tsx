@@ -1,83 +1,27 @@
-import { restaurantApi } from '@/lib/zodiosClients';
-import { Order, OrderStatus } from '@/types';
+import { Button, Input, StatusPill, Surface } from '@shared/ui';
+import { useOrderHistory } from '@features/restaurant-orders/model/useOrderHistory';
+import { Order } from '@/types';
 import { formatINR } from '@shared/money';
-import { getFriendlyStatusMessage } from '@features/customer-orders/model/statusMessaging';
+import { orderStatusView } from '@features/customer-orders/model/orderStatus';
 import { RestaurantOrderDetailsModal } from '@features/restaurant-orders/components/RestaurantOrderDetailsModal';
 import { Calendar, ChevronLeft, ChevronRight, Package, Receipt } from 'lucide-react';
 import React, { useState } from 'react';
 
 export function OrderHistory({ restaurantId, onOpenChat }: { restaurantId: string, onOpenChat?: (orderId: string) => void }) {
- const [dateFilter, setDateFilter] = useState('');
- const [currentPage, setCurrentPage] = useState(1);
- const itemsPerPage = 10;
- const [orders, setOrders] = useState<Order[]>([]);
- const [totalPages, setTotalPages] = useState(1);
- const [totalElements, setTotalElements] = useState(0);
+  const {
+    dateFilter, setDateFilter, currentPage, setCurrentPage,
+    orders, totalPages, totalElements, itemsPerPage,
+  } = useOrderHistory(restaurantId);
  const [selectedOrderForDetails, setSelectedOrderForDetails] = useState<Order | null>(null);
 
 
- React.useEffect(() => {
- if (!restaurantId) return;
- const fetchHistory = async () => {
- try {
- const queries: Record<string, string | number> = {
- page: currentPage - 1,
- size: itemsPerPage
- };
- if (dateFilter) queries.date = dateFilter;
-
- const res = await restaurantApi.fulfillment.get('/api/v1/restaurants/:restaurantId/fulfillment/orders/history', { params: { restaurantId }, queries });
- if (res.data) {
-
-
- const mapped = (res.data.content || []).map((o) => {
- // eslint-disable-next-line @typescript-eslint/no-explicit-any
- const raw = o as Record<string, any>;
- let s = (raw.status || '').toUpperCase();
- if (s === OrderStatus.READY_FOR_PICKUP || s === 'READY') s = OrderStatus.READY_FOR_PICKUP; 
- if (s === OrderStatus.CANCELLED_BY_RESTAURANT) s = OrderStatus.CANCELLED;
- 
- let parsedItems = raw.items || [];
- if (raw.itemsJson && typeof raw.itemsJson === 'string') {
- try { parsedItems = JSON.parse(raw.itemsJson); } catch { /* keep fallback */ }
- }
- // eslint-disable-next-line @typescript-eslint/no-explicit-any
- const calculatedTotal = Array.isArray(parsedItems) ? parsedItems.reduce((acc: number, item: any) => {
- return acc + (item.item?.price || item.price || 0) * (item.quantity || 1);
- }, 0) : 0;
- 
- return {
- ...o, 
- id: raw.orderId || raw.id, 
- status: s as OrderStatus, 
- items: parsedItems,
- totalAmount: raw.totalAmount || raw.total || calculatedTotal,
- itemTotal: raw.itemTotal || raw.subtotal || calculatedTotal,
- createdAt: raw.createdAt || new Date().toISOString(),
- sgst: raw.sgst || 0,
- cgst: raw.cgst || 0,
- deliveryFee: raw.deliveryFee || 0,
- restaurantName: raw.restaurantName || '',
- customerPlatformFee: raw.customerPlatformFee || 0,
- } as Order;
- });
- setOrders(mapped);
- setTotalPages(res.data.totalPages || 1);
- setTotalElements(res.data.totalElements || mapped.length);
- }
- } catch (err: unknown) {
- console.error('Failed to fetch history orders', err);
- }
- };
- fetchHistory();
- }, [restaurantId, dateFilter, currentPage]);
 
  const paginatedOrders = orders;
 
 
 
  return (
- <div className="bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 p-5 sm:p-8 rounded-[2rem] shadow-sm">
+ <Surface radius="xl" elevation={1} className="p-5 sm:p-8">
  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
  <div>
  <h4 className="font-extrabold text-lg tracking-tight uppercase font-sans text-slate-800 dark:text-[#f0ede6] flex items-center gap-2">
@@ -90,14 +34,15 @@ export function OrderHistory({ restaurantId, onOpenChat }: { restaurantId: strin
  <div className="flex items-center gap-3">
  <div className="relative">
  <Calendar className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-300" />
- <input
+ <Input
  type="date"
+ aria-label="Filter orders by date"
  value={dateFilter}
  onChange={(e) => {
  setDateFilter(e.target.value);
  setCurrentPage(1);
  }}
- className="pl-9 pr-4 py-2 bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50 outline-none w-full sm:w-auto"
+ className="pl-9 pr-4 w-full sm:w-auto focus:ring-2 focus:ring-rose-500/50"
  />
  </div>
  {dateFilter && (
@@ -114,7 +59,7 @@ export function OrderHistory({ restaurantId, onOpenChat }: { restaurantId: strin
  </div>
  </div>
 
- <div className="bg-white/20 dark:bg-slate-950/20 rounded-2xl border border-rose-500/20 dark:border-rose-500/30 overflow-hidden">
+ <Surface radius="lg" elevation={0} className="overflow-hidden">
  <div className="overflow-x-auto">
  <table className="w-full text-left border-collapse">
  <thead>
@@ -187,9 +132,10 @@ export function OrderHistory({ restaurantId, onOpenChat }: { restaurantId: strin
  </div>
  </td>
  <td className="p-4 pr-6 whitespace-nowrap">
- <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:shadow-[0_0_12px_rgba(244,63,94,0.5)] uppercase`}>
- {getFriendlyStatusMessage(order.status, order.deliveryStatus)}
- </span>
+ {(() => {
+ const view = orderStatusView(order.status, order.deliveryStatus);
+ return <StatusPill label={view.label} tone={view.tone} live={view.live} />;
+ })()}
  </td>
  <td className="p-4 whitespace-nowrap">
  <div className="flex flex-col gap-2">
@@ -223,9 +169,9 @@ export function OrderHistory({ restaurantId, onOpenChat }: { restaurantId: strin
  <div className="flex flex-col items-center justify-center gap-4 duration-500">
  <div className="relative">
  <div className="absolute inset-0 bg-rose-500/20 dark:bg-rose-500/10 rounded-full blur-xl animate-pulse"></div>
- <div className="w-20 h-20 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-lg border border-slate-100 dark:border-slate-700 relative z-10">
+ <Surface radius="full" elevation={2} className="w-20 h-20 flex items-center justify-center relative z-10">
  <Package className="w-10 h-10 text-rose-400 dark:text-rose-500" strokeWidth={1.5} />
- </div>
+ </Surface>
  </div>
  <h3 className="text-lg font-bold text-slate-800 dark:text-[#f0ede6]">No Orders Found</h3>
  <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm">
@@ -240,7 +186,7 @@ export function OrderHistory({ restaurantId, onOpenChat }: { restaurantId: strin
  </tbody>
  </table>
  </div>
- </div>
+ </Surface>
 
  {totalPages > 1 && (
  <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
@@ -249,13 +195,15 @@ export function OrderHistory({ restaurantId, onOpenChat }: { restaurantId: strin
  </div>
  
  <div className="flex items-center gap-2">
- <button
+ <Button
+ variant="secondary"
+ size="icon"
+ aria-label="Previous page"
  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
  disabled={currentPage === 1}
- className="p-2 rounded-lg bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 text-slate-600 dark:text-[#f0ede6] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition"
  >
  <ChevronLeft className="w-4 h-4" />
- </button>
+ </Button>
  
  <div className="flex items-center gap-1">
  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -266,28 +214,29 @@ export function OrderHistory({ restaurantId, onOpenChat }: { restaurantId: strin
  else pageNum = currentPage - 2 + i;
  
  return (
- <button
+ <Button
  key={pageNum}
+ size="sm"
+ variant={currentPage === pageNum ? 'primary' : 'secondary'}
+ aria-current={currentPage === pageNum ? 'page' : undefined}
  onClick={() => setCurrentPage(pageNum)}
- className={`w-8 h-8 rounded-lg text-xs font-bold transition-colors ${
- currentPage === pageNum
- ? 'bg-amber-500 text-white'
- : 'bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 text-slate-600 dark:text-[#f0ede6] hover:bg-slate-50 dark:hover:bg-slate-900'
- }`}
+ className="w-8 justify-center"
  >
  {pageNum}
- </button>
+ </Button>
  );
  })}
  </div>
  
- <button
+ <Button
+ variant="secondary"
+ size="icon"
+ aria-label="Next page"
  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
  disabled={currentPage === totalPages}
- className="p-2 rounded-lg bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 text-slate-600 dark:text-[#f0ede6] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition"
  >
  <ChevronRight className="w-4 h-4" />
- </button>
+ </Button>
  </div>
  </div>
  )}
@@ -297,6 +246,6 @@ export function OrderHistory({ restaurantId, onOpenChat }: { restaurantId: strin
  isOpen={!!selectedOrderForDetails}
  onClose={() => setSelectedOrderForDetails(null)}
  />
- </div>
+ </Surface>
  );
 }

@@ -1,3 +1,4 @@
+import { Surface } from '@shared/ui';
 import React, { useState } from 'react';
 import PayoutQueue from './PayoutQueue';
 import PayoutHistory from './PayoutHistory';
@@ -22,10 +23,9 @@ export default function AdminPayoutsPage() {
 
   return (
     <div className="flex h-full w-full">
-      <div className="w-64 border-r border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 p-4">
+      <Surface elevation={0} className="w-64 border-r p-4">
          <h2 className="text-xl font-black mb-6 px-4">Payouts</h2>
          <SidebarNav
-            activeColor="amber"
             activeKey={activeTab}
             onSelect={(key) => setActiveTab(key as 'queue' | 'history')}
             items={[
@@ -33,7 +33,7 @@ export default function AdminPayoutsPage() {
               { key: 'history', label: 'History', icon: <History className="w-5 h-5" /> },
             ]}
          />
-      </div>
+      </Surface>
 
       <div className="flex-1 relative">
          {activeTab === 'queue' && <PayoutQueue onSelectRow={setSelectedQueueRow} />}

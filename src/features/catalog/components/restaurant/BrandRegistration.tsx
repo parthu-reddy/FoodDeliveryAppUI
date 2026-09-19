@@ -1,7 +1,9 @@
+import { Input, Surface, surfaceStyle } from '@shared/ui';
 import { restaurantApi } from '@/lib/zodiosClients';
 import ImageUploadField from "@features/kyc/components/ImageUploadField";
 import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, CreditCard, Plus, Sparkles, Store } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
+import { useMotionPresets } from '@shared/ui';
 import React, { useState } from 'react';
 import { z } from 'zod';
 import { Spinner } from '@shared/ui';
@@ -17,6 +19,7 @@ const brandSchema = z.object({
 });
 
 export default function BrandRegistration({ onRefresh }: { onRefresh: () => void }) {
+ const presets = useMotionPresets();
  const [isOpen, setIsOpen] = useState(false);
  const [step, setStep] = useState(1);
 
@@ -113,7 +116,11 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
  return (
  <button
  onClick={() => setIsOpen(true)}
- className="w-full p-4 border-2 border-dashed border-rose-300 dark:border-rose-700/50 rounded-2xl flex items-center justify-center gap-2 text-slate-500 dark:text-slate-300 hover:text-rose-500 hover:border-rose-500/50 hover:bg-rose-50/50 dark:hover:bg-rose-950/20 transition cursor-pointer hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)]"
+ className="w-full p-4 flex items-center justify-center gap-2 text-slate-500 dark:text-slate-300 hover:text-rose-500 transition cursor-pointer"
+ style={{
+ ...surfaceStyle({ variant: 'sunken', radius: 'lg', elevation: 0 }),
+ border: '2px dashed var(--color-rose-300)',
+ }}
  >
  <Plus className="w-5 h-5" />
  <span className="font-bold text-sm">Register New Brand</span>
@@ -122,7 +129,7 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
  }
 
  return (
- <div className="bg-white/20 dark:bg-slate-900/20 border border-rose-500/20 dark:border-rose-500/30 rounded-[2rem] p-5 shadow-sm overflow-hidden">
+ <Surface radius="xl" elevation={1} className="p-5 overflow-hidden">
  <div className="flex items-center justify-between mb-4">
  <div className="flex items-center gap-2 text-rose-500">
  <Sparkles className="w-5 h-5 animate-pulse" />
@@ -145,10 +152,7 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
  <AnimatePresence mode="wait">
  {step === 1 && (
  <motion.div
- key="step1"
- initial={{ opacity: 0, x: -20 }}
- animate={{ opacity: 1, x: 0 }}
- exit={{ opacity: 0, x: -20 }}
+ key="step1" {...presets.slideInX}
  transition={{ duration: 0.3 }}
  className="space-y-4"
  >
@@ -158,32 +162,32 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
  </div>
  <div className="space-y-1">
  <label className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">Brand Name</label>
- <input
+ <Input
  type="text" required value={name} onChange={e => setName(e.target.value)}
- className="w-full bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-rose-500/50"
+ className="font-bold focus:ring-2 focus:ring-rose-500/50"
  placeholder="e.g. KFC"
  />
  </div>
  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
  <div className="space-y-1">
  <label className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">GSTIN (15 char)</label>
- <input
+ <Input
  type="text" required minLength={15} maxLength={15} value={gstin} onChange={e => setGstin(e.target.value.toUpperCase())}
- className="w-full bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-rose-500/50 uppercase"
+ className="font-bold uppercase focus:ring-2 focus:ring-rose-500/50"
  />
  </div>
  <div className="space-y-1">
  <label className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">PAN (10 char)</label>
- <input
+ <Input
  type="text" required minLength={10} maxLength={10} value={pan} onChange={e => setPan(e.target.value.toUpperCase())}
- className="w-full bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-rose-500/50 uppercase"
+ className="font-bold uppercase focus:ring-2 focus:ring-rose-500/50"
  />
  </div>
  <div className="space-y-1 col-span-2 sm:col-span-1">
  <label className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">CIN (21 char)</label>
- <input
+ <Input
  type="text" required minLength={21} maxLength={21} value={cin} onChange={e => setCin(e.target.value.toUpperCase())}
- className="w-full bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-rose-500/50 uppercase"
+ className="font-bold uppercase focus:ring-2 focus:ring-rose-500/50"
  />
  </div>
  </div>
@@ -206,7 +210,7 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
  </button>
  <button
  type="button" onClick={handleNext}
- className="flex-1 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-black rounded-xl shadow-md transition flex items-center justify-center gap-2 hover:scale-[1.02]"
+ className="flex-1 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-black rounded-xl transition flex items-center justify-center gap-2 hover:scale-[1.02]"
  >
  Next <ArrowRight className="w-4 h-4" />
  </button>
@@ -216,10 +220,7 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
 
  {step === 2 && (
  <motion.div
- key="step2"
- initial={{ opacity: 0, x: 20 }}
- animate={{ opacity: 1, x: 0 }}
- exit={{ opacity: 0, x: 20 }}
+ key="step2" {...presets.slideInX}
  transition={{ duration: 0.3 }}
  className="space-y-4"
  >
@@ -237,16 +238,16 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
  <div className="grid grid-cols-2 gap-3">
  <div className="space-y-1">
  <label className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">Bank Account #</label>
- <input
+ <Input
  type="text" required value={bankAccount} onChange={e => setBankAccount(e.target.value)}
- className="w-full bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-rose-500/50"
+ className="font-bold focus:ring-2 focus:ring-rose-500/50"
  />
  </div>
  <div className="space-y-1">
  <label className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">IFSC Code (11 char)</label>
- <input
+ <Input
  type="text" required minLength={11} maxLength={11} value={ifsc} onChange={e => setIfsc(e.target.value.toUpperCase())}
- className="w-full bg-white/20 dark:bg-slate-950/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-xl px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-rose-500/50 uppercase"
+ className="font-bold uppercase focus:ring-2 focus:ring-rose-500/50"
  />
  </div>
  </div>
@@ -262,7 +263,7 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
  type="button"
  onClick={handleRegister}
  disabled={isSaving}
- className="flex-1 py-2.5 bg-gradient-to-r from-rose-500 to-rose-500 text-white text-sm font-black rounded-xl shadow-md hover:shadow-lg transition flex items-center justify-center gap-2 disabled:opacity-50 hover:scale-[1.02]"
+ className="flex-1 py-2.5 bg-gradient-to-r from-rose-500 to-rose-500 text-white text-sm font-black rounded-xl transition flex items-center justify-center gap-2 disabled:opacity-50 hover:scale-[1.02]"
  >
  {isSaving ? (
  <Spinner size="sm" color="#ffffff" label="" />
@@ -276,6 +277,6 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
  )}
  </AnimatePresence>
  </div>
- </div>
+ </Surface>
  );
 }

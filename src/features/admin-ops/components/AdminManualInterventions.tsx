@@ -2,7 +2,7 @@ import { useToast } from "@/contexts/ToastContext";
 import { usePolling } from "@/hooks/usePolling";
 import { parseApiError } from '@/lib/parseApiError';
 import { customerApi, deliveryApi } from "@/lib/zodiosClients";
-import { Button, Surface, Textarea, surfaceStyle } from '@shared/ui';
+import { Button, Surface, Textarea, surfaceStyle, useConfirm } from '@shared/ui';
 import { Shield, Truck } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Order as OrderSchema } from '@/api/generated/schemas/customer/common';
@@ -11,6 +11,7 @@ type Order = z.infer<typeof OrderSchema>;
 
 export default function AdminManualInterventions() {
   const { showSuccess, showError } = useToast();
+  const confirm = useConfirm();
   const [activeTab, setActiveTab] = useState<'DISPATCH'>('DISPATCH');
    
   const [selectedIntervention, setSelectedIntervention] = useState<Order | Record<string, unknown> | null>(null);
@@ -62,6 +63,18 @@ export default function AdminManualInterventions() {
   }, [driversList]);
 
   const handleAssignDriverToIntervention = async (orderId: string, driverId: string) => {
+    // Force-assign overrides automatic dispatch and puts a specific rider on a specific
+    // order. It cannot be taken back from this screen, and the rider is notified immediately.
+    const ok = await confirm({
+      title: 'Force-assign this driver?',
+      description:
+        'This overrides automatic dispatch. The rider is notified straight away and the order '
+        + 'resumes on their device. It cannot be undone from here.',
+      confirmLabel: 'Force assign',
+      tone: 'danger',
+    });
+    if (!ok) return;
+
     // Optimistic UI Update
     setInterventions(prev => prev.filter(o => o.id !== orderId));
 
@@ -96,8 +109,13 @@ export default function AdminManualInterventions() {
   return (
     <div className="flex-1 flex w-full h-full overflow-hidden">
       {/* Live Interventions List */}
-      <div className="w-80 flex flex-col border-r border-slate-200 dark:border-slate-800 bg-rose-500/5 dark:bg-rose-500/10 backdrop-blur-xl shrink-0">
-        <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-col gap-3 bg-white/20 dark:bg-slate-900/30">
+      <Surface
+        variant="sunken"
+        radius="none"
+        elevation={0}
+        className="w-80 flex flex-col border-r shrink-0"
+      >
+        <Surface elevation={0} className="p-4 border-b flex flex-col gap-3">
           <div className="flex justify-between items-center">
             <h3 className="font-black text-lg text-rose-600 dark:text-rose-400">Interventions</h3>
             <Button variant="ghost" onClick={() => { fetchInterventions(); fetchAvailableDrivers(); }}>Refresh</Button>
@@ -105,12 +123,16 @@ export default function AdminManualInterventions() {
           <div className="flex bg-slate-200/50 dark:bg-slate-800/50 rounded-lg p-1">
             <button
               onClick={() => { setActiveTab('DISPATCH'); setSelectedIntervention(null); }}
-              className={`flex-1 py-1 text-xs font-bold rounded-md transition ${activeTab === 'DISPATCH' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-800 dark:text-white' : 'text-slate-500 hover:bg-white/50 dark:hover:bg-slate-700/50'}`}
+              className="flex-1 py-1 text-xs font-bold rounded-md transition"
+              style={{
+                background: activeTab === 'DISPATCH' ? 'var(--color-paper)' : 'transparent',
+                color: activeTab === 'DISPATCH' ? 'var(--color-ink)' : 'var(--color-ink-2)',
+              }}
             >
               Dispatch ({interventions.length})
             </button>
           </div>
-        </div>
+        </Surface>
         <div className="flex-1 overflow-y-auto p-3 space-y-2">
           {activeTab === 'DISPATCH' ? (
             <>
@@ -119,7 +141,7 @@ export default function AdminManualInterventions() {
                   key={order.id}
                   onClick={() => setSelectedIntervention(order)}
                   style={surfaceStyle({ variant: 'glass-chrome', elevation: 3, radius: 'lg' })}
-                  className={`w-full flex items-center gap-3 p-3 text-left transition ${selectedIntervention?.id === order.id ? '!border-rose-500 shadow-md ring-1 ring-rose-500' : 'hover:border-rose-300'}`}
+                  className={`w-full flex items-center gap-3 p-3 text-left transition ${selectedIntervention?.id === order.id ? '!border-rose-500 ring-1 ring-rose-500' : 'hover:border-rose-300'}`}
                 >
                   <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-rose-500/20">
                     <Shield className="w-5 h-5 text-rose-500" />
@@ -152,14 +174,14 @@ export default function AdminManualInterventions() {
             </>
           ) : null}
         </div>
-      </div>
+      </Surface>
 
       {/* Intervention Detail View */}
       <div className="flex-1 flex flex-col p-8 bg-slate-50 dark:bg-[#0f111a] overflow-y-auto">
         {selectedIntervention ? (
           <div className="max-w-4xl mx-auto w-full">
             {activeTab === 'DISPATCH' ? (
-              <Surface variant="glass-overlay" elevation={4} radius="xl" className="border-rose-500/30 p-8 relative overflow-hidden">
+              <Surface elevation={2} radius="xl" className="border-rose-500/30 p-8 relative overflow-hidden">
                 <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-rose-500 to-amber-500" />
 
                 <h2 className="text-3xl font-black mb-2 flex items-center gap-3">
@@ -173,12 +195,12 @@ export default function AdminManualInterventions() {
                     <h3 className="font-bold text-lg border-b border-slate-200 dark:border-slate-700 pb-2">Assign Available Driver</h3>
                     <div className="max-h-64 overflow-y-auto space-y-2 pr-2">
                       {availableDrivers.map(driver => (
-                        <Surface variant="glass-chrome" elevation={3} radius="lg" key={driver.id as string} className="flex items-center justify-between p-3">
+                        <Surface elevation={2} radius="lg" key={driver.id as string} className="flex items-center justify-between p-3">
                           <div className="flex items-center gap-3">
                             <Truck className="w-5 h-5 text-rose-500" />
                             <p className="font-bold text-sm">{driver.fullName as string || 'Driver'}</p>
                           </div>
-                          <Button variant="success" onClick={() => handleAssignDriverToIntervention((selectedIntervention as Order).id, driver.id as string)} className="shadow-lg shadow-amber-500/20">
+                          <Button variant="success" onClick={() => handleAssignDriverToIntervention((selectedIntervention as Order).id, driver.id as string)} className="">
                             Force Assign
                           </Button>
                         </Surface>
@@ -199,7 +221,7 @@ export default function AdminManualInterventions() {
                     <Button
                       variant="primary"
                       onClick={() => handleCancelIntervention((selectedIntervention as Order).id)}
-                      className="w-full !py-3 !bg-rose-500 hover:!bg-rose-600 shadow-lg shadow-rose-500/30"
+                      className="w-full !py-3 !bg-rose-500 hover:!bg-rose-600"
                     >
                       Cancel & Refund (Normal)
                     </Button>

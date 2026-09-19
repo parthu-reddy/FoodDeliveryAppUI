@@ -53,7 +53,7 @@ function AppContent() {
 
   const renderFallback = () => (
     <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative items-center justify-center">
-      <Surface variant="glass-overlay" elevation={4} radius="xl" className="px-6 py-4 rounded-2xl flex flex-col items-center gap-3">
+      <Surface elevation={2} radius="xl" className="px-6 py-4 rounded-2xl flex flex-col items-center gap-3">
         <Spinner size="md" color="var(--color-action)" />
         <span className="text-xs font-bold tracking-wider uppercase">Loading Workspace...</span>
       </Surface>
@@ -67,11 +67,11 @@ function AppContent() {
       <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative">
         <Suspense fallback={renderFallback()}>
           {!userRole ? (
-            <div className="flex-1 flex flex-col w-full h-full justify-center items-center overflow-hidden relative">
-              <ZodErrorBoundary contextName="Login Screen">
-                <LoginScreen onLoginSuccess={handleLoginSuccess} />
-              </ZodErrorBoundary>
-            </div>
+            // No centring wrapper: RoleShell is a full-height frame that manages its own
+            // header, scroll region and insets, and `justify-center` fought it.
+            <ZodErrorBoundary contextName="Login Screen">
+              <LoginScreen onLoginSuccess={handleLoginSuccess} />
+            </ZodErrorBoundary>
           ) : (
             <CallProvider>
               <div className="flex-1 flex flex-col w-full h-full overflow-hidden relative">

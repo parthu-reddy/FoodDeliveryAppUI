@@ -1,3 +1,4 @@
+import { Surface } from '@shared/ui';
 import React from 'react';
 
 interface SkeletonProps {
@@ -28,7 +29,7 @@ export const LoadingSkeleton: React.FC = () => {
 /** Skeleton shaped like a restaurant card (image + text rows) */
 export const RestaurantCardSkeleton = () => {
   return (
-    <div className="flex flex-col rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-white/10 shadow-sm">
+    <Surface radius="xl" elevation={1} className="flex flex-col overflow-hidden">
       <Skeleton className="h-44 w-full" />
       <div className="p-4.5 space-y-2">
         <div className="flex justify-between items-center">
@@ -42,7 +43,7 @@ export const RestaurantCardSkeleton = () => {
           <Skeleton className="h-4 w-16" />
         </div>
       </div>
-    </div>
+    </Surface>
   );
 };
 

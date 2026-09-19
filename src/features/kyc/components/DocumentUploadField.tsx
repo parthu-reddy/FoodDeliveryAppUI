@@ -121,11 +121,23 @@ export default function DocumentUploadField({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          className={`flex-1 flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed ${isDragging ? 'border-rose-500 bg-rose-500/10' :
-              error ? 'border-rose-500/50 bg-rose-500/5'
-                : value ? 'border-amber-500/30 bg-amber-500/10'
-                  : 'border-rose-500/30 bg-white/10 dark:bg-slate-900/10'
-            } backdrop-blur-md cursor-pointer hover:bg-white/20 dark:hover:bg-slate-900/20 transition`}
+          className="flex-1 flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed cursor-pointer transition"
+          style={{
+            // one tinted state per meaning, from the semantic tokens -- which also carry dark
+            // mode, so the four `dark:` twins this replaces are gone
+            background: isDragging || error
+              ? 'var(--color-danger-bg)'
+              : value
+                ? 'var(--color-success-bg)'
+                : 'var(--color-paper-sunken)',
+            borderColor: isDragging
+              ? 'var(--color-action)'
+              : error
+                ? 'var(--color-danger-line)'
+                : value
+                  ? 'var(--color-success-line)'
+                  : 'var(--color-paper-line)',
+          }}
         >
           {isUploading ? (
             <div className="flex flex-col items-center space-y-2">

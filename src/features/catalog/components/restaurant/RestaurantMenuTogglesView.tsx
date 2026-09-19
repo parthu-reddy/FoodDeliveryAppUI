@@ -1,7 +1,8 @@
+import { Surface, Switch } from '@shared/ui';
 import { MenuItem } from '@/types';
 import ImageLoader from '@shared/ui/ImageLoader';
-import { ToggleLeft, ToggleRight } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useMotionPresets } from '@shared/ui';
 import React from 'react';
 
 interface RestaurantMenuTogglesViewProps {
@@ -24,12 +25,10 @@ export const RestaurantMenuTogglesView: React.FC<RestaurantMenuTogglesViewProps>
     return acc;
   }, {} as Record<string, MenuItem[]>);
 
+  const presets = useMotionPresets();
   return (
     <motion.div
-      key="menu-panel"
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
+      key="menu-panel" {...presets.rise}
       className="p-5 space-y-4"
     >
       <div className="space-y-1">
@@ -51,10 +50,7 @@ export const RestaurantMenuTogglesView: React.FC<RestaurantMenuTogglesViewProps>
                     ? stockStatus[`${selectedOutletId}_${dish.id}`] 
                     : dish.isAvailable !== false;
                 return (
-                  <div 
-                    key={dish.id} 
-                    className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 p-4 rounded-2xl flex items-center justify-between shadow-sm"
-                  >
+                  <Surface radius="lg" elevation={1} className="p-4 flex items-center justify-between" key={dish.id}>
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-200 dark:bg-slate-800 shrink-0">
                         <ImageLoader 
@@ -72,23 +68,20 @@ export const RestaurantMenuTogglesView: React.FC<RestaurantMenuTogglesViewProps>
                       </div>
                     </div>
 
-                    <button 
-                      onClick={() => toggleStock(dish.id as string, available)}
-                      className="cursor-pointer transition-colors p-1"
+                    <Switch
+                      checked={available}
+                      onChange={() => toggleStock(dish.id as string, available)}
+                      label={`${dish.name} available`}
+                      className="p-1"
                     >
-                      {available ? (
-                        <div className="flex items-center gap-1.5 text-amber-500 font-bold text-xs font-mono">
-                          <span>ACTIVE</span>
-                          <ToggleRight className="w-10 h-10" />
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1.5 text-rose-400 font-bold text-xs font-mono">
-                          <span>PAUSED</span>
-                          <ToggleLeft className="w-10 h-10" />
-                        </div>
-                      )}
-                    </button>
-                  </div>
+                      <span
+                        className="font-bold text-xs font-mono"
+                        style={{ color: available ? 'var(--color-success)' : 'var(--color-ink-3)' }}
+                      >
+                        {available ? 'ACTIVE' : 'PAUSED'}
+                      </span>
+                    </Switch>
+                  </Surface>
                 );
               })}
             </div>

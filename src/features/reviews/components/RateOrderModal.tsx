@@ -1,9 +1,11 @@
+import { Surface, Textarea } from '@shared/ui';
 import { reviewsApi } from '@/lib/zodiosClients';
 import { parseApiError } from '@/lib/parseApiError';
 import { AlertBanner, Button, ErrorBoundary, Modal, Spinner } from '@shared/ui';
-import { Bike, Check, Lock, Star, Store, UtensilsCrossed } from 'lucide-react';
+import { Check, Lock, Star } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { StarRating } from './StarRating';
+import { ReviewTargetIcon } from './ReviewTargetIcon';
 import { isAlreadyReviewed, reviewRejectionCopy, shortDate } from '../model/reviewCopy';
 import { useOrderReviewEligibility } from '../model/useOrderReviewEligibility';
 import type { ReviewEntry, ReviewTarget } from '../model/types';
@@ -32,12 +34,6 @@ export default function RateOrderModal(props: RateOrderModalProps) {
 interface Draft {
   rating: number;
   comment: string;
-}
-
-function targetIcon(entityType: ReviewTarget['entityType']) {
-  if (entityType === 'RESTAURANT') return <Store className="h-4 w-4" />;
-  if (entityType === 'DRIVER') return <Bike className="h-4 w-4" />;
-  return <UtensilsCrossed className="h-4 w-4" />;
 }
 
 function targetKey(target: ReviewTarget) {
@@ -187,13 +183,10 @@ function RateOrderModalInner({ isOpen, onClose, orderId, onSubmitted }: RateOrde
             const comment = draft?.comment ?? '';
 
             return (
-              <div
-                key={key}
-                className="rounded-2xl border border-white/40 bg-white/20 p-4 backdrop-blur-sm dark:border-white/10 dark:bg-black/10"
-              >
+              <Surface variant="glass-chrome" radius="lg" elevation={0} className="p-4" key={key}>
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-2 text-slate-700 dark:text-slate-200">
-                    <span className="text-rose-500">{targetIcon(target.entityType)}</span>
+                    <span className="text-rose-500"><ReviewTargetIcon entityType={target.entityType} className="h-4 w-4" /></span>
                     <span className="truncate text-sm font-bold">{target.displayName}</span>
                   </div>
                   <StarRating
@@ -205,7 +198,7 @@ function RateOrderModalInner({ isOpen, onClose, orderId, onSubmitted }: RateOrde
                 </div>
 
                 <div className="mt-3">
-                  <textarea
+                  <Textarea
                     value={comment}
                     maxLength={COMMENT_LIMIT}
                     // A comment with no rating cannot be submitted, so the field stays out of the
@@ -219,7 +212,7 @@ function RateOrderModalInner({ isOpen, onClose, orderId, onSubmitted }: RateOrde
                     }
                     rows={2}
                     aria-label={`Comment about ${target.displayName}`}
-                    className="w-full resize-none rounded-xl border border-white/50 bg-white/40 p-2.5 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10 dark:bg-black/20 dark:text-slate-200"
+                    className="disabled:cursor-not-allowed disabled:opacity-50"
                   />
                   {comment.length > 0 && (
                     <p className="mt-1 text-right text-[10px] tabular-nums text-slate-400">
@@ -227,7 +220,7 @@ function RateOrderModalInner({ isOpen, onClose, orderId, onSubmitted }: RateOrde
                     </p>
                   )}
                 </div>
-              </div>
+              </Surface>
             );
           })}
 
@@ -237,13 +230,10 @@ function RateOrderModalInner({ isOpen, onClose, orderId, onSubmitted }: RateOrde
                 Already reviewed
               </h4>
               {submitted.map((target) => (
-                <div
-                  key={targetKey(target)}
-                  className="rounded-2xl border border-white/30 bg-white/10 p-3 dark:border-white/5 dark:bg-black/5"
-                >
+                <Surface radius="lg" elevation={0} className="p-3" key={targetKey(target)}>
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-2 text-slate-500 dark:text-slate-400">
-                      <span>{targetIcon(target.entityType)}</span>
+                      <span><ReviewTargetIcon entityType={target.entityType} className="h-4 w-4" /></span>
                       <span className="truncate text-sm font-semibold">{target.displayName}</span>
                     </div>
                     <StarRating value={target.existingRating ?? 0} size="sm" />
@@ -256,7 +246,7 @@ function RateOrderModalInner({ isOpen, onClose, orderId, onSubmitted }: RateOrde
                   <p className="mt-1 text-[10px] text-slate-400">
                     Submitted {shortDate(target.existingReviewedAt)}
                   </p>
-                </div>
+                </Surface>
               ))}
             </div>
           )}

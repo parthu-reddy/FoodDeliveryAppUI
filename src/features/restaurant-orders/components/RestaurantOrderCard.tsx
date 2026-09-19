@@ -1,20 +1,14 @@
 import { Order, OrderStatus } from '@/types';
-import { RestaurantOrderDetailsModal } from '@features/restaurant-orders/components/RestaurantOrderDetailsModal';
+import { RestaurantOrderActions } from '@features/restaurant-orders/components/RestaurantOrderActions';
+import { RestaurantOrderDrawers } from '@features/restaurant-orders/components/RestaurantOrderDrawers';
 import { useCallContext } from '@/contexts/CallContext';
-import { Badge, Button, FormField, Input, Spinner, surfaceStyle } from '@shared/ui';
-import { AnimatePresence, motion } from 'motion/react';
+import { Badge, Spinner, surfaceStyle } from '@shared/ui';
+import { motion } from 'motion/react';
 import {
  Bike,
- Check,
- CheckCircle2,
  Clock,
  Flame,
- KeyRound,
- MessageSquare,
- Receipt,
- Send,
  User,
- XCircle,
  PhoneCall
 } from 'lucide-react';
 import React, { useState } from 'react';
@@ -114,8 +108,7 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
 
  return (
  <motion.div 
- layoutId={`card-₹{order.id}`}
- style={surfaceStyle({ variant: 'glass-chrome', elevation: 3, radius: 'lg' })}
+  style={surfaceStyle({ variant: 'glass-chrome', elevation: 3, radius: 'lg' })}
           className={`p-4 space-y-3.5 relative overflow-hidden transition ${styles.bg} ${styles.ring}`}
  >
  <div className="flex justify-between items-start">
@@ -128,7 +121,6 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
  variant={order.status === OrderStatus.AWAITING_DELAY_APPROVAL ? 'danger' : 'primary'} 
  icon={order.status === OrderStatus.PREPARING ? <Flame className="w-3 h-3 text-amber-500 animate-bounce" /> : undefined}
  pulse={order.status === OrderStatus.AWAITING_DELAY_APPROVAL}
- className="shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:shadow-[0_0_12px_rgba(244,63,94,0.5)]"
  >
  {order.status === OrderStatus.AWAITING_DELAY_APPROVAL ? 'ON HOLD' : 
  order.status === OrderStatus.PREPARING ? 'COOKING' :
@@ -226,248 +218,44 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
  </div>
  )}
 
- <div className="pt-2.5 border-t border-rose-500/20 dark:border-rose-500/30 flex flex-col gap-2">
- <div className="flex items-center justify-between gap-3">
- <div className="flex flex-wrap gap-x-4 gap-y-2 flex-1 min-w-0">
- <div className="space-y-1">
- <span className="text-[9px] text-slate-400 dark:text-slate-300 uppercase font-mono block truncate">Order Value</span>
- <span className="text-xs font-bold text-slate-850 dark:text-[#f0ede6] font-mono">{formatINR(order.totalAmount || 0)}</span>
- </div>
- <div className="space-y-1">
- <span className="text-[9px] text-slate-400 dark:text-slate-300 uppercase font-mono block truncate">Your Payout</span>
- <span className="text-xs font-bold text-amber-600 dark:text-amber-400 font-mono">
- {order.earnings?.netPayout != null ? formatINR(order.earnings.netPayout) : '---'}
- </span>
- </div>
- </div>
-
- <div className="flex gap-2 shrink-0">
- {isNewPlaced && (
- <Button
- variant="secondary"
- size="sm"
- icon={<Clock className="w-3.5 h-3.5" />}
- onClick={() => setActiveModal(activeModal === 'delay' ? 'none' : 'delay')}
- />
- )}
- 
- 
- <Button
- variant="secondary"
- size="sm"
- icon={<MessageSquare className="w-3 h-3 text-blue-500" />}
- onClick={() => setSelectedChatOrder(order)}
- />
- 
- <Button
- variant="secondary"
- size="sm"
- icon={<Receipt className="w-3.5 h-3.5 text-amber-500" />}
- onClick={() => setShowDetails(true)}
- />
- </div>
- </div>
-
- <div className="flex gap-1.5 pt-1.5">
- {!isBeingDelivered && (
- <Button
- variant="danger"
- size="sm"
- className="flex-1 shadow-none bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-500/20"
- icon={<XCircle className="w-3.5 h-3.5" />}
- onClick={() => setActiveModal(activeModal === 'cancel' ? 'none' : 'cancel')}
- >
- Cancel
- </Button>
- )}
- 
- {isRefundRequest && (
- <Badge variant="danger" className="animate-pulse">
- Action Required: Refund
- </Badge>
- )}
-
- {isNewPlaced && (
- <Button
- variant="warning"
- size="sm"
- className="flex-[2] shadow-sm"
- disabled={isSubmitting}
- icon={isSubmitting ? <Spinner size="xs" label="" /> : <Check className="w-3.5 h-3.5 shrink-0" />}
- onClick={() => {
- setIsSubmitting(true);
- handleStatusTransition(order);
- }}
- >
- {isSubmitting ? 'Accepting...' : 'Accept Order'}
- </Button>
- )}
-
- {isCooking && (
- <>
- {order.status === OrderStatus.ACCEPTED ? (
- <Button
- variant="warning"
- size="sm"
- className="flex-[2] shadow-sm"
- disabled={isSubmitting}
- icon={isSubmitting ? <Spinner size="xs" label="" /> : undefined}
- onClick={() => {
- setIsSubmitting(true);
- handleStatusTransition(order);
- }}
- >
- {isSubmitting ? 'Starting...' : 'Start Cook'}
- </Button>
- ) : (
- <Button
- variant="success"
- size="sm"
- className="flex-[2] shadow-sm bg-amber-500/20 hover:bg-amber-500/30 text-amber-700 dark:text-amber-300 border-amber-500/30"
- disabled={isSubmitting}
- icon={isSubmitting ? <Spinner size="xs" label="" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
- onClick={() => {
- setIsSubmitting(true);
- handleStatusTransition(order);
- }}
- >
- {isSubmitting ? 'Marking...' : 'Mark Prepared'}
- </Button>
- )}
- </>
- )}
- 
- {(isPrepared || isBeingDelivered) && (
- <Button
- variant="primary"
- size="sm"
- className="flex-[2] shadow-sm"
- icon={!showOtp ? <KeyRound className="w-3.5 h-3.5" /> : undefined}
- onClick={() => {
- setShowOtp(true);
- setTimeout(() => setShowOtp(false), 6000);
- }}
- >
- {showOtp ? (
- <span className="font-mono tracking-widest text-base">
- {order.pickupOtp || 'N/A'}
- </span>
- ) : (
- 'Show Handover OTP'
- )}
- </Button>
- )}
- </div>
-
- {/* Drawers */}
- {activeModal === 'cancel' && (
- <div className="mt-2 p-3 bg-rose-50 dark:bg-rose-950/20 rounded-xl border border-rose-200 dark:border-rose-900/50 space-y-2 duration-200">
- <FormField label="Reason for cancellation">
- <Input 
- type="text" 
- placeholder="e.g. Out of stock, Kitchen busy..."
- value={cancelReason}
- onChange={(e) => setCancelReason(e.target.value)}
- />
- </FormField>
- <div className="flex gap-2 pt-1">
- <Button variant="secondary" size="sm" className="flex-1" onClick={() => setActiveModal('none')}>
- Back
- </Button>
- <Button variant="danger" size="sm" className="flex-1" onClick={submitCancel}>
- Confirm Cancel
- </Button>
- </div>
- </div>
- )}
-
- {activeModal === 'refund' && (
- <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-xl border border-blue-200 dark:border-blue-900/50 space-y-2 duration-200">
- <FormField label="Refund Amount (₹)">
- <Input 
- type="number" 
- placeholder="0.00"
- step="0.01"
- min="0.01"
- value={refundAmount}
- onChange={(e) => setRefundAmount(e.target.value)}
- />
- </FormField>
- <FormField label="Reason for partial refund">
- <Input 
- type="text" 
- placeholder="e.g. Missing Item..."
- value={refundReason}
- onChange={(e) => setRefundReason(e.target.value)}
- />
- </FormField>
- <div className="flex gap-2 pt-1">
- <Button variant="secondary" size="sm" className="flex-1" onClick={() => setActiveModal('none')}>
- Back
- </Button>
- <Button variant="primary" size="sm" className="flex-1" onClick={submitRefund}>
- Issue Refund
- </Button>
- </div>
- </div>
- )}
- 
- <AnimatePresence>
- {activeModal === 'delay' && (
- <motion.div 
- initial={{ height: 0, opacity: 0 }}
- animate={{ height: 'auto', opacity: 1 }}
- exit={{ height: 0, opacity: 0 }}
- className="overflow-hidden border-t border-rose-500/20 dark:border-rose-500/30 pt-2.5 mt-1 space-y-2.5"
- >
- <div className="space-y-1">
- <label className="text-[9px] font-bold font-mono text-slate-400 dark:text-slate-300 uppercase">Delay Duration</label>
- <div className="grid grid-cols-4 gap-1">
- {['5', '10', '15', '20'].map(m => (
- <button
- key={m}
- type="button"
- onClick={() => setDelayMinutes(m)}
- className={`py-1 text-[10px] font-mono font-bold rounded-lg border cursor-pointer transition ${
- delayMinutes === m
- ? 'bg-amber-500 border-transparent text-white'
- : 'bg-slate-50 dark:bg-slate-955 border-rose-500/20 dark:border-rose-500/30 text-slate-400 dark:text-slate-300'
- }`}
- >
- +{m} Min
- </button>
- ))}
- </div>
- </div>
-
- <FormField label="Reason for delay">
- <Input 
- type="text"
- value={delayReason}
- onChange={(e) => setDelayReason(e.target.value)}
- placeholder="e.g. High custom baking orders"
- />
- </FormField>
-
- <Button
- variant="primary"
- size="sm"
- className="w-full mt-2"
- icon={<Send className="w-3 h-3 text-rose-450" />}
- onClick={submitDelay}
- >
- Submit Delay
- </Button>
- </motion.div>
- )}
- </AnimatePresence>
- </div>
-
- <RestaurantOrderDetailsModal
- order={order}
- isOpen={showDetails}
- onClose={() => setShowDetails(false)}
- />
+   <RestaurantOrderActions
+     order={order}
+     activeModal={activeModal}
+     isCooking={isCooking}
+     isNewPlaced={isNewPlaced}
+     isRefundRequest={isRefundRequest}
+     isSubmitting={isSubmitting}
+     showOtp={showOtp}
+     setShowOtp={setShowOtp}
+     setActiveModal={setActiveModal}
+     setShowDetails={setShowDetails}
+     isPrepared={isPrepared}
+     isBeingDelivered={isBeingDelivered}
+     setSelectedChatOrder={setSelectedChatOrder}
+     handleStatusTransition={handleStatusTransition}
+   />
+   <RestaurantOrderDrawers
+     activeModal={activeModal}
+     setActiveModal={setActiveModal}
+     setShowDetails={setShowDetails}
+     isPrepared={isPrepared}
+     isBeingDelivered={isBeingDelivered}
+     order={order}
+     showDetails={showDetails}
+     cancelReason={cancelReason}
+     setCancelReason={setCancelReason}
+     submitCancel={submitCancel}
+     refundAmount={refundAmount}
+     setRefundAmount={setRefundAmount}
+     refundReason={refundReason}
+     setRefundReason={setRefundReason}
+     submitRefund={submitRefund}
+     delayMinutes={delayMinutes}
+     setDelayMinutes={setDelayMinutes}
+     delayReason={delayReason}
+     setDelayReason={setDelayReason}
+     submitDelay={submitDelay}
+   />
  </motion.div>
  );
 };

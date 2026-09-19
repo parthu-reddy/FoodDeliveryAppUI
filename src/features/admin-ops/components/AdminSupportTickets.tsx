@@ -1,3 +1,4 @@
+import { Surface } from '@shared/ui';
 import { Order } from "@/types";
 import { useToast } from "@/contexts/ToastContext";
 import { usePolling } from "@/hooks/usePolling";
@@ -7,12 +8,13 @@ import { SupportTicket as SupportTicketSchema } from "@/api/generated/schemas/cu
 import { z } from 'zod';
 type SupportTicket = z.infer<typeof SupportTicketSchema>;
 import { ChatWidget, ChatWidgetHandle } from "@features/communication/components/ChatWidget";
-import { Button, Textarea } from '@shared/ui';
+import { Button, Textarea, useConfirm } from '@shared/ui';
 import { ShieldCheck, XCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 export default function AdminSupportTickets() {
   const { showSuccess, showError } = useToast();
+  const confirm = useConfirm();
   const [activeTab, setActiveTab] = useState<'OPEN' | 'IN_REVIEW' | 'RESOLVED' | 'REJECTED'>('OPEN');
   
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
@@ -45,6 +47,19 @@ export default function AdminSupportTickets() {
   }, [ticketsResponse]);
 
   const handleResolveTicket = async (ticketId: string, approved: boolean) => {
+    // Rejecting is the destructive half: the customer is told no and the ticket closes.
+    // Approving pays out, which the money layer already guards.
+    if (!approved) {
+      const ok = await confirm({
+        title: 'Reject this request?',
+        description:
+          'The customer will be told their request was declined and the ticket will close. '
+          + 'This cannot be undone.',
+        confirmLabel: 'Reject request',
+        tone: 'danger',
+      });
+      if (!ok) return;
+    }
     try {
       await customerApi.adminOrderManual.resolveSupportTicket({ 
         approved: approved.toString(), 
@@ -78,7 +93,7 @@ export default function AdminSupportTickets() {
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Review refund requests and support cases</p>
           </div>
           
-          <div className="flex p-1 bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+          <Surface radius="md" elevation={1} className="flex p-1">
             {(['OPEN', 'IN_REVIEW', 'RESOLVED', 'REJECTED'] as const).map(tab => (
               <button
                 key={tab}
@@ -89,22 +104,26 @@ export default function AdminSupportTickets() {
                   setShowChat(false);
                 }}
                 className={`px-4 py-2 text-sm font-semibold rounded-md transition-colors ${
-                  activeTab === tab 
-                    ? 'bg-rose-50 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400' 
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
-                }`}
+ activeTab === tab 
+ ? 'bg-rose-50 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400' 
+ : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
+ }`}
               >
                 {tab.replace('_', ' ')}
               </button>
             ))}
-          </div>
+          </Surface>
         </div>
 
         {/* Content Area */}
         <div className="flex flex-1 gap-6 min-h-0">
           
           {/* List View */}
-          <div className={`flex flex-col flex-1 bg-white dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200 dark:border-slate-700/50 rounded-2xl shadow-sm overflow-hidden ${selectedTicket ? 'max-w-md hidden lg:flex' : ''}`}>
+          <Surface
+            radius="lg"
+            elevation={1}
+            className={`flex flex-col flex-1 overflow-hidden ${selectedTicket ? 'max-w-md hidden lg:flex' : ''}`}
+          >
             <div className="p-4 border-b border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-slate-800/50">
               <h2 className="font-bold text-slate-800 dark:text-[#f0ede6]">
                 {activeTab.replace('_', ' ')} Tickets ({tickets.length})
@@ -123,10 +142,10 @@ export default function AdminSupportTickets() {
                     key={ticket.id}
                     onClick={() => handleOpenChat(ticket)}
                     className={`p-4 rounded-xl border transition cursor-pointer ${
-                      selectedTicket?.id === ticket.id
-                        ? 'border-rose-500 bg-rose-50/50 dark:bg-rose-500/10'
-                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-rose-300 dark:hover:border-rose-700'
-                    }`}
+ selectedTicket?.id === ticket.id
+ ? 'border-rose-500 bg-rose-50/50 dark:bg-rose-500/10'
+ : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-rose-300 dark:hover:border-rose-700'
+ }`}
                   >
                     <div className="flex justify-between items-start mb-2">
                       <div className="text-sm font-bold text-slate-800 dark:text-[#f0ede6]">Order #{String(ticket.orderId).substring(0, 8)}</div>
@@ -168,11 +187,11 @@ export default function AdminSupportTickets() {
                 </Button>
               </div>
             )}
-          </div>
+          </Surface>
 
           {/* Detail View */}
           {selectedTicket && (
-            <div className="flex-1 flex flex-col bg-white dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200 dark:border-slate-700/50 rounded-2xl shadow-sm overflow-hidden relative">
+            <Surface radius="lg" elevation={1} className="flex-1 flex flex-col overflow-hidden relative">
               <div className="p-6 border-b border-slate-100 dark:border-slate-700/50 flex justify-between items-center">
                 <div>
                   <h2 className="text-xl font-bold text-slate-800 dark:text-[#f0ede6]">Ticket Details</h2>
@@ -237,7 +256,7 @@ export default function AdminSupportTickets() {
                   </div>
                 )}
               </div>
-            </div>
+            </Surface>
           )}
 
         </div>

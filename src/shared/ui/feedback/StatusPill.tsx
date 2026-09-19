@@ -81,6 +81,11 @@ export function StatusPill({
         borderWidth: 1,
         borderStyle: 'solid',
         borderRadius: 'var(--radius-full)',
+        // A status change is information arriving; it crossfades rather than snapping.
+        // Colour only — nothing here moves, so there is no reduced-motion branch to make.
+        transitionProperty: 'background-color, color, border-color',
+        transitionDuration: 'var(--duration-fast)',
+        transitionTimingFunction: 'var(--ease-out)',
       }}
     >
       {live && (

@@ -109,7 +109,7 @@ export default function PayoutQueue({ onSelectRow }: { onSelectRow: (payout: Pen
             </div>
           </div>
         ) : pagedData.length === 0 ? (
-          <Surface variant="glass-overlay" elevation={4} radius="xl" className="p-12 text-center">
+          <Surface elevation={2} radius="xl" className="p-12 text-center">
             <CheckCircle className="w-16 h-16 text-amber-500 mx-auto mb-4" />
             <h3 className="text-xl font-bold mb-2">All Caught Up!</h3>
             <p className="text-slate-500">There are no pending payouts matching your filters.</p>
@@ -117,15 +117,15 @@ export default function PayoutQueue({ onSelectRow }: { onSelectRow: (payout: Pen
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {pagedData.map((account) => (
-              <Surface variant="glass-overlay" elevation={4} radius="xl" 
+              <Surface elevation={2} radius="xl" 
                 key={account.payeeId} 
                 className="p-6 flex flex-col cursor-pointer hover:border-rose-500 transition-colors"
                 onClick={() => onSelectRow(account)}
               >
                 <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-200 dark:border-slate-800/50">
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg ${
-                    account.payeeType === 'RESTAURANT' ? 'bg-amber-500 shadow-amber-500/30' : 'bg-rose-500 shadow-rose-500/30'
-                  }`}>
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
+ account.payeeType === 'RESTAURANT' ? 'bg-amber-500 ' : 'bg-rose-500 '
+ }`}>
                     {account.payeeType === 'RESTAURANT' ? <Store className="w-6 h-6 text-white" /> : <Bike className="w-6 h-6 text-white" />}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -133,8 +133,8 @@ export default function PayoutQueue({ onSelectRow }: { onSelectRow: (payout: Pen
                         <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">{account.payeeType}</p>
                         {account.beneficiaryStatus?.verified !== undefined && (
                             <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                                account.beneficiaryStatus.verified ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'
-                            }`}>
+ account.beneficiaryStatus.verified ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'
+ }`}>
                                 {account.beneficiaryStatus.verified ? 'VERIFIED' : 'UNVERIFIED'}
                             </span>
                         )}

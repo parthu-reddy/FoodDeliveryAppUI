@@ -1,6 +1,6 @@
 import { reviewsApi } from '@/lib/zodiosClients';
 import { parseApiError } from '@/lib/parseApiError';
-import { AlertBanner, Button, EmptyState, Input, Select, Spinner } from '@shared/ui';
+import { AlertBanner, Button, EmptyState, Input, Select, Spinner, Surface } from '@shared/ui';
 import { Search, ShieldAlert } from 'lucide-react';
 import { useState } from 'react';
 import { StarRating } from './StarRating';
@@ -159,9 +159,12 @@ export function AdminReviewsView() {
             {reviews.length} review{reviews.length === 1 ? '' : 's'}
           </p>
           {reviews.map((review) => (
-            <article
+            <Surface
+              as="article"
               key={review.id}
-              className="rounded-2xl border border-white/40 bg-white/20 p-4 backdrop-blur-sm dark:border-white/10 dark:bg-black/10"
+              radius="lg"
+              elevation={1}
+              className="p-4"
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <StarRating value={review.rating} size="sm" />
@@ -175,7 +178,8 @@ export function AdminReviewsView() {
               )}
 
               {/* The whole reason this screen exists: author and order, on the record. */}
-              <dl className="mt-3 grid grid-cols-1 gap-x-6 gap-y-1 border-t border-white/30 pt-2 font-mono text-[10px] text-slate-500 dark:border-white/10 dark:text-slate-400 sm:grid-cols-2">
+              <dl className="mt-3 grid grid-cols-1 gap-x-6 gap-y-1 border-t pt-2 font-mono text-[10px] text-slate-500 dark:text-slate-400 sm:grid-cols-2"
+                style={{ borderColor: 'var(--color-paper-line)' }}>
                 <div className="flex gap-2">
                   <dt className="font-bold">author</dt>
                   <dd className="truncate">{review.authorDisplayName || '—'} · {review.userId}</dd>
@@ -193,7 +197,7 @@ export function AdminReviewsView() {
                   <dd className="truncate">{review.id}</dd>
                 </div>
               </dl>
-            </article>
+            </Surface>
           ))}
         </div>
       )}

@@ -1,5 +1,6 @@
 // The review feature's public surface. Everything else in this folder is internal to it.
 export { StarRating } from './components/StarRating';
+export { InlineRating } from './components/InlineRating';
 export { RatingSummary } from './components/RatingSummary';
 export { ReviewList } from './components/ReviewList';
 export { MyReviewsList } from './components/MyReviewsList';

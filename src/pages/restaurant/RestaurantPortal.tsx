@@ -1,3 +1,4 @@
+import { Surface } from '@shared/ui';
 import { Order, OrderStatus, RoleName } from "@/types";
 import BrandRegistration from '@features/catalog/components/restaurant/BrandRegistration';
 import OutletRegistration from '@features/catalog/components/restaurant/OutletRegistration';
@@ -47,7 +48,13 @@ export default function RestaurantPortal(props: Props) {
   }, []);
 
   const renderRegistrationHeader = () => (
-    <header className="sticky top-0 bg-white/20 dark:bg-slate-950/20 backdrop-blur-xl px-5 py-3 flex flex-col sm:flex-row sm:items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 z-30 shrink-0 shadow-[0_2px_15px_rgba(0,0,0,0.01)] gap-3">
+    <Surface
+      as="header"
+      variant="glass-chrome"
+      radius="none"
+      elevation={2}
+      className="sticky top-0 px-5 py-3 flex flex-col sm:flex-row sm:items-center justify-between z-30 shrink-0 gap-3"
+    >
       <div className="flex items-center gap-3.5 flex-wrap">
         <LaBouffeLogo showText={false} iconSize="w-8 h-8" textColorClass="text-slate-800 dark:text-[#f0ede6] text-xs" subColorClass="text-rose-500 text-[8px]" />
         <div className="hidden sm:flex h-6 w-[1px] bg-slate-200 dark:bg-slate-800" />
@@ -85,11 +92,11 @@ export default function RestaurantPortal(props: Props) {
           <User className="w-4 h-4 text-rose-500" />
         </button>
       </div>
-    </header>
+    </Surface>
   );
 
   const renderRegistrationLayout = (children: React.ReactNode) => (
-    <div className="w-full h-full flex flex-col overflow-hidden bg-white/30 dark:bg-black/30 backdrop-blur-md">
+    <Surface elevation={0} className="w-full h-full flex flex-col overflow-hidden">
       {renderRegistrationHeader()}
       <div className="flex-1 overflow-auto p-4">
         {children}
@@ -104,14 +111,14 @@ export default function RestaurantPortal(props: Props) {
         onNameUpdate={props.onNameUpdate}
         onLogout={props.onLogout}
       />
-    </div>
+    </Surface>
   );
 
   if (loading) {
     return (
-      <div className="w-full h-full flex justify-center items-center backdrop-blur-md bg-white/30 dark:bg-black/30">
+      <Surface elevation={0} className="w-full h-full flex justify-center items-center">
         <Spinner size="lg" color="var(--color-amber-500)" />
-      </div>
+      </Surface>
     );
   }
 

@@ -95,7 +95,7 @@ export default tseslint.config(
       "src/features/catalog/model/menuStore.ts",                            // BFF-proxied menu fetches
       "src/features/catalog/components/customer/CustomerRestaurantCard.tsx",
       "src/features/catalog/components/restaurant/OutletRegistration.tsx",  // /olamaps/* proxy
-      "src/features/customer-orders/components/CustomerAddressModal.tsx",   // /olamaps/* proxy
+      "src/features/maps-tracking/model/usePlaceAutocomplete.ts",           // /olamaps/* proxy, for every caller
       "src/features/customer-orders/components/CustomerAddressSelectorModal.tsx",
       "src/features/customer-orders/components/CustomerAddressPage.tsx",    // /api/places/geocode on the BFF
       "src/features/kyc/components/DocumentUploadField.tsx"                 // presigned-URL upload, not a service API

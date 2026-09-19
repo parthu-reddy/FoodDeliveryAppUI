@@ -85,7 +85,7 @@ export const CallOverlay: React.FC = () => {
  dismissOnEscape={false}
  className="w-80 max-w-[calc(100vw-2rem)]"
  >
- <Surface variant="solid" elevation={4} radius="xl" className="p-8 flex flex-col items-center w-full">
+ <Surface variant="solid" elevation={2} radius="xl" className="p-8 flex flex-col items-center w-full">
  
  {/* Avatar Placeholder */}
  <div className="w-24 h-24 bg-rose-100 dark:bg-rose-900/50 rounded-full flex items-center justify-center mb-6">
@@ -114,7 +114,7 @@ export const CallOverlay: React.FC = () => {
  <>
  <button 
  onClick={() => declineCall()}
- className="w-14 h-14 bg-rose-500 hover:bg-rose-600 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95 text-white"
+ className="w-14 h-14 bg-rose-500 hover:bg-rose-600 rounded-full flex items-center justify-center transition-transform hover:scale-105 active:scale-95 text-white"
  >
  <PhoneOff className="w-6 h-6" />
  </button>
@@ -127,7 +127,7 @@ export const CallOverlay: React.FC = () => {
  audioRef.current.play().catch(e => console.error("Error playing audio on accept:", e));
  }
  }}
- className="w-14 h-14 bg-amber-500 hover:bg-amber-600 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95 text-white animate-bounce"
+ className="w-14 h-14 bg-amber-500 hover:bg-amber-600 rounded-full flex items-center justify-center transition-transform hover:scale-105 active:scale-95 text-white animate-bounce"
  >
  <PhoneCall className="w-6 h-6" />
  </button>
@@ -141,14 +141,14 @@ export const CallOverlay: React.FC = () => {
  const muted = toggleMute();
  setIsMuted(muted);
  }}
- className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95 ${isMuted ? 'bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400' : 'bg-slate-100 text-slate-800 dark:bg-slate-600 dark:text-white'}`}
+ className={`w-14 h-14 rounded-full flex items-center justify-center transition-transform hover:scale-105 active:scale-95 ${isMuted ? 'bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400' : 'bg-slate-100 text-slate-800 dark:bg-slate-600 dark:text-white'}`}
  >
  {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
  </button>
  
  <button 
  onClick={() => endCall()}
- className="w-14 h-14 bg-rose-500 hover:bg-rose-600 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95 text-white"
+ className="w-14 h-14 bg-rose-500 hover:bg-rose-600 rounded-full flex items-center justify-center transition-transform hover:scale-105 active:scale-95 text-white"
  >
  <PhoneOff className="w-6 h-6" />
  </button>

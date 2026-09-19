@@ -122,8 +122,11 @@ describe('OperationsPage', () => {
     render(<OperationsPage />);
     fireEvent.click(screen.getByText('Reconciliation Runs'));
 
+    // Asserted on the semantic tone, not a utility class. This test previously pinned
+    // `bg-rose-100`, then `bg-red-100` before that — it has now been rewritten twice because
+    // it was testing how the pill was painted rather than what it means.
     const status = await screen.findByText('PARTIAL');
-    expect(status.className).toContain('bg-rose-100');
+    expect(status.closest('[data-tone]')).toHaveAttribute('data-tone', 'danger');
   });
 
   it('shows a successful run in green', async () => {
@@ -135,7 +138,7 @@ describe('OperationsPage', () => {
     fireEvent.click(screen.getByText('Reconciliation Runs'));
 
     const status = await screen.findByText('SUCCESS');
-    expect(status.className).toContain('bg-amber-100');
+    expect(status.closest('[data-tone]')).toHaveAttribute('data-tone', 'success');
   });
 
   it('says when there is nothing stuck rather than showing a blank panel', async () => {

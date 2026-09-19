@@ -1,3 +1,4 @@
+import { Surface } from '@shared/ui';
 import { Check, ChevronDown, Search } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
@@ -57,7 +58,7 @@ export default function CategorySelector({ categories, value, onChange, placehol
  </button>
 
  {isOpen && (
- <div className="absolute z-50 w-full mt-1 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-lg shadow-xl overflow-hidden ">
+ <Surface radius="md" elevation={2} className="absolute z-50 w-full mt-1 overflow-hidden">
  <div className="p-2 border-b border-rose-500/10">
  <div className="relative">
  <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
@@ -95,7 +96,7 @@ export default function CategorySelector({ categories, value, onChange, placehol
  </div>
  )}
  </div>
- </div>
+ </Surface>
  )}
  </div>
  );

@@ -1,3 +1,15 @@
+import type { ReviewEntityType } from './types';
+
+/**
+ * What a review is about, in words. `MyReviewsList` held the only copy; `RateOrderModal`
+ * rendered the icon with no label beside it at all.
+ */
+export const ENTITY_LABEL: Record<ReviewEntityType, string> = {
+  RESTAURANT: 'Restaurant',
+  DRIVER: 'Delivery partner',
+  PRODUCT: 'Dish',
+};
+
 /**
  * Server rejection reasons, in words a customer can act on.
  *

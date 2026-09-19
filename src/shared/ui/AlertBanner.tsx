@@ -50,7 +50,7 @@ export function AlertBanner({
       {dismissible && (
         <button
           onClick={onDismiss}
-          className="p-0.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-pointer shrink-0"
+          className="p-0.5 rounded-full hover:bg-[var(--color-paper-sunken)] transition-colors cursor-pointer shrink-0"
         >
           <X className="w-3.5 h-3.5" />
         </button>

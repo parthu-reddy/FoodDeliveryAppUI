@@ -1,8 +1,8 @@
 import { DeliveryStatus, Order } from "@/types";
 import { KeyRound, PhoneCall } from 'lucide-react';
 import { useCallContext } from '@/contexts/CallContext';
-import React from 'react';
-import { Input, Surface } from '@shared/ui';
+import React, { useRef } from 'react';
+import { Button, Input, Surface, SwipeAction } from '@shared/ui';
 
 interface ActiveDeliveryCardProps {
   currentJob: Order;
@@ -23,10 +23,11 @@ export default function ActiveDeliveryCard({
   handleArrivedAtRestaurant,
   handlePickUpFood
 }: ActiveDeliveryCardProps) {
+  const pickupFormRef = useRef<HTMLFormElement>(null);
   const { startCall } = useCallContext();
 
   return (
-    <Surface variant="glass-chrome" elevation={3} radius="lg" className="rounded-3xl p-5 space-y-4">
+    <Surface elevation={2} radius="lg" className="rounded-2xl p-5 space-y-4">
       <div className="space-y-1">
         <h5 className="font-bold text-sm text-slate-400 font-mono tracking-wider">NAVIGATIONAL STEPS</h5>
         <p className="text-base font-bold text-slate-900 dark:text-[#f0ede6]">
@@ -80,15 +81,11 @@ export default function ActiveDeliveryCard({
       {(!currentJob.deliveryStatus || currentJob.deliveryStatus === DeliveryStatus.ASSIGNED || currentJob.deliveryStatus === DeliveryStatus.AT_RESTAURANT) ? (
         <div className="space-y-4 pt-2">
           {currentJob.deliveryStatus !== DeliveryStatus.AT_RESTAURANT && (
-            <button
-              type="button"
-              onClick={handleArrivedAtRestaurant}
-              className="w-full bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-white font-bold py-3 rounded-2xl"
-            >
+            <Button variant="secondary" size="touch" fullWidth onClick={handleArrivedAtRestaurant}>
               Mark Arrived at Restaurant
-            </button>
+            </Button>
           )}
-          <form onSubmit={handlePickUpFood} className="space-y-4">
+          <form ref={pickupFormRef} onSubmit={handlePickUpFood} className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-400 tracking-wider font-mono flex items-center gap-1.5">
                 <KeyRound className="w-4 h-4 text-amber-500" /> RESTAURANT HANDOVER OTP
@@ -105,13 +102,12 @@ export default function ActiveDeliveryCard({
               </div>
               {pickupOtpError && <p className="text-xs text-rose-500 font-bold mt-1 text-center">{pickupOtpError}</p>}
             </div>
-            <button
-              type="submit"
+            <SwipeAction
+              label="Slide to confirm pickup"
+              confirmingLabel="Confirming pickup…"
               disabled={isUpdatingPickup}
-              className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 rounded-2xl shadow-[0_4px_16px_rgba(245,158,11,0.4)] transition cursor-pointer disabled:opacity-50"
-            >
-              {isUpdatingPickup ? 'Confirming...' : 'Confirm Pickup'}
-            </button>
+              onConfirm={() => pickupFormRef.current?.requestSubmit()}
+            />
           </form>
         </div>
       ) : (

@@ -1,3 +1,4 @@
+import { Surface } from '@shared/ui';
 import { StarRating } from './StarRating';
 import { toAverage, type Review, type ReviewAggregate } from '../model/types';
 
@@ -64,12 +65,12 @@ export function RatingSummary({
               <span className="w-3 text-[10px] font-bold tabular-nums text-slate-500 dark:text-slate-400">
                 {bucket}
               </span>
-              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200/70 dark:bg-white/10">
+              <Surface radius="full" elevation={0} className="h-1.5 flex-1 overflow-hidden">
                 <div
                   className="h-full rounded-full bg-amber-400"
                   style={{ width: `${(counts[i] / loaded) * 100}%` }}
                 />
-              </div>
+              </Surface>
               <span className="w-6 text-right text-[10px] tabular-nums text-slate-400 dark:text-slate-500">
                 {counts[i]}
               </span>

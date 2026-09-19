@@ -137,11 +137,11 @@ export default function AdminLiveOperations() {
   return (
     <div className="flex-1 flex w-full h-full overflow-hidden">
       {/* Live Orders List */}
-      <div className="w-80 flex flex-col border-r border-slate-200 dark:border-slate-800 bg-white/10 dark:bg-slate-950/20 backdrop-blur-xl shrink-0">
-        <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-white/20 dark:bg-slate-900/30">
+      <Surface elevation={0} className="w-80 flex flex-col border-r shrink-0">
+        <Surface elevation={0} className="p-4 border-b flex justify-between items-center">
             <h3 className="font-black text-lg">Active Orders</h3>
             <Button variant="ghost" onClick={() => { fetchActiveOrders(); fetchAvailableDrivers(); }}>Refresh</Button>
-        </div>
+        </Surface>
         <div className="flex-1 overflow-y-auto p-3 space-y-2">
             {activeOrders.map(order => {
                 const isUnassigned = !order.deliveryExecutiveId;
@@ -151,7 +151,7 @@ export default function AdminLiveOperations() {
                         key={order.id} 
                         onClick={() => setSelectedOrder(order)} 
                         style={surfaceStyle({ variant: 'glass-chrome', elevation: 3, radius: 'lg' })}
-                        className={`w-full flex items-center gap-3 p-3 text-left transition ${selectedOrder?.id === order.id ? '!border-rose-500 shadow-md ring-1 ring-rose-500' : 'hover:border-rose-300'}`}
+                        className={`w-full flex items-center gap-3 p-3 text-left transition ${selectedOrder?.id === order.id ? '!border-rose-500 ring-1 ring-rose-500' : 'hover:border-rose-300'}`}
                     >
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isUnassigned ? 'bg-amber-500/20' : 'bg-amber-500/20'}`}>
                             <Package className={`w-5 h-5 ${statusColor}`} />
@@ -170,7 +170,7 @@ export default function AdminLiveOperations() {
             })}
             {activeOrders.length === 0 && <p className="text-center text-slate-400 text-sm mt-10">No active orders right now.</p>}
         </div>
-        <div className="p-3 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center bg-white/20 dark:bg-slate-900/30">
+        <Surface elevation={0} className="p-3 border-t flex justify-between items-center">
             <Button 
                 variant="outline"
                 onClick={() => setPage(p => Math.max(0, p - 1))}
@@ -186,8 +186,8 @@ export default function AdminLiveOperations() {
             >
                 Next
             </Button>
-        </div>
-      </div>
+        </Surface>
+      </Surface>
 
       {/* Main Map View */}
       <div className="flex-1 flex flex-col bg-slate-50 dark:bg-[#0f111a] relative">
@@ -245,14 +245,14 @@ export default function AdminLiveOperations() {
                         <h3 className="font-bold text-lg mb-3">Available Drivers ({availableDrivers.length})</h3>
                         <div className="max-h-32 overflow-y-auto space-y-2 pr-2">
                             {availableDrivers.map(driver => (
-                                <Surface variant="glass-chrome" elevation={3} radius="lg" key={driver.id} className="flex items-center justify-between p-3">
+                                <Surface elevation={2} radius="lg" key={driver.id} className="flex items-center justify-between p-3">
                                     <div className="flex items-center gap-3">
                                         <Truck className="w-5 h-5 text-rose-500" />
                                         <div>
                                             <p className="font-bold text-sm">{driver.fullName || 'Unknown Driver'}</p>
                                         </div>
                                     </div>
-                                    <Button variant="success" onClick={() => handleAssignDriver(selectedOrder.id, driver.id)} className="shadow-lg shadow-amber-500/20">
+                                    <Button variant="success" onClick={() => handleAssignDriver(selectedOrder.id, driver.id)} className="">
                                         Assign
                                     </Button>
                                 </Surface>

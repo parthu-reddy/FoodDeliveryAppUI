@@ -3,9 +3,9 @@ import { customerApi } from '@/lib/zodiosClients';
 import { DeliveryStatus, Order, OrderStatus } from '@/types';
 import { RateOrderModal } from '@features/reviews';
 import { getFriendlyStatusMessage } from '@features/customer-orders/model/statusMessaging';
-import { EmptyState, Overlay, Spinner, Surface } from '@shared/ui';
+import { Button, EmptyState, Overlay, PullToRefresh, Spinner, Surface } from '@shared/ui';
 import { AlertCircle, Clock, Package, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { formatINR } from '@shared/money';
 import PostDeliverySupportModal from './PostDeliverySupportModal';
 import { Star } from 'lucide-react';
@@ -29,54 +29,49 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
 
   const handleSupportRequest = async (orderId: string, reason: string) => {
     await customerApi.customerOrder.post('/api/v1/customer/orders/:orderId/refund-request', { reason }, { params: { orderId } });
-    setPage(p => p); // force reload history
+    await loadHistory();
     setSelectedOrderIdForSupport(null);
   };
 
-  useEffect(() => {
-    let ignore = false;
-    
-    if (page > 0) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIsFetchingPage(true);
-    }
-
+  // A callable fetch, not an effect body: pull-to-refresh has to be able to await it so the
+  // indicator stays until the data lands. The previous "force reload history" was
+  // `setPage(p => p)`, which re-renders nothing and re-runs no effect — a refresh that never
+  // refreshed.
+  const loadHistory = useCallback(async () => {
     if (onAddApiLog) {
       onAddApiLog({ id: `fetch_history_${page}`, label: `GET /api/v1/orders/history?page=${page}&size=20`, method: 'GET' });
     }
-
-    customerApi.order.getOrderHistory({ queries: { page } })
-      .then(res => {
-        if (!ignore && res.data) {
-          const content = res.data.content ?? [];
-          // Normalise rather than cast. The API sends `total` but no `total`, `subtotal` or
-          // `customerName`, and this view reads all three -- assigning the raw response left them
-          // undefined. That was invisible while Order resolved to `any`.
-          setOrders(content.map(normalizeOrder));
-          setTotalPages(res.data.totalPages || 1);
-        }
-      })
-      .catch(err => {
-        console.error("Failed to fetch order history", err);
-        if (!ignore) setError("Failed to load past orders.");
-      })
-      .finally(() => {
-        if (!ignore) {
-            setIsLoading(false);
-            setIsFetchingPage(false);
-        }
-      });
-
-    return () => { ignore = true; };
-   
+    try {
+      const res = await customerApi.order.getOrderHistory({ queries: { page } });
+      if (res.data) {
+        const content = res.data.content ?? [];
+        // Normalise rather than cast. The API sends `total` but no `total`, `subtotal` or
+        // `customerName`, and this view reads all three -- assigning the raw response left them
+        // undefined. That was invisible while Order resolved to `any`.
+        setOrders(content.map(normalizeOrder));
+        setTotalPages(res.data.totalPages || 1);
+      }
+    } catch (err) {
+      console.error("Failed to fetch order history", err);
+      setError("Failed to load past orders.");
+    } finally {
+      setIsLoading(false);
+      setIsFetchingPage(false);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (page > 0) setIsFetchingPage(true);
+    loadHistory();
+  }, [page, loadHistory]);
 
   return (
     <Overlay open onClose={onClose} label="Order history" className="w-full max-w-2xl">
       <div className="w-full overflow-hidden flex flex-col max-h-[85vh]">
       <Surface variant="glass-overlay" elevation={4} radius="xl" className="flex flex-col overflow-hidden h-full">
-        <div className="p-4 sm:p-6 border-b border-white/20 dark:border-white/10 flex items-center justify-between sticky top-0 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md z-10">
+        <Surface elevation={0} className="p-4 sm:p-6 border-b flex items-center justify-between sticky top-0 z-10">
           <div>
             <h2 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
               <Clock className="w-5 h-5 text-rose-500" />
@@ -84,22 +79,30 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Your past orders and refunds</p>
           </div>
-          <button 
-            onClick={onClose}
-            className="w-10 h-10 flex items-center justify-center rounded-full bg-white/50 dark:bg-slate-800/50 text-slate-500 hover:bg-white/80 dark:hover:bg-slate-700 transition-colors backdrop-blur-sm"
-          >
+          <Button variant="secondary" size="icon" aria-label="Close order history" onClick={onClose}>
             <X className="w-5 h-5" />
-          </button>
-        </div>
+          </Button>
+        </Surface>
 
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+        <PullToRefresh
+          onRefresh={loadHistory}
+          label="Pull down to reload your orders"
+          className="flex-1 p-4 sm:p-6 space-y-4"
+        >
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-12">
               <Spinner size="lg" color="var(--color-action)" />
               <p className="mt-4 text-sm font-medium text-slate-500 dark:text-slate-400">Loading your history...</p>
             </div>
           ) : error ? (
-            <div className="bg-rose-50/80 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 p-6 rounded-2xl flex flex-col items-center text-center backdrop-blur-sm border border-rose-200 dark:border-rose-500/20">
+            <div
+              className="p-6 rounded-2xl flex flex-col items-center text-center"
+              style={{
+                background: 'var(--color-danger-bg)',
+                color: 'var(--color-danger)',
+                border: '1px solid var(--color-danger-line)',
+              }}
+            >
               <AlertCircle className="w-10 h-10 mb-2" />
               <h3 className="font-bold">Oops!</h3>
               <p className="text-sm">{error}</p>
@@ -112,7 +115,7 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
             />
           ) : (
             orders.map(order => (
-              <div key={order.id} className="border border-white/40 dark:border-white/10 bg-white/20 dark:bg-black/10 backdrop-blur-sm rounded-2xl p-4 flex flex-col gap-3 hover:border-rose-300 dark:hover:border-rose-500/50 transition-colors shadow-sm">
+              <Surface radius="lg" elevation={1} className="p-4 flex flex-col gap-3 hover:border-rose-300 dark:hover:border-rose-500/50 transition-colors" key={order.id}>
                 <div className="flex justify-between items-start">
                   <div>
                     <h4 className="font-bold text-slate-800 dark:text-white">{order.restaurantName}</h4>
@@ -127,7 +130,7 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
                   </div>
                 </div>
 
-                <div className="text-sm text-slate-700 dark:text-slate-300 bg-white/40 dark:bg-white/5 rounded-xl p-3 border border-white/20 dark:border-white/5">
+                <Surface radius="md" elevation={0} className="text-sm text-slate-700 dark:text-slate-300 p-3">
                   { }
                   { }
                   {order.items?.map((item: import('@/types').OrderItem, idx: number) => (
@@ -136,9 +139,9 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
                       <span className="truncate">{item.item?.name || item.name || 'Item'}</span>
                     </div>
                   ))}
-                </div>
+                </Surface>
 
-                <div className="flex items-center justify-between pt-2 border-t border-white/30 dark:border-white/10 mt-1">
+                <Surface elevation={0} className="flex items-center justify-between pt-2 border-t mt-1">
                   <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider uppercase border ${
                     order.status === OrderStatus.CANCELLED || order.status === OrderStatus.CANCELLED_BY_RESTAURANT 
                       ? 'bg-rose-50/80 dark:bg-rose-500/10 text-rose-600 border-rose-200 dark:border-rose-500/20'
@@ -184,8 +187,8 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
                       </button>
                     )}
                   </div>
-                </div>
-              </div>
+                </Surface>
+              </Surface>
             ))
           )}
           
@@ -210,7 +213,7 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
               </button>
             </div>
           )}
-        </div>
+        </PullToRefresh>
       </Surface>
       </div>
       

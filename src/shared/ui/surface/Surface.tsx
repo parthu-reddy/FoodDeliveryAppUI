@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useReducedMotion } from 'motion/react';
 import { RADIUS, variantStyle } from './surfaceStyle';
 import type { SurfaceElevation, SurfaceRadius, SurfaceVariant } from './surfaceStyle';
 
@@ -42,6 +43,11 @@ export function Surface({
   ...rest
 }: SurfaceProps) {
   const Tag = as as React.ElementType;
+  const reduceMotion = useReducedMotion();
+  const [pressed, setPressed] = useState(false);
+  // `interactive` declared a transition on transform and then never moved anything. A card
+  // that does not respond to touch reads as a picture of a card.
+  const isPressed = interactive && pressed && !reduceMotion;
 
   const composed: React.CSSProperties = {
     ...variantStyle(variant),
@@ -51,9 +57,10 @@ export function Surface({
       ? {
           transitionProperty: 'transform, box-shadow',
           transitionDuration: 'var(--duration-instant)',
-          transitionTimingFunction: 'var(--ease-out)',
+          transitionTimingFunction: isPressed ? 'var(--ease-out)' : 'var(--ease-spring)',
         }
       : null),
+    ...(isPressed ? { transform: 'scale(.985)' } : null),
     ...style,
   };
 
@@ -61,6 +68,15 @@ export function Surface({
     <Tag
       data-surface={variant}
       data-elevation={elevation}
+      data-pressed={isPressed || undefined}
+      {...(interactive
+        ? {
+            onPointerDown: () => setPressed(true),
+            onPointerUp: () => setPressed(false),
+            onPointerLeave: () => setPressed(false),
+            onPointerCancel: () => setPressed(false),
+          }
+        : null)}
       className={className}
       style={composed}
       {...rest}

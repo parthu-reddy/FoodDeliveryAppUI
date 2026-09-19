@@ -80,7 +80,7 @@ export default function PayoutDrawer({
   return (
     <>
       <Overlay open onClose={onClose} label={account.displayName || 'Payout account'} placement="right" className="h-full w-full max-w-xl">
-      <Surface variant="solid" elevation={4} radius="none" className="h-full flex flex-col">
+      <Surface variant="solid" elevation={2} radius="none" className="h-full flex flex-col">
         <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
            <div>
                <h2 className="text-xl font-bold text-slate-900 dark:text-white">{account.displayName || 'Unknown Payee'}</h2>

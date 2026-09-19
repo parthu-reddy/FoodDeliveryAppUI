@@ -1,11 +1,13 @@
 import { Button, Modal } from '@shared/ui';
 import { AnimatePresence, motion } from 'motion/react';
+import { useMotionPresets } from '@shared/ui';
 import { Check, ChevronRight, CreditCard, Lock, Phone, ShieldCheck, Store, Wallet } from 'lucide-react';
 import React, { useState } from 'react';
 import { ErrorBoundary } from './ErrorBoundary';
 import { formatINR } from '@shared/money';
 import { Spinner } from './feedback/Spinner';
 import { Surface } from "./surface/Surface";
+import { surfaceStyle } from "./surface/surfaceStyle";
 
 export type PaymentMethodType = 'CARD' | 'WALLET' | 'UPI';
 
@@ -77,6 +79,7 @@ function PaymentModalInner({
 
   const methods = allMethods.filter(m => availableMethods.includes(m.id as PaymentMethodType));
 
+  const presets = useMotionPresets();
   return (
     <Modal
       open={isOpen}
@@ -87,7 +90,7 @@ function PaymentModalInner({
       <div className="relative overflow-hidden text-left p-1 sm:p-4">
         {/* Abstract Background Elements inside Modal */}
         {status === 'idle' && (
-          <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl opacity-20 dark:opacity-40">
+          <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl opacity-20 dark:opacity-40">
             <div className="absolute top-0 right-0 w-64 h-64 bg-rose-500 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-amber-500 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3"></div>
           </div>
@@ -96,10 +99,7 @@ function PaymentModalInner({
         <AnimatePresence mode="wait">
           {status === 'idle' && (
             <motion.div
-              key="checkout"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
+              key="checkout" {...presets.scaleIn}
               className="relative z-10 flex flex-col gap-6"
             >
               <div className={`grid grid-cols-1 ${leftPanelContent ? 'md:grid-cols-2' : ''} gap-6`}>
@@ -127,13 +127,22 @@ function PaymentModalInner({
                             <button
                               onClick={() => !isDisabled && setSelectedMethod(method.id as PaymentMethodType)}
                               disabled={isDisabled}
-                              className={`w-full flex items-center justify-between p-3 rounded-xl border transition ${
-                                isDisabled 
-                                  ? 'opacity-50 cursor-not-allowed border-white/20 dark:border-white/5 bg-slate-50 dark:bg-slate-900/50 grayscale'
-                                  : isSelected
-                                    ? 'border-rose-500 bg-rose-50/80 dark:bg-rose-500/20 shadow-md'
-                                    : 'border-white/40 dark:border-white/10 bg-white/20 dark:bg-white/5 hover:bg-white/40 dark:hover:bg-white/10'
-                                }`}
+                              className={`w-full flex items-center justify-between p-3 transition ${
+                                isDisabled ? 'opacity-50 cursor-not-allowed grayscale' : ''
+                              }`}
+                              style={{
+                                ...surfaceStyle({
+                                  variant: isDisabled ? 'sunken' : 'solid',
+                                  radius: 'md',
+                                  elevation: isSelected ? 2 : 1,
+                                }),
+                                ...(isSelected
+                                  ? {
+                                      background: 'var(--color-danger-bg)',
+                                      border: '1px solid var(--color-action)',
+                                    }
+                                  : null),
+                              }}
                             >
                               <div className="flex items-center gap-3">
                                 <div className={`p-2 rounded-lg ${isSelected ? 'bg-rose-100 dark:bg-rose-500/30 text-rose-600 dark:text-rose-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
@@ -159,7 +168,7 @@ function PaymentModalInner({
                   </Surface>
 
                   {/* Totals Box */}
-                  <Surface variant="glass-chrome" elevation={3} radius="lg" className="p-4 bg-slate-900 dark:bg-black/40 border-none shadow-xl text-white">
+                  <Surface variant="glass-chrome" elevation={3} radius="lg" className="p-4 bg-slate-900 dark:bg-black/40 border-none text-white">
                     {totals ? (
                       <div className="space-y-2 text-sm text-slate-300 mb-4">
                         <div className="flex justify-between">
@@ -193,10 +202,10 @@ function PaymentModalInner({
                         </div>
                       </div>
                     )}
-                    <div className="border-t border-white/20 pt-3 flex justify-between items-end">
+                    <Surface elevation={0} className="border-t pt-3 flex justify-between items-end">
                       <span className="text-slate-200">{totals ? 'Total to Pay' : 'Total Amount'}</span>
                       <span className="font-mono text-2xl font-black">{formatINR((amount || 0))}</span>
-                    </div>
+                    </Surface>
                   </Surface>
                 </div>
               </div>
@@ -232,9 +241,7 @@ function PaymentModalInner({
 
           {status === 'processing' && (
             <motion.div
-              key="processing"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
+              key="processing" {...presets.scaleIn}
               className="py-16 flex flex-col items-center justify-center text-center"
             >
               <div className="relative">
@@ -250,17 +257,13 @@ function PaymentModalInner({
 
           {status === 'success' && (
             <motion.div
-              key="success"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
+              key="success" {...presets.scaleIn}
               className="py-16 flex flex-col items-center justify-center text-center"
             >
               <div className="w-24 h-24 rounded-full bg-amber-500/20 flex items-center justify-center mb-6 relative">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
+                <motion.div {...presets.scaleIn}
                   transition={{ type: "spring", bounce: 0.5 }}
-                  className="w-16 h-16 bg-amber-500 rounded-full flex items-center justify-center text-white shadow-xl shadow-amber-500/30"
+                  className="w-16 h-16 bg-amber-500 rounded-full flex items-center justify-center text-white"
                 >
                   <Check className="w-8 h-8" />
                 </motion.div>

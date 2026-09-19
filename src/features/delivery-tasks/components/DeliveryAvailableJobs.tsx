@@ -1,7 +1,9 @@
+import { Surface } from '@shared/ui';
 import { Order } from "@/types";
 import { EmptyState } from "@shared/ui";
 import { Map as MapIcon, Play } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useMotionPresets } from '@shared/ui';
 import { formatINR } from '@shared/money';
 
 interface DeliveryAvailableJobsProps {
@@ -13,12 +15,10 @@ export function DeliveryAvailableJobs({
   availableJobs,
   handleAcceptJob
 }: DeliveryAvailableJobsProps) {
+  const presets = useMotionPresets();
   return (
     <motion.div
-      key="jobs-board"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      key="jobs-board" {...presets.fade}
       className="p-5 space-y-4"
     >
       <div className="flex justify-between items-center">
@@ -35,10 +35,7 @@ export function DeliveryAvailableJobs({
       ) : (
         <div className="space-y-4">
           {availableJobs.map(job => (
-            <div 
-              key={job.id} 
-              className="bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-3xl p-5 shadow-sm space-y-4"
-            >
+            <Surface radius="xl" elevation={1} className="p-5 space-y-4" key={job.id}>
               <div className="flex justify-between items-center">
                 <div className="space-y-0.5">
                   <span className="text-xs font-mono font-bold text-slate-400 dark:text-slate-300">ORDER CONTRACT #{job.id.substring(0, 8)}</span>
@@ -58,11 +55,11 @@ export function DeliveryAvailableJobs({
 
               <button
                 onClick={() => handleAcceptJob(job)}
-                className="w-full bg-gradient-to-r from-rose-500 to-amber-500 text-white font-bold py-3 rounded-2xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-rose-500/10 border border-rose-500/30"
+                className="w-full bg-gradient-to-r from-rose-500 to-amber-500 text-white font-bold py-3 rounded-2xl transition cursor-pointer flex items-center justify-center gap-1.5 border border-rose-500/30"
               >
                 <Play className="w-4 h-4 fill-current" /> Accept & Open Map
               </button>
-            </div>
+            </Surface>
           ))}
         </div>
       )}

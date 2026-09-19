@@ -1,5 +1,6 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { format } from 'date-fns';
+import { DataTable, type Column } from '@shared/ui';
 import { Money } from './Money';
 
 export interface StatementRow {
@@ -13,68 +14,71 @@ export interface StatementRow {
   runningBalance?: number;
 }
 
+const COLUMNS: Column<StatementRow>[] = [
+  {
+    key: 'date',
+    header: 'Date',
+    cell: (row) => format(new Date(row.date), 'MMM d, yyyy h:mm a'),
+    cellClassName: 'whitespace-nowrap',
+  },
+  {
+    key: 'description',
+    header: 'Description',
+    cell: (row) => (
+      <>
+        <p className="font-medium" style={{ color: 'var(--color-ink)' }}>{row.description}</p>
+        {row.referenceId && (
+          row.referenceLink ? (
+            <a href={row.referenceLink} className="text-xs mt-0.5 block hover:underline"
+               style={{ color: 'var(--color-info)' }}>
+              Ref: {row.referenceId}
+            </a>
+          ) : (
+            <p className="text-xs font-mono mt-0.5" style={{ color: 'var(--color-ink-3)' }}>
+              Ref: {row.referenceId}
+            </p>
+          )
+        )}
+      </>
+    ),
+  },
+  {
+    key: 'debit',
+    header: 'Debit',
+    align: 'right',
+    cell: (row) => (row.debit > 0 ? <Money value={row.debit} sign="never" /> : '-'),
+    cellClassName: 'font-medium',
+  },
+  {
+    key: 'credit',
+    header: 'Credit',
+    align: 'right',
+    cell: (row) => (row.credit > 0 ? <Money value={row.credit} sign="never" /> : '-'),
+    cellClassName: 'font-medium',
+  },
+  {
+    key: 'balance',
+    header: 'Balance',
+    align: 'right',
+    cell: (row) => (row.runningBalance !== undefined ? <Money value={row.runningBalance} sign="auto" /> : '-'),
+    cellClassName: 'font-medium whitespace-nowrap',
+  },
+];
+
 interface StatementTableProps {
   rows: StatementRow[];
   isLoading?: boolean;
 }
 
 export function StatementTable({ rows, isLoading }: StatementTableProps) {
-  // Simple virtualization: just rendering for now, could be enhanced for > 200 rows
-  const displayRows = useMemo(() => rows, [rows]);
-
-  if (isLoading && displayRows.length === 0) {
-    return <div className="p-8 text-center text-slate-500">Loading statement...</div>;
-  }
-
-  if (displayRows.length === 0) {
-    return <div className="p-8 text-center text-slate-500">No transactions found for this period.</div>;
-  }
-
   return (
-    <div className="overflow-x-auto border border-slate-200 rounded-lg shadow-sm bg-white">
-      <table className="w-full text-left text-sm text-slate-600">
-        <thead className="bg-slate-50 text-slate-700 font-medium border-b border-slate-200">
-          <tr>
-            <th className="px-4 py-3">Date</th>
-            <th className="px-4 py-3">Description</th>
-            <th className="px-4 py-3 text-right">Debit</th>
-            <th className="px-4 py-3 text-right">Credit</th>
-            <th className="px-4 py-3 text-right">Balance</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100">
-          {displayRows.map((row) => (
-            <tr key={row.id} className="hover:bg-slate-50/50 transition-colors">
-              <td className="px-4 py-3 whitespace-nowrap">
-                {format(new Date(row.date), 'MMM d, yyyy h:mm a')}
-              </td>
-              <td className="px-4 py-3">
-                <p className="font-medium text-slate-900">{row.description}</p>
-                {row.referenceId && (
-                  row.referenceLink ? (
-                    <a href={row.referenceLink} className="text-xs text-blue-600 hover:underline mt-0.5 block">
-                      Ref: {row.referenceId}
-                    </a>
-                  ) : (
-                    <p className="text-xs text-slate-400 font-mono mt-0.5">Ref: {row.referenceId}</p>
-                  )
-                )}
-              </td>
-              <td className="px-4 py-3 text-right text-rose-600 font-medium">
-                {row.debit > 0 ? <Money value={row.debit} sign="never" /> : '-'}
-              </td>
-              <td className="px-4 py-3 text-right text-amber-600 font-medium">
-                {row.credit > 0 ? <Money value={row.credit} sign="never" /> : '-'}
-              </td>
-              <td className="px-4 py-3 text-right text-slate-900 font-medium whitespace-nowrap">
-                {row.runningBalance !== undefined ? (
-                  <Money value={row.runningBalance} sign="auto" />
-                ) : '-'}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <DataTable
+      caption="Statement"
+      columns={COLUMNS}
+      rows={rows}
+      rowKey={(row) => row.id}
+      loading={isLoading}
+      emptyMessage="No transactions found for this period."
+    />
   );
 }

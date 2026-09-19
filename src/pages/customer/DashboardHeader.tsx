@@ -1,4 +1,5 @@
 import { useTheme } from "@/contexts/ThemeContext";
+import { Surface } from '@shared/ui';
 import LaBouffeLogo from '@shared/ui/LaBouffeLogo';
 import { ChevronRight, MapPin, Moon, Sun, User } from 'lucide-react';
 import React from 'react';
@@ -19,7 +20,13 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <header className="sticky top-0 bg-white/20 dark:bg-white/5 backdrop-blur-xl px-5 py-3 flex items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 z-30 shrink-0 shadow-[0_2px_15px_rgba(0,0,0,0.01)] gap-3">
+    <Surface
+      as="header"
+      variant="glass-chrome"
+      radius="none"
+      elevation={2}
+      className="sticky top-0 px-5 py-3 flex items-center justify-between z-30 shrink-0 gap-3"
+    >
       <div className="flex items-center gap-2 sm:gap-3.5 flex-1 min-w-0">
         <LaBouffeLogo showText={false} iconSize="w-8 h-8 shrink-0" textColorClass="text-slate-800 dark:text-[#f0ede6] text-xs" subColorClass="text-rose-500 text-[8px]" />
         <div className="flex h-6 w-[1px] bg-slate-200 dark:bg-slate-800 shrink-0" />
@@ -44,10 +51,10 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         <button
           onClick={() => view === 'settings' ? setView('home') : setView('settings')}
           className={`p-2.5 rounded-xl transition cursor-pointer ${
-            view === 'settings' 
-              ? 'bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 shadow-sm shadow-rose-500/10' 
-              : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6]'
-          }`}
+ view === 'settings' 
+ ? 'bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 ' 
+ : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6]'
+ }`}
           title="Profile Settings"
         >
           <User className="w-4 h-4 text-rose-500" />
@@ -60,6 +67,6 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-rose-500" />}
         </button>
       </div>
-    </header>
+    </Surface>
   );
 };

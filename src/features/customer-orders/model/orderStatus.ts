@@ -113,3 +113,85 @@ export const terminalHeadline = (status: OrderStatus | undefined): string | null
       return null;
   }
 };
+
+
+/* ------------------------------------------------------------------------------------ */
+/* Presentation                                                                          */
+/* ------------------------------------------------------------------------------------ */
+
+import type { StatusTone } from '@shared/ui';
+import { getFriendlyStatusMessage } from './statusMessaging';
+
+/**
+ * How an order status is shown. One map, feeding `StatusPill`.
+ *
+ * The labels come from `getFriendlyStatusMessage`, which already existed and is already the
+ * single source of wording — this adds the tone beside it rather than starting a second
+ * vocabulary. Phase 3 called for this map and shipped without it; the Phase 4 gate checks the
+ * components that consume it.
+ *
+ * Exhaustive over `OrderStatus` on purpose: a status added on the server becomes a TypeScript
+ * error here instead of rendering an untoned pill.
+ */
+export const ORDER_STATUS_TONE: Record<OrderStatus, StatusTone> = {
+  [OrderStatus.CREATED]: 'neutral',
+  [OrderStatus.PENDING_ACCEPTANCE]: 'warning',
+  [OrderStatus.AWAITING_DELAY_APPROVAL]: 'warning',
+  [OrderStatus.ACCEPTED]: 'info',
+  [OrderStatus.PREPARING]: 'info',
+  [OrderStatus.READY_FOR_PICKUP]: 'info',
+  [OrderStatus.HANDED_OVER]: 'live',
+  [OrderStatus.CANCELLED]: 'danger',
+  [OrderStatus.CANCELLED_BY_RESTAURANT]: 'danger',
+  [OrderStatus.CANCELLED_BY_PLATFORM]: 'danger',
+  [OrderStatus.DELIVERY_FAILED]: 'danger',
+};
+
+export interface OrderStatusView {
+  label: string;
+  tone: StatusTone;
+  /** True only while the order is genuinely moving — drives the pulsing dot on StatusPill. */
+  live: boolean;
+}
+
+/** The label and tone for one order, delivery status included where it is more specific. */
+export function orderStatusView(
+  status: OrderStatus,
+  deliveryStatus?: DeliveryStatus,
+): OrderStatusView {
+  const label = getFriendlyStatusMessage(status, deliveryStatus);
+  const settled = deliveryStatus === DeliveryStatus.DELIVERED;
+  const lifecycle = classifyOrderStatus(status);
+
+  if (settled) return { label, tone: 'success', live: false };
+  if (deliveryStatus === DeliveryStatus.FAILED) return { label, tone: 'danger', live: false };
+
+  return {
+    label,
+    tone: ORDER_STATUS_TONE[status] ?? 'neutral',
+    live: lifecycle === 'IN_FLIGHT' && deliveryStatus === DeliveryStatus.OUT_FOR_DELIVERY,
+  };
+}
+
+/** The four stages a customer is shown, in order. */
+export const ORDER_STAGES = ['Placed', 'Accepted', 'Prepared', 'Delivered'] as const;
+export type OrderStage = (typeof ORDER_STAGES)[number];
+
+/**
+ * How many stages are complete, 0–4.
+ *
+ * Deliberately derived from BOTH statuses: an order can be `HANDED_OVER` while its delivery
+ * is still `ASSIGNED`, and the customer should see the food as prepared either way.
+ */
+export function completedStages(status: OrderStatus, deliveryStatus?: DeliveryStatus): number {
+  if (deliveryStatus === DeliveryStatus.DELIVERED) return 4;
+  if (
+    status === OrderStatus.HANDED_OVER ||
+    deliveryStatus === DeliveryStatus.OUT_FOR_DELIVERY ||
+    deliveryStatus === DeliveryStatus.AT_RESTAURANT
+  ) return 3;
+  if (status === OrderStatus.READY_FOR_PICKUP) return 3;
+  if (status === OrderStatus.PREPARING || status === OrderStatus.ACCEPTED) return 2;
+  if (classifyOrderStatus(status) === 'FAILED') return 0;
+  return 1;
+}

@@ -1,4 +1,4 @@
-import { Button, EmptyState, Spinner } from '@shared/ui';
+import { Button, EmptyState, Spinner, Surface } from '@shared/ui';
 import { MessageSquare } from 'lucide-react';
 import { StarRating } from './StarRating';
 import { authorLabel, shortDate } from '../model/reviewCopy';
@@ -53,9 +53,12 @@ export function ReviewList({
   return (
     <div className={`space-y-3 ${className}`}>
       {reviews.map((review) => (
-        <article
+        <Surface
+          as="article"
           key={review.id}
-          className="rounded-2xl border border-white/40 bg-white/20 p-4 backdrop-blur-sm dark:border-white/10 dark:bg-black/10"
+          radius="lg"
+          elevation={1}
+          className="p-4"
         >
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
@@ -77,7 +80,7 @@ export function ReviewList({
               {review.comment}
             </p>
           )}
-        </article>
+        </Surface>
       ))}
 
       {hasMore && onLoadMore && (

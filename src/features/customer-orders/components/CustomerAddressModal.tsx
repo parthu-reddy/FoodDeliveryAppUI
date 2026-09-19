@@ -1,31 +1,17 @@
-import { olaProxyBase, olaStyleUrl, transformOlaRequest } from '@/lib/olaMaps';
+import { Surface } from '@shared/ui';
 import { useConfig } from "@/contexts/ConfigContext";
 import { useToast } from "@/contexts/ToastContext";
-import { useDebounce } from "@/hooks/useDebounce";
-import { customerApi, mapsApi } from "@/lib/zodiosClients";
-import { Button, Input, Spinner } from '@shared/ui';
-import { MapPin, Navigation, Search, X } from 'lucide-react';
-import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
-import { AnimatePresence, motion } from 'motion/react';
-import { useEffect, useRef, useState } from 'react';
-import { z } from 'zod';
-
-const addressSchema = z.object({
- label: z.string().min(1, 'Label is required').max(50, 'Label cannot exceed 50 characters'),
- addressLine1: z.string().min(1, 'Address Line 1 is required').max(255, 'Address cannot exceed 255 characters'),
- addressLine2: z.string().max(255, 'Address cannot exceed 255 characters').optional(),
- city: z.string().min(1, 'City is required').max(100, 'City cannot exceed 100 characters'),
- state: z.string().min(1, 'State is required').max(100, 'State cannot exceed 100 characters'),
- zipCode: z.string().min(1, 'ZIP Code is required').max(20, 'ZIP Code cannot exceed 20 characters'),
- latitude: z.number().min(-90).max(90),
- longitude: z.number().min(-180).max(180)
-});
-
-interface SearchResult {
- place_id: string;
- description: string;
-}
+import { customerApi } from "@/lib/zodiosClients";
+import { Button, Spinner } from '@shared/ui';
+import { MapPin, Navigation, X } from 'lucide-react';
+import { MapPanel } from '@features/maps-tracking/components/MapPanel';
+import { fetchPlaceLocation, usePlaceAutocomplete } from '@features/maps-tracking/model/usePlaceAutocomplete';
+import { AddressFormFields } from '@features/customer-orders/components/AddressFormFields';
+import { PlaceSearchField } from '@features/maps-tracking/components/PlaceSearchField';
+import { addressSchema, parseIndianAddress } from '@features/customer-orders/model/addressParts';
+import { requestCurrentPosition, reverseGeocode } from '@features/maps-tracking/model/currentLocation';
+import { maplibre, type MapInstance } from '@features/maps-tracking/model/maplibre';
+import { useRef, useState } from 'react';
 
 interface SavedAddress {
  id: string;
@@ -66,9 +52,8 @@ export default function CustomerAddressModal({
  initialLng,
  onAddressAdded
 }: CustomerAddressModalProps) {
- const mapContainerRef = useRef<HTMLDivElement>(null);
- const mapRef = useRef<maplibregl.Map | null>(null);
- const markerRef = useRef<maplibregl.Marker | null>(null);
+ const mapRef = useRef<MapInstance | null>(null);
+ const markerRef = useRef<maplibre.Marker | null>(null);
  const [lat, setLat] = useState(initialLat ? String(initialLat) : '12.9716');
  const [lng, setLng] = useState(initialLng ? String(initialLng) : '77.5946');
 
@@ -81,35 +66,13 @@ export default function CustomerAddressModal({
  state: '',
  zipCode: ''
  });
- const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
- const [isSearching, setIsSearching] = useState(false);
  const [isSaving, setIsSaving] = useState(false);
  const { showError } = useToast();
  useConfig();
- const debouncedSearchQuery = useDebounce(addressSearchQuery, 500);
+ const { results: searchResults, isSearching, setResults: setSearchResults, setIsSearching } =
+   usePlaceAutocomplete(addressSearchQuery);
 
- useEffect(() => {
- async function searchPlaces() {
- if (!debouncedSearchQuery || debouncedSearchQuery.length < 3) {
- setSearchResults([]);
- setIsSearching(false);
- return;
- }
- setIsSearching(true);
- try {
- const res = await window.fetch(`${olaProxyBase()}/places/v1/autocomplete?input=${encodeURIComponent(debouncedSearchQuery)}`);
- const data = await res.json();
- if (data.predictions) {
- setSearchResults(data.predictions);
- }
- } catch (err: unknown) {
- console.error('Autocomplete Error:', err);
- } finally {
- setIsSearching(false);
- }
- }
- searchPlaces();
- }, [debouncedSearchQuery]);
+
 
  const handleSearch = (query: string) => {
  setAddressSearchQuery(query);
@@ -117,23 +80,12 @@ export default function CustomerAddressModal({
 
  const handleSelectPlace = async (placeId: string, description: string) => {
  try {
- const res = await window.fetch(`${olaProxyBase()}/places/v1/details?place_id=${placeId}`);
- const data = await res.json();
- if (data.result && data.result.geometry) {
- const location = data.result.geometry.location;
+ const location = await fetchPlaceLocation(placeId);
+ if (location) {
  setLat(location.lat.toString());
  setLng(location.lng.toString());
  
- // Auto populate fields
- const parts = description.split(',').map(p => p.trim());
- setAddressForm(prev => ({
- ...prev,
- addressLine1: parts[0] || '',
- addressLine2: parts.length > 3 ? parts[1] : '',
- city: parts.length > 2 ? parts[parts.length - 3] || '' : (parts[1] || ''),
- state: parts.length > 1 ? parts[parts.length - 2] || '' : '',
- zipCode: parts.length > 0 ? parts[parts.length - 1] || '' : ''
- }));
+ setAddressForm(prev => ({ ...prev, ...parseIndianAddress(description) }));
  
  if (mapRef.current) {
  mapRef.current.flyTo({ center: [location.lng, location.lat], zoom: 15 });
@@ -149,53 +101,25 @@ export default function CustomerAddressModal({
  }
  };
 
- const handleUseCurrentLocation = () => {
- if (navigator.geolocation) {
+ const handleUseCurrentLocation = async () => {
  setIsSearching(true);
- navigator.geolocation.getCurrentPosition(
- async (position) => {
  try {
- const { latitude, longitude } = position.coords;
+ const { latitude, longitude } = await requestCurrentPosition();
  setLat(latitude.toString());
  setLng(longitude.toString());
- 
- if (mapRef.current) {
- mapRef.current.flyTo({ center: [longitude, latitude], zoom: 15 });
- }
- if (markerRef.current) {
- markerRef.current.setLngLat([longitude, latitude]);
- }
- 
- // Try to reverse geocode
- const res = await mapsApi.integration.get('/api/places/reverse-geocode', { queries: { lat: latitude, lng: longitude } });
- if (res && res.address) {
- const description = res.address;
+ mapRef.current?.flyTo({ center: [longitude, latitude], zoom: 15 });
+ markerRef.current?.setLngLat([longitude, latitude]);
+
+ const description = await reverseGeocode(latitude, longitude);
+ if (description) {
  setAddressSearchQuery(description);
- const parts = String(description ?? '').split(',').map((p: string) => p.trim());
- setAddressForm(prev => ({
- ...prev,
- addressLine1: parts[0] || '',
- addressLine2: parts.length > 3 ? parts[1] : '',
- city: parts.length > 2 ? parts[parts.length - 3] || '' : (parts[1] || ''),
- state: parts.length > 1 ? parts[parts.length - 2] || '' : '',
- zipCode: parts.length > 0 ? parts[parts.length - 1] || '' : ''
- }));
+ setAddressForm(prev => ({ ...prev, ...parseIndianAddress(description) }));
  }
  } catch (e: unknown) {
- console.error("Reverse geocoding failed", e);
+ console.error("Current location failed", e);
+ showError(e instanceof Error ? e.message : "Could not get your current location.");
  } finally {
  setIsSearching(false);
- }
- },
- (error) => {
- console.error("Geolocation error", error);
- setIsSearching(false);
- showError("Could not get your current location.");
- },
- { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
- );
- } else {
- showError("Geolocation is not supported by this browser.");
  }
  };
 
@@ -231,50 +155,30 @@ export default function CustomerAddressModal({
  }
  };
 
- useEffect(() => {
- if (isAddressModalOpen && mapContainerRef.current && !mapRef.current) {
- 
- const map = new maplibregl.Map({
- container: mapContainerRef.current,
- style: olaStyleUrl(),
- center: [parseFloat(lng), parseFloat(lat)],
- zoom: 12,
- minZoom: 10,
- maxZoom: 17,
- interactive: false,
- attributionControl: false,
- transformRequest: transformOlaRequest
- });
- map.addControl(new maplibregl.NavigationControl(), 'top-right');
-
- const marker = new maplibregl.Marker({ draggable: true, color: '#f97316' })
+ const attachMap = (map: MapInstance) => {
+ mapRef.current = map;
+ const marker = new maplibre.Marker({ draggable: true, color: '#f97316' })
  .setLngLat([parseFloat(lng), parseFloat(lat)])
  .addTo(map);
-
  marker.on('dragend', () => {
  const lngLat = marker.getLngLat();
  setLng(lngLat.lng.toFixed(6));
  setLat(lngLat.lat.toFixed(6));
  });
-
- mapRef.current = map;
  markerRef.current = marker;
- }
- }, [isAddressModalOpen, lat, lng]);
-
- useEffect(() => {
- if (!isAddressModalOpen && mapRef.current) {
- mapRef.current.remove();
+ return () => {
+ marker.remove();
  mapRef.current = null;
  markerRef.current = null;
- }
- }, [isAddressModalOpen]);
+ };
+ };
+
 
  return (
  <>
  {/* ------------------- ADDRESS MODAL ------------------- */}
  {isAddressModalOpen && (
- <div className="bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-[2rem] p-5 shadow-sm flex flex-col space-y-4">
+ <Surface variant="glass-chrome" radius="xl" elevation={1} className="p-5 flex flex-col space-y-4">
  <div className="flex justify-between items-center shrink-0 mb-4">
  <div>
  <h4 className="font-bold text-lg text-slate-900 dark:text-[#f0ede6]">Delivery Location</h4>
@@ -290,63 +194,31 @@ export default function CustomerAddressModal({
 
  <div className="flex flex-col space-y-4">
  {/* Search Bar */}
- <div className="relative">
- <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-300" />
- <input
- type="text"
- placeholder="Search for area, street name..."
- value={addressSearchQuery}
- onChange={e => handleSearch(e.target.value)}
- className="w-full bg-slate-50 dark:bg-slate-900 border border-rose-500/20 dark:border-rose-500/30 rounded-2xl py-3.5 pl-10 pr-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-rose-500/50"
- />
- <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
- {isSearching ? (
- <Spinner size="sm" label="" />
- ) : (
- <button
- onClick={handleUseCurrentLocation}
- className="flex items-center gap-1 text-[10px] font-semibold text-rose-500 hover:text-rose-600 bg-rose-50 dark:bg-rose-500/10 px-2 py-1.5 rounded-lg transition-colors cursor-pointer"
- title="Use Current Location"
- >
- <Navigation className="w-3 h-3" />
- <span className="hidden sm:inline">Locate Me</span>
- </button>
- )}
- </div>
-
- {/* Search Results Dropdown */}
- <AnimatePresence>
- {searchResults.length > 0 && (
- <motion.div
- initial={{ opacity: 0, y: -10 }}
- animate={{ opacity: 1, y: 0 }}
- exit={{ opacity: 0, y: -10 }}
- className="absolute z-50 w-full mt-2 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden max-h-60 overflow-y-auto"
- >
- {searchResults.map((result) => (
- <button
- key={result.place_id}
- onClick={() => handleSelectPlace(result.place_id, result.description)}
- className="w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors border-b border-slate-100 dark:border-slate-700 last:border-0 flex items-start gap-3"
- >
- <MapPin className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
- <div>
- <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{result.description.split(',')[0]}</p>
- <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{result.description}</p>
- </div>
- </button>
- ))}
- </motion.div>
- )}
- </AnimatePresence>
- </div>
+            <PlaceSearchField
+              value={addressSearchQuery}
+              onChange={handleSearch}
+              results={searchResults}
+              isSearching={isSearching}
+              onSelect={handleSelectPlace}
+              onUseCurrentLocation={handleUseCurrentLocation}
+            />
 
  {/* Maplibre Map */}
- <div ref={mapContainerRef} className="relative w-full h-48 rounded-2xl overflow-hidden shrink-0 border border-rose-500/20 dark:border-rose-500/30">
- <div className="absolute bottom-3 inset-x-0 mx-auto w-fit bg-white/20 dark:bg-slate-900/20 backdrop-blur text-xs font-bold px-3 py-1.5 rounded-full shadow-sm text-slate-700 dark:text-[#f0ede6] z-10 pointer-events-none">
+ <MapPanel
+ label="Delivery location"
+ center={[parseFloat(lng), parseFloat(lat)]}
+ zoom={12}
+ minZoom={10}
+ maxZoom={17}
+ interactive={false}
+ navigation
+ onReady={attachMap}
+ className="w-full h-48 rounded-2xl overflow-hidden shrink-0 border border-rose-500/20 dark:border-rose-500/30"
+ >
+ <Surface variant="glass-chrome" radius="full" elevation={1} className="absolute bottom-3 inset-x-0 mx-auto w-fit backdrop-blur text-xs font-bold px-3 py-1.5 text-slate-700 dark:text-[#f0ede6] z-10 pointer-events-none">
  Drag pin to move
- </div>
- </div>
+ </Surface>
+ </MapPanel>
  {/* Saved Addresses */}
  {savedAddresses && savedAddresses.length > 0 && (
  <div className="space-y-2">
@@ -381,65 +253,7 @@ export default function CustomerAddressModal({
  )}
 
  {/* Current Address Details */}
- <div className="space-y-3 flex-1 pb-4">
- <label className="text-[10px] font-bold font-mono text-slate-400 dark:text-slate-300 uppercase">Address Details</label>
- 
- <div className="grid grid-cols-2 gap-3">
- <div className="col-span-2">
- <Input
- type="text"
- placeholder="Label (e.g. Home, Work)"
- value={addressForm.label}
- onChange={(e) => setAddressForm({...addressForm, label: e.target.value})}
- />
- </div>
- 
- <div className="col-span-2">
- <Input
- type="text"
- placeholder="Address Line 1"
- value={addressForm.addressLine1}
- onChange={(e) => setAddressForm({...addressForm, addressLine1: e.target.value})}
- />
- </div>
- 
- <div className="col-span-2">
- <Input
- type="text"
- placeholder="Address Line 2 (Optional)"
- value={addressForm.addressLine2}
- onChange={(e) => setAddressForm({...addressForm, addressLine2: e.target.value})}
- />
- </div>
- 
- <div>
- <Input
- type="text"
- placeholder="City"
- value={addressForm.city}
- onChange={(e) => setAddressForm({...addressForm, city: e.target.value})}
- />
- </div>
- 
- <div>
- <Input
- type="text"
- placeholder="State"
- value={addressForm.state}
- onChange={(e) => setAddressForm({...addressForm, state: e.target.value})}
- />
- </div>
- 
- <div className="col-span-2">
- <Input
- type="text"
- placeholder="ZIP Code"
- value={addressForm.zipCode}
- onChange={(e) => setAddressForm({...addressForm, zipCode: e.target.value})}
- />
- </div>
- </div>
- </div>
+ <AddressFormFields addressForm={addressForm} setAddressForm={setAddressForm} />
 
  <div className="flex flex-col gap-2 mt-auto">
  <Button
@@ -467,7 +281,7 @@ export default function CustomerAddressModal({
  )}
  </div>
  </div>
- </div>
+ </Surface>
  )}
  </>
  );

@@ -1,6 +1,8 @@
 import { Order, OrderStatus } from '@/types';
+import { KanbanColumn } from '@features/restaurant-orders/components/KanbanColumn';
 import { RestaurantOrderCard } from '@features/restaurant-orders/components/RestaurantOrderCard';
 import { motion } from 'motion/react';
+import { useMotionPresets } from '@shared/ui';
 import {
  Bike,
  ChefHat,
@@ -9,15 +11,12 @@ import {
  Sliders,
  Truck
 } from 'lucide-react';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { z } from 'zod';
 import { RefundView } from '@/api/generated/schemas/customer/common';
 import { Spinner, Surface } from '@shared/ui';
 
 type RefundViewType = z.infer<typeof RefundView>;
-
-// Utility
- 
 
 interface RestaurantOrderQueueProps {
  totalRevenue: number;
@@ -37,6 +36,8 @@ interface RestaurantOrderQueueProps {
  setSelectedChatOrder: (order: Order) => void;
 }
 
+const ICON = { className: "w-8 h-8", strokeWidth: 1.5 } as const;
+
 export const RestaurantOrderQueue = React.memo(function RestaurantOrderQueue({
  // eslint-disable-next-line @typescript-eslint/no-unused-vars
  totalRevenue,
@@ -53,16 +54,44 @@ export const RestaurantOrderQueue = React.memo(function RestaurantOrderQueue({
  handleStatusTransition,
  setSelectedChatOrder
 }: RestaurantOrderQueueProps) {
+ // Newest first, and each status filtered once. Every column used to run its own filter
+ // three times over -- for the count, for the emptiness test and again to render.
+ const byStatus = useMemo(() => {
+   const of = (status: OrderStatus) =>
+     myOrders.filter(o => o.status === status).slice().reverse();
+   return {
+     delayed: of(OrderStatus.AWAITING_DELAY_APPROVAL),
+     ready: of(OrderStatus.READY_FOR_PICKUP),
+     handedOver: of(OrderStatus.HANDED_OVER),
+   };
+ }, [myOrders]);
+
+ const card = (order: Order, extra: { isNewPlaced?: boolean; isRefundRequest?: boolean } = {}) => (
+   <RestaurantOrderCard
+     key={order.id}
+     order={order}
+     cardDelayStatus={cardDelayStatus}
+     handleStatusTransition={handleStatusTransition}
+     setSelectedChatOrder={setSelectedChatOrder}
+     handleCardCancelSubmit={handleCardCancelSubmit}
+     handleCardDelaySubmit={handleCardDelaySubmit}
+     handleCardPartialRefundSubmit={handleCardPartialRefundSubmit}
+     {...extra}
+   />
+ );
+
+ const refundOrders = refundRequests
+   .slice()
+   .reverse()
+   .map(ticket => myOrders.find(o => o.id === ticket.orderId))
+   .filter((o): o is Order => Boolean(o));
+
+ const presets = useMotionPresets();
  return (
  <motion.div
- key="orders-panel"
- initial={{ opacity: 0, y: 10 }}
- animate={{ opacity: 1, y: 0 }}
- exit={{ opacity: 0, y: -10 }}
+ key="orders-panel" {...presets.rise}
  className="p-5 space-y-5"
  >
-
-
  {/* Live Orders Kanban Board */}
  <div className="space-y-4">
  <div className="flex items-center justify-between">
@@ -73,270 +102,87 @@ export const RestaurantOrderQueue = React.memo(function RestaurantOrderQueue({
  </h4>
  <p className="text-[11px] text-slate-400 dark:text-slate-300">Manage orders through standard operations. Swiping/scrolling available.</p>
  </div>
- <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-400 dark:text-slate-300 bg-slate-100 dark:bg-slate-900 px-2.5 py-1 rounded-lg border border-rose-500/20 dark:border-rose-500/30 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+ <Surface radius="md" elevation={2} className="flex items-center gap-1.5 text-[10px] font-mono text-slate-400 dark:text-slate-300 px-2.5 py-1">
  <Spinner size="xs" color="var(--color-action)" label="" />
  <span>Auto-Sync Gateway</span>
- </div>
- </div>
-
- {/* Responsive Kanban Columns */}
- <div className="flex gap-4 pb-6 w-full overflow-x-auto touch-pan-x snap-x snap-mandatory scrollbar-thin scrollbar-thumb-rose-500/30 scrollbar-track-transparent ">
-
- {/* COLUMN 1: Placed Orders (Just Got Placed) */}
- <Surface variant="glass-overlay" elevation={4} radius="xl" className="w-[85%] xs:w-[310px] sm:w-[350px] shrink-0 snap-center flex flex-col p-4 min-h-[480px]">
- <div className="flex items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 pb-3 mb-3">
- <div className="flex items-center gap-2">
- <div className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
- <span className="font-extrabold text-xs text-slate-800 dark:text-[#f0ede6] uppercase font-sans tracking-wide">New Placed</span>
- </div>
- <span className="text-[10px] font-black font-mono bg-amber-500/10 text-amber-550 dark:text-amber-400 px-2.5 py-0.5 rounded-full border border-amber-500/20">
- {pendingOrders.length}
- </span>
- </div>
-
- <div className="flex-1 space-y-3.5 overflow-y-auto h-[500px] scrollbar-thin pr-1">
- {pendingOrders.length === 0 ? (
- <div className="h-full flex flex-col items-center justify-center text-center py-16 px-4 duration-500 bg-white/40 dark:bg-slate-900/10 border border-dashed border-rose-500/20 dark:border-rose-500/30 rounded-2xl">
- <div className="relative mb-4">
- <div className="absolute inset-0 bg-amber-500/20 dark:bg-amber-500/10 rounded-full blur-xl animate-pulse"></div>
- <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-lg border border-slate-100 dark:border-slate-700 relative z-10">
- <Clock className="w-8 h-8 text-amber-400 dark:text-amber-500" strokeWidth={1.5} />
- </div>
- </div>
- <h3 className="text-sm font-bold text-slate-800 dark:text-[#f0ede6]">No pending orders</h3>
- <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 max-w-[180px]">When customers place live orders, they will ping in this slot instantly.</p>
- </div>
- ) : (
- pendingOrders.slice().reverse().map(order => (
- <RestaurantOrderCard
- key={order.id}
- order={order}
- cardDelayStatus={cardDelayStatus}
- isNewPlaced={true}
- handleStatusTransition={handleStatusTransition}
- setSelectedChatOrder={setSelectedChatOrder}
- handleCardCancelSubmit={handleCardCancelSubmit}
- handleCardDelaySubmit={handleCardDelaySubmit}
- handleCardPartialRefundSubmit={handleCardPartialRefundSubmit}
- />
- ))
- )}
- </div>
  </Surface>
-
- {/* COLUMN 1.5: Active Refund Requests */}
- <Surface variant="glass-overlay" elevation={4} radius="xl" className="w-[85%] xs:w-[310px] sm:w-[350px] shrink-0 snap-center flex flex-col p-4 min-h-[480px]">
- <div className="flex items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 pb-3 mb-3">
- <div className="flex items-center gap-2">
- <div className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
- <span className="font-extrabold text-xs text-slate-800 dark:text-[#f0ede6] uppercase font-sans tracking-wide">Active Refunds</span>
- </div>
- <span className="text-[10px] font-black font-mono bg-rose-500/10 text-rose-500 dark:text-rose-400 px-2.5 py-0.5 rounded-full border border-rose-500/20">
- {refundRequests.length}
- </span>
  </div>
 
- <div className="flex-1 space-y-3.5 overflow-y-auto h-[500px] scrollbar-thin pr-1">
- {refundRequests.length === 0 ? (
- <div className="h-full flex flex-col items-center justify-center text-center py-16 px-4 duration-500 bg-white/40 dark:bg-slate-900/10 border border-dashed border-rose-500/20 dark:border-rose-500/30 rounded-2xl">
- <div className="relative mb-4">
- <div className="absolute inset-0 bg-rose-500/20 dark:bg-rose-500/10 rounded-full blur-xl animate-pulse"></div>
- <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-lg border border-slate-100 dark:border-slate-700 relative z-10">
- <RefreshCw className="w-8 h-8 text-rose-400 dark:text-rose-500" strokeWidth={1.5} />
- </div>
- </div>
- <h3 className="text-sm font-bold text-slate-800 dark:text-[#f0ede6]">No active requests</h3>
- <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 max-w-[180px]">Customer refund requests will appear here for review.</p>
- </div>
- ) : (
- refundRequests.slice().reverse().map(ticket => {
- const orderMatch = myOrders.find(o => o.id === ticket.orderId);
- if (!orderMatch) return null;
- return (
- <RestaurantOrderCard
- key={ticket.id}
- order={orderMatch}
- cardDelayStatus={cardDelayStatus}
- isRefundRequest={true}
- handleStatusTransition={handleStatusTransition}
- setSelectedChatOrder={setSelectedChatOrder}
- handleCardCancelSubmit={handleCardCancelSubmit}
- handleCardDelaySubmit={handleCardDelaySubmit}
- handleCardPartialRefundSubmit={handleCardPartialRefundSubmit}
- />
- );
- })
- )}
- </div>
- </Surface>
+ {/*
+   A scroll-snap rail on a phone; a grid from md: up. The kitchen runs this on a
+   propped-up landscape tablet, where the whole board has to be visible at once --
+   that is what a kanban is for, and scrolling it sideways at 1024px was a phone
+   layout that happened to be wide.
+ */}
+ <div className="flex gap-4 pb-6 w-full overflow-x-auto touch-pan-x snap-x snap-mandatory scrollbar-thin scrollbar-thumb-rose-500/30 scrollbar-track-transparent md:grid md:grid-cols-2 md:overflow-visible md:snap-none lg:grid-cols-3 xl:grid-cols-6">
 
- {/* COLUMN 2: Requested Delay (On Hold) */}
- <Surface variant="glass-overlay" elevation={4} radius="xl" className="w-[85%] xs:w-[310px] sm:w-[350px] shrink-0 snap-center flex flex-col p-4 min-h-[480px]">
- <div className="flex items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 pb-3 mb-3">
- <div className="flex items-center gap-2">
- <div className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
- <span className="font-extrabold text-xs text-slate-800 dark:text-[#f0ede6] uppercase font-sans tracking-wide">Requested Delay</span>
- </div>
- <span className="text-[10px] font-black font-mono bg-rose-500/10 text-rose-500 px-2.5 py-0.5 rounded-full border border-rose-500/20">
- {myOrders.filter(o => o.status === OrderStatus.AWAITING_DELAY_APPROVAL).length}
- </span>
- </div>
+ <KanbanColumn
+ title="New Placed"
+ tone="warning"
+ beat="ping"
+ count={pendingOrders.length}
+ emptyIcon={<Clock {...ICON} />}
+ emptyTitle="No pending orders"
+ emptyHint="When customers place live orders, they will ping in this slot instantly."
+ >
+ {pendingOrders.slice().reverse().map(order => card(order, { isNewPlaced: true }))}
+ </KanbanColumn>
 
- <div className="flex-1 space-y-3.5 overflow-y-auto h-[500px] scrollbar-thin pr-1">
- {myOrders.filter(o => o.status === OrderStatus.AWAITING_DELAY_APPROVAL).length === 0 ? (
- <div className="h-full flex flex-col items-center justify-center text-center py-16 px-4 duration-500 bg-white/40 dark:bg-slate-900/10 border border-dashed border-rose-500/20 dark:border-rose-500/30 rounded-2xl">
- <div className="relative mb-4">
- <div className="absolute inset-0 bg-rose-500/20 dark:bg-rose-500/10 rounded-full blur-xl animate-pulse"></div>
- <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-lg border border-slate-100 dark:border-slate-700 relative z-10">
- <Clock className="w-8 h-8 text-rose-400 dark:text-rose-500" strokeWidth={1.5} />
- </div>
- </div>
- <h3 className="text-sm font-bold text-slate-800 dark:text-[#f0ede6]">No delayed orders</h3>
- </div>
- ) : (
- myOrders.filter(o => o.status === OrderStatus.AWAITING_DELAY_APPROVAL).slice().reverse().map(order => (
- <RestaurantOrderCard
- key={order.id}
- order={order}
- cardDelayStatus={cardDelayStatus}
- isRequestedDelay={true}
- handleStatusTransition={handleStatusTransition}
- setSelectedChatOrder={setSelectedChatOrder}
- handleCardCancelSubmit={handleCardCancelSubmit}
- handleCardDelaySubmit={handleCardDelaySubmit}
- handleCardPartialRefundSubmit={handleCardPartialRefundSubmit}
- />
- ))
- )}
- </div>
- </Surface>
+ <KanbanColumn
+ title="Active Refunds"
+ tone="danger"
+ beat="ping"
+ count={refundOrders.length}
+ emptyIcon={<RefreshCw {...ICON} />}
+ emptyTitle="No active requests"
+ emptyHint="Customer refund requests will appear here for review."
+ >
+ {refundOrders.map(order => card(order, { isRefundRequest: true }))}
+ </KanbanColumn>
 
- {/* COLUMN 3: Kitchen Preparing (Accepted or Preparing) */}
- <Surface variant="glass-overlay" elevation={4} radius="xl" className="w-[85%] xs:w-[310px] sm:w-[350px] shrink-0 snap-center flex flex-col p-4 min-h-[480px]">
- <div className="flex items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 pb-3 mb-3">
- <div className="flex items-center gap-2">
- <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
- <span className="font-extrabold text-xs text-slate-800 dark:text-[#f0ede6] uppercase font-sans tracking-wide">Cooking Feed</span>
- </div>
- <span className="text-[10px] font-black font-mono bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2.5 py-0.5 rounded-full border border-amber-500/20">
- {activePreparing.length}
- </span>
- </div>
+ <KanbanColumn
+ title="Requested Delay"
+ tone="danger"
+ count={byStatus.delayed.length}
+ emptyIcon={<Clock {...ICON} />}
+ emptyTitle="No delayed orders"
+ emptyHint="Orders awaiting a delay decision from the customer will appear here."
+ >
+ {byStatus.delayed.map(order => card(order))}
+ </KanbanColumn>
 
- {/* Body - Scrollable list */}
- <div className="flex-1 space-y-3.5 overflow-y-auto h-[500px] scrollbar-thin pr-1">
- {activePreparing.length === 0 ? (
- <div className="h-full flex flex-col items-center justify-center text-center py-16 px-4 duration-500 bg-white/40 dark:bg-slate-900/10 border border-dashed border-rose-500/20 dark:border-rose-500/30 rounded-2xl">
- <div className="relative mb-4">
- <div className="absolute inset-0 bg-rose-500/20 dark:bg-rose-500/10 rounded-full blur-xl animate-pulse"></div>
- <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-lg border border-slate-100 dark:border-slate-700 relative z-10">
- <ChefHat className="w-8 h-8 text-rose-400 dark:text-rose-500" strokeWidth={1.5} />
- </div>
- </div>
- <h3 className="text-sm font-bold text-slate-800 dark:text-[#f0ede6]">Kitchen is idle</h3>
- <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 max-w-[180px]">Accepted tickets appear here. Start cooking to alert couriers!</p>
- </div>
- ) : (
- activePreparing.slice().reverse().map(order => (
- <RestaurantOrderCard
- key={order.id}
- order={order}
- cardDelayStatus={cardDelayStatus}
- isCooking={true}
- handleStatusTransition={handleStatusTransition}
- setSelectedChatOrder={setSelectedChatOrder}
- handleCardCancelSubmit={handleCardCancelSubmit}
- handleCardDelaySubmit={handleCardDelaySubmit}
- handleCardPartialRefundSubmit={handleCardPartialRefundSubmit}
- />
- ))
- )}
- </div>
- </Surface>
+ <KanbanColumn
+ title="Cooking Feed"
+ tone="warning"
+ count={activePreparing.length}
+ emptyIcon={<ChefHat {...ICON} />}
+ emptyTitle="Kitchen is idle"
+ emptyHint="Accepted tickets appear here. Start cooking to alert couriers!"
+ >
+ {activePreparing.slice().reverse().map(order => card(order))}
+ </KanbanColumn>
 
- {/* COLUMN 4: Prepared & Ready (Dispatched, awaiting pickup) */}
- <Surface variant="glass-overlay" elevation={4} radius="xl" className="w-[85%] xs:w-[310px] sm:w-[350px] shrink-0 snap-center flex flex-col p-4 min-h-[480px]">
- <div className="flex items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 pb-3 mb-3">
- <div className="flex items-center gap-2">
- <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
- <span className="font-extrabold text-xs text-slate-800 dark:text-[#f0ede6] uppercase font-sans tracking-wide">Prepared Ready</span>
- </div>
- <span className="text-[10px] font-black font-mono bg-amber-500/10 text-amber-650 dark:text-amber-400 px-2.5 py-0.5 rounded-full border border-amber-500/20">
- {myOrders.filter(o => o.status === OrderStatus.READY_FOR_PICKUP).length}
- </span>
- </div>
+ <KanbanColumn
+ title="Prepared Ready"
+ tone="success"
+ count={byStatus.ready.length}
+ emptyIcon={<Truck {...ICON} />}
+ emptyTitle="No ready packages"
+ emptyHint="Finished dishes will wait here. Handover to couriers with secure codes."
+ >
+ {byStatus.ready.map(order => card(order))}
+ </KanbanColumn>
 
- <div className="flex-1 space-y-3.5 overflow-y-auto h-[500px] scrollbar-thin pr-1">
- {myOrders.filter(o => o.status === OrderStatus.READY_FOR_PICKUP).length === 0 ? (
- <div className="h-full flex flex-col items-center justify-center text-center py-16 px-4 duration-500 bg-white/40 dark:bg-slate-900/10 border border-dashed border-rose-500/20 dark:border-rose-500/30 rounded-2xl">
- <div className="relative mb-4">
- <div className="absolute inset-0 bg-amber-500/20 dark:bg-amber-500/10 rounded-full blur-xl animate-pulse"></div>
- <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-lg border border-slate-100 dark:border-slate-700 relative z-10">
- <Truck className="w-8 h-8 text-amber-400 dark:text-amber-500" strokeWidth={1.5} />
- </div>
- </div>
- <h3 className="text-sm font-bold text-slate-800 dark:text-[#f0ede6]">No ready packages</h3>
- <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 max-w-[180px]">Finished dishes will wait here. Handover to couriers with secure codes.</p>
- </div>
- ) : (
- myOrders.filter(o => o.status === OrderStatus.READY_FOR_PICKUP).slice().reverse().map(order => (
- <RestaurantOrderCard
- key={order.id}
- order={order}
- cardDelayStatus={cardDelayStatus}
- isPrepared={true}
- handleStatusTransition={handleStatusTransition}
- setSelectedChatOrder={setSelectedChatOrder}
- handleCardCancelSubmit={handleCardCancelSubmit}
- handleCardDelaySubmit={handleCardDelaySubmit}
- handleCardPartialRefundSubmit={handleCardPartialRefundSubmit}
- />
- ))
- )}
- </div>
- </Surface>
-
- {/* COLUMN 5: Being Delivered (Picked up) */}
- <Surface variant="glass-overlay" elevation={4} radius="xl" className="w-[85%] xs:w-[310px] sm:w-[350px] shrink-0 snap-center flex flex-col p-4 min-h-[480px]">
- <div className="flex items-center justify-between border-b border-rose-500/20 dark:border-rose-500/30 pb-3 mb-3">
- <div className="flex items-center gap-2">
- <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
- <span className="font-extrabold text-xs text-slate-800 dark:text-[#f0ede6] uppercase font-sans tracking-wide">Being Delivered</span>
- </div>
- <span className="text-[10px] font-black font-mono bg-rose-500/10 text-rose-650 dark:text-rose-400 px-2.5 py-0.5 rounded-full border border-rose-500/20">
- {myOrders.filter(o => o.status === OrderStatus.HANDED_OVER).length}
- </span>
- </div>
-
- <div className="flex-1 space-y-3.5 overflow-y-auto h-[500px] scrollbar-thin pr-1">
- {myOrders.filter(o => o.status === OrderStatus.HANDED_OVER).length === 0 ? (
- <div className="h-full flex flex-col items-center justify-center text-center py-16 px-4 duration-500 bg-white/40 dark:bg-slate-900/10 border border-dashed border-rose-500/20 dark:border-rose-500/30 rounded-2xl">
- <div className="relative mb-4">
- <div className="absolute inset-0 bg-rose-500/20 dark:bg-rose-500/10 rounded-full blur-xl animate-pulse"></div>
- <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-lg border border-slate-100 dark:border-slate-700 relative z-10">
- <Bike className="w-8 h-8 text-rose-400 dark:text-rose-500" strokeWidth={1.5} />
- </div>
- </div>
- <h3 className="text-sm font-bold text-slate-800 dark:text-[#f0ede6]">No orders in transit</h3>
- <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 max-w-[180px]">Orders picked up by riders will appear here until delivered.</p>
- </div>
- ) : (
- myOrders.filter(o => o.status === OrderStatus.HANDED_OVER).slice().reverse().map(order => (
- <RestaurantOrderCard
- key={order.id}
- order={order}
- cardDelayStatus={cardDelayStatus}
- isBeingDelivered={true}
- handleStatusTransition={handleStatusTransition}
- setSelectedChatOrder={setSelectedChatOrder}
- handleCardCancelSubmit={handleCardCancelSubmit}
- handleCardDelaySubmit={handleCardDelaySubmit}
- handleCardPartialRefundSubmit={handleCardPartialRefundSubmit}
- />
- ))
- )}
- </div>
- </Surface>
+ <KanbanColumn
+ title="Being Delivered"
+ tone="info"
+ count={byStatus.handedOver.length}
+ emptyIcon={<Bike {...ICON} />}
+ emptyTitle="No orders in transit"
+ emptyHint="Orders picked up by riders will appear here until delivered."
+ >
+ {byStatus.handedOver.map(order => card(order))}
+ </KanbanColumn>
 
  </div>
  </div>

@@ -1,5 +1,7 @@
+import { Surface } from '@shared/ui';
 import { Restaurant } from '@/types';
 import ImageLoader from '@shared/ui/ImageLoader';
+import { motion } from 'motion/react';
 import { Bike, Clock, Heart, Megaphone, Star } from 'lucide-react';
 import React, { useEffect, useRef } from 'react';
 import { surfaceStyle } from '@shared/ui';
@@ -63,10 +65,16 @@ export default function CustomerRestaurantCard({ restaurant, isLast, lastElement
         cardRef.current = node;
       }}
       onClick={handleCardClick}
-      style={surfaceStyle({ variant: 'glass-chrome', elevation: 3, radius: 'lg' })}
-      className={`group flex flex-col transition duration-300 relative overflow-hidden cursor-pointer hover:-translate-y-1.5 ${restaurant.isSponsored ? 'hover:shadow-[0_0_15px_rgba(234,179,8,0.5)] border-amber-400/40 hover:border-amber-400/60' : 'hover:shadow-[0_0_12px_rgba(255,255,255,0.4)] hover:border-white/50'} text-left`}
+      style={{
+        ...surfaceStyle({ elevation: 2, radius: 'lg' }),
+        // sponsored is a border, not a glow: a hover shadow class could never win against
+        // the inline boxShadow this style sets, so the old one never rendered
+        ...(restaurant.isSponsored ? { border: '1px solid var(--color-amber-400)' } : null),
+      }}
+      className="group flex flex-col transition duration-300 relative overflow-hidden cursor-pointer hover:-translate-y-1.5 text-left"
     >
-      <div className="h-44 w-full relative overflow-hidden bg-transparent">
+      {/* Shared element 1 of 2: this cover travels into the menu's header. */}
+      <motion.div layoutId={`restaurant-cover-${restaurant.id}`} className="h-44 w-full relative overflow-hidden bg-transparent">
         <ImageLoader
           src={restaurant.image || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80"}
           alt={restaurant.name || "Restaurant"}
@@ -75,15 +83,18 @@ export default function CustomerRestaurantCard({ restaurant, isLast, lastElement
           containerClassName="w-full h-full"
         />
         {restaurant.isSponsored && (
-          <div className="absolute top-3 left-3 bg-amber-500/90 backdrop-blur-md px-2.5 py-1 rounded-xl text-white font-black text-[10px] uppercase tracking-wider flex items-center gap-1.5 shadow-lg border border-amber-400/50">
+          <div
+            className="absolute top-3 left-3 px-2.5 py-1 rounded-xl font-black text-[10px] uppercase tracking-wider flex items-center gap-1.5"
+            style={{ background: 'var(--color-amber-500)', color: 'var(--color-ink)' }}
+          >
             <Megaphone className="w-3 h-3" />
             Sponsored
           </div>
         )}
-        <div className="absolute top-3 right-3 bg-slate-950/20 backdrop-blur-sm p-1.5 rounded-full text-white/80 hover:text-rose-500 border border-rose-500/30">
+        <Surface radius="full" elevation={0} className="absolute top-3 right-3 p-1.5 text-white/80 hover:text-rose-500">
           <Heart className="w-4 h-4" />
-        </div>
-      </div>
+        </Surface>
+      </motion.div>
 
       <div className="p-4.5 space-y-2">
         <div className="flex items-center justify-between">

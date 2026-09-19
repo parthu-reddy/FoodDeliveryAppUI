@@ -1,6 +1,6 @@
 import React from 'react';
 import type { MenuItem } from '@/types';
-import { vegClass } from '../model/menuItem';
+import { VEG_LABEL, vegClass } from '../model/menuItem';
 
 /**
  * The Indian veg / non-veg marker: a bordered square with a filled dot inside.
@@ -27,11 +27,6 @@ const COLOUR = {
   'non-veg': 'var(--color-danger)',
 } as const;
 
-const LABEL = {
-  veg: 'Vegetarian',
-  'non-veg': 'Non-vegetarian',
-} as const;
-
 interface VegMarkerProps {
   item: Pick<MenuItem, 'isVeg'>;
   size?: MarkerSize;
@@ -48,8 +43,8 @@ export function VegMarker({ item, size = 'sm', className = '' }: VegMarkerProps)
   return (
     <span
       role="img"
-      aria-label={LABEL[kind]}
-      title={LABEL[kind]}
+      aria-label={VEG_LABEL[kind]}
+      title={VEG_LABEL[kind]}
       className={`inline-flex items-center justify-center shrink-0 ${className}`}
       style={{
         width: box,

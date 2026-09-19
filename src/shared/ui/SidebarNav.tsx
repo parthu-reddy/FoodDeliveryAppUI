@@ -12,23 +12,13 @@ interface SidebarNavProps {
   items: SidebarNavItem[];
   activeKey: string;
   onSelect: (key: string) => void;
-  /** Color used for the active tab highlight */
-  activeColor?: 'indigo' | 'rose' | 'emerald' | 'amber';
   className?: string;
 }
-
-const activeColorStyles: Record<string, string> = {
-  indigo: 'bg-rose-500 text-white shadow-lg shadow-rose-500/30',
-  rose: 'bg-rose-500 text-white shadow-lg shadow-rose-500/30',
-  emerald: 'bg-amber-500 text-white shadow-lg shadow-amber-500/30',
-  amber: 'bg-amber-500 text-white shadow-lg shadow-amber-500/30',
-};
 
 export function SidebarNav({
   items,
   activeKey,
   onSelect,
-  activeColor = 'indigo',
   className = '',
 }: SidebarNavProps) {
   return (
@@ -39,13 +29,17 @@ export function SidebarNav({
           <button
             key={item.key}
             onClick={() => onSelect(item.key)}
-            className={`
-              w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition cursor-pointer
-              ${isActive
-                ? activeColorStyles[activeColor]
-                : 'text-slate-600 dark:text-slate-300 hover:bg-white/20 dark:hover:bg-slate-800/40'
-              }
-            `}
+            aria-current={isActive ? 'page' : undefined}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition cursor-pointer ${
+              isActive ? '' : 'hover:bg-[var(--color-paper-sunken)]'
+            }`}
+            style={{
+              // left unset when inactive on purpose: an inline background would beat the
+              // hover class, which is how the old hover state came to do nothing at all
+              background: isActive ? 'var(--color-action)' : undefined,
+              color: isActive ? '#ffffff' : 'var(--color-ink-2)',
+              boxShadow: isActive ? 'var(--elevation-2)' : 'none',
+            }}
           >
             <span className="w-5 h-5 shrink-0">{item.icon}</span>
             <span className="truncate">{item.label}</span>

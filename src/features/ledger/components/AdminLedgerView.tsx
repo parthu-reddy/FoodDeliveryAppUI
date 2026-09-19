@@ -99,7 +99,7 @@ export default function AdminLedgerView() {
       </div>
 
       {/* Filters */}
-      <Surface as="form" variant="glass-overlay" elevation={4} radius="xl" onSubmit={handleFilter} className="p-4 mb-6">
+      <Surface as="form" elevation={2} radius="xl" onSubmit={handleFilter} className="p-4 mb-6">
         <div className="flex items-center gap-2 mb-4">
             <Filter className="w-5 h-5 text-rose-500" />
             <h3 className="font-bold">Filters</h3>
@@ -156,7 +156,7 @@ export default function AdminLedgerView() {
       </Surface>
 
       {/* Table */}
-      <Surface variant="glass-overlay" elevation={4} radius="xl" className="flex-1 flex flex-col overflow-hidden">
+      <Surface elevation={2} radius="xl" className="flex-1 flex flex-col overflow-hidden">
         <div className="overflow-x-auto flex-1">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -217,7 +217,7 @@ export default function AdminLedgerView() {
                     <td className="p-4 align-middle">
                       {tx.fromAccountId ? (
                         <div className="flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full bg-rose-400 shadow-[0_0_8px_rgba(251,113,133,0.6)]"></span>
+                          <span className="w-2 h-2 rounded-full bg-rose-400"></span>
                           <span className="font-mono text-xs text-slate-600 dark:text-slate-300">{tx.fromAccountId}</span>
                         </div>
                       ) : (
@@ -230,7 +230,7 @@ export default function AdminLedgerView() {
                       </div>
                       {tx.toAccountId ? (
                         <div className="flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]"></span>
+                          <span className="w-2 h-2 rounded-full bg-amber-400"></span>
                           <span className="font-mono text-xs text-slate-600 dark:text-slate-300">{tx.toAccountId}</span>
                         </div>
                       ) : (
@@ -238,7 +238,7 @@ export default function AdminLedgerView() {
                       )}
                     </td>
                     <td className="p-4 align-middle text-right">
-                      <span className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm border border-slate-200/50 dark:border-slate-700/50">
+                      <span className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200/50 dark:border-slate-700/50">
                         {tx.amount != null ? formatINR(tx.amount) : formatINR(0)}
                       </span>
                     </td>

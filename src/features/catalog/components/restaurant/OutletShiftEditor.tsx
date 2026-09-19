@@ -165,7 +165,7 @@ export default function OutletShiftEditor({ outlet, onRefresh, onClose }: Outlet
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 py-2 bg-gradient-to-r from-amber-500 to-rose-500 text-white text-xs font-black rounded-xl shadow-md hover:shadow-lg transition flex items-center justify-center gap-2 disabled:opacity-50"
+              className="flex-1 py-2 bg-gradient-to-r from-amber-500 to-rose-500 text-white text-xs font-black rounded-xl transition flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {isSubmitting ? 'Saving...' : (
                 <>

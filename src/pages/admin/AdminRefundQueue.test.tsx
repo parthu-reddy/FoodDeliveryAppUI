@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import '@testing-library/jest-dom';
 import { ToastProvider } from '@/contexts/ToastContext';
+import { ConfirmProvider } from '@shared/ui';
 
 const ADMIN_ID = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 const getTickets = vi.fn();
@@ -20,7 +21,15 @@ vi.mock('@/lib/tokenStore', () => ({ getUserProfile: () => ({ id: ADMIN_ID }) })
 
 import RefundQueue from './money/RefundQueue';
 
-const wrap = (ui: React.ReactElement) => render(<ToastProvider>{ui}</ToastProvider>);
+// RefundQueue now asks for confirmation before resolving a ticket — approving moves money
+// and rejecting refuses it, and both close the ticket for good. App.tsx supplies the provider
+// in the real tree; the test has to as well.
+const wrap = (ui: React.ReactElement) =>
+  render(
+    <ToastProvider>
+      <ConfirmProvider>{ui}</ConfirmProvider>
+    </ToastProvider>,
+  );
 
 describe('Admin Refund Queue', () => {
   beforeEach(() => {

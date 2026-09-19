@@ -5,10 +5,11 @@ import { parseApiError } from '@/lib/parseApiError';
 import { customerApi, identityApi } from "@/lib/zodiosClients";
 import { RoleName } from "@/types";
 import { Button, EmptyState, Input, Select, Surface, surfaceStyle } from '@shared/ui';
-import { Plus, Power, Search, User, X } from 'lucide-react';
+import { Search, User } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 
+import { AdminUserDetailPanel } from '@features/admin-ops/components/AdminUserDetailPanel';
 import { UserDTO } from '@/api/generated/schemas/identity/admin_user_controller';
 import { OrderResponse } from '@/api/generated/schemas/customer/common';
 
@@ -143,7 +144,8 @@ export default function AdminUserManagement() {
   const handleToggleStatus = async () => {
     if (!selectedUser) return;
     const newStatus = !selectedUser.active;
-    
+
+    // AdminUserDetailPanel confirms the suspension; this commits it.
     // Optimistic UI update
     setSelectedUser({ ...selectedUser, active: newStatus });
     setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, active: newStatus } : u));
@@ -161,7 +163,7 @@ export default function AdminUserManagement() {
 
   return (
     <div className="flex-1 flex p-6 gap-6 h-full overflow-hidden">
-        <Surface variant="glass-overlay" elevation={4} radius="xl" className="w-1/3 flex flex-col p-4 shrink-0">
+        <Surface elevation={2} radius="xl" className="w-1/3 flex flex-col p-4 shrink-0">
         <div className="flex gap-2 mb-4 border-b border-slate-200 dark:border-slate-800 pb-4">
             <Select 
               value={roleFilter} 
@@ -188,7 +190,7 @@ export default function AdminUserManagement() {
                     key={user.id}
                     onClick={() => setSelectedUser(user)}
                     style={surfaceStyle({ variant: 'glass-chrome', elevation: 3, radius: 'lg' })}
-                    className={`w-full text-left p-4 mb-2 transition duration-300 ${selectedUser?.id === user.id ? '!bg-rose-500/80 !border-rose-500 text-white shadow-lg shadow-rose-500/30' : 'hover:border-rose-300/50'}`}
+                    className={`w-full text-left p-4 mb-2 transition duration-300 ${selectedUser?.id === user.id ? '!bg-rose-500/80 !border-rose-500 text-white ' : 'hover:border-rose-300/50'}`}
                 >
                     <div className="flex items-center justify-between">
                         <p className="font-bold">{user.id.substring(0, 8)}...</p>
@@ -212,7 +214,7 @@ export default function AdminUserManagement() {
                 </div>
             )}
         </div>
-        <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center bg-white/20 dark:bg-slate-900/30">
+        <Surface elevation={0} className="mt-2 pt-2 border-t flex justify-between items-center">
             <Button 
                 variant="outline"
                 onClick={() => setPage(p => Math.max(0, p - 1))}
@@ -228,101 +230,18 @@ export default function AdminUserManagement() {
             >
                 Next
             </Button>
-        </div>
+        </Surface>
         </Surface>
 
-        <Surface variant="glass-overlay" elevation={4} radius="xl" className="flex-1 p-8 overflow-y-auto">
-        {selectedUser ? (
-            <div className="max-w-2xl mx-auto space-y-8">
-                <div className="flex items-center justify-between pb-6 border-b border-slate-200 dark:border-slate-800">
-                    <div>
-                        <h2 className="text-3xl font-black mb-1">User Details</h2>
-                        <p className="text-slate-500">Manage roles, status, and view history.</p>
-                    </div>
-                    <Button
-                        variant={selectedUser.active !== false ? 'danger' : 'outline'}
-                        onClick={handleToggleStatus}
-                        icon={<Power className="w-4 h-4" />}
-                        className={selectedUser.active === false ? '!bg-amber-500/10 !text-amber-500 hover:!bg-amber-500/20' : ''}
-                    >
-                        {selectedUser.active !== false ? 'Suspend User' : 'Activate User'}
-                    </Button>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mb-8">
-                    <Surface variant="glass-chrome" elevation={3} radius="lg" className="p-4">
-                        <p className="text-sm text-slate-500 mb-1">ID</p>
-                        <p className="font-mono text-sm">{selectedUser.id}</p>
-                    </Surface>
-                    <Surface variant="glass-chrome" elevation={3} radius="lg" className="p-4">
-                        <p className="text-sm text-slate-500 mb-1">Status</p>
-                        <p className="font-mono text-sm">
-                            <span className={selectedUser.active !== false ? 'text-amber-500' : 'text-rose-500'}>
-                                {selectedUser.active !== false ? 'Active' : 'Suspended'}
-                            </span>
-                        </p>
-                    </Surface>
-                    <Surface variant="glass-chrome" elevation={3} radius="lg" className="p-4">
-                        <p className="text-sm text-slate-500 mb-1">Phone</p>
-                        <p className="font-bold">{selectedUser.phoneNumber}</p>
-                    </Surface>
-                </div>
-
-                <div>
-                    <h3 className="font-bold text-xl mb-4">Roles</h3>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                        {(selectedUser.roles || []).map((role: string) => (
-                            <div key={role} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 font-bold text-sm">
-                                {role}
-                                <Button variant="ghost" size="icon" onClick={() => handleRemoveRole(role)} className="!text-rose-500">
-                                    <X className="w-4 h-4" />
-                                </Button>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="flex gap-2">
-                        <Input 
-                            type="text" 
-                            value={newRole} 
-                            onChange={(e) => setNewRole(e.target.value.toUpperCase())} 
-                            placeholder="NEW_ROLE"
-                        />
-                        <Button variant="primary" onClick={handleAddRole} icon={<Plus className="w-4 h-4" />}>
-                            Add
-                        </Button>
-                    </div>
-                </div>
-
-                <div>
-                    <h3 className="font-bold text-xl mb-4">Active Orders ({userActiveOrders.length})</h3>
-                    {userActiveOrders.length > 0 ? (
-                        <div className="space-y-3">
-                            {userActiveOrders.map(order => (
-                                <Surface variant="glass-chrome" elevation={3} radius="lg" key={order.id} className="p-4">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <p className="font-bold text-sm">#{order.id?.substring(0, 8)}</p>
-                                        <span className="text-xs font-bold px-2 py-1 bg-rose-500/20 text-rose-400 rounded-md">{order.status}</span>
-                                    </div>
-                                    <p className="text-sm text-slate-500">{order.restaurantName}</p>
-                                    { }
-                                    {/* eslint-disable-next-line react-hooks/purity */}
-                                    <p className="text-xs text-slate-500 mt-2">Placed: {new Date(order.createdAt || Date.now()).toLocaleString()}</p>
-                                </Surface>
-                            ))}
-                        </div>
-                    ) : (
-                        <p className="text-slate-500 text-sm">No active orders for this user.</p>
-                    )}
-                </div>
-            </div>
-        ) : (
-            <div className="h-full flex flex-col items-center justify-center text-slate-400">
-                <User className="w-16 h-16 mb-4 opacity-30" />
-                <h2 className="text-2xl font-black mb-2 text-slate-800 dark:text-[#f0ede6]">User Management</h2>
-                <p>Select a user to view details and manage roles.</p>
-            </div>
-        )}
-        </Surface>
+        <AdminUserDetailPanel
+          selectedUser={selectedUser}
+          userActiveOrders={userActiveOrders}
+          newRole={newRole}
+          setNewRole={setNewRole}
+          handleAddRole={handleAddRole}
+          handleRemoveRole={handleRemoveRole}
+          handleToggleStatus={handleToggleStatus}
+        />
     </div>
   );
 }

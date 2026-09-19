@@ -1,7 +1,7 @@
 import { restaurantApi } from '@/lib/zodiosClients';
 import { AlertCircle, CheckCircle, Settings, X } from 'lucide-react';
 import React, { useState } from 'react';
-import { Overlay, Surface } from '@shared/ui';
+import { Input, Overlay, Surface } from '@shared/ui';
 
 interface OutletSettingsEditorProps {
   outlet: import('@/types').Outlet;
@@ -64,14 +64,14 @@ export default function OutletSettingsEditor({ outlet, onRefresh, onClose }: Out
           <div className="space-y-3">
             <div>
               <label className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase px-1">Default Prep Time (Seconds)</label>
-              <input
+              <Input
                 type="number"
                 required
                 min="60"
                 step="60"
                 value={defaultPrepTimeSeconds}
                 onChange={e => setDefaultPrepTimeSeconds(parseInt(e.target.value, 10) || 0)}
-                className="w-full bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-sm font-bold text-slate-800 dark:text-[#f0ede6] focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                className="font-bold focus:ring-2 focus:ring-rose-500/50"
               />
               <p className="text-[10px] text-slate-400 mt-1 px-1">
                 E.g. 900 seconds = 15 minutes
@@ -91,7 +91,7 @@ export default function OutletSettingsEditor({ outlet, onRefresh, onClose }: Out
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 py-2 bg-gradient-to-r from-amber-500 to-rose-500 text-white text-xs font-black rounded-xl shadow-md hover:shadow-lg transition flex items-center justify-center gap-2 disabled:opacity-50"
+              className="flex-1 py-2 bg-gradient-to-r from-amber-500 to-rose-500 text-white text-xs font-black rounded-xl transition flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {isSubmitting ? 'Saving...' : (
                 <>

@@ -78,7 +78,7 @@ export default function PayoutHistory({ onSelectPayout }: { onSelectPayout: (pay
         )}
       </div>
 
-      <Surface variant="glass-overlay" elevation={4} radius="xl" className="p-4 mb-6 flex items-end gap-4">
+      <Surface elevation={2} radius="xl" className="p-4 mb-6 flex items-end gap-4">
           <div className="flex-1 max-w-xs">
               <label className="block text-xs font-bold text-slate-500 mb-1">Payee ID (UUID)</label>
               <Input value={searchPayeeId} onChange={e => setSearchPayeeId(e.target.value)} placeholder="Enter UUID..." />
@@ -111,13 +111,13 @@ export default function PayoutHistory({ onSelectPayout }: { onSelectPayout: (pay
             </div>
           </div>
         ) : payouts.length === 0 ? (
-          <Surface variant="glass-overlay" elevation={4} radius="xl" className="p-12 text-center">
+          <Surface elevation={2} radius="xl" className="p-12 text-center">
             <Search className="w-16 h-16 text-slate-300 dark:text-slate-700 mx-auto mb-4" />
             <h3 className="text-xl font-bold mb-2">Search Payouts</h3>
             <p className="text-slate-500">Enter a payee ID above to view their payout history.</p>
           </Surface>
         ) : (
-          <Surface variant="glass-overlay" elevation={4} radius="xl" className="overflow-hidden">
+          <Surface elevation={2} radius="xl" className="overflow-hidden">
              <table className="w-full text-left border-collapse">
                 <thead>
                    <tr className="border-b border-slate-200 dark:border-slate-700/50">

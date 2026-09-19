@@ -1,12 +1,11 @@
+import { Surface } from '@shared/ui';
 import { useCallContext } from "@/contexts/CallContext";
 import { useToast } from "@/contexts/ToastContext";
-import { getToken, getUserProfile } from "@/lib/tokenStore";
-import { chatApi } from "@/lib/zodiosClients";
-import { type ChatMessage, type TypingIndicator } from "@/types";
-import { useChatWebSocket } from "@features/communication/models/useChatWebSocket";
-import { Camera, ImagePlus, MessageSquare, PhoneCall, PhoneOff, Send, X } from 'lucide-react';
-import React, { useCallback, useEffect, useRef, useState, useImperativeHandle } from 'react';
-import { formatINR } from '@shared/money';
+import { getUserProfile } from "@/lib/tokenStore";
+import { useChatSession } from "@features/communication/models/useChatSession";
+import { ChatMessageList } from "./ChatMessageList";
+import { Camera, ImagePlus, MessageSquare, PhoneCall, Send, X } from 'lucide-react';
+import React, { useState, useImperativeHandle } from 'react';
 import { RefundRequestModal } from './RefundRequestModal';
 import { Spinner } from '@shared/ui';
 
@@ -33,17 +32,17 @@ export interface ChatWidgetHandle {
 
 export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({ orderId, order, currentUserType, otherParticipants, onClose, onBack }, ref) => {
   const { showError } = useToast();
-  const token = getToken();
   const user = getUserProfile();
   const [isOpen, setIsOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [inputText, setInputText] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isTyping, setIsTyping] = useState<Record<string, boolean>>({});
-  const [targetUserId, setTargetUserId] = useState<string | null>(null);
-  const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
+
+  const {
+    unreadCount, setUnreadCount, sessionId, messages,
+    inputText, setInputText, isLoading, isTyping, targetUserId,
+    isRefundModalOpen, setIsRefundModalOpen,
+    handleSend, handleImageUpload, handleRefundSubmit,
+    messagesEndRef, fileInputRef, cameraInputRef,
+    isConnected, sendMessage, sendTypingIndicator, uploadedImageCount, isImageUploadDisabled,
+  } = useChatSession({ orderId, isOpen, currentUserType, otherParticipants, showError });
 
   useImperativeHandle(ref, () => ({
     openAndRequestRefundQuote: () => {
@@ -60,169 +59,8 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { startCall, callState, callEndReason, isCaller } = useCallContext();
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const typingTimeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, isTyping, isOpen]);
-
-  const isOpenRef = useRef(isOpen);
-  useEffect(() => {
-    isOpenRef.current = isOpen;
-  }, [isOpen]);
-
-  // Handle incoming WebSocket messages
-  const handleMessageReceived = useCallback((msg: ChatMessage) => {
-    setMessages(prev => {
-      // Prevent duplicates if STOMP delivers the same message twice
-      if (prev.some(m => m.id === msg.id)) return prev;
-      return [...prev, msg];
-    });
-    // If they sent a message, they aren't just typing anymore
-    setIsTyping(prev => ({ ...prev, [msg.senderId]: false }));
-
-    // Play notification sound if message is from someone else and chat is closed
-    if (msg.senderId !== user?.id) {
-      if (isOpenRef.current) {
-        // Play small blip when message is received while chat is open
-        const audio = new Audio('/sounds/beep_short.wav');
-        audio.volume = 0.5;
-        audio.play().catch(() => { });
-      } else {
-        setUnreadCount(prev => prev + 1);
-        try {
-          const audio = new Audio('/sounds/beep_short.wav');
-          audio.play().catch(e => console.warn('Audio play blocked:', e));
-        } catch {
-          // best effort: a notification sound is not worth surfacing
-        }
-      }
-    }
-  }, [user?.id]);
-
-  // Handle typing indicators
-  const handleTypingIndicator = useCallback((indicator: TypingIndicator) => {
-    if (indicator.userId === user?.id) return; // ignore our own typing
-
-    setIsTyping(prev => ({ ...prev, [indicator.userId]: true }));
-
-    // Clear typing status after 3 seconds of silence
-    if (typingTimeoutRef.current[indicator.userId]) {
-      clearTimeout(typingTimeoutRef.current[indicator.userId]);
-    }
-    typingTimeoutRef.current[indicator.userId] = setTimeout(() => {
-      setIsTyping(prev => ({ ...prev, [indicator.userId]: false }));
-    }, 3000);
-  }, [user?.id]);
-
-  const { isConnected, sendMessage, sendImage, sendTypingIndicator } = useChatWebSocket({
-    sessionId,
-    onMessageReceived: handleMessageReceived,
-    onTypingIndicator: handleTypingIndicator,
-  });
-
-  const handleRefundSubmit = (items: { itemId: string; quantity: number }[], reason: string) => {
-    if (isConnected && orderId) {
-      sendMessage(JSON.stringify({ 
-        orderId, 
-        refundType: "PARTIAL", 
-        reason,
-        items 
-      }), 'REFUND_QUOTE_REQUEST');
-      setIsRefundModalOpen(false);
-    }
-  };
-
-  const uploadedImageCount = messages.filter(
-    (msg) => msg.messageType === 'IMAGE' && msg.senderId === user?.id
-  ).length;
-  const isImageUploadDisabled = uploadedImageCount >= 4 || !isConnected || isLoading;
-
-  // Initialize session when chat is opened for the first time
-  useEffect(() => {
-    if (isOpen && !sessionId && orderId && token && user) {
-      const initChat = async () => {
-        setIsLoading(true);
-        try {
-          // 1. Create or get session
-            const data = await chatApi.chatSession.post(`/api/v1/chat/sessions`, {
-              id: "",
-              orderId,
-            participants: [
-              {
-                userId: user.id,
-                entityType: currentUserType,
-                displayName: (user.name || user.email || user.id) as string
-              },
-              ...(otherParticipants || [])
-            ]
-          });
-
-          if (!data || !data.success || !data.data) throw new Error('Failed to init chat session');
-          const session = data.data;
-          const sid = session.sessionId as string;
-          setSessionId(sid);
-
-          if ((session).participants) {
-            const otherParticipant = (session).participants.find((p: { userId: string }) => p.userId !== user.id);
-            if (otherParticipant) {
-              setTargetUserId(otherParticipant.userId);
-            }
-          }
-
-          // 2. Load history
-          const histData = await chatApi.chatSession.get('/api/v1/chat/sessions/:sessionId/messages', { params: { sessionId: sid } });
-          if (histData && histData.success) {
-            setMessages((histData.data?.content as ChatMessage[]) ?? []);
-          }
-        } catch (error: unknown) {
-          console.error("Error initializing chat:", error);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-
-      initChat();
-    }
-   
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, sessionId, orderId, token, user, currentUserType]);
-
-  const handleSend = (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!inputText.trim() || !isConnected || !user) return;
-
-    sendMessage(inputText.trim(), 'TEXT');
-    setInputText('');
-  };
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !sendImage) return;
-
-    // Clear both inputs so the same file can be selected again
-    if (fileInputRef.current) fileInputRef.current.value = '';
-    if (cameraInputRef.current) cameraInputRef.current.value = '';
-
-    if (uploadedImageCount >= 4) {
-      showError("You can attach at most 4 images to a chat session.");
-      return;
-    }
-
-    setIsLoading(true);
-    const imageUrl = await sendImage(file);
-    if (!imageUrl) {
-      showError("Could not upload that image. Check it is under 5MB and try again.");
-    }
-    setIsLoading(false);
-  };
  
 
   // The floating chat button
@@ -233,7 +71,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
           setIsOpen(true);
           setUnreadCount(0);
         }}
-        className="fixed bottom-6 right-6 bg-amber-600 hover:bg-amber-700 text-white px-5 py-4 rounded-full shadow-lg transition-transform hover:scale-105 z-50 flex items-center justify-center space-x-2"
+        className="fixed bottom-6 right-6 bg-amber-600 hover:bg-amber-700 text-white px-5 py-4 rounded-full transition-transform hover:scale-105 z-50 flex items-center justify-center space-x-2"
       >
         <MessageSquare className="w-6 h-6" />
         <span className="font-bold text-sm">#{orderId.substring(0, 6)}</span>
@@ -248,7 +86,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
 
   // The open chat window
   return (
-    <div className="fixed bottom-0 right-0 sm:bottom-6 sm:right-6 w-full sm:w-96 h-[100dvh] sm:h-[500px] max-h-[100dvh] sm:max-h-[calc(100vh-6rem)] bg-white sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden z-[60] sm:border sm:border-slate-100">
+    <Surface elevation={2} className="fixed bottom-0 right-0 sm:bottom-6 sm:right-6 w-full sm:w-96 h-[100dvh] sm:h-[500px] max-h-[100dvh] sm:max-h-[calc(100vh-6rem)] sm:rounded-2xl flex flex-col overflow-hidden z-[60] sm:border sm:border-slate-100">
       {/* Header */}
       <div className="bg-amber-600 text-white p-4 flex justify-between items-center shrink-0">
         <div className="flex items-center gap-2">
@@ -327,121 +165,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
             <p>Send a message to start the conversation.</p>
           </div>
         ) : (
-          messages.map((msg, idx) => {
-            const isMe = msg.senderId === user?.id;
-
-            // Format sender label: "Name (Type)"
-            let typeLabel = '';
-            if (msg.senderType === 'CUSTOMER') typeLabel = 'Customer';
-            else if (msg.senderType === 'RESTAURANT') typeLabel = 'Restaurant';
-            else if (msg.senderType === 'DELIVERY') typeLabel = 'Rider';
-
-            const showHeader = idx === 0 || messages[idx - 1].senderId !== msg.senderId;
-
-            return (
-              <div key={msg.id || idx} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                {showHeader && (
-                  <span className="text-xs text-slate-500 mb-1 ml-1 mr-1">
-                    {isMe ? 'You' : `${msg.senderName} (${typeLabel})`}
-                  </span>
-                )}
-                <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${isMe
-                      ? 'bg-amber-600 text-white rounded-tr-sm'
-                      : 'bg-white border border-slate-200 text-slate-800 rounded-tl-sm shadow-sm'
-                    }`}
-                >
-                  {msg.content === '[SYSTEM_MISSED_CALL]' ? (
-                    <div className="flex items-center space-x-2 font-semibold text-rose-500">
-                      <PhoneOff className="w-4 h-4" />
-                      <span>Missed Voice Call</span>
-                    </div>
-                  ) : msg.content.startsWith('[SYSTEM_CALL_ENDED') ? (
-                    <div className="flex items-center space-x-2 font-semibold">
-                      <PhoneCall className="w-4 h-4" />
-                      <span>Call Ended {msg.content.replace('[SYSTEM_CALL_ENDED ', '').replace(']', '')}</span>
-                    </div>
-                  ) : msg.messageType === 'IMAGE' ? (
-                    <img src={msg.content} alt="Attachment" className="max-w-full rounded-lg" loading="lazy" />
-                  ) : msg.messageType === 'AUDIO' ? (
-                    <div className="flex flex-col space-y-1">
-                      <span className="text-xs font-semibold">📞 Call Recording</span>
-                      <audio controls src={msg.content} className="max-w-[200px] h-10" />
-                    </div>
-                  ) : msg.messageType === 'REFUND_QUOTE_RESPONSE' ? (() => {
-                    try {
-                      const payload = JSON.parse(msg.content);
-                      return (
-                        <div className={`flex flex-col space-y-3 p-2 min-w-[220px] ${isMe ? 'text-white' : 'text-slate-800'}`}>
-                          <div className={`flex items-center space-x-2 border-b pb-2 ${isMe ? 'border-amber-400' : 'border-slate-200'}`}>
-                            <span className="text-xl">💰</span>
-                            <span className="font-semibold">Refund Quote</span>
-                          </div>
-                          <div>
-                            <div className="text-sm opacity-80 mb-1">Eligible Amount:</div>
-                            <div className="font-bold text-2xl">{formatINR(payload.quoteAmount)}</div>
-                          </div>
-                          <div className="text-xs opacity-75">Type: {payload.refundType}</div>
-                          <button 
-                            onClick={() => {
-                              sendMessage(JSON.stringify({ orderId, reason: "Customer requested", refundType: payload.refundType, customerId: user?.id }), 'REFUND_REQUEST');
-                            }}
-                            className={`w-full font-semibold py-2 rounded-xl transition shadow-sm ${
-                              isMe 
-                                ? 'bg-white text-amber-600 hover:bg-amber-50' 
-                                : 'bg-amber-600 text-white hover:bg-amber-700 hover:shadow-md'
-                            }`}
-                          >
-                            Accept & Process Refund
-                          </button>
-                        </div>
-                      );
-                    } catch {
-                      return <span>Invalid quote response</span>;
-                    }
-                  })() : msg.messageType === 'REFUND_DECISION' ? (() => {
-                    try {
-                      const payload = JSON.parse(msg.content);
-                      return (
-                        <div className="flex flex-col space-y-2 p-2">
-                          <div className="flex items-center space-x-2 text-amber-600 font-bold">
-                            <span className="text-lg">✅</span>
-                            <span>Refund Request Submitted</span>
-                          </div>
-                          <div className="text-sm font-medium">Amount: {formatINR(payload.amount || payload.quoteAmount || 0)}</div>
-                          <div className="text-xs opacity-75 mt-1">Check your dashboard for details.</div>
-                        </div>
-                      );
-                    } catch { return <span>Invalid decision response</span>; }
-                  })() : msg.messageType === 'REFUND_ERROR' ? (() => {
-                    let errorMessage = msg.content;
-                    try {
-                      const payload = JSON.parse(msg.content);
-                      errorMessage = payload.error || payload.message || msg.content;
-                    } catch { /* ignore */ }
-                    return (
-                      <div className="flex flex-col space-y-1 p-2">
-                        <div className="flex items-center space-x-2 text-rose-500 font-bold">
-                          <span>❌</span>
-                          <span>Request Failed</span>
-                        </div>
-                        <span className="text-sm">{errorMessage}</span>
-                      </div>
-                    );
-                  })() : msg.messageType === 'REFUND_QUOTE_REQUEST' || msg.messageType === 'REFUND_REQUEST' ? (
-                    <div className="flex items-center space-x-2 p-1 opacity-90">
-                      <Spinner size="sm" label="" />
-                      <span className="text-sm font-medium">
-                        {msg.messageType === 'REFUND_QUOTE_REQUEST' ? 'Requesting quote...' : 'Processing refund...'}
-                      </span>
-                    </div>
-                  ) : (
-                    msg.content
-                  )}
-                </div>
-              </div>
-            );
-          })
+            <ChatMessageList messages={messages} userId={user?.id} orderId={orderId} sendMessage={sendMessage} />
         )}
 
         {/* Typing indicators */}
@@ -527,9 +251,9 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
             type="submit"
             disabled={!inputText.trim() || !isConnected}
             className={`p-1.5 rounded-full transition-colors ${inputText.trim() && isConnected
-                ? 'bg-amber-600 text-white hover:bg-amber-700'
-                : 'bg-slate-300 text-slate-500 cursor-not-allowed'
-              }`}
+ ? 'bg-amber-600 text-white hover:bg-amber-700'
+ : 'bg-slate-300 text-slate-500 cursor-not-allowed'
+ }`}
           >
             <Send className="w-4 h-4" />
           </button>
@@ -545,6 +269,6 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
           onSubmit={handleRefundSubmit}
         />
       )}
-    </div>
+    </Surface>
   );
 });

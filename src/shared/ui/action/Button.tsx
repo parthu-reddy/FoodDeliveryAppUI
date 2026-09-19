@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useReducedMotion } from 'motion/react';
 import { Spinner } from '../feedback/Spinner';
 
 /**
@@ -15,7 +16,7 @@ import { Spinner } from '../feedback/Spinner';
  */
 
 type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'ghost' | 'outline';
-type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'icon';
+type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'icon' | 'touch' | 'touch-icon';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -90,10 +91,29 @@ const SIZE: Record<ButtonSize, React.CSSProperties> = {
   md: { fontSize: 14, minHeight: 44, padding: '0 16px', borderRadius: 'var(--radius-md)', gap: 8 },
   lg: { fontSize: 15, minHeight: 50, padding: '0 20px', borderRadius: 'var(--radius-md)', gap: 8 },
   icon: { minHeight: 44, minWidth: 44, padding: 0, borderRadius: 'var(--radius-full)', gap: 0 },
+  // 48px, not 44. 44 is the iOS minimum for a thumb on a phone held still; the rider is
+  // outdoors, one-handed, often moving, and the Phase 4 plan holds that tree to 48. These
+  // two sizes exist so a delivery screen can meet it without every other screen growing.
+  touch: { fontSize: 15, minHeight: 48, padding: '0 20px', borderRadius: 'var(--radius-md)', gap: 8 },
+  'touch-icon': { minHeight: 48, minWidth: 48, padding: 0, borderRadius: 'var(--radius-full)', gap: 0 },
 };
 
 const SPINNER: Record<ButtonSize, 'xs' | 'sm' | 'md'> = {
-  xs: 'xs', sm: 'xs', md: 'sm', lg: 'md', icon: 'sm',
+  xs: 'xs', sm: 'xs', md: 'sm', lg: 'md', icon: 'sm', touch: 'md', 'touch-icon': 'sm',
+};
+
+/**
+ * Press travel. A surface that does not move when pressed is a picture of a button
+ * (Phase5 plan, "Why depth is not currently visible", point 3) — and until now this one
+ * declared a transition on `transform` and then never changed it.
+ *
+ * Driven from pointer state rather than `:active` so it is observable: a test can press the
+ * button and read the transform back. Under reduced motion the press is simply absent —
+ * there is no slower version of a 90ms travel.
+ */
+const PRESSED: React.CSSProperties = {
+  transform: 'scale(.97) translateY(1px)',
+  boxShadow: 'var(--elevation-press)',
 };
 
 export function Button({
@@ -110,6 +130,9 @@ export function Button({
   ...rest
 }: ButtonProps) {
   const inert = disabled || loading;
+  const reduceMotion = useReducedMotion();
+  const [pressed, setPressed] = useState(false);
+  const isPressed = pressed && !inert && !reduceMotion;
 
   return (
     <button
@@ -117,6 +140,11 @@ export function Button({
       disabled={inert}
       aria-busy={loading || undefined}
       data-variant={variant}
+      data-pressed={isPressed || undefined}
+      onPointerDown={() => setPressed(true)}
+      onPointerUp={() => setPressed(false)}
+      onPointerLeave={() => setPressed(false)}
+      onPointerCancel={() => setPressed(false)}
       className={`lb-button inline-flex items-center justify-center font-bold select-none ${
         fullWidth ? 'w-full' : ''
       } ${className}`}
@@ -128,7 +156,10 @@ export function Button({
         opacity: inert ? 0.6 : 1,
         transitionProperty: 'transform, box-shadow, background-color, opacity',
         transitionDuration: 'var(--duration-instant)',
-        transitionTimingFunction: 'var(--ease-out)',
+        // out on the way down, spring on the way back: leaving a press should feel like
+        // release, not like another press in reverse
+        transitionTimingFunction: isPressed ? 'var(--ease-out)' : 'var(--ease-spring)',
+        ...(isPressed ? PRESSED : null),
         ...style,
       }}
       {...rest}

@@ -1,4 +1,5 @@
 import { Check, ChevronDown } from 'lucide-react';
+import { SELECT_SIZE, type SelectOption, type SelectSize } from './selectStyle';
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
 /**
@@ -13,14 +14,6 @@ import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 
  * arrow/Home/End navigation, typeahead, Escape to close, click-outside, and focus returning
  * to the trigger on close.
  */
-
-export interface SelectOption {
-  value: string;
-  label: string;
-  disabled?: boolean;
-}
-
-type SelectSize = 'sm' | 'md' | 'lg';
 
 interface SelectProps {
   options: SelectOption[];
@@ -37,11 +30,6 @@ interface SelectProps {
   'aria-labelledby'?: string;
 }
 
-const SIZE: Record<SelectSize, React.CSSProperties> = {
-  sm: { minHeight: 36, fontSize: 12, padding: '0 10px', borderRadius: 'var(--radius-sm)' },
-  md: { minHeight: 44, fontSize: 14, padding: '0 12px', borderRadius: 'var(--radius-md)' },
-  lg: { minHeight: 50, fontSize: 15, padding: '0 14px', borderRadius: 'var(--radius-md)' },
-};
 
 export function Select({
   options,
@@ -216,7 +204,7 @@ export function Select({
         onKeyDown={onKeyDown}
         className="w-full flex items-center justify-between gap-2 text-left font-medium"
         style={{
-          ...SIZE[selectSize],
+          ...SELECT_SIZE[selectSize],
           background: 'var(--color-paper-sunken)',
           color: selected ? 'var(--color-ink)' : 'var(--color-ink-2)',
           border: `1px solid ${error ? 'var(--color-danger)' : 'var(--color-paper-line)'}`,

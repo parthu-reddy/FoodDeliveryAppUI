@@ -1,3 +1,4 @@
+import { Surface } from '@shared/ui';
 import { Order, OrderStatus } from '@/types';
 import { Check, Clock } from 'lucide-react';
 import { formatINR } from '@shared/money';
@@ -13,7 +14,7 @@ export default function OrderQueue({ orders, onAcceptOrder, onRejectOrder }: Ord
   
   if (pendingOrders.length === 0) {
     return (
-      <div className="p-12 text-center text-slate-400 dark:text-slate-300 border border-dashed border-rose-500/30 rounded-3xl space-y-2.5">
+      <div className="p-12 text-center text-slate-400 dark:text-slate-300 border border-dashed border-rose-500/30 rounded-2xl space-y-2.5">
         <Clock className="w-8 h-8 mx-auto opacity-50" />
         <p className="text-sm font-semibold">No pending orders in the queue.</p>
       </div>
@@ -24,7 +25,7 @@ export default function OrderQueue({ orders, onAcceptOrder, onRejectOrder }: Ord
     <div className="space-y-4">
       <h3 className="font-bold text-lg">Incoming Orders ({pendingOrders.length})</h3>
       {pendingOrders.map(order => (
-        <div key={order.id} className="bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 rounded-3xl p-5 shadow-sm">
+        <Surface radius="xl" elevation={1} className="p-5" key={order.id}>
           <div className="flex justify-between items-start mb-4">
             <div>
               <p className="font-mono text-xs font-bold text-slate-500">ORDER #{order.id.substring(0, 8)}</p>
@@ -40,7 +41,7 @@ export default function OrderQueue({ orders, onAcceptOrder, onRejectOrder }: Ord
               Reject
             </button>
           </div>
-        </div>
+        </Surface>
       ))}
     </div>
   );

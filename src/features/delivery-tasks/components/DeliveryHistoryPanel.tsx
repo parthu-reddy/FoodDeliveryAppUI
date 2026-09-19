@@ -1,7 +1,9 @@
+import { Input, Surface, surfaceStyle } from '@shared/ui';
 import { Order } from "@/types";
 import { DeliveryOrderDetailsModal } from "@features/delivery-tasks/components/DeliveryOrderDetailsModal";
 import { ArrowLeft, Check, Clock, MapPin } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useMotionPresets } from '@shared/ui';
 import React, { useState } from 'react';
 import { formatINR } from '@shared/money';
 
@@ -26,12 +28,10 @@ export function DeliveryHistoryPanel({
 }: DeliveryHistoryPanelProps) {
   const [selectedJob, setSelectedJob] = useState<Order | null>(null);
 
+  const presets = useMotionPresets();
   return (
     <motion.div
-      key="history"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      key="history" {...presets.fade}
       className="p-5 flex-1 flex flex-col"
     >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
@@ -43,11 +43,13 @@ export function DeliveryHistoryPanel({
         </div>
 
         <div className="flex items-center gap-2">
-          <input
+          <Input
             type="date"
+            inputSize="lg"
+            aria-label="Filter completed deliveries by date"
             value={historyDateFilter}
             onChange={(e) => { setHistoryDateFilter(e.target.value); setHistoryPage(1); }}
-            className="px-3 py-1.5 text-xs rounded-xl border border-rose-500/20 dark:border-rose-500/30 bg-white/20 dark:bg-slate-950/45 text-slate-800 dark:text-[#f0ede6] font-mono outline-none"
+            className="font-mono focus:ring-2 focus:ring-rose-500/50"
           />
           {historyDateFilter && (
             <button onClick={() => { setHistoryDateFilter(""); setHistoryPage(1); }} className="text-[10px] text-slate-400 dark:text-slate-300 hover:text-slate-600 dark:text-slate-300 underline">Clear</button>
@@ -56,17 +58,18 @@ export function DeliveryHistoryPanel({
       </div>
       <div className="space-y-4 overflow-y-auto">
         {paginatedHistoryJobs.length === 0 ? (
-          <div className="p-12 text-center text-slate-400 dark:text-slate-300 border border-dashed border-rose-500/30 dark:border-rose-500/30 rounded-3xl space-y-2.5 bg-white/20 dark:bg-slate-900/45">
+          <Surface radius="xl" elevation={0} className="p-12 text-center text-slate-400 dark:text-slate-300 border-dashed space-y-2.5">
             <Clock className="w-8 h-8 mx-auto text-slate-500 dark:text-slate-300 opacity-50" />
             <p className="text-sm font-semibold">No completed deliveries found.</p>
             <p className="text-xs text-slate-500 dark:text-slate-300">Try selecting a different date.</p>
-          </div>
+          </Surface>
         ) : (
           paginatedHistoryJobs.map(job => (
             <button type="button" 
               key={job.id} 
               onClick={() => setSelectedJob(job)}
-              className="bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-3xl p-5 shadow-sm flex flex-col gap-3 transition hover:border-rose-500/30 hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] cursor-pointer text-left w-full"
+              className="p-5 flex flex-col gap-3 transition cursor-pointer text-left w-full"
+              style={surfaceStyle({ radius: 'lg', elevation: 1 })}
             >
               <div className="flex justify-between items-start">
                 <div>

@@ -73,26 +73,26 @@ function CustomerPaymentModalInner({
       </Surface>
 
       {deliveryLat && deliveryLng && (
-        <div className="h-32 w-full rounded-xl overflow-hidden border border-white/20 relative my-4">
+        <Surface radius="md" elevation={0} className="h-32 w-full overflow-hidden relative my-4">
           {/* Static map preview using a simple background grid and pin to represent map */}
           <div className="absolute inset-0 bg-slate-200 dark:bg-slate-800 flex items-center justify-center relative"
             style={{
               backgroundImage: 'radial-gradient(circle at center, #cbd5e1 1px, transparent 1px)',
               backgroundSize: '20px 20px'
             }}>
-            <MapPin className="w-8 h-8 text-rose-500 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 drop-shadow-md" />
-            <div className="absolute bottom-2 right-2 bg-white/80 dark:bg-slate-900/80 px-2 py-1 rounded text-[10px] font-mono text-slate-500 backdrop-blur-sm">
+            <MapPin className="w-8 h-8 text-rose-500 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 drop-" />
+            <Surface variant="glass-chrome" radius="sm" elevation={0} className="absolute bottom-2 right-2 px-2 py-1 text-[10px] font-mono text-slate-500">
               {Number(deliveryLat).toFixed(4)}, {Number(deliveryLng).toFixed(4)}
-            </div>
+            </Surface>
           </div>
-        </div>
+        </Surface>
       )}
 
       <Surface variant="glass-chrome" elevation={3} radius="lg" className="p-4">
-        <div className="flex items-center gap-2 mb-4 pb-3 border-b border-white/20 dark:border-white/10">
+        <Surface elevation={0} className="flex items-center gap-2 mb-4 pb-3 border-b">
           <Store className="w-4 h-4 text-rose-500" />
           <h3 className="font-bold text-slate-800 dark:text-white">{cartRestaurant?.name || 'Restaurant'}</h3>
-        </div>
+        </Surface>
 
         <div className="space-y-3 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
           {(cart || []).map((cItem: import('@/types').CartItem, idx: number) => (

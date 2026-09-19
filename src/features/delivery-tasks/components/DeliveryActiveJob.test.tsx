@@ -41,7 +41,9 @@ const props = {
   handleCustomerUnavailable: () => {},
 };
 
-const confirmButton = () => screen.getByRole('button', { name: /confirm delivery/i });
+// The rider confirms by sliding, not tapping -- a tap fires by accident in a pocket.
+// This was a button until the control SwipeAction was built for went unused for a phase.
+const confirmSlider = () => screen.getByRole('slider', { name: /slide to deliver/i });
 
 describe('prepaid delivery completion', () => {
   test('asks only for the delivery OTP and can confirm immediately', () => {
@@ -52,6 +54,7 @@ describe('prepaid delivery completion', () => {
     );
 
     expect(screen.queryByLabelText(/cash collected/i)).not.toBeInTheDocument();
-    expect(confirmButton()).toBeEnabled();
+    expect(confirmSlider()).not.toHaveAttribute('aria-disabled');
+    expect(confirmSlider()).toHaveAttribute('tabindex', '0');
   });
 });

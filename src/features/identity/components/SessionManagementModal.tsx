@@ -94,10 +94,10 @@ export default function SessionManagementModal({ isOpen, onClose, sessions, phon
             <div
               key={session.sessionId}
               className={`flex items-center justify-between p-4 rounded-2xl border transition ${theme === 'dark' ? 'bg-slate-800/20 border-slate-700 hover:border-slate-600' : 'bg-slate-50 border-slate-200 hover:border-slate-300'
-                }`}
+ }`}
             >
               <div className="flex items-center gap-4">
-                <div className={`p-2.5 rounded-xl ${theme === 'dark' ? 'bg-slate-700' : 'bg-white shadow-sm'}`}>
+                <div className={`p-2.5 rounded-xl ${theme === 'dark' ? 'bg-slate-700' : 'bg-white '}`}>
                   {getDeviceIcon(session.os)}
                 </div>
                 <div>

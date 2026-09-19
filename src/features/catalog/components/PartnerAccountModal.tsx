@@ -121,12 +121,9 @@ interface DeviceSession {
           >
             <div className="flex-1 overflow-y-auto w-full p-5 flex flex-col space-y-4 bg-transparent">
               <div className="flex items-center gap-3 shrink-0 mb-4">
-                <button
-                  onClick={onClose}
-                  className="p-2 rounded-xl bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 text-slate-500 dark:text-slate-300 hover:text-slate-900 hover:bg-white dark:hover:text-white cursor-pointer transition"
-                >
+                <Button variant="secondary" size="icon" aria-label="Close" onClick={onClose}>
                   <X className="w-5 h-5" />
-                </button>
+                </Button>
                 <div>
                   <h4 className="font-bold text-xl text-slate-900 dark:text-[#f0ede6]">Account Settings</h4>
                   <p className="text-xs text-slate-500 dark:text-slate-300">Manage your profile</p>

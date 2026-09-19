@@ -1,4 +1,4 @@
-import { EmptyState, Overlay, Surface } from '@shared/ui';
+import { Button, EmptyState, Overlay, Stepper, Surface, surfaceStyle } from '@shared/ui';
 import { AlertCircle, ShieldCheck, ShoppingBag, X } from 'lucide-react';
 import { MenuItem, Restaurant } from '@/types';
 import React from 'react';
@@ -118,7 +118,7 @@ export default function CustomerCartDrawer({
                   activeCarts.map(([restaurantId, cartState]) => {
                     const total = getCartTotal(restaurantId);
                     return (
-                    <div key={restaurantId} className="bg-white/40 dark:bg-slate-900/40 rounded-2xl p-4 border border-rose-500/10 shadow-sm space-y-4">
+                    <Surface radius="lg" elevation={1} className="p-4 space-y-4" key={restaurantId}>
                       <div className="flex justify-between items-center border-b border-rose-500/10 pb-2">
                         <span className="font-bold text-slate-800 dark:text-[#f0ede6]">{cartState.restaurant?.name || 'Restaurant'}</span>
                       </div>
@@ -129,21 +129,13 @@ export default function CustomerCartDrawer({
                               <span className="font-semibold text-slate-900 dark:text-[#f0ede6]">{cartItem.item.name}</span>
                               <p className="text-xs text-amber-500 font-mono">{formatINR(cartItem.item.price)}</p>
                             </div>
-                            <div className="flex items-center bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-[#f0ede6] rounded-lg font-bold">
-                              <button 
-                                onClick={() => removeFromCart(cartItem.item.id as string, restaurantId)}
-                                className="p-1 px-2.5 text-xs hover:text-rose-500 cursor-pointer"
-                              >
-                                -
-                              </button>
-                              <span className="px-1 text-xs">{cartItem.quantity}</span>
-                              <button 
-                                onClick={() => addToCart(cartItem.item, selectedRestaurant?.id === restaurantId ? selectedRestaurant : cartState.restaurant)}
-                                className="p-1 px-2.5 text-xs hover:text-amber-500 cursor-pointer"
-                              >
-                                +
-                              </button>
-                            </div>
+                            <Stepper
+                              value={cartItem.quantity}
+                              label={cartItem.item.name ?? 'item'}
+                              min={0}
+                              onDecrement={() => removeFromCart(cartItem.item.id as string, restaurantId)}
+                              onIncrement={() => addToCart(cartItem.item, selectedRestaurant?.id === restaurantId ? selectedRestaurant : cartState.restaurant)}
+                            />
                           </div>
                         ))}
                       </div>
@@ -178,15 +170,16 @@ export default function CustomerCartDrawer({
                         </div>
                       </div>
 
-                      <button
+                      <Button
                         onClick={() => onCheckoutClick(restaurantId)}
                         disabled={isSubmitting || isQuoting}
-                        className="w-full mt-2 bg-gradient-to-r from-amber-500 to-amber-500 text-white py-3 rounded-xl font-bold shadow-md shadow-amber-500/20 hover:brightness-110 active:scale-98 transition flex items-center justify-center gap-2 cursor-pointer border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                        fullWidth
+                        className="mt-2"
+                        icon={<ShieldCheck className="w-4 h-4" />}
                       >
-                        <ShieldCheck className="w-4 h-4" />
                         {isSubmitting ? 'Processing...' : isQuoting ? 'Calculating Quote...' : `Checkout ${cartState.restaurant?.name}`}
-                      </button>
-                    </div>
+                      </Button>
+                    </Surface>
                   )})
                 )}
               </div>
@@ -199,7 +192,8 @@ export default function CustomerCartDrawer({
                     setIsCartOpen(false);
                   }
                 }}
-                className="p-3 bg-white/20 dark:bg-slate-900/45 backdrop-blur-sm border border-rose-500/20 dark:border-rose-500/30 rounded-xl space-y-1 cursor-pointer hover:bg-white/30 dark:hover:bg-slate-900/60 transition-colors flex justify-between items-center text-left w-full"
+                className="p-3 space-y-1 cursor-pointer transition-colors flex justify-between items-center text-left w-full"
+                style={surfaceStyle({ variant: 'sunken', radius: 'md', elevation: 0 })}
               >
                 <div>
                   <span className="text-[10px] text-slate-500 dark:text-[#f0ede6] font-bold block uppercase font-mono">Delivering To</span>

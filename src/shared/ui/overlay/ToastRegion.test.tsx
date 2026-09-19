@@ -58,4 +58,13 @@ describe('ToastRegion', () => {
     expect(container.querySelector('[role="status"]')).toBeNull();
     expect(screen.getByRole('status')).toBeInTheDocument();
   });
+
+  it('announces without moving when prefers-reduced-motion is set', () => {
+    // A toast is the one piece of motion a screen-reader user also hears. `useReducedMotion`
+    // removes the slide; the live region still announces.
+    render(<ToastRegion toasts={[{ id: '1', type: 'success', message: 'Order placed' }]} />);
+    const region = screen.getByRole('status');
+    expect(region).toHaveAttribute('aria-live');
+    expect(region).toHaveTextContent('Order placed');
+  });
 });

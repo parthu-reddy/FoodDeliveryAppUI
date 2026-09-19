@@ -3,6 +3,7 @@ import { RoleName, UserRole } from "@/types";
 import { Button, Input, Surface, surfaceStyle } from '@shared/ui';
 import { AlertCircle, Bike, KeyRound, Shield, Smartphone, Store, Utensils } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useMotionPresets } from '@shared/ui';
 import React from 'react';
 
 interface AuthFormProps {
@@ -66,16 +67,14 @@ export function AuthForm({
     }
   };
 
+  const presets = useMotionPresets();
   return (
     <motion.div
-      key="otp-form"
-      initial={{ opacity: 0, x: 30 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -30 }}
+      key="otp-form" {...presets.slideInX}
       transition={{ duration: 0.3 }}
       className="max-w-xl mx-auto w-full"
     >
-      <Surface variant="glass-chrome" elevation={3} radius="lg" className="p-8 sm:p-10 space-y-6 relative overflow-hidden">
+      <Surface elevation={2} radius="lg" className="p-8 sm:p-10 space-y-6 relative overflow-hidden">
         {/* Subtle inner highlight */}
         <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent pointer-events-none" />
         
@@ -106,9 +105,9 @@ export function AuthForm({
             <div className="space-y-1.5">
               <label className={`text-xs font-bold tracking-wider font-mono ${theme === 'dark' ? 'text-slate-300' : 'text-slate-500 dark:text-slate-300'}`}>PHONE NUMBER</label>
               <div style={surfaceStyle({ variant: 'glass-chrome', elevation: 1, radius: 'lg' })} className="flex overflow-hidden focus-within:border-rose-400 transition-colors">
-                <div className="px-4 flex items-center border-r border-white/10 font-mono text-sm bg-white/5">
+                <Surface elevation={0} className="px-4 flex items-center border-r font-mono text-sm">
                   +91
-                </div>
+                </Surface>
                 <Input
                   type="tel"
                   value={phone}
@@ -136,9 +135,9 @@ export function AuthForm({
             <div className="space-y-1.5">
               <label className={`text-xs font-bold tracking-wider font-mono ${theme === 'dark' ? 'text-slate-300' : 'text-slate-500 dark:text-slate-300'}`}>ENTER SECURE CODE</label>
               <div style={surfaceStyle({ variant: 'glass-chrome', elevation: 1, radius: 'lg' })} className="flex overflow-hidden focus-within:border-rose-400 transition-colors">
-                <div className="px-4 flex items-center border-r border-white/10 bg-white/5">
+                <Surface elevation={0} className="px-4 flex items-center border-r">
                   <KeyRound className="w-4 h-4 text-rose-400" />
-                </div>
+                </Surface>
                 <Input
                   type="password"
                   inputMode="numeric"

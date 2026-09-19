@@ -56,4 +56,22 @@ describe('status models', () => {
     });
     expect(payoutStatus(undefined).label).toBe('Unknown');
   });
+
+  it('crossfades when the status changes', () => {
+    // A status change is information arriving. Before this the pill swapped colour between
+    // frames, which reads as a glitch rather than an update.
+    const { rerender } = render(<StatusPill label="Preparing" tone="info" />);
+    const pill = screen.getByText('Preparing');
+    expect(pill.style.transitionProperty).toBe('background-color, color, border-color');
+    expect(pill.style.transitionDuration).toBe('var(--duration-fast)');
+    rerender(<StatusPill label="On the way" tone="live" />);
+    expect(screen.getByText('On the way').style.transitionProperty)
+      .toBe('background-color, color, border-color');
+  });
+
+  it('transitions colour only, so prefers-reduced-motion is handled in CSS', () => {
+    render(<StatusPill label="Delivered" tone="success" />);
+    const pill = screen.getByText('Delivered');
+    expect(pill.style.transitionProperty).not.toMatch(/transform/);
+  });
 });

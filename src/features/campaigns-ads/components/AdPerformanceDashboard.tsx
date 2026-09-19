@@ -1,6 +1,8 @@
+import { Surface } from '@shared/ui';
 import { format } from 'date-fns';
 import { CheckCircle, Eye, MousePointerClick, TrendingUp } from 'lucide-react';
 import { formatINR } from '@shared/money';
+import { DataTable, type Column } from '@shared/ui';
 
 export interface CampaignPerformance {
   id: string;
@@ -12,6 +14,14 @@ export interface CampaignPerformance {
   conversions?: number;
   spend: number;
 }
+
+const PERFORMANCE_COLUMNS: Column<CampaignPerformance>[] = [
+  { key: 'date', header: 'Date', cell: (row) => format(new Date(row.date), 'MMM d, yyyy') },
+  { key: 'impressions', header: 'Impressions', align: 'right', cell: (row) => (row.impressions ?? 0).toLocaleString() },
+  { key: 'clicks', header: 'Clicks', align: 'right', cell: (row) => (row.clicks ?? 0).toLocaleString(), cellClassName: 'font-medium' },
+  { key: 'conversions', header: 'Conversions', align: 'right', cell: (row) => (row.conversions ?? 0).toLocaleString() },
+  { key: 'spend', header: 'Spend', align: 'right', cell: (row) => formatINR(row.spend), cellClassName: 'font-medium font-mono' },
+];
 
 interface AdPerformanceDashboardProps {
   performanceData: CampaignPerformance[];
@@ -26,11 +36,11 @@ export function AdPerformanceDashboard({ performanceData, isLoading }: AdPerform
 
   if (performanceData.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center p-12 bg-white rounded-2xl border border-slate-200 shadow-sm">
+      <Surface radius="lg" elevation={1} className="flex flex-col items-center justify-center p-12">
         <TrendingUp className="w-12 h-12 text-slate-300 mb-4" />
         <h3 className="text-lg font-medium text-slate-900 mb-1">No Ad Performance Data</h3>
         <p className="text-slate-500 text-sm">Once your campaigns start running, metrics will appear here.</p>
-      </div>
+      </Surface>
     );
   }
 
@@ -43,7 +53,7 @@ export function AdPerformanceDashboard({ performanceData, isLoading }: AdPerform
   }), { impressions: 0, clicks: 0, conversions: 0, spend: 0 });
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+    <Surface radius="lg" elevation={1} className="p-6">
       <h3 className="text-lg font-medium text-slate-900 mb-6">Lifetime Campaign Performance</h3>
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
@@ -74,30 +84,13 @@ export function AdPerformanceDashboard({ performanceData, isLoading }: AdPerform
       </div>
 
       <h4 className="text-sm font-medium text-slate-700 mb-4 uppercase tracking-wider">Daily Breakdown</h4>
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm text-slate-600">
-          <thead className="bg-slate-50 text-slate-700 font-medium border-y border-slate-200">
-            <tr>
-              <th className="px-4 py-3">Date</th>
-              <th className="px-4 py-3 text-right">Impressions</th>
-              <th className="px-4 py-3 text-right">Clicks</th>
-              <th className="px-4 py-3 text-right">Conversions</th>
-              <th className="px-4 py-3 text-right">Spend</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {performanceData.map((data) => (
-              <tr key={data.id} className="hover:bg-slate-50/50">
-                <td className="px-4 py-3">{format(new Date(data.date), 'MMM d, yyyy')}</td>
-                <td className="px-4 py-3 text-right">{(data.impressions ?? 0).toLocaleString()}</td>
-                <td className="px-4 py-3 text-right font-medium text-slate-900">{(data.clicks ?? 0).toLocaleString()}</td>
-                <td className="px-4 py-3 text-right text-amber-600">{(data.conversions ?? 0).toLocaleString()}</td>
-                <td className="px-4 py-3 text-right font-medium">{formatINR(data.spend)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+      <DataTable
+        caption="Daily ad performance"
+        rows={performanceData}
+        rowKey={(row) => row.id}
+        emptyMessage="No performance data for this period."
+        columns={PERFORMANCE_COLUMNS}
+      />
+    </Surface>
   );
 }

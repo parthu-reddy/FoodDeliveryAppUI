@@ -1,6 +1,6 @@
 import ImageLoader from '@shared/ui/ImageLoader';
 import { Flame, Leaf, Sparkles, Trophy } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 
 const PREMIUM_FOOD_SHOT = {
   url: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1600&q=80',
@@ -21,6 +21,7 @@ interface CinematicFoodBackgroundProps {
 }
 
 export default function CinematicFoodBackground({ theme = 'light' }: CinematicFoodBackgroundProps) {
+  const reduceMotion = useReducedMotion();
   return (
     <div className="fixed inset-0 w-full h-full overflow-hidden select-none pointer-events-none z-0">
       <div className="absolute inset-0 w-full h-full">
@@ -43,9 +44,13 @@ export default function CinematicFoodBackground({ theme = 'light' }: CinematicFo
         }`}
       />
 
-      {/* 3. Creative Interactive Particles and Floating Ingredients */}
+      {/* 3. Creative Interactive Particles and Floating Ingredients
+             Dropped entirely under reduced motion: this is the one animation in the app that
+             never stops, and a permanent drift in the corner of the eye is exactly what the
+             preference exists to prevent. It is decoration behind an absolutely-positioned
+             layer, so removing it changes no layout. */}
       <div className="absolute inset-0 w-full h-full opacity-60">
-        {FLOATING_INGREDIENTS.map((ingredient, idx) => {
+        {(reduceMotion ? [] : FLOATING_INGREDIENTS).map((ingredient, idx) => {
           const IconComponent = ingredient.icon;
           return (
             <motion.div

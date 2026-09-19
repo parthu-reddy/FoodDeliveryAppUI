@@ -1,10 +1,9 @@
-import { olaStyleUrl, transformOlaRequest } from '@/lib/olaMaps';
 import { useConfig } from "@/contexts/ConfigContext";
 import { restaurantApi } from "@/lib/zodiosClients";
-import { ErrorBoundary } from "@shared/ui";
-import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
-import { useEffect, useRef, useState } from 'react';
+import { createMapCallout, createMapPin, ErrorBoundary } from "@shared/ui";
+import { MapPanel } from './MapPanel';
+import { maplibre, type MapInstance } from '../model/maplibre';
+import { useState } from 'react';
 
 interface Driver {
     id: string;
@@ -39,52 +38,38 @@ function AdminAssignmentMapInner({
     onAssign 
 }: AdminAssignmentMapProps) {
   useConfig();
-  const mapContainerRef = useRef<HTMLDivElement>(null);
-  const [, setMapInstance] = useState<maplibregl.Map | null>(null);
+  const [, setMapInstance] = useState<MapInstance | null>(null);
 
 
-  useEffect(() => {
+  const attachMap = (map: MapInstance) => {
     let active = true;
-    let map: maplibregl.Map | null = null;
 
     const createRestaurantMarker = () => {
-      const el = document.createElement('div');
-      el.className = 'w-8 h-8 bg-rose-600 rounded-full flex items-center justify-center shadow-lg border-2 border-white text-white shadow-rose-600/50';
-      el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7"/></svg>';
-      return el;
+      return createMapPin({
+        tone: 'restaurant',
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7"/></svg>',
+      });
     };
     
     const createDriverMarker = (driverName: string) => {
       const el = document.createElement('div');
       el.className = 'flex flex-col items-center group relative';
-      el.innerHTML = `
-        <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 mb-2 flex flex-col items-center gap-1 min-w-[100px] pointer-events-auto">
-            <span class="text-xs font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">${driverName || 'Driver'}</span>
-            <button class="assign-btn w-full py-1 px-2 bg-rose-500/20 hover:bg-rose-500 text-rose-700 dark:text-rose-300 hover:text-white dark:hover:text-white rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors border border-rose-500/30">
+      el.appendChild(createMapCallout(`
+            <span class="text-xs font-bold whitespace-nowrap">${driverName || 'Driver'}</span>
+            <button class="assign-btn w-full py-1 px-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors" style="background: var(--color-danger-bg); color: var(--color-danger); border: 1px solid var(--color-danger-line);">
                 Assign
             </button>
-        </div>
-        <div class="w-8 h-8 bg-rose-600 rounded-full flex items-center justify-center shadow-lg border-2 border-white text-white shadow-rose-600/50 cursor-pointer">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>
-        </div>
-      `;
+      `));
+      el.appendChild(createMapPin({
+        tone: 'rider',
+        className: 'cursor-pointer',
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>',
+      }));
       return el;
     };
 
-    const initMap = async () => {
+    const placeMarkers = async () => {
       try {
-        if (!active || !mapContainerRef.current) return;
-        
-        map = new maplibregl.Map({
-             container: mapContainerRef.current!,
-             style: olaStyleUrl(),
-             center: [77.5946, 12.9716], // Default Bangalore
-             zoom: 12,
-             minZoom: 10,
-             maxZoom: 17,
-             transformRequest: transformOlaRequest
-        });
-        
         let rLat = 12.98;
         let rLng = 77.58;
         try {
@@ -99,12 +84,12 @@ function AdminAssignmentMapInner({
         setMapInstance(map);
 
         if (map && active) {
-            const bounds = new maplibregl.LngLatBounds();
+            const bounds = new maplibre.LngLatBounds();
             bounds.extend([rLng, rLat]);
 
-            new maplibregl.Marker({ element: createRestaurantMarker() })
+            new maplibre.Marker({ element: createRestaurantMarker() })
                 .setLngLat([rLng, rLat])
-                .setPopup(new maplibregl.Popup({ offset: 25 }).setHTML(`<strong>${order.restaurantName}</strong><br/>Restaurant`))
+                .setPopup(new maplibre.Popup({ offset: 25 }).setHTML(`<strong>${order.restaurantName}</strong><br/>Restaurant`))
                 .addTo(map);
 
             availableDrivers.forEach(driver => {
@@ -122,9 +107,8 @@ function AdminAssignmentMapInner({
                         });
                     }
 
-                    new maplibregl.Marker({ element: markerEl })
+                    new maplibre.Marker({ element: markerEl })
                         .setLngLat([driver.lng, driver.lat])
-                        // @ts-expect-error auto-migration type suppression
                         .addTo(map);
 
                 }
@@ -142,17 +126,22 @@ function AdminAssignmentMapInner({
       }
     };
     
-    initMap();
-    
-    return () => {
-      active = false;
-      if (map) map.remove();
-    };
-  }, [order.id, order.restaurantId, availableDrivers, onAssign, order.restaurantName]);
+    placeMarkers();
+
+    // The markers go with the map, which MapPanel removes; this only stops the in-flight
+    // restaurant lookup writing to a map that is already gone.
+    return () => { active = false; };
+  };
 
   return (
-    <div className="relative w-full h-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
-        <div ref={mapContainerRef} className="absolute inset-0 w-full h-full" />
-    </div>
+    <MapPanel
+      label={`Drivers available for order ${order.id}`}
+      center={[77.5946, 12.9716]}
+      zoom={12}
+      minZoom={10}
+      maxZoom={17}
+      onReady={attachMap}
+      className="w-full h-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800"
+    />
   );
 }

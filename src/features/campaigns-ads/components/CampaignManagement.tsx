@@ -2,21 +2,15 @@ import { useToast } from "@/contexts/ToastContext";
 import { parseApiError } from "@/lib/parseApiError";
 import { campaignApi, walletApi } from "@/lib/zodiosClients";
 import { AdPerformanceDashboard, CampaignPerformance } from "@features/campaigns-ads/components/AdPerformanceDashboard";
-import { Badge, Button, FormField, Input, Modal, TransactionHistoryTable, WalletTransaction, Surface } from "@shared/ui";
+import { CampaignCard } from "@features/campaigns-ads/components/CampaignCard";
+import type { Campaign } from "@features/campaigns-ads/model/campaign";
+import { CreateCampaignModal } from "@features/campaigns-ads/components/CreateCampaignModal";
+import { useAdvertiserWallet } from "@features/campaigns-ads/model/useAdvertiserWallet";
+import { Button, FormField, Input, Modal, TransactionHistoryTable, Surface } from "@shared/ui";
 import { PaymentModal, type PaymentMethodType } from "@shared/ui/PaymentModal";
-import { Calendar, DollarSign, Pause, Plus, TrendingUp, Wallet } from 'lucide-react';
+import { DollarSign, Plus, TrendingUp, Wallet } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { formatINR, roundRupees } from '@shared/money';
-
-interface Campaign {
-  id: string;
-  name: string;
-  status: string;
-  dailyBudget: number;
-  totalBudget?: number;
-  startDate: string;
-  endDate?: string;
-}
 
 export default function CampaignManagement({ advertiserId }: { advertiserId: string }) {
   const { showError, showSuccess } = useToast();
@@ -35,30 +29,13 @@ export default function CampaignManagement({ advertiserId }: { advertiserId: str
     };
   }, []);
   
-  const [walletBalance, setWalletBalance] = useState<number>(0);
-  const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
-  const [txPage, setTxPage] = useState(0);
-  const [txTotalPages, setTxTotalPages] = useState(1);
-  const [txLoading, setTxLoading] = useState(false);
+  const {
+    walletBalance, transactions, txPage, setTxPage, txTotalPages, txLoading, loadWalletData,
+  } = useAdvertiserWallet(advertiserId);
   
   const [performanceData, setPerformanceData] = useState<CampaignPerformance[]>([]);
   const [perfLoading, setPerfLoading] = useState(false);
 
-  // Create Form State
-  const [name, setName] = useState('');
-  const [dailyBudget, setDailyBudget] = useState('50');
-  const [totalBudget, setTotalBudget] = useState('500');
-  const [startDate, setStartDate] = useState(() => {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
-  });
-  const [endDate, setEndDate] = useState(() => {
-    const date = new Date();
-    date.setDate(date.getDate() + 30);
-    return date.toISOString().split('T')[0];
-  });
-  const [bidAmount, setBidAmount] = useState('1.5');
-  const [radiusKm, setRadiusKm] = useState('5.0');
 
   useEffect(() => {
     if (advertiserId) {
@@ -66,8 +43,6 @@ export default function CampaignManagement({ advertiserId }: { advertiserId: str
       // eslint-disable-next-line react-hooks/immutability
       loadCampaigns();
        
-      // eslint-disable-next-line react-hooks/immutability
-      loadWalletData();
        
       // eslint-disable-next-line react-hooks/immutability
       loadPerformanceData();
@@ -76,40 +51,8 @@ export default function CampaignManagement({ advertiserId }: { advertiserId: str
   }, [advertiserId]);
 
    
-  useEffect(() => {
-    if (advertiserId) {
-      // eslint-disable-next-line react-hooks/immutability
-      loadTransactions(txPage);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [txPage, advertiserId]);
 
-  const loadWalletData = async () => {
-    if (!advertiserId) return;
-    setTxLoading(true);
-    try {
-      const balanceRes = await walletApi.payeeWallet.get('/api/v1/money/advertiser/:entityType/:entityId', { params: { entityType: 'ADVERTISER', entityId: advertiserId } });
-      if (balanceRes) setWalletBalance(balanceRes.balance ?? 0);
-    } catch (e: unknown) {
-      console.error(e);
-      showError('Failed to fetch wallet balance');
-    } finally {
-      setTxLoading(false);
-    }
-  };
 
-  const loadTransactions = async (page: number) => {
-    setTxLoading(true);
-    try {
-      const res = await walletApi.payeeWallet.get('/api/v1/money/advertiser/:entityType/:entityId/transactions', { params: { entityType: 'ADVERTISER', entityId: advertiserId }, queries: { page } });
-      setTransactions(res.content ?? []);
-      setTxTotalPages(res.totalPages ?? 1);
-    } catch (err: unknown) {
-      console.warn("Could not load transactions", err);
-    } finally {
-      setTxLoading(false);
-    }
-  };
 
   const loadPerformanceData = async () => {
     if (!advertiserId) return;
@@ -139,25 +82,6 @@ export default function CampaignManagement({ advertiserId }: { advertiserId: str
     }
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await campaignApi.campaign.post('/api/v1/advertisers/:advertiserId/campaigns', {
-              advertiserId: advertiserId,
-              name,
-              dailyBudget: Math.round(parseFloat(dailyBudget) * 100),
-              lifetimeBudget: Math.round(parseFloat(totalBudget) * 100),
-              maxBid: Math.round(parseFloat(bidAmount) * 100),
-              startDate: new Date(startDate).toISOString(),
-              endDate: new Date(endDate).toISOString()
-            }, { params: { advertiserId: advertiserId }, queries: { pageable: {} } as Record<string, unknown> });
-      showSuccess('Campaign created successfully');
-      setShowCreateModal(false);
-      loadCampaigns();
-    } catch (err: unknown) {
-      showError(parseApiError(err, 'Failed to create campaign').message);
-    }
-  };
 
   const handlePause = async (id: string) => {
     try {
@@ -238,7 +162,7 @@ export default function CampaignManagement({ advertiserId }: { advertiserId: str
   };
 
   const paymentLeftContent = (
-    <Surface variant="glass-chrome" elevation={3} radius="lg" className="p-6 h-full flex flex-col justify-center items-center text-center space-y-4">
+    <Surface elevation={2} radius="lg" className="p-6 h-full flex flex-col justify-center items-center text-center space-y-4">
       <div className="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center shrink-0">
         <Wallet className="w-8 h-8 text-amber-500" />
       </div>
@@ -255,7 +179,7 @@ export default function CampaignManagement({ advertiserId }: { advertiserId: str
     <div className="p-5 space-y-6">
       {/* Metrics Row */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-2xl p-4 flex items-center gap-3 shadow-sm">
+        <Surface radius="lg" elevation={1} className="p-4 flex items-center gap-3">
           <div className="p-3 bg-amber-500/10 text-amber-650 dark:text-amber-400 rounded-xl">
             <DollarSign className="w-5 h-5" />
           </div>
@@ -268,9 +192,9 @@ export default function CampaignManagement({ advertiserId }: { advertiserId: str
               </Button>
             </div>
           </div>
-        </div>
+        </Surface>
 
-        <div className="bg-white/50 dark:bg-slate-900/40 backdrop-blur-md border border-rose-500/20 dark:border-rose-500/30 rounded-2xl p-4 flex items-center gap-3 shadow-sm">
+        <Surface radius="lg" elevation={1} className="p-4 flex items-center gap-3">
           <div className="p-3 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl">
             <TrendingUp className="w-5 h-5" />
           </div>
@@ -278,7 +202,7 @@ export default function CampaignManagement({ advertiserId }: { advertiserId: str
             <span className="text-[10px] text-slate-500 dark:text-[#f0ede6] uppercase font-mono block">Active Campaigns</span>
             <span className="text-base font-black text-slate-800 dark:text-[#f0ede6]">{campaigns.filter(c => c.status === 'ACTIVE').length}</span>
           </div>
-        </div>
+        </Surface>
       </div>
 
       <div className="flex justify-between items-center">
@@ -291,44 +215,13 @@ export default function CampaignManagement({ advertiserId }: { advertiserId: str
       {loading ? (
         <div className="text-center p-10 text-slate-500">Loading campaigns...</div>
       ) : campaigns.length === 0 ? (
-        <div className="text-center p-10 bg-white/40 dark:bg-slate-900/40 rounded-2xl border border-dashed border-rose-500/30">
+        <Surface radius="lg" elevation={0} className="text-center p-10 border-dashed">
           <p className="text-slate-500 dark:text-slate-400">No campaigns found. Create your first ad campaign!</p>
-        </div>
+        </Surface>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {campaigns.map(campaign => (
-            <div key={campaign.id} className="bg-white/50 dark:bg-slate-900/40 border border-rose-500/20 rounded-2xl p-4 flex flex-col gap-3">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h4 className="font-bold text-slate-900 dark:text-[#f0ede6] text-sm">{campaign.name}</h4>
-                  <div className="flex gap-2 text-[10px] font-mono mt-1 text-slate-500">
-                    <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(campaign.startDate).toLocaleDateString()}</span>
-                  </div>
-                </div>
-                <Badge variant={campaign.status === 'ACTIVE' ? 'success' : 'neutral'}>
-                  {campaign.status}
-                </Badge>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="bg-slate-100 dark:bg-slate-800 p-2 rounded-lg">
-                  <div className="text-[10px] text-slate-400">Daily Budget</div>
-                  <div className="font-bold text-slate-800 dark:text-[#f0ede6]">{formatINR(campaign.dailyBudget)}</div>
-                </div>
-                <div className="bg-slate-100 dark:bg-slate-800 p-2 rounded-lg">
-                  <div className="text-[10px] text-slate-400">Total Budget</div>
-                  <div className="font-bold text-slate-800 dark:text-[#f0ede6]">{formatINR(campaign.totalBudget)}</div>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-2 mt-2">
-                {campaign.status === 'ACTIVE' && (
-                  <Button variant="ghost" size="icon" onClick={() => handlePause(campaign.id)} title="Pause Campaign">
-                    <Pause className="w-4 h-4" />
-                  </Button>
-                )}
-              </div>
-            </div>
+            <CampaignCard key={campaign.id} campaign={campaign} onPause={handlePause} />
           ))}
         </div>
       )}
@@ -350,44 +243,12 @@ export default function CampaignManagement({ advertiserId }: { advertiserId: str
         />
       </div>
 
-      <Modal open={showCreateModal} onClose={() => setShowCreateModal(false)} title="New Ad Campaign" size="md">
-        <div className="p-6">
-          <form onSubmit={handleCreate} className="space-y-4">
-            <FormField label="Campaign Name" required>
-              <Input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Summer Special Boost" required />
-            </FormField>
-            <div className="grid grid-cols-2 gap-4">
-              <FormField label="Daily Budget (₹)" required>
-                <Input type="number" step="0.01" value={dailyBudget} onChange={e => setDailyBudget(e.target.value)} required />
-              </FormField>
-              <FormField label="Total Budget (₹)" required>
-                <Input type="number" step="0.01" value={totalBudget} onChange={e => setTotalBudget(e.target.value)} required />
-              </FormField>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <FormField label="Start Date" required>
-                <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} required />
-              </FormField>
-              <FormField label="End Date" required>
-                <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} required />
-              </FormField>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <FormField label="Bid per Impression (₹)" required>
-                <Input type="number" step="0.01" value={bidAmount} onChange={e => setBidAmount(e.target.value)} required />
-              </FormField>
-              <FormField label="Targeting Radius (km)" required>
-                <Input type="number" step="0.1" value={radiusKm} onChange={e => setRadiusKm(e.target.value)} required />
-              </FormField>
-            </div>
-
-            <div className="pt-4 flex gap-3 justify-end border-t border-slate-100 dark:border-slate-800 mt-2">
-              <Button variant="ghost" type="button" onClick={() => setShowCreateModal(false)}>Cancel</Button>
-              <Button variant="warning" type="submit">Launch Campaign</Button>
-            </div>
-          </form>
-        </div>
-      </Modal>
+      <CreateCampaignModal
+        advertiserId={advertiserId}
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onCreated={loadCampaigns}
+      />
 
       <Modal open={showAmountModal} onClose={() => setShowAmountModal(false)} title="Top Up Wallet" size="sm">
         <div className="p-6">

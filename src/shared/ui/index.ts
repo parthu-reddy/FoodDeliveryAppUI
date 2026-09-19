@@ -20,13 +20,41 @@ export type { ToastItem, ToastType } from './overlay/ToastRegion';
 export type { ConfirmOptions, ConfirmTone } from './overlay/ConfirmDialog';
 
 // --- action ---------------------------------------------------------------------------
+export { AddToCartControl } from './action/AddToCartControl';
 export { Button } from './action/Button';
+export { SwipeAction } from './action/SwipeAction';
 
 // --- form -----------------------------------------------------------------------------
 export { Select } from './form/Select';
-export type { SelectOption } from './form/Select';
+export { Stepper } from './form/Stepper';
+export { Switch } from './form/Switch';
+export type { SelectOption } from './form/selectStyle';
+
+// --- shell: the only owner of safe-area insets -----------------------------------------
+export { RoleShell } from './shell/RoleShell';
+export type { NavPlacement } from './shell/RoleShell';
+export { AdminShell, CustomerShell, DeliveryShell, RestaurantShell } from './shell/RoleShells';
+
+// --- navigation ---------------------------------------------------------------------
+export { Tabs } from './navigation/Tabs';
+export type { TabItem } from './navigation/Tabs';
+
+// --- motion: the app's motion vocabulary, reduced-motion aware ------------------------
+export { ScreenTransition } from './motion/ScreenTransition';
+export { screenTransitionVariants } from './motion/screenTransitionVariants';
+export { useMotionPresets, prefersReducedMotion, DURATION, EASE, STAGGER_STEP, STAGGER_MAX_ITEMS } from './motion/motionPresets';
+export type { MotionPreset } from './motion/motionPresets';
+
+// --- map: the only builder of a maplibre marker element -------------------------------
+export { createMapCallout, createMapPin } from './map/mapMarker';
+export type { MapPinOptions, MapPinTone } from './map/mapMarker';
+
+// --- data ------------------------------------------------------------------------------
+export { DataTable } from './data/DataTable';
+export type { Column } from './data/DataTable';
 
 // --- feedback ---------------------------------------------------------------------------
+export { PullToRefresh } from './feedback/PullToRefresh';
 export { Spinner } from './feedback/Spinner';
 export { StatusPill } from './feedback/StatusPill';
 export type { StatusTone } from './feedback/StatusPill';
@@ -34,7 +62,6 @@ export type { StatusTone } from './feedback/StatusPill';
 // --- not yet migrated to the new layout (phases 3-4) -----------------------------------
 export { AlertBanner } from './AlertBanner';
 export { Badge } from './Badge';
-export { Card } from './Card';
 export { FormField } from './FormField';
 export { Input } from './Input';
 export { SearchInput } from './SearchInput';

@@ -1,6 +1,9 @@
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
 import { Surface } from './Surface';
+
+const reducedMotion = vi.hoisted(() => ({ value: false }));
+vi.mock('motion/react', () => ({ useReducedMotion: () => reducedMotion.value }));
 
 describe('Surface', () => {
   it('applies the requested elevation from the token ramp', () => {
@@ -44,5 +47,30 @@ describe('Surface', () => {
 
     rerender(<Surface interactive>content</Surface>);
     expect(screen.getByText('content').style.transitionProperty).toBe('transform, box-shadow');
+  });
+
+  it('an interactive Surface travels on press', () => {
+    // `interactive` set a transition on `transform` and then never changed it, so a card
+    // that advertised press motion had none.
+    render(<Surface interactive data-testid="card">Paradise Biryani</Surface>);
+    const card = screen.getByTestId('card');
+    fireEvent.pointerDown(card);
+    expect(card).toHaveAttribute('data-pressed', 'true');
+    expect(card.style.transform).toBe('scale(.985)');
+    fireEvent.pointerUp(card);
+    expect(card).not.toHaveAttribute('data-pressed');
+  });
+
+  it('a plain Surface does not move, and neither does an interactive one under reduced motion', () => {
+    const { rerender } = render(<Surface data-testid="plain">Static</Surface>);
+    fireEvent.pointerDown(screen.getByTestId('plain'));
+    expect(screen.getByTestId('plain')).not.toHaveAttribute('data-pressed');
+
+    reducedMotion.value = true;
+    rerender(<Surface interactive data-testid="plain">Static</Surface>);
+    fireEvent.pointerDown(screen.getByTestId('plain'));
+    expect(screen.getByTestId('plain')).not.toHaveAttribute('data-pressed');
+    expect(screen.getByTestId('plain').style.transform).toBe('');
+    reducedMotion.value = false;
   });
 });

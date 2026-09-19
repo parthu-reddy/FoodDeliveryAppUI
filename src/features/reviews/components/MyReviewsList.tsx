@@ -1,25 +1,13 @@
-import { AlertBanner, EmptyState, Spinner } from '@shared/ui';
-import { Bike, Star, Store, UtensilsCrossed } from 'lucide-react';
+import { AlertBanner, EmptyState, Spinner, Surface } from '@shared/ui';
+import { Star } from 'lucide-react';
 import { StarRating } from './StarRating';
-import { shortDate } from '../model/reviewCopy';
+import { ReviewTargetIcon } from './ReviewTargetIcon';
+import { ENTITY_LABEL, shortDate } from '../model/reviewCopy';
 import { useMyReviews } from '../model/useMyReviews';
-import type { ReviewEntityType } from '../model/types';
 
 interface MyReviewsListProps {
   enabled?: boolean;
   className?: string;
-}
-
-const TYPE_LABEL: Record<ReviewEntityType, string> = {
-  RESTAURANT: 'Restaurant',
-  DRIVER: 'Delivery partner',
-  PRODUCT: 'Dish',
-};
-
-function icon(entityType: ReviewEntityType) {
-  if (entityType === 'RESTAURANT') return <Store className="h-3.5 w-3.5" />;
-  if (entityType === 'DRIVER') return <Bike className="h-3.5 w-3.5" />;
-  return <UtensilsCrossed className="h-3.5 w-3.5" />;
 }
 
 /**
@@ -58,14 +46,17 @@ export function MyReviewsList({ enabled = true, className = '' }: MyReviewsListP
   return (
     <div className={`space-y-3 ${className}`}>
       {reviews.map((review) => (
-        <article
+        <Surface
+          as="article"
           key={review.id}
-          className="rounded-2xl border border-white/40 bg-white/20 p-4 backdrop-blur-sm dark:border-white/10 dark:bg-black/10"
+          radius="lg"
+          elevation={1}
+          className="p-4"
         >
           <div className="flex items-start justify-between gap-3">
             <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              {icon(review.entityType)}
-              {TYPE_LABEL[review.entityType]}
+              <ReviewTargetIcon entityType={review.entityType} />
+              {ENTITY_LABEL[review.entityType]}
             </span>
             <time
               dateTime={review.createdAt}
@@ -86,7 +77,7 @@ export function MyReviewsList({ enabled = true, className = '' }: MyReviewsListP
           <p className="mt-2 font-mono text-[10px] text-slate-400 dark:text-slate-500">
             Order #{review.orderId.substring(0, 8)}
           </p>
-        </article>
+        </Surface>
       ))}
 
       <p className="pt-1 text-center text-[10px] text-slate-400 dark:text-slate-500">

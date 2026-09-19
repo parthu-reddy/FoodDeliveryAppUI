@@ -1,13 +1,21 @@
 import { Order } from '@/types';
-import { getFriendlyStatusMessage } from '@features/customer-orders/model/statusMessaging';
+import { orderStatusView } from '@features/customer-orders/model/orderStatus';
+import { StatusPill, Surface } from '@shared/ui';
+
+/**
+ * The live-order strip: everything the customer has in flight, one card each, floating above
+ * the bottom chrome.
+ *
+ * The status now comes from `orderStatusView`, so a delivered order reads green and a failed
+ * one reads red. Every card previously rendered the same rose badge whatever the status was —
+ * the one place a customer glances to see how an order is going told them nothing about it.
+ */
 
 interface CustomerActiveOrdersCarouselProps {
   activeOrders: Order[];
   isActiveOrder: (order: Order) => boolean;
   trackingOrder: Order | null;
   cartLength: number;
-  selectedRestaurantId?: string;
-  cartRestaurantId?: string;
   setTrackingOrder: (order: Order) => void;
 }
 
@@ -16,37 +24,55 @@ export default function CustomerActiveOrdersCarousel({
   isActiveOrder,
   trackingOrder,
   cartLength,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  selectedRestaurantId,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  cartRestaurantId,
-  setTrackingOrder
+  setTrackingOrder,
 }: CustomerActiveOrdersCarouselProps) {
-  if (activeOrders.filter(o => isActiveOrder(o)).length === 0 || trackingOrder) {
-    return null;
-  }
-
-  const isCartActive = cartLength > 0;
+  const inFlight = activeOrders.filter(isActiveOrder);
+  if (inFlight.length === 0 || trackingOrder) return null;
 
   return (
-    <div className={`fixed left-0 right-0 max-w-3xl mx-auto z-30 pointer-events-none transition duration-300 ${isCartActive ? 'bottom-24' : 'bottom-4'}`}>
-      <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-none px-5 gap-4 pb-2 pointer-events-auto">
-        {activeOrders.filter(o => isActiveOrder(o)).slice().reverse().map((order) => (
-          <button
-            key={order.id}
-            onClick={() => setTrackingOrder(order)}
-            className="shrink-0 w-[85%] sm:w-[340px] snap-center bg-white/20 dark:bg-slate-900/20 backdrop-blur-xl rounded-[20px] shadow-2xl shadow-slate-900/10 dark:shadow-black/40 border border-rose-500/20 dark:border-rose-500/30 p-3.5 text-left cursor-pointer transition active:scale-[0.98] hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50 transition"
-          >
-            <div className="flex justify-between items-center gap-2">
-              <span className="shrink-0 text-[10px] font-mono font-bold text-slate-600 dark:text-[#f0ede6] bg-slate-200/80 dark:bg-slate-700 px-2 py-0.5 rounded-full">#{order.id.substring(0, 8)}</span>
-              <h5 className="font-extrabold text-[14px] text-slate-900 dark:text-[#f0ede6] line-clamp-1 flex-1">{order.restaurantName}</h5>
-              <span className="shrink-0 text-[9px] font-black px-2 py-1 rounded-md bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-500/30 shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:shadow-[0_0_12px_rgba(244,63,94,0.5)] uppercase tracking-wider">
-                {getFriendlyStatusMessage(order.status, order.deliveryStatus)}
-              </span>
-            </div>
-          </button>
-        ))}
-      </div>
+    <div
+      className={`fixed left-0 right-0 max-w-3xl mx-auto z-30 pointer-events-none ${
+        cartLength > 0 ? 'bottom-24' : 'bottom-4'
+      }`}
+    >
+      <ul className="flex overflow-x-auto snap-x snap-mandatory px-5 gap-4 pb-2 pointer-events-auto list-none">
+        {inFlight
+          .slice()
+          .reverse()
+          .map((order) => {
+            const status = orderStatusView(order.status, order.deliveryStatus);
+            return (
+              <li key={order.id} className="shrink-0 w-[85%] sm:w-[340px] snap-center">
+                <button
+                  onClick={() => setTrackingOrder(order)}
+                  className="w-full text-left cursor-pointer"
+                  aria-label={`Track your order from ${order.restaurantName}`}
+                >
+                  <Surface variant="glass-overlay" radius="xl" elevation={3} interactive className="p-3.5">
+                    <span className="flex justify-between items-center gap-2">
+                      <span
+                        className="shrink-0 text-[10px] font-mono font-bold px-2 py-0.5 rounded-full"
+                        style={{
+                          color: 'var(--color-ink-2)',
+                          background: 'var(--color-paper-sunken)',
+                        }}
+                      >
+                        #{order.id.substring(0, 8)}
+                      </span>
+                      <span
+                        className="font-extrabold text-[14px] line-clamp-1 flex-1"
+                        style={{ color: 'var(--color-ink)' }}
+                      >
+                        {order.restaurantName}
+                      </span>
+                      <StatusPill label={status.label} tone={status.tone} live={status.live} />
+                    </span>
+                  </Surface>
+                </button>
+              </li>
+            );
+          })}
+      </ul>
     </div>
   );
 }

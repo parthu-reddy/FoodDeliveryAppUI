@@ -1,27 +1,18 @@
-import { olaStyleUrl, transformOlaRequest } from '@/lib/olaMaps';
+import { Button, Surface } from '@shared/ui';
 import { getToken } from "@/lib/tokenStore";
 import { customerApi, mapsApi } from "@/lib/zodiosClients";
 import { AutocompleteResponse } from '@/api/generated/schemas/maps/common';
 import { MapPin, Search, X } from 'lucide-react';
-import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
+import { MapPanel } from '@features/maps-tracking/components/MapPanel';
+import type { MapInstance } from '@features/maps-tracking/model/maplibre';
 import { motion } from 'motion/react';
-import { useEffect, useRef, useState } from 'react';
+import { useMotionPresets } from '@shared/ui';
+import { useEffect, useState } from 'react';
+import { AddressDetailsForm } from '@features/customer-orders/components/AddressDetailsForm';
+import { addressSchema, parseIndianAddress } from '@features/customer-orders/model/addressParts';
 import { z } from 'zod';
 
 type AutocompleteSuggestion = z.infer<typeof AutocompleteResponse>;
-
-const addressSchema = z.object({
-  label: z.string().min(1, 'Label is required').max(50, 'Label cannot exceed 50 characters'),
-  addressLine1: z.string().min(1, 'Address Line 1 is required').max(255, 'Address cannot exceed 255 characters'),
-  city: z.string().min(1, 'City is required').max(100, 'City cannot exceed 100 characters'),
-  state: z.string().min(1, 'State is required').max(100, 'State cannot exceed 100 characters'),
-  zipCode: z.string().min(1, 'ZIP Code is required').max(20, 'ZIP Code cannot exceed 20 characters'),
-  latitude: z.number().min(-90).max(90),
-  longitude: z.number().min(-180).max(180)
-});
-
-window.maplibregl = maplibregl;
 
 
 interface SavedAddress {
@@ -57,8 +48,7 @@ export default function CustomerAddressPage({
   setSavedAddresses,
   userId
 }: CustomerAddressPageProps) {
-  const mapContainerRef = useRef<HTMLDivElement>(null);
-  const [mapInstance, setMapInstance] = useState<maplibregl.Map | null>(null);
+  const [mapInstance, setMapInstance] = useState<MapInstance | null>(null);
   const [suggestions, setSuggestions] = useState<AutocompleteSuggestion[]>([]);
   const [, setIsSearching] = useState(false);
 
@@ -69,108 +59,45 @@ export default function CustomerAddressPage({
   const [error, setError] = useState('');
 
 
-  useEffect(() => {
+  const attachMap = (map: MapInstance) => {
     let active = true;
-    let map: unknown = null;
+    setMapInstance(map);
+    if (onAddApiLog) {
+      onAddApiLog({ id: 'fetch_maps_key', label: 'GET /api/config/maps-key', method: 'GET' });
+    }
 
-    const initMap = async () => {
+    map.on('moveend', async () => {
       try {
+        const center = map.getCenter();
         if (onAddApiLog) {
-           onAddApiLog({ id: 'fetch_maps_key', label: 'GET /api/config/maps-key', method: 'GET' });
+          onAddApiLog({ id: 'reverse_geocode', label: `GET /api/places/reverse-geocode?lat=${center.lat.toFixed(4)}&lng=${center.lng.toFixed(4)}`, method: 'GET' });
         }
-        if (!active || !mapContainerRef.current) return;
-        
-        map = new maplibregl.Map({
-             container: mapContainerRef.current!,
-             style: olaStyleUrl(),
-             minZoom: 10,
-             maxZoom: 17,
-             interactive: false,
-             transformRequest: transformOlaRequest
-        });
-        
-        // @ts-expect-error auto-migration type suppression
-        setMapInstance(map);
-
-        // @ts-expect-error auto-migration type suppression
-        map.on('moveend', async () => {
-             try {
-                // @ts-expect-error auto-migration type suppression
-                const center = map.getCenter();
-                if (onAddApiLog) {
-                   onAddApiLog({ id: 'reverse_geocode', label: `GET /api/places/reverse-geocode?lat=${center.lat.toFixed(4)}&lng=${center.lng.toFixed(4)}`, method: 'GET' });
-                }
-                const res = await mapsApi.integration.get('/api/places/reverse-geocode', { queries: { lat: center.lat, lng: center.lng } });
-                if (active && res.address) {
-                   setAddress(res.address);
-                   const parts = ((res.address as string) ?? '').split(',').map((p: string) => p.trim());
-                   let zip = '';
-                   let state = '';
-                   let city = '';
-                   let currentIndex = parts.length - 1;
-                   if (currentIndex >= 0 && (parts[currentIndex].toLowerCase() === 'india' || parts[currentIndex].toLowerCase() === 'in')) {
-                       currentIndex--;
-                   }
-                   if (currentIndex >= 0) {
-                       const zipMatch = parts[currentIndex].match(/(.*?)\s+([\d\s-]{5,10})$/);
-                       if (zipMatch) {
-                           state = zipMatch[1].trim();
-                           zip = zipMatch[2].trim();
-                           currentIndex--;
-                       } else if (/^[\d\s-]{5,10}$/.test(parts[currentIndex])) {
-                           zip = parts[currentIndex];
-                           currentIndex--;
-                       }
-                   }
-                   if (currentIndex >= 0 && !state) {
-                       state = parts[currentIndex];
-                       currentIndex--;
-                   }
-                   if (currentIndex >= 0) {
-                       city = parts[currentIndex];
-                   }
-                   if (zip) setZipCode(zip);
-                   if (state) setState(state);
-                   if (city) setCity(city);
-                }
-              } catch (e: unknown) {
-                console.error(e);
-              }
-           });
-
-           // Request geolocation
-           if (navigator.geolocation) {
-             navigator.geolocation.getCurrentPosition(
-               (position) => {
-                 const { latitude, longitude } = position.coords;
-                 if (map && active) {
-                   // @ts-expect-error auto-migration type suppression
-                   map.flyTo({ center: [longitude, latitude], zoom: 16 });
-                 }
-               },
-               (error) => {
-                 console.error("Geolocation error:", error);
-               },
-               { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
-             );
-           }
+        const res = await mapsApi.integration.get('/api/places/reverse-geocode', { queries: { lat: center.lat, lng: center.lng } });
+        if (!active || !res.address) return;
+        setAddress(res.address);
+        const parsed = parseIndianAddress(res.address as string);
+        if (parsed.zipCode) setZipCode(parsed.zipCode);
+        if (parsed.state) setState(parsed.state);
+        if (parsed.city) setCity(parsed.city);
       } catch (e: unknown) {
-         console.error('Map init failed', e);
+        console.error(e);
       }
-    };
-    
-    initMap();
-    
-    return () => {
-      active = false;
-      if (map) {
-         // @ts-expect-error auto-migration type suppression
-         map.remove();
-      }
-    };
-   
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    });
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          if (active) map.flyTo({ center: [longitude, latitude], zoom: 16 });
+        },
+        (error) => { console.error('Geolocation error:', error); },
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 },
+      );
+    }
+
+    return () => { active = false; };
+  };
+
 
   useEffect(() => {
     if (!addressSearchQuery || addressSearchQuery.length < 3) {
@@ -223,52 +150,23 @@ export default function CustomerAddressPage({
       if (loc && mapInstance) {
          mapInstance.flyTo({ center: [loc.lng, loc.lat], zoom: 16 });
          setAddress(suggestion.description ?? '');
-         const parts = (suggestion.description ?? '').split(',').map((p: string) => p.trim());
-         let zip = '';
-         let state = '';
-         let city = '';
-         let currentIndex = parts.length - 1;
-         if (currentIndex >= 0 && (parts[currentIndex].toLowerCase() === 'india' || parts[currentIndex].toLowerCase() === 'in')) {
-             currentIndex--;
-         }
-         if (currentIndex >= 0) {
-             const zipMatch = parts[currentIndex].match(/(.*?)\s+([\d\s-]{5,10})$/);
-             if (zipMatch) {
-                 state = zipMatch[1].trim();
-                 zip = zipMatch[2].trim();
-                 currentIndex--;
-             } else if (/^[\d\s-]{5,10}$/.test(parts[currentIndex])) {
-                 zip = parts[currentIndex];
-                 currentIndex--;
-             }
-         }
-         if (currentIndex >= 0 && !state) {
-             state = parts[currentIndex];
-             currentIndex--;
-         }
-         if (currentIndex >= 0) {
-             city = parts[currentIndex];
-         }
-         if (zip) setZipCode(zip);
-         if (state) setState(state);
-         if (city) setCity(city);
+         // the fourth copy of this parse, inlined; it is one call now
+         const parsed = parseIndianAddress(suggestion.description);
+         if (parsed.zipCode) setZipCode(parsed.zipCode);
+         if (parsed.state) setState(parsed.state);
+         if (parsed.city) setCity(parsed.city);
       }
   };
 
+  const presets = useMotionPresets();
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+    <motion.div {...presets.fade}
       className="flex-1 overflow-y-auto w-full p-5 flex flex-col space-y-4 bg-transparent"
     >
       <div className="flex items-center gap-3 shrink-0 mb-4">
-        <button
-          onClick={() => setView('settings')}
-          className="p-2 rounded-xl bg-white/20 dark:bg-slate-900/20 backdrop-blur-md border border-rose-500/20 text-slate-500 dark:text-slate-300 hover:text-slate-900 hover:bg-white dark:hover:text-white cursor-pointer transition"
-        >
+        <Button variant="secondary" size="icon" aria-label="Close" onClick={() => setView('settings')}>
           <X className="w-5 h-5" />
-        </button>
+        </Button>
         <div>
           <h4 className="font-bold text-xl text-slate-900 dark:text-[#f0ede6]">Delivery Location</h4>
           <p className="text-xs text-slate-500 dark:text-slate-300">Set your precise location for faster delivery</p>
@@ -293,7 +191,7 @@ export default function CustomerAddressPage({
               className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-base font-medium focus:outline-none focus:ring-2 focus:ring-rose-500/50"
             />
             {suggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 max-h-64 overflow-y-auto z-10">
+              <Surface radius="md" elevation={2} className="absolute top-full left-0 right-0 mt-2 max-h-64 overflow-y-auto z-10">
                 {suggestions.map((s, idx) => (
                   <button type="button" 
                     key={idx} 
@@ -303,87 +201,44 @@ export default function CustomerAddressPage({
                     <p className="text-sm text-slate-800 dark:text-[#f0ede6] truncate">{s.description}</p>
                   </button>
                 ))}
-              </div>
+              </Surface>
             )}
           </div>
 
           {/* Map Container */}
-          <div className="relative w-full h-[300px] rounded-3xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 shrink-0 shadow-inner">
-            <div ref={mapContainerRef} className="absolute inset-0 w-full h-full" />
+          <MapPanel
+            label="Pick your delivery location"
+            center={[77.5946, 12.9716]}
+            minZoom={10}
+            maxZoom={17}
+            interactive={false}
+            onReady={attachMap}
+            className="w-full h-[300px] rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 shrink-0"
+          >
             {/* Fixed Center Pin */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="w-16 h-16 bg-rose-500/20 rounded-full flex items-center justify-center animate-pulse">
-                <div className="w-10 h-10 bg-rose-500 text-white rounded-full flex items-center justify-center shadow-2xl mb-5">
+                <div className="w-10 h-10 bg-rose-500 text-white rounded-full flex items-center justify-center mb-5">
                   <MapPin className="w-5 h-5" />
                 </div>
               </div>
             </div>
-          </div>
+          </MapPanel>
 
           {/* Current Address Details */}
-          <div className="space-y-4 bg-white/20 dark:bg-slate-900/20 backdrop-blur-md/50 p-5 sm:p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm">
-            <div className="flex gap-4">
-               <div className="flex-1 space-y-1.5">
-                  <label className="text-xs font-bold font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider">Label</label>
-                  <input
-                    type="text"
-                    value={label}
-                    onChange={e => setLabel(e.target.value)}
-                    placeholder="e.g. Home, Work"
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-rose-500/50"
-                  />
-               </div>
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider">Address Line 1</label>
-              <textarea
-                value={address}
-                onChange={(e) => { setAddress(e.target.value); setError(''); }}
-                rows={2}
-                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-rose-500/50 resize-none"
-                required
-                minLength={5}
-                maxLength={255}
-              />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-               <div className="space-y-1.5">
-                  <label className="text-xs font-bold font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider">City</label>
-                  <input
-                    type="text"
-                    value={city}
-                    onChange={e => { setCity(e.target.value); setError(''); }}
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-rose-500/50"
-                    required
-                    minLength={2}
-                    maxLength={100}
-                  />
-               </div>
-               <div className="space-y-1.5">
-                  <label className="text-xs font-bold font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider">State</label>
-                  <input
-                    type="text"
-                    value={state}
-                    onChange={e => { setState(e.target.value); setError(''); }}
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-rose-500/50"
-                    required
-                    minLength={2}
-                    maxLength={100}
-                  />
-               </div>
-               <div className="space-y-1.5">
-                  <label className="text-xs font-bold font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider">Zip</label>
-                  <input
-                    type="text"
-                    value={zipCode}
-                    onChange={e => { setZipCode(e.target.value); setError(''); }}
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-rose-500/50"
-                    required
-                    pattern="^\d{5,10}$"
-                  />
-               </div>
-            </div>
-            </div>
+          <AddressDetailsForm
+            label={label}
+            setLabel={setLabel}
+            address={address}
+            setAddress={setAddress}
+            city={city}
+            setCity={setCity}
+            state={state}
+            setState={setState}
+            zipCode={zipCode}
+            setZipCode={setZipCode}
+            onEdit={() => setError('')}
+          />
             
              <div className="pt-4">
                <button
@@ -417,7 +272,7 @@ export default function CustomerAddressPage({
                    }
                    setView('settings');
                  }}
-                 className="w-full py-3.5 bg-rose-500 text-white rounded-xl font-bold shadow-lg shadow-rose-500/20 active:scale-95 transition"
+                 className="w-full py-3.5 bg-rose-500 text-white rounded-xl font-bold active:scale-95 transition"
                >
                  Confirm Location
                </button>

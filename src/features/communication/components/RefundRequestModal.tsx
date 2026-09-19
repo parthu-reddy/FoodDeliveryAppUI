@@ -92,7 +92,7 @@ export const RefundRequestModal: React.FC<RefundRequestModalProps> = ({
     >
           <Surface
             variant="solid"
-            elevation={4}
+            elevation={2}
             radius="xl"
             className="w-full overflow-hidden flex flex-col max-h-[90vh]"
           >

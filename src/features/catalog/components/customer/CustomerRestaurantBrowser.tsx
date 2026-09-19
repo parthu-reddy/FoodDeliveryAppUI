@@ -1,7 +1,8 @@
 import { useDebounce } from '@/hooks/useDebounce';
-import { Button, EmptyState } from '@shared/ui';
+import { Button, EmptyState, Surface } from '@shared/ui';
 import { AlertCircle, MapPinOff, Search } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useMotionPresets } from '@shared/ui';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import CustomerRestaurantCard from './CustomerRestaurantCard';
 
@@ -51,54 +52,69 @@ export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps>
     return matchesSearch && matchesCategory;
   });
 
+  const presets = useMotionPresets();
   return (
     <motion.div
-      key="feed"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      key="feed" {...presets.fade}
       className="p-5 space-y-6"
     >
-      {/* Promo banner */}
-      <div className="bg-gradient-to-r from-amber-500/90 to-amber-500/90 border border-white/25 backdrop-blur-md text-white p-5 rounded-3xl relative overflow-hidden shadow-lg shadow-amber-500/10">
+      {/* Promo banner. A coloured panel keeps its colour and takes shape and depth from
+          Surface; it is not chrome, so it carries no blur and no white translucency. */}
+      <Surface
+        radius="lg"
+        elevation={2}
+        className="text-white p-5 relative overflow-hidden"
+        style={{
+          background: 'linear-gradient(140deg, var(--color-amber-700), var(--color-amber-900))',
+          border: 'none',
+        }}
+      >
         <div className="absolute right-0 bottom-0 top-0 w-1/3 bg-[radial-gradient(circle,_transparent_30%,_rgba(0,0,0,0.1)_70%)] pointer-events-none" />
         <div className="relative z-10 space-y-2 max-w-[240px]">
-          <span className="text-[9px] uppercase font-bold tracking-wider bg-white/30 text-white px-2 py-0.5 rounded-full border border-white/20">FLAT 50% OFF</span>
+          <span
+            className="text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full"
+            style={{ background: 'var(--color-amber-500)', color: 'var(--color-ink)' }}
+          >
+            FLAT 50% OFF
+          </span>
           <h3 className="text-xl font-black tracking-tight leading-none text-white">Craving pizza or juicy burgers?</h3>
           <p className="text-xs text-amber-50 font-semibold">Free delivery on your first three gourmet meals.</p>
         </div>
-      </div>
+      </Surface>
 
       {/* Categories Selector */}
       <div className="space-y-2">
         <h4 className="font-bold text-sm tracking-wide text-slate-400 dark:text-slate-300 uppercase font-mono">Filter by Cravings</h4>
         <div className="flex overflow-x-auto scrollbar-none gap-2 pb-2 -mx-5 px-5 sm:mx-0 sm:px-0">
-          {categories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat === 'All' ? null : cat)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer border ${(cat === 'All' && !selectedCategory) || selectedCategory === cat
-                  ? 'bg-gradient-to-r from-amber-500 to-amber-500 border-transparent text-white shadow-md shadow-amber-500/15'
-                  : 'bg-white/20 dark:bg-white/5 backdrop-blur-sm border-rose-500/20 dark:border-rose-500/30 text-slate-500 dark:text-[#f0ede6] hover:border-amber-500/30 dark:hover:border-amber-500/50 hover:bg-white/20 dark:hover:bg-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)]'
-                }`}
-            >
-              {cat}
-            </button>
-          ))}
+          {categories.map(cat => {
+            const isActive = (cat === 'All' && !selectedCategory) || selectedCategory === cat;
+            return (
+              <Button
+                key={cat}
+                size="sm"
+                variant={isActive ? 'primary' : 'secondary'}
+                aria-pressed={isActive}
+                onClick={() => setSelectedCategory(cat === 'All' ? null : cat)}
+                className="shrink-0 whitespace-nowrap"
+              >
+                {cat}
+              </Button>
+            );
+          })}
         </div>
       </div>
 
       {/* Search Bar */}
-      <div className="sticky top-[69px] z-20 flex items-center bg-white/20 dark:bg-white/5 border border-rose-500/20 dark:border-rose-500/30 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:bg-white/20 dark:hover:bg-white/10 focus-within:bg-white/20 dark:focus-within:bg-white/10 backdrop-blur-md rounded-[2rem] px-4 py-3 focus-within:border-amber-500/50 dark:focus-within:border-amber-500/50 transition hover:shadow-[0_0_12px_rgba(244,63,94,0.4)] dark:hover:shadow-[0_0_12px_rgba(244,63,94,0.5)] hover:border-rose-500/50">
+      <Surface variant="sunken" radius="md" elevation={0} className="sticky top-[69px] z-20 flex items-center px-4 py-3">
         <Search className="w-4.5 h-4.5 text-slate-400 dark:text-slate-300 mr-2 shrink-0" />
         <input
           type="text"
           placeholder="Search restaurants, dishes, cuisines..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="bg-transparent border-none text-sm outline-none w-full text-slate-800 dark:text-[#f0ede6] placeholder-slate-400"
+          className="bg-transparent border-none text-sm w-full rounded-md text-slate-800 dark:text-[#f0ede6] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/50"
         />
-      </div>
+      </Surface>
 
       {/* Restaurants Feed */}
       <div className="space-y-4">
@@ -108,7 +124,7 @@ export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps>
         </div>
 
         {restaurants.length === 0 ? (
-          <div className="p-12 text-center text-slate-400 dark:text-slate-300 border border-dashed border-rose-500/30 rounded-3xl bg-white/5 backdrop-blur-sm">
+          <Surface radius="xl" elevation={0} className="p-12 text-center text-slate-400 dark:text-slate-300 border-dashed">
             <div className="flex justify-center mb-4">
               <MapPinOff className="w-12 h-12 text-rose-500/50" />
             </div>
@@ -121,15 +137,15 @@ export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps>
             >
               Change Address
             </Button>
-          </div>
+          </Surface>
         ) : isRestaurantsLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map(i => (
-              <div key={i} className="h-64 rounded-3xl bg-white/20 dark:bg-slate-900/45 border border-rose-500/20 dark:border-rose-500/30 p-4 animate-pulse flex flex-col justify-between">
+              <Surface radius="xl" elevation={0} className="h-64 p-4 animate-pulse flex flex-col justify-between" key={i}>
                 <div className="h-32 bg-slate-200 dark:bg-slate-800 rounded-2xl mb-4" />
                 <div className="h-6 w-3/4 bg-slate-200 dark:bg-slate-800 rounded-xl mb-2" />
                 <div className="h-4 w-1/2 bg-slate-200 dark:bg-slate-800 rounded-lg" />
-              </div>
+              </Surface>
             ))}
           </div>
         ) : filteredRestaurants.length === 0 ? (

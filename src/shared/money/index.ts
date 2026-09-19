@@ -2,6 +2,7 @@ export * from './format';
 export * from './money-fields';
 export { Money } from './components/Money';
 export { AmountBreakdown } from './components/AmountBreakdown';
+export type { BreakdownLine } from './components/AmountBreakdown';
 export { StatementTable } from './components/StatementTable';
 export type { StatementRow } from './components/StatementTable';
 export { PaymentMethodBadge } from './components/PaymentMethodBadge';

@@ -1,7 +1,8 @@
+import { Surface } from '@shared/ui';
 import { EmptyState } from '@shared/ui';
 import { UtensilsCrossed } from 'lucide-react';
 import { useMemo } from 'react';
-import { StarRating } from './StarRating';
+import { InlineRating } from './InlineRating';
 import { useEntityAggregates } from '../model/useEntityAggregates';
 
 interface Dish {
@@ -76,28 +77,19 @@ export function DishRatingsPanel({ dishes, className = '' }: DishRatingsPanelPro
         {rows.map((row) => {
           const total = row.summary?.totalReviews ?? 0;
           return (
-            <div
-              key={row.id}
-              className="flex items-center justify-between gap-3 rounded-xl border border-white/40 bg-white/20 px-3 py-2 backdrop-blur-sm dark:border-white/10 dark:bg-black/10"
-            >
+            <Surface radius="md" elevation={0} className="flex items-center justify-between gap-3 px-3 py-2" key={row.id}>
               <span className="min-w-0 truncate text-sm font-semibold text-slate-800 dark:text-white">
                 {row.name}
               </span>
 
-              {total === 0 ? (
-                <span className="shrink-0 text-[10px] font-medium text-slate-400 dark:text-slate-500">
-                  Not rated yet
-                </span>
-              ) : (
-                <span className="flex shrink-0 items-center gap-2">
-                  <StarRating value={row.summary.average} size="sm" label={row.name} />
-                  <span className="w-20 text-right text-[11px] font-semibold tabular-nums text-slate-500 dark:text-slate-400">
-                    {row.summary.average.toFixed(1)}
-                    <span className="font-normal"> ({total})</span>
-                  </span>
-                </span>
-              )}
-            </div>
+              <InlineRating
+                average={row.summary?.average ?? 0}
+                total={total}
+                label={row.name}
+                emptyLabel="Not rated yet"
+                className="shrink-0"
+              />
+            </Surface>
           );
         })}
       </div>

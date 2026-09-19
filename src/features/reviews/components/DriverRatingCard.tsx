@@ -1,3 +1,4 @@
+import { Surface } from '@shared/ui';
 import { ChevronDown, Star } from 'lucide-react';
 import { useState } from 'react';
 import { AlertBanner, surfaceStyle } from '@shared/ui';
@@ -61,7 +62,7 @@ export function DriverRatingCard({ driverId, className = '' }: DriverRatingCardP
       </button>
 
       {expanded && (
-        <div className="border-t border-white/20 px-4 pb-4 pt-3 dark:border-white/10">
+        <Surface elevation={0} className="border-t px-4 pb-4 pt-3">
           {error ? (
             <AlertBanner variant="error">{error}</AlertBanner>
           ) : (
@@ -78,7 +79,7 @@ export function DriverRatingCard({ driverId, className = '' }: DriverRatingCardP
               />
             </>
           )}
-        </div>
+        </Surface>
       )}
     </div>
   );
