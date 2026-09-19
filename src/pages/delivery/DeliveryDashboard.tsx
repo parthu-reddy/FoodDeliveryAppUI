@@ -10,7 +10,7 @@ import { DeliveryHistoryPanel } from "@features/delivery-tasks/components/Delive
 import { DispatchPingCard } from "@features/delivery-tasks/components/DispatchPingCard";
 import { PermissionsPrompt, ProfileRequiredPrompt } from "@features/delivery-tasks/components/RiderPrompts";
 import { RiderHeader } from "@features/delivery-tasks/components/RiderHeader";
-import { ConnectionBanner, RiderOfflineState, RiderToast } from "@features/delivery-tasks/components/RiderNotices";
+import { ConnectionBanner, LocationBanner, RiderOfflineState, RiderToast } from "@features/delivery-tasks/components/RiderNotices";
 import { RiderStatsBar } from "@features/delivery-tasks/components/RiderStatsBar";
 import RiderOnboardingWizard from "@features/delivery-tasks/components/RiderOnboardingWizard";
 import RiderSettingsView from "@features/delivery-tasks/components/RiderSettingsView";
@@ -68,7 +68,7 @@ export default function DeliveryDashboard({
   const profile = useRiderProfile({ riderPhone, showToast, setIsOnline });
 
   const {
-    wsConnected, historyDateFilter, setHistoryDateFilter, historyPage, setHistoryPage,
+    wsConnected, hasLocationFix, historyDateFilter, setHistoryDateFilter, historyPage, setHistoryPage,
     showHistory, setShowHistory, setActiveJobId, currentJob, pingJob, setPingJob, pingTimer,
     setRejectedIds, availableJobs, todayEarnings, todayCompletedCount, paginatedHistoryJobs,
     totalHistoryPages, historyRef, onUpdateOrderStatus,
@@ -167,6 +167,7 @@ export default function DeliveryDashboard({
       <RiderToast message={toastMessage} />
 
       <ConnectionBanner visible={isOnline && !wsConnected && view === "home"} />
+      <LocationBanner visible={isOnline && wsConnected && !hasLocationFix && view === "home"} />
 
       {view === "settings" ? (
         <RiderSettingsView

@@ -41,6 +41,10 @@ export function useDeliveryOrders({
   });
 
   const [wsConnected, setWsConnected] = useState(false);
+  // Whether geolocation has actually produced a position this shift. Dispatch reads the
+  // rider's coordinates to decide who is near a kitchen, so "online" without one is not a
+  // state the rider should be left to discover from an empty trip list.
+  const [hasLocationFix, setHasLocationFix] = useState(false);
   const todayDateString = new Date().toISOString().split('T')[0];
   const [historyDateFilter, setHistoryDateFilter] = useState(todayDateString);
   const [historyPage, setHistoryPage] = useState(1);
@@ -287,14 +291,24 @@ export function useDeliveryOrders({
     let ws: WebSocket;
     let interval: NodeJS.Timeout;
     let watchId: number;
-    let currentLat = 12.9716;
-    let currentLng = 77.5946;
+    // NOT seeded with a fake position. These were 12.9716 / 77.5946 -- the centre of
+    // Bangalore -- and `sendLocation` runs immediately on WS open and then every 5s, so a
+    // rider whose geolocation had not resolved yet (desktop browser, prompt still open,
+    // permission denied) broadcast that invented spot as their real one.
+    //
+    // Measured 2026-09-19: that default is ~7.8 km from Brand 1 Outlet 10 (12.9842, 77.6658),
+    // so the rider read as "Online Duty" in the UI, pinged steadily, and the outlet still
+    // answered "No delivery partner near that restaurant". Dispatch decides who is near a
+    // kitchen from these numbers; a fabricated one is worse than none at all.
+    let currentLat: number | null = null;
+    let currentLng: number | null = null;
 
     if (navigator.geolocation) {
       watchId = navigator.geolocation.watchPosition(
         (pos) => {
           currentLat = pos.coords.latitude;
           currentLng = pos.coords.longitude;
+          setHasLocationFix(true);
         },
         (err) => {
           console.error("Location error:", err);
@@ -302,6 +316,7 @@ export function useDeliveryOrders({
             (deliveryApi.deliveryExecutive.post(`/api/delivery/status`, { driverId: deliveryExecutiveId, available: false }, {}))
               .catch(e => console.error(e));
           }
+          setHasLocationFix(false);
           setIsOnline(false);
           setShowPermissionsPrompt(true);
         },
@@ -329,6 +344,11 @@ export function useDeliveryOrders({
         setWsConnected(true);
         
         const sendLocation = () => {
+          // No real fix yet: send nothing. The server's StaleDriverSweeperDaemon marks a
+          // driver OFFLINE after 60s without a ping, which is the correct outcome for a rider
+          // whose position is unknown -- far better than being dispatched to a stranger's
+          // order because the app guessed a location.
+          if (currentLat === null || currentLng === null) return;
           if (ws.readyState === WebSocket.OPEN) {
             const payload: { driverId: string, lat: number, lng: number, timestamp: string, orderId?: string, cityId?: string } = { driverId: deliveryExecutiveId, lat: currentLat, lng: currentLng, timestamp: new Date().toISOString() };
             if (activeJobIdRef.current) {
@@ -488,6 +508,7 @@ export function useDeliveryOrders({
   return {
     activeOrders,
     wsConnected,
+    hasLocationFix,
     historyDateFilter,
     setHistoryDateFilter,
     historyPage,

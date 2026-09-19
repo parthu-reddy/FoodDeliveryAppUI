@@ -56,6 +56,35 @@ export function ConnectionBanner({ visible }: { visible: boolean }) {
   );
 }
 
+/**
+ * On duty, but the device has not produced a position yet.
+ *
+ * Previously invisible: the app broadcast a hardcoded Bangalore-centre coordinate until
+ * geolocation resolved, so the rider read as online and correctly placed while dispatch
+ * matched them against a spot they were never at.
+ */
+export function LocationBanner({ visible }: { visible: boolean }) {
+  if (!visible) return null;
+  return (
+    <div
+      className="px-5 py-2 flex items-center gap-2"
+      role="alert"
+      style={{
+        background: 'var(--color-warning-bg)',
+        borderBottom: '1px solid var(--color-warning-line)',
+      }}
+    >
+      <span
+        className="w-2 h-2 rounded-full animate-pulse shrink-0"
+        style={{ background: 'var(--color-warning)' }}
+      />
+      <p className="text-xs font-bold" style={{ color: 'var(--color-warning)' }}>
+        Waiting for your location &mdash; you will not receive trips until it is found.
+      </p>
+    </div>
+  );
+}
+
 export function RiderOfflineState() {
   const presets = useMotionPresets();
   return (
