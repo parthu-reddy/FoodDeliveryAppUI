@@ -3,6 +3,7 @@ import { CartState } from '@features/customer-orders/model/useCustomerCart';
 import { motion } from 'motion/react';
 import { useMotionPresets } from '@shared/ui';
 import { AlertCircle, ChevronDown, MapPinOff, Star } from 'lucide-react';
+import { deliveryUnavailableReason } from '@features/catalog/model/deliveryReason';
 import React, { useMemo, useState } from 'react';
 import { InlineRating, toAverage, useEntityAggregate, useEntityAggregates } from '@features/reviews';
 import { ReviewsPanel } from '@features/reviews/components/ReviewsPanel';
@@ -86,6 +87,10 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
     : minOrder == null ? `₹${selectedRestaurant.deliveryFee} Base`
     : getCartTotal().subtotal >= minOrder ? 'Free Delivery' : 'Dynamic Fee';
 
+  const unavailableReason = deliveryUnavailableReason(
+    deliveryPricing?.error ?? deliveryAvailabilityError
+  );
+
   const notices = (
     <div className="space-y-2 px-4 pt-3 empty:hidden">
       {!deliveryAddressId && (
@@ -100,9 +105,8 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
       )}
       {!isDeliverable && (
         <AlertBanner variant="error" icon={<MapPinOff className="w-5 h-5 shrink-0" />}>
-          {deliveryPricing?.error === 'NO_DELIVERY_PARTNER_NEARBY'
-            || deliveryAvailabilityError === 'NO_DELIVERY_PARTNER_NEARBY'
-            ? 'No Delivery Partner Available' : 'Out of Serviceable Area'}
+          {/* The real reason, not a guess -- see model/deliveryReason.ts */}
+          {unavailableReason}
         </AlertBanner>
       )}
     </div>

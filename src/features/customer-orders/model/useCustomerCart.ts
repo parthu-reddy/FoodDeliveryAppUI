@@ -293,7 +293,13 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
               quantity: item.quantity
             })) : []
           });
-          return { restaurantId: rId, quote: res };
+          // `isDeliverable: true` explicitly. The catch below sets it to false, but this
+          // branch used to return the raw response, leaving the flag UNDEFINED on success --
+          // and `CustomerMenuView` reads `deliveryPricing?.isDeliverable ?? isDeliveryAvailable
+          // ?? true`, so a perfectly good quote fell through to an unrelated signal instead of
+          // answering for itself. Verified on the deployed app: quote 200 with distanceKm 1.16
+          // and full fees, while the menu showed "Out of Serviceable Area".
+          return { restaurantId: rId, quote: { ...res, isDeliverable: true } };
         } catch (err: unknown) {
           const axiosErr = err as { response?: { data?: { message?: string, error?: string } }, message?: string };
           setPaymentStatus('idle');
