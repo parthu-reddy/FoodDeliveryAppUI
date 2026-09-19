@@ -5,7 +5,7 @@ import { RoleSelector } from '@features/identity/components/RoleSelector';
 import SessionManagementModal from '@features/identity/components/SessionManagementModal';
 import { useOtpLogin } from '@features/identity/model/useOtpLogin';
 import { SPECIALS_COUNT } from '@features/identity/model/specials';
-import { CompleteProfileModal, RoleShell } from '@shared/ui';
+import { CinematicFoodBackground, CompleteProfileModal, RoleShell } from '@shared/ui';
 import { AnimatePresence } from 'motion/react';
 import { AuthForm } from './AuthForm';
 import { LoginFooter } from './LoginFooter';
@@ -50,13 +50,26 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
       }
     >
       <div className="relative flex flex-col min-h-full">
+        {/* The one screen that keeps the photograph: a sign-in page has no content for it to
+            wash out, and it is the brand moment. It used to render app-wide from App.tsx. */}
+        <CinematicFoodBackground theme={theme} />
+
         <OtpNotification
           open={login.showNotification}
           otp={login.generatedOtp}
           onAutofill={login.autofillOtp}
         />
 
-        <div className="flex-1 flex flex-col justify-start my-3 sm:my-6 w-full max-w-7xl mx-auto px-4 sm:px-8">
+        {/* `relative z-10` is load-bearing, not decoration.
+
+            `CinematicFoodBackground` is `position: fixed; z-0`. This content div was NOT
+            positioned, and in CSS paint order a non-positioned block paints BELOW a positioned
+            element with z-index 0 -- so the scrim was painting over the role cards, not behind
+            them. Every card on this screen was being seen THROUGH the overlay. That is why the
+            sign-in screen read as washed out no matter what the cards themselves were styled
+            like, and it is invisible to a hit test because the background layer is
+            `pointer-events-none`. */}
+        <div className="relative z-10 flex-1 flex flex-col justify-start my-3 sm:my-6 w-full max-w-7xl mx-auto px-4 sm:px-8">
           <AnimatePresence mode="wait">
             {!login.selectedRole ? (
               <RoleSelector onSelectRole={login.setSelectedRole} />
@@ -79,7 +92,9 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
           </AnimatePresence>
         </div>
 
-        <LoginFooter specialIndex={specialIndex} />
+        <div className="relative z-10">
+          <LoginFooter specialIndex={specialIndex} />
+        </div>
       </div>
 
       <SessionManagementModal

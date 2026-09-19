@@ -224,7 +224,11 @@ export default function CustomerDashboard({
   };
 
   return (
-    <div className="flex-1 flex flex-col w-full max-w-3xl mx-auto overflow-y-auto overflow-x-hidden min-h-0 bg-transparent text-slate-800 dark:text-[#f0ede6] h-full pb-20">
+    // max-w-3xl (768px) capped this at every size, so on a 1440px screen the app used 53% of
+    // the width and showed background either side. The restaurant grid was already
+    // `lg:grid-cols-3` -- those three columns were being crammed into 768px rather than given
+    // room. Widening to 7xl (1280px) at lg matches the desktop board and lets the grid breathe.
+    <div className="flex-1 flex flex-col w-full max-w-3xl lg:max-w-7xl mx-auto overflow-y-auto overflow-x-hidden min-h-0 bg-transparent text-slate-800 dark:text-[#f0ede6] h-full pb-20">
       <CallOverlay />
       {/* Global Error Toast */}
       <AnimatePresence>

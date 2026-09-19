@@ -1,4 +1,4 @@
-import { CinematicFoodBackground, ConfirmProvider, Spinner, ZodErrorBoundary, Surface } from '@shared/ui';
+import { ConfirmProvider, Spinner, ZodErrorBoundary, Surface } from '@shared/ui';
 import React, { Suspense, useState } from 'react';
 import { CallProvider } from './contexts/CallContext';
 import { ConfigProvider } from './contexts/ConfigContext';
@@ -62,8 +62,13 @@ function AppContent() {
 
   return (
     <div className={`app-background flex-1 flex flex-col overflow-hidden relative w-full h-[100dvh] ${theme === 'dark' ? 'dark text-[#f0ede6]' : 'text-slate-900'}`}>
-      <CinematicFoodBackground theme={theme} />
-      
+      {/* No full-bleed photograph here. `.app-background` is the paper ground the design
+          specifies (--color-paper with three faint brand gradients); a photo on top of it
+          hid that on EVERY screen and put a pastel wash over all content, which is why the
+          app read as low-contrast and muddy. Food photography belongs inside the cards,
+          edge-to-edge, not behind the interface. The photo remains on the sign-in screen,
+          where there is no content for it to compete with. */}
+
       <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative">
         <Suspense fallback={renderFallback()}>
           {!userRole ? (

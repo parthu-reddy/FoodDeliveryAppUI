@@ -35,13 +35,35 @@ export default function CinematicFoodBackground({ theme = 'light' }: CinematicFo
         />
       </div>
 
-      {/* 2. Soft vignette overlay gradient to focus user attention on the primary login frame */}
-      <div 
-        className={`absolute inset-0 transition-colors duration-1000 ${
-          theme === 'dark'
-            ? 'bg-gradient-to-br from-rose-950/80 via-rose-900/70 to-slate-950/90 mix-blend-multiply'
-            : 'bg-gradient-to-br from-blue-100/80 via-rose-100/70 to-slate-50/90'
-        }`}
+      {/* 2. Scrim.
+
+             This used to be `from-blue-100/80 via-rose-100/70 to-slate-50/90` in light mode: an
+             80%-opaque PASTEL BLUE laid over food photography, in an app whose palette is warm
+             red and amber on cream paper. Blue is the info hue here and appears nowhere in the
+             brand, so the hero was both off-palette and washed to roughly a fifth of its
+             strength -- it read as a smudge rather than as a photograph, which is the single
+             biggest reason this screen looked muddy.
+
+             It is now a warm scrim built from the brand tokens (ink and rose-950), dark enough
+             that the photo reads as a photograph and that the cream `Surface` cards and the
+             glass header sit visibly IN FRONT of it. That separation is the depth the design
+             calls for and it was not previously visible.
+
+             Both themes are dark here on purpose: the sign-in hero is the one full-bleed
+             photographic surface in the app, and `LoginFooter` is written against a dark
+             ground. Lightening this without changing that file would make its text
+             unreadable. */}
+      <div
+        className="absolute inset-0"
+        style={{
+          transitionProperty: 'background',
+          transitionDuration: 'var(--duration-slow)',
+          transitionTimingFunction: 'var(--ease-out)',
+          background:
+            theme === 'dark'
+              ? 'linear-gradient(140deg, color-mix(in srgb, var(--color-ink) 90%, transparent) 0%, color-mix(in srgb, var(--color-rose-950) 80%, transparent) 45%, color-mix(in srgb, var(--color-ink) 94%, transparent) 100%)'
+              : 'linear-gradient(140deg, color-mix(in srgb, var(--color-ink) 42%, transparent) 0%, color-mix(in srgb, var(--color-rose-950) 32%, transparent) 45%, color-mix(in srgb, var(--color-ink) 56%, transparent) 100%)',
+        }}
       />
 
       {/* 3. Creative Interactive Particles and Floating Ingredients
@@ -49,7 +71,7 @@ export default function CinematicFoodBackground({ theme = 'light' }: CinematicFo
              never stops, and a permanent drift in the corner of the eye is exactly what the
              preference exists to prevent. It is decoration behind an absolutely-positioned
              layer, so removing it changes no layout. */}
-      <div className="absolute inset-0 w-full h-full opacity-60">
+      <div className="absolute inset-0 w-full h-full opacity-80">
         {(reduceMotion ? [] : FLOATING_INGREDIENTS).map((ingredient, idx) => {
           const IconComponent = ingredient.icon;
           return (
