@@ -18,7 +18,7 @@ export function olaProxyBase(): string {
 
 /** Absolute URL of a MapLibre style document served through the gateway proxy. */
 export function olaStyleUrl(styleId: string = 'default-light-standard'): string {
-  return `${olaProxyBase()}/tiles/vector/v1/styles/${styleId}/style.json`;
+  return `${olaProxyBase()}/tiles/vector/v1/styles/${styleId}/style.json?cb=2`;
 }
 
 /**
@@ -27,7 +27,9 @@ export function olaStyleUrl(styleId: string = 'default-light-standard'): string 
  */
 export function transformOlaRequest(url: string): { url: string } {
   if (url.startsWith(OLA_UPSTREAM_ORIGIN)) {
-    return { url: olaProxyBase() + url.slice(OLA_UPSTREAM_ORIGIN.length) };
+    let proxied = olaProxyBase() + url.slice(OLA_UPSTREAM_ORIGIN.length);
+    proxied += (proxied.includes('?') ? '&' : '?') + 'cb=2';
+    return { url: proxied };
   }
   return { url };
 }
