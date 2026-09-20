@@ -52,6 +52,7 @@ export function AddToCartControl({
             icon={<Plus className="w-3.5 h-3.5" />}
             disabled={disabled}
             onClick={onAdd}
+            data-testid="add-to-cart-button"
           >
             ADD
           </Button>
