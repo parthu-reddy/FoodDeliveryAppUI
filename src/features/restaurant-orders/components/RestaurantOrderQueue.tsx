@@ -66,7 +66,7 @@ export const RestaurantOrderQueue = React.memo(function RestaurantOrderQueue({
    };
  }, [myOrders]);
 
- const card = (order: Order, extra: { isNewPlaced?: boolean; isRefundRequest?: boolean } = {}) => (
+ const card = (order: Order, extra: { isNewPlaced?: boolean; isRefundRequest?: boolean; isCooking?: boolean; isPrepared?: boolean; isBeingDelivered?: boolean } = {}) => (
    <RestaurantOrderCard
      key={order.id}
      order={order}
@@ -159,7 +159,7 @@ export const RestaurantOrderQueue = React.memo(function RestaurantOrderQueue({
  emptyTitle="Kitchen is idle"
  emptyHint="Accepted tickets appear here. Start cooking to alert couriers!"
  >
- {activePreparing.slice().reverse().map(order => card(order))}
+ {activePreparing.slice().reverse().map(order => card(order, { isCooking: true }))}
  </KanbanColumn>
 
  <KanbanColumn
@@ -170,7 +170,7 @@ export const RestaurantOrderQueue = React.memo(function RestaurantOrderQueue({
  emptyTitle="No ready packages"
  emptyHint="Finished dishes will wait here. Handover to couriers with secure codes."
  >
- {byStatus.ready.map(order => card(order))}
+ {byStatus.ready.map(order => card(order, { isPrepared: true }))}
  </KanbanColumn>
 
  <KanbanColumn
@@ -181,7 +181,7 @@ export const RestaurantOrderQueue = React.memo(function RestaurantOrderQueue({
  emptyTitle="No orders in transit"
  emptyHint="Orders picked up by riders will appear here until delivered."
  >
- {byStatus.handedOver.map(order => card(order))}
+ {byStatus.handedOver.map(order => card(order, { isBeingDelivered: true }))}
  </KanbanColumn>
 
  </div>
