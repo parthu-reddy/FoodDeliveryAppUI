@@ -24,26 +24,26 @@ describe('olaMaps proxy URLs', () => {
   it('olaStyleUrl is absolute and resolvable without a base', () => {
     const url = olaStyleUrl();
     expect(isAbsolute(url)).toBe(true);
-    expect(url).toBe(`${window.location.origin}/olamaps/tiles/vector/v1/styles/default-light-standard/style.json`);
+    expect(url).toBe(`${window.location.origin}/olamaps/tiles/vector/v1/styles/default-light-standard/style.json?cb=2`);
   });
 
   it('olaStyleUrl honours a non-default style id', () => {
     expect(olaStyleUrl('default-dark-standard')).toBe(
-      `${window.location.origin}/olamaps/tiles/vector/v1/styles/default-dark-standard/style.json`,
+      `${window.location.origin}/olamaps/tiles/vector/v1/styles/default-dark-standard/style.json?cb=2`,
     );
   });
 
   it('rewrites upstream tile URLs onto the proxy, absolutely', () => {
     const { url } = transformOlaRequest('https://api.olamaps.io/tiles/vector/v1/data/planet/12/2925/1789.pbf');
     expect(isAbsolute(url)).toBe(true);
-    expect(url).toBe(`${window.location.origin}/olamaps/tiles/vector/v1/data/planet/12/2925/1789.pbf`);
+    expect(url).toBe(`${window.location.origin}/olamaps/tiles/vector/v1/data/planet/12/2925/1789.pbf?cb=2`);
   });
 
   it('rewrites glyph and sprite URLs, preserving the path and query', () => {
     expect(transformOlaRequest('https://api.olamaps.io/tiles/vector/v1/fonts/Gentona%20Medium/0-255.pbf').url)
-      .toBe(`${window.location.origin}/olamaps/tiles/vector/v1/fonts/Gentona%20Medium/0-255.pbf`);
+      .toBe(`${window.location.origin}/olamaps/tiles/vector/v1/fonts/Gentona%20Medium/0-255.pbf?cb=2`);
     expect(transformOlaRequest('https://api.olamaps.io/places/v1/details?place_id=abc').url)
-      .toBe(`${window.location.origin}/olamaps/places/v1/details?place_id=abc`);
+      .toBe(`${window.location.origin}/olamaps/places/v1/details?place_id=abc&cb=2`);
   });
 
   it('leaves non-Ola URLs untouched', () => {
