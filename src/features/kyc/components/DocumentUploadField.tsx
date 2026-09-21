@@ -34,7 +34,7 @@ export default function DocumentUploadField({
     setError('');
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('auth_token');
       const uploadUrlQuery = new URLSearchParams({ docType, contentType: file.type }).toString();
       const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
       const resData = await window.fetch(baseUrl + uploadEndpoint + '?' + uploadUrlQuery, {
