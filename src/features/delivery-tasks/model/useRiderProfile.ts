@@ -40,7 +40,7 @@ useEffect(() => {
 
   // Fetch delivery-specific profile details
   deliveryApi.deliveryExecutive
-    .get("/api/delivery/profile", { queries: { phoneNumber: "" }, headers: { "X-User-Id": "" } })
+    .get("/api/delivery/profile", { queries: { phoneNumber: riderPhone }, headers: { "X-User-Id": "" } })
     .then((data) => {
       if (data.success && data.data) {
         const profile = data.data;
@@ -95,7 +95,7 @@ useEffect(() => {
   /** Re-read the delivery profile after the rider edits it in settings. */
   const refresh = () =>
     deliveryApi.deliveryExecutive
-      .get('/api/delivery/profile', { queries: { phoneNumber: '' }, headers: { 'X-User-Id': '' } })
+      .get('/api/delivery/profile', { queries: { phoneNumber: riderPhone }, headers: { 'X-User-Id': '' } })
       .then((data) => {
         if (!data.success || !data.data) return null;
         const profile = data.data;

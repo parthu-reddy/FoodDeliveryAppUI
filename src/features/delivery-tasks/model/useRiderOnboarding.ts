@@ -59,10 +59,15 @@ export function useRiderOnboarding({ riderPhone, initialName, userId, onComplete
     try {
       const verRes = await deliveryApi.deliveryVerification.get(`/api/delivery/verification/status`, {});
       if (verRes?.data) {
-        setVerificationStatus(verRes.data);
+        setVerificationStatus({
+          ...verRes.data,
+          dlApproved: verRes.data.dlStatus === 'VERIFIED' || verRes.data.dlStatus === 'APPROVED',
+          rcApproved: verRes.data.rcStatus === 'VERIFIED' || verRes.data.rcStatus === 'APPROVED',
+          bankApproved: verRes.data.bankStatus === 'VERIFIED' || verRes.data.bankStatus === 'APPROVED'
+        });
       }
 
-      const deliveryRes = await deliveryApi.deliveryExecutive.get('/api/delivery/profile', { queries: { phoneNumber: "" }, headers: { "X-User-Id": userId } });
+      const deliveryRes = await deliveryApi.deliveryExecutive.get('/api/delivery/profile', { queries: { phoneNumber: riderPhone }, headers: { "X-User-Id": userId } });
       if (deliveryRes?.data) {
         setVehicle(deliveryRes.data.vehicleNumber || '');
         setVehicleType(deliveryRes.data.vehicleType || 'BICYCLE');
@@ -97,6 +102,7 @@ export function useRiderOnboarding({ riderPhone, initialName, userId, onComplete
         photoUrl: photo
       }, {});
       showSuccess('Profile saved');
+      await loadStatus();
       handleNext();
     } catch (e: unknown) {
       const axiosErr = e as { response?: { data?: { message?: string, error?: string } }, message?: string };
