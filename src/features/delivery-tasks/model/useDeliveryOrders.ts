@@ -73,7 +73,7 @@ export function useDeliveryOrders({
 
     let fetchedActiveJobs: Order[] = [];
     let fetchedAvailableJobs: Order[] = [];
-    const getArrayFromRes = (res: unknown) => (res as {content?: unknown[]}).content || (res as {data?:{data?:unknown[]}}).data?.data || (res as {data?:unknown[]}).data || [];
+    const getArrayFromRes = (res: unknown) => Array.isArray(res) ? res : (res as {content?: unknown[]}).content || (res as {data?:{data?:unknown[]}}).data?.data || (res as {data?:unknown[]}).data || [];
 
     try {
       const activeRes = await deliveryApi.deliveryOrder.get(`/api/v1/delivery/orders/active`, {});
@@ -168,7 +168,7 @@ export function useDeliveryOrders({
 
     deliveryApi.deliveryOrder.get('/api/v1/delivery/orders/history', { queries: { date: dateToFetch } }).then(res => {
       if (res) {
-        const getArrayFromRes = (res: unknown) => (res as {content?: unknown[]}).content || (res as {data?:{data?:unknown[]}}).data?.data || (res as {data?:unknown[]}).data || [];
+        const getArrayFromRes = (res: unknown) => Array.isArray(res) ? res : (res as {content?: unknown[]}).content || (res as {data?:{data?:unknown[]}}).data?.data || (res as {data?:unknown[]}).data || [];
         const histData = getArrayFromRes(res);
         historyRef.current = histData.map((o: unknown) => ({ ...(o as Order), status: ((o as Order).status as string)?.toUpperCase() as OrderStatus || '' as OrderStatus }));
         setInternalOrders(prev => {
