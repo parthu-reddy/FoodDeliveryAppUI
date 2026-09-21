@@ -150,6 +150,7 @@ export default function CustomerAddressModal({
  }
  } catch (err: unknown) {
  console.error(err);
+ showError(err instanceof Error ? err.message : "Failed to save address");
  } finally {
  setIsSaving(false);
  }
