@@ -148,9 +148,11 @@ export default function CustomerAddressModal({
  const formatted = `${savedAddr.label || 'Address'}: ${savedAddr.addressLine1 || ''}, ${savedAddr.city || ''}`;
  onSelectDeliveryLocation(formatted, savedAddr.latitude, savedAddr.longitude);
  }
- } catch (error: any) {
+ } catch (error) {
  console.error('Failed to save address:', error);
- const msg = error?.response?.data?.message || error.message || 'Failed to save address';
+ const msg = 
+   (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+   (error instanceof Error ? error.message : 'Failed to save address');
  showError(msg);
  } finally {
  setIsSaving(false);
