@@ -132,13 +132,19 @@ export default function DeliveryDashboard({
       <RiderOnboardingWizard
         riderPhone={riderPhone}
         theme={theme}
-        onComplete={() =>
+        onComplete={() => {
           profile.setVerificationStatus({
             ...profile.verificationStatus,
             allDocsApproved: true,
             bankApproved: true,
-          })
-        }
+          });
+          profile.refresh().then((p) => {
+            if (p?.fullName && p?.vehicleNumber) {
+              profile.setIsProfileMandatory(false);
+              profile.setShowProfileRequiredPrompt(false);
+            }
+          });
+        }}
         userId={user?.id || ""}
         initialName={profile.deliveryExecutiveName}
         onLogout={onLogout}
