@@ -48,7 +48,7 @@ export default function RiderSettingsView({
   const presets = useMotionPresets();
   return (
     <motion.div {...presets.fade} 
-      className="flex-1 overflow-y-auto w-full p-5 flex flex-col space-y-4 bg-transparent max-w-3xl mx-auto mt-2"
+      className="w-full p-5 flex flex-col space-y-4 bg-transparent max-w-3xl mx-auto mt-2"
     >
       <div className="flex items-center gap-3 shrink-0 mb-2">
         {!isProfileMandatory && (
@@ -69,7 +69,7 @@ export default function RiderSettingsView({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto overscroll-none pr-1">
+      <div className="flex-1 pr-1">
         <form onSubmit={saveProfile} className="space-y-4">
           
           {errorMsg && (
