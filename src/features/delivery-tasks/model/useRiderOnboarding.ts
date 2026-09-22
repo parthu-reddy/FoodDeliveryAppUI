@@ -31,6 +31,7 @@ export function useRiderOnboarding({ riderPhone, initialName, userId, onComplete
   const [verificationStatus, setVerificationStatus] = useState<Record<string, unknown> | null>(null);
 
   // Form State
+  const [cityId, setCityId] = useState('1');
   const [name, setName] = useState(initialName || '');
   const [photo, setPhoto] = useState('');
   const [vehicle, setVehicle] = useState('');
@@ -95,6 +96,7 @@ export function useRiderOnboarding({ riderPhone, initialName, userId, onComplete
         await identityApi.user.put('/api/v1/users/profile', { id: userId, name, phone: riderPhone }, { headers: { "X-User-Id": userId } });
       }
       await deliveryApi.deliveryExecutive.post('/api/delivery/onboard', {
+        cityId: cityId,
         phoneNumber: riderPhone,
         fullName: name,
         vehicleNumber: vehicle,
@@ -192,6 +194,7 @@ export function useRiderOnboarding({ riderPhone, initialName, userId, onComplete
     errorMsg, setErrorMsg,
     isSubmitting,
     verificationStatus,
+    cityId, setCityId,
     name, setName,
     photo, setPhoto,
     vehicle, setVehicle,

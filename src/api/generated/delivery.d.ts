@@ -613,6 +613,7 @@ export interface components {
             timestamp: string;
         };
         DeliveryOnboardRequest: {
+            cityId: string;
             fullName: string;
             phoneNumber: string;
             vehicleNumber: string;

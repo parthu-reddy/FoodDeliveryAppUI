@@ -32,6 +32,7 @@ if (steps.length !== STEP_COUNT) {
 export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, userId, initialName, onLogout }: RiderOnboardingWizardProps) {
   const {
     currentStep, errorMsg, isSubmitting, verificationStatus,
+    cityId, setCityId,
     name, setName, photo, setPhoto, vehicle, setVehicle, vehicleType, setVehicleType,
     dlNumber, setDlNumber, dob, setDob, dlDoc, setDlDoc,
     rcNumber, setRcNumber, rcDoc, setRcDoc,
@@ -48,6 +49,19 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
           <div className="space-y-4">
             <FormField label="Full Name" required>
               <Input type="text" value={name} onChange={e => setName(e.target.value)} disabled={!!initialName} />
+            </FormField>
+            <FormField label="City" required>
+              <Select
+                selectSize="lg"
+                aria-label="City"
+                value={cityId}
+                onChange={setCityId}
+                options={[
+                  { value: '1', label: 'Hyderabad' },
+                  { value: '2', label: 'Bengaluru' },
+                  { value: '3', label: 'Mumbai' },
+                ]}
+              />
             </FormField>
             <FormField label="Vehicle Type" required>
               <Select

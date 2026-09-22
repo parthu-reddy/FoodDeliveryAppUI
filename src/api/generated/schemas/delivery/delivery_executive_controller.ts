@@ -46,6 +46,7 @@ export const ToggleStatusRequest = z
   .passthrough();
 export const DeliveryOnboardRequest = z
   .object({
+    cityId: z.string().min(1).max(50),
     fullName: z.string().min(0).max(100),
     phoneNumber: z
       .string()
