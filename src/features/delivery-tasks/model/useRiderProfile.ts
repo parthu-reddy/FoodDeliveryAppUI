@@ -33,15 +33,16 @@ export function useRiderProfile({ riderPhone, showToast, setIsOnline }: UseRider
 
 useEffect(() => {
   // Fetch unified profile first
-  identityApi.user.get(`/api/v1/users/profile`, { headers: { "X-User-Id": "" } }).catch((err: any) => {
-    if (err?.status !== 404)
+  identityApi.user.get(`/api/v1/users/profile`, { headers: { "X-User-Id": "" } }).catch((err: unknown) => {
+    const error = err as { status?: number };
+    if (error?.status !== 404)
       console.warn("Failed to fetch unified profile:", err);
   });
 
   // Fetch delivery-specific profile details
   deliveryApi.deliveryExecutive
     .get("/api/delivery/profile", { queries: { phoneNumber: riderPhone }, headers: { "X-User-Id": "" } })
-    .then((data: any) => {
+    .then((data) => {
       if (data.success && data.data) {
         const profile = data.data;
         if (!deliveryExecutiveName) setRiderName(profile.fullName || "");
@@ -64,14 +65,14 @@ useEffect(() => {
         setShowProfileRequiredPrompt(true);
       }
     })
-    .catch((err: any) => {
-      if (err?.status === 404) {
+    .catch((err: unknown) => {
+      const error = err as { status?: number, response?: { data?: { message?: string, error?: string } }, message?: string };
+      if (error?.status === 404) {
         setIsProfileMandatory(true);
         setShowProfileRequiredPrompt(true);
       } else {
         console.error("Profile fetch error:", err);
-        const errObj = err as { response?: { data?: { message?: string, error?: string } }, message?: string };
-        showToast(errObj.response?.data?.message || errObj.response?.data?.error || errObj.message || "Failed to load profile");
+        showToast(error.response?.data?.message || error.response?.data?.error || error.message || "Failed to load profile");
       }
     })
     .finally(() => setIsLoadingProfile(false));
@@ -79,15 +80,15 @@ useEffect(() => {
   // Fetch verification status
   deliveryApi.deliveryVerification
     .get("/api/delivery/verification/status")
-    .then((res: any) => {
+    .then((res) => {
       if (res?.data) {
         setVerificationStatus({
-          allDocsApproved: res.data.fullyVerified === true || res.data.fullyVerified === 'true',
+          allDocsApproved: res.data.fullyVerified === true,
           bankApproved: res.data.bankStatus === 'APPROVED' || res.data.bankStatus === 'VERIFIED'
         });
       }
     })
-    .catch((err: any) => console.warn("Failed to fetch verification status", err))
+    .catch((err: unknown) => console.warn("Failed to fetch verification status", err))
     .finally(() => setIsVerificationLoaded(true));
  
 // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -96,7 +97,7 @@ useEffect(() => {
   const refresh = () =>
     deliveryApi.deliveryExecutive
       .get('/api/delivery/profile', { queries: { phoneNumber: riderPhone }, headers: { 'X-User-Id': '' } })
-      .then((data: any) => {
+      .then((data) => {
         if (!data.success || !data.data) return null;
         const profile = data.data;
         setRiderName(profile.fullName || '');
