@@ -98,6 +98,22 @@ export default function RestaurantDashboard({
   const [, setEditEmail] = useState('');
   const [editPhone, setEditPhone] = useState('');
 
+  // Filter orders meant for this restaurant
+  const allRestaurantOrders = activeOrders.filter(o => o.restaurantId === selectedOutletId);
+
+  // Separate into active and history
+  const myOrders = allRestaurantOrders.filter(o => isActiveOrder(o));
+  const historyOrders = allRestaurantOrders.filter(o => !isActiveOrder(o));
+
+  const pendingOrders = myOrders.filter(o => o.status === OrderStatus.PENDING_ACCEPTANCE || o.status === OrderStatus.CREATED);
+  const activePreparing = myOrders.filter(o => o.status === OrderStatus.ACCEPTED || o.status === OrderStatus.PREPARING);
+  // HANDED_OVER means the rider collected the food, not that it arrived. Everything in
+  // historyOrders has a terminal deliveryStatus by construction (isActiveOrder), so filtering on
+  // status alone counted DELIVERY_FAILED and cancelled deliveries as completed. The restaurant's
+  // "completed" tile was therefore always at least as large as the truth.
+  const completedOrders = historyOrders.filter(
+    o => o.status === OrderStatus.HANDED_OVER && o.deliveryStatus === DeliveryStatus.DELIVERED);
+
   // Chat state
   const showChatList = location.search.includes('chat=list');
   const setShowChatList = (show: boolean) => {
@@ -142,21 +158,7 @@ export default function RestaurantDashboard({
 
   useBrandKycStream(brands, setBrands);
 
-  // Filter orders meant for this restaurant
-  const allRestaurantOrders = activeOrders.filter(o => o.restaurantId === selectedOutletId);
 
-  // Separate into active and history
-  const myOrders = allRestaurantOrders.filter(o => isActiveOrder(o));
-  const historyOrders = allRestaurantOrders.filter(o => !isActiveOrder(o));
-
-  const pendingOrders = myOrders.filter(o => o.status === OrderStatus.PENDING_ACCEPTANCE || o.status === OrderStatus.CREATED);
-  const activePreparing = myOrders.filter(o => o.status === OrderStatus.ACCEPTED || o.status === OrderStatus.PREPARING);
-  // HANDED_OVER means the rider collected the food, not that it arrived. Everything in
-  // historyOrders has a terminal deliveryStatus by construction (isActiveOrder), so filtering on
-  // status alone counted DELIVERY_FAILED and cancelled deliveries as completed. The restaurant's
-  // "completed" tile was therefore always at least as large as the truth.
-  const completedOrders = historyOrders.filter(
-    o => o.status === OrderStatus.HANDED_OVER && o.deliveryStatus === DeliveryStatus.DELIVERED);
 
   // Compute stats
   const totalRevenue = sumRupees(...myOrders.map((o) => {

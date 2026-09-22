@@ -12,7 +12,7 @@ import MoneyOperationsPage from "./money/OperationsPage";
 import { Button, SidebarNav } from '@shared/ui';
 import { AdminReviewsView } from '@features/reviews';
 import LaBouffeLogo from '@shared/ui/LaBouffeLogo';
-import { Activity, AlertTriangle, Database, LogOut, MapPin, MessageSquare, Moon, Shield, Star, Tags, Users } from 'lucide-react';
+import { Activity, AlertTriangle, Database, LogOut, MapPin, MessageSquare, Moon, Shield, Star, Sun, Tags, Users } from 'lucide-react';
 import React from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { usePolling } from '../../hooks/usePolling';
