@@ -33,7 +33,7 @@ export function useRiderProfile({ riderPhone, showToast, setIsOnline }: UseRider
 
 useEffect(() => {
   // Fetch unified profile first
-  identityApi.user.get(`/api/v1/users/profile`, { headers: { "X-User-Id": "" } }).catch((err) => {
+  identityApi.user.get(`/api/v1/users/profile`, { headers: { "X-User-Id": "" } }).catch((err: any) => {
     if (err?.status !== 404)
       console.warn("Failed to fetch unified profile:", err);
   });
@@ -41,7 +41,7 @@ useEffect(() => {
   // Fetch delivery-specific profile details
   deliveryApi.deliveryExecutive
     .get("/api/delivery/profile", { queries: { phoneNumber: riderPhone }, headers: { "X-User-Id": "" } })
-    .then((data) => {
+    .then((data: any) => {
       if (data.success && data.data) {
         const profile = data.data;
         if (!deliveryExecutiveName) setRiderName(profile.fullName || "");
@@ -64,7 +64,7 @@ useEffect(() => {
         setShowProfileRequiredPrompt(true);
       }
     })
-    .catch((err) => {
+    .catch((err: any) => {
       if (err?.status === 404) {
         setIsProfileMandatory(true);
         setShowProfileRequiredPrompt(true);
@@ -78,16 +78,16 @@ useEffect(() => {
 
   // Fetch verification status
   deliveryApi.deliveryVerification
-    .get("/api/delivery/verification/status", {})
-    .then((res) => {
+    .get("/api/delivery/verification/status")
+    .then((res: any) => {
       if (res?.data) {
         setVerificationStatus({
-          allDocsApproved: res.data.fullyVerified === true || (res.data.fullyVerified as unknown) === 'true',
+          allDocsApproved: res.data.fullyVerified === true || res.data.fullyVerified === 'true',
           bankApproved: res.data.bankStatus === 'APPROVED' || res.data.bankStatus === 'VERIFIED'
         });
       }
     })
-    .catch((err) => console.warn("Failed to fetch verification status", err))
+    .catch((err: any) => console.warn("Failed to fetch verification status", err))
     .finally(() => setIsVerificationLoaded(true));
  
 // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -96,12 +96,14 @@ useEffect(() => {
   const refresh = () =>
     deliveryApi.deliveryExecutive
       .get('/api/delivery/profile', { queries: { phoneNumber: riderPhone }, headers: { 'X-User-Id': '' } })
-      .then((data) => {
+      .then((data: any) => {
         if (!data.success || !data.data) return null;
         const profile = data.data;
         setRiderName(profile.fullName || '');
         setVehicleNumber(profile.vehicleNumber || '');
         setPhotoUrl(profile.photoUrl || '');
+        setRiderId(profile.id ?? '');
+        setCityId(profile.cityId || '');
         return profile;
       });
 
