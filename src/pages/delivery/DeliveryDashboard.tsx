@@ -21,7 +21,7 @@ import { useRiderProfile } from "@features/delivery-tasks/model/useRiderProfile"
 import { DeliveryShell, ErrorBoundary, Spinner, useConfirm } from "@shared/ui";
 import { AnimatePresence } from "motion/react";
 import React, { useState } from "react";
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 /**
  * The rider's screen.
