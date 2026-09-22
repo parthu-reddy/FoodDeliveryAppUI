@@ -31,7 +31,7 @@ export function useRiderOnboarding({ riderPhone, initialName, userId, onComplete
   const [verificationStatus, setVerificationStatus] = useState<Record<string, unknown> | null>(null);
 
   // Form State
-  const [cityId, setCityId] = useState('1');
+  const [cityId, setCityId] = useState('BLR');
   const [name, setName] = useState(initialName || '');
   const [photo, setPhoto] = useState('');
   const [vehicle, setVehicle] = useState('');

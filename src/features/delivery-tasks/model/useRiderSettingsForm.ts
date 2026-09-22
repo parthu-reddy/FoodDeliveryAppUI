@@ -37,7 +37,7 @@ export function useRiderSettingsForm({ riderPhone, onProfileUpdated }: UseRiderS
   const [editVehicle, setEditVehicle] = useState('');
   const [editVehicleType, setEditVehicleType] = useState('BICYCLE');
   const [editPhoto, setEditPhoto] = useState('');
-  const [editCityId, setEditCityId] = useState('1');
+  const [editCityId, setEditCityId] = useState('BLR');
 
   // Document Verification State
 

@@ -125,6 +125,7 @@ export const ApiResponseVoid = z
   .passthrough();
 export const DeliveryOnboardRequest = z
   .object({
+    cityId: z.string().min(0).max(50),
     fullName: z.string().min(0).max(100),
     phoneNumber: z
       .string()
@@ -188,11 +189,11 @@ export const pageable = z
   .passthrough();
 export const PageableObject = z
   .object({
+    sort: SortObject.optional(),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
     unpaged: z.boolean(),
-    sort: SortObject.optional(),
     offset: z.number().int(),
   })
   .passthrough();
@@ -200,14 +201,14 @@ export const PageDeliveryExecutive = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    pageable: PageableObject.optional(),
     sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
+    first: z.boolean(),
+    last: z.boolean(),
+    number: z.number().int(),
     size: z.number().int(),
     content: z.array(DeliveryExecutive),
     numberOfElements: z.number().int(),
-    number: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -225,14 +226,14 @@ export const PageDriverLocationDTO = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    pageable: PageableObject.optional(),
     sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
+    first: z.boolean(),
+    last: z.boolean(),
+    number: z.number().int(),
     size: z.number().int(),
     content: z.array(DriverLocationDTO),
     numberOfElements: z.number().int(),
-    number: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
     empty: z.boolean(),
   })
   .passthrough();

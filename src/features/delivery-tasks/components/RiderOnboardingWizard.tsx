@@ -57,9 +57,9 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
                 value={cityId}
                 onChange={setCityId}
                 options={[
-                  { value: '1', label: 'Hyderabad' },
-                  { value: '2', label: 'Bengaluru' },
-                  { value: '3', label: 'Mumbai' },
+                  { value: 'HYD', label: 'Hyderabad' },
+                  { value: 'BLR', label: 'Bengaluru' },
+                  { value: 'MUM', label: 'Mumbai' },
                 ]}
               />
             </FormField>
