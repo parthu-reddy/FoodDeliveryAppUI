@@ -37,6 +37,7 @@ export function useRiderSettingsForm({ riderPhone, onProfileUpdated }: UseRiderS
   const [editVehicle, setEditVehicle] = useState('');
   const [editVehicleType, setEditVehicleType] = useState('BICYCLE');
   const [editPhoto, setEditPhoto] = useState('');
+  const [editCityId, setEditCityId] = useState('1');
 
   // Document Verification State
 
@@ -68,6 +69,9 @@ export function useRiderSettingsForm({ riderPhone, onProfileUpdated }: UseRiderS
           setEditVehicle(profile.vehicleNumber || '');
           setEditVehicleType(profile.vehicleType || 'BICYCLE');
           setEditPhoto(profile.photoUrl || '');
+          if (profile.cityId) {
+            setEditCityId(profile.cityId);
+          }
           if (profile.fullName && !identityRes?.data?.name) {
              setEditName(profile.fullName);
              setInitialName(profile.fullName);
@@ -133,7 +137,8 @@ export function useRiderSettingsForm({ riderPhone, onProfileUpdated }: UseRiderS
               fullName: editName,
               vehicleNumber: editVehicle,
               vehicleType: editVehicleType as "BICYCLE" | "EV_TWO_WHEELER" | "MCWG" | "LMV",
-              photoUrl: editPhoto
+              photoUrl: editPhoto,
+              cityId: editCityId
             });
 
       // Refresh unified profile data in parent dashboard
@@ -155,6 +160,7 @@ export function useRiderSettingsForm({ riderPhone, onProfileUpdated }: UseRiderS
     editVehicle, setEditVehicle,
     editVehicleType, setEditVehicleType,
     editPhoto, setEditPhoto,
+    editCityId, setEditCityId,
     userId,
     initialName,
     initialEmail,
