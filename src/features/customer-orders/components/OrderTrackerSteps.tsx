@@ -43,11 +43,22 @@ export function OrderTrackerSteps({ currentTrackingOrder, isFailedOrder }: Order
     { status: DeliveryStatus.DELIVERED, label: 'Handed Over & Verified' }
   ];
 
+  const getUiStepIndex = (order: Order) => {
+    if (order.deliveryStatus === DeliveryStatus.DELIVERED) return 4;
+    switch (order.status) {
+      case OrderStatus.PENDING_ACCEPTANCE: return 0;
+      case OrderStatus.ACCEPTED: return 1;
+      case OrderStatus.PREPARING: return 2;
+      case OrderStatus.READY_FOR_PICKUP: return 2;
+      case OrderStatus.HANDED_OVER: return 3;
+      default: return -1;
+    }
+  };
+
   return UI_STEPS.map((step, idx, arr) => {
-    const stepStatusIndex = UI_STEPS.findIndex(s => s.status === step.status);
-    const currentStatusIndex = UI_STEPS.findIndex(s => s.status === (currentTrackingOrder.deliveryStatus === DeliveryStatus.DELIVERED ? DeliveryStatus.DELIVERED : currentTrackingOrder.status));
-    const isDone = currentStatusIndex > stepStatusIndex || (currentStatusIndex === stepStatusIndex && step.status !== DeliveryStatus.DELIVERED);
-    const isCurrent = currentStatusIndex === stepStatusIndex || (step.status === OrderStatus.PREPARING && [OrderStatus.READY_FOR_PICKUP, OrderStatus.HANDED_OVER].includes(currentTrackingOrder.status as OrderStatus));
+    const currentStatusIndex = getUiStepIndex(currentTrackingOrder);
+    const isDone = idx < currentStatusIndex || (idx === 4 && currentTrackingOrder.deliveryStatus === DeliveryStatus.DELIVERED);
+    const isCurrent = idx === currentStatusIndex && !isDone;
     const isLast = idx === arr.length - 1;
 
     return (
