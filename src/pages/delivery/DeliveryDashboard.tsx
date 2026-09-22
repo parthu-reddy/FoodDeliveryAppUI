@@ -21,6 +21,7 @@ import { useRiderProfile } from "@features/delivery-tasks/model/useRiderProfile"
 import { DeliveryShell, ErrorBoundary, Spinner, useConfirm } from "@shared/ui";
 import { AnimatePresence } from "motion/react";
 import React, { useState } from "react";
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 
 /**
  * The rider's screen.
@@ -57,8 +58,18 @@ export default function DeliveryDashboard({
   const [user] = useState(getUserProfile());
   const [isOnline, setIsOnline] = useState(false);
   const [showPermissionsPrompt, setShowPermissionsPrompt] = useState(false);
-  const [view, setView] = useState<"home" | "settings">("home");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Route-derived state
+  const isSettingsView = location.pathname.includes('/delivery/settings');
+  const view = isSettingsView ? 'settings' : 'home';
+  const setView = (v: 'home' | 'settings') => navigate(v === 'settings' ? '/delivery/settings' : '/delivery');
+
+  const showHistory = location.pathname.includes('/delivery/history');
+  const setShowHistory = (show: boolean) => navigate(show ? '/delivery/history' : '/delivery');
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -69,7 +80,7 @@ export default function DeliveryDashboard({
 
   const {
     wsConnected, hasLocationFix, historyDateFilter, setHistoryDateFilter, historyPage, setHistoryPage,
-    showHistory, setShowHistory, setActiveJobId, currentJob, pingJob, setPingJob, pingTimer,
+    setActiveJobId, currentJob, pingJob, setPingJob, pingTimer,
     setRejectedIds, availableJobs, todayEarnings, todayCompletedCount, paginatedHistoryJobs,
     totalHistoryPages, historyRef, onUpdateOrderStatus,
   } = useDeliveryOrders({
@@ -84,6 +95,7 @@ export default function DeliveryDashboard({
     externalUpdateStatus,
     setShowPermissionsPrompt,
     onAddApiLog,
+    showHistory,
   });
 
   const duty = useRiderDuty({

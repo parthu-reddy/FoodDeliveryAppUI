@@ -1,5 +1,6 @@
 import { ConfirmProvider, Spinner, ZodErrorBoundary, Surface } from '@shared/ui';
 import React, { Suspense, useState } from 'react';
+import { BrowserRouter, Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { CallProvider } from './contexts/CallContext';
 import { ConfigProvider } from './contexts/ConfigContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
@@ -7,6 +8,7 @@ import { ToastProvider } from './contexts/ToastContext';
 import { logout as authLogout } from './lib/authStore';
 import { getUserProfile } from './lib/tokenStore';
 import { RoleName, UserRole } from './types';
+import { RoleGuard } from '@shared/ui';
 
 // Lazy load route components for code splitting and bundle optimization
 const LoginScreen = React.lazy(() => import("@features/identity/components/LoginScreen"));
@@ -15,14 +17,7 @@ const RestaurantDashboard = React.lazy(() => import('@/pages/restaurant/Restaura
 const DeliveryDashboard = React.lazy(() => import("@/pages/delivery/DeliveryDashboard"));
 const AdminPortal = React.lazy(() => import("@/pages/admin/AdminPortal"));
 
-function AppContent() {
-  // Initialize auth state SYNCHRONOUSLY from localStorage.
-  // This ensures the correct dashboard renders on the first render
-  // and LoginScreen never briefly mounts when a session exists.
-  const [userRole, setUserRole] = useState<RoleName | null>(() => {
-    const profile = getUserProfile();
-    return profile?.role ? (profile.role as RoleName) : null;
-  });
+function AppRoutes() {
   const [phone, setPhone] = useState(() => {
     const profile = getUserProfile();
     return profile?.phone || '';
@@ -33,22 +28,31 @@ function AppContent() {
   });
   
   const { theme } = useTheme();
+  const navigate = useNavigate();
 
   const handleLoginSuccess = (selectedRole: UserRole, userPhone: string, displayName: string) => {
     // Clear cart when logging in successfully to ensure previous session data is removed.
     localStorage.removeItem('food_delivery_cart');
     localStorage.removeItem('food_delivery_cart_restaurant');
     
-    setUserRole(selectedRole as RoleName);
     setPhone(userPhone);
     setUserName(displayName);
+    
+    const rolePaths: Record<string, string> = {
+      [RoleName.CUSTOMER]: '/customer',
+      [RoleName.RESTAURANT]: '/restaurant',
+      [RoleName.DELIVERY]: '/delivery',
+      [RoleName.ADMIN]: '/admin',
+    };
+    
+    navigate(rolePaths[selectedRole] || '/login');
   };
 
   const handleLogout = async () => {
     await authLogout();
-    setUserRole(null);
     setPhone('');
     setUserName('');
+    navigate('/login');
   };
 
   const renderFallback = () => (
@@ -62,25 +66,18 @@ function AppContent() {
 
   return (
     <div className={`app-background flex-1 flex flex-col overflow-hidden relative w-full h-[100dvh] ${theme === 'dark' ? 'dark text-[#f0ede6]' : 'text-slate-900'}`}>
-      {/* No full-bleed photograph here. `.app-background` is the paper ground the design
-          specifies (--color-paper with three faint brand gradients); a photo on top of it
-          hid that on EVERY screen and put a pastel wash over all content, which is why the
-          app read as low-contrast and muddy. Food photography belongs inside the cards,
-          edge-to-edge, not behind the interface. The photo remains on the sign-in screen,
-          where there is no content for it to compete with. */}
-
       <div className="flex-1 flex flex-col min-h-0 w-full h-full z-10 p-0 overflow-hidden relative">
         <Suspense fallback={renderFallback()}>
-          {!userRole ? (
-            // No centring wrapper: RoleShell is a full-height frame that manages its own
-            // header, scroll region and insets, and `justify-center` fought it.
-            <ZodErrorBoundary contextName="Login Screen">
-              <LoginScreen onLoginSuccess={handleLoginSuccess} />
-            </ZodErrorBoundary>
-          ) : (
-            <CallProvider>
-              <div className="flex-1 flex flex-col w-full h-full overflow-hidden relative">
-                {userRole === RoleName.CUSTOMER && (
+          <Routes>
+            <Route path="/login" element={
+              <ZodErrorBoundary contextName="Login Screen">
+                <LoginScreen onLoginSuccess={handleLoginSuccess} />
+              </ZodErrorBoundary>
+            } />
+            
+            <Route path="/customer/*" element={<RoleGuard allowedRole={RoleName.CUSTOMER} />}>
+              <Route path="*" element={
+                <CallProvider>
                   <ZodErrorBoundary contextName="Customer Dashboard">
                     <CustomerDashboard 
                       userName={userName || 'Customer'} 
@@ -88,37 +85,71 @@ function AppContent() {
                       onLogout={handleLogout}
                     />
                   </ZodErrorBoundary>
-                )}
-                {userRole === RoleName.RESTAURANT && (
+                </CallProvider>
+              } />
+            </Route>
+
+            <Route path="/restaurant/*" element={<RoleGuard allowedRole={RoleName.RESTAURANT} />}>
+              <Route path="*" element={
+                <CallProvider>
                   <ZodErrorBoundary contextName="Restaurant Dashboard">
                     <RestaurantDashboard 
                       restaurantId=""
                       onLogout={handleLogout}
                     />
                   </ZodErrorBoundary>
-                )}
-                {userRole === RoleName.DELIVERY && (
+                </CallProvider>
+              } />
+            </Route>
+
+            <Route path="/delivery/*" element={<RoleGuard allowedRole={RoleName.DELIVERY} />}>
+              <Route path="*" element={
+                <CallProvider>
                   <ZodErrorBoundary contextName="Delivery Dashboard">
                     <DeliveryDashboard 
                       riderPhone={phone}
                       onLogout={handleLogout}
                     />
                   </ZodErrorBoundary>
-                )}
-                {userRole === RoleName.ADMIN && (
+                </CallProvider>
+              } />
+            </Route>
+
+            <Route path="/admin/*" element={<RoleGuard allowedRole={RoleName.ADMIN} />}>
+              <Route path="*" element={
+                <CallProvider>
                   <ZodErrorBoundary contextName="Admin Portal">
                     <AdminPortal 
                       onLogout={handleLogout}
                     />
                   </ZodErrorBoundary>
-                )}
-              </div>
-            </CallProvider>
-          )}
+                </CallProvider>
+              } />
+            </Route>
+
+            {/* Root Redirect */}
+            <Route path="*" element={<RootRedirect />} />
+          </Routes>
         </Suspense>
       </div>
     </div>
   );
+}
+
+function RootRedirect() {
+  const profile = getUserProfile();
+  if (!profile || !profile.role) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  const rolePaths: Record<string, string> = {
+    [RoleName.CUSTOMER]: '/customer',
+    [RoleName.RESTAURANT]: '/restaurant',
+    [RoleName.DELIVERY]: '/delivery',
+    [RoleName.ADMIN]: '/admin',
+  };
+  
+  return <Navigate to={rolePaths[profile.role] || '/login'} replace />;
 }
 
 export default function App() {
@@ -127,7 +158,9 @@ export default function App() {
       <ConfigProvider>
         <ToastProvider>
           <ConfirmProvider>
-            <AppContent />
+            <BrowserRouter>
+              <AppRoutes />
+            </BrowserRouter>
           </ConfirmProvider>
         </ToastProvider>
       </ConfigProvider>

@@ -3,7 +3,8 @@ import { DeliveryStatus, Order, OrderStatus } from "@/types";
 import {
     MessageSquare
 } from 'lucide-react';
-import { Suspense, lazy, useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState, useMemo } from 'react';
+import { Routes, Route, useNavigate, useLocation, useMatch } from 'react-router-dom';
 
 import { CallOverlay } from "@features/communication/components/CallOverlay";
 import { CompleteProfileModal, ErrorBoundary } from "@shared/ui";
@@ -53,10 +54,29 @@ export default function RestaurantDashboard({
     externalOrders,
     externalUpdateStatus
   });
-  const [activeTab, setActiveTab] = useState<'orders' | 'menu' | 'campaigns' | 'earnings' | 'reviews'>('orders');
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Derive state from route
+  const isSettingsView = location.pathname.includes('/restaurant/settings');
+  const view = isSettingsView ? 'settings' : 'home';
+  const showSettings = isSettingsView;
+
+  const chatMatch = useMatch('/restaurant/chat/:orderId');
+  const chatOrderId = chatMatch?.params?.orderId;
+  
+  let activeTab: 'orders' | 'menu' | 'campaigns' | 'earnings' | 'reviews' = 'orders';
+  if (location.pathname.includes('/menu')) activeTab = 'menu';
+  else if (location.pathname.includes('/campaigns')) activeTab = 'campaigns';
+  else if (location.pathname.includes('/earnings')) activeTab = 'earnings';
+  else if (location.pathname.includes('/reviews')) activeTab = 'reviews';
+
+  const setActiveTab = (tab: typeof activeTab) => navigate(`/restaurant/${tab}`);
+  const setView = (v: 'home' | 'settings') => navigate(v === 'settings' ? '/restaurant/settings' : '/restaurant');
+  const setShowSettings = (show: boolean) => navigate(show ? '/restaurant/settings' : '/restaurant');
+
   const [, setApiPrepSeconds] = useState('15');
 
-  const [showSettings, setShowSettings] = useState(false);
   const [selectedOutletId, setSelectedOutletId] = useState<string>(() => {
     return localStorage.getItem('restaurant_selectedOutletId') || '';
   });
@@ -74,14 +94,32 @@ export default function RestaurantDashboard({
   } = useRestaurantCatalog({ selectedOutletId, setSelectedOutletId, setApiPrepSeconds, showError });
 
   const [showCompleteProfileModal, setShowCompleteProfileModal] = useState(false);
-  const [view, setView] = useState<'home' | 'settings'>('home');
   const [, setEditName] = useState('');
   const [, setEditEmail] = useState('');
   const [editPhone, setEditPhone] = useState('');
 
   // Chat state
-  const [selectedChatOrder, setSelectedChatOrder] = useState<Order | null>(null);
-  const [showChatList, setShowChatList] = useState(false);
+  const showChatList = location.search.includes('chat=list');
+  const setShowChatList = (show: boolean) => {
+    if (show) {
+      navigate(location.pathname + '?chat=list');
+    } else {
+      navigate(location.pathname);
+    }
+  };
+
+  const selectedChatOrder = useMemo(() => {
+    if (!chatOrderId || !myOrders) return null;
+    return myOrders.find(o => o.id === chatOrderId) || null;
+  }, [chatOrderId, myOrders]);
+
+  const setSelectedChatOrder = (order: Order | null) => {
+    if (order) {
+      navigate(`/restaurant/chat/${order.id}`);
+    } else {
+      navigate('/restaurant');
+    }
+  };
 
   // Unified profile hook — replaces inline fetch pattern
   const { profile: fetchedProfile, isProfileIncomplete, localProfile } = useUserProfile();
@@ -203,32 +241,34 @@ export default function RestaurantDashboard({
         </div>
       ) : (
         <>
-          <RestaurantTabPanels
-        activeTab={activeTab}
-        showSettings={showSettings}
-        setShowSettings={setShowSettings}
-        restaurantId={restaurantId}
-        selectedOutletId={selectedOutletId}
-        menuList={menuList}
-        brands={brands}
-        outlets={outlets}
-        stockStatus={stockStatus}
-        toggleStock={toggleStock}
-        activeOrders={activeOrders}
-        refundRequests={refundRequests}
-        internalOrders={internalOrders}
-        pendingOrders={pendingOrders}
-        activePreparing={activePreparing}
-        completedOrders={completedOrders}
-        cardDelayStatus={cardDelayStatus}
-        totalRevenue={totalRevenue}
-        loadData={loadData}
-        setSelectedChatOrder={setSelectedChatOrder}
-        handleStatusTransition={handleStatusTransition}
-        handleCardCancelSubmit={handleCardCancelSubmit}
-        handleCardPartialRefundSubmit={handleCardPartialRefundSubmit}
-        handleCardDelaySubmit={handleCardDelaySubmit}
-      />
+          <Routes>
+        <Route path="*" element={<RestaurantTabPanels
+          activeTab={activeTab}
+          showSettings={showSettings}
+          setShowSettings={setShowSettings}
+          restaurantId={restaurantId}
+          selectedOutletId={selectedOutletId}
+          menuList={menuList}
+          brands={brands}
+          outlets={outlets}
+          stockStatus={stockStatus}
+          toggleStock={toggleStock}
+          activeOrders={activeOrders}
+          refundRequests={refundRequests}
+          internalOrders={internalOrders}
+          pendingOrders={pendingOrders}
+          activePreparing={activePreparing}
+          completedOrders={completedOrders}
+          cardDelayStatus={cardDelayStatus}
+          totalRevenue={totalRevenue}
+          loadData={loadData}
+          setSelectedChatOrder={setSelectedChatOrder}
+          handleStatusTransition={handleStatusTransition}
+          handleCardCancelSubmit={handleCardCancelSubmit}
+          handleCardPartialRefundSubmit={handleCardPartialRefundSubmit}
+          handleCardDelaySubmit={handleCardDelaySubmit}
+        />} />
+      </Routes>
 
       <CompleteProfileModal 
         isOpen={showCompleteProfileModal} 

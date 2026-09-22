@@ -20,6 +20,7 @@ export interface UseDeliveryOrdersProps {
   externalUpdateStatus?: (orderId: string, status: OrderStatus, deliveryStatus?: DeliveryStatus, riderInfo?: unknown) => void;
   setShowPermissionsPrompt: (show: boolean) => void;
   onAddApiLog?: (log: unknown) => void;
+  showHistory: boolean;
 }
 
 export function useDeliveryOrders({
@@ -31,7 +32,8 @@ export function useDeliveryOrders({
   externalOrders,
   externalUpdateStatus,
   setShowPermissionsPrompt,
-  onAddApiLog
+  onAddApiLog,
+  showHistory
 }: UseDeliveryOrdersProps) {
   const [internalOrders, setInternalOrders] = useState<Order[]>([]);
   const activeOrders = externalOrders ?? internalOrders;
@@ -48,7 +50,6 @@ export function useDeliveryOrders({
   const todayDateString = new Date().toISOString().split('T')[0];
   const [historyDateFilter, setHistoryDateFilter] = useState(todayDateString);
   const [historyPage, setHistoryPage] = useState(1);
-  const [showHistory, setShowHistory] = useState(false);
   
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
 
@@ -513,8 +514,6 @@ export function useDeliveryOrders({
     setHistoryDateFilter,
     historyPage,
     setHistoryPage,
-    showHistory,
-    setShowHistory,
     activeJobId,
     setActiveJobId,
     currentJob,

@@ -36,6 +36,7 @@
     "pino-http": "^10.2.0",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
+    "react-router-dom": "^7.18.4",
     "sockjs-client": "^1.6.1",
     "vite": "^6.2.3",
     "zod": "^3.23.8"

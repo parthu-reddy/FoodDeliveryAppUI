@@ -10,7 +10,8 @@ import { CustomerModalStack } from '@features/customer-orders/components/Custome
 import { useConfirm } from '@shared/ui';
 
 import { AnimatePresence } from 'motion/react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
+import { Routes, Route, useNavigate, useLocation, useMatch } from 'react-router-dom';
 
 import { useTheme } from "@/contexts/ThemeContext";
 import { useRestaurants } from '@features/catalog/model/useRestaurants';
@@ -73,20 +74,17 @@ export default function CustomerDashboard({
     setInternalOrders(prev => [...prev, order]);
   });
 
-  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  // Sync to localStorage whenever delivery location changes and new restaurants are fetched
-  useEffect(() => {
-    if (selectedRestaurant && restaurants && restaurants.length > 0) {
-      const updated = restaurants.find(r => r.id === selectedRestaurant.id);
-      if (updated) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setSelectedRestaurant(updated);
-      }
-    }
-   
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restaurants]);
+  // Route matches to derive state
+  const restaurantMatch = useMatch('/customer/restaurant/:id');
+  const restaurantIdFromUrl = restaurantMatch?.params?.id;
+
+  const selectedRestaurant = useMemo(() => {
+    if (!restaurantIdFromUrl || !restaurants) return null;
+    return restaurants.find(r => r.id === restaurantIdFromUrl) || null;
+  }, [restaurantIdFromUrl, restaurants]);
 
   const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
   const [orderSuccessToast, setOrderSuccessToast] = useState<Order | null>(null);
@@ -183,8 +181,25 @@ export default function CustomerDashboard({
 
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [isOutletSelectorOpen, setIsOutletSelectorOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'home' | 'settings'>('home');
-  const [settingsTab, setSettingsTab] = useState<'profile' | 'history' | 'addresses'>('profile');
+  
+  // viewMode and settingsTab are now derived from routes
+  const isSettingsView = location.pathname.includes('/customer/settings');
+  const viewMode = isSettingsView ? 'settings' : 'home';
+  
+  let settingsTab: 'profile' | 'history' | 'addresses' = 'profile';
+  if (location.pathname.includes('/history')) settingsTab = 'history';
+  if (location.pathname.includes('/addresses')) settingsTab = 'addresses';
+
+  // We provide dummy setViewMode and setSettingsTab for compatibility with child components
+  const setViewMode = (mode: 'home' | 'settings') => navigate(mode === 'settings' ? '/customer/settings' : '/customer');
+  const setSettingsTab = (tab: 'profile' | 'history' | 'addresses') => navigate(`/customer/settings/${tab}`);
+  const setSelectedRestaurantRoute = (r: Restaurant | null) => {
+    if (r) {
+      navigate(`/customer/restaurant/${r.id}`);
+    } else {
+      navigate(`/customer`);
+    }
+  };
 
   const [addressSearchQuery, setAddressSearchQuery] = useState('');
 
@@ -218,7 +233,7 @@ export default function CustomerDashboard({
     isAddressSelectorOpen, setIsAddressSelectorOpen,
     isOutletSelectorOpen, setIsOutletSelectorOpen,
     isRestaurantsLoading, onAddApiLog, onLogout, onUpdateOrder,
-    restaurants, selectedRestaurant, setSelectedRestaurant,
+    restaurants, selectedRestaurant, setSelectedRestaurant: setSelectedRestaurantRoute,
     setInternalOrders, setTrackingOrder, settingsTab, setSettingsTab,
     showError, theme, view: viewMode, setView: setViewMode,
   };
@@ -246,12 +261,12 @@ export default function CustomerDashboard({
       {/* 1. Header Area */}
       <DashboardHeader
         address={address}
-        view={viewMode}
-        setView={setViewMode}
         setIsAddressSelectorOpen={setIsAddressSelectorOpen}
       />
 
-      <CustomerMainView {...view} />
+      <Routes>
+        <Route path="*" element={<CustomerMainView {...view} />} />
+      </Routes>
 
       <CompleteProfileModal
         isOpen={showProfileModal}

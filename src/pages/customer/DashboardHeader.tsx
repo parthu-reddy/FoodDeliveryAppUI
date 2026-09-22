@@ -3,21 +3,21 @@ import { Surface } from '@shared/ui';
 import LaBouffeLogo from '@shared/ui/LaBouffeLogo';
 import { ChevronRight, MapPin, Moon, Sun, User } from 'lucide-react';
 import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface DashboardHeaderProps {
   address: string;
-  view: 'home' | 'settings';
-  setView: (view: 'home' | 'settings') => void;
   setIsAddressSelectorOpen: (isOpen: boolean) => void;
 }
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   address,
-  view,
-  setView,
   setIsAddressSelectorOpen
 }) => {
   const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isSettingsView = location.pathname.includes('/customer/settings');
 
   return (
     <Surface
@@ -49,9 +49,9 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
       <div className="flex items-center gap-2 shrink-0">
         <button
-          onClick={() => view === 'settings' ? setView('home') : setView('settings')}
+          onClick={() => isSettingsView ? navigate('/customer') : navigate('/customer/settings')}
           className={`p-2.5 rounded-xl transition cursor-pointer ${
- view === 'settings' 
+ isSettingsView 
  ? 'bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 ' 
  : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-500 dark:text-[#f0ede6]'
  }`}
