@@ -145,7 +145,7 @@ export default function CustomerDashboard({
 
   const processPaymentAndOrder = (method: PaymentMethodChoice) => originalProcessPaymentAndOrder(method, deliveryAddressId as string, () => {
     if (checkoutRestaurantId === selectedRestaurant?.id) {
-      setSelectedRestaurant(null);
+      setSelectedRestaurantRoute(null);
     }
   });
 
