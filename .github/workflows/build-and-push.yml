@@ -170,7 +170,7 @@ jobs:
           tags: hyd.ocir.io/axekmbadoczl/food-delivery/food-delivery-app-ui:${{ github.sha }}
           platforms: linux/arm64
 
-      - name: Update .versions file
+      - name: Update deployment environment file
         working-directory: deps/Deployment
         run: |
           git config user.name "github-actions[bot]"
@@ -178,26 +178,22 @@ jobs:
           
           MAX_RETRIES=5
           for i in $(seq 1 $MAX_RETRIES); do
-            # Always start fresh from the remote
             git pull --rebase origin main
 
-            TAG_VAR="FOOD_DELIVERY_APP_UI_TAG"
-            if grep -q "^${TAG_VAR}=" .versions; then
-              sed -i "s/^${TAG_VAR}=.*/${TAG_VAR}=${{ github.sha }}/g" .versions
-            else
-              echo "${TAG_VAR}=${{ github.sha }}" >> .versions
-            fi
+            mkdir -p env_deployments/dev
+            ENV_FILE="env_deployments/dev/food-delivery-app-ui.env"
+            echo "FOOD_DELIVERY_APP_UI_TAG=${{ github.sha }}" > "$ENV_FILE"
 
-            # Check if there are changes to commit
             if git diff --quiet; then
               echo "No changes to commit"
               break
             fi
 
-            git commit -am "Update ${TAG_VAR} with new image tag"
+            git add "$ENV_FILE"
+            git commit -m "Update food-delivery-app-ui tag"
             
             if git push origin HEAD:main; then
-              echo "Successfully updated .versions!"
+              echo "Successfully updated deployment env file!"
               break
             fi
             
@@ -206,7 +202,7 @@ jobs:
               exit 1
             fi
             
-            echo "Push rejected due to race condition. Retrying ($i/$MAX_RETRIES)..."
+            echo "Push rejected. Retrying ($i/$MAX_RETRIES)..."
             git reset --hard HEAD~1
             git pull --rebase origin main
             sleep $((1 + RANDOM % 5))
