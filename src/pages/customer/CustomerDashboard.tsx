@@ -81,10 +81,14 @@ export default function CustomerDashboard({
   const restaurantMatch = useMatch('/customer/restaurant/:id');
   const restaurantIdFromUrl = restaurantMatch?.params?.id;
 
+  const [overrideRestaurant, setOverrideRestaurant] = useState<Restaurant | null>(null);
+
   const selectedRestaurant = useMemo(() => {
-    if (!restaurantIdFromUrl || !restaurants) return null;
+    if (!restaurantIdFromUrl) return null;
+    if (overrideRestaurant && overrideRestaurant.id === restaurantIdFromUrl) return overrideRestaurant;
+    if (!restaurants) return null;
     return restaurants.find(r => r.id === restaurantIdFromUrl) || null;
-  }, [restaurantIdFromUrl, restaurants]);
+  }, [restaurantIdFromUrl, restaurants, overrideRestaurant]);
 
   const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
   const [orderSuccessToast, setOrderSuccessToast] = useState<Order | null>(null);
@@ -195,8 +199,10 @@ export default function CustomerDashboard({
   const setSettingsTab = (tab: 'profile' | 'history' | 'addresses') => navigate(`/customer/settings/${tab}`);
   const setSelectedRestaurantRoute = (r: Restaurant | null) => {
     if (r) {
+      setOverrideRestaurant(r);
       navigate(`/customer/restaurant/${r.id}`);
     } else {
+      setOverrideRestaurant(null);
       navigate(`/customer`);
     }
   };
