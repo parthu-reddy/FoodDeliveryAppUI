@@ -92,6 +92,18 @@ export default function CustomerDashboard({
 
   const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
   const [orderSuccessToast, setOrderSuccessToast] = useState<Order | null>(null);
+  const restoredActiveOrderRef = useRef(false);
+
+  // Restore the live tracker after login or a full-page reload. Delivery OTPs and the current
+  // handoff state live on the order returned by getActiveOrders; keeping trackingOrder only in
+  // component state previously hid that information until the customer happened to click the
+  // small active-order card again. Run once so closing the tracker remains a deliberate action.
+  useEffect(() => {
+    if (restoredActiveOrderRef.current || isInitialLoad) return;
+    restoredActiveOrderRef.current = true;
+    const latestInFlightOrder = activeOrders.find(isActiveOrder);
+    if (latestInFlightOrder) setTrackingOrder(latestInFlightOrder);
+  }, [activeOrders, isInitialLoad]);
 
   const chatWidgetRef = useRef<ChatWidgetHandle>(null);
 
