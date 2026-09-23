@@ -10,7 +10,7 @@ import { CustomerModalStack } from '@features/customer-orders/components/Custome
 import { useConfirm } from '@shared/ui';
 
 import { AnimatePresence } from 'motion/react';
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { Routes, Route, useNavigate, useLocation, useMatch } from 'react-router-dom';
 
 import { useTheme } from "@/contexts/ThemeContext";
@@ -90,20 +90,15 @@ export default function CustomerDashboard({
     return restaurants.find(r => r.id === restaurantIdFromUrl) || null;
   }, [restaurantIdFromUrl, restaurants, overrideRestaurant]);
 
-  const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
+  const [trackingSelection, setTrackingSelection] = useState<{
+    explicitlyChosen: boolean;
+    order: Order | null;
+  }>({ explicitlyChosen: false, order: null });
+  const trackingOrder = trackingSelection.order;
+  const setTrackingOrder = useCallback((order: Order | null) => {
+    setTrackingSelection({ explicitlyChosen: true, order });
+  }, []);
   const [orderSuccessToast, setOrderSuccessToast] = useState<Order | null>(null);
-  const restoredActiveOrderRef = useRef(false);
-
-  // Restore the live tracker after login or a full-page reload. Delivery OTPs and the current
-  // handoff state live on the order returned by getActiveOrders; keeping trackingOrder only in
-  // component state previously hid that information until the customer happened to click the
-  // small active-order card again. Run once so closing the tracker remains a deliberate action.
-  useEffect(() => {
-    if (restoredActiveOrderRef.current || isInitialLoad) return;
-    restoredActiveOrderRef.current = true;
-    const latestInFlightOrder = activeOrders.find(isActiveOrder);
-    if (latestInFlightOrder) setTimeout(() => setTrackingOrder(latestInFlightOrder), 0);
-  }, [activeOrders, isInitialLoad]);
 
   const chatWidgetRef = useRef<ChatWidgetHandle>(null);
 
@@ -221,8 +216,16 @@ export default function CustomerDashboard({
 
   const [addressSearchQuery, setAddressSearchQuery] = useState('');
 
-  // If there's an active order, let's keep checking its status in the parent
-  const currentTrackingOrder = activeOrders.find(o => o.id === trackingOrder?.id) || trackingOrder;
+  // Before the customer makes an explicit tracker choice, derive the initial selection from the
+  // asynchronously loaded active orders. This restores the delivery OTP after login/reload without
+  // an effect-driven state update. Once the customer selects or closes a tracker, preserve that
+  // choice instead of automatically reopening it.
+  const restoredTrackingOrder = !trackingSelection.explicitlyChosen && !isInitialLoad
+    ? activeOrders.find(isActiveOrder) || null
+    : null;
+  const currentTrackingOrder = activeOrders.find(o => o.id === trackingOrder?.id)
+    || trackingOrder
+    || restoredTrackingOrder;
 
   useEffect(() => {
     if (currentTrackingOrder && (currentTrackingOrder.status === OrderStatus.HANDED_OVER || currentTrackingOrder.deliveryStatus === DeliveryStatus.AT_RESTAURANT || currentTrackingOrder.deliveryStatus === DeliveryStatus.OUT_FOR_DELIVERY)) {
@@ -300,7 +303,7 @@ export default function CustomerDashboard({
       <CustomerActiveOrdersCarousel
         activeOrders={activeOrders}
         isActiveOrder={isActiveOrder}
-        trackingOrder={trackingOrder}
+        trackingOrder={currentTrackingOrder}
         cartLength={totalCartItems}
         setTrackingOrder={setTrackingOrder}
       />
