@@ -102,7 +102,7 @@ export default function CustomerDashboard({
     if (restoredActiveOrderRef.current || isInitialLoad) return;
     restoredActiveOrderRef.current = true;
     const latestInFlightOrder = activeOrders.find(isActiveOrder);
-    if (latestInFlightOrder) setTrackingOrder(latestInFlightOrder);
+    if (latestInFlightOrder) setTimeout(() => setTrackingOrder(latestInFlightOrder), 0);
   }, [activeOrders, isInitialLoad]);
 
   const chatWidgetRef = useRef<ChatWidgetHandle>(null);
