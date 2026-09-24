@@ -3,6 +3,7 @@ import { Badge, Button } from '@shared/ui';
 import { Check, CheckCircle2, Clock, KeyRound, MessageSquare, Receipt, XCircle } from 'lucide-react';
 import { OrderStatus } from '@/types';
 import type { Order } from '@/types';
+import { promisedPrepMinutes } from '../model/acceptDeadline';
 import { formatINR } from '@shared/money';
 
 /**
@@ -116,7 +117,7 @@ loading={isSubmitting}
 icon={<Check className="w-4 h-4 shrink-0" />}
 onClick={() => { setIsSubmitting(true); handleStatusTransition(order); }}
 >
-{isSubmitting ? 'Accepting…' : 'Accept'}
+{isSubmitting ? 'Accepting…' : <>Accept <span className="font-mono font-medium opacity-90">· {promisedPrepMinutes(order as { prepTime?: number; additionalPrepTime?: number })} min</span></>}
 </Button>
 )}
 

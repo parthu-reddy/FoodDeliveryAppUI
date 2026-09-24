@@ -26,11 +26,6 @@ export async function getBrands(): Promise<Brand[]> {
   } catch { return []; }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function saveBrands(brands: Brand[]) {
-  // Mocked for now, not fully implemented in API
-}
-
 export async function getOutlets(): Promise<Outlet[]> {
   try {
     const res = await apiGet(`${API_BASE}/outlets`);
@@ -45,11 +40,6 @@ export async function getOutletsByBrand(brandId: string): Promise<Outlet[]> {
   } catch { return []; }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function saveOutlets(outlets: Outlet[]) {
-  // Mocked for now
-}
-
 export async function getMasterMenuItems(brandId: string): Promise<MasterMenuItem[]> {
   if (!brandId || brandId === 'undefined') return [];
   try {
@@ -58,21 +48,11 @@ export async function getMasterMenuItems(brandId: string): Promise<MasterMenuIte
   } catch { return []; }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function saveMasterMenuItems(items: MasterMenuItem[]) {
-  // Mocked
-}
-
 export async function getOutletOverrides(outletId: string): Promise<OutletOverride[]> {
   try {
     const res = await apiGet(`${API_BASE}/outlets/${outletId}/menu-overrides`);
     return res.data || [];
   } catch { return []; }
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function saveOutletOverrides(overrides: OutletOverride[]) {
-  // Mocked
 }
 
 // Add Master Menu Item
