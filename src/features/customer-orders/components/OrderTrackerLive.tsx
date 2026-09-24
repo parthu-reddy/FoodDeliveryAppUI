@@ -42,6 +42,10 @@ function useMinutesUntil(epochMs?: number) {
   return Math.max(0, Math.ceil((epochMs - now) / 60_000));
 }
 
+function clockTime(epochMs: number) {
+  return new Date(epochMs).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+}
+
 function headlineFor(order: Order): { title: string; detail: string } {
   if (order.deliveryStatus === DeliveryStatus.FAILED) {
     return { title: 'Finding a rider', detail: 'Your food is safe. We are looking for a nearby delivery partner.' };
@@ -80,10 +84,15 @@ export function OrderTrackerLive({
   const failed = isFailedOrder(order);
   // `estimatedCompletionTime` is when the FOOD is ready (the restaurant's accept time plus its
   // prep time, epoch ms -- RestaurentApplication CreatedState), not when it arrives. The
-  // artboard's "Arriving in" needs a delivery ETA the API does not return (Phase 7 A5), so the
-  // countdown is shown only while the kitchen is cooking and says what it actually measures.
+  // artboard's "Arriving in" is `estimatedArrivalTime` below; this countdown is the fallback
+  // when there is no estimate, shown only while cooking and saying what it actually measures.
   const cooking = order.status === OrderStatus.ACCEPTED || order.status === OrderStatus.PREPARING;
   const minutes = useMinutesUntil(cooking ? order.estimatedCompletionTime : undefined);
+  // The door-arrival estimate (CustomerApplication DeliveryEta): ready time or pickup, plus the
+  // road time restaurant to door. The server sends it only while it means something -- accepted,
+  // not yet delivered -- and never invents one; without it the screen falls back to the
+  // kitchen's ready time, and then to words.
+  const arrivalMinutes = useMinutesUntil(order.estimatedArrivalTime ?? undefined);
   const { busy, cancel, answerDelay } = useLiveOrderActions({ order, onAddApiLog, onUpdateOrder, setInternalOrders, showError });
   const view = orderStatusView(order.status, order.deliveryStatus);
   const { title, detail } = headlineFor(order);
@@ -118,7 +127,21 @@ export function OrderTrackerLive({
     <div className="space-y-3.5" data-testid="order-tracker" data-order-id={order.id} data-status={order.status}>
       <div className="flex flex-wrap items-start gap-x-3 gap-y-2">
         <div className="flex-1 min-w-[11rem]">
-          {minutes !== null ? (
+          {arrivalMinutes !== null ? (
+            <>
+              <span className="block font-mono text-[10px] font-bold tracking-[.12em] text-ink-2">ARRIVING IN</span>
+              <span className="block font-mono text-[44px] leading-none font-bold tracking-tight text-ink">
+                {arrivalMinutes === 0 ? 'Any minute' : <>{arrivalMinutes}<span className="ml-1 text-xl font-medium tracking-normal">min</span></>}
+              </span>
+              <span className="block mt-1 text-[12.5px] font-semibold text-ink-2">
+                by{' '}
+                <span className="font-mono font-bold text-ink">{clockTime(order.estimatedArrivalTime!)}</span>
+                {cooking && order.estimatedCompletionTime
+                  ? <> &middot; food ready {clockTime(order.estimatedCompletionTime)}</>
+                  : <> &middot; {title.toLowerCase()}</>}
+              </span>
+            </>
+          ) : minutes !== null ? (
             <>
               <span className="block font-mono text-[10px] font-bold tracking-[.12em] text-ink-2">FOOD READY IN</span>
               <span className="block font-mono text-[44px] leading-none font-bold tracking-tight text-ink">
@@ -127,7 +150,7 @@ export function OrderTrackerLive({
               <span className="block mt-1 text-[12.5px] font-semibold text-ink-2">
                 by{' '}
                 <span className="font-mono font-bold text-ink">
-                  {new Date(order.estimatedCompletionTime!).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                  {clockTime(order.estimatedCompletionTime!)}
                 </span>
                 {' · the kitchen is cooking'}
               </span>

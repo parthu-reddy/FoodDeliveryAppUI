@@ -129,6 +129,8 @@ export const Order = z
     createdAt: z.string().datetime({ offset: true }),
     updatedAt: z.string().datetime({ offset: true }),
     deliveredAt: z.string().datetime({ offset: true }).optional(),
+    deliveryTravelSeconds: z.number().int().optional(),
+    handedOverAt: z.number().int().optional(),
   })
   .passthrough();
 export const PageOrder = z

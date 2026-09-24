@@ -99,6 +99,7 @@ export const OrderResponse = z
     cancellationReason: z.string().optional(),
     requestedDelayMinutes: z.number().int().optional(),
     delayReason: z.string().optional(),
+    estimatedArrivalTime: z.number().int().optional(),
     expiresAt: z.number().int().optional(),
   })
   .passthrough();
@@ -735,6 +736,8 @@ export const Order = z
     createdAt: z.string().datetime({ offset: true }),
     updatedAt: z.string().datetime({ offset: true }),
     deliveredAt: z.string().datetime({ offset: true }).optional(),
+    deliveryTravelSeconds: z.number().int().optional(),
+    handedOverAt: z.number().int().optional(),
   })
   .passthrough();
 export const SortObject = z

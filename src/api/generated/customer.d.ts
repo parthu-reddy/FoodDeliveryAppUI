@@ -1203,6 +1203,8 @@ export interface components {
             requestedDelayMinutes?: number;
             delayReason?: string;
             /** Format: int64 */
+            estimatedArrivalTime?: number;
+            /** Format: int64 */
             expiresAt?: number;
         };
         DelayApprovalRequest: {
@@ -1767,6 +1769,10 @@ export interface components {
             updatedAt: string;
             /** Format: date-time */
             deliveredAt?: string;
+            /** Format: int32 */
+            deliveryTravelSeconds?: number;
+            /** Format: int64 */
+            handedOverAt?: number;
         };
         Pageable: {
             /** Format: int32 */

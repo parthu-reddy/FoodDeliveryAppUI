@@ -86,6 +86,25 @@ describe('OrderTrackerLive', () => {
     expect(body).toEqual({ approved: true });
   });
 
+  it('leads with the arrival estimate when the server has one, and still says when the food is ready', () => {
+    const ready = Date.now() + 12 * 60_000;
+    renderLive({ status: OrderStatus.PREPARING, estimatedCompletionTime: ready, estimatedArrivalTime: ready + 10 * 60_000 } as Partial<Order>);
+    expect(screen.getByText('ARRIVING IN')).toBeInTheDocument();
+    expect(screen.getByText('22')).toBeInTheDocument();
+    expect(screen.getByText(/food ready/)).toBeInTheDocument();
+    expect(screen.queryByText('FOOD READY IN')).not.toBeInTheDocument();
+  });
+
+  it('keeps counting to the door after pickup', () => {
+    renderLive({
+      status: OrderStatus.HANDED_OVER, deliveryStatus: DeliveryStatus.OUT_FOR_DELIVERY,
+      estimatedArrivalTime: Date.now() + 6 * 60_000,
+    } as Partial<Order>);
+    expect(screen.getByText('ARRIVING IN')).toBeInTheDocument();
+    // The timeline says "on the way" too; the arrival line is the one after the clock time.
+    expect(screen.getAllByText(/on the way/).some((el) => el.textContent?.includes('\u00b7 on the way'))).toBe(true);
+  });
+
   it('carries no demo instructions', () => {
     renderLive({ status: OrderStatus.PREPARING });
     expect(screen.queryByText(/switch roles/i)).not.toBeInTheDocument();
