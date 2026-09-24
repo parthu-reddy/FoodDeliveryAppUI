@@ -1,7 +1,9 @@
 import { getToken } from "@/lib/tokenStore";
-import { deliveryApi, restaurantApi } from "@/lib/zodiosClients";
+import { restaurantApi } from "@/lib/zodiosClients";
 import { fetchEventSource } from '@microsoft/fetch-event-source';
-import { createHomeMarker, createRestaurantMarker, createRiderMarker } from '@features/maps-tracking/model/orderTrackingMarkers';
+import { createRiderMarker } from '@features/maps-tracking/model/orderTrackingMarkers';
+import { knownPoint, missingPointsNote, routeEnds, type LatLng } from '@features/maps-tracking/model/mapPoints';
+import { drawRoute, placePins } from '@features/maps-tracking/model/placeOrderMap';
 import { createSmoothMover } from '@features/maps-tracking/model/smoothPosition';
 import { prefersReducedMotion } from '@shared/ui';
 import { MapPanel } from './MapPanel';
@@ -9,8 +11,7 @@ import { LiveStreamBadge, type LiveStreamState } from './LiveStreamBadge';
 import { maplibre, type MapInstance } from '../model/maplibre';
 import { useState } from 'react';
 
-import { decodePolyline } from "@/lib/polyline";
-import { Order, OrderStatus } from "@/types";
+import { Order } from "@/types";
 import { useConfig } from "@/contexts/ConfigContext";
 import { ErrorBoundary } from "@shared/ui/ErrorBoundary";
 
@@ -20,7 +21,15 @@ import { ErrorBoundary } from "@shared/ui/ErrorBoundary";
  */
 class FatalStreamError extends Error {}
 
-export default function OrderTrackingMap(props: { order: Order; enableLiveTracking?: boolean }) {
+interface OrderTrackingMapProps {
+  order: Order;
+  /** Subscribe to the rider's live position stream (the customer's view). */
+  enableLiveTracking?: boolean;
+  /** The device is the rider's: its own GPS is the rider's position. Never true for a customer. */
+  viewerIsRider?: boolean;
+}
+
+export default function OrderTrackingMap(props: OrderTrackingMapProps) {
   return (
     <ErrorBoundary>
       <OrderTrackingMapInner {...props} />
@@ -28,166 +37,52 @@ export default function OrderTrackingMap(props: { order: Order; enableLiveTracki
   );
 }
 
-function OrderTrackingMapInner({ order, enableLiveTracking = false }: { order: Order; enableLiveTracking?: boolean }) {
+function OrderTrackingMapInner({ order, enableLiveTracking = false, viewerIsRider = false }: OrderTrackingMapProps) {
   useConfig();
   const [, setMapInstance] = useState<MapInstance | null>(null);
   const [liveState, setLiveState] = useState<LiveStreamState>('connecting');
+  const [missingNote, setMissingNote] = useState<string | null>(null);
+  const initialCentre = knownPoint(order.deliveryLat, order.deliveryLng);
 
   const attachMap = (map: MapInstance) => {
     let active = true;
 
 
+    // Only points the data actually has. A missing one is not drawn -- it used to be
+    // replaced by a fixed Bengaluru coordinate and drawn, with a route, as if it were real.
     const placeEverything = async () => {
       try {
-        // Set customer location to order delivery coordinates (if available) or fallback
-        const cLat = order.deliveryLat || 12.96;
-        const cLng = order.deliveryLng || 77.61;
-
-        let rLat = 12.98;
-        let rLng = 77.58;
+        const customer = knownPoint(order.deliveryLat, order.deliveryLng);
+        let restaurant: LatLng | null = null;
         try {
           const res = await restaurantApi.restaurantOutlet.get('/api/v1/restaurants/:id', { params: { id: order.restaurantId } });
-          const geo = res;
-          if ((geo?.data)?.lat) rLat = Number((geo.data).lat);
-          if ((geo?.data)?.lng) rLng = Number((geo.data).lng);
+          restaurant = knownPoint(res?.data?.lat, res?.data?.lng);
         } catch (err: unknown) {
-          console.warn('Could not fetch restaurant location, using defaults', err);
+          console.warn('Could not fetch restaurant location', err);
         }
-
+        if (!active) return;
         setMapInstance(map);
+        setMissingNote(missingPointsNote(restaurant, customer));
 
-        // cLat and cLng computed above
-
-        const addMarkers = (riderLat: number | null, riderLng: number | null) => {
-          if (!map || !active) return;
-
-          if (riderLat !== null && riderLng !== null) {
-            map.flyTo({ center: [riderLng, riderLat], zoom: 13 });
-            new maplibre.Marker({ element: createRiderMarker() })
-              .setLngLat([riderLng, riderLat])
-              .addTo(map);
-          }
-
-          // Customer delivery location
-          const homePopup = new maplibre.Popup({ offset: 25, closeButton: false, closeOnClick: false })
-            .setHTML('<div class="text-xs font-semibold text-center cursor-pointer text-blue-600">Customer<br/><span class="text-slate-500 font-normal">Click for Google Maps</span></div>');
-
-          const homeMarker = new maplibre.Marker({ element: createHomeMarker(cLat, cLng) })
-            .setLngLat([cLng, cLat])
-            .setPopup(homePopup)
-            .addTo(map);
-
-          // Add click to popup as well
-          homePopup.on('open', () => {
-            const content = homePopup.getElement();
-            if (content) {
-              content.onclick = () => {
-                try {
-                  window.open(`https://www.google.com/maps/dir/?api=1&destination=${cLat},${cLng}`, '_blank');
-                } catch (e: unknown) {
-                  console.error("Could not open external map navigation", e);
-                }
-              };
-            }
-          });
-          homeMarker.togglePopup();
-
-          // Actual restaurant location
-          const restPopup = new maplibre.Popup({ offset: 25, closeButton: false, closeOnClick: false })
-            .setHTML('<div class="text-xs font-semibold text-center cursor-pointer text-rose-600">Restaurant<br/><span class="text-slate-500 font-normal">Click for Google Maps</span></div>');
-
-          const restMarker = new maplibre.Marker({ element: createRestaurantMarker(rLat, rLng) })
-            .setLngLat([rLng, rLat])
-            .setPopup(restPopup)
-            .addTo(map);
-
-          restPopup.on('open', () => {
-            const content = restPopup.getElement();
-            if (content) {
-              content.onclick = () => {
-                try {
-                  window.open(`https://www.google.com/maps/dir/?api=1&destination=${rLat},${rLng}`, '_blank');
-                } catch (e: unknown) {
-                  console.error("Could not open external map navigation", e);
-                }
-              };
-            }
-          });
-          restMarker.togglePopup();
+        const place = (rider: LatLng | null) => {
+          if (!active) return;
+          placePins(map, { restaurant, customer, rider });
+          const ends = routeEnds({ rider, restaurant, customer, deliveryStatus: order.deliveryStatus });
+          if (ends) void drawRoute(map, ends[0], ends[1]);
         };
 
-        const drawRoute = async (sourceLat: number, sourceLng: number, destLat: number, destLng: number) => {
-          try {
-            const res = await deliveryApi.logistics.get('/api/v1/logistics/route', { queries: { sourceLat, sourceLng, destLat, destLng } });
-            const anyRes = res as { polyline?: string };
-            if (anyRes?.polyline) {
-              const decodedCoords = decodePolyline(anyRes.polyline).map(p => [p.lng, p.lat]);
-              if (map && map.isStyleLoaded()) {
-                map.addSource('route', {
-                  type: 'geojson',
-                  data: {
-                    type: 'Feature',
-                    properties: {},
-                    geometry: {
-                      type: 'LineString',
-                      coordinates: decodedCoords
-                    }
-                  }
-                });
-                map.addLayer({
-                  id: 'route',
-                  type: 'line',
-                  source: 'route',
-                  layout: { 'line-join': 'round', 'line-cap': 'round' },
-                  paint: { 'line-color': '#4f46e5', 'line-width': 4 }
-                });
-
-                // Fit bounds to show the whole route
-                const bounds = decodedCoords.reduce((bounds, coord) => {
-                  return bounds.extend(coord as [number, number]);
-                }, new maplibre.LngLatBounds(decodedCoords[0] as [number, number], decodedCoords[0] as [number, number]));
-                map.fitBounds(bounds, { padding: 40 });
-              } else if (map) {
-                map.on('style.load', () => drawRoute(sourceLat, sourceLng, destLat, destLng));
-              }
-            }
-          } catch (err: unknown) {
-            console.warn('Could not fetch optimized route, relying on static markers', err);
-          }
-        };
-
-        // Try geolocation to center map if we want to show rider's current location too
-        if (navigator.geolocation) {
+        // The device's own position is the RIDER only on the rider's screen. On the customer's
+        // tracker it is the customer, and it used to be drawn as the rider -- at the customer's
+        // own door, with a route from there -- after asking the customer for location access.
+        if (viewerIsRider && navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
-            (position) => {
-              const { latitude, longitude } = position.coords;
-              if (order.deliveryExecutiveId || order.status === OrderStatus.HANDED_OVER) {
-                addMarkers(latitude, longitude);
-
-                // Draw route from rider to destination (restaurant or customer depending on status)
-                if (order.deliveryStatus === 'ASSIGNED' || !order.deliveryStatus) {
-                  drawRoute(latitude, longitude, rLat, rLng);
-                } else {
-                  drawRoute(latitude, longitude, cLat, cLng);
-                }
-              } else {
-                addMarkers(null, null);
-                drawRoute(rLat, rLng, cLat, cLng);
-              }
-            },
-            () => {
-              // Fallback if location fails
-              addMarkers(null, null);
-              drawRoute(rLat, rLng, cLat, cLng);
-            },
-            { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
+            (position) => place({ lat: position.coords.latitude, lng: position.coords.longitude }),
+            () => place(null),
+            { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 },
           );
         } else {
-          // Fallback if geolocation unavailable
-          addMarkers(null, null);
-          drawRoute(rLat, rLng, cLat, cLng);
+          place(null);
         }
-
       } catch (e: unknown) {
         console.error('Map init failed', e);
       }
@@ -274,7 +169,9 @@ function OrderTrackingMapInner({ order, enableLiveTracking = false }: { order: O
   return (
     <MapPanel
       label="Live order tracking"
-      center={[order.deliveryLng || 77.61, order.deliveryLat || 12.96]}
+      // Only the initial camera, never a pin: a map needs somewhere to start. Placement fits
+      // the camera to the real points once it has them.
+      center={initialCentre ? [initialCentre.lng, initialCentre.lat] : [77.61, 12.96]}
       zoom={12}
       minZoom={10}
       maxZoom={17}
@@ -292,6 +189,12 @@ function OrderTrackingMapInner({ order, enableLiveTracking = false }: { order: O
         `}
       </style>
       {enableLiveTracking && <LiveStreamBadge state={liveState} />}
+      {missingNote && (
+        <span role="status" className="absolute bottom-2 left-2 z-10 px-2.5 py-1 rounded-full text-[11px] font-bold"
+          style={{ background: 'var(--color-paper)', color: 'var(--color-ink-2)', border: '1px solid var(--color-paper-line)' }}>
+          {missingNote}
+        </span>
+      )}
     </MapPanel>
   );
 }
