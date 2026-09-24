@@ -97,6 +97,8 @@ export const OrderResponse = z
     distanceKm: z.number().optional(),
     paymentMethod: z.enum(["CARD", "UPI", "WALLET"]).optional(),
     cancellationReason: z.string().optional(),
+    requestedDelayMinutes: z.number().int().optional(),
+    delayReason: z.string().optional(),
     expiresAt: z.number().int().optional(),
   })
   .passthrough();
@@ -727,6 +729,8 @@ export const Order = z
     estimatedPrepTimeMinutes: z.number().int().optional(),
     estimatedCompletionTime: z.number().int().optional(),
     cancellationReason: z.string().optional(),
+    requestedDelayMinutes: z.number().int().optional(),
+    delayReason: z.string().optional(),
     version: z.number().int().optional(),
     createdAt: z.string().datetime({ offset: true }),
     updatedAt: z.string().datetime({ offset: true }),
@@ -746,25 +750,25 @@ export const pageable = z
   .passthrough();
 export const PageableObject = z
   .object({
-    sort: SortObject.optional(),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
-    unpaged: z.boolean(),
+    sort: SortObject.optional(),
     offset: z.number().int(),
+    unpaged: z.boolean(),
   })
   .passthrough();
 export const PageOrder = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    sort: SortObject.optional(),
     pageable: PageableObject.optional(),
+    sort: SortObject.optional(),
+    first: z.boolean(),
+    last: z.boolean(),
     size: z.number().int(),
     content: z.array(Order),
     number: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
     numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
@@ -781,13 +785,13 @@ export const PageSupportTicket = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    sort: SortObject.optional(),
     pageable: PageableObject.optional(),
+    sort: SortObject.optional(),
+    first: z.boolean(),
+    last: z.boolean(),
     size: z.number().int(),
     content: z.array(SupportTicket),
     number: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
     numberOfElements: z.number().int(),
     empty: z.boolean(),
   })

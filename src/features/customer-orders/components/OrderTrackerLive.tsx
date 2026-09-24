@@ -50,8 +50,17 @@ function headlineFor(order: Order): { title: string; detail: string } {
     case OrderStatus.CREATED:
     case OrderStatus.PENDING_ACCEPTANCE:
       return { title: 'Waiting for the restaurant', detail: 'They have 10 minutes to accept. If they do not, the order is cancelled for you.' };
-    case OrderStatus.AWAITING_DELAY_APPROVAL:
-      return { title: 'The kitchen needs more time', detail: 'Let them know if you are happy to wait.' };
+    case OrderStatus.AWAITING_DELAY_APPROVAL: {
+      // The restaurant's own request (CustomerApplication stores it from
+      // OrderDelayApprovalRequestedEvent). Absent on orders from before that change, and on a
+      // backend that has not deployed it yet -- then the generic line stands.
+      const mins = order.requestedDelayMinutes;
+      const reason = order.delayReason?.trim();
+      return {
+        title: mins && mins > 0 ? `The kitchen asked for ${mins} more minutes` : 'The kitchen needs more time',
+        detail: reason ? `“${reason}” Let them know if you are happy to wait.` : 'Let them know if you are happy to wait.',
+      };
+    }
     case OrderStatus.ACCEPTED:
     case OrderStatus.PREPARING:
       return { title: 'Cooking now', detail: 'The kitchen has your order.' };

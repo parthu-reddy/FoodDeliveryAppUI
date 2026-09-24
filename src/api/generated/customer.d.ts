@@ -1199,6 +1199,9 @@ export interface components {
             /** @enum {string} */
             paymentMethod?: "CARD" | "UPI" | "WALLET";
             cancellationReason?: string;
+            /** Format: int32 */
+            requestedDelayMinutes?: number;
+            delayReason?: string;
             /** Format: int64 */
             expiresAt?: number;
         };
@@ -1754,6 +1757,9 @@ export interface components {
             estimatedCompletionTime?: number;
             cancellationReason?: string;
             /** Format: int32 */
+            requestedDelayMinutes?: number;
+            delayReason?: string;
+            /** Format: int32 */
             version?: number;
             /** Format: date-time */
             createdAt: string;
@@ -1774,29 +1780,29 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
-            sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
+            sort?: components["schemas"]["SortObject"];
+            first: boolean;
+            last: boolean;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["Order"][];
             /** Format: int32 */
             number: number;
-            first: boolean;
-            last: boolean;
             /** Format: int32 */
             numberOfElements: number;
             empty: boolean;
         };
         PageableObject: {
-            sort?: components["schemas"]["SortObject"];
             paged: boolean;
             /** Format: int32 */
             pageNumber: number;
             /** Format: int32 */
             pageSize: number;
-            unpaged: boolean;
+            sort?: components["schemas"]["SortObject"];
             /** Format: int64 */
             offset: number;
+            unpaged: boolean;
         };
         SortObject: {
             empty: boolean;
@@ -1815,15 +1821,15 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
-            sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
+            sort?: components["schemas"]["SortObject"];
+            first: boolean;
+            last: boolean;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["SupportTicket"][];
             /** Format: int32 */
             number: number;
-            first: boolean;
-            last: boolean;
             /** Format: int32 */
             numberOfElements: number;
             empty: boolean;
