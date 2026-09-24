@@ -25,3 +25,12 @@ export function formatCountdown(ms: number): string {
   const s = total % 60;
   return `${m}:${String(s).padStart(2, '0')}`;
 }
+
+/**
+ * The prep time the kitchen commits to by accepting -- the same arithmetic the server does
+ * (RestaurentApplication `CreatedState.accept`: `prepTime ?? 15` plus any additional minutes),
+ * so "Accept · 25 min" is the number the customer will be quoted, not a second opinion.
+ */
+export function promisedPrepMinutes(order: { prepTime?: number | null; additionalPrepTime?: number | null }): number {
+  return (order.prepTime ?? 15) + (order.additionalPrepTime ?? 0);
+}

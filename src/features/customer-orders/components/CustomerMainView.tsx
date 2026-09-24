@@ -108,7 +108,7 @@ export function CustomerMainView({
       {currentTrackingOrder ? (
         currentTrackingOrder.deliveryStatus === DeliveryStatus.DELIVERED ? (
           <OrderDeliveredSummary
-            key="summary"
+            key="panel-summary"
             order={currentTrackingOrder}
             onBack={() => setTrackingOrder(null)}
             chatWidgetRef={chatWidgetRef}
@@ -116,6 +116,7 @@ export function CustomerMainView({
         ) : (
           /* ------------------- TRACKING SCREEN ------------------- */
           <CustomerOrderTracker
+            key="panel-tracking"
             currentTrackingOrder={currentTrackingOrder}
              
             setTrackingOrder={setTrackingOrder}
@@ -133,7 +134,7 @@ export function CustomerMainView({
         )
       ) : selectedRestaurant ? (
         /* ------------------- RESTAURANT DETAIL & MENU ------------------- */
-        <React.Fragment key="menu">
+        <React.Fragment key="panel-menu">
           <CustomerFreeDeliveryTracker
             carts={carts}
             getCartTotal={getCartTotal}
@@ -175,7 +176,7 @@ export function CustomerMainView({
         </React.Fragment>
       ) : (
         /* ------------------- MAIN RESTAURANT FEED ------------------- */
-        <ErrorBoundary fallbackLabel="Restaurant Feed">
+        <ErrorBoundary key="panel-feed" fallbackLabel="Restaurant Feed">
           <CustomerRestaurantBrowser
             restaurants={restaurants}
             isRestaurantsLoading={isRestaurantsLoading}

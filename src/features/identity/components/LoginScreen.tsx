@@ -70,11 +70,16 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
             like, and it is invisible to a hit test because the background layer is
             `pointer-events-none`. */}
         <div className="relative z-10 flex-1 flex flex-col justify-start my-3 sm:my-6 w-full max-w-7xl mx-auto px-4 sm:px-8">
-          <AnimatePresence mode="wait">
+          {/* No mode="wait" and keyed branches: both children are components, not motion
+              elements, so under "wait" an unreported exit would leave sign-in stuck on the role
+              picker. The keys differ from the ones the children put on their own motion roots
+              (presence_audit.mjs R1-R3). */}
+          <AnimatePresence initial={false}>
             {!login.selectedRole ? (
-              <RoleSelector onSelectRole={login.setSelectedRole} />
+              <RoleSelector key="panel-role" onSelectRole={login.setSelectedRole} />
             ) : (
               <AuthForm
+                key="panel-auth"
                 selectedRole={login.selectedRole}
                 phone={login.phoneNumber}
                 setPhone={login.setPhone}

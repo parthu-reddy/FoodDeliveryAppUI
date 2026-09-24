@@ -66,7 +66,7 @@ export function DeliveryActiveJob({
 
       {/* Map Integration */}
       <div className="relative w-full h-64 bg-slate-200/50 dark:bg-slate-800/50 rounded-xl mb-6 overflow-hidden border border-slate-200 dark:border-slate-700/50">
-        <OrderTrackingMap order={currentJob} />
+        <OrderTrackingMap order={currentJob} viewerIsRider />
         <Surface radius="md" elevation={1} className="absolute top-2 right-2 px-2.5 py-1 text-[10px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1.5 pointer-events-none">
           <MapPin className="w-3 h-3 text-rose-500" />
           Tap markers for Google Maps
