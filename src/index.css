@@ -356,3 +356,16 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Printing a tax invoice (TaxInvoiceSheet): the invoice alone, black on white, whatever the
+   theme -- a dark-mode invoice would print light text on a white page. */
+@media print {
+  body * { visibility: hidden !important; }
+  [data-print-root], [data-print-root] * {
+    visibility: visible !important;
+    color: #000 !important;
+    background: transparent !important;
+    border-color: #999 !important;
+  }
+  [data-print-root] { position: absolute; left: 0; top: 0; width: 100%; padding: 24px; }
+}

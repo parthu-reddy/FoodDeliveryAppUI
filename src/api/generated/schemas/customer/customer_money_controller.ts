@@ -23,6 +23,49 @@ export const CustomerReceipt = z
   })
   .partial()
   .passthrough();
+export const Party = z
+  .object({
+    legalName: z.string(),
+    tradeName: z.string(),
+    gstin: z.string(),
+    fssaiLicenseNumber: z.string(),
+    address: z.string(),
+  })
+  .partial()
+  .passthrough();
+export const Line = z
+  .object({
+    description: z.string(),
+    sac: z.string(),
+    quantity: z.number().int(),
+    unitPrice: z.number(),
+    amount: z.number(),
+  })
+  .partial()
+  .passthrough();
+export const CustomerInvoice = z
+  .object({
+    invoiceNumber: z.string(),
+    issuedAt: z.string().datetime({ offset: true }),
+    orderId: z.string().uuid(),
+    orderPlacedAt: z.string().datetime({ offset: true }),
+    supplier: Party,
+    operator: Party,
+    customerName: z.string(),
+    deliveryAddress: z.string(),
+    lines: z.array(Line),
+    taxableValue: z.number(),
+    cgstRatePercent: z.number(),
+    cgstAmount: z.number(),
+    sgstRatePercent: z.number(),
+    sgstAmount: z.number(),
+    deliveryFee: z.number(),
+    platformFee: z.number(),
+    total: z.number(),
+    paymentMethod: z.string(),
+  })
+  .partial()
+  .passthrough();
 export const WalletDto = z
   .object({
     id: z.string().uuid(),
@@ -50,6 +93,9 @@ export const PageResponseDtoMapStringObject = z
 export const schemas = {
   ReceiptItem,
   CustomerReceipt,
+  Party,
+  Line,
+  CustomerInvoice,
   WalletDto,
   PageResponseDtoMapStringObject,
 };
@@ -115,6 +161,20 @@ export const endpoints = makeApi([
       },
     ],
     response: CustomerReceipt,
+  },
+  {
+    method: "get",
+    path: "/api/v1/money/customer/orders/:orderId/invoice",
+    alias: "getInvoice",
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "orderId",
+        type: "Path",
+        schema: z.string().uuid(),
+      },
+    ],
+    response: CustomerInvoice,
   },
 ]);
 

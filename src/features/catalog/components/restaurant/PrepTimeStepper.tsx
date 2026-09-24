@@ -61,7 +61,7 @@ function Stepper({ outletId, saved, onSaved }: { outletId: string; saved: number
     }, SAVE_AFTER_MS);
   };
 
-  const buttonClass = 'w-[42px] h-[42px] shrink-0 rounded-xl border border-paper-line bg-paper-sunken flex items-center justify-center text-ink disabled:opacity-40';
+  const buttonClass = 'w-[42px] h-[42px] shrink-0 rounded-md border border-paper-line bg-paper-sunken flex items-center justify-center text-ink disabled:opacity-40';
   return (
     <section aria-label="Prep time right now" className="mt-3 p-3.5 rounded-2xl border border-paper-line flex flex-col gap-2.5" data-testid="prep-time-stepper">
       <h3 className="text-xs font-bold text-ink">Prep time right now</h3>

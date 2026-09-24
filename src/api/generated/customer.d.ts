@@ -772,6 +772,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/money/customer/orders/{orderId}/invoice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getInvoice"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/internal/orders/{orderId}/review-context": {
         parameters: {
             query?: never;
@@ -1666,6 +1682,44 @@ export interface components {
             /** Format: int32 */
             quantity?: number;
             price?: number;
+        };
+        CustomerInvoice: {
+            invoiceNumber?: string;
+            /** Format: date-time */
+            issuedAt?: string;
+            /** Format: uuid */
+            orderId?: string;
+            /** Format: date-time */
+            orderPlacedAt?: string;
+            supplier?: components["schemas"]["Party"];
+            operator?: components["schemas"]["Party"];
+            customerName?: string;
+            deliveryAddress?: string;
+            lines?: components["schemas"]["Line"][];
+            taxableValue?: number;
+            cgstRatePercent?: number;
+            cgstAmount?: number;
+            sgstRatePercent?: number;
+            sgstAmount?: number;
+            deliveryFee?: number;
+            platformFee?: number;
+            total?: number;
+            paymentMethod?: string;
+        };
+        Line: {
+            description?: string;
+            sac?: string;
+            /** Format: int32 */
+            quantity?: number;
+            unitPrice?: number;
+            amount?: number;
+        };
+        Party: {
+            legalName?: string;
+            tradeName?: string;
+            gstin?: string;
+            fssaiLicenseNumber?: string;
+            address?: string;
         };
         ApiResponseOrderReviewContextDto: {
             success: boolean;
@@ -3186,6 +3240,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CustomerReceipt"];
+                };
+            };
+        };
+    };
+    getInvoice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomerInvoice"];
                 };
             };
         };
