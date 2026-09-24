@@ -1,19 +1,16 @@
-import { Order, OrderStatus } from '@/types';
+import { Order } from '@/types';
 import { RestaurantOrderActions } from '@features/restaurant-orders/components/RestaurantOrderActions';
 import { RestaurantOrderDrawers } from '@features/restaurant-orders/components/RestaurantOrderDrawers';
 import { useCallContext } from '@/contexts/CallContext';
-import { Badge, Spinner, surfaceStyle } from '@shared/ui';
+import { StatusPill, surfaceStyle } from '@shared/ui';
 import { motion } from 'motion/react';
-import {
- Bike,
- Clock,
- Flame,
- User,
- PhoneCall
-} from 'lucide-react';
+import { Bike, Clock, User, PhoneCall } from 'lucide-react';
 import React, { useState } from 'react';
 import { formatINR } from '@shared/money';
 import { getFriendlyDeliveryStatusMessage } from '@features/customer-orders/model/statusMessaging';
+import { orderStatusView } from '@features/customer-orders/model/orderStatus';
+import { acceptDeadline } from '../model/acceptDeadline';
+import { AcceptClock } from './AcceptClock';
 
 // Utility
 
@@ -95,126 +92,81 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
  setRefundReason('');
  };
 
- const statusStyling = () => {
- if (order.status === OrderStatus.AWAITING_DELAY_APPROVAL) {
- return { ring: 'ring-rose-500/20 border-rose-500/30', bg: 'bg-rose-500/[0.01]' };
- }
- if (order.status === OrderStatus.PREPARING) {
- return { ring: 'ring-amber-500/20 border-amber-500/30', bg: 'bg-amber-500/[0.01]' };
- }
- return { ring: 'ring-amber-500/10', bg: 'border-rose-500/20 dark:border-rose-500/30' };
- };
- const styles = statusStyling();
+ const view = orderStatusView(order.status, order.deliveryStatus);
+ const deadline = isNewPlaced ? acceptDeadline(order) : null;
+ // The kitchen ticket (Restaurant.dc.html): cooking orders are dark and set in 20 px type,
+ // readable from across a counter on a propped-up tablet. `dark` on the card scopes the
+ // .dark token block to this subtree, so paper/ink invert without a hardcoded colour.
+ const ticket = !!isCooking;
+ const items = (order.items ?? []) as { quantity: number, name?: string, price?: number, item?: { id?: string, name: string, price?: number } }[];
+ const who = order.customerName || 'Customer';
 
  return (
- <motion.div 
-  style={surfaceStyle({ variant: 'glass-chrome', elevation: 3, radius: 'lg' })}
-          className={`p-4 space-y-3.5 relative overflow-hidden transition ${styles.bg} ${styles.ring}`}
+ <motion.div
+  style={surfaceStyle({ variant: 'solid', elevation: isNewPlaced ? 2 : 1, radius: 'lg' })}
+  className={`p-4 space-y-3.5 relative overflow-hidden ${ticket ? 'dark' : ''}`}
  >
- <div className="flex justify-between items-start">
- <div>
- <span className="text-xs font-mono font-bold text-amber-500">#{order.id.substring(0, 8)}</span>
- <span className="text-[10px] text-slate-400 dark:text-slate-300 font-medium block">{order.createdAt ? new Date(order.createdAt).toLocaleTimeString() : ''}</span>
- </div>
- <div className="flex items-center gap-1.5">
- <Badge 
- variant={order.status === OrderStatus.AWAITING_DELAY_APPROVAL ? 'danger' : 'primary'} 
- icon={order.status === OrderStatus.PREPARING ? <Flame className="w-3 h-3 text-amber-500 animate-bounce" /> : undefined}
- pulse={order.status === OrderStatus.AWAITING_DELAY_APPROVAL}
- >
- {order.status === OrderStatus.AWAITING_DELAY_APPROVAL ? 'ON HOLD' : 
- order.status === OrderStatus.PREPARING ? 'COOKING' :
- order.status === OrderStatus.ACCEPTED ? 'ACCEPTED' :
- order.status === OrderStatus.READY_FOR_PICKUP ? 'READY' :
- order.status === OrderStatus.HANDED_OVER ? 'DISPATCHED' :
- 'PLACED'}
- </Badge>
- </div>
- </div>
-
- <div className="bg-slate-50 dark:bg-slate-950/40 rounded-xl border border-rose-500/20 dark:border-rose-500/30 overflow-hidden divide-y divide-rose-500/10 dark:divide-rose-500/20">
- <div className="p-2.5 space-y-1 text-[11px]">
- <div className="flex items-center justify-between gap-1">
- <div className="flex items-center gap-2">
- <p className="font-bold text-slate-700 dark:text-[#f0ede6] flex items-center gap-1">
- <User className="w-3 h-3 text-slate-400 dark:text-slate-300" />
- <span className="truncate max-w-[120px]">Customer #{order.customerId?.substring(0, 8) || order.id?.substring(0, 8)}</span>
- </p>
- {order.customerId && (
- <button
- type="button"
- onClick={() => startCall(order.customerId!, order.id)}
- className="p-1 rounded-full bg-amber-100 text-amber-600 hover:bg-amber-200 dark:bg-amber-500/20 dark:text-amber-400 transition-colors"
- title="Call Customer"
- >
- <PhoneCall className="w-3 h-3" />
- </button>
- )}
- </div>
- {order.estimatedCompletionTime && (
- <span className="flex items-center gap-1 text-[9px] text-amber-500 font-bold shrink-0">
- <Clock className="w-2.5 h-2.5" />
- {new Date(order.estimatedCompletionTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
- </span>
- )}
- </div>
- </div>
-
- <div className="p-2.5 bg-rose-50/30 dark:bg-rose-950/20">
- <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-300 mb-1.5">
- <span className="font-semibold text-[9px] uppercase tracking-wider text-rose-400/80">Courier</span>
- <span className="font-bold flex items-center gap-1 text-rose-400 text-[9px] uppercase">
- <span className="w-1 h-1 rounded-full bg-rose-500 animate-ping" />
- {getFriendlyDeliveryStatusMessage(order.deliveryStatus)}
+ <div className="flex justify-between items-start gap-3">
+ <div className="min-w-0">
+ <span className={`block font-mono font-bold text-ink ${ticket ? 'text-2xl' : 'text-sm'}`}>#{order.id.substring(0, 8).toUpperCase()}</span>
+ <span className="text-[11px] font-medium text-ink-2">
+ {order.createdAt ? new Date(order.createdAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : ''}
+ {order.estimatedCompletionTime ? ` · ready by ${new Date(order.estimatedCompletionTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : ''}
  </span>
  </div>
- {order.deliveryExecutiveId ? (
- <div className="flex items-center justify-between w-full">
- <div className="flex items-center gap-2">
- <div className="w-6 h-6 rounded-full bg-rose-500/15 flex items-center justify-center text-rose-550 shrink-0">
- <Bike className="w-3 h-3" />
- </div>
- <p className="font-bold text-[11px] text-slate-750 dark:text-[#f0ede6] truncate">Rider #{order.deliveryExecutiveId.substring(0, 4)}</p>
- </div>
- {order.deliveryExecutiveId && (
- <button
- type="button"
- onClick={() => startCall(order.deliveryExecutiveId!, order.id)}
- className="p-1 rounded-full bg-amber-100 text-amber-600 hover:bg-amber-200 dark:bg-amber-500/20 dark:text-amber-400 transition-colors"
- title={`Call Rider`}
- >
- <PhoneCall className="w-3 h-3" />
- </button>
- )}
- </div>
- ) : (
- <div className="flex items-center gap-2 py-0.5 text-slate-450">
- <Spinner size="xs" label="" />
- <span className="text-[9px]">Awaiting assignment...</span>
- </div>
- )}
- </div>
+ <StatusPill label={view.label} tone={view.tone} live={view.live} />
  </div>
 
- <div className="space-y-1">
- <span className="text-[9px] text-slate-400 dark:text-slate-300 font-extrabold uppercase font-mono">Dishes ({order.items?.length || 0})</span>
- <div className="space-y-1 max-h-[100px] overflow-y-auto scrollbar-thin pl-1">
- { }
- {order.items?.map((cartItem: { quantity: number, name?: string, price?: number, item?: { id?: string, name: string, price?: number } }, idx: number) => (
- <div key={cartItem.item?.id || idx} className="flex justify-between text-[11px]">
- <span className="text-slate-600 dark:text-[#f0ede6] font-medium">
- <span className="font-mono text-amber-500 font-bold pr-1">{cartItem.quantity || 1}x</span> {cartItem.item?.name || cartItem.name || 'Item'}
- </span>
- <span className="text-slate-400 dark:text-slate-300 font-mono">{formatINR((cartItem.item?.price || cartItem.price || 0) * (cartItem.quantity || 1))}</span>
+ {deadline && (
+ <div className="flex items-center gap-4">
+ <AcceptClock deadline={deadline} />
+ <div className="min-w-0 space-y-1">
+ <p className="text-[15px] font-extrabold text-ink">{items.reduce((n, i) => n + (i.quantity || 1), 0)} items · {formatINR(order.totalAmount ?? 0)}</p>
+ <p className="text-xs font-medium text-ink-2 truncate">{who}{order.paymentMethod ? ` · pays by ${order.paymentMethod.toLowerCase()}` : ''}</p>
  </div>
+ </div>
+ )}
+
+ <ul className={ticket ? 'space-y-1.5' : 'space-y-1'} aria-label="Dishes">
+ {items.map((cartItem, idx) => (
+ <li key={cartItem.item?.id || idx} className={`flex justify-between gap-3 ${ticket ? 'text-[20px] leading-snug font-bold' : 'text-[13px]'}`}>
+ <span className="text-ink">
+ <span className="font-mono pr-1.5">{cartItem.quantity || 1}×</span>{cartItem.item?.name || cartItem.name || 'Item'}
+ </span>
+ {!ticket && <span className="font-mono text-ink-2">{formatINR((cartItem.item?.price || cartItem.price || 0) * (cartItem.quantity || 1))}</span>}
+ </li>
  ))}
- </div>
+ </ul>
+
+ <div className="flex items-center justify-between gap-2 pt-2 border-t border-paper-line text-xs">
+ <span className="flex items-center gap-1.5 min-w-0 text-ink-2">
+ <User className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+ <span className="truncate font-semibold text-ink">{who}</span>
+ </span>
+ {order.customerId && (
+ <button type="button" onClick={() => startCall(order.customerId!, order.id)} aria-label={`Call ${who}`} className="p-1.5 rounded-full text-ink-2">
+ <PhoneCall className="w-4 h-4" />
+ </button>
+ )}
+ <span className="flex items-center gap-1.5 min-w-0 text-ink-2">
+ <Bike className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+ {order.deliveryExecutiveId ? (
+ <span className="truncate font-semibold text-ink">{order.deliveryExecutiveName || 'Rider assigned'}</span>
+ ) : (
+ <span className="truncate">{getFriendlyDeliveryStatusMessage(order.deliveryStatus)}</span>
+ )}
+ </span>
+ {order.deliveryExecutiveId && (
+ <button type="button" onClick={() => startCall(order.deliveryExecutiveId!, order.id)} aria-label={`Call ${order.deliveryExecutiveName || 'the rider'}`} className="p-1.5 rounded-full text-ink-2">
+ <PhoneCall className="w-4 h-4" />
+ </button>
+ )}
  </div>
 
  {cardDelayStatus[order.id] && (
- <div className="bg-amber-500/10 dark:bg-amber-500/5 text-amber-600 dark:text-amber-400 text-[10px] font-bold p-2 rounded-xl border border-amber-500/15 flex items-center gap-1.5 animate-pulse">
+ <div className="text-xs font-bold p-2 rounded-xl flex items-center gap-1.5" style={{ background: 'var(--color-warning-bg)', color: 'var(--color-warning)' }}>
  <Clock className="w-3.5 h-3.5 shrink-0" />
- <span>Revised ETA (+{cardDelayStatus[order.id].minutes} min) logged with API</span>
+ <span>Asked the customer for {cardDelayStatus[order.id].minutes} more minutes</span>
  </div>
  )}
 

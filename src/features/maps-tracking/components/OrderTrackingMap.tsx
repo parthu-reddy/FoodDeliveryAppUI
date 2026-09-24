@@ -11,10 +11,7 @@ import { useState } from 'react';
 
 import { decodePolyline } from "@/lib/polyline";
 import { Order, OrderStatus } from "@/types";
-
-
 import { useConfig } from "@/contexts/ConfigContext";
-
 import { ErrorBoundary } from "@shared/ui/ErrorBoundary";
 
 /**

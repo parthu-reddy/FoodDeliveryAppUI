@@ -3,6 +3,7 @@ import { useMotionPresets } from '@shared/ui';
 import React, { Suspense } from 'react';
 import type { Brand, MenuItem, Order, Outlet } from '@/types';
 import { RestaurantMenuTogglesView } from '@features/catalog/components/restaurant/RestaurantMenuTogglesView';
+import { QuickStockRail } from '@features/catalog/components/restaurant/QuickStockRail';
 import { RestaurantOrderQueue } from '@features/restaurant-orders/components/RestaurantOrderQueue';
 import { DishRatingsPanel } from '@features/reviews';
 import { ReviewsPanel } from '@features/reviews/components/ReviewsPanel';
@@ -79,6 +80,8 @@ export function RestaurantTabPanels({
           totalRevenue={totalRevenue} 
           completedOrdersCount={completedOrders.length} 
         />
+        <div className="flex items-start gap-5">
+        <div className="flex-1 min-w-0">
         <ErrorBoundary fallbackLabel="Order Queue">
           <RestaurantOrderQueue 
             totalRevenue={totalRevenue}
@@ -95,6 +98,9 @@ export function RestaurantTabPanels({
             setSelectedChatOrder={setSelectedChatOrder}
           />
         </ErrorBoundary>
+        </div>
+        <QuickStockRail menuList={menuList} stockStatus={stockStatus} toggleStock={toggleStock} selectedOutletId={selectedOutletId} />
+        </div>
       </motion.div>
     )}
 

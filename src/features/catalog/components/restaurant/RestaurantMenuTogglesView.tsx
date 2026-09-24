@@ -1,6 +1,6 @@
-import { Surface, Switch } from '@shared/ui';
 import { MenuItem } from '@/types';
-import ImageLoader from '@shared/ui/ImageLoader';
+import { StockToggleRow } from './StockToggleRow';
+import { isDishAvailable } from '../../model/dishAvailability';
 import { motion } from 'motion/react';
 import { useMotionPresets } from '@shared/ui';
 import React from 'react';
@@ -32,56 +32,23 @@ export const RestaurantMenuTogglesView: React.FC<RestaurantMenuTogglesViewProps>
       className="p-5 space-y-4"
     >
       <div className="space-y-1">
-        <h4 className="font-bold text-lg">In-Stock Dish Toggles</h4>
-        <p className="text-xs text-slate-400 dark:text-slate-300">
-          Instantly toggle dishes to "Out of Stock" to lock them in customer views.
+        <h2 className="font-extrabold text-lg tracking-tight text-ink">Today&rsquo;s menu</h2>
+        <p className="text-xs text-ink-2">
+          Switch a dish off and customers stop seeing it as orderable straight away.
         </p>
       </div>
 
       <div className="space-y-6">
         {Object.entries(categories).map(([category, dishes]) => (
           <div key={category} className="space-y-3">
-            <h5 className="font-extrabold text-sm text-slate-800 dark:text-slate-300 uppercase tracking-widest">
+            <h3 className="font-extrabold text-sm text-ink uppercase tracking-widest">
               {category}
-            </h5>
+            </h3>
             <div className="space-y-3">
               {(dishes as MenuItem[]).map(dish => {
-                const available = stockStatus[`${selectedOutletId}_${dish.id}`] !== undefined 
-                    ? stockStatus[`${selectedOutletId}_${dish.id}`] 
-                    : dish.isAvailable !== false;
+                const available = isDishAvailable(stockStatus, selectedOutletId, dish);
                 return (
-                  <Surface radius="lg" elevation={1} className="p-4 flex items-center justify-between" key={dish.id}>
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-200 dark:bg-slate-800 shrink-0">
-                        <ImageLoader 
-                          src={dish.imageUrl || ''} 
-                          alt={dish.name} 
-                          className="w-full h-full object-cover" 
-                          containerClassName="w-full h-full" 
-                          referrerPolicy="no-referrer" 
-                          loading="lazy" 
-                        />
-                      </div>
-                      <div>
-                        <h5 className="font-bold text-sm">{dish.name}</h5>
-                        <span className="text-xs text-amber-500 font-mono">₹{dish.price}</span>
-                      </div>
-                    </div>
-
-                    <Switch
-                      checked={available}
-                      onChange={() => toggleStock(dish.id as string, available)}
-                      label={`${dish.name} available`}
-                      className="p-1"
-                    >
-                      <span
-                        className="font-bold text-xs font-mono"
-                        style={{ color: available ? 'var(--color-success)' : 'var(--color-ink-3)' }}
-                      >
-                        {available ? 'ACTIVE' : 'PAUSED'}
-                      </span>
-                    </Switch>
-                  </Surface>
+                  <StockToggleRow key={dish.id} dish={dish} available={available} onToggle={() => toggleStock(dish.id as string, available)} />
                 );
               })}
             </div>
