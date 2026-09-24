@@ -32,6 +32,7 @@ export const OrderRequest = z
     deliveryAddressId: z.string().uuid(),
     paymentMethod: z.enum(["CARD", "UPI", "WALLET", "CARD", "UPI", "WALLET"]),
     items: z.array(OrderItemRequest),
+    tipAmount: z.number().lte(500).optional(),
   })
   .passthrough();
 export const OrderItemResponse = z
@@ -100,6 +101,7 @@ export const OrderResponse = z
     requestedDelayMinutes: z.number().int().optional(),
     delayReason: z.string().optional(),
     estimatedArrivalTime: z.number().int().optional(),
+    tipAmount: z.number().optional(),
     expiresAt: z.number().int().optional(),
   })
   .passthrough();
@@ -564,6 +566,7 @@ export const DriverSummary = z
     gross: z.number(),
     taxes: z.number(),
     net: z.number(),
+    tips: z.number(),
     pendingBalance: z.number(),
     lastPayout: PayoutSummaryDto,
   })
@@ -780,6 +783,7 @@ export const Order = z
     updatedAt: z.string().datetime({ offset: true }),
     deliveredAt: z.string().datetime({ offset: true }).optional(),
     deliveryTravelSeconds: z.number().int().optional(),
+    tipAmount: z.number().optional(),
     handedOverAt: z.number().int().optional(),
   })
   .passthrough();
@@ -809,9 +813,9 @@ export const PageOrder = z
     totalElements: z.number().int(),
     totalPages: z.number().int(),
     pageable: PageableObject.optional(),
-    sort: SortObject.optional(),
     first: z.boolean(),
     last: z.boolean(),
+    sort: SortObject.optional(),
     size: z.number().int(),
     content: z.array(Order),
     number: z.number().int(),
@@ -832,9 +836,9 @@ export const PageSupportTicket = z
     totalElements: z.number().int(),
     totalPages: z.number().int(),
     pageable: PageableObject.optional(),
-    sort: SortObject.optional(),
     first: z.boolean(),
     last: z.boolean(),
+    sort: SortObject.optional(),
     size: z.number().int(),
     content: z.array(SupportTicket),
     number: z.number().int(),

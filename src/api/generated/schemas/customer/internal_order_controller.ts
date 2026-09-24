@@ -130,6 +130,7 @@ export const Order = z
     updatedAt: z.string().datetime({ offset: true }),
     deliveredAt: z.string().datetime({ offset: true }).optional(),
     deliveryTravelSeconds: z.number().int().optional(),
+    tipAmount: z.number().optional(),
     handedOverAt: z.number().int().optional(),
   })
   .passthrough();
@@ -138,9 +139,9 @@ export const PageOrder = z
     totalElements: z.number().int(),
     totalPages: z.number().int(),
     pageable: PageableObject.optional(),
-    sort: SortObject.optional(),
     first: z.boolean(),
     last: z.boolean(),
+    sort: SortObject.optional(),
     size: z.number().int(),
     content: z.array(Order),
     number: z.number().int(),

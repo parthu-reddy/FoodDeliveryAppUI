@@ -1151,6 +1151,7 @@ export interface components {
              */
             paymentMethod: "CARD" | "UPI" | "WALLET" | "CARD" | "UPI" | "WALLET";
             items: components["schemas"]["OrderItemRequest"][];
+            tipAmount?: number;
         };
         ApiResponseOrderResponse: {
             success: boolean;
@@ -1220,6 +1221,7 @@ export interface components {
             delayReason?: string;
             /** Format: int64 */
             estimatedArrivalTime?: number;
+            tipAmount?: number;
             /** Format: int64 */
             expiresAt?: number;
         };
@@ -1630,6 +1632,7 @@ export interface components {
             gross?: number;
             taxes?: number;
             net?: number;
+            tips?: number;
             pendingBalance?: number;
             lastPayout?: components["schemas"]["PayoutSummaryDto"];
         };
@@ -1825,6 +1828,7 @@ export interface components {
             deliveredAt?: string;
             /** Format: int32 */
             deliveryTravelSeconds?: number;
+            tipAmount?: number;
             /** Format: int64 */
             handedOverAt?: number;
         };
@@ -1841,9 +1845,9 @@ export interface components {
             /** Format: int32 */
             totalPages: number;
             pageable?: components["schemas"]["PageableObject"];
-            sort?: components["schemas"]["SortObject"];
             first: boolean;
             last: boolean;
+            sort?: components["schemas"]["SortObject"];
             /** Format: int32 */
             size: number;
             content: components["schemas"]["Order"][];
@@ -1882,9 +1886,9 @@ export interface components {
             /** Format: int32 */
             totalPages: number;
             pageable?: components["schemas"]["PageableObject"];
-            sort?: components["schemas"]["SortObject"];
             first: boolean;
             last: boolean;
+            sort?: components["schemas"]["SortObject"];
             /** Format: int32 */
             size: number;
             content: components["schemas"]["SupportTicket"][];

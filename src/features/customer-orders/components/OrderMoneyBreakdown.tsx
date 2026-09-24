@@ -15,7 +15,7 @@ import { AmountBreakdown, type BreakdownLine } from '@shared/money';
  */
 
 interface OrderMoneyBreakdownProps {
-  order: Pick<Order, 'itemTotal' | 'customerPlatformFee' | 'sgst' | 'cgst' | 'deliveryFee' | 'totalAmount'>;
+  order: Pick<Order, 'itemTotal' | 'customerPlatformFee' | 'sgst' | 'cgst' | 'deliveryFee' | 'totalAmount' | 'tipAmount'>;
   className?: string;
 }
 
@@ -30,6 +30,8 @@ export function OrderMoneyBreakdown({ order, className = '' }: OrderMoneyBreakdo
   if (tax > 0) {
     lines.push({ label: 'GST', amount: tax, info: 'SGST and CGST, charged separately' });
   }
+  // Part of totalAmount since Phase 7 A3; without this line the bill would not add up.
+  if ((order.tipAmount ?? 0) > 0) lines.push({ label: 'Rider tip', amount: order.tipAmount ?? 0 });
 
   return (
     <AmountBreakdown

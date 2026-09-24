@@ -147,11 +147,11 @@ export default function CustomerDashboard({
     return originalGetCartTotal(rId);
   };
 
-  const processPaymentAndOrder = (method: PaymentMethodChoice) => originalProcessPaymentAndOrder(method, deliveryAddressId as string, () => {
+  const processPaymentAndOrder = (method: PaymentMethodChoice, tip = 0) => originalProcessPaymentAndOrder(method, deliveryAddressId as string, () => {
     if (checkoutRestaurantId === selectedRestaurant?.id) {
       setSelectedRestaurantRoute(null);
     }
-  });
+  }, tip);
 
   const totalCartItems = Object.values(carts).reduce((sum, cart) => sum + cart.items.reduce((s, i) => s + i.quantity, 0), 0);
 
