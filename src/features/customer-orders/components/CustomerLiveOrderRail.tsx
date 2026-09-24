@@ -2,6 +2,7 @@ import React from 'react';
 import type { Order } from '@/types';
 import { useCallContext } from '@/contexts/CallContext';
 import { Surface } from '@shared/ui';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { OrderTrackerLive } from './OrderTrackerLive';
 
 const OrderTrackingMap = React.lazy(() => import('@features/maps-tracking/components/OrderTrackingMap'));
@@ -12,6 +13,10 @@ const OrderTrackingMap = React.lazy(() => import('@features/maps-tracking/compon
  * a live order -- an empty rail would take 344 px from the menu to say nothing.
  *
  * It renders the same `OrderTrackerLive` the phone shows, so there is one tracker, not two.
+ *
+ * Below 1280 it renders nothing at all. It used to be `hidden xl:flex` -- invisible but mounted --
+ * while the main column also showed the order below 1280, so every phone and tablet ran two
+ * trackers, two maps and two /live-tracking streams for one order (Phase 7 B9).
  */
 
 interface CustomerLiveOrderRailProps {
@@ -23,8 +28,12 @@ interface CustomerLiveOrderRailProps {
   showError: (msg: string) => void;
 }
 
+export const RAIL_MEDIA_QUERY = '(min-width: 1280px)';
+
 export function CustomerLiveOrderRail({ order, ...rest }: CustomerLiveOrderRailProps) {
   const { startCall } = useCallContext();
+  const wide = useMediaQuery(RAIL_MEDIA_QUERY);
+  if (!wide) return null;
   return (
     <aside
       aria-label="Live order"

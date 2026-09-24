@@ -23,7 +23,7 @@ import { useCustomerAddresses } from '@features/customer-orders/model/useCustome
 import { useCustomerOrders } from '@features/customer-orders/model/useCustomerOrders';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { CustomerNavRail } from '@/pages/customer/CustomerNavRail';
-import { CustomerLiveOrderRail } from '@features/customer-orders/components/CustomerLiveOrderRail';
+import { CustomerLiveOrderRail, RAIL_MEDIA_QUERY } from '@features/customer-orders/components/CustomerLiveOrderRail';
 import { useCustomerRoute } from '@features/customer-orders/model/useCustomerRoute';
 import { useAddressChangeNotice } from '@features/customer-orders/model/useAddressChangeNotice';
 import { CompleteProfileModal } from "@shared/ui";
@@ -199,7 +199,8 @@ export default function CustomerDashboard({
   // eighty-odd props whose names are identical on both sides.
   // From xl the live order sits in its own rail (Desktop.dc.html), so the main column keeps
   // browsing instead of showing the same order a second time.
-  const wide = useMediaQuery('(min-width: 1280px)');
+  // Same query the rail mounts on, so exactly one of the two shows the order.
+  const wide = useMediaQuery(RAIL_MEDIA_QUERY);
   const railOrder = currentTrackingOrder && isActiveOrder(currentTrackingOrder) && !isFailedOrder(currentTrackingOrder)
     && currentTrackingOrder.deliveryStatus !== DeliveryStatus.DELIVERED ? currentTrackingOrder : null;
 
