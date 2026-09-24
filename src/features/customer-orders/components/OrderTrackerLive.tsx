@@ -83,7 +83,7 @@ export function OrderTrackerLive({
 
   if (failed) {
     return (
-      <Surface radius="xl" elevation={2} className="p-5 space-y-4">
+      <Surface radius="xl" elevation={2} className="p-5 space-y-4" data-testid="order-tracker" data-order-id={order.id} data-status={order.status}>
         <StatusPill label={view.label} tone="danger" size="md" />
         <div>
           <h2 className="text-xl font-extrabold text-ink">This order was not completed</h2>
@@ -104,7 +104,9 @@ export function OrderTrackerLive({
   }
 
   return (
-    <div className="space-y-3.5">
+    // data-order-id: the E2E suite reads the full id here. The redesign dropped the "#<uuid>"
+    // header it used to scrape, and a styling class is not an interface.
+    <div className="space-y-3.5" data-testid="order-tracker" data-order-id={order.id} data-status={order.status}>
       <div className="flex flex-wrap items-start gap-x-3 gap-y-2">
         <div className="flex-1 min-w-[11rem]">
           {minutes !== null ? (
@@ -146,14 +148,14 @@ export function OrderTrackerLive({
             <span className="block font-mono text-[10px] font-bold tracking-wider text-ink-2">DELIVERY CODE</span>
             <span className="block text-[13px] font-semibold text-ink">Tell your rider this code at the door</span>
           </span>
-          <span className="font-mono text-2xl font-bold tracking-[.2em] text-ink px-3 py-1.5" style={surfaceStyle({ variant: 'sunken', radius: 'md', elevation: 0 })}>
+          <span data-testid="delivery-code" className="font-mono text-2xl font-bold tracking-[.2em] text-ink px-3 py-1.5" style={surfaceStyle({ variant: 'sunken', radius: 'md', elevation: 0 })}>
             {order.otp}
           </span>
         </Surface>
       )}
 
       {order.deliveryExecutiveId && (
-        <Surface radius="lg" elevation={2} className="p-3 flex items-center gap-3">
+        <Surface radius="lg" elevation={2} className="p-3 flex items-center gap-3" data-testid="rider-card">
           <span className="w-11 h-11 shrink-0 rounded-2xl flex items-center justify-center" style={surfaceStyle({ variant: 'sunken', radius: 'md', elevation: 0 })}>
             <UserRound className="w-6 h-6 text-ink-2" aria-hidden="true" />
           </span>

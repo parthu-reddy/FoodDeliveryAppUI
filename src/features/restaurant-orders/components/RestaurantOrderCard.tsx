@@ -105,6 +105,7 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
  <motion.div
   style={surfaceStyle({ variant: 'solid', elevation: isNewPlaced ? 2 : 1, radius: 'lg' })}
   className={`p-4 space-y-3.5 relative overflow-hidden ${ticket ? 'dark' : ''}`}
+  data-testid="restaurant-order-card" data-order-id={order.id} data-status={order.status}
  >
  <div className="flex justify-between items-start gap-3">
  <div className="min-w-0">

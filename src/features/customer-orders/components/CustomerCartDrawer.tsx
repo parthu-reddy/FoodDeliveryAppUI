@@ -154,7 +154,7 @@ export default function CustomerCartDrawer({
                         className="mt-2"
                         icon={<ShieldCheck className="w-4 h-4" />}
                       >
-                        {isSubmitting ? 'Processing…' : 'Review bill & pay'}
+                        {isSubmitting ? 'Processing…' : 'Checkout'}
                       </Button>
                     </Surface>
                   )})

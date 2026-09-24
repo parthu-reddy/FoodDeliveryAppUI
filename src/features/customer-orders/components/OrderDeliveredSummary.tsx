@@ -29,7 +29,7 @@ interface OrderDeliveredSummaryProps {
 export function OrderDeliveredSummary({ order, onBack, chatWidgetRef }: OrderDeliveredSummaryProps) {
   const presets = useMotionPresets();
   return (
-    <motion.div key="summary" {...presets.rise} className="p-4 sm:p-5 space-y-4">
+    <motion.div key="summary" {...presets.rise} className="p-4 sm:p-5 space-y-4" data-testid="order-tracker" data-order-id={order.id} data-status={order.status}>
       <div className="flex items-center gap-2.5">
         <button
           type="button"
