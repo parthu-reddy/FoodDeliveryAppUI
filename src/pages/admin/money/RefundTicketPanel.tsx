@@ -46,12 +46,18 @@ export function RefundTicketPanel({ ticket, onClose, onResolved }: RefundTicketP
 
     // Both outcomes are final and both are about money: approving moves it, rejecting
     // refuses it. The ticket closes either way.
+    // Admin.dc.html: the destructive confirm names the amount and the entry it lands on, so
+    // the admin approves a figure, not "a refund". It used to name neither.
+    const amountText = overrideAmount
+      ? formatINR(roundRupees(Number(overrideAmount)))
+      : ticket.refundAmount ? formatINR(ticket.refundAmount) : 'the full refundable amount';
+    const orderRef = ticket.orderId ? ` on order #${String(ticket.orderId).slice(0, 8).toUpperCase()}` : '';
     const ok = await confirm({
-      title: approved ? 'Approve this refund?' : 'Reject this refund?',
+      title: approved ? `Approve a refund of ${amountText}?` : 'Reject this refund?',
       description: approved
-        ? 'The refund will be issued against this order and the ticket will close. Refunds '
-          + 'cannot be reversed from this screen.'
-        : 'The customer will be told their refund was declined and the ticket will close.',
+        ? `${amountText} will be refunded${orderRef} and posted to the ledger as a refund entry; `
+          + 'the ticket will close. Refunds cannot be reversed from this screen.'
+        : `The customer will be told their refund${orderRef} was declined and the ticket will close.`,
       confirmLabel: approved ? 'Approve refund' : 'Reject refund',
       tone: 'danger',
     });
