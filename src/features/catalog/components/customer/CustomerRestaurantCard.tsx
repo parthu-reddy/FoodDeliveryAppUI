@@ -1,4 +1,5 @@
 import { formatDeliveryFee, formatKm, formatRating } from '@features/catalog/model/restaurantFacts';
+import { outletPrepMinutes } from '@features/catalog/model/prepTime';
 import { Surface } from '@shared/ui';
 import { Restaurant } from '@/types';
 import ImageLoader from '@shared/ui/ImageLoader';
@@ -17,6 +18,7 @@ interface CustomerRestaurantCardProps {
 
 export default function CustomerRestaurantCard({ restaurant, isLast, lastElementRef, onClick }: CustomerRestaurantCardProps) {
   const cardRef = useRef<HTMLButtonElement>(null);
+  const prepMinutes = outletPrepMinutes(restaurant.defaultPrepTimeSeconds);
 
   // IntersectionObserver for Impression Tracking
   useEffect(() => {
@@ -109,8 +111,10 @@ export default function CustomerRestaurantCard({ restaurant, isLast, lastElement
         <p className="text-xs text-slate-400 dark:text-slate-300 font-medium">{restaurant.cuisine}</p>
 
         <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1 pt-2 text-xs text-slate-500 dark:text-slate-300 font-mono border-t border-rose-500/20 dark:border-rose-500/30">
-          {restaurant.deliveryTime ? (
-            <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-ink-3" /> {restaurant.deliveryTime} min</span>
+          {/* The kitchen's live prep default (the restaurant's stepper), not `deliveryTime` --
+              a figure typed in once at onboarding that nothing keeps current. Phase 7 C4. */}
+          {prepMinutes ? (
+            <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-ink-3" /> {prepMinutes} min prep</span>
           ) : null}
           <span className="flex items-center gap-1"><Bike className="w-3.5 h-3.5 text-ink-3" /> {formatDeliveryFee(restaurant.deliveryFee)}</span>
           {formatKm(restaurant.distance) && <span>{formatKm(restaurant.distance)}</span>}

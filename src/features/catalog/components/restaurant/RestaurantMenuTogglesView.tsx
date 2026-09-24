@@ -1,6 +1,7 @@
-import { MenuItem } from '@/types';
+import type { MenuItem, Outlet } from '@/types';
 import { StockToggleRow } from './StockToggleRow';
 import { isDishAvailable } from '../../model/dishAvailability';
+import { PrepTimeStepper } from './PrepTimeStepper';
 import { motion } from 'motion/react';
 import { useMotionPresets } from '@shared/ui';
 import React from 'react';
@@ -10,13 +11,17 @@ interface RestaurantMenuTogglesViewProps {
   stockStatus: Record<string, boolean>;
   toggleStock: (dishId: string, currentStatus: boolean) => void;
   selectedOutletId: string;
+  outlet?: Outlet;
+  onPrepSaved?: () => void;
 }
 
 export const RestaurantMenuTogglesView: React.FC<RestaurantMenuTogglesViewProps> = ({
   menuList,
   stockStatus,
   toggleStock,
-  selectedOutletId
+  selectedOutletId,
+  outlet,
+  onPrepSaved,
 }) => {
   const categories = menuList.reduce((acc, dish) => {
     const cat = dish.categoryName || 'Uncategorized';
@@ -36,6 +41,10 @@ export const RestaurantMenuTogglesView: React.FC<RestaurantMenuTogglesViewProps>
         <p className="text-xs text-ink-2">
           Switch a dish off and customers stop seeing it as orderable straight away.
         </p>
+      </div>
+
+      <div className="max-w-sm">
+        <PrepTimeStepper outlet={outlet} onSaved={onPrepSaved} />
       </div>
 
       <div className="space-y-6">
