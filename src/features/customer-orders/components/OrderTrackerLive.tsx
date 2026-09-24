@@ -105,8 +105,8 @@ export function OrderTrackerLive({
 
   return (
     <div className="space-y-3.5">
-      <div className="flex items-start gap-3">
-        <div className="flex-1 min-w-0">
+      <div className="flex flex-wrap items-start gap-x-3 gap-y-2">
+        <div className="flex-1 min-w-[11rem]">
           {minutes !== null ? (
             <>
               <span className="block font-mono text-[10px] font-bold tracking-[.12em] text-ink-2">FOOD READY IN</span>

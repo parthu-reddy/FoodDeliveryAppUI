@@ -16,11 +16,14 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useRestaurants } from '@features/catalog/model/useRestaurants';
 import { CallOverlay } from "@features/communication/components/CallOverlay";
 import { type ChatWidgetHandle } from "@features/communication/components/ChatWidget";
-import { isActiveOrder } from '@features/customer-orders/model/orderStatus';
+import { isActiveOrder, isFailedOrder } from '@features/customer-orders/model/orderStatus';
 import { useCustomerCart } from '@features/customer-orders/model/useCustomerCart';
 import { useCustomerStorefront } from '@features/catalog/model/useCustomerStorefront';
 import { useCustomerAddresses } from '@features/customer-orders/model/useCustomerAddresses';
 import { useCustomerOrders } from '@features/customer-orders/model/useCustomerOrders';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { CustomerNavRail } from '@/pages/customer/CustomerNavRail';
+import { CustomerLiveOrderRail } from '@features/customer-orders/components/CustomerLiveOrderRail';
 import { useCustomerRoute } from '@features/customer-orders/model/useCustomerRoute';
 import { useAddressChangeNotice } from '@features/customer-orders/model/useAddressChangeNotice';
 import { CompleteProfileModal } from "@shared/ui";
@@ -66,7 +69,7 @@ export default function CustomerDashboard({
     deliveryLat, deliveryLng, address, deliveryAddressId,
     } = addresses;
 
-  const { restaurants, isRestaurantsLoading } = useRestaurants({
+  const { restaurants, isRestaurantsLoading, error: restaurantsError, retry: retryRestaurants } = useRestaurants({
     deliveryLat,
     deliveryLng
   });
@@ -194,6 +197,12 @@ export default function CustomerDashboard({
   // Everything the two view components read. They are splits of one dashboard rather than
   // independent components, so the shared state is handed over as one object instead of
   // eighty-odd props whose names are identical on both sides.
+  // From xl the live order sits in its own rail (Desktop.dc.html), so the main column keeps
+  // browsing instead of showing the same order a second time.
+  const wide = useMediaQuery('(min-width: 1280px)');
+  const railOrder = currentTrackingOrder && isActiveOrder(currentTrackingOrder) && !isFailedOrder(currentTrackingOrder)
+    && currentTrackingOrder.deliveryStatus !== DeliveryStatus.DELIVERED ? currentTrackingOrder : null;
+
   const view = {
     ...addresses, ...storefront, ...cart,
     // These four override what `...cart` spreads. The hook's versions take the restaurant
@@ -201,22 +210,22 @@ export default function CustomerDashboard({
     // by accident is a real regression the linter caught while this bag was being built.
     addToCart, removeFromCart, getCartTotal, processPaymentAndOrder,
     activeOrders, addressSearchQuery, setAddressSearchQuery,
-    chatWidgetRef, confirm, currentTrackingOrder,
+    chatWidgetRef, confirm, currentTrackingOrder: wide && railOrder ? null : currentTrackingOrder,
     globalError, setGlobalError, isAddressModalOpen, setIsAddressModalOpen,
     isAddressSelectorOpen, setIsAddressSelectorOpen,
     isOutletSelectorOpen, setIsOutletSelectorOpen,
-    isRestaurantsLoading, onAddApiLog, onLogout, onUpdateOrder,
+    isRestaurantsLoading, restaurantsError, retryRestaurants, onAddApiLog, onLogout, onUpdateOrder,
     restaurants, selectedRestaurant, setSelectedRestaurant: setSelectedRestaurantRoute,
     setInternalOrders, setTrackingOrder, settingsTab, setSettingsTab,
     showError, theme, view: viewMode, setView: setViewMode,
   };
 
   return (
-    // max-w-3xl (768px) capped this at every size, so on a 1440px screen the app used 53% of
-    // the width and showed background either side. The restaurant grid was already
-    // `lg:grid-cols-3` -- those three columns were being crammed into 768px rather than given
-    // room. Widening to 7xl (1280px) at lg matches the desktop board and lets the grid breathe.
-    <div className="flex-1 flex flex-col w-full max-w-3xl lg:max-w-7xl mx-auto overflow-y-auto overflow-x-hidden min-h-0 bg-transparent text-slate-800 dark:text-[#f0ede6] h-full pb-20">
+    <div className="flex-1 flex w-full min-h-0 h-full">
+    <CustomerNavRail hasLiveOrder={activeOrders.some(isActiveOrder)} onLogout={onLogout} />
+    {/* Phone: one centred column. lg: the nav rail takes the left, this column the rest.
+        xl: the live-order rail takes 344 px on the right while there is a live order. */}
+    <div className="flex-1 min-w-0 flex flex-col w-full max-w-3xl lg:max-w-none mx-auto overflow-y-auto overflow-x-hidden min-h-0 bg-transparent text-slate-800 dark:text-[#f0ede6] h-full pb-20">
       <CallOverlay />
       {/* Global Error Toast */}
       <AnimatePresence>
@@ -275,6 +284,13 @@ export default function CustomerDashboard({
         chatWidgetRef={chatWidgetRef}
       />
 
+    </div>
+    {railOrder && (
+      <CustomerLiveOrderRail
+        order={railOrder} onAddApiLog={onAddApiLog} onUpdateOrder={onUpdateOrder}
+        setInternalOrders={setInternalOrders} setTrackingOrder={setTrackingOrder} showError={showError}
+      />
+    )}
     </div>
   );
 }

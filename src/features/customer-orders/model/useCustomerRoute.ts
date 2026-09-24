@@ -7,6 +7,8 @@ import type { Restaurant } from '@/types';
  * settings screen is showing and on which tab. Moved verbatim out of `CustomerDashboard`
  * (2026-09-24) to bring it back under the 300-line gate.
  */
+export type CustomerSettingsTab = 'profile' | 'history' | 'addresses' | 'wallet' | 'reviews';
+
 export function useCustomerRoute(restaurants: Restaurant[] | null | undefined) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -28,13 +30,14 @@ export function useCustomerRoute(restaurants: Restaurant[] | null | undefined) {
   const isSettingsView = location.pathname.includes('/customer/settings');
   const viewMode = isSettingsView ? 'settings' : 'home';
   
-  let settingsTab: 'profile' | 'history' | 'addresses' = 'profile';
-  if (location.pathname.includes('/history')) settingsTab = 'history';
-  if (location.pathname.includes('/addresses')) settingsTab = 'addresses';
+  // All five tabs the settings screen has. Wallet and reviews used to fall through to
+  // 'profile', so /customer/settings/wallet opened the profile tab.
+  const tabMatch = location.pathname.match(/\/customer\/settings\/(profile|history|addresses|wallet|reviews)/);
+  const settingsTab: CustomerSettingsTab = (tabMatch?.[1] as CustomerSettingsTab | undefined) ?? 'profile';
 
   // We provide dummy setViewMode and setSettingsTab for compatibility with child components
   const setViewMode = (mode: 'home' | 'settings') => navigate(mode === 'settings' ? '/customer/settings' : '/customer');
-  const setSettingsTab = (tab: 'profile' | 'history' | 'addresses') => navigate(`/customer/settings/${tab}`);
+  const setSettingsTab = (tab: CustomerSettingsTab) => navigate(`/customer/settings/${tab}`);
   const setSelectedRestaurantRoute = (r: Restaurant | null) => {
     if (r) {
       setOverrideRestaurant(r);

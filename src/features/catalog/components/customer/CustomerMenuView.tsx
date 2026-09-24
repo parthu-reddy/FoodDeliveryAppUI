@@ -12,6 +12,7 @@ import { RestaurantHeader } from '@features/catalog/components/RestaurantHeader'
 import { viewFromMenuItem } from '@features/catalog/model/menuItem';
 import { AlertBanner, Button } from '@shared/ui';
 import { formatINR } from '@shared/money';
+import { formatKm } from '@features/catalog/model/restaurantFacts';
 
 interface CustomerMenuViewProps {
   selectedRestaurant: Restaurant;
@@ -127,7 +128,7 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
         restaurant={selectedRestaurant}
         onBack={() => setSelectedRestaurant(null)}
         feeLabel={feeLabel}
-        distanceLabel={`${deliveryPricing?.distanceKm?.toFixed(1) ?? selectedRestaurant.distance} km away`}
+        distanceLabel={`${formatKm(deliveryPricing?.distanceKm ?? selectedRestaurant.distance) ?? '—'} away`}
         notices={notices}
         rating={
           // The live aggregate rather than Outlet.rating. That column is kept current by the

@@ -11,6 +11,9 @@ import { useReorderSuggestions } from '@features/customer-orders/model/useReorde
 interface CustomerRestaurantBrowserProps {
   restaurants: import('@/types').Restaurant[];
   isRestaurantsLoading: boolean;
+  /** The nearby request failed. Not the same as an empty area -- see the feed below. */
+  loadFailed?: boolean;
+  onRetry?: () => void;
   setIsAddressSelectorOpen: (isOpen: boolean) => void;
   setSelectedRestaurant: (restaurant: import('@/types').Restaurant) => void;
   onAddApiLog?: (log: unknown) => void;
@@ -19,8 +22,9 @@ interface CustomerRestaurantBrowserProps {
 /**
  * Chips come from the cuisines actually on the list, most common first. They used to be a
  * hardcoded ['All', 'Burgers', 'Pizza', 'Sushi', 'Salads', 'Desserts'] matched against
- * `restaurant.tags` -- a field the restaurant DTO does not have -- so every chip but All
- * emptied the list.
+ * `restaurant.tags` -- free text the owner types at onboarding -- so a chip matched only a
+ * restaurant that happened to use that exact word, and the row offered cuisines no kitchen
+ * nearby served. Tapping one usually emptied the list.
  */
 function cuisineChips(restaurants: import('@/types').Restaurant[], max = 8): string[] {
   const counts = new Map<string, number>();
@@ -34,6 +38,8 @@ function cuisineChips(restaurants: import('@/types').Restaurant[], max = 8): str
 export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps> = ({
   restaurants,
   isRestaurantsLoading,
+  loadFailed = false,
+  onRetry,
   setIsAddressSelectorOpen,
   setSelectedRestaurant,
   onAddApiLog
@@ -150,6 +156,15 @@ export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps>
               </Surface>
             ))}
           </div>
+        ) : loadFailed ? (
+          // A failed request used to fall through to "Out of Range", telling the customer
+          // there were no kitchens near them when the service was simply unreachable.
+          <EmptyState
+            title="Couldn't load restaurants"
+            description="Check your connection and try again."
+            icon={<AlertCircle className="w-12 h-12" style={{ color: 'var(--color-ink-3)' }} />}
+            action={onRetry ? <Button onClick={onRetry} className="mt-4">Try again</Button> : undefined}
+          />
         ) : restaurants.length === 0 ? (
           <Surface radius="xl" elevation={0} className="p-12 text-center text-slate-400 dark:text-slate-300 border-dashed">
             <div className="flex justify-center mb-4">

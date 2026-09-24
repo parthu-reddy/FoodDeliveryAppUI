@@ -45,7 +45,7 @@ export function OrderStatusTimeline({ status, deliveryStatus, className = '' }: 
         const complete = index < done;
         const current = done > 0 && index === done && done < ORDER_STAGES.length;
         return (
-          <li key={stage} className="relative flex-1 flex flex-col items-center gap-1.5" aria-current={current ? 'step' : undefined}>
+          <li key={stage} className="relative flex-1 min-w-0 flex flex-col items-center gap-1.5" aria-current={current ? 'step' : undefined}>
             <span
               className="w-[23px] h-[23px] rounded-full flex items-center justify-center shrink-0"
               style={
@@ -60,7 +60,7 @@ export function OrderStatusTimeline({ status, deliveryStatus, className = '' }: 
               {current && <span className="w-[7px] h-[7px] rounded-full bg-white" aria-hidden="true" />}
             </span>
             <span
-              className={`text-[10px] sm:text-[11px] text-center leading-tight ${current ? 'font-extrabold' : complete ? 'font-bold' : 'font-semibold'}`}
+              className={`w-full px-0.5 text-[10px] text-center leading-tight break-words ${current ? 'font-extrabold' : complete ? 'font-bold' : 'font-semibold'}`}
               style={{ color: current ? 'var(--color-success)' : complete ? 'var(--color-ink)' : 'var(--color-ink-3)' }}
             >
               {stage}

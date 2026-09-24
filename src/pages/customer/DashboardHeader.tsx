@@ -28,8 +28,8 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       className="sticky top-0 px-5 py-3 flex items-center justify-between z-30 shrink-0 gap-3"
     >
       <div className="flex items-center gap-2 sm:gap-3.5 flex-1 min-w-0">
-        <LaBouffeLogo showText={false} iconSize="w-8 h-8 shrink-0" textColorClass="text-slate-800 dark:text-[#f0ede6] text-xs" subColorClass="text-rose-500 text-[8px]" />
-        <div className="flex h-6 w-[1px] bg-slate-200 dark:bg-slate-800 shrink-0" />
+        <span className="contents lg:hidden"><LaBouffeLogo showText={false} iconSize="w-8 h-8 shrink-0" textColorClass="text-slate-800 dark:text-[#f0ede6] text-xs" subColorClass="text-rose-500 text-[8px]" />
+        <div className="flex h-6 w-[1px] bg-slate-200 dark:bg-slate-800 shrink-0" /></span>
         <button 
           onClick={() => {
             setIsAddressSelectorOpen(true);
@@ -47,7 +47,8 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         </button>
       </div>
 
-      <div className="flex items-center gap-2 shrink-0">
+      {/* On lg the nav rail carries account and theme. */}
+      <div className="flex items-center gap-2 shrink-0 lg:hidden">
         <button
           onClick={() => isSettingsView ? navigate('/customer') : navigate('/customer/settings')}
           className={`p-2.5 rounded-xl transition cursor-pointer ${
