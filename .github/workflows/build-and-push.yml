@@ -4,6 +4,14 @@ on:
   # push:
     # branches: [ "main" ]
   workflow_dispatch:
+    inputs:
+      dev_login:
+        description: >-
+          Dev login: show the test phone numbers on sign-in and autofill OTPs. Keep ON for dev
+          (the E2E suite depends on it). Turn OFF for a production image, which is pushed as
+          food-delivery-app-ui-prod and does not touch the dev deployment.
+        type: boolean
+        default: true
 
 jobs:
   build-and-push:
@@ -120,7 +128,8 @@ jobs:
           
       - name: Build and Test Application
         env:
-          VITE_ENABLE_DEV_OTP: 'true'
+          # Unset, not 'false', for production: the app checks for the string 'true'.
+          VITE_ENABLE_DEV_OTP: ${{ inputs.dev_login && 'true' || '' }}
         run: |
           npm ci
           npm run typecheck
@@ -158,7 +167,10 @@ jobs:
           path: deps/Deployment
           token: ${{ secrets.CHECKOUT_TOKEN }}
 
+      # Dev only. retention.py --delete-all removes every image of the service, and a
+      # production image must survive the next dev build -- hence its separate repository.
       - name: Clean up old Docker images
+        if: ${{ inputs.dev_login }}
         run: python3 deps/Deployment/retention.py --apply --delete-all --service food-delivery-app-ui
 
       - name: Build and push Docker image
@@ -167,10 +179,11 @@ jobs:
           context: .
           file: Dockerfile
           push: true
-          tags: hyd.ocir.io/axekmbadoczl/food-delivery/food-delivery-app-ui:${{ github.sha }}
+          tags: hyd.ocir.io/axekmbadoczl/food-delivery/food-delivery-app-ui${{ !inputs.dev_login && '-prod' || '' }}:${{ github.sha }}
           platforms: linux/arm64
 
       - name: Update deployment environment file
+        if: ${{ inputs.dev_login }}
         working-directory: deps/Deployment
         run: |
           git config user.name "github-actions[bot]"
