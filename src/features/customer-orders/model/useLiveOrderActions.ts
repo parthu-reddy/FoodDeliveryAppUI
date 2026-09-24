@@ -75,9 +75,9 @@ export function useLiveOrderActions({ order, onAddApiLog, onUpdateOrder, setInte
     try {
       await customerApi.order.post(
         '/api/v1/orders/:orderId/delay-approval',
-        // The API requires a figure on approval; the restaurant's own request carries none the
-        // UI can read back, so 15 is the value this screen has always sent. See Phase 7 A4.
-        approved ? { approved: true, expectedDelayMinutes: 15 } : { approved: false },
+        // Only the answer. The minutes are the restaurant's (`order.requestedDelayMinutes`, shown
+        // in the prompt); this screen used to send a fixed 15 that the server never read.
+        { approved },
         { params: { orderId: order.id } },
       );
       setStatus(approved ? OrderStatus.ACCEPTED : OrderStatus.CANCELLED);

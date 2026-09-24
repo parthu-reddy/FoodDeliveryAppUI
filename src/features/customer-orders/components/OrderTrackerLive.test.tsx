@@ -64,6 +64,28 @@ describe('OrderTrackerLive', () => {
     expect(screen.getByText('4821')).toBeInTheDocument();
   });
 
+  it('shows the delay the kitchen asked for, with its reason', () => {
+    renderLive({ status: OrderStatus.AWAITING_DELAY_APPROVAL, requestedDelayMinutes: 20, delayReason: 'Tandoor is backed up' });
+    expect(screen.getByText('The kitchen asked for 20 more minutes')).toBeInTheDocument();
+    expect(screen.getByText(/Tandoor is backed up/)).toBeInTheDocument();
+  });
+
+  it('falls back to the generic delay prompt when the order carries no request', () => {
+    renderLive({ status: OrderStatus.AWAITING_DELAY_APPROVAL });
+    expect(screen.getByText('The kitchen needs more time')).toBeInTheDocument();
+    expect(screen.queryByText(/asked for/)).not.toBeInTheDocument();
+  });
+
+  it('approving a delay sends only the answer -- no invented minutes', async () => {
+    post.mockClear();
+    renderLive({ status: OrderStatus.AWAITING_DELAY_APPROVAL, requestedDelayMinutes: 20 });
+    fireEvent.click(screen.getByRole('button', { name: /ll wait$/ }));
+    await waitFor(() => expect(post).toHaveBeenCalled());
+    const [path, body] = post.mock.calls[0];
+    expect(path).toBe('/api/v1/orders/:orderId/delay-approval');
+    expect(body).toEqual({ approved: true });
+  });
+
   it('carries no demo instructions', () => {
     renderLive({ status: OrderStatus.PREPARING });
     expect(screen.queryByText(/switch roles/i)).not.toBeInTheDocument();

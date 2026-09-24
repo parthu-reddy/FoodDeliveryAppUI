@@ -2,8 +2,8 @@ import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
 import { pageable } from "./common";
-import { SortObject } from "./common";
 import { PageableObject } from "./common";
+import { SortObject } from "./common";
 
 export const OrderReviewItemDto = z
   .object({ menuItemId: z.string().uuid(), name: z.string() })
@@ -123,6 +123,8 @@ export const Order = z
     estimatedPrepTimeMinutes: z.number().int().optional(),
     estimatedCompletionTime: z.number().int().optional(),
     cancellationReason: z.string().optional(),
+    requestedDelayMinutes: z.number().int().optional(),
+    delayReason: z.string().optional(),
     version: z.number().int().optional(),
     createdAt: z.string().datetime({ offset: true }),
     updatedAt: z.string().datetime({ offset: true }),
@@ -133,13 +135,13 @@ export const PageOrder = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    sort: SortObject.optional(),
     pageable: PageableObject.optional(),
+    sort: SortObject.optional(),
+    first: z.boolean(),
+    last: z.boolean(),
     size: z.number().int(),
     content: z.array(Order),
     number: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
     numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
