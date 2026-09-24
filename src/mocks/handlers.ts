@@ -27,12 +27,18 @@ export const handlers = [
     });
   }),
   
+  // `success` is REQUIRED, not decoration. `apiGet` in menuStore unwraps with
+  //   json?.success !== undefined ? json.data : json
+  // so a mock without it returns the whole body as `data`, making `brands` an object and
+  // throwing `brands.some is not a function` on the restaurant dashboard. This mock lacked it,
+  // so the restaurant role was unusable in local dev; the deployed API sends the envelope.
   http.get('*/api/v1/brands', () => {
     return HttpResponse.json({
+      success: true,
       data: [
-        { id: '1', name: 'Spicy Kitchen' },
-        { id: '2', name: 'Burger Joint' }
-      ]
+        { id: '1', name: 'Spicy Kitchen', kycStatus: 'APPROVED', pennyDropStatus: 'APPROVED' },
+        { id: '2', name: 'Burger Joint', kycStatus: 'APPROVED', pennyDropStatus: 'APPROVED' },
+      ],
     });
   }),
 ];

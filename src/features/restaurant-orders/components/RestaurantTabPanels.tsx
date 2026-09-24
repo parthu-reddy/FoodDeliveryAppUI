@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'motion/react';
+import { motion } from 'motion/react';
 import { useMotionPresets } from '@shared/ui';
 import React, { Suspense } from 'react';
 import type { Brand, MenuItem, Order, Outlet } from '@/types';
@@ -58,7 +58,18 @@ export function RestaurantTabPanels({
 }: RestaurantTabPanelsProps) {
   const presets = useMotionPresets();
   return (
-  <AnimatePresence mode="wait">
+  // No AnimatePresence here.
+  //
+  // This was <AnimatePresence mode="wait">, which holds the outgoing panel until its exit
+  // animation reports completion before mounting the next one. On the deployed app that
+  // completion never arrived: the URL and the tab highlight followed the click while the
+  // previous panel stayed and the incoming one never entered the DOM at all. A full page load
+  // always looked right, because an initial mount has no exit to wait for.
+  //
+  // For a tab set that wait buys nothing and costs a lot: every switch pays a full exit
+  // animation before anything appears, and a single unreported exit wedges the whole surface.
+  // Each panel still animates IN through its own motion root, so the entrance is unchanged.
+  <>
     {!showSettings && activeTab === 'orders' && (
       <motion.div
         key="orders-panel" {...presets.rise}
@@ -89,10 +100,8 @@ export function RestaurantTabPanels({
 
     {!showSettings && activeTab === 'menu' && (
       /* ------------------- MENU STOCK TOGGLES -------------------
-         No `key` here on purpose. The presence key for this branch lives on the child's own
-         motion root (`RestaurantMenuTogglesView`), which is the pattern every branch follows.
-         Adding a second one here would duplicate it inside the same AnimatePresence subtree --
-         the exact fault that wedged the orders branch. */
+         No `key` here: the branch is a plain conditional now, and the child
+         (`RestaurantMenuTogglesView`) owns its own motion root. */
       <ErrorBoundary fallbackLabel="Menu Stock Toggles">
         <RestaurantMenuTogglesView
           menuList={menuList}
@@ -178,6 +187,6 @@ export function RestaurantTabPanels({
         </Suspense>
       </ErrorBoundary>
     )}
-  </AnimatePresence>
+  </>
   );
 }
