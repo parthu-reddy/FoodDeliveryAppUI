@@ -29,7 +29,7 @@ if (steps.length !== STEP_COUNT) {
   throw new Error(`steps and STEP_COUNT disagree: ${steps.length} vs ${STEP_COUNT}`);
 }
 
-export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, userId, initialName, onLogout }: RiderOnboardingWizardProps) {
+export default function RiderOnboardingWizard({ riderPhone, onComplete, userId, initialName, onLogout }: RiderOnboardingWizardProps) {
   const {
     currentStep, errorMsg, isSubmitting, verificationStatus,
     cityId, setCityId,

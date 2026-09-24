@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useTheme } from '@/contexts/ThemeContext';
+
 import type { UserRole } from '@/types';
 import { RoleSelector } from '@features/identity/components/RoleSelector';
 import SessionManagementModal from '@features/identity/components/SessionManagementModal';
@@ -26,7 +26,6 @@ interface LoginScreenProps {
 }
 
 export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreenProps) {
-  const { theme } = useTheme();
   const login = useOtpLogin({ onLoginSuccess, onAddApiLog });
   const [scrollTop, setScrollTop] = useState(0);
   const [specialIndex, setSpecialIndex] = useState(0);
