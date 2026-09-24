@@ -1,4 +1,3 @@
-import { useToast } from "@/contexts/ToastContext";
 import { getToken } from "@/lib/tokenStore";
 import { deliveryApi, restaurantApi } from "@/lib/zodiosClients";
 import { fetchEventSource } from '@microsoft/fetch-event-source';
@@ -6,16 +5,20 @@ import { createHomeMarker, createRestaurantMarker, createRiderMarker } from '@fe
 import { createSmoothMover } from '@features/maps-tracking/model/smoothPosition';
 import { prefersReducedMotion } from '@shared/ui';
 import { MapPanel } from './MapPanel';
+import { LiveStreamBadge, type LiveStreamState } from './LiveStreamBadge';
 import { maplibre, type MapInstance } from '../model/maplibre';
 import { useState } from 'react';
 
 import { decodePolyline } from "@/lib/polyline";
 import { Order, OrderStatus } from "@/types";
-
-
 import { useConfig } from "@/contexts/ConfigContext";
-
 import { ErrorBoundary } from "@shared/ui/ErrorBoundary";
+
+/**
+ * A 4xx from the live stream is not going to fix itself. onopen threw on one before too, but
+ * onerror swallowed it and returned a backoff, so a "fatal" stream retried forever.
+ */
+class FatalStreamError extends Error {}
 
 export default function OrderTrackingMap(props: { order: Order; enableLiveTracking?: boolean }) {
   return (
@@ -28,7 +31,7 @@ export default function OrderTrackingMap(props: { order: Order; enableLiveTracki
 function OrderTrackingMapInner({ order, enableLiveTracking = false }: { order: Order; enableLiveTracking?: boolean }) {
   useConfig();
   const [, setMapInstance] = useState<MapInstance | null>(null);
-  const { showError } = useToast();
+  const [liveState, setLiveState] = useState<LiveStreamState>('connecting');
 
   const attachMap = (map: MapInstance) => {
     let active = true;
@@ -199,7 +202,6 @@ function OrderTrackingMapInner({ order, enableLiveTracking = false }: { order: O
 
     if (enableLiveTracking) {
       let retryCount = 0;
-      let lastToastTime = 0;
 
       try {
         const token = getToken();
@@ -212,9 +214,10 @@ function OrderTrackingMapInner({ order, enableLiveTracking = false }: { order: O
           async onopen(res) {
             if (res.ok && res.status === 200) {
               retryCount = 0;
+              if (active) setLiveState('live');
             } else if (res.status >= 400 && res.status < 500 && res.status !== 429) {
-              showError('Live tracking unauthorized or unavailable.');
-              throw new Error(`Fatal SSE error: ${res.status}`);
+              if (active) setLiveState('unavailable');
+              throw new FatalStreamError(`Live tracking stream refused: ${res.status}`);
             }
           },
           onmessage(event) {
@@ -245,13 +248,10 @@ function OrderTrackingMapInner({ order, enableLiveTracking = false }: { order: O
             }
           },
           onerror(err) {
+            if (err instanceof FatalStreamError) throw err;
             console.warn('Could not connect to SSE stream', err);
             retryCount++;
-            const now = Date.now();
-            if (now - lastToastTime > 15000) {
-              showError(`Connection lost. Reconnecting (attempt ${retryCount})...`);
-              lastToastTime = now;
-            }
+            if (active) setLiveState('reconnecting');
             const backoffDelay = Math.min(1000 * Math.pow(2, retryCount - 1), 16000);
             return backoffDelay;
           }
@@ -291,6 +291,7 @@ function OrderTrackingMapInner({ order, enableLiveTracking = false }: { order: O
           .maplibregl-popup { pointer-events: auto !important; }
         `}
       </style>
+      {enableLiveTracking && <LiveStreamBadge state={liveState} />}
     </MapPanel>
   );
 }

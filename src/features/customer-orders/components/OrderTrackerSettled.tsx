@@ -28,7 +28,7 @@ export function OrderTrackerSettled({
   currentTrackingOrder, isFailedOrder, getFriendlyStatusMessage, refunds, setOrderIdToRate, startCall,
 }: OrderTrackerSettledProps) {
   return (
-  <Surface radius="xl" elevation={2} className="p-6 space-y-6">
+  <Surface radius="xl" elevation={2} className="p-6 space-y-6" data-testid="order-tracker" data-order-id={currentTrackingOrder.id} data-status={currentTrackingOrder.status}>
     <div className="text-center pb-4 border-b border-rose-500/10 dark:border-slate-800">
       <div className="inline-flex w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 items-center justify-center mb-3">
         <X className="w-6 h-6 text-rose-500" />

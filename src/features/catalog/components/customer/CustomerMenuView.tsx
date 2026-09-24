@@ -11,6 +11,8 @@ import { MenuList } from '@features/catalog/components/MenuList';
 import { RestaurantHeader } from '@features/catalog/components/RestaurantHeader';
 import { viewFromMenuItem } from '@features/catalog/model/menuItem';
 import { AlertBanner, Button } from '@shared/ui';
+import { formatINR } from '@shared/money';
+import { formatKm } from '@features/catalog/model/restaurantFacts';
 
 interface CustomerMenuViewProps {
   selectedRestaurant: Restaurant;
@@ -82,10 +84,14 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
     if (item) addToCart(item);
   };
 
+  // Plain words, not "Dynamic Fee" / "₹40 Base". The exact figure is on the checkout bill; here
+  // the customer needs to know whether delivery is free and, if not, what makes it free.
   const minOrder = deliveryPricing?.minAmountForFreeDelivery;
-  const feeLabel = isQuoting ? '...'
-    : minOrder == null ? `₹${selectedRestaurant.deliveryFee} Base`
-    : getCartTotal().subtotal >= minOrder ? 'Free Delivery' : 'Dynamic Fee';
+  const baseFee = Number(selectedRestaurant.deliveryFee ?? 0);
+  const feeLabel = isQuoting ? 'Checking delivery fee…'
+    : minOrder != null && getCartTotal().subtotal >= minOrder ? 'Free delivery'
+    : minOrder != null ? `Free delivery over ${formatINR(minOrder)}`
+    : baseFee > 0 ? `Delivery ${formatINR(baseFee)}` : 'Free delivery';
 
   const unavailableReason = deliveryUnavailableReason(
     deliveryPricing?.error ?? deliveryAvailabilityError
@@ -122,14 +128,14 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
         restaurant={selectedRestaurant}
         onBack={() => setSelectedRestaurant(null)}
         feeLabel={feeLabel}
-        distanceLabel={`${deliveryPricing?.distanceKm?.toFixed(1) ?? selectedRestaurant.distance} km away`}
+        distanceLabel={`${formatKm(deliveryPricing?.distanceKm ?? selectedRestaurant.distance) ?? '—'} away`}
         notices={notices}
         rating={
           // The live aggregate rather than Outlet.rating. That column is kept current by the
           // review-events consumer, but it is a denormalised copy refreshed on an event --
           // reading the source means a customer who just submitted a review sees it counted.
           <Button
-            size="sm" variant="warning" aria-expanded={showReviews}
+            size="sm" variant="secondary" aria-expanded={showReviews}
             onClick={() => setShowReviews((v) => !v)}
             icon={<Star className="w-3.5 h-3.5 fill-current" />}
             iconRight={<ChevronDown className={`w-3 h-3 ${showReviews ? 'rotate-180' : ''}`} />}
@@ -150,10 +156,9 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
         )}
       </RestaurantHeader>
 
-      <div className="p-5 space-y-4">
-        <h4 className="font-bold text-lg" style={{ color: 'var(--color-ink)' }}>Menu items</h4>
-
+      <div className="px-5 pb-5 space-y-4">
         <MenuList
+          categoryNav
           views={views}
           loading={isMenuLoading}
           can={{ addToCart: true }}

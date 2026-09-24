@@ -115,9 +115,13 @@ export function SwipeAction({
         aria-hidden="true"
         className="absolute inset-y-0 left-0"
         style={{
-          width: `${progress * 100}%`,
-          background: 'var(--color-success)',
-          transitionProperty: 'width',
+          // A full-width fill scaled from the left, never an animated width: the fill tracks
+          // the thumb on every pointermove, and width would re-layout each of those frames.
+          width: '100%',
+          transform: `scaleX(${progress})`,
+          transformOrigin: 'left',
+          background: 'var(--color-success-solid)',
+          transitionProperty: 'transform',
           transitionDuration: 'var(--duration-instant)',
           transitionTimingFunction: 'var(--ease-out)',
         }}

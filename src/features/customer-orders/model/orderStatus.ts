@@ -173,25 +173,36 @@ export function orderStatusView(
   };
 }
 
-/** The four stages a customer is shown, in order. */
-export const ORDER_STAGES = ['Placed', 'Accepted', 'Prepared', 'Delivered'] as const;
+/**
+ * The stages a customer is shown, in order. `Tracking.dc.html` draws Placed / Cooked /
+ * Picked up / Delivered; Accepted stays because a restaurant that has not answered is a real
+ * state with a real consequence (auto-cancel after 10 minutes), and the customer should be
+ * able to see which side of it they are on.
+ */
+export const ORDER_STAGES = ['Placed', 'Accepted', 'Cooked', 'Picked up', 'Delivered'] as const;
 export type OrderStage = (typeof ORDER_STAGES)[number];
 
 /**
- * How many stages are complete, 0–4.
+ * How many stages are complete, 0–5.
  *
- * Deliberately derived from BOTH statuses: an order can be `HANDED_OVER` while its delivery
- * is still `ASSIGNED`, and the customer should see the food as prepared either way.
+ * Derived from BOTH statuses: an order can be `HANDED_OVER` while its rider is still
+ * `AT_RESTAURANT` or merely `ASSIGNED`. The food is cooked in all three, but it has only been
+ * picked up once the rider has it -- which the delivery status says, not the order status.
  */
 export function completedStages(status: OrderStatus, deliveryStatus?: DeliveryStatus): number {
-  if (deliveryStatus === DeliveryStatus.DELIVERED) return 4;
+  if (deliveryStatus === DeliveryStatus.DELIVERED) return 5;
+  if (classifyOrderStatus(status) === 'FAILED') return 0;
+  if (deliveryStatus === DeliveryStatus.OUT_FOR_DELIVERY) return 4;
   if (
+    status === OrderStatus.HANDED_OVER &&
+    deliveryStatus !== DeliveryStatus.AT_RESTAURANT &&
+    deliveryStatus !== DeliveryStatus.ASSIGNED
+  ) return 4;
+  if (
+    status === OrderStatus.READY_FOR_PICKUP ||
     status === OrderStatus.HANDED_OVER ||
-    deliveryStatus === DeliveryStatus.OUT_FOR_DELIVERY ||
     deliveryStatus === DeliveryStatus.AT_RESTAURANT
   ) return 3;
-  if (status === OrderStatus.READY_FOR_PICKUP) return 3;
   if (status === OrderStatus.PREPARING || status === OrderStatus.ACCEPTED) return 2;
-  if (classifyOrderStatus(status) === 'FAILED') return 0;
   return 1;
 }

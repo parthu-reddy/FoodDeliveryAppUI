@@ -43,14 +43,15 @@ export default function ActiveDeliveryCard({
             <div className="flex justify-between items-center w-full">
               <span className="font-bold text-slate-800 dark:text-[#f0ede6]">{currentJob.restaurantName}</span>
               {currentJob.restaurantId && (
-                <button
-                  type="button"
+                // 48 px: the rider is outdoors, one-handed, often moving (Phase 4 plan). These
+                // were 28 px amber circles.
+                <Button
+                  variant="secondary"
+                  size="touch-icon"
+                  aria-label={`Call ${currentJob.restaurantName || 'the restaurant'}`}
                   onClick={() => startCall(currentJob.restaurantId!, currentJob.id)}
-                  className="p-1.5 rounded-full bg-amber-100 text-amber-600 hover:bg-amber-200 dark:bg-amber-500/20 dark:text-amber-400 transition-colors"
-                  title={`Call ${currentJob.restaurantName}`}
-                >
-                  <PhoneCall className="w-4 h-4" />
-                </button>
+                  icon={<PhoneCall className="w-5 h-5" />}
+                />
               )}
             </div>
           </div>
@@ -61,16 +62,15 @@ export default function ActiveDeliveryCard({
           <div className="flex-1">
             <span className="text-[10px] text-slate-400 block font-mono">DELIVERY ADDRESS</span>
             <div className="flex justify-between items-center w-full">
-              <span className="font-bold text-slate-800 dark:text-[#f0ede6]">Customer</span>
+              <span className="font-bold text-slate-800 dark:text-[#f0ede6]">{currentJob.customerName || 'Customer'}</span>
               {currentJob.customerId && (
-                <button
-                  type="button"
+                <Button
+                  variant="primary"
+                  size="touch-icon"
+                  aria-label={`Call ${currentJob.customerName || 'the customer'}`}
                   onClick={() => startCall(currentJob.customerId!, currentJob.id)}
-                  className="p-1.5 rounded-full bg-amber-100 text-amber-600 hover:bg-amber-200 dark:bg-amber-500/20 dark:text-amber-400 transition-colors"
-                  title={`Call Customer`}
-                >
-                  <PhoneCall className="w-4 h-4" />
-                </button>
+                  icon={<PhoneCall className="w-5 h-5" />}
+                />
               )}
             </div>
             <p className="text-xs text-slate-400 mt-1">{currentJob.deliveryAddress}</p>
@@ -91,12 +91,16 @@ export default function ActiveDeliveryCard({
                 <KeyRound className="w-4 h-4 text-amber-500" /> RESTAURANT HANDOVER OTP
               </label>
               <div className="flex rounded-2xl overflow-hidden">
+                {/* Plain text, not password: the rider copies a code the kitchen reads out, and
+                    masking it only adds typos (and wakes password managers). */}
                 <Input
-                  type="password"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
                   value={enteredPickupOtp}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEnteredPickupOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
                   placeholder="Enter 6-digit pickup OTP"
-                  className="flex-1 px-4 py-3 outline-none font-mono text-center tracking-widest text-sm"
+                  className="flex-1 px-4 py-3 outline-none font-mono text-center tracking-[.3em] text-xl"
                   required
                 />
               </div>

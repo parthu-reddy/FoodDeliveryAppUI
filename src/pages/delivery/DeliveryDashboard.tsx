@@ -3,14 +3,14 @@ import { useToast } from "@/contexts/ToastContext";
 import { getUserProfile } from "@/lib/tokenStore";
 import { DeliveryStatus, Order, OrderStatus } from "@/types";
 import { CallOverlay } from "@features/communication/components/CallOverlay";
-import { ChatWidget } from "@features/communication/components/ChatWidget";
 import { DeliveryActiveJob } from "@features/delivery-tasks/components/DeliveryActiveJob";
 import { DeliveryAvailableJobs } from "@features/delivery-tasks/components/DeliveryAvailableJobs";
 import { DeliveryHistoryPanel } from "@features/delivery-tasks/components/DeliveryHistoryPanel";
 import { DispatchPingCard } from "@features/delivery-tasks/components/DispatchPingCard";
 import { PermissionsPrompt, ProfileRequiredPrompt } from "@features/delivery-tasks/components/RiderPrompts";
 import { RiderHeader } from "@features/delivery-tasks/components/RiderHeader";
-import { ConnectionBanner, LocationBanner, RiderOfflineState, RiderToast } from "@features/delivery-tasks/components/RiderNotices";
+import { ConnectionBanner, LocationBanner, RiderOfflineState, RiderToast, RiderVerifyingState } from "@features/delivery-tasks/components/RiderNotices";
+import { RiderJobChat } from "@features/delivery-tasks/components/RiderJobChat";
 import { RiderStatsBar } from "@features/delivery-tasks/components/RiderStatsBar";
 import RiderOnboardingWizard from "@features/delivery-tasks/components/RiderOnboardingWizard";
 import RiderSettingsView from "@features/delivery-tasks/components/RiderSettingsView";
@@ -18,7 +18,7 @@ import { useDeliveryOrders } from "@features/delivery-tasks/model/useDeliveryOrd
 import { useRiderDuty } from "@features/delivery-tasks/model/useRiderDuty";
 import { useRiderJobActions } from "@features/delivery-tasks/model/useRiderJobActions";
 import { useRiderProfile } from "@features/delivery-tasks/model/useRiderProfile";
-import { DeliveryShell, ErrorBoundary, Spinner, useConfirm } from "@shared/ui";
+import { DeliveryShell, ErrorBoundary, useConfirm } from "@shared/ui";
 import { AnimatePresence } from "motion/react";
 import React, { useState } from "react";
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -124,16 +124,7 @@ export default function DeliveryDashboard({
   });
 
   if (profile.isLoadingProfile || !profile.isVerificationLoaded) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center min-h-0 h-full gap-4">
-        <Spinner size="md" color="var(--color-action)" />
-        {!profile.isLoadingProfile && (
-          <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--color-ink-2)' }}>
-            Verifying Account
-          </p>
-        )}
-      </div>
-    );
+    return <RiderVerifyingState verifying={!profile.isLoadingProfile} />;
   }
 
   const verified =
@@ -214,9 +205,15 @@ export default function DeliveryDashboard({
             onOpenHistory={() => setShowHistory(true)}
           />
 
-          <AnimatePresence mode="wait">
+          {/* No mode="wait": it holds the next panel until the previous one's exit reports,
+              and these children are ErrorBoundaries, not motion elements, so an exit may never
+              report -- the wedge fixed on the restaurant tabs in 3b5de61. Keys so presence can
+              tell the branches apart, and deliberately NOT the keys the children put on their
+              own motion roots (history, offline, active-job, jobs-board): an identical key
+              nested inside is what corrupted presence in 671985c. */}
+          <AnimatePresence initial={false}>
             {showHistory ? (
-              <ErrorBoundary fallbackLabel="Delivery History">
+              <ErrorBoundary key="panel-history" fallbackLabel="Delivery History">
                 <DeliveryHistoryPanel
                   setShowHistory={setShowHistory}
                   historyDateFilter={historyDateFilter}
@@ -228,9 +225,9 @@ export default function DeliveryDashboard({
                 />
               </ErrorBoundary>
             ) : !isOnline ? (
-              <RiderOfflineState />
+              <RiderOfflineState key="panel-offline" />
             ) : currentJob ? (
-              <ErrorBoundary fallbackLabel="Active Job">
+              <ErrorBoundary key="panel-active-job" fallbackLabel="Active Job">
                 <DeliveryActiveJob
                   currentJob={currentJob}
                   enteredPickupOtp={job.enteredPickupOtp}
@@ -252,7 +249,7 @@ export default function DeliveryDashboard({
                 />
               </ErrorBoundary>
             ) : (
-              <ErrorBoundary fallbackLabel="Available Jobs">
+              <ErrorBoundary key="panel-jobs" fallbackLabel="Available Jobs">
                 <DeliveryAvailableJobs
                   availableJobs={availableJobs}
                   handleAcceptJob={job.handleAcceptJob}
@@ -288,21 +285,7 @@ export default function DeliveryDashboard({
         </>
       )}
 
-      {currentJob && (
-        <ChatWidget
-          orderId={currentJob.id}
-          order={currentJob}
-          currentUserType="DELIVERY"
-          otherParticipants={[
-            ...(currentJob.customerId
-              ? [{ userId: currentJob.customerId, entityType: "CUSTOMER" as const, displayName: "Customer" }]
-              : []),
-            ...(currentJob.restaurantId
-              ? [{ userId: currentJob.restaurantId, entityType: "RESTAURANT" as const, displayName: currentJob.restaurantName || "Restaurant" }]
-              : []),
-          ]}
-        />
-      )}
+      {currentJob && <RiderJobChat job={currentJob} />}
     </DeliveryShell>
   );
 }

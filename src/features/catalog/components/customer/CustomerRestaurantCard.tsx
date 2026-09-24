@@ -1,3 +1,4 @@
+import { formatDeliveryFee, formatKm, formatRating } from '@features/catalog/model/restaurantFacts';
 import { Surface } from '@shared/ui';
 import { Restaurant } from '@/types';
 import ImageLoader from '@shared/ui/ImageLoader';
@@ -101,16 +102,18 @@ export default function CustomerRestaurantCard({ restaurant, isLast, lastElement
           <h5 className="font-bold text-base text-slate-900 dark:text-[#f0ede6] group-hover:text-amber-500 transition-colors">{restaurant.brandName || restaurant.name}</h5>
           <div className="flex items-center gap-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-lg text-xs font-bold">
             <Star className="w-3.5 h-3.5 fill-current" />
-            <span>{restaurant.rating}</span>
+            <span>{formatRating(restaurant.rating)}</span>
           </div>
         </div>
 
         <p className="text-xs text-slate-400 dark:text-slate-300 font-medium">{restaurant.cuisine}</p>
 
-        <div className="flex items-center gap-3.5 pt-2 text-xs text-slate-500 dark:text-slate-300 font-mono border-t border-rose-500/20 dark:border-rose-500/30">
-          <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-amber-500" /> {restaurant.deliveryTime}m</span>
-          <span className="flex items-center gap-1"><Bike className="w-3.5 h-3.5 text-amber-500" /> ₹{restaurant.deliveryFee} fee</span>
-          <span>{restaurant.distance} km</span>
+        <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1 pt-2 text-xs text-slate-500 dark:text-slate-300 font-mono border-t border-rose-500/20 dark:border-rose-500/30">
+          {restaurant.deliveryTime ? (
+            <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-ink-3" /> {restaurant.deliveryTime} min</span>
+          ) : null}
+          <span className="flex items-center gap-1"><Bike className="w-3.5 h-3.5 text-ink-3" /> {formatDeliveryFee(restaurant.deliveryFee)}</span>
+          {formatKm(restaurant.distance) && <span>{formatKm(restaurant.distance)}</span>}
         </div>
       </div>
     </button>

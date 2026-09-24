@@ -26,7 +26,10 @@ export function useRestaurantOrders({
   const activeOrders = externalOrders ?? internalOrders;
 
   const onUpdateOrderStatus = externalUpdateStatus ?? (async (orderId: string, status: OrderStatus, payload?: { reason?: string }) => {
-    // Optimistic UI update
+    // Optimistic UI update, reverted if the server refuses. Without the revert a failed accept
+    // showed the order as accepted until the next 5 s poll -- long enough for a kitchen to
+    // start cooking an order the server was about to auto-cancel.
+    const previous = internalOrders.find(o => o.id === orderId)?.status;
     setInternalOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o));
     
     // API call
@@ -57,7 +60,10 @@ export function useRestaurantOrders({
     } catch (error: unknown) {
       console.error('Failed to update order status:', error);
       if (showError) showError((error as {response?: {data?: {message?: string}}})?.response?.data?.message || 'Failed to update order status');
-      // Revert optimistic update on failure could be implemented here
+      if (previous) setInternalOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: previous } : o));
+      // The poll turns ACCEPTED into PREPARING while this flag is set, so a failed "start
+      // cooking" would otherwise come back as cooking on the next poll.
+      if (status === OrderStatus.PREPARING) localStorage.removeItem(`order_preparing_${orderId}`);
     }
   });
 

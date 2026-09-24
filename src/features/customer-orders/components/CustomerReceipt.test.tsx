@@ -6,6 +6,7 @@ import { OrderStatus, DeliveryStatus } from '@/types/backend-enums';
 import { Order } from '@/types';
 import { CallProvider } from '../../../contexts/CallContext'
 import { ToastProvider } from '@/contexts/ToastContext';
+import { ConfirmProvider } from '@shared/ui';
 
 describe('Customer Receipt & Order Details', () => {
   const defaultProps = {
@@ -30,9 +31,9 @@ describe('Customer Receipt & Order Details', () => {
     } as Partial<Order> as Order;
 
     render(
-      <ToastProvider><CallProvider>
+      <ToastProvider><ConfirmProvider><CallProvider>
         <CustomerOrderTracker {...defaultProps} currentTrackingOrder={order} />
-      </CallProvider></ToastProvider>
+      </CallProvider></ConfirmProvider></ToastProvider>
     );
 
     expect(screen.getByText('Paid via UPI')).toBeInTheDocument();
@@ -49,9 +50,9 @@ describe('Customer Receipt & Order Details', () => {
     } as Partial<Order> as Order;
 
     render(
-      <ToastProvider><CallProvider>
+      <ToastProvider><ConfirmProvider><CallProvider>
         <CustomerOrderTracker {...defaultProps} isFailedOrder={() => true} currentTrackingOrder={order} isActiveOrder={() => false} />
-      </CallProvider></ToastProvider>
+      </CallProvider></ConfirmProvider></ToastProvider>
     );
 
     expect(screen.getByText('Refunded to CARD')).toBeInTheDocument();

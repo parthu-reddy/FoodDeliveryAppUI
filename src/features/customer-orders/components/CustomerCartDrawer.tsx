@@ -35,7 +35,6 @@ interface CustomerCartDrawerProps {
   getCartTotal: (restaurantId: string) => CartTotal;
   setIsPaymentModalOpen?: (open: boolean) => void;
   isSubmitting?: boolean;
-  isQuoting?: boolean;
   setIsAddressModalOpen?: (open: boolean) => void;
   deliveryAddressId?: string | null;
 }
@@ -53,7 +52,6 @@ export default function CustomerCartDrawer({
   getCartTotal,
 
   isSubmitting,
-  isQuoting,
   setIsAddressModalOpen,
   deliveryAddressId
 }: CustomerCartDrawerProps) {
@@ -140,44 +138,23 @@ export default function CustomerCartDrawer({
                         ))}
                       </div>
 
-                      {/* Summary calculations for this restaurant */}
-                      <div className="border-t border-rose-500/10 pt-3 space-y-1.5 text-xs font-mono">
-                        <div className="flex justify-between text-slate-500 dark:text-slate-400">
-                          <span>Subtotal</span>
-                          <span>{formatINR(total.subtotal)}</span>
-                        </div>
-                        {(total.platformFee !== undefined && total.platformFee > 0) && (
-                          <div className="flex justify-between text-slate-500 dark:text-slate-400">
-                            <span>Platform Fee</span>
-                            <span>{formatINR(total.platformFee)}</span>
-                          </div>
-                        )}
-                        <div className="flex justify-between text-slate-500 dark:text-slate-400">
-                          <span>Delivery Fee</span>
-                          <span>{total.deliveryFee === 0 ? <span className="text-amber-500 font-bold">FREE</span> : `${formatINR(total.deliveryFee)}`}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-500 dark:text-slate-400">
-                          <span>SGST (2.5%)</span>
-                          <span>{total.isEstimated ? 'Calculating...' : `${formatINR(total.sgst)}`}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-500 dark:text-slate-400">
-                          <span>CGST (2.5%)</span>
-                          <span>{total.isEstimated ? 'Calculating...' : `${formatINR(total.cgst)}`}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-900 dark:text-[#f0ede6] font-bold text-sm pt-1 border-t border-rose-500/10">
-                          <span>Total</span>
-                          <span>{total.isEstimated ? `Estimate: ${formatINR(total.total)}` : `${formatINR(total.total)}`}</span>
-                        </div>
+                      {/* Item total only. The full bill -- delivery, fees, GST -- is quoted by the
+                          server and shown once, on the checkout sheet. This drawer used to print
+                          its own estimate with SGST/CGST as "Calculating...", a second bill that
+                          disagreed with the first until the quote landed. */}
+                      <div className="border-t border-paper-line pt-3 flex justify-between items-baseline">
+                        <span className="text-[13px] font-medium text-ink-2">Item total</span>
+                        <span className="font-mono text-sm font-bold text-ink">{formatINR(total.subtotal)}</span>
                       </div>
 
                       <Button
                         onClick={() => onCheckoutClick(restaurantId)}
-                        disabled={isSubmitting || isQuoting}
+                        disabled={isSubmitting}
                         fullWidth
                         className="mt-2"
                         icon={<ShieldCheck className="w-4 h-4" />}
                       >
-                        {isSubmitting ? 'Processing...' : isQuoting ? 'Calculating Quote...' : `Checkout ${cartState.restaurant?.name}`}
+                        {isSubmitting ? 'Processing…' : 'Checkout'}
                       </Button>
                     </Surface>
                   )})

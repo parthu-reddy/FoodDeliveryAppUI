@@ -1,18 +1,22 @@
-import { Clock, PhoneCall, Timer } from 'lucide-react';
-import React from 'react';
+import { useEffect, useState } from 'react';
+import { ChevronRight, PhoneCall, Store, UserRound } from 'lucide-react';
 import type { Order } from '@/types';
 import { DeliveryStatus, OrderStatus } from '@/types/backend-enums';
-import { customerApi } from '@/lib/zodiosClients';
+import { Button, StatusPill, Surface, surfaceStyle } from '@shared/ui';
 import { formatINR } from '@shared/money';
-import { Surface } from '@shared/ui';
-import { terminalHeadline } from '@features/customer-orders/model/orderStatus';
-import { OrderTrackerSteps } from './OrderTrackerSteps';
+import { orderStatusView, terminalHeadline } from '@features/customer-orders/model/orderStatus';
+import { useLiveOrderActions } from '@features/customer-orders/model/useLiveOrderActions';
+import { OrderStatusTimeline } from './OrderStatusTimeline';
+import { OrderMoneyBreakdown } from './OrderMoneyBreakdown';
 
 /**
- * An order that is still happening: where it is, who has it, and what is left to do.
+ * An order that is still happening — the waiting screen. Built against `Tracking.dc.html`:
+ * the next time that matters is the headline, the stages sit directly under it, and the person
+ * who has your food is one tap away.
  *
- * Split from `CustomerOrderTracker`, which held this and the settled view — two mutually
- * exclusive 300- and 150-line branches — in one 563-line component.
+ * Everything shown is a field the order API returns. What the artboard has and the API does
+ * not — rider rating, delivery count, per-stage times, a chat button on this card — is left
+ * out rather than faked.
  */
 
 interface OrderTrackerLiveProps {
@@ -26,249 +30,195 @@ interface OrderTrackerLiveProps {
   showError: (msg: string) => void;
 }
 
+/** Whole minutes until `epochMs`, re-read every 30 s. Null when there is no estimate. */
+function useMinutesUntil(epochMs?: number) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!epochMs) return;
+    const t = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(t);
+  }, [epochMs]);
+  if (!epochMs) return null;
+  return Math.max(0, Math.ceil((epochMs - now) / 60_000));
+}
+
+function headlineFor(order: Order): { title: string; detail: string } {
+  if (order.deliveryStatus === DeliveryStatus.FAILED) {
+    return { title: 'Finding a rider', detail: 'Your food is safe. We are looking for a nearby delivery partner.' };
+  }
+  switch (order.status) {
+    case OrderStatus.CREATED:
+    case OrderStatus.PENDING_ACCEPTANCE:
+      return { title: 'Waiting for the restaurant', detail: 'They have 10 minutes to accept. If they do not, the order is cancelled for you.' };
+    case OrderStatus.AWAITING_DELAY_APPROVAL:
+      return { title: 'The kitchen needs more time', detail: 'Let them know if you are happy to wait.' };
+    case OrderStatus.ACCEPTED:
+    case OrderStatus.PREPARING:
+      return { title: 'Cooking now', detail: 'The kitchen has your order.' };
+    case OrderStatus.READY_FOR_PICKUP:
+      return { title: 'Packed and ready', detail: 'Waiting for your rider to collect it.' };
+    default:
+      return order.deliveryStatus === DeliveryStatus.OUT_FOR_DELIVERY
+        ? { title: 'On the way', detail: 'Your rider has your food.' }
+        : { title: 'Rider at the restaurant', detail: 'Your food is being handed over.' };
+  }
+}
+
 export function OrderTrackerLive({
-  currentTrackingOrder, isFailedOrder, startCall,
+  currentTrackingOrder: order, isFailedOrder, startCall,
   onAddApiLog, onUpdateOrder, setInternalOrders, showError, setTrackingOrder,
 }: OrderTrackerLiveProps) {
-  return (
-    <>
-  {/* Active Status Display Card */}
-  <Surface radius="xl" elevation={2} className="p-5 space-y-4">
-    <div className="flex justify-between items-start">
-      <div className="space-y-1">
-        <h4 className="font-bold text-lg">
-          {currentTrackingOrder.status === OrderStatus.PENDING_ACCEPTANCE && 'Waiting for Restaurant...'}
-          {currentTrackingOrder.status === OrderStatus.AWAITING_DELAY_APPROVAL && 'Restaurant Requested Delay'}
-          {currentTrackingOrder.status === OrderStatus.ACCEPTED && 'Order Confirmed!'}
-          {currentTrackingOrder.status === OrderStatus.PREPARING && 'Kitchen is Cooking...'}
-          {currentTrackingOrder.status === OrderStatus.READY_FOR_PICKUP && 'Order is Ready!'}
-          {currentTrackingOrder.status === OrderStatus.HANDED_OVER && currentTrackingOrder.deliveryStatus === DeliveryStatus.AT_RESTAURANT && 'Rider is Waiting at Restaurant...'}
-          {currentTrackingOrder.status === OrderStatus.HANDED_OVER && currentTrackingOrder.deliveryStatus === DeliveryStatus.OUT_FOR_DELIVERY && 'Rider is on the Way!'}
-          {currentTrackingOrder.status === OrderStatus.HANDED_OVER && !currentTrackingOrder.deliveryStatus && 'Picked Up by Rider!'}
-          {currentTrackingOrder.deliveryStatus === DeliveryStatus.FAILED && 'Order Delayed - Finding a Driver...'}
-          {currentTrackingOrder.deliveryStatus !== DeliveryStatus.FAILED && isFailedOrder(currentTrackingOrder) && 'Order Failed / Cancelled'}
-        </h4>
-        <p className="text-xs text-slate-400 dark:text-slate-300">
-          {currentTrackingOrder.status === OrderStatus.AWAITING_DELAY_APPROVAL 
-            ? 'Restaurant needs more time to prepare your order. Please wait...'
-            : isFailedOrder(currentTrackingOrder)
-            // Who ended it, not just that it ended. Before Phase 3 a dispatch failure and a
-            // restaurant cancellation were the same status and the customer got the same
-            // sentence for both; only one of them is the restaurant's doing.
-            ? (terminalHeadline(currentTrackingOrder.status) ?? 'Your order could not be completed and will be refunded.')
-            : currentTrackingOrder.deliveryStatus === DeliveryStatus.FAILED
-            ? 'We are looking for a nearby delivery partner. Thank you for your patience.'
-            : 'Estimated delivery: 15-20 mins'}
-        </p>
-      </div>
-      <div className={`p-2.5 rounded-2xl ${isFailedOrder(currentTrackingOrder) ? 'bg-rose-500/10 text-rose-500' : 'bg-amber-500/10 text-amber-500'}`}>
-        {currentTrackingOrder.status === OrderStatus.AWAITING_DELAY_APPROVAL || isFailedOrder(currentTrackingOrder) ? <Clock className="w-5 h-5 text-rose-500" /> : <Timer className="w-5 h-5" />}
-      </div>
-    </div>
+  const failed = isFailedOrder(order);
+  // `estimatedCompletionTime` is when the FOOD is ready (the restaurant's accept time plus its
+  // prep time, epoch ms -- RestaurentApplication CreatedState), not when it arrives. The
+  // artboard's "Arriving in" needs a delivery ETA the API does not return (Phase 7 A5), so the
+  // countdown is shown only while the kitchen is cooking and says what it actually measures.
+  const cooking = order.status === OrderStatus.ACCEPTED || order.status === OrderStatus.PREPARING;
+  const minutes = useMinutesUntil(cooking ? order.estimatedCompletionTime : undefined);
+  const { busy, cancel, answerDelay } = useLiveOrderActions({ order, onAddApiLog, onUpdateOrder, setInternalOrders, showError });
+  const view = orderStatusView(order.status, order.deliveryStatus);
+  const { title, detail } = headlineFor(order);
+  const cancellable = order.status === OrderStatus.PENDING_ACCEPTANCE || order.status === OrderStatus.CREATED;
+  const itemCount = (order.items ?? []).reduce((n, i) => n + ((i as { quantity?: number }).quantity || 1), 0);
 
-    {currentTrackingOrder.status === OrderStatus.AWAITING_DELAY_APPROVAL && (
-      <div className="flex items-center gap-3 pt-2">
-        <button
-          onClick={async () => {
-            if (onAddApiLog) {
-              onAddApiLog({ id: 'order_approve_delay', label: `POST /api/v1/orders/${currentTrackingOrder.id}/delay-approval`, method: 'POST' });
-            }
-            
-            try {
-              await customerApi.order.post('/api/v1/orders/:orderId/delay-approval', {
-                approved: true,
-                expectedDelayMinutes: 15
-              }, { params: { orderId: currentTrackingOrder.id } });
-              if (onUpdateOrder) onUpdateOrder(currentTrackingOrder.id, OrderStatus.ACCEPTED);
-              setInternalOrders(prev => prev.map(o => o.id === currentTrackingOrder.id ? { ...o, status: OrderStatus.ACCEPTED } : o));
-            } catch (e: unknown) {
-              console.error("Failed to approve delay", e);
-            }
-          }}
-          className="flex-1 py-3 bg-amber-500 text-white rounded-xl font-bold hover:bg-amber-600 transition-colors"
-        >
-          Approve Delay
-        </button>
-        <button
-          onClick={async () => {
-            if (onAddApiLog) {
-              onAddApiLog({ id: 'order_reject_delay', label: `POST /api/v1/orders/${currentTrackingOrder.id}/delay-approval`, method: 'POST' });
-            }
-            
-            try {
-              await customerApi.order.post('/api/v1/orders/:orderId/delay-approval', {
-                approved: false
-              }, { params: { orderId: currentTrackingOrder.id } });
-              if (onUpdateOrder) onUpdateOrder(currentTrackingOrder.id, OrderStatus.CANCELLED);
-              setInternalOrders(prev => prev.map(o => o.id === currentTrackingOrder.id ? { ...o, status: OrderStatus.CANCELLED } : o));
-            } catch (e: unknown) {
-              console.error("Failed to reject delay", e);
-            }
-          }}
-          className="flex-1 py-3 bg-rose-100 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold rounded-2xl hover:bg-rose-200 dark:hover:bg-rose-500/20 transition text-sm"
-        >
-          Cancel Order
-        </button>
-      </div>
-    )}
-    
-    {isFailedOrder(currentTrackingOrder) && (
-      <div className="flex items-center gap-3 pt-2">
-        <button
+  if (failed) {
+    return (
+      <Surface radius="xl" elevation={2} className="p-5 space-y-4" data-testid="order-tracker" data-order-id={order.id} data-status={order.status}>
+        <StatusPill label={view.label} tone="danger" size="md" />
+        <div>
+          <h2 className="text-xl font-extrabold text-ink">This order was not completed</h2>
+          <p className="mt-1 text-sm text-ink-2">{terminalHeadline(order.status) ?? 'Your order could not be completed.'}</p>
+        </div>
+        <Button
+          variant="secondary"
+          fullWidth
           onClick={() => {
-            // Dismiss from local UI state
-            setInternalOrders(prev => prev.filter(o => o.id !== currentTrackingOrder.id));
+            setInternalOrders((prev) => prev.filter((o) => o.id !== order.id));
             setTrackingOrder(null);
           }}
-          className="flex-1 py-3 bg-rose-500 text-white font-bold rounded-2xl hover:bg-rose-600 transition text-sm"
         >
           Dismiss
-        </button>
-      </div>
-    )}
-    
-    {(currentTrackingOrder.status === OrderStatus.PENDING_ACCEPTANCE || currentTrackingOrder.status === OrderStatus.CREATED) && (
-      <div className="flex items-center gap-3 pt-2">
-        <button
-          onClick={async () => {
-            if (onAddApiLog) {
-              onAddApiLog({ id: 'cancel_order', label: `POST /api/v1/orders/${currentTrackingOrder.id}/cancel`, method: 'POST' });
-            }
-            const oldStatus = currentTrackingOrder.status;
-            // Optimistic update
-            if (onUpdateOrder) onUpdateOrder(currentTrackingOrder.id, OrderStatus.CANCELLED);
-            else {
-              setInternalOrders(prev => prev.map(o => o.id === currentTrackingOrder.id ? { ...o, status: OrderStatus.CANCELLED } : o));
-            }
-            try {
-              await customerApi.order.post('/api/v1/orders/:orderId/cancel', undefined, { params: { orderId: currentTrackingOrder.id } });
-            } catch (e: unknown) {
-              console.error("Failed to cancel order", e);
-              const typedErr = e as { response?: { data?: { message?: string } } };
-              showError(typedErr.response?.data?.message || "Failed to cancel order");
-              // Revert optimistic update
-              if (onUpdateOrder) onUpdateOrder(currentTrackingOrder.id, oldStatus);
-              else {
-                setInternalOrders(prev => prev.map(o => o.id === currentTrackingOrder.id ? { ...o, status: oldStatus } : o));
-              }
-            }
-          }}
-          className="flex-1 py-3 bg-rose-100 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold rounded-2xl hover:bg-rose-200 dark:hover:bg-rose-500/20 transition text-sm"
-        >
-          Cancel Order
-        </button>
-      </div>
-    )}
-
-    {currentTrackingOrder.estimatedCompletionTime && !isFailedOrder(currentTrackingOrder) && (
-      <Surface radius="lg" elevation={0} className="p-4 flex items-center justify-between mb-4">
-        <div>
-          <span className="text-[10px] text-slate-500 dark:text-[#f0ede6] font-bold block uppercase font-mono tracking-wider">Estimated Time of Arrival</span>
-          <span className="text-sm font-semibold">Arriving at {new Date(currentTrackingOrder.estimatedCompletionTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-        </div>
+        </Button>
       </Surface>
-    )}
+    );
+  }
 
-    {currentTrackingOrder.status !== OrderStatus.AWAITING_DELAY_APPROVAL && !isFailedOrder(currentTrackingOrder) && (
-      <Surface radius="lg" elevation={0} className="p-4 flex items-center justify-between">
-        <div>
-          <span className="text-[10px] text-slate-500 dark:text-[#f0ede6] font-bold block uppercase font-mono tracking-wider">Secure Delivery Verification</span>
-          <span className="text-sm font-semibold">Share OTP with Rider at delivery</span>
+  return (
+    // data-order-id: the E2E suite reads the full id here. The redesign dropped the "#<uuid>"
+    // header it used to scrape, and a styling class is not an interface.
+    <div className="space-y-3.5" data-testid="order-tracker" data-order-id={order.id} data-status={order.status}>
+      <div className="flex flex-wrap items-start gap-x-3 gap-y-2">
+        <div className="flex-1 min-w-[11rem]">
+          {minutes !== null ? (
+            <>
+              <span className="block font-mono text-[10px] font-bold tracking-[.12em] text-ink-2">FOOD READY IN</span>
+              <span className="block font-mono text-[44px] leading-none font-bold tracking-tight text-ink">
+                {minutes}<span className="ml-1 text-xl font-medium tracking-normal">min</span>
+              </span>
+              <span className="block mt-1 text-[12.5px] font-semibold text-ink-2">
+                by{' '}
+                <span className="font-mono font-bold text-ink">
+                  {new Date(order.estimatedCompletionTime!).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                </span>
+                {' · the kitchen is cooking'}
+              </span>
+            </>
+          ) : (
+            <>
+              <h2 className="text-2xl font-extrabold tracking-tight text-ink">{title}</h2>
+              <p className="mt-1 text-[12.5px] font-medium text-ink-2">{detail}</p>
+            </>
+          )}
         </div>
-        <div className="bg-gradient-to-r from-amber-500 to-amber-500 text-white font-mono text-xl font-black px-4 py-2 rounded-xl tracking-wider">
-          {(currentTrackingOrder as {otp?: string, distanceKm?: number}).otp}
-        </div>
-      </Surface>
-    )}
+        <StatusPill label={view.label} tone={view.tone} live={view.live} />
+      </div>
 
-    {/* Step checklist */}
-            <OrderTrackerSteps
-              currentTrackingOrder={currentTrackingOrder}
-              isFailedOrder={isFailedOrder}
-            />
+      <OrderStatusTimeline status={order.status} deliveryStatus={order.deliveryStatus} className="pt-2" />
 
-  </Surface>
-  
-  {/* Active Order Details */}
-  <Surface radius="xl" elevation={0} className="p-6 mt-6">
-    <h3 className="font-bold text-lg text-slate-900 dark:text-[#f0ede6] mb-4">Order Details</h3>
-    {currentTrackingOrder.restaurantName && (
-      <div className="flex items-center justify-between text-sm font-semibold text-slate-500 dark:text-slate-400 mb-3 pb-3 border-b border-dashed border-slate-200 dark:border-slate-800">
-        <span>From: {currentTrackingOrder.restaurantName}</span>
-        {currentTrackingOrder.restaurantId && (
-          <button 
-            onClick={() => startCall(currentTrackingOrder.restaurantId!, currentTrackingOrder.id)}
-            className="p-1.5 rounded-full bg-amber-100 text-amber-600 hover:bg-amber-200 dark:bg-amber-500/20 dark:text-amber-400 dark:hover:bg-amber-500/30 transition-colors"
-            title={`Call ${currentTrackingOrder.restaurantName}`}
-          >
-            <PhoneCall className="w-4 h-4" />
-          </button>
-        )}
-      </div>
-    )}
-    {currentTrackingOrder.deliveryExecutiveId && (
-      <div className="flex items-center justify-between text-sm font-semibold text-slate-500 dark:text-slate-400 mb-3 pb-3 border-b border-dashed border-slate-200 dark:border-slate-800">
-        <span>Rider Assigned</span>
-        <button 
-          onClick={() => startCall(currentTrackingOrder.deliveryExecutiveId!, currentTrackingOrder.id)}
-          className="p-1.5 rounded-full bg-amber-100 text-amber-600 hover:bg-amber-200 dark:bg-amber-500/20 dark:text-amber-400 dark:hover:bg-amber-500/30 transition-colors"
-          title={`Call Rider`}
-        >
-          <PhoneCall className="w-4 h-4" />
-        </button>
-      </div>
-    )}
-    <div className="space-y-3">
-      {currentTrackingOrder.items && currentTrackingOrder.items.map((item: unknown, idx: number) => {
-        const i = item as { item?: { id?: string; name?: string; price?: number }; quantity?: number; name?: string; price?: number };
-        return (
-        <div key={idx} className="flex justify-between text-sm font-semibold text-slate-700 dark:text-slate-300">
-          <span>{i.quantity || 1}x {i.item?.name || i.name || 'Item'}</span>
-          <span>{formatINR((i.item?.price || i.price || 0) * (i.quantity || 1))}</span>
-        </div>
-      )})}
-    </div>
-    
-    <div className="pt-4 mt-4 border-t border-dashed border-slate-200 dark:border-slate-700 space-y-2">
-      <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
-        <span>Items Total</span>
-        <span>{formatINR(currentTrackingOrder.itemTotal ?? 0)}</span>
-      </div>
-      <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
-        <span>Delivery Fee</span>
-        <span>{currentTrackingOrder.deliveryFee !== undefined ? formatINR(currentTrackingOrder.deliveryFee) : formatINR(0)}</span>
-      </div>
-      {currentTrackingOrder.customerPlatformFee !== undefined && (
-        <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
-          <span>Platform Fee</span>
-          <span>{formatINR(currentTrackingOrder.customerPlatformFee)}</span>
+      {order.status === OrderStatus.AWAITING_DELAY_APPROVAL && (
+        <div className="flex gap-2.5">
+          <Button fullWidth disabled={busy} onClick={() => answerDelay(true)}>I&rsquo;ll wait</Button>
+          <Button fullWidth variant="secondary" disabled={busy} onClick={() => answerDelay(false)}>Cancel order</Button>
         </div>
       )}
-      {currentTrackingOrder.sgst !== undefined && (
-        <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
-          <span>SGST</span>
-          <span>{formatINR(currentTrackingOrder.sgst)}</span>
-        </div>
-      )}
-      {currentTrackingOrder.cgst !== undefined && (
-        <div className="flex justify-between text-sm font-bold text-slate-500 dark:text-slate-400">
-          <span>CGST</span>
-          <span>{formatINR(currentTrackingOrder.cgst)}</span>
-        </div>
-      )}
-      <div className="flex justify-between text-lg font-black text-slate-900 dark:text-white pt-2 border-t border-slate-200 dark:border-slate-700">
-        <span>Total Paid</span>
-        <span>{formatINR(currentTrackingOrder.totalAmount ?? 0)}</span>
-      </div>
-      {currentTrackingOrder.paymentMethod && (
-        <div className="flex justify-end pt-1">
-          <span className="text-xs px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded font-medium border border-slate-200 dark:border-slate-700">
-            Paid via {currentTrackingOrder.paymentMethod}
+
+      {order.otp && order.status !== OrderStatus.AWAITING_DELAY_APPROVAL && (
+        <Surface radius="lg" elevation={1} className="p-3.5 flex items-center gap-3">
+          <span className="flex-1 min-w-0">
+            <span className="block font-mono text-[10px] font-bold tracking-wider text-ink-2">DELIVERY CODE</span>
+            <span className="block text-[13px] font-semibold text-ink">Tell your rider this code at the door</span>
           </span>
-        </div>
+          <span data-testid="delivery-code" className="font-mono text-2xl font-bold tracking-[.2em] text-ink px-3 py-1.5" style={surfaceStyle({ variant: 'sunken', radius: 'md', elevation: 0 })}>
+            {order.otp}
+          </span>
+        </Surface>
+      )}
+
+      {order.deliveryExecutiveId && (
+        <Surface radius="lg" elevation={2} className="p-3 flex items-center gap-3" data-testid="rider-card">
+          <span className="w-11 h-11 shrink-0 rounded-2xl flex items-center justify-center" style={surfaceStyle({ variant: 'sunken', radius: 'md', elevation: 0 })}>
+            <UserRound className="w-6 h-6 text-ink-2" aria-hidden="true" />
+          </span>
+          <span className="flex-1 min-w-0">
+            <span className="block text-sm font-extrabold text-ink truncate">{order.deliveryExecutiveName || 'Your rider'}</span>
+            <span className="block text-[11px] font-medium text-ink-2">
+              {order.deliveryStatus === DeliveryStatus.OUT_FOR_DELIVERY ? 'Has your food' : 'Assigned to your order'}
+            </span>
+          </span>
+          <Button
+            size="icon"
+            aria-label={`Call ${order.deliveryExecutiveName || 'your rider'}`}
+            onClick={() => startCall(order.deliveryExecutiveId!, order.id)}
+            icon={<PhoneCall className="w-5 h-5" />}
+          />
+        </Surface>
+      )}
+
+      <Surface radius="lg" elevation={1} className="overflow-hidden">
+        <details className="group">
+          <summary className="list-none cursor-pointer p-3.5 flex items-center gap-3">
+            <span className="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center" style={surfaceStyle({ variant: 'sunken', radius: 'md', elevation: 0 })}>
+              <Store className="w-5 h-5 text-ink-2" aria-hidden="true" />
+            </span>
+            <span className="flex-1 min-w-0">
+              <span className="block text-[13px] font-bold text-ink truncate">{order.restaurantName ?? 'Your order'}</span>
+              <span className="block font-mono text-[10px] font-medium text-ink-2">
+                #{order.id.slice(0, 8).toUpperCase()} · {itemCount} {itemCount === 1 ? 'ITEM' : 'ITEMS'} · {formatINR(order.totalAmount ?? 0)}
+              </span>
+            </span>
+            <ChevronRight className="w-4 h-4 text-ink-3 transition-transform group-open:rotate-90" aria-hidden="true" />
+          </summary>
+          <div className="px-4 pb-4 space-y-3">
+            <ul className="space-y-2">
+              {(order.items ?? []).map((raw, idx) => {
+                const i = raw as { item?: { name?: string; price?: number }; quantity?: number; name?: string; price?: number };
+                const qty = i.quantity || 1;
+                return (
+                  <li key={idx} className="flex justify-between gap-3 text-[13px]">
+                    <span className="font-semibold text-ink">{qty}× {i.item?.name || i.name || 'Item'}</span>
+                    <span className="font-mono text-ink">{formatINR((i.item?.price || i.price || 0) * qty)}</span>
+                  </li>
+                );
+              })}
+            </ul>
+            <div className="border-t border-dashed border-paper-line pt-3">
+              <OrderMoneyBreakdown order={order} />
+            </div>
+            {order.paymentMethod && <p className="text-[11px] font-semibold text-ink-2">Paid via {order.paymentMethod}</p>}
+            {order.restaurantId && (
+              <Button variant="ghost" size="sm" onClick={() => startCall(order.restaurantId!, order.id)} icon={<PhoneCall className="w-4 h-4" />}>
+                Call the restaurant
+              </Button>
+            )}
+          </div>
+        </details>
+      </Surface>
+
+      {cancellable && (
+        <Button variant="ghost" fullWidth disabled={busy} onClick={cancel} className="!text-danger">
+          Cancel order
+        </Button>
       )}
     </div>
-  </Surface>
-    </>
   );
 }

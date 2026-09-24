@@ -39,14 +39,14 @@ function variantStyle(variant: ButtonVariant): React.CSSProperties {
       };
     case 'danger':
       return {
-        background: 'var(--color-danger)',
+        background: 'var(--color-danger-solid)',
         color: '#ffffff',
         border: '1px solid transparent',
         boxShadow: 'var(--elevation-1)',
       };
     case 'success':
       return {
-        background: 'var(--color-success)',
+        background: 'var(--color-success-solid)',
         color: '#ffffff',
         border: '1px solid transparent',
         boxShadow: 'var(--elevation-1)',

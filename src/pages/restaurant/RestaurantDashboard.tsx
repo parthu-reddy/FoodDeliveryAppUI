@@ -4,7 +4,6 @@ import {
     MessageSquare
 } from 'lucide-react';
 import { Suspense, lazy, useEffect, useState, useMemo } from 'react';
-import { useNavigate, useLocation, useMatch } from 'react-router-dom';
 
 import { CallOverlay } from "@features/communication/components/CallOverlay";
 import { CompleteProfileModal, ErrorBoundary } from "@shared/ui";
@@ -25,6 +24,7 @@ import { useBrandKycStream } from '@features/restaurant-orders/model/useBrandKyc
 import { useRestaurantCatalog } from '@features/restaurant-orders/model/useRestaurantCatalog';
 import { useRestaurantOrderActions } from '@features/restaurant-orders/model/useRestaurantOrderActions';
 import { useRestaurantOrders } from '@features/restaurant-orders/model/useRestaurantOrders';
+import { useRestaurantRoute } from '@features/restaurant-orders/model/useRestaurantRoute';
 
 import { isActiveOrder } from '@features/customer-orders/model/orderStatus';
 import { sumRupees } from '@shared/money';
@@ -54,26 +54,10 @@ export default function RestaurantDashboard({
     externalOrders,
     externalUpdateStatus
   });
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  // Derive state from route
-  const isSettingsView = location.pathname.includes('/restaurant/settings');
-  const view = isSettingsView ? 'settings' : 'home';
-  const showSettings = isSettingsView;
-
-  const chatMatch = useMatch('/restaurant/chat/:orderId');
-  const chatOrderId = chatMatch?.params?.orderId;
-  
-  let activeTab: 'orders' | 'menu' | 'campaigns' | 'earnings' | 'reviews' = 'orders';
-  if (location.pathname.includes('/menu')) activeTab = 'menu';
-  else if (location.pathname.includes('/campaigns')) activeTab = 'campaigns';
-  else if (location.pathname.includes('/earnings')) activeTab = 'earnings';
-  else if (location.pathname.includes('/reviews')) activeTab = 'reviews';
-
-  const setActiveTab = (tab: typeof activeTab) => navigate(`/restaurant/${tab}`);
-  const setView = (v: 'home' | 'settings') => navigate(v === 'settings' ? '/restaurant/settings' : '/restaurant');
-  const setShowSettings = (show: boolean) => navigate(show ? '/restaurant/settings' : '/restaurant');
+  const {
+    view, showSettings, chatOrderId, activeTab,
+    setActiveTab, setView, setShowSettings, showChatList, setShowChatList, setSelectedChatOrder,
+  } = useRestaurantRoute();
 
   const [, setApiPrepSeconds] = useState('15');
 
@@ -114,28 +98,10 @@ export default function RestaurantDashboard({
   const completedOrders = historyOrders.filter(
     o => o.status === OrderStatus.HANDED_OVER && o.deliveryStatus === DeliveryStatus.DELIVERED);
 
-  // Chat state
-  const showChatList = location.search.includes('chat=list');
-  const setShowChatList = (show: boolean) => {
-    if (show) {
-      navigate(location.pathname + '?chat=list');
-    } else {
-      navigate(location.pathname);
-    }
-  };
-
   const selectedChatOrder = useMemo(() => {
     if (!chatOrderId || !myOrders) return null;
     return myOrders.find(o => o.id === chatOrderId) || null;
   }, [chatOrderId, myOrders]);
-
-  const setSelectedChatOrder = (order: Order | null) => {
-    if (order) {
-      navigate(`/restaurant/chat/${order.id}`);
-    } else {
-      navigate('/restaurant');
-    }
-  };
 
   // Unified profile hook — replaces inline fetch pattern
   const { profile: fetchedProfile, isProfileIncomplete, localProfile } = useUserProfile();
@@ -222,9 +188,9 @@ export default function RestaurantDashboard({
           // back on Live Kitchen. See Phase7_PendingDefectClosure/plan.md.
           onChange={(key: typeof activeTab) => setActiveTab(key)}
           items={[
-            { key: 'orders', label: `Live Kitchen Feed (${myOrders.length})` },
-            { key: 'menu', label: 'Menu Stock Toggles' },
-            { key: 'campaigns', label: 'Ad Campaigns' },
+            { key: 'orders', label: `Orders (${myOrders.length})` },
+            { key: 'menu', label: 'Menu' },
+            { key: 'campaigns', label: 'Campaigns' },
             { key: 'earnings', label: 'Earnings' },
             { key: 'reviews', label: 'Reviews' },
           ]}

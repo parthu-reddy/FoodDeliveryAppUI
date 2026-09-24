@@ -6,13 +6,11 @@ import {
  ChefHat,
  Clock,
  RefreshCw,
- Sliders,
  Truck
 } from 'lucide-react';
 import React, { useMemo } from 'react';
 import { z } from 'zod';
 import { RefundView } from '@/api/generated/schemas/customer/common';
-import { Spinner, Surface } from '@shared/ui';
 
 type RefundViewType = z.infer<typeof RefundView>;
 
@@ -100,18 +98,11 @@ export const RestaurantOrderQueue = React.memo(function RestaurantOrderQueue({
  >
  {/* Live Orders Kanban Board */}
  <div className="space-y-4">
- <div className="flex items-center justify-between">
- <div>
- <h4 className="font-extrabold text-sm tracking-tight text-slate-900 dark:text-[#f0ede6] uppercase font-sans flex items-center gap-2">
- <Sliders className="w-4.5 h-4.5 text-rose-500" />
- <span>Kitchen Kanban Board</span>
- </h4>
- <p className="text-[11px] text-slate-400 dark:text-slate-300">Manage orders through standard operations. Swiping/scrolling available.</p>
- </div>
- <Surface radius="md" elevation={2} className="flex items-center gap-1.5 text-[10px] font-mono text-slate-400 dark:text-slate-300 px-2.5 py-1">
- <Spinner size="xs" color="var(--color-action)" label="" />
- <span>Auto-Sync Gateway</span>
- </Surface>
+ <div className="flex items-baseline justify-between gap-3">
+ <h2 className="font-extrabold text-base tracking-tight text-ink">Orders</h2>
+ {/* Honest about freshness: the board polls every 5 s (useRestaurantOrders). It used to
+     show a spinner labelled "Auto-Sync Gateway", which described nothing. */}
+ <span className="text-[11px] font-mono text-ink-2">Updates every 5 s</span>
  </div>
 
  {/*
@@ -123,64 +114,52 @@ export const RestaurantOrderQueue = React.memo(function RestaurantOrderQueue({
  <div className="flex gap-4 pb-6 w-full overflow-x-auto touch-pan-x snap-x snap-mandatory scrollbar-thin scrollbar-thumb-rose-500/30 scrollbar-track-transparent md:grid md:overflow-visible md:snap-none md:[grid-template-columns:repeat(auto-fit,minmax(310px,1fr))]">
 
  <KanbanColumn
- title="New Placed"
+ title="Incoming"
  tone="warning"
  beat="ping"
  count={pendingOrders.length}
  emptyIcon={<Clock {...ICON} />}
- emptyTitle="No pending orders"
- emptyHint="When customers place live orders, they will ping in this slot instantly."
+ emptyTitle="No new orders"
+ emptyHint="New orders appear here with a clock: 10 minutes to accept."
  >
  {pendingOrders.slice().reverse().map(order => card(order, { isNewPlaced: true }))}
  </KanbanColumn>
 
  <KanbanColumn
- title="Active Refunds"
- tone="danger"
- beat="ping"
- count={refundOrders.length}
- emptyIcon={<RefreshCw {...ICON} />}
- emptyTitle="No active requests"
- emptyHint="Customer refund requests will appear here for review."
- >
- {refundOrders.map(order => card(order, { isRefundRequest: true }))}
- </KanbanColumn>
-
- <KanbanColumn
- title="Requested Delay"
- tone="danger"
- count={byStatus.delayed.length}
- emptyIcon={<Clock {...ICON} />}
- emptyTitle="No delayed orders"
- emptyHint="Orders awaiting a delay decision from the customer will appear here."
- >
- {byStatus.delayed.map(order => card(order))}
- </KanbanColumn>
-
- <KanbanColumn
- title="Cooking Feed"
+ title="In the kitchen"
  tone="warning"
  count={activePreparing.length}
  emptyIcon={<ChefHat {...ICON} />}
- emptyTitle="Kitchen is idle"
- emptyHint="Accepted tickets appear here. Start cooking to alert couriers!"
+ emptyTitle="Nothing cooking"
+ emptyHint="Accepted orders become kitchen tickets here."
  >
  {activePreparing.slice().reverse().map(order => card(order, { isCooking: true }))}
  </KanbanColumn>
 
  <KanbanColumn
- title="Prepared Ready"
+ title="Waiting on customer"
+ tone="danger"
+ count={byStatus.delayed.length}
+ emptyIcon={<Clock {...ICON} />}
+ emptyTitle="No delayed orders"
+ emptyHint="Orders where you asked for more time wait here for the customer\u2019s answer."
+ >
+ {byStatus.delayed.map(order => card(order))}
+ </KanbanColumn>
+
+ <KanbanColumn
+ title="Ready for pickup"
  tone="success"
  count={byStatus.ready.length}
  emptyIcon={<Truck {...ICON} />}
- emptyTitle="No ready packages"
- emptyHint="Finished dishes will wait here. Handover to couriers with secure codes."
+ emptyTitle="Nothing waiting"
+ emptyHint="Packed orders wait here until the rider collects them with the pickup code."
  >
  {byStatus.ready.map(order => card(order, { isPrepared: true }))}
  </KanbanColumn>
 
  <KanbanColumn
- title="Being Delivered"
+ title="Out for delivery"
  tone="info"
  count={byStatus.handedOver.length}
  emptyIcon={<Bike {...ICON} />}
@@ -188,6 +167,18 @@ export const RestaurantOrderQueue = React.memo(function RestaurantOrderQueue({
  emptyHint="Orders picked up by riders will appear here until delivered."
  >
  {byStatus.handedOver.map(order => card(order, { isBeingDelivered: true }))}
+ </KanbanColumn>
+
+ <KanbanColumn
+ title="Refund requests"
+ tone="danger"
+ beat="ping"
+ count={refundOrders.length}
+ emptyIcon={<RefreshCw {...ICON} />}
+ emptyTitle="No refund requests"
+ emptyHint="Customer refund requests will appear here for review."
+ >
+ {refundOrders.map(order => card(order, { isRefundRequest: true }))}
  </KanbanColumn>
 
  </div>
