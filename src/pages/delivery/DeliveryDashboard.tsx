@@ -214,9 +214,11 @@ export default function DeliveryDashboard({
             onOpenHistory={() => setShowHistory(true)}
           />
 
+          {/* Every branch needs a key: mode="wait" tracks children by key and wedges
+              without one. Same defect as RestaurantTabPanels. */}
           <AnimatePresence mode="wait">
             {showHistory ? (
-              <ErrorBoundary fallbackLabel="Delivery History">
+              <ErrorBoundary key="history-panel" fallbackLabel="Delivery History">
                 <DeliveryHistoryPanel
                   setShowHistory={setShowHistory}
                   historyDateFilter={historyDateFilter}
@@ -228,9 +230,9 @@ export default function DeliveryDashboard({
                 />
               </ErrorBoundary>
             ) : !isOnline ? (
-              <RiderOfflineState />
+              <RiderOfflineState key="offline-panel" />
             ) : currentJob ? (
-              <ErrorBoundary fallbackLabel="Active Job">
+              <ErrorBoundary key="active-job-panel" fallbackLabel="Active Job">
                 <DeliveryActiveJob
                   currentJob={currentJob}
                   enteredPickupOtp={job.enteredPickupOtp}
@@ -252,7 +254,7 @@ export default function DeliveryDashboard({
                 />
               </ErrorBoundary>
             ) : (
-              <ErrorBoundary fallbackLabel="Available Jobs">
+              <ErrorBoundary key="available-jobs-panel" fallbackLabel="Available Jobs">
                 <DeliveryAvailableJobs
                   availableJobs={availableJobs}
                   handleAcceptJob={job.handleAcceptJob}

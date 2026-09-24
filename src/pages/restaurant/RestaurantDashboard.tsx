@@ -4,7 +4,7 @@ import {
     MessageSquare
 } from 'lucide-react';
 import { Suspense, lazy, useEffect, useState, useMemo } from 'react';
-import { Routes, Route, useNavigate, useLocation, useMatch } from 'react-router-dom';
+import { useNavigate, useLocation, useMatch } from 'react-router-dom';
 
 import { CallOverlay } from "@features/communication/components/CallOverlay";
 import { CompleteProfileModal, ErrorBoundary } from "@shared/ui";
@@ -245,8 +245,13 @@ export default function RestaurantDashboard({
         </div>
       ) : (
         <>
-          <Routes>
-        <Route path="*" element={<RestaurantTabPanels
+          {/* Rendered directly. This was wrapped in <Routes><Route path="*"> with a single
+              catch-all route, so no routing decision was being made -- and the subtree did
+              not pick up a new `activeTab` on client-side navigation. The tab strip (a
+              controlled component fed the same value) updated correctly while the panel
+              kept rendering the previous tab. Panel choice is by `activeTab`, which is
+              derived from the pathname, so the wrapper bought nothing. */}
+        <RestaurantTabPanels
           activeTab={activeTab}
           showSettings={showSettings}
           setShowSettings={setShowSettings}
@@ -271,8 +276,7 @@ export default function RestaurantDashboard({
           handleCardCancelSubmit={handleCardCancelSubmit}
           handleCardPartialRefundSubmit={handleCardPartialRefundSubmit}
           handleCardDelaySubmit={handleCardDelaySubmit}
-        />} />
-      </Routes>
+        />
 
       <CompleteProfileModal 
         isOpen={showCompleteProfileModal} 
