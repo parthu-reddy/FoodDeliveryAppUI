@@ -20,14 +20,12 @@ export function LoginFooter({ specialIndex }: { specialIndex: number }) {
   return (
     <div className="shrink-0 text-center space-y-1 sm:space-y-1.5 w-full max-w-7xl mx-auto px-4 sm:px-8 pb-4">
       <p
-        className="text-[11px] sm:text-[12px]"
-        style={{ color: 'color-mix(in srgb, var(--color-paper) 82%, transparent)' }}
+        className="text-[11px] sm:text-[12px] text-slate-500 dark:text-slate-400"
       >
         By continuing, you agree to our terms &amp; instant delivery guidelines.
       </p>
       <div
-        className="flex items-center justify-center gap-3 text-[11px] sm:text-[12px] font-mono tracking-wide"
-        style={{ color: 'color-mix(in srgb, var(--color-paper) 66%, transparent)' }}
+        className="flex items-center justify-center gap-3 text-[11px] sm:text-[12px] font-mono tracking-wide text-slate-500 dark:text-slate-400"
       >
         <span>SECURE END-TO-END</span>
         <span>&bull;</span>

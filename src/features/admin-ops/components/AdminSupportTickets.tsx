@@ -1,14 +1,15 @@
-import { Surface } from '@shared/ui';
+import { formatINR } from '@shared/money';
 import { Order } from "@/types";
 import { useToast } from "@/contexts/ToastContext";
 import { usePolling } from "@/hooks/usePolling";
 import { parseApiError } from '@/lib/parseApiError';
+import { getUserProfile } from '@/lib/tokenStore';
 import { customerApi } from "@/lib/zodiosClients";
 import { SupportTicket as SupportTicketSchema } from "@/api/generated/schemas/customer/common";
 import { z } from 'zod';
 type SupportTicket = z.infer<typeof SupportTicketSchema>;
 import { ChatWidget, ChatWidgetHandle } from "@features/communication/components/ChatWidget";
-import { Button, Textarea, useConfirm } from '@shared/ui';
+import { Button, Surface, Textarea, useConfirm } from '@shared/ui';
 import { ShieldCheck, XCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
@@ -46,10 +47,26 @@ export default function AdminSupportTickets() {
     }
   }, [ticketsResponse]);
 
-  const handleResolveTicket = async (ticketId: string, approved: boolean) => {
-    // Rejecting is the destructive half: the customer is told no and the ticket closes.
-    // Approving pays out, which the money layer already guards.
-    if (!approved) {
+  const handleResolveTicket = async (ticket: SupportTicket, approved: boolean) => {
+    const adminId = getUserProfile()?.id;
+    if (!adminId) {
+      showError('Your session does not identify you; sign in again before resolving a refund.');
+      return;
+    }
+    if (approved) {
+      const amount = ticket.refundAmount;
+      if (typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0) {
+        showError('The refund amount is unavailable. Refresh the ticket before approving.');
+        return;
+      }
+      const ok = await confirm({
+        title: `Approve the request for ${formatINR(amount)}?`,
+        description: `This will request a refund for order #${ticket.orderId} and close the ticket. Payment completion may take time; refunds cannot be reversed from this screen.`,
+        confirmLabel: 'Approve request',
+        tone: 'danger',
+      });
+      if (!ok) return;
+    } else {
       const ok = await confirm({
         title: 'Reject this request?',
         description:
@@ -61,10 +78,13 @@ export default function AdminSupportTickets() {
       if (!ok) return;
     }
     try {
-      await customerApi.adminOrderManual.resolveSupportTicket({ 
-        approved: approved.toString(), 
-        resolutionNotes: resolutionNotes,
-      }, { params: { ticketId } });
+      await customerApi.adminRefund.resolveTicket({
+        approved,
+        notes: resolutionNotes,
+        faultType: 'UNKNOWN',
+        // Submit the amount the admin confirmed, even if the quote changes during review.
+        overrideAmount: approved ? ticket.refundAmount : undefined,
+      }, { params: { ticketId: ticket.id }, headers: { 'X-User-Id': adminId } });
       
       showSuccess(`Ticket successfully ${approved ? 'approved' : 'rejected'}`);
       setSelectedTicket(null);
@@ -72,7 +92,7 @@ export default function AdminSupportTickets() {
       setShowChat(false);
       fetchTickets();
     } catch (error) {
-      showError(`Failed to resolve ticket: ${parseApiError(error)}`);
+      showError(`Failed to resolve ticket: ${parseApiError(error).message}`);
     }
   };
 
@@ -231,14 +251,14 @@ export default function AdminSupportTickets() {
                       <Button 
                         variant="primary" 
                         className="flex-1 bg-amber-500 hover:bg-amber-600 text-white border-transparent"
-                        onClick={() => handleResolveTicket(selectedTicket.id, true)}
+                        onClick={() => handleResolveTicket(selectedTicket, true)}
                       >
                         Resolve Ticket
                       </Button>
                       <Button 
                         variant="danger" 
                         className="flex-1"
-                        onClick={() => handleResolveTicket(selectedTicket.id, false)}
+                        onClick={() => handleResolveTicket(selectedTicket, false)}
                         disabled={!resolutionNotes.trim()}
                       >
                         Reject Request

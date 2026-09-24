@@ -68,7 +68,7 @@ export { SearchInput } from './SearchInput';
 export { SidebarNav } from './SidebarNav';
 export { StatCard } from './StatCard';
 export { Textarea } from './Textarea';
-export { default as CinematicFoodBackground } from './CinematicFoodBackground';
+
 export { EmptyState } from './EmptyState';
 export { LoadingSkeleton, MenuCategorySkeleton, RestaurantCardSkeleton, Skeleton } from './Skeleton';
 export { TransactionHistoryTable } from './TransactionHistoryTable';

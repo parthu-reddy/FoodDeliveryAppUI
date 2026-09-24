@@ -2,7 +2,7 @@ import { Surface, surfaceStyle } from '@shared/ui';
 import { STEP_COUNT, useRiderOnboarding } from '@features/delivery-tasks/model/useRiderOnboarding';
 import DocumentUploadField from "@features/kyc/components/DocumentUploadField";
 import ImageUploadField from "@features/kyc/components/ImageUploadField";
-import { Button, CinematicFoodBackground, FormField, Input, Select, Spinner } from '@shared/ui';
+import { Button, FormField, Input, Select, Spinner } from '@shared/ui';
 import { AlertCircle, Car, CheckCircle, ChevronRight, FileText, Landmark, LogOut, UserSquare } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useMotionPresets } from '@shared/ui';
@@ -201,7 +201,6 @@ export default function RiderOnboardingWizard({ riderPhone, theme, onComplete, u
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0 z-0">
-        <CinematicFoodBackground theme={theme} />
         <Surface elevation={0} className="absolute inset-0" />
       </div>
 

@@ -6,6 +6,7 @@ import { useToast } from '@/contexts/ToastContext';
 import type { Order } from '../../schemas/order';
 import { formatINR } from '@shared/money';
 import { getFriendlyStatusMessage } from '@features/customer-orders/model/statusMessaging';
+import { placedAt } from '@features/customer-orders/model/placedAt';
 import { Badge } from './Badge';
 import { Button } from './action/Button';
 import { Surface } from './surface/Surface';
@@ -77,6 +78,12 @@ export function SettingsHistoryTab({ setTrackingOrder }: { setTrackingOrder?: (o
               <div>
                 <span className="text-[10px] font-bold text-slate-400 dark:text-slate-300 font-mono block">{order.id.substring(0, 8)}</span>
                 <h5 className="font-bold text-sm text-slate-900 dark:text-[#f0ede6]">{order.restaurantName}</h5>
+                {/* When it was placed (HISTORY-03): a history row said what and how much, never when. */}
+                {placedAt(order.createdAt) && (
+                  <time dateTime={order.createdAt} className="block text-[11px] text-slate-500 dark:text-slate-300">
+                    {placedAt(order.createdAt)}
+                  </time>
+                )}
               </div>
               <Badge variant="primary">
                 {getFriendlyStatusMessage(order.status, order.deliveryStatus)}

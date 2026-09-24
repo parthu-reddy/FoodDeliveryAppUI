@@ -5,7 +5,16 @@ interface ImageLoaderProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   alt?: string;
   className?: string;
   containerClassName?: string;
+  /**
+   * An image to show when `src` is missing or fails -- the brand mark on a menu row, say.
+   * Without one, a missing or failed image falls to the initial placeholder below.
+   */
+  fallbackSrc?: string;
+  /** Classes for the fallback image instead of `className`: a logo is contained, not cropped. */
+  fallbackClassName?: string;
 }
+
+type LoadState = { src?: string; loaded: boolean; failed: boolean; fallbackFailed: boolean };
 
 /**
  * An image that fades in, and a quiet placeholder when there is no image to show.
@@ -15,25 +24,48 @@ interface ImageLoaderProps extends React.ImgHTMLAttributes<HTMLImageElement> {
  * the back button. Most restaurants in the system have no photo yet, so that was the common
  * case, not the edge. Now a missing or failed image shows the paper-sunken ground with the
  * name's initial, and the alt text stays with the placeholder as its accessible name.
+ *
+ * With `fallbackSrc`, the order is: the photo, then the fallback image, then the initial. A
+ * fallback that fails too is not retried, so an error can never loop.
  */
-export default function ImageLoader({ src, alt, className, containerClassName, ...props }: ImageLoaderProps) {
-  const [state, setState] = useState<{ src?: string; loaded: boolean; failed: boolean }>({ src, loaded: false, failed: false });
+export default function ImageLoader({
+  src,
+  alt,
+  className,
+  containerClassName,
+  fallbackSrc,
+  fallbackClassName,
+  ...props
+}: ImageLoaderProps) {
+  const [state, setState] = useState<LoadState>({ src, loaded: false, failed: false, fallbackFailed: false });
   const imgRef = useRef<HTMLImageElement>(null);
   // Reset when the source changes, during render rather than in an effect.
-  const current = state.src === src ? state : { src, loaded: false, failed: false };
+  const current = state.src === src ? state : { src, loaded: false, failed: false, fallbackFailed: false };
   if (current !== state) setState(current);
+
+  const photo = src && !current.failed ? src : undefined;
+  const fallback = !photo && fallbackSrc && !current.fallbackFailed ? fallbackSrc : undefined;
+  const shown = photo ?? fallback;
 
   useEffect(() => {
     if (imgRef.current?.complete && imgRef.current.naturalWidth > 0) {
       setState((s) => (s.src === src ? { ...s, loaded: true } : s));
     }
-  }, [src]);
+  }, [src, shown]);
 
-  const missing = !src || current.failed;
+  const onError = () =>
+    setState((s) => {
+      if (s.src !== src) return s;
+      // The photo failed: move to the fallback, which has to load in its own right.
+      return photo ? { ...s, failed: true, loaded: false } : { ...s, fallbackFailed: true };
+    });
 
   return (
-    <div className={`relative overflow-hidden ${containerClassName || ''}`}>
-      {missing ? (
+    <div
+      className={`relative overflow-hidden ${containerClassName || ''}`}
+      style={fallback ? { background: 'var(--color-paper-sunken)' } : undefined}
+    >
+      {!shown ? (
         <div
           role={alt ? 'img' : undefined}
           aria-label={alt || undefined}
@@ -50,12 +82,15 @@ export default function ImageLoader({ src, alt, className, containerClassName, .
             <div className="absolute inset-0 bg-slate-900/5 dark:bg-slate-100/5 animate-pulse" />
           )}
           <img
+            // A new element per source, so a fallback starts from a fresh load rather than
+            // inheriting the failed photo's state.
+            key={shown}
             ref={imgRef}
-            src={src}
+            src={shown}
             alt={alt}
-            className={`transition-opacity duration-300 ease-in-out ${current.loaded ? 'opacity-100' : 'opacity-0'} ${className || ''}`}
+            className={`transition-opacity duration-300 ease-in-out ${current.loaded ? 'opacity-100' : 'opacity-0'} ${(fallback ? fallbackClassName ?? className : className) || ''}`}
             onLoad={() => setState((s) => (s.src === src ? { ...s, loaded: true } : s))}
-            onError={() => setState((s) => (s.src === src ? { ...s, failed: true } : s))}
+            onError={onError}
             {...props}
           />
         </>

@@ -88,6 +88,20 @@ export const endpoints = makeApi([
   },
   {
     method: "get",
+    path: "/api/v1/internal/restaurants/outlets/:outletId/invoice-details",
+    alias: "getInvoiceDetails",
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "outletId",
+        type: "Path",
+        schema: z.string().uuid(),
+      },
+    ],
+    response: z.record(z.object({}).partial().passthrough()),
+  },
+  {
+    method: "get",
     path: "/api/v1/internal/restaurants/outlets/:outletId/exists",
     alias: "outletExists",
     requestFormat: "json",

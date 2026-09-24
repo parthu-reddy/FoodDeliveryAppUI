@@ -5,7 +5,7 @@ import { RoleSelector } from '@features/identity/components/RoleSelector';
 import SessionManagementModal from '@features/identity/components/SessionManagementModal';
 import { useOtpLogin } from '@features/identity/model/useOtpLogin';
 import { SPECIALS_COUNT } from '@features/identity/model/specials';
-import { CinematicFoodBackground, CompleteProfileModal, RoleShell } from '@shared/ui';
+import { CompleteProfileModal, RoleShell } from '@shared/ui';
 import { AnimatePresence } from 'motion/react';
 import { AuthForm } from './AuthForm';
 import { LoginFooter } from './LoginFooter';
@@ -50,9 +50,7 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
       }
     >
       <div className="relative flex flex-col min-h-full">
-        {/* The one screen that keeps the photograph: a sign-in page has no content for it to
-            wash out, and it is the brand moment. It used to render app-wide from App.tsx. */}
-        <CinematicFoodBackground theme={theme} />
+        {/* The photographic background has been removed as per user request */}
 
         <OtpNotification
           open={login.showNotification}

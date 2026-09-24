@@ -189,6 +189,26 @@ describe('MenuItemRow', () => {
     expect(screen.queryByText(/min/)).not.toBeInTheDocument();
   });
 
+  // MENU-08: every row keeps its picture slot. A dish with no photo, or a photo that fails,
+  // shows the brand mark there instead of nothing or a broken image. Decorative either way:
+  // the dish name is the heading right beside it.
+  it('shows the brand mark in the picture slot when the dish has no photo', () => {
+    const { container } = render(<MenuItemRow view={view({ imageUrl: undefined })} />);
+    const img = container.querySelector('[data-menu-item] img');
+    expect(img).not.toBeNull();
+    expect(img!.getAttribute('src')).toBe('/favicon.svg');
+    expect(img!.getAttribute('alt')).toBe('');
+  });
+
+  it('keeps exactly one decorative image when the photo fails to load', () => {
+    const { container } = render(<MenuItemRow view={view({ imageUrl: 'https://example.invalid/dish.jpg' })} />);
+    fireEvent.error(container.querySelector('[data-menu-item] img')!);
+    const imgs = container.querySelectorAll('[data-menu-item] img');
+    expect(imgs).toHaveLength(1);
+    expect(imgs[0].getAttribute('src')).toBe('/favicon.svg');
+    expect(imgs[0].getAttribute('alt')).toBe('');
+  });
+
   it('renders the rating slot it is given and nothing when there is none', () => {
     const { rerender } = render(<MenuItemRow view={view()} rating={<span>4.6 (12)</span>} />);
     expect(screen.getByText('4.6 (12)')).toBeInTheDocument();

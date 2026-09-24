@@ -15,4 +15,27 @@ describe('ImageLoader', () => {
     expect(container.querySelector('img')).toBeNull();
     expect(screen.getByRole('img', { name: 'Rumali Roti' })).toBeInTheDocument();
   });
+
+  it('shows the fallback image, not the initial, when there is no src and one is given', () => {
+    const { container } = render(<ImageLoader alt="" fallbackSrc="/favicon.svg" />);
+    const img = container.querySelector('img');
+    expect(img).not.toBeNull();
+    expect(img!.getAttribute('src')).toBe('/favicon.svg');
+    expect(img!.getAttribute('alt')).toBe('');
+  });
+
+  it('swaps a failed photo for the fallback image', () => {
+    const { container } = render(<ImageLoader src="https://example.invalid/x.jpg" alt="" fallbackSrc="/favicon.svg" />);
+    fireEvent.error(container.querySelector('img')!);
+    expect(container.querySelectorAll('img')).toHaveLength(1);
+    expect(container.querySelector('img')!.getAttribute('src')).toBe('/favicon.svg');
+  });
+
+  it('drops to the placeholder when the fallback fails too, rather than looping', () => {
+    const { container } = render(<ImageLoader src="https://example.invalid/x.jpg" alt="Rumali Roti" fallbackSrc="/missing.svg" />);
+    fireEvent.error(container.querySelector('img')!);
+    fireEvent.error(container.querySelector('img')!);
+    expect(container.querySelector('img')).toBeNull();
+    expect(screen.getByRole('img', { name: 'Rumali Roti' })).toHaveTextContent('R');
+  });
 });

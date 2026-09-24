@@ -23,6 +23,9 @@ import { VegMarker } from './VegMarker';
  * have to depend on `reviews`; the customer screen passes a `<StarRating>` into it.
  */
 
+/** The La Bouffe mark, served from public/ -- the same drawing as LaBouffeLogoMark. */
+const BRAND_MARK_SRC = '/favicon.svg';
+
 export interface MenuItemCapabilities {
   addToCart?: boolean;
   edit?: boolean;
@@ -73,20 +76,25 @@ export function MenuItemRow({
       style={{ opacity: view.available ? 1 : 0.6 }}
       data-menu-item={view.id}
     >
-      {view.imageUrl && (
-        // The radius comes from Surface, not from a token reference: feature code does not
-        // touch the surface tokens, and the Phase 2 gate enforces that.
-        <Surface radius="md" elevation={0} variant="solid" className="overflow-hidden p-0 shrink-0">
-          <ImageLoader
-            src={view.imageUrl}
-            alt=""
-            className="w-20 h-20 object-cover block"
-            referrerPolicy="no-referrer"
-            containerClassName="w-20 h-20"
-            loading="lazy"
-          />
-        </Surface>
-      )}
+      {/* Every row keeps its picture slot (Menu.dc.html draws one on each dish). A dish with no
+          photo, or a photo that fails to load, shows the brand mark there -- it used to show
+          nothing, or a broken image (MENU-08). Decorative: the name is the heading beside it.
+          The radius comes from Surface, not from a token reference: feature code does not
+          touch the surface tokens, and the Phase 2 gate enforces that. `self-start`: a flex row
+          stretches its children, and the slot grew to the text column's height, showing a band of
+          surface under the 80px picture. */}
+      <Surface radius="md" elevation={0} variant="solid" className="overflow-hidden p-0 shrink-0 self-start">
+        <ImageLoader
+          src={view.imageUrl}
+          alt=""
+          fallbackSrc={BRAND_MARK_SRC}
+          className="w-20 h-20 object-cover block"
+          fallbackClassName="w-20 h-20 object-contain block p-4"
+          referrerPolicy="no-referrer"
+          containerClassName="w-20 h-20"
+          loading="lazy"
+        />
+      </Surface>
 
       <div className="flex-1 min-w-0 flex flex-col gap-1.5">
         <div className="flex items-center gap-2">

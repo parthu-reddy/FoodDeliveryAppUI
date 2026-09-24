@@ -9,10 +9,11 @@ import AdminCategories from '@features/catalog/components/admin/AdminCategories'
 import AdminLedgerView from "@features/ledger/components/AdminLedgerView";
 import AdminPayoutsPage from "./money/AdminPayoutsPage";
 import MoneyOperationsPage from "./money/OperationsPage";
+import RefundQueue from "./money/RefundQueue";
 import { Button, SidebarNav } from '@shared/ui';
 import { AdminReviewsView } from '@features/reviews';
 import LaBouffeLogo from '@shared/ui/LaBouffeLogo';
-import { Activity, AlertTriangle, Database, LogOut, MapPin, MessageSquare, Moon, Shield, Star, Sun, Tags, Users } from 'lucide-react';
+import { Activity, AlertTriangle, Database, LogOut, MapPin, MessageSquare, Moon, RotateCcw, Shield, Star, Sun, Tags, Users } from 'lucide-react';
 import React from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { usePolling } from '../../hooks/usePolling';
@@ -34,7 +35,7 @@ export default function AdminPortal({
   // Extract activeTab from URL, default to 'map'
   const pathParts = location.pathname.split('/');
   const currentPath = pathParts[pathParts.length - 1];
-  const validTabs = ['deliveries', 'users', 'categories', 'map', 'ledger', 'payouts', 'money_ops', 'interventions', 'support_tickets', 'reviews'];
+  const validTabs = ['deliveries', 'users', 'categories', 'map', 'ledger', 'payouts', 'money_ops', 'interventions', 'support_tickets', 'refunds', 'reviews'];
   const activeTab = validTabs.includes(currentPath) ? currentPath : 'map';
 
   // Poll for intervention count to show badge on sidebar
@@ -64,6 +65,7 @@ export default function AdminPortal({
             items={[
               { key: 'deliveries', label: 'Live Operations', icon: <Activity className="w-5 h-5" /> },
               { key: 'support_tickets', label: 'Support Tickets', icon: <MessageSquare className="w-5 h-5" /> },
+              { key: 'refunds', label: 'Refund Queue', icon: <RotateCcw className="w-5 h-5" /> },
               { key: 'interventions', label: 'Manual Interventions', icon: <Shield className="w-5 h-5" />, badge: interventionsCount || undefined },
               { key: 'users', label: 'User Management', icon: <Users className="w-5 h-5" /> },
               { key: 'categories', label: 'Categories', icon: <Tags className="w-5 h-5" /> },
@@ -124,6 +126,7 @@ export default function AdminPortal({
           } />
           
           <Route path="interventions" element={<AdminManualInterventions />} />
+          <Route path="refunds" element={<RefundQueue />} />
           <Route path="support_tickets" element={<AdminSupportTickets />} />
           <Route path="deliveries" element={<AdminLiveOperations />} />
           <Route path="users" element={<AdminUserManagement />} />
