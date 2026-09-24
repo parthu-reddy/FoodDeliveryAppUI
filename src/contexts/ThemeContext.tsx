@@ -9,15 +9,34 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+const STORAGE_KEY = 'theme';
+
+/** The stored choice, or light. Never throws: private mode and blocked site data both
+ *  make localStorage unavailable, and a theme is not worth failing a render over. */
+function storedTheme(): Theme {
+  try {
+    return localStorage.getItem(STORAGE_KEY) === 'dark' ? 'dark' : 'light';
+  } catch {
+    return 'light';
+  }
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('light');
+  // Seeded from storage rather than hardcoded to 'light'. It used to be
+  // `useState<Theme>('light')` with nothing written back, so a reload silently discarded the
+  // choice -- the E2E test `profileDarkThemePersistsAcrossReload` fails on exactly that.
+  // Read lazily so the very first render already has the right theme and the page does not
+  // flash light before correcting itself.
+  const [theme, setTheme] = useState<Theme>(storedTheme);
 
-  // We don't apply the 'dark' class here because it's applied in App.tsx
-  // based on this context. Or better, we can move the application of the class here.
-  // Actually, we can just leave the class application in App.tsx using this context.
-
+  // The `dark` class itself is still applied by App.tsx from this value; this provider owns
+  // the value and its persistence, nothing else.
   const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+    setTheme(prev => {
+      const next: Theme = prev === 'dark' ? 'light' : 'dark';
+      try { localStorage.setItem(STORAGE_KEY, next); } catch { /* storage unavailable */ }
+      return next;
+    });
   };
 
   return (

@@ -103,12 +103,13 @@ export function AuthForm({
         {!otpSent ? (
           <form onSubmit={onSendOtp} className="space-y-4 relative z-10">
             <div className="space-y-1.5">
-              <label className={`text-xs font-bold tracking-wider font-mono ${theme === 'dark' ? 'text-slate-300' : 'text-slate-500 dark:text-slate-300'}`}>PHONE NUMBER</label>
+              <label htmlFor="login-phone" className={`text-xs font-bold tracking-wider font-mono ${theme === 'dark' ? 'text-slate-300' : 'text-slate-500 dark:text-slate-300'}`}>PHONE NUMBER</label>
               <div style={surfaceStyle({ variant: 'glass-chrome', elevation: 1, radius: 'lg' })} className="flex overflow-hidden focus-within:border-rose-400 transition-colors">
                 <Surface elevation={0} className="px-4 flex items-center border-r font-mono text-sm">
                   +91
                 </Surface>
                 <Input
+                  id="login-phone"
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}

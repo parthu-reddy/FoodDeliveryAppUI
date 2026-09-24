@@ -263,7 +263,15 @@
     background-attachment: fixed;
   }
 
-  /* Same correction on the dark ground, where the overlap read as a red haze. */
+  /* Same correction on the dark ground, where the overlap read as a red haze.
+
+     The selector carries BOTH forms on purpose. `App.tsx` puts `dark` and `app-background`
+     on the SAME element, so the descendant form `.dark .app-background` could never match
+     it and the dark theme left the ground at its light value -- confirmed by the E2E test
+     `profileDarkThemeChangesRenderedBackground`, which measured rgb(255,252,248) after the
+     class was added. The compound form matches that element; the descendant form is kept so
+     a nested `.app-background` inside a dark subtree still works. */
+  .app-background.dark,
   .dark .app-background {
     background:
       radial-gradient(circle at 15% 50%, rgba(220, 36, 72, .09), transparent 32%),

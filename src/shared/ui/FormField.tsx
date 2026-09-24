@@ -12,11 +12,22 @@ interface FormFieldProps {
 export function FormField({ label, required, error, hint, className = '', children }: FormFieldProps) {
   return (
     <div className={className}>
-      <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1 block tracking-wider">
-        {label}
-        {required && <span className="text-rose-500 ml-0.5">*</span>}
+      {/* The control is NESTED inside the label, which is what associates the two.
+          This used to render the <label> as a SIBLING of {children} with no `htmlFor`, so
+          the visible text was not the field's accessible name anywhere it was used -- 17
+          call sites, including customer Account Settings' Full Name and Email Address, where
+          the E2E accessibility audit fails on exactly this. A wrapping label needs no id
+          plumbing and works whatever the caller passes as a child.
+
+          `error` and `hint` stay OUTSIDE the label on purpose: a <label>'s content model is
+          phrasing content, and a <p> inside it is invalid HTML. */}
+      <label className="block">
+        <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1 block tracking-wider">
+          {label}
+          {required && <span className="text-rose-500 ml-0.5">*</span>}
+        </span>
+        {children}
       </label>
-      {children}
       {error && (
         <p className="text-[10px] text-rose-500 dark:text-rose-400 mt-1 font-medium">{error}</p>
       )}

@@ -30,6 +30,7 @@ export function AddressFormFields({ addressForm, setAddressForm }: AddressFormFi
 <Input
 type="text"
 placeholder="Label (e.g. Home, Work)"
+aria-label="Label (e.g. Home, Work)"
 value={addressForm.label}
 onChange={(e) => setAddressForm({...addressForm, label: e.target.value})}
 />
@@ -39,6 +40,7 @@ onChange={(e) => setAddressForm({...addressForm, label: e.target.value})}
 <Input
 type="text"
 placeholder="Address Line 1"
+aria-label="Address Line 1"
 value={addressForm.addressLine1}
 onChange={(e) => setAddressForm({...addressForm, addressLine1: e.target.value})}
 />
@@ -48,6 +50,7 @@ onChange={(e) => setAddressForm({...addressForm, addressLine1: e.target.value})}
 <Input
 type="text"
 placeholder="Address Line 2 (Optional)"
+aria-label="Address Line 2 (optional)"
 value={addressForm.addressLine2}
 onChange={(e) => setAddressForm({...addressForm, addressLine2: e.target.value})}
 />
@@ -57,6 +60,7 @@ onChange={(e) => setAddressForm({...addressForm, addressLine2: e.target.value})}
 <Input
 type="text"
 placeholder="City"
+aria-label="City"
 value={addressForm.city}
 onChange={(e) => setAddressForm({...addressForm, city: e.target.value})}
 />
@@ -66,6 +70,7 @@ onChange={(e) => setAddressForm({...addressForm, city: e.target.value})}
 <Input
 type="text"
 placeholder="State"
+aria-label="State"
 value={addressForm.state}
 onChange={(e) => setAddressForm({...addressForm, state: e.target.value})}
 />
@@ -75,6 +80,7 @@ onChange={(e) => setAddressForm({...addressForm, state: e.target.value})}
 <Input
 type="text"
 placeholder="ZIP Code"
+aria-label="ZIP Code"
 value={addressForm.zipCode}
 onChange={(e) => setAddressForm({...addressForm, zipCode: e.target.value})}
 />

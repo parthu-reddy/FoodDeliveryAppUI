@@ -34,6 +34,7 @@ export function AddressDetailsForm({
             value={label}
             onChange={e => setLabel(e.target.value)}
             placeholder="e.g. Home, Work"
+aria-label="e.g. Home, Work"
             className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-rose-500/50"
           />
        </div>

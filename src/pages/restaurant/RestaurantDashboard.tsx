@@ -204,13 +204,12 @@ export default function RestaurantDashboard({
         inProfile={view === 'settings'}
         onToggleProfile={() => {
           if (view === 'settings') setView('home');
-          else { setView('settings'); setShowSettings(false); }
+          else setView('settings'); // same double-navigate as the tabs: it bounced Profile
+          // settings back to Live Kitchen, so Log Out was unreachable.
         }}
         inSettings={showSettings}
-        onToggleSettings={() => {
-          setShowSettings(!showSettings);
-          if (view === 'settings') setView('home');
-        }}
+        // `setView` and `setShowSettings` are the same navigation; one call is enough.
+        onToggleSettings={() => setShowSettings(!showSettings)}
       />}
       nav={!showSettings && view !== 'settings' ? (
         <Tabs
@@ -218,7 +217,10 @@ export default function RestaurantDashboard({
           orientation="responsive"
           className="lg:flex-col lg:gap-1 lg:p-3"
           value={activeTab}
-          onChange={(key: typeof activeTab) => { setActiveTab(key); setShowSettings(false); }}
+          // One navigation only. This was `{ setActiveTab(key); setShowSettings(false); }` --
+          // both are navigate() calls, so the second cancelled the first and every tab landed
+          // back on Live Kitchen. See Phase7_PendingDefectClosure/plan.md.
+          onChange={(key: typeof activeTab) => setActiveTab(key)}
           items={[
             { key: 'orders', label: `Live Kitchen Feed (${myOrders.length})` },
             { key: 'menu', label: 'Menu Stock Toggles' },
