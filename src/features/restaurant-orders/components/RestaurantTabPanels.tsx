@@ -89,13 +89,11 @@ export function RestaurantTabPanels({
 
     {!showSettings && activeTab === 'menu' && (
       /* ------------------- MENU STOCK TOGGLES -------------------
-         `key` is REQUIRED here, not decoration. `AnimatePresence mode="wait"` identifies its
-         children by key and waits for the outgoing one to finish exiting before mounting the
-         next. This branch and the settings branch were the only two without one, so switching
-         to them wedged the transition: the URL changed, `activeTab` updated (the tab strip
-         showed aria-selected correctly), and the PREVIOUS panel stayed on screen. A full page
-         load worked because that is an initial mount with no transition to wait on. */
-      <ErrorBoundary key="menu-panel" fallbackLabel="Menu Stock Toggles">
+         No `key` here on purpose. The presence key for this branch lives on the child's own
+         motion root (`RestaurantMenuTogglesView`), which is the pattern every branch follows.
+         Adding a second one here would duplicate it inside the same AnimatePresence subtree --
+         the exact fault that wedged the orders branch. */
+      <ErrorBoundary fallbackLabel="Menu Stock Toggles">
         <RestaurantMenuTogglesView
           menuList={menuList}
           stockStatus={stockStatus}
@@ -165,7 +163,7 @@ export function RestaurantTabPanels({
 
     {showSettings && (
       /* ------------------- RESTAURANT SETTINGS CONSOLE ------------------- */
-      <ErrorBoundary key="settings-panel" fallbackLabel="Restaurant Settings">
+      <ErrorBoundary fallbackLabel="Restaurant Settings">
         <Suspense fallback={<LoadingSkeleton />}>
           <RestaurantSettingsShell
             brands={brands}

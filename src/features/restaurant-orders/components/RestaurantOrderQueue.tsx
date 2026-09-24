@@ -1,8 +1,6 @@
 import { Order, OrderStatus } from '@/types';
 import { KanbanColumn } from '@features/restaurant-orders/components/KanbanColumn';
 import { RestaurantOrderCard } from '@features/restaurant-orders/components/RestaurantOrderCard';
-import { motion } from 'motion/react';
-import { useMotionPresets } from '@shared/ui';
 import {
  Bike,
  ChefHat,
@@ -86,10 +84,18 @@ export const RestaurantOrderQueue = React.memo(function RestaurantOrderQueue({
    .map(ticket => myOrders.find(o => o.id === ticket.orderId))
    .filter((o): o is Order => Boolean(o));
 
- const presets = useMotionPresets();
+ // A plain div, and NOT key="orders-panel".
+ //
+ // This root carried the SAME `key` as the <motion.div> that wraps it in
+ // RestaurantTabPanels, nested directly inside it. AnimatePresence tracks children by key,
+ // so a duplicate inside its subtree corrupted the presence entry: the orders panel's exit
+ // never resolved, and with mode="wait" the next panel never mounted. The restaurant tabs
+ // therefore changed the URL and the tab highlight while the Kanban stayed on screen -- and
+ // a full page load looked fine, because an initial mount has no exit to wait for.
+ //
+ // The parent already provides the entrance animation; animating again here was redundant.
  return (
- <motion.div
- key="orders-panel" {...presets.rise}
+ <div
  className="p-5 space-y-5"
  >
  {/* Live Orders Kanban Board */}
@@ -186,6 +192,6 @@ export const RestaurantOrderQueue = React.memo(function RestaurantOrderQueue({
 
  </div>
  </div>
- </motion.div>
+ </div>
  );
 });
