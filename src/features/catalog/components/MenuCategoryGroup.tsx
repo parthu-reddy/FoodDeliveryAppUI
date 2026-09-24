@@ -14,6 +14,8 @@ import { Surface } from '@shared/ui';
  */
 
 interface MenuCategoryGroupProps {
+  /** Anchor target for the customer menu's category bar. */
+  id?: string;
   title: string;
   description?: string;
   /** The timing panel on the restaurant editors. Nothing on the customer menu. */
@@ -28,6 +30,7 @@ interface MenuCategoryGroupProps {
 }
 
 export function MenuCategoryGroup({
+  id,
   title,
   description,
   aside,
@@ -75,7 +78,7 @@ export function MenuCategoryGroup({
 
   if (!framed) {
     return (
-      <section className={`space-y-4 ${className}`}>
+      <section id={id} className={`space-y-4 scroll-mt-16 ${className}`}>
         {header}
         {body}
       </section>
@@ -83,7 +86,7 @@ export function MenuCategoryGroup({
   }
 
   return (
-    <Surface as="section" radius="lg" elevation={1} className={`overflow-hidden p-0 ${className}`}>
+    <Surface as="section" id={id} radius="lg" elevation={1} className={`overflow-hidden p-0 ${className}`}>
       {header}
       <div className="p-4">{body}</div>
     </Surface>

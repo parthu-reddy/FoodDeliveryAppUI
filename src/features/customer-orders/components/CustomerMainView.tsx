@@ -69,7 +69,6 @@ export function CustomerMainView({
   clearCart,
   setDeliveryLat,
   setDeliveryLng,
-  categories,
   setGlobalError,
   chatWidgetRef,
 }: Props) {
@@ -266,7 +265,6 @@ export function CustomerMainView({
         /* ------------------- MAIN RESTAURANT FEED ------------------- */
         <ErrorBoundary fallbackLabel="Restaurant Feed">
           <CustomerRestaurantBrowser
-            categories={categories}
             restaurants={restaurants}
             isRestaurantsLoading={isRestaurantsLoading}
             setIsAddressSelectorOpen={setIsAddressSelectorOpen}

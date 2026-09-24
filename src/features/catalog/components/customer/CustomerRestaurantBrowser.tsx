@@ -9,7 +9,6 @@ import { ReorderStrip } from '@features/customer-orders/components/ReorderStrip'
 import { useReorderSuggestions } from '@features/customer-orders/model/useReorderSuggestions';
 
 interface CustomerRestaurantBrowserProps {
-  categories: string[];
   restaurants: import('@/types').Restaurant[];
   isRestaurantsLoading: boolean;
   setIsAddressSelectorOpen: (isOpen: boolean) => void;
@@ -17,8 +16,22 @@ interface CustomerRestaurantBrowserProps {
   onAddApiLog?: (log: unknown) => void;
 }
 
+/**
+ * Chips come from the cuisines actually on the list, most common first. They used to be a
+ * hardcoded ['All', 'Burgers', 'Pizza', 'Sushi', 'Salads', 'Desserts'] matched against
+ * `restaurant.tags` -- a field the restaurant DTO does not have -- so every chip but All
+ * emptied the list.
+ */
+function cuisineChips(restaurants: import('@/types').Restaurant[], max = 8): string[] {
+  const counts = new Map<string, number>();
+  for (const r of restaurants) {
+    const c = r.cuisine?.trim();
+    if (c) counts.set(c, (counts.get(c) ?? 0) + 1);
+  }
+  return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, max).map(([c]) => c);
+}
+
 export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps> = ({
-  categories,
   restaurants,
   isRestaurantsLoading,
   setIsAddressSelectorOpen,
@@ -52,17 +65,30 @@ export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps>
   const filteredRestaurants = restaurants.filter(restaurant => {
     const matchesSearch = (restaurant.name || '').toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
       (restaurant.cuisine || '').toLowerCase().includes(debouncedSearchQuery.toLowerCase());
-    const matchesCategory = !selectedCategory || selectedCategory === 'All' ||
-      ((restaurant as { tags?: string[] }).tags || []).includes(selectedCategory);
+    const matchesCategory = !selectedCategory || restaurant.cuisine?.trim() === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
+  const chips = cuisineChips(restaurants);
   const presets = useMotionPresets();
   return (
     <motion.div
       key="feed" {...presets.fade}
       className="p-5 space-y-6"
     >
+      {/* Search Bar */}
+      <Surface variant="sunken" radius="md" elevation={0} className="flex items-center px-4 py-3">
+        <Search className="w-4.5 h-4.5 text-ink-3 mr-2 shrink-0" />
+        <input
+          type="text"
+          placeholder="Search restaurants or cuisines"
+          aria-label="Search restaurants or cuisines"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="bg-transparent border-none text-sm w-full rounded-md text-ink placeholder:text-ink-3 focus:outline-none focus:ring-2 focus:ring-rose-500/50"
+        />
+      </Surface>
+
       {/* Reorder first, then browse -- the order `Main.dc.html` specifies. A promotional
           banner used to hold this slot, which put a campaign above the path most customers
           actually take. The strip renders nothing when there is no history, so a first-time
@@ -84,48 +110,47 @@ export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps>
           white text on it, so the one appetising colour in the palette came out as mud at the
           top of the appetite-led screen. A real campaign surface belongs here when
           CampaignService feeds it. */}
-      {/* Categories Selector */}
-      <div className="space-y-2">
-        <h4 className="font-bold text-sm tracking-wide text-slate-400 dark:text-slate-300 uppercase font-mono">Filter by Cravings</h4>
-        <div className="flex overflow-x-auto scrollbar-none gap-2 pb-2 -mx-5 px-5 sm:mx-0 sm:px-0">
-          {categories.map(cat => {
-            const isActive = (cat === 'All' && !selectedCategory) || selectedCategory === cat;
-            return (
-              <Button
-                key={cat}
-                size="sm"
-                variant={isActive ? 'primary' : 'secondary'}
-                aria-pressed={isActive}
-                onClick={() => setSelectedCategory(cat === 'All' ? null : cat)}
-                className="shrink-0 whitespace-nowrap"
-              >
-                {cat}
-              </Button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Search Bar */}
-      <Surface variant="sunken" radius="md" elevation={0} className="sticky top-[69px] z-20 flex items-center px-4 py-3">
-        <Search className="w-4.5 h-4.5 text-slate-400 dark:text-slate-300 mr-2 shrink-0" />
-        <input
-          type="text"
-          placeholder="Search restaurants, dishes, cuisines..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="bg-transparent border-none text-sm w-full rounded-md text-slate-800 dark:text-[#f0ede6] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/50"
-        />
-      </Surface>
-
       {/* Restaurants Feed */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h4 className="font-bold text-lg text-slate-900 dark:text-[#f0ede6]">Open now near you</h4>
-          <span className="text-xs font-mono text-slate-400 dark:text-slate-300">{filteredRestaurants.length} open</span>
+          <h2 className="font-extrabold text-lg tracking-tight text-ink">Open now near you</h2>
+          <span className="text-xs font-mono text-ink-2">{filteredRestaurants.length} nearby</span>
         </div>
+        {/* Cuisine filter */}
+        {chips.length > 1 && (
+          <div className="flex overflow-x-auto scrollbar-none gap-2 pb-1 -mx-5 px-5 sm:mx-0 sm:px-0" role="group" aria-label="Filter by cuisine">
+            {['All', ...chips].map(cat => {
+              const isActive = (cat === 'All' && !selectedCategory) || selectedCategory === cat;
+              return (
+                <Button
+                  key={cat}
+                  size="sm"
+                  variant={isActive ? 'primary' : 'secondary'}
+                  aria-pressed={isActive}
+                  onClick={() => setSelectedCategory(cat === 'All' ? null : cat)}
+                  className="shrink-0 whitespace-nowrap"
+                >
+                  {cat}
+                </Button>
+              );
+            })}
+          </div>
+        )}
 
-        {restaurants.length === 0 ? (
+
+        {/* Loading is checked first: an empty list while the request is in flight is not
+            "out of range", and the old order flashed that message on every visit. */}
+        {isRestaurantsLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <Surface radius="xl" elevation={0} className="h-64 p-4 animate-pulse flex flex-col justify-between" key={i}>
+                <div className="h-32 bg-slate-200 dark:bg-slate-800 rounded-2xl mb-4" />
+                <div className="h-6 w-3/4 bg-slate-200 dark:bg-slate-800 rounded-xl mb-2" />
+                <div className="h-4 w-1/2 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+              </Surface>
+            ))}
+          </div>
+        ) : restaurants.length === 0 ? (
           <Surface radius="xl" elevation={0} className="p-12 text-center text-slate-400 dark:text-slate-300 border-dashed">
             <div className="flex justify-center mb-4">
               <MapPinOff className="w-12 h-12 text-rose-500/50" />
@@ -140,16 +165,6 @@ export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps>
               Change Address
             </Button>
           </Surface>
-        ) : isRestaurantsLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map(i => (
-              <Surface radius="xl" elevation={0} className="h-64 p-4 animate-pulse flex flex-col justify-between" key={i}>
-                <div className="h-32 bg-slate-200 dark:bg-slate-800 rounded-2xl mb-4" />
-                <div className="h-6 w-3/4 bg-slate-200 dark:bg-slate-800 rounded-xl mb-2" />
-                <div className="h-4 w-1/2 bg-slate-200 dark:bg-slate-800 rounded-lg" />
-              </Surface>
-            ))}
-          </div>
         ) : filteredRestaurants.length === 0 ? (
           <EmptyState
             title="No Kitchens Found"

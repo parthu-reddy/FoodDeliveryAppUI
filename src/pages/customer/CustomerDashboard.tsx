@@ -1,6 +1,6 @@
 import { useToast } from "@/contexts/ToastContext";
 import { DashboardHeader } from "@/pages/customer/DashboardHeader";
-import { DeliveryStatus, MenuItem, Order, OrderStatus, PaymentMethodChoice, Restaurant } from "@/types";
+import { DeliveryStatus, MenuItem, Order, OrderStatus, PaymentMethodChoice } from "@/types";
 import CustomerActiveOrdersCarousel from '@features/customer-orders/components/CustomerActiveOrdersCarousel';
 import { CustomerMainView } from '@features/customer-orders/components/CustomerMainView';
 import { CustomerCartBar, CustomerGlobalError } from '@features/customer-orders/components/CustomerHomeChrome';
@@ -10,8 +10,7 @@ import { CustomerModalStack } from '@features/customer-orders/components/Custome
 import { useConfirm } from '@shared/ui';
 
 import { AnimatePresence } from 'motion/react';
-import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
-import { Routes, Route, useNavigate, useLocation, useMatch } from 'react-router-dom';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useTheme } from "@/contexts/ThemeContext";
 import { useRestaurants } from '@features/catalog/model/useRestaurants';
@@ -22,6 +21,8 @@ import { useCustomerCart } from '@features/customer-orders/model/useCustomerCart
 import { useCustomerStorefront } from '@features/catalog/model/useCustomerStorefront';
 import { useCustomerAddresses } from '@features/customer-orders/model/useCustomerAddresses';
 import { useCustomerOrders } from '@features/customer-orders/model/useCustomerOrders';
+import { useCustomerRoute } from '@features/customer-orders/model/useCustomerRoute';
+import { useAddressChangeNotice } from '@features/customer-orders/model/useAddressChangeNotice';
 import { CompleteProfileModal } from "@shared/ui";
 
 interface CustomerDashboardProps {
@@ -74,21 +75,10 @@ export default function CustomerDashboard({
     setInternalOrders(prev => [...prev, order]);
   });
 
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  // Route matches to derive state
-  const restaurantMatch = useMatch('/customer/restaurant/:id');
-  const restaurantIdFromUrl = restaurantMatch?.params?.id;
-
-  const [overrideRestaurant, setOverrideRestaurant] = useState<Restaurant | null>(null);
-
-  const selectedRestaurant = useMemo(() => {
-    if (!restaurantIdFromUrl) return null;
-    if (overrideRestaurant && overrideRestaurant.id === restaurantIdFromUrl) return overrideRestaurant;
-    if (!restaurants) return null;
-    return restaurants.find(r => r.id === restaurantIdFromUrl) || null;
-  }, [restaurantIdFromUrl, restaurants, overrideRestaurant]);
+  const {
+    selectedRestaurant, viewMode, setViewMode,
+    settingsTab, setSettingsTab, setSelectedRestaurantRoute,
+  } = useCustomerRoute(restaurants);
 
   const [trackingSelection, setTrackingSelection] = useState<{
     explicitlyChosen: boolean;
@@ -162,21 +152,7 @@ export default function CustomerDashboard({
 
   const totalCartItems = Object.values(carts).reduce((sum, cart) => sum + cart.items.reduce((s, i) => s + i.quantity, 0), 0);
 
-  const prevLocationKeyRef = useRef(locationKey);
-  const prevCartItemsRef = useRef(totalCartItems);
-
-  useEffect(() => {
-    prevCartItemsRef.current = totalCartItems;
-  }, [totalCartItems]);
-
-  useEffect(() => {
-    if (prevLocationKeyRef.current !== locationKey) {
-      if (prevCartItemsRef.current > 0) {
-        showInfo("Address changed. Your cart items from the previous address are saved.");
-      }
-      prevLocationKeyRef.current = locationKey;
-    }
-  }, [locationKey, showInfo]);
+  useAddressChangeNotice(locationKey, totalCartItems, showInfo);
 
   const activeCartCount = Object.keys(carts).length;
  
@@ -193,27 +169,6 @@ export default function CustomerDashboard({
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [isOutletSelectorOpen, setIsOutletSelectorOpen] = useState(false);
   
-  // viewMode and settingsTab are now derived from routes
-  const isSettingsView = location.pathname.includes('/customer/settings');
-  const viewMode = isSettingsView ? 'settings' : 'home';
-  
-  let settingsTab: 'profile' | 'history' | 'addresses' = 'profile';
-  if (location.pathname.includes('/history')) settingsTab = 'history';
-  if (location.pathname.includes('/addresses')) settingsTab = 'addresses';
-
-  // We provide dummy setViewMode and setSettingsTab for compatibility with child components
-  const setViewMode = (mode: 'home' | 'settings') => navigate(mode === 'settings' ? '/customer/settings' : '/customer');
-  const setSettingsTab = (tab: 'profile' | 'history' | 'addresses') => navigate(`/customer/settings/${tab}`);
-  const setSelectedRestaurantRoute = (r: Restaurant | null) => {
-    if (r) {
-      setOverrideRestaurant(r);
-      navigate(`/customer/restaurant/${r.id}`);
-    } else {
-      setOverrideRestaurant(null);
-      navigate(`/customer`);
-    }
-  };
-
   const [addressSearchQuery, setAddressSearchQuery] = useState('');
 
   // Before the customer makes an explicit tracker choice, derive the initial selection from the
@@ -236,9 +191,6 @@ export default function CustomerDashboard({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTrackingOrder?.status]);
 
-  // Categories
-  const categories = ['All', 'Burgers', 'Pizza', 'Sushi', 'Salads', 'Desserts'];
-
   // Everything the two view components read. They are splits of one dashboard rather than
   // independent components, so the shared state is handed over as one object instead of
   // eighty-odd props whose names are identical on both sides.
@@ -249,7 +201,7 @@ export default function CustomerDashboard({
     // by accident is a real regression the linter caught while this bag was being built.
     addToCart, removeFromCart, getCartTotal, processPaymentAndOrder,
     activeOrders, addressSearchQuery, setAddressSearchQuery,
-    categories, chatWidgetRef, confirm, currentTrackingOrder,
+    chatWidgetRef, confirm, currentTrackingOrder,
     globalError, setGlobalError, isAddressModalOpen, setIsAddressModalOpen,
     isAddressSelectorOpen, setIsAddressSelectorOpen,
     isOutletSelectorOpen, setIsOutletSelectorOpen,
@@ -285,9 +237,9 @@ export default function CustomerDashboard({
         setIsAddressSelectorOpen={setIsAddressSelectorOpen}
       />
 
-      <Routes>
-        <Route path="*" element={<CustomerMainView {...view} />} />
-      </Routes>
+      {/* Rendered directly. A catch-all <Routes><Route path="*"> around it made no routing
+          decision and is the wrapper that stopped restaurant tabs switching (94036a8). */}
+      <CustomerMainView {...view} />
 
       <CompleteProfileModal
         isOpen={showProfileModal}

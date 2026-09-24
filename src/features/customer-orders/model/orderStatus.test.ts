@@ -4,6 +4,8 @@ import { Order } from '@/types';
 import {
   classifyDeliveryStatus,
   classifyOrderStatus,
+  completedStages,
+  ORDER_STAGES,
   isActiveOrder,
   isFailedOrder,
   terminalHeadline,
@@ -79,5 +81,32 @@ describe('order status classification', () => {
     expect(terminalHeadline(OrderStatus.CANCELLED_BY_RESTAURANT)).toMatch(/restaurant/i);
     expect(terminalHeadline(OrderStatus.DELIVERY_FAILED)).toMatch(/deliver/i);
     expect(terminalHeadline(OrderStatus.PREPARING)).toBeNull();
+  });
+});
+
+describe('completedStages -- what the customer timeline shows', () => {
+  const cases: [OrderStatus, DeliveryStatus | undefined, number][] = [
+    [OrderStatus.PENDING_ACCEPTANCE, undefined, 1],
+    [OrderStatus.AWAITING_DELAY_APPROVAL, undefined, 1],
+    [OrderStatus.ACCEPTED, undefined, 2],
+    [OrderStatus.PREPARING, undefined, 2],
+    [OrderStatus.READY_FOR_PICKUP, DeliveryStatus.ASSIGNED, 3],
+    // Handed to dispatch but the rider has not collected it: cooked, NOT picked up.
+    [OrderStatus.HANDED_OVER, DeliveryStatus.ASSIGNED, 3],
+    [OrderStatus.HANDED_OVER, DeliveryStatus.AT_RESTAURANT, 3],
+    [OrderStatus.HANDED_OVER, DeliveryStatus.OUT_FOR_DELIVERY, 4],
+    [OrderStatus.HANDED_OVER, DeliveryStatus.DELIVERED, 5],
+    [OrderStatus.CANCELLED_BY_RESTAURANT, undefined, 0],
+  ];
+  test.each(cases)('%s / %s -> %i', (status, delivery, expected) => {
+    expect(completedStages(status, delivery)).toBe(expected);
+  });
+
+  test('never reports more stages than exist', () => {
+    for (const s of Object.values(OrderStatus)) {
+      for (const d of [undefined, ...Object.values(DeliveryStatus)]) {
+        expect(completedStages(s, d)).toBeLessThanOrEqual(ORDER_STAGES.length);
+      }
+    }
   });
 });

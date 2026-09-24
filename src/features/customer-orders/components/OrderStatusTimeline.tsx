@@ -4,11 +4,16 @@ import type { DeliveryStatus, OrderStatus } from '@/types/backend-enums';
 import { ORDER_STAGES, completedStages } from '../model/orderStatus';
 
 /**
- * The four stages an order moves through, shown the same way to everyone who watches it.
+ * The stages an order moves through, shown the same way to everyone who watches it.
+ * Drawn as `Tracking.dc.html` draws it: done stages are a solid check, the stage in progress
+ * carries a ring, stages still ahead are hollow.
  *
  * The stage arithmetic lives in `model/orderStatus`, not here: an order can be `HANDED_OVER`
  * while its delivery is still `ASSIGNED`, and deciding what that means is a domain question,
  * not a rendering one.
+ *
+ * No times under the stages. The artboard shows them, but the order API carries only
+ * `createdAt` and `updatedAt` -- a per-stage clock would be invented.
  */
 
 interface OrderStatusTimelineProps {
@@ -19,40 +24,48 @@ interface OrderStatusTimelineProps {
 
 export function OrderStatusTimeline({ status, deliveryStatus, className = '' }: OrderStatusTimelineProps) {
   const done = completedStages(status, deliveryStatus);
+  const last = ORDER_STAGES.length - 1;
 
   return (
-    <ol className={`flex items-start ${className}`} aria-label="Order progress">
+    <ol className={`relative flex items-start justify-between ${className}`} aria-label="Order progress">
+      <span aria-hidden="true" className="absolute left-[10%] right-[10%] top-[10px] h-[3px] rounded-full" style={{ background: 'var(--color-paper-line)' }} />
+      <span
+        aria-hidden="true"
+        className="absolute left-[10%] right-[10%] top-[10px] h-[3px] rounded-full origin-left"
+        style={{
+          background: 'var(--color-success-solid)',
+          // A full-width bar scaled from the left -- never an animated width.
+          transform: `scaleX(${Math.min(Math.max(done - 1, 0), last) / last})`,
+          transitionProperty: 'transform',
+          transitionDuration: 'var(--duration-slow)',
+          transitionTimingFunction: 'var(--ease-out)',
+        }}
+      />
       {ORDER_STAGES.map((stage, index) => {
         const complete = index < done;
-        const current = index === done - 1;
+        const current = done > 0 && index === done && done < ORDER_STAGES.length;
         return (
-          <li key={stage} className="flex-1 flex flex-col items-center gap-1.5 relative">
-            {index > 0 && (
-              <span
-                aria-hidden="true"
-                className="absolute top-3 right-1/2 left-[-50%] h-0.5"
-                style={{
-                  background: complete ? 'var(--color-success)' : 'var(--color-paper-line)',
-                }}
-              />
-            )}
+          <li key={stage} className="relative flex-1 flex flex-col items-center gap-1.5" aria-current={current ? 'step' : undefined}>
             <span
-              className="relative z-10 w-6 h-6 rounded-full flex items-center justify-center shrink-0"
-              style={{
-                background: complete ? 'var(--color-success)' : 'var(--color-paper-sunken)',
-                border: `2px solid ${complete ? 'var(--color-success)' : 'var(--color-paper-line)'}`,
-                color: complete ? '#ffffff' : 'var(--color-ink-3)',
-              }}
+              className="w-[23px] h-[23px] rounded-full flex items-center justify-center shrink-0"
+              style={
+                complete
+                  ? { background: 'var(--color-success-solid)', color: '#ffffff' }
+                  : current
+                    ? { background: 'var(--color-success-solid)', boxShadow: '0 0 0 3px var(--color-success-line)' }
+                    : { background: 'var(--color-paper)', border: '2.5px solid var(--color-paper-line)' }
+              }
             >
-              {complete && <Check className="w-3.5 h-3.5" aria-hidden="true" />}
+              {complete && <Check className="w-3 h-3" strokeWidth={3} aria-hidden="true" />}
+              {current && <span className="w-[7px] h-[7px] rounded-full bg-white" aria-hidden="true" />}
             </span>
             <span
-              className={`text-[11px] text-center ${current ? 'font-bold' : 'font-medium'}`}
-              style={{ color: complete ? 'var(--color-ink)' : 'var(--color-ink-2)' }}
+              className={`text-[10px] sm:text-[11px] text-center leading-tight ${current ? 'font-extrabold' : complete ? 'font-bold' : 'font-semibold'}`}
+              style={{ color: current ? 'var(--color-success)' : complete ? 'var(--color-ink)' : 'var(--color-ink-3)' }}
             >
               {stage}
             </span>
-            <span className="sr-only">{complete ? 'complete' : 'not yet'}</span>
+            <span className="sr-only">{complete ? 'complete' : current ? 'in progress' : 'not yet'}</span>
           </li>
         );
       })}

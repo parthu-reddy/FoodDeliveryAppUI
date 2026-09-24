@@ -87,7 +87,8 @@ export function OrderCard({
             style={{ color: 'var(--color-ink-2)' }}
           >
             <Clock className="w-3 h-3" aria-hidden="true" />
-            {new Date(order.estimatedCompletionTime).toLocaleTimeString([], {
+            {/* The kitchen's ready time, not an arrival time -- see OrderTrackerLive. */}
+            Ready {new Date(order.estimatedCompletionTime).toLocaleTimeString([], {
               hour: '2-digit', minute: '2-digit',
             })}
           </span>

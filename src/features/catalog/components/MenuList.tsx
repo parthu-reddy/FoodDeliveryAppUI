@@ -26,6 +26,11 @@ interface MenuListProps {
   onAdd?: (id: string) => void;
   onIncrement?: (id: string) => void;
   onDecrement?: (id: string) => void;
+  /**
+   * A sticky row of category links above the list (`Menu.dc.html`). Only drawn when there is
+   * more than one category -- a bar with one chip is chrome with nothing to do.
+   */
+  categoryNav?: boolean;
 }
 
 export function MenuList({
@@ -38,6 +43,7 @@ export function MenuList({
   onAdd,
   onIncrement,
   onDecrement,
+  categoryNav = false,
 }: MenuListProps) {
   if (loading) {
     return (
@@ -51,10 +57,29 @@ export function MenuList({
     );
   }
 
+  const groups = groupByCategory(views);
+  const anchor = (index: number) => `menu-category-${index}`;
+
   return (
     <div className="space-y-8">
-      {groupByCategory(views).map(({ category, items }) => (
-        <MenuCategoryGroup key={category} title={category} itemCount={items.length}>
+      {categoryNav && groups.length > 1 && (
+        <nav
+          aria-label="Menu categories"
+          className="sticky top-0 z-10 -mx-5 px-5 py-2.5 flex gap-2 overflow-x-auto bg-paper border-b border-paper-line"
+        >
+          {groups.map(({ category }, index) => (
+            <a
+              key={category}
+              href={`#${anchor(index)}`}
+              className="shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold text-ink border border-paper-line bg-paper-sunken whitespace-nowrap"
+            >
+              {category}
+            </a>
+          ))}
+        </nav>
+      )}
+      {groups.map(({ category, items }, index) => (
+        <MenuCategoryGroup key={category} id={anchor(index)} title={category} itemCount={items.length}>
           <div className="space-y-4">
             {items.map((view) => (
               <Surface key={view.id} radius="xl" elevation={1} className="p-4">

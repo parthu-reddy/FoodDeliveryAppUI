@@ -1,4 +1,4 @@
-import { Surface } from '@shared/ui';
+import { Surface, surfaceStyle } from '@shared/ui';
 import { motion } from 'motion/react';
 import { useMotionPresets } from '@shared/ui';
 import { ArrowLeft } from 'lucide-react';
@@ -12,6 +12,7 @@ import { useCallContext } from '@/contexts/CallContext';
 
 import { Order } from '@/types';
 import { useOrderRefunds } from '@features/customer-orders/model/useOrderRefunds';
+import { orderStatusView } from '@features/customer-orders/model/orderStatus';
 import { Select } from '@shared/ui';
 
 interface CustomerOrderTrackerProps {
@@ -43,45 +44,48 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
   const refunds = useOrderRefunds(currentTrackingOrder?.id, isFailedOrder(currentTrackingOrder));
   const [orderIdToRate, setOrderIdToRate] = useState<string | null>(null);
   const presets = useMotionPresets();
+  const live = isActiveOrder(currentTrackingOrder) && !isFailedOrder(currentTrackingOrder);
+  const trackable = activeOrders.filter((o) => isActiveOrder(o));
   return (
     <motion.div
       key="tracking" {...presets.rise}
-      className="p-5 space-y-5"
+      className="p-4 sm:p-5 space-y-4"
     >
-      <div className="flex items-center gap-2">
-        <button 
+      <div className="flex items-center gap-2.5">
+        <button
+          type="button"
           onClick={() => setTrackingOrder(null)}
-          className="p-1.5 rounded-lg bg-slate-200 dark:bg-slate-900 text-slate-500 dark:text-slate-300 hover:text-slate-800 dark:text-[#f0ede6] cursor-pointer"
+          aria-label="Back"
+          className="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center text-ink"
+          style={surfaceStyle({ radius: 'md', elevation: 1 })}
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-[18px] h-[18px]" />
         </button>
-        <h3 className="font-bold text-lg flex items-center gap-2">
-          {isActiveOrder(currentTrackingOrder) ? 'Order Tracking' : 'Order Details'}
-          {activeOrders.filter(o => isActiveOrder(o)).length > 1 ? (
-            <Select
-              selectSize="sm"
-              aria-label="Which order to track"
-              className="w-56"
-              value={currentTrackingOrder.id}
-              onChange={(id: string) => {
-                const order = activeOrders.find((o) => o.id === id);
-                if (order) setTrackingOrder(order);
-              }}
-              options={activeOrders
-                .filter((o) => isActiveOrder(o))
-                .map((o) => ({ value: o.id, label: `#${o.id} - ${o.status}` }))}
-            />
-          ) : (
-            <span className="text-xs font-mono bg-slate-100 dark:bg-slate-900 px-2 py-0.5 rounded text-slate-500 dark:text-slate-300">#{currentTrackingOrder.id}</span>
-          )}
-        </h3>
+        <h1 className="flex-1 min-w-0 text-[17px] font-extrabold tracking-tight text-ink">
+          {live ? 'Live order' : 'Order details'}
+        </h1>
+        {trackable.length > 1 && (
+          <Select
+            selectSize="sm"
+            aria-label="Which order to track"
+            className="w-48"
+            value={currentTrackingOrder.id}
+            onChange={(id: string) => {
+              const order = activeOrders.find((o) => o.id === id);
+              if (order) setTrackingOrder(order);
+            }}
+            options={trackable.map((o) => ({
+              value: o.id,
+              label: `${o.restaurantName ?? 'Order'} · ${orderStatusView(o.status, o.deliveryStatus).label}`,
+            }))}
+          />
+        )}
       </div>
 
-      {isActiveOrder(currentTrackingOrder) && !isFailedOrder(currentTrackingOrder) ? (
+      {live ? (
         <>
-          {/* Immersive Delivery map (Vector path simulation) */}
-          <Surface radius="xl" elevation={0} className="relative w-full h-44 overflow-hidden">
-            <React.Suspense fallback={<div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-500">Loading map...</div>}>
+          <Surface radius="xl" elevation={1} className="relative w-full h-56 sm:h-64 overflow-hidden">
+            <React.Suspense fallback={<div className="w-full h-full flex items-center justify-center text-sm text-ink-2">Loading map…</div>}>
               <OrderTrackingMap order={currentTrackingOrder} enableLiveTracking={true} />
             </React.Suspense>
           </Surface>
@@ -107,13 +111,6 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
           startCall={startCall}
         />
       )}
-
-      {/* Quick action / note */}
-      <div className="bg-amber-500/5 border border-amber-500/10 p-4 rounded-2xl text-center">
-        <p className="text-xs text-amber-500 leading-relaxed">
-          👉 <strong>How to complete?</strong> You can switch roles from the top menu, navigate to the <strong>Restaurant View</strong> to accept/cook, then to the <strong>Delivery Partner View</strong> to navigate and insert the OTP!
-        </p>
-      </div>
 
       {orderIdToRate && (
         <RateOrderModal

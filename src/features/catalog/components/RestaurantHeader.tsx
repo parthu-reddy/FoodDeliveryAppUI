@@ -1,7 +1,7 @@
 import { ArrowLeft, Bike, Clock, MapPin } from 'lucide-react';
 import React from 'react';
 import type { Restaurant } from '@/types';
-import { Button, Surface } from '@shared/ui';
+import { Button } from '@shared/ui';
 import { motion } from 'motion/react';
 import ImageLoader from '@shared/ui/ImageLoader';
 
@@ -61,7 +61,9 @@ export function RestaurantHeader({
 
       {notices}
 
-      <Surface variant="glass-chrome" radius="none" elevation={0} className="p-5 space-y-3">
+      {/* Page content, so solid paper: glass is for chrome that floats over scrolling content,
+          and this block scrolls with the menu. */}
+      <div className="px-5 pt-5 pb-3 space-y-3">
         <div className="flex justify-between items-start gap-3">
           <div className="min-w-0">
             <h3
@@ -78,12 +80,14 @@ export function RestaurantHeader({
         </div>
 
         <div
-          className="flex items-center gap-4 text-xs font-mono"
+          className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-mono"
           style={{ color: 'var(--color-ink-2)' }}
         >
-          <span className="flex items-center gap-1">
-            <Clock className="w-3.5 h-3.5" /> {restaurant.deliveryTime} mins
-          </span>
+          {restaurant.deliveryTime ? (
+            <span className="flex items-center gap-1">
+              <Clock className="w-3.5 h-3.5" /> {restaurant.deliveryTime} min
+            </span>
+          ) : null}
           <span className="flex items-center gap-1">
             <Bike className="w-3.5 h-3.5" /> {feeLabel}
           </span>
@@ -93,7 +97,7 @@ export function RestaurantHeader({
         </div>
 
         {children}
-      </Surface>
+      </div>
     </header>
   );
 }

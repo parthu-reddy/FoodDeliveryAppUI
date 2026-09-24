@@ -23,7 +23,7 @@ export function CustomerGlobalError({ message }: { message: string | null }) {
     >
       <div
         className="rounded-2xl p-4 flex items-start gap-3"
-        style={{ background: 'var(--color-danger)', border: '1px solid var(--color-danger)' }}
+        style={{ background: 'var(--color-danger-solid)', border: '1px solid var(--color-danger-solid)' }}
       >
         <AlertCircle className="w-6 h-6 text-white shrink-0" />
         <p className="text-white font-medium text-sm pt-0.5">{globalError}</p>

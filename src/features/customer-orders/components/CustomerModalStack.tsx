@@ -2,7 +2,7 @@ import React from 'react';
 import CustomerAddressSelectorModal from '@features/customer-orders/components/CustomerAddressSelectorModal';
 import CustomerCartDrawer from '@features/customer-orders/components/CustomerCartDrawer';
 import CustomerOutletSelectorModal from '@features/catalog/components/customer/CustomerOutletSelectorModal';
-import CustomerPaymentModal from '@features/payments-wallet/components/CustomerPaymentModal';
+import CustomerCheckout from '@features/customer-orders/components/CustomerCheckout';
 import { Button, Overlay, Surface } from '@shared/ui';
 import { MapPinOff } from 'lucide-react';
 
@@ -113,17 +113,19 @@ export function CustomerModalStack({
     deliveryAddressId={deliveryAddressId}
   />
 
-  <CustomerPaymentModal
-    isPaymentModalOpen={isPaymentModalOpen}
-    setIsPaymentModalOpen={setIsPaymentModalOpen}
-    paymentStatus={paymentStatus}
-    getCartTotal={() => getCartTotal(checkoutRestaurantId || '')}
-    cart={checkoutRestaurantId ? (carts[checkoutRestaurantId]?.items || []) : []}
-    cartRestaurant={checkoutRestaurantId ? (carts[checkoutRestaurantId]?.restaurant as { name: string }) : { name: 'Restaurant' }}
-    processPaymentAndOrder={processPaymentAndOrder}
-    address={deliveryAddressId || ''}
-    deliveryLat={deliveryLat ?? 0}
-    deliveryLng={deliveryLng ?? 0}
+  <CustomerCheckout
+    open={isPaymentModalOpen}
+    onClose={() => setIsPaymentModalOpen(false)}
+    status={paymentStatus}
+    totals={getCartTotal(checkoutRestaurantId || '')}
+    items={checkoutRestaurantId ? (carts[checkoutRestaurantId]?.items || []) : []}
+    restaurantName={(checkoutRestaurantId && carts[checkoutRestaurantId]?.restaurant?.name) || 'Restaurant'}
+    address={address}
+    onChangeAddress={() => {
+      setIsPaymentModalOpen(false);
+      setIsAddressSelectorOpen(true);
+    }}
+    onPlaceOrder={processPaymentAndOrder}
     error={globalError}
   />
 

@@ -31,7 +31,7 @@ describe('Switch', () => {
 
     rerender(<Switch checked label="Dish available" onChange={() => {}} />);
     expect(thumb().style.transform).toBe('translateX(18px)');
-    expect(track().style.background).toBe('var(--color-success)');
+    expect(track().style.background).toBe('var(--color-success-solid)');
     // transform, never left/margin: the thumb must not lay out on every frame.
     expect(thumb().style.transitionProperty).toBe('transform');
   });

@@ -126,6 +126,13 @@
   --color-danger-line: #f6c3cd;
   /* fills and indicators only, never text */
   --color-live: #10b981;
+  /* Fills that carry WHITE text (danger/success buttons, the swipe track, the switch).
+     Theme-invariant on purpose: the text tokens above are lifted in .dark so they read on
+     #12161c, and no single hue reaches 4.5:1 against both near-black and white. */
+  --color-success-solid: #047857;
+  --color-danger-solid: #b51c38;
+  --color-warning-solid: #9e5b0b;
+  --color-info-solid: #1d4ed8;
 
   /* --- type -------------------------------------------------------------- */
   --font-sans: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
@@ -205,6 +212,15 @@
   --color-ink: #ffffff;
   --color-ink-2: #a2aab5;
   --color-ink-3: #758190;
+
+  /* Status TEXT, lifted for the dark ground (on #12161c / #1b212a): success 9.4 / 8.4,
+     danger 6.5 / 5.8, warning 10.2 / 9.1, info 8.7 / 7.8, action-ink 6.5 / 5.8.
+     The light values sat at 2.4-3.4:1 here. Fills use the *-solid tokens. */
+  --color-success: #34d399;
+  --color-danger: #f47189;
+  --color-warning: #f7b659;
+  --color-info: #8ab4ff;
+  --color-action-ink: #f47189;
 
   --color-success-bg: rgba(4, 120, 87, .16);
   --color-success-line: rgba(4, 120, 87, .42);
