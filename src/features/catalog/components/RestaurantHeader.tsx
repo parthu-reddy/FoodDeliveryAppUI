@@ -2,6 +2,7 @@ import { ArrowLeft, Bike, Clock, MapPin } from 'lucide-react';
 import React from 'react';
 import type { Restaurant } from '@/types';
 import { Button } from '@shared/ui';
+import { outletPrepMinutes } from '@features/catalog/model/prepTime';
 import { motion } from 'motion/react';
 import ImageLoader from '@shared/ui/ImageLoader';
 
@@ -37,6 +38,7 @@ export function RestaurantHeader({
   distanceLabel,
   children,
 }: RestaurantHeaderProps) {
+  const prepMinutes = outletPrepMinutes(restaurant.defaultPrepTimeSeconds);
   return (
     <header>
       {/* The other end of the restaurant-cover shared element; see CustomerRestaurantCard. */}
@@ -83,9 +85,9 @@ export function RestaurantHeader({
           className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-mono"
           style={{ color: 'var(--color-ink-2)' }}
         >
-          {restaurant.deliveryTime ? (
+          {prepMinutes ? (
             <span className="flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5" /> {restaurant.deliveryTime} min
+              <Clock className="w-3.5 h-3.5" /> {prepMinutes} min prep
             </span>
           ) : null}
           <span className="flex items-center gap-1">

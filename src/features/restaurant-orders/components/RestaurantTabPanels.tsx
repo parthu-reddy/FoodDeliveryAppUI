@@ -58,6 +58,7 @@ export function RestaurantTabPanels({
   handleCardDelaySubmit,
 }: RestaurantTabPanelsProps) {
   const presets = useMotionPresets();
+  const currentOutlet = outlets.find((o) => o.id === selectedOutletId);
   return (
   // No AnimatePresence here.
   //
@@ -99,7 +100,7 @@ export function RestaurantTabPanels({
           />
         </ErrorBoundary>
         </div>
-        <QuickStockRail menuList={menuList} stockStatus={stockStatus} toggleStock={toggleStock} selectedOutletId={selectedOutletId} />
+        <QuickStockRail menuList={menuList} stockStatus={stockStatus} toggleStock={toggleStock} selectedOutletId={selectedOutletId} outlet={currentOutlet} onPrepSaved={loadData} />
         </div>
       </motion.div>
     )}
@@ -114,6 +115,8 @@ export function RestaurantTabPanels({
           stockStatus={stockStatus}
           toggleStock={toggleStock}
           selectedOutletId={selectedOutletId}
+          outlet={currentOutlet}
+          onPrepSaved={loadData}
         />
       </ErrorBoundary>
     )}

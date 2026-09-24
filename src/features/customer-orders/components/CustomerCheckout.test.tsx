@@ -55,7 +55,7 @@ describe('CustomerCheckout', () => {
     const { onPlaceOrder } = renderCheckout();
     await screen.findByText(/Balance/);
     fireEvent.click(placeButton());
-    expect(onPlaceOrder).toHaveBeenCalledWith('WALLET');
+    expect(onPlaceOrder).toHaveBeenCalledWith('WALLET', 0);
   });
 
   it('does not let a short wallet be charged and waits for another method', async () => {
@@ -67,7 +67,34 @@ describe('CustomerCheckout', () => {
 
     fireEvent.click(screen.getByRole('radio', { name: /^UPI$/ }));
     fireEvent.click(placeButton());
-    expect(onPlaceOrder).toHaveBeenCalledWith('UPI');
+    expect(onPlaceOrder).toHaveBeenCalledWith('UPI', 0);
+  });
+
+  it('starts with no tip -- the customer opts in', async () => {
+    walletGet.mockResolvedValue({ balance: 1240 });
+    renderCheckout();
+    expect(screen.getByRole('radio', { name: '₹0' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.queryByText('Rider tip')).not.toBeInTheDocument();
+  });
+
+  it('a tip is on the bill, in the total on the button, and sent with the order', async () => {
+    walletGet.mockResolvedValue({ balance: 1240 });
+    const { onPlaceOrder } = renderCheckout();
+    await screen.findByText(/Balance/);
+    fireEvent.click(screen.getByRole('radio', { name: '₹20' }));
+    expect(screen.getByText('Rider tip')).toBeInTheDocument();
+    expect(placeButton()).toHaveTextContent('646.40');
+    fireEvent.click(placeButton());
+    expect(onPlaceOrder).toHaveBeenCalledWith('WALLET', 20);
+  });
+
+  it('checks the wallet against the total with the tip', async () => {
+    walletGet.mockResolvedValue({ balance: 640 });
+    renderCheckout();
+    await screen.findByText(/Balance/);
+    expect(screen.getByRole('radio', { name: /Wallet/ })).toBeEnabled();
+    fireEvent.click(screen.getByRole('radio', { name: '₹20' }));
+    expect(screen.getByRole('radio', { name: /Wallet/ })).toBeDisabled();
   });
 
   it('never offers an unquoted total as payable', async () => {

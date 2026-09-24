@@ -1,15 +1,13 @@
-import type { MenuItem } from '@/types';
+import type { MenuItem, Outlet } from '@/types';
 import { StockToggleRow } from './StockToggleRow';
 import { isDishAvailable } from '../../model/dishAvailability';
+import { PrepTimeStepper } from './PrepTimeStepper';
 
 /**
  * The orders screen's right rail from `Restaurant.dc.html`: every dish with its switch, so
  * marking something sold out mid-service is one tap from the order board, not a trip into
  * the menu editor. Shown only on wide screens (2xl) where it does not squeeze the board; on a
- * tablet the Menu tab is the same switches.
- *
- * The artboard also puts a prep-time stepper here ("every customer browsing sees this"). Not
- * built: no endpoint updates an outlet's prep time -- Phase 7 backlog C4.
+ * tablet the Menu tab is the same switches, and the same prep-time stepper.
  */
 
 interface QuickStockRailProps {
@@ -17,9 +15,11 @@ interface QuickStockRailProps {
   stockStatus: Record<string, boolean>;
   toggleStock: (dishId: string, currentStatus: boolean) => void;
   selectedOutletId: string;
+  outlet?: Outlet;
+  onPrepSaved?: () => void;
 }
 
-export function QuickStockRail({ menuList, stockStatus, toggleStock, selectedOutletId }: QuickStockRailProps) {
+export function QuickStockRail({ menuList, stockStatus, toggleStock, selectedOutletId, outlet, onPrepSaved }: QuickStockRailProps) {
   if (menuList.length === 0) return null;
   return (
     <aside aria-label="Today's menu" className="hidden 2xl:block w-[322px] shrink-0 self-start sticky top-0 px-4 py-3 rounded-2xl border border-paper-line">
@@ -33,6 +33,7 @@ export function QuickStockRail({ menuList, stockStatus, toggleStock, selectedOut
           );
         })}
       </div>
+      <PrepTimeStepper outlet={outlet} onSaved={onPrepSaved} />
     </aside>
   );
 }

@@ -2,8 +2,8 @@
 /* source(none) disables Tailwind v4's automatic project-root scanning, so ONLY the two
    @source globs below are scanned.
 
-   Without it Tailwind also reads the ~20 stale eslint-report-*.json / lint-results*.json
-   scratch files in the package root. Those contain snippets of pre-codemod source, so the
+   Without it Tailwind also read the ~20 stale eslint-report-*.json / lint-results*.json
+   scratch files in the package root (deleted since). They held snippets of pre-codemod source, so the
    build kept emitting utilities for classes no component uses any more: 39 emerald, 44 indigo,
    30 red, 14 gray. Dead CSS, and it made the built stylesheet a false signal of what the app
    actually uses. */
@@ -355,4 +355,17 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Printing a tax invoice (TaxInvoiceSheet): the invoice alone, black on white, whatever the
+   theme -- a dark-mode invoice would print light text on a white page. */
+@media print {
+  body * { visibility: hidden !important; }
+  [data-print-root], [data-print-root] * {
+    visibility: visible !important;
+    color: #000 !important;
+    background: transparent !important;
+    border-color: #999 !important;
+  }
+  [data-print-root] { position: absolute; left: 0; top: 0; width: 100%; padding: 24px; }
 }

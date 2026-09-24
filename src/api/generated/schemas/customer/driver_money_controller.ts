@@ -12,6 +12,7 @@ export const DriverSummary = z
     gross: z.number(),
     taxes: z.number(),
     net: z.number(),
+    tips: z.number(),
     pendingBalance: z.number(),
     lastPayout: PayoutSummaryDto,
   })

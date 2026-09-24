@@ -1,20 +1,22 @@
-import { ArrowLeft, Check } from 'lucide-react';
+import { ArrowLeft, Check, FileText } from 'lucide-react';
+import { useState } from 'react';
 import type React from 'react';
 import { motion } from 'motion/react';
 import type { Order } from '@/types';
-import { OrderStatus } from '@/types/backend-enums';
+import { DeliveryStatus, OrderStatus } from '@/types/backend-enums';
 import { Button, Surface, surfaceStyle, useMotionPresets } from '@shared/ui';
 import { formatINR } from '@shared/money';
 import type { ChatWidgetHandle } from '@features/communication/components/ChatWidget';
 import { OrderMoneyBreakdown } from './OrderMoneyBreakdown';
+import { TaxInvoiceSheet } from './TaxInvoiceSheet';
 
 /**
  * The screen after the door: what arrived, what it cost, and a way to say something was wrong.
  *
  * Moved out of `CustomerMainView` (2026-09-24), and three things did not survive the move:
  *  - a "Download PDF Invoice" button that downloaded nothing and announced success through
- *    the ERROR toast. No invoice endpoint exists (a GST invoice needs a number the backend
- *    does not issue yet) -- Phase 7 backlog A6;
+ *    the ERROR toast. Replaced by "Tax invoice" (TaxInvoiceSheet), a real numbered GST invoice
+ *    from CustomerApplication -- Phase 7 A6;
  *  - "Payment Method: Wallet / Card | Credit Card", guessed from whether `paymentIntent` was
  *    set, when the order carries `paymentMethod`;
  *  - a hand-written SGST/CGST list; the bill is `OrderMoneyBreakdown`, as everywhere else.
@@ -28,6 +30,8 @@ interface OrderDeliveredSummaryProps {
 
 export function OrderDeliveredSummary({ order, onBack, chatWidgetRef }: OrderDeliveredSummaryProps) {
   const presets = useMotionPresets();
+  const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const delivered = order.deliveryStatus === DeliveryStatus.DELIVERED;
   return (
     <motion.div key="summary" {...presets.rise} className="p-4 sm:p-5 space-y-4" data-testid="order-tracker" data-order-id={order.id} data-status={order.status}>
       <div className="flex items-center gap-2.5">
@@ -76,12 +80,19 @@ export function OrderDeliveredSummary({ order, onBack, chatWidgetRef }: OrderDel
         </div>
         {order.paymentMethod && <p className="text-[11px] font-semibold text-ink-2">Paid via {order.paymentMethod}</p>}
 
+        {delivered && (
+          <Button variant="secondary" fullWidth onClick={() => setInvoiceOpen(true)}>
+            <FileText className="w-4 h-4" aria-hidden="true" /> Tax invoice
+          </Button>
+        )}
+
         {order.status !== OrderStatus.CANCELLED && (
           <Button variant="outline" fullWidth onClick={() => chatWidgetRef.current?.openAndRequestRefundQuote()}>
             Something wrong with this order?
           </Button>
         )}
       </Surface>
+      {delivered && <TaxInvoiceSheet orderId={order.id} open={invoiceOpen} onClose={() => setInvoiceOpen(false)} />}
     </motion.div>
   );
 }

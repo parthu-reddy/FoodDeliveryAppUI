@@ -19,6 +19,7 @@ export const OrderRequest = z
     deliveryAddressId: z.string().uuid(),
     paymentMethod: z.enum(["CARD", "UPI", "WALLET", "CARD", "UPI", "WALLET"]),
     items: z.array(OrderItemRequest),
+    tipAmount: z.number().lte(500).optional(),
   })
   .passthrough();
 export const ApiResponseOrderResponse = z

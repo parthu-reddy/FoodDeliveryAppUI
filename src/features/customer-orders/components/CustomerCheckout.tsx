@@ -6,6 +6,7 @@ import { AmountBreakdown, formatINR, type BreakdownLine } from '@shared/money';
 import { VegMarker } from '@features/catalog/components/VegMarker';
 import { customerApi } from '@/lib/zodiosClients';
 import type { CartItem, PaymentMethodChoice } from '@/types';
+import { RiderTipPicker } from './RiderTipPicker';
 
 /**
  * Checkout — the whole bill, before you pay. Built against `Checkout.dc.html`.
@@ -18,9 +19,8 @@ import type { CartItem, PaymentMethodChoice } from '@/types';
  *  - **The address is words, not an id.** This sheet replaced `CustomerPaymentModal`, which was
  *    handed `deliveryAddressId` as its `address` prop and printed the row's UUID under
  *    "Delivering to".
- *
- * Not built: the artboard's rider tip. The order API has no tip field, so a tip shown here
- * would be a total the server does not charge. Recorded as A3 in Phase 7's backlog.
+ *  - **The rider tip is part of the bill.** It is sent with the order and charged with it
+ *    (Phase 7 A3), so the total on the button is the total charged.
  */
 
 export interface CheckoutTotals {
@@ -41,7 +41,7 @@ interface CustomerCheckoutProps {
   restaurantName: string;
   address: string;
   onChangeAddress: () => void;
-  onPlaceOrder: (method: PaymentMethodChoice) => void;
+  onPlaceOrder: (method: PaymentMethodChoice, tip: number) => void;
   error?: string | null;
 }
 
@@ -90,7 +90,9 @@ function CustomerCheckoutInner({
 }: CustomerCheckoutProps) {
   const presets = useMotionPresets();
   const balance = useWalletBalance(open);
-  const walletShort = balance !== null && balance < totals.total;
+  const [tip, setTip] = useState(0);
+  const charged = totals.total + tip;
+  const walletShort = balance !== null && balance < charged;
   const [picked, setPicked] = useState<Method | null>(null);
   // Wallet is the default only while it can cover the bill; a later balance that cannot
   // un-selects it rather than leaving a method the server will reject.
@@ -106,6 +108,7 @@ function CustomerCheckoutInner({
   if (!totals.isEstimated) {
     lines.push({ label: 'GST & restaurant charges', amount: totals.tax, info: 'SGST and CGST, charged separately' });
   }
+  if (tip > 0) lines.push({ label: 'Rider tip', amount: tip });
 
   return (
     <Modal
@@ -118,10 +121,10 @@ function CustomerCheckoutInner({
       footer={status === 'idle' ? (
         <PlaceOrderBar
           method={method}
-          total={totals.total}
+          total={charged}
           estimated={!!totals.isEstimated}
           disabled={!canPlace}
-          onPlace={() => method && canPlace && onPlaceOrder(method)}
+          onPlace={() => method && canPlace && onPlaceOrder(method, tip)}
         />
       ) : undefined}
     >
@@ -168,7 +171,7 @@ function CustomerCheckoutInner({
               <div className="p-4">
                 <AmountBreakdown
                   lines={lines}
-                  total={totals.total}
+                  total={charged}
                   totalLabel={totals.isEstimated ? 'Total before taxes' : 'Total'}
                   footnote={totals.isEstimated ? undefined : 'No surcharge at the door. This is what you pay.'}
                 />
@@ -179,6 +182,8 @@ function CustomerCheckoutInner({
                 )}
               </div>
             </Surface>
+
+            <RiderTipPicker tip={tip} onChange={setTip} />
 
             <Surface radius="lg" elevation={1} className="p-2" role="radiogroup" aria-label="Payment method">
               {METHODS.map(({ id, label, Icon }) => {

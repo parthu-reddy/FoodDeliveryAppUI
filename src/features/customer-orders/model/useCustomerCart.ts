@@ -370,7 +370,9 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
     paymentMethod: PaymentMethodChoice | undefined,
     deliveryAddressId: string,
 
-    onSuccessCb: () => void
+    onSuccessCb: () => void,
+    /** Rider tip in whole rupees; sent only when there is one. Charged with the order. */
+    tip = 0,
   ) => {
     if (!checkoutRestaurantId) return;
     if (isSubmittingOrderRef.current || paymentStatus !== 'idle') return;
@@ -426,7 +428,8 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
         restaurantId: activeCart.restaurant.id || checkoutRestaurantId,
         deliveryAddressId: finalAddressId,
         items,
-        paymentMethod
+        paymentMethod,
+        ...(tip > 0 ? { tipAmount: tip } : {}),
       };
 
       const res = await customerApi.order.post('/api/v1/orders', orderPayload, {});

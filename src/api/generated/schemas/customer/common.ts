@@ -32,6 +32,7 @@ export const OrderRequest = z
     deliveryAddressId: z.string().uuid(),
     paymentMethod: z.enum(["CARD", "UPI", "WALLET", "CARD", "UPI", "WALLET"]),
     items: z.array(OrderItemRequest),
+    tipAmount: z.number().lte(500).optional(),
   })
   .passthrough();
 export const OrderItemResponse = z
@@ -99,6 +100,8 @@ export const OrderResponse = z
     cancellationReason: z.string().optional(),
     requestedDelayMinutes: z.number().int().optional(),
     delayReason: z.string().optional(),
+    estimatedArrivalTime: z.number().int().optional(),
+    tipAmount: z.number().optional(),
     expiresAt: z.number().int().optional(),
   })
   .passthrough();
@@ -563,6 +566,7 @@ export const DriverSummary = z
     gross: z.number(),
     taxes: z.number(),
     net: z.number(),
+    tips: z.number(),
     pendingBalance: z.number(),
     lastPayout: PayoutSummaryDto,
   })
@@ -608,6 +612,49 @@ export const CustomerReceipt = z
     paidAt: z.string().datetime({ offset: true }),
     refunds: z.array(RefundView),
     storeCreditUsed: z.number(),
+  })
+  .partial()
+  .passthrough();
+export const Party = z
+  .object({
+    legalName: z.string(),
+    tradeName: z.string(),
+    gstin: z.string(),
+    fssaiLicenseNumber: z.string(),
+    address: z.string(),
+  })
+  .partial()
+  .passthrough();
+export const Line = z
+  .object({
+    description: z.string(),
+    sac: z.string(),
+    quantity: z.number().int(),
+    unitPrice: z.number(),
+    amount: z.number(),
+  })
+  .partial()
+  .passthrough();
+export const CustomerInvoice = z
+  .object({
+    invoiceNumber: z.string(),
+    issuedAt: z.string().datetime({ offset: true }),
+    orderId: z.string().uuid(),
+    orderPlacedAt: z.string().datetime({ offset: true }),
+    supplier: Party,
+    operator: Party,
+    customerName: z.string(),
+    deliveryAddress: z.string(),
+    lines: z.array(Line),
+    taxableValue: z.number(),
+    cgstRatePercent: z.number(),
+    cgstAmount: z.number(),
+    sgstRatePercent: z.number(),
+    sgstAmount: z.number(),
+    deliveryFee: z.number(),
+    platformFee: z.number(),
+    total: z.number(),
+    paymentMethod: z.string(),
   })
   .partial()
   .passthrough();
@@ -735,6 +782,9 @@ export const Order = z
     createdAt: z.string().datetime({ offset: true }),
     updatedAt: z.string().datetime({ offset: true }),
     deliveredAt: z.string().datetime({ offset: true }).optional(),
+    deliveryTravelSeconds: z.number().int().optional(),
+    tipAmount: z.number().optional(),
+    handedOverAt: z.number().int().optional(),
   })
   .passthrough();
 export const SortObject = z
@@ -763,9 +813,9 @@ export const PageOrder = z
     totalElements: z.number().int(),
     totalPages: z.number().int(),
     pageable: PageableObject.optional(),
-    sort: SortObject.optional(),
     first: z.boolean(),
     last: z.boolean(),
+    sort: SortObject.optional(),
     size: z.number().int(),
     content: z.array(Order),
     number: z.number().int(),
@@ -786,9 +836,9 @@ export const PageSupportTicket = z
     totalElements: z.number().int(),
     totalPages: z.number().int(),
     pageable: PageableObject.optional(),
-    sort: SortObject.optional(),
     first: z.boolean(),
     last: z.boolean(),
+    sort: SortObject.optional(),
     size: z.number().int(),
     content: z.array(SupportTicket),
     number: z.number().int(),
