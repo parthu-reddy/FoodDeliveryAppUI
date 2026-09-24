@@ -59,7 +59,9 @@ export function DeliveryActiveJob({
         <h4 className="font-bold text-lg flex items-center gap-1.5 text-amber-500">
           <Navigation className="w-5 h-5" /> Active Contract
         </h4>
-        <span className="text-xs font-mono bg-slate-200 dark:bg-slate-900 px-2 py-0.5 rounded">#{currentJob.id}</span>
+        {/* The full id stays in the DOM (the E2E suite reads it); the pill truncates it so a
+            36-character UUID no longer overflows a 390 px screen. */}
+        <span className="text-xs font-mono px-2 py-0.5 rounded truncate max-w-[9rem]" title={currentJob.id} style={{ background: 'var(--color-paper-sunken)', color: 'var(--color-ink-2)' }}>#{currentJob.id}</span>
       </div>
 
       {/* Map Integration */}
@@ -103,13 +105,14 @@ export function DeliveryActiveJob({
               </label>
               <Surface radius="lg" elevation={0} className="flex overflow-hidden focus-within:border-amber-500 transition-colors">
                 <input
-                  type="password"
+                  type="text"
                   pattern="[0-9]*"
+                  autoComplete="one-time-code"
                   inputMode="numeric"
                   value={enteredOtp}
                   onChange={(e) => setEnteredOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   placeholder="Ask customer for 6-digit OTP"
-                  className="flex-1 px-4 py-3 bg-transparent text-slate-800 dark:text-[#f0ede6] outline-none font-mono text-center tracking-widest text-sm placeholder-slate-400"
+                  className="flex-1 px-4 py-3 bg-transparent text-slate-800 dark:text-[#f0ede6] outline-none font-mono text-center tracking-[.3em] text-xl placeholder:text-sm placeholder:tracking-normal placeholder-slate-400"
                   required
                 />
               </Surface>

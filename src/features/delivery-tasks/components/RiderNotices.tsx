@@ -2,7 +2,7 @@ import { ShieldAlert } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useMotionPresets } from '@shared/ui';
 import React from 'react';
-import { Surface } from '@shared/ui';
+import { Spinner, Surface } from '@shared/ui';
 
 /**
  * The three things the rider screen says when it is not showing a job: an error toast, a lost
@@ -104,5 +104,19 @@ export function RiderOfflineState() {
         navigating maps, and pocketing payouts.
       </p>
     </motion.div>
+  );
+}
+
+/** While the rider's profile and verification load. Moved out of DeliveryDashboard. */
+export function RiderVerifyingState({ verifying }: { verifying: boolean }) {
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center min-h-0 h-full gap-4">
+      <Spinner size="md" color="var(--color-action)" />
+      {verifying && (
+        <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--color-ink-2)' }}>
+          Verifying account
+        </p>
+      )}
+    </div>
   );
 }
