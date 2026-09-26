@@ -41,7 +41,9 @@ export function useCustomerRoute(restaurants: Restaurant[] | null | undefined) {
   const setSelectedRestaurantRoute = (r: Restaurant | null) => {
     if (r) {
       setOverrideRestaurant(r);
-      navigate(`/customer/restaurant/${r.id}`);
+      // Picking an outlet while a menu is already open swaps that menu in place; pushing a
+      // second entry made browser Back land on the previous menu instead of the list.
+      navigate(`/customer/restaurant/${r.id}`, { replace: Boolean(restaurantIdFromUrl) });
     } else {
       setOverrideRestaurant(null);
       navigate(`/customer`);
