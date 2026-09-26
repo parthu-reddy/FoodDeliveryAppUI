@@ -1,6 +1,24 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+export const DeadLetterReplayResult = z
+  .object({
+    topic: z.string(),
+    key: z.string(),
+    eventType: z.string(),
+    eventId: z.string(),
+  })
+  .partial()
+  .passthrough();
+export const ApiResponseDeadLetterReplayResult = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    errorCode: z.string().optional(),
+    data: DeadLetterReplayResult.optional(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
 export const OutboxEventEntity = z
   .object({
     id: z.string().uuid(),
@@ -107,6 +125,13 @@ export const PageResponseDtoOutboxEventEntity = z
     empty: z.boolean(),
   })
   .passthrough();
+export const DeadLetterReplayRequest = z
+  .object({
+    dltTopic: z.string(),
+    partition: z.number().int(),
+    offset: z.number().int(),
+  })
+  .passthrough();
 export const ApiResponseString = z
   .object({
     success: z.boolean(),
@@ -118,8 +143,11 @@ export const ApiResponseString = z
   .passthrough();
 
 export const schemas = {
+  DeadLetterReplayResult,
+  ApiResponseDeadLetterReplayResult,
   OutboxEventEntity,
   PageResponseDtoOutboxEventEntity,
+  DeadLetterReplayRequest,
   ApiResponseString,
 };
 
@@ -133,20 +161,10 @@ export const endpoints = makeApi([
       {
         name: "body",
         type: "Body",
-        schema: z.record(z.object({}).partial().passthrough()),
-      },
-      {
-        name: "topic",
-        type: "Query",
-        schema: z.string().optional(),
-      },
-      {
-        name: "eventId",
-        type: "Header",
-        schema: z.string().optional(),
+        schema: DeadLetterReplayRequest,
       },
     ],
-    response: ApiResponseString,
+    response: ApiResponseDeadLetterReplayResult,
   },
   {
     method: "post",

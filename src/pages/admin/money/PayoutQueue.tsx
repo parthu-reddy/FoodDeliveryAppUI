@@ -8,6 +8,7 @@ import { formatINR } from '@shared/money';
 
 import { PendingPayoutResponse as PendingPayoutResponseSchema } from "@/api/generated/schemas/ledger/common";
 import { z } from "zod";
+import { formatDate, tryParseInstant } from '@/shared/time';
 
 type PendingPayoutResponse = z.infer<typeof PendingPayoutResponseSchema>;
 
@@ -52,7 +53,7 @@ export default function PayoutQueue({ onSelectRow }: { onSelectRow: (payout: Pen
     }
     return [...res].sort((a, b) => {
       if (sortField === 'amount') return (b.unsettledAmount ?? 0) - (a.unsettledAmount ?? 0);
-      return new Date(a.unsettledSince ?? 0).getTime() - new Date(b.unsettledSince ?? 0).getTime();
+      return (tryParseInstant(a.unsettledSince) ?? 0) - (tryParseInstant(b.unsettledSince) ?? 0);
     });
   }, [pendingPayouts, filterType, filterBank, sortField]);
 
@@ -158,7 +159,7 @@ export default function PayoutQueue({ onSelectRow }: { onSelectRow: (payout: Pen
                   <div className="text-4xl font-black text-slate-900 dark:text-white flex items-center gap-1">
                     {formatINR(account.unsettledAmount ?? 0)}
                   </div>
-                  <p className="text-xs text-slate-400 mt-2">{account.lineCount} lines since {account.unsettledSince ? new Date(account.unsettledSince).toLocaleDateString() : 'N/A'}</p>
+                  <p className="text-xs text-slate-400 mt-2">{account.lineCount} lines since {account.unsettledSince ? formatDate(account.unsettledSince) : 'N/A'}</p>
                 </div>
               </Surface>
             ))}

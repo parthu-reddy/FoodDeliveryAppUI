@@ -64,4 +64,33 @@ describe('PullToRefresh', () => {
     expect(indicator().style.transitionDuration).toBe('0s');
     reducedMotion.value = false;
   });
+
+  // Inside a page that scrolls (Account Settings), the list's own box never scrolls -- its
+  // parent does. Checking only its own scrollTop, the pull armed with the list scrolled halfway
+  // down, and a downward drag reloaded instead of scrolling back up.
+  it('does not start a pull while the page around it is scrolled', async () => {
+    const onRefresh = vi.fn();
+    render(
+      <div data-testid="page" style={{ overflowY: 'auto' }}>
+        <PullToRefresh onRefresh={onRefresh}><div>content</div></PullToRefresh>
+      </div>,
+    );
+    const page = screen.getByTestId('page');
+    Object.defineProperty(page, 'scrollHeight', { configurable: true, value: 1000 });
+    Object.defineProperty(page, 'clientHeight', { configurable: true, value: 400 });
+    page.scrollTop = 200;
+
+    fireEvent.pointerDown(scroller(), { clientY: 0 });
+    fireEvent.pointerMove(scroller(), { clientY: 80 });
+    fireEvent.pointerUp(scroller());
+    expect(indicator().style.transform).toBe('translateY(-64px)');
+    expect(onRefresh).not.toHaveBeenCalled();
+
+    // Back at the top of the page, the same pull refreshes.
+    page.scrollTop = 0;
+    fireEvent.pointerDown(scroller(), { clientY: 0 });
+    fireEvent.pointerMove(scroller(), { clientY: 80 });
+    fireEvent.pointerUp(scroller());
+    await waitFor(() => expect(onRefresh).toHaveBeenCalledTimes(1));
+  });
 });

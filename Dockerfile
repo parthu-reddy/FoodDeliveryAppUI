@@ -1,5 +1,7 @@
 # Serve the application with Nginx (pre-built locally)
 FROM nginx:alpine
+# Access-log times in UTC, like every other service. RandomDocuments/TimezoneCorrectness_2026-09-25.
+ENV TZ=UTC
 
 # Copy the build output to replace the default nginx contents
 COPY dist /usr/share/nginx/html

@@ -2,6 +2,7 @@ import { Badge, Button, Surface } from '@shared/ui';
 import { formatINR } from '@shared/money';
 import type { Campaign } from '@features/campaigns-ads/model/campaign';
 import { Calendar, Pause } from 'lucide-react';
+import { formatLocalDate } from '@/shared/time';
 
 
 /**
@@ -16,7 +17,7 @@ export function CampaignCard({ campaign, onPause }: { campaign: Campaign; onPaus
           <div>
             <h4 className="font-bold text-slate-900 dark:text-[#f0ede6] text-sm">{campaign.name}</h4>
             <div className="flex gap-2 text-[10px] font-mono mt-1 text-slate-500">
-              <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(campaign.startDate).toLocaleDateString()}</span>
+              <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatLocalDate(campaign.startDate)}</span>
             </div>
           </div>
           <Badge variant={campaign.status === 'ACTIVE' ? 'success' : 'neutral'}>

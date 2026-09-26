@@ -138,14 +138,14 @@ export const PageOrder = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    pageable: PageableObject.optional(),
+    numberOfElements: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
-    sort: SortObject.optional(),
+    number: z.number().int(),
     size: z.number().int(),
     content: z.array(Order),
-    number: z.number().int(),
-    numberOfElements: z.number().int(),
+    pageable: PageableObject.optional(),
+    sort: SortObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -220,9 +220,14 @@ export const endpoints = makeApi([
         schema: z.string().uuid(),
       },
       {
-        name: "date",
+        name: "from",
         type: "Query",
-        schema: z.string().optional(),
+        schema: z.string().datetime({ offset: true }),
+      },
+      {
+        name: "to",
+        type: "Query",
+        schema: z.string().datetime({ offset: true }),
       },
       {
         name: "pageable",

@@ -651,24 +651,26 @@ export interface components {
             sort?: components["schemas"]["SortObject"];
         };
         PageDeliveryExecutive: {
-            /** Format: int32 */
-            totalPages: number;
             /** Format: int64 */
             totalElements: number;
-            sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
-            first: boolean;
-            last: boolean;
+            /** Format: int32 */
+            totalPages: number;
+            /** Format: int32 */
+            numberOfElements: number;
             /** Format: int32 */
             number: number;
+            first: boolean;
+            last: boolean;
+            sort?: components["schemas"]["SortObject"];
             /** Format: int32 */
             size: number;
             content: components["schemas"]["DeliveryExecutive"][];
-            /** Format: int32 */
-            numberOfElements: number;
+            pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };
         PageableObject: {
+            /** Format: int64 */
+            offset: number;
             sort?: components["schemas"]["SortObject"];
             paged: boolean;
             /** Format: int32 */
@@ -676,8 +678,6 @@ export interface components {
             /** Format: int32 */
             pageSize: number;
             unpaged: boolean;
-            /** Format: int64 */
-            offset: number;
         };
         SortObject: {
             empty: boolean;
@@ -696,21 +696,21 @@ export interface components {
             status: string;
         };
         PageDriverLocationDTO: {
-            /** Format: int32 */
-            totalPages: number;
             /** Format: int64 */
             totalElements: number;
-            sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
-            first: boolean;
-            last: boolean;
+            /** Format: int32 */
+            totalPages: number;
+            /** Format: int32 */
+            numberOfElements: number;
             /** Format: int32 */
             number: number;
+            first: boolean;
+            last: boolean;
+            sort?: components["schemas"]["SortObject"];
             /** Format: int32 */
             size: number;
             content: components["schemas"]["DriverLocationDTO"][];
-            /** Format: int32 */
-            numberOfElements: number;
+            pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };
         JsonNode: Record<string, never>;
@@ -1308,8 +1308,9 @@ export interface operations {
     };
     getOrderHistory: {
         parameters: {
-            query?: {
-                date?: string;
+            query: {
+                from: string;
+                to: string;
                 page?: number;
                 size?: number;
             };

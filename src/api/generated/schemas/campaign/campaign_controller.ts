@@ -23,8 +23,9 @@ export const CampaignResponse = z
     dailyBudget: z.number(),
     lifetimeBudget: z.number(),
     maxBid: z.number(),
-    startDate: z.string().datetime({ offset: true }),
-    endDate: z.string().datetime({ offset: true }).optional(),
+    startDate: z.string(),
+    endDate: z.string().optional(),
+    timeZone: z.string(),
     frequencyCap: z.number().int(),
     version: z.number().int(),
   })
@@ -42,14 +43,14 @@ export const PageCampaignResponse = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
     numberOfElements: z.number().int(),
-    size: z.number().int(),
-    content: z.array(CampaignResponse),
-    number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
+    number: z.number().int(),
+    size: z.number().int(),
+    content: z.array(CampaignResponse),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -78,14 +79,14 @@ export const PageCampaignPerformanceResponse = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
     numberOfElements: z.number().int(),
-    size: z.number().int(),
-    content: z.array(CampaignPerformanceResponse),
-    number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
+    number: z.number().int(),
+    size: z.number().int(),
+    content: z.array(CampaignPerformanceResponse),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -105,8 +106,8 @@ export const CampaignRequest = z
     dailyBudget: z.number(),
     lifetimeBudget: z.number().optional(),
     maxBid: z.number(),
-    startDate: z.string().datetime({ offset: true }),
-    endDate: z.string().datetime({ offset: true }).optional(),
+    startDate: z.string(),
+    endDate: z.string().optional(),
     frequencyCap: z.number().int().optional(),
   })
   .passthrough();

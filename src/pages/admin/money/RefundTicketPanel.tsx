@@ -8,6 +8,7 @@ import { IndianRupee, MessageSquare } from 'lucide-react';
 import { useState } from 'react';
 import { z } from "zod";
 import { SupportTicket } from "@/api/generated/schemas/customer/common";
+import { formatDateTime } from '@/shared/time';
 
 type Ticket = z.infer<typeof SupportTicket>;
 
@@ -238,7 +239,7 @@ export function RefundTicketPanel({ ticket, onClose, onResolved }: RefundTicketP
                              {selectedTicket.resolvedAt && (
                                  <div className="flex justify-between">
                                      <span className="text-slate-500">Date:</span>
-                                     <span>{new Date(selectedTicket.resolvedAt).toLocaleString()}</span>
+                                     <span>{formatDateTime(selectedTicket.resolvedAt)}</span>
                                  </div>
                              )}
                              {selectedTicket.resolutionNotes && (

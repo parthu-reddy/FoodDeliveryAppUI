@@ -50,9 +50,14 @@ export const endpoints = makeApi([
     requestFormat: "json",
     parameters: [
       {
-        name: "period",
+        name: "from",
         type: "Query",
-        schema: z.string().optional().default("month"),
+        schema: z.string().datetime({ offset: true }),
+      },
+      {
+        name: "to",
+        type: "Query",
+        schema: z.string().datetime({ offset: true }),
       },
     ],
     response: DriverSummary,
@@ -75,20 +80,6 @@ export const endpoints = makeApi([
       },
     ],
     response: PageResponseDtoLedgerStatementLineDto,
-  },
-  {
-    method: "get",
-    path: "/api/v1/money/driver/orders",
-    alias: "fetchOrders_1",
-    requestFormat: "json",
-    parameters: [
-      {
-        name: "date",
-        type: "Query",
-        schema: z.string().optional(),
-      },
-    ],
-    response: z.array(DriverOrderEarnings),
   },
 ]);
 

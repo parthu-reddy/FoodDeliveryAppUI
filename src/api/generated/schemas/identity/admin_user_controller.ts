@@ -159,6 +159,20 @@ export const endpoints = makeApi([
   },
   {
     method: "get",
+    path: "/api/v1/internal/admin/users/by-phone",
+    alias: "getUserByPhone",
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "phone",
+        type: "Query",
+        schema: z.string(),
+      },
+    ],
+    response: ApiResponseUserDTO,
+  },
+  {
+    method: "get",
     path: "/api/v1/internal/admin/users/all",
     alias: "getAllUsers",
     requestFormat: "json",

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { restaurantApi } from '@/lib/zodiosClients';
 import { OrderStatus, type Order } from '@/types';
+import { dayWindow } from '@/shared/time';
 
 /**
  * A page of this outlet's completed orders, filtered by date.
@@ -28,7 +29,8 @@ const queries: Record<string, string | number> = {
 page: currentPage - 1,
 size: ITEMS_PER_PAGE
 };
-if (dateFilter) queries.date = dateFilter;
+// The kitchen's day as instants, computed on the viewer's (the kitchen's) calendar.
+if (dateFilter) Object.assign(queries, dayWindow(dateFilter));
 
 const res = await restaurantApi.fulfillment.get('/api/v1/restaurants/:restaurantId/fulfillment/orders/history', { params: { restaurantId }, queries });
 if (res.data) {

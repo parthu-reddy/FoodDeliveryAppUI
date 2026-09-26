@@ -6,6 +6,7 @@ import { orderStatusView } from '@features/customer-orders/model/orderStatus';
 import { RestaurantOrderDetailsModal } from '@features/restaurant-orders/components/RestaurantOrderDetailsModal';
 import { Calendar, ChevronLeft, ChevronRight, Package, Receipt } from 'lucide-react';
 import React, { useState } from 'react';
+import { formatDate, formatInstant, msUntil } from '@/shared/time';
 
 export function OrderHistory({ restaurantId, onOpenChat }: { restaurantId: string, onOpenChat?: (orderId: string) => void }) {
   const {
@@ -84,10 +85,10 @@ export function OrderHistory({ restaurantId, onOpenChat }: { restaurantId: strin
  <td className="p-4 whitespace-nowrap">
  <div className="flex flex-col">
  <span className="font-medium text-slate-800 dark:text-[#f0ede6]">
- {new Date((order as {timestamp?: string}).timestamp || order.createdAt).toLocaleDateString()}
+ {formatDate((order as {timestamp?: string}).timestamp || order.createdAt)}
  </span>
  <span className="text-xs text-slate-500 dark:text-slate-300 font-mono">
- {new Date((order as {timestamp?: string}).timestamp || order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+ {formatInstant((order as {timestamp?: string}).timestamp || order.createdAt, { hour: '2-digit', minute: '2-digit' })}
  </span>
  </div>
  </td>
@@ -95,7 +96,7 @@ export function OrderHistory({ restaurantId, onOpenChat }: { restaurantId: strin
  {order.estimatedCompletionTime ? (
  <div className="flex flex-col">
  <span className="font-bold text-rose-600 dark:text-rose-400">
- {new Date(order.estimatedCompletionTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+ {formatInstant(order.estimatedCompletionTime, { hour: '2-digit', minute: '2-digit' })}
  </span>
  </div>
  ) : (
@@ -143,8 +144,7 @@ export function OrderHistory({ restaurantId, onOpenChat }: { restaurantId: strin
  
  {/* Restaurant's OrderHistory gives a 4 hour window from HANDED_OVER to account for delivery time */}
  { }
- {/* eslint-disable-next-line react-hooks/purity */}
- {onOpenChat && order.updatedAt && (Date.now() - new Date(order.updatedAt).getTime() < 4 * 60 * 60 * 1000) && (
+ {onOpenChat && order.updatedAt && (-msUntil(order.updatedAt) < 4 * 60 * 60 * 1000) && (
  <button
  onClick={() => onOpenChat(order.id)}
  className="text-xs font-bold text-blue-500 hover:text-blue-600 underline text-left"

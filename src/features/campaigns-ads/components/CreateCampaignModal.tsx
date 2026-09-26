@@ -2,7 +2,8 @@ import { parseApiError } from '@/lib/parseApiError';
 import { campaignApi } from '@/lib/zodiosClients';
 import { useToast } from '@/contexts/ToastContext';
 import { Button, FormField, Input, Modal } from '@shared/ui';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { addDays, todayIn, viewerTimeZone } from '@/shared/time';
 
 interface CreateCampaignModalProps {
   advertiserId: string;
@@ -24,15 +25,25 @@ export function CreateCampaignModal({ advertiserId, open, onClose, onCreated }: 
   const [name, setName] = useState('');
   const [dailyBudget, setDailyBudget] = useState('50');
   const [totalBudget, setTotalBudget] = useState('500');
-  const [startDate, setStartDate] = useState(() => {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
-  });
-  const [endDate, setEndDate] = useState(() => {
-    const date = new Date();
-    date.setDate(date.getDate() + 30);
-    return date.toISOString().split('T')[0];
-  });
+  // Calendar dates. The server reads them on the advertiser's calendar: a campaign starts at local
+  // midnight on its first day and runs all of its last day. So the default is the advertiser's today,
+  // not the creator's (east of the advertiser that is already tomorrow, and the campaign would not run
+  // until then). Until the profile loads, or if it cannot, the creator's today stands in. null = untouched.
+  const [advertiserZone, setAdvertiserZone] = useState<string | null>(null);
+  const [pickedStart, setStartDate] = useState<string | null>(null);
+  const [pickedEnd, setEndDate] = useState<string | null>(null);
+  const today = todayIn(advertiserZone ?? viewerTimeZone());
+  const startDate = pickedStart ?? today;
+  const endDate = pickedEnd ?? addDays(today, 30);
+
+  useEffect(() => {
+    if (!open || advertiserZone) return;
+    let cancelled = false;
+    campaignApi.advertiser.get('/api/v1/advertisers/:id', { params: { id: advertiserId } })
+      .then((res) => { if (!cancelled && res.data?.timeZone) setAdvertiserZone(res.data.timeZone); })
+      .catch(() => { /* keep the creator's today */ });
+    return () => { cancelled = true; };
+  }, [open, advertiserId, advertiserZone]);
   const [bidAmount, setBidAmount] = useState('1.5');
   const [radiusKm, setRadiusKm] = useState('5.0');
 
@@ -45,8 +56,8 @@ export function CreateCampaignModal({ advertiserId, open, onClose, onCreated }: 
               dailyBudget: Math.round(parseFloat(dailyBudget) * 100),
               lifetimeBudget: Math.round(parseFloat(totalBudget) * 100),
               maxBid: Math.round(parseFloat(bidAmount) * 100),
-              startDate: new Date(startDate).toISOString(),
-              endDate: new Date(endDate).toISOString()
+              startDate,
+              endDate
             }, { params: { advertiserId: advertiserId }, queries: { pageable: {} } as Record<string, unknown> });
       showSuccess('Campaign created successfully');
       onClose();
@@ -79,6 +90,9 @@ export function CreateCampaignModal({ advertiserId, open, onClose, onCreated }: 
             <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} required />
           </FormField>
         </div>
+        {advertiserZone && advertiserZone !== viewerTimeZone() && (
+          <p className="text-xs text-slate-500">Dates run on the advertiser's calendar ({advertiserZone}).</p>
+        )}
         <div className="grid grid-cols-2 gap-4">
           <FormField label="Bid per Impression (₹)" required>
             <Input type="number" step="0.01" value={bidAmount} onChange={e => setBidAmount(e.target.value)} required />

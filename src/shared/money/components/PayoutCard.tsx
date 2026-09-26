@@ -1,6 +1,7 @@
 import React from 'react';
 import { Money } from './Money';
 import { PayoutTimeline } from './PayoutTimeline';
+import { formatDate } from '@/shared/time';
 
 interface Props {
   payoutId: string;
@@ -24,7 +25,7 @@ export function PayoutCard({ payoutId, amount, status, createdAt, onClick }: Pro
           </div>
         </div>
         <div className="text-right">
-          <p className="text-sm text-slate-500">{new Date(createdAt).toLocaleDateString()}</p>
+          <p className="text-sm text-slate-500">{formatDate(createdAt)}</p>
         </div>
       </div>
       <div className="pt-4 border-t border-slate-100">

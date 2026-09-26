@@ -9,6 +9,7 @@ import { formatINR } from '@shared/money';
 
 import { z } from "zod";
 import { payoutStatus } from '@features/ledger/model/payoutStatus';
+import { formatDateTime } from '@/shared/time';
 
 // The list endpoint returns PayoutDto (status is a plain string), not the Payout entity shape.
 type Payout = z.infer<typeof ledgerCommon.PayoutDto>;
@@ -57,7 +58,7 @@ export default function PayoutHistory({ onSelectPayout }: { onSelectPayout: (pay
   const handleExport = () => {
      const csvContent = "data:text/csv;charset=utf-8," 
         + "ID,Payee,Type,Amount,Status,Created At\n"
-        + payouts.map(p => `${p.id},${p.payeeDisplayName || p.payeeId},${p.payeeType},${p.amount},${p.status},${new Date(p.createdAt || '').toLocaleString()}`).join("\n");
+        + payouts.map(p => `${p.id},${p.payeeDisplayName || p.payeeId},${p.payeeType},${p.amount},${p.status},${p.createdAt ?? ''}`).join("\n");
      const encodedUri = encodeURI(csvContent);
      const link = document.createElement("a");
      link.setAttribute("href", encodedUri);
@@ -151,7 +152,7 @@ export default function PayoutHistory({ onSelectPayout }: { onSelectPayout: (pay
                             {getStatusBadge(payout.status)}
                          </td>
                          <td className="p-4 text-sm text-slate-500">
-                            {new Date(payout.createdAt || '').toLocaleString()}
+                            {formatDateTime(payout.createdAt)}
                          </td>
                       </tr>
                    ))}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { customerApi } from '@/lib/zodiosClients';
 import type { Order } from '@/types';
+import { tryParseInstant } from '@/shared/time';
 
 /**
  * "Order it again" — the most recent completed order per restaurant.
@@ -37,8 +38,8 @@ export interface ReorderSuggestion {
 const COMPLETED = new Set(['DELIVERED']);
 
 export function relativeAgo(iso: string, now: number = Date.now()): string {
-  const then = new Date(iso).getTime();
-  if (!Number.isFinite(then)) return '';
+  const then = tryParseInstant(iso);
+  if (then === null) return '';
   const days = Math.floor((now - then) / 86_400_000);
   if (days <= 0) return 'today';
   if (days === 1) return 'yesterday';
@@ -50,7 +51,7 @@ export function relativeAgo(iso: string, now: number = Date.now()): string {
 
 export function toSuggestions(orders: Order[], limit = 6, now: number = Date.now()): ReorderSuggestion[] {
   const newestFirst = [...orders].sort(
-    (a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime()
+    (a, b) => (tryParseInstant(b.createdAt) ?? 0) - (tryParseInstant(a.createdAt) ?? 0)
   );
 
   const seen = new Set<string>();

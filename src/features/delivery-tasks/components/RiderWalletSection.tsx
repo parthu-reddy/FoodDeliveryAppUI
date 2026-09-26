@@ -1,5 +1,6 @@
 import { customerApi } from '@/lib/zodiosClients';
 import { formatINR } from '@shared/money';
+import { lastDaysWindow, todayIn } from '@/shared/time';
 import { TransactionHistoryTable, WalletTransaction } from '@shared/ui';
 import React, { useCallback, useEffect, useState } from 'react';
 
@@ -12,7 +13,7 @@ import React, { useCallback, useEffect, useState } from 'react';
  */
 export function RiderWalletSection({ userId }: { userId: string }) {
   // Wallet State
-  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [tips, setTips] = useState(0);
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
   const [txPage, setTxPage] = useState(0);
@@ -27,9 +28,12 @@ export function RiderWalletSection({ userId }: { userId: string }) {
       // ledger earnings and cash, so this reads the driver money summary and statement. The old
       // code asked WalletService for a DRIVER wallet, which no route and no handler served; the
       // catch below turned that into a permanent zero balance and an empty history.
-      const summary = await customerApi.driverMoney.get('/api/v1/money/driver/summary', { queries: { period: 'ALL' } });
+      // The 30 calendar days up to and including today, on the rider's calendar, which is what the
+      // tips line below says. It sent period 'ALL', which the server ignored for one UTC month.
+      const summary = await customerApi.driverMoney.get('/api/v1/money/driver/summary', { queries: lastDaysWindow(todayIn(), 30) });
       if (summary) {
-        setWalletBalance(summary.pendingBalance ?? 0);
+        // Absent when the ledger could not say: shown as unavailable, not as a balance of zero.
+        setWalletBalance(summary.pendingBalance ?? null);
         // Customers' tips, paid to the rider whole (Phase 7 A3); each also appears in the
         // statement below as a "Rider tip" line.
         setTips(summary.tips ?? 0);
@@ -66,7 +70,7 @@ export function RiderWalletSection({ userId }: { userId: string }) {
         <div className="pt-8 mt-8 border-t border-rose-500/20">
           <div className="flex justify-between items-center mb-4">
             <h4 className="text-sm font-bold text-slate-900 dark:text-[#f0ede6]">Earnings Wallet</h4>
-            <span className="font-black text-slate-900 dark:text-[#f0ede6] text-lg">{formatINR(walletBalance)}</span>
+            <span className="font-black text-slate-900 dark:text-[#f0ede6] text-lg">{walletBalance === null ? <span aria-label="Not available">—</span> : formatINR(walletBalance)}</span>
           </div>
           {tips > 0 && (
             <p className="-mt-2 mb-4 text-xs font-semibold text-ink-2" data-testid="rider-tips">

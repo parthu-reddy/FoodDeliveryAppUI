@@ -5,6 +5,7 @@ import { Badge, Button, FormField, Input, Overlay, Surface } from '@shared/ui';
 import { LogOut, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
+import { formatDateTime } from '@/shared/time';
 
 const nameSchema = z.string().min(1, 'Name is required').max(100, 'Name cannot exceed 100 characters');
 
@@ -185,7 +186,7 @@ interface DeviceSession {
                               {device.deviceModel || 'Unknown Device'}
                               {device.deviceId === currentDeviceId && <Badge variant="success" size="xs" className="ml-2">This Device</Badge>}
                             </p>
-                            <p className="text-[10px] text-slate-500 mt-0.5">Last login: {new Date(device.loginTime).toLocaleString()}</p>
+                            <p className="text-[10px] text-slate-500 mt-0.5">Last login: {formatDateTime(device.loginTime)}</p>
                           </div>
                           <button
                             onClick={(e) => { e.preventDefault(); handleRemoveDevice(device.sessionId); }}

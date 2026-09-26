@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Badge, Spinner } from "@shared/ui";
 import { identityApi } from '../../lib/zodiosClients';
 import { useToast } from '../../contexts/ToastContext';
+import { formatDateTime } from '@/shared/time';
 
 export interface ActiveSessionsProps {
   callingService: string;
@@ -93,7 +94,7 @@ export function ActiveSessions({ callingService, onAddApiLog }: ActiveSessionsPr
                     {os} • {browser}
                   </p>
                   <p className="text-[10px] text-slate-500 mt-0.5 line-clamp-1">{session.deviceInfo}</p>
-                  <p className="text-[9px] text-rose-500 mt-0.5">Last Active: {session.lastActive ? new Date(session.lastActive).toLocaleString() : ''}</p>
+                  <p className="text-[9px] text-rose-500 mt-0.5">Last Active: {formatDateTime(session.lastActive)}</p>
                 </div>
                 <button
                   onClick={() => revokeSession(sessionId)}

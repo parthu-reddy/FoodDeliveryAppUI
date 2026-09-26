@@ -9,6 +9,7 @@ import { getFriendlyStatusMessage } from '@features/customer-orders/model/status
 import { placedAt } from '@features/customer-orders/model/placedAt';
 import { Badge } from './Badge';
 import { Button } from './action/Button';
+import { PullToRefresh } from './feedback/PullToRefresh';
 import { Surface } from './surface/Surface';
 import { useEffect, useState } from 'react';
 
@@ -61,6 +62,9 @@ export function SettingsHistoryTab({ setTrackingOrder }: { setTrackingOrder?: (o
   }, []);
 
   return (
+    // The motion inventory's pull to refresh for the customer's order history. It was built
+    // into CustomerOrderHistory.tsx, which no screen renders; this is the history they see.
+    <PullToRefresh onRefresh={() => fetchOrders(0, 'history')} label="Pull down to reload your orders">
     <div className="space-y-4">
       {isLoadingOrders && paginatedOrders.length === 0 ? (
         <div className="text-center text-slate-500 text-sm py-8">Loading history...</div>
@@ -115,5 +119,6 @@ export function SettingsHistoryTab({ setTrackingOrder }: { setTrackingOrder?: (o
         </Button>
       )}
     </div>
+    </PullToRefresh>
   );
 }

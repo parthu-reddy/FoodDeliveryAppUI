@@ -3,6 +3,7 @@ import { Printer, X } from 'lucide-react';
 import { customerApi } from '@/lib/zodiosClients';
 import { Button, Overlay, Surface } from '@shared/ui';
 import { formatINR } from '@shared/money';
+import { formatDate } from '@/shared/time';
 
 /**
  * The GST tax invoice for a delivered order (Phase 7 A6), replacing the "Download PDF Invoice"
@@ -110,7 +111,7 @@ function Row({ label, value, strong = false }: { label: string; value?: number; 
 }
 
 export function InvoiceDocument({ invoice }: { invoice: TaxInvoice }) {
-  const issued = invoice.issuedAt ? new Date(invoice.issuedAt).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' }) : null;
+  const issued = invoice.issuedAt ? formatDate(invoice.issuedAt) : null;
   return (
     <article data-print-root data-testid="tax-invoice" className="space-y-4">
       <header className="flex justify-between gap-3">

@@ -351,9 +351,9 @@ export interface components {
             dailyBudget: number;
             lifetimeBudget?: number;
             maxBid: number;
-            /** Format: date-time */
+            /** Format: date */
             startDate: string;
-            /** Format: date-time */
+            /** Format: date */
             endDate?: string;
             /** Format: int32 */
             frequencyCap?: number;
@@ -377,10 +377,11 @@ export interface components {
             dailyBudget: number;
             lifetimeBudget: number;
             maxBid: number;
-            /** Format: date-time */
+            /** Format: date */
             startDate: string;
-            /** Format: date-time */
+            /** Format: date */
             endDate?: string;
+            timeZone: string;
             /** Format: int32 */
             frequencyCap: number;
             /** Format: int64 */
@@ -447,10 +448,12 @@ export interface components {
             lifetimeBudget?: number;
             /** Format: uuid */
             advertiserId: string;
+            timeZone: string;
         };
         AdvertiserRegistrationRequest: {
             companyName: string;
             externalRef?: string;
+            timeZone: string;
         };
         AdvertiserResponse: {
             /** Format: uuid */
@@ -460,6 +463,7 @@ export interface components {
             externalRef?: string;
             /** Format: uuid */
             walletBalanceId?: string;
+            timeZone: string;
             /** Format: date-time */
             createdAt: string;
             /** Format: date-time */
@@ -546,20 +550,22 @@ export interface components {
             totalPages: number;
             /** Format: int64 */
             totalElements: number;
-            sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             numberOfElements: number;
+            first: boolean;
+            last: boolean;
+            /** Format: int32 */
+            number: number;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["CampaignResponse"][];
-            /** Format: int32 */
-            number: number;
-            first: boolean;
-            last: boolean;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };
         PageableObject: {
+            /** Format: int64 */
+            offset: number;
             sort?: components["schemas"]["SortObject"];
             paged: boolean;
             /** Format: int32 */
@@ -567,8 +573,6 @@ export interface components {
             /** Format: int32 */
             pageSize: number;
             unpaged: boolean;
-            /** Format: int64 */
-            offset: number;
         };
         SortObject: {
             empty: boolean;
@@ -605,17 +609,17 @@ export interface components {
             totalPages: number;
             /** Format: int64 */
             totalElements: number;
-            sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             numberOfElements: number;
+            first: boolean;
+            last: boolean;
+            /** Format: int32 */
+            number: number;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["CampaignPerformanceResponse"][];
-            /** Format: int32 */
-            number: number;
-            first: boolean;
-            last: boolean;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };
         ApiResponsePageAdGroupResponse: {
@@ -631,17 +635,17 @@ export interface components {
             totalPages: number;
             /** Format: int64 */
             totalElements: number;
-            sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             numberOfElements: number;
+            first: boolean;
+            last: boolean;
+            /** Format: int32 */
+            number: number;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["AdGroupResponse"][];
-            /** Format: int32 */
-            number: number;
-            first: boolean;
-            last: boolean;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };
         ApiResponseListAdCreativeResponse: {

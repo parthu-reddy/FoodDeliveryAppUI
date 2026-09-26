@@ -29,6 +29,15 @@ interface PullToRefreshProps {
   className?: string;
 }
 
+/** This element if it scrolls, else the nearest ancestor that does, else this element. */
+function scrollingBox(el: HTMLElement | null): HTMLElement | null {
+  for (let node = el; node; node = node.parentElement) {
+    const { overflowY } = getComputedStyle(node);
+    if ((overflowY === 'auto' || overflowY === 'scroll') && node.scrollHeight > node.clientHeight) return node;
+  }
+  return el;
+}
+
 export function PullToRefresh({
   onRefresh, label = 'Pull down to refresh', children, className = '',
 }: PullToRefreshProps) {
@@ -42,7 +51,10 @@ export function PullToRefresh({
   // rendered with.
   const [dragging, setDragging] = useState(false);
 
-  const atTop = () => (scroller.current?.scrollTop ?? 0) <= 0;
+  // The element that actually scrolls. Inside a page that scrolls around it (Account
+  // Settings) this box never scrolls itself, so checking only its own scrollTop armed a pull
+  // with the list halfway down the page.
+  const atTop = () => (scrollingBox(scroller.current)?.scrollTop ?? 0) <= 0;
   const armed = pull >= TRIGGER_AT;
 
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {

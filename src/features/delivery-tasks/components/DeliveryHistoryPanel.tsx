@@ -6,6 +6,7 @@ import { motion } from 'motion/react';
 import { useMotionPresets } from '@shared/ui';
 import React, { useState } from 'react';
 import { formatINR } from '@shared/money';
+import { formatDateTime } from '@/shared/time';
 
 interface DeliveryHistoryPanelProps {
   setShowHistory: (show: boolean) => void;
@@ -75,7 +76,7 @@ export function DeliveryHistoryPanel({
                 <div>
                   <p className="font-mono text-xs text-slate-400 dark:text-slate-300 font-bold">ORDER #{job.id.substring(0, 8)}</p>
                   <p className="font-black text-slate-900 dark:text-[#f0ede6] mt-1">{job.restaurantName}</p>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-300 mt-0.5">{job.createdAt ? new Date(job.createdAt).toLocaleString() : ""}</p>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-300 mt-0.5">{formatDateTime(job.createdAt)}</p>
                 </div>
                 <div className="text-right">
                   <p className="font-black text-amber-500 text-lg">+{job.earnings?.netPayout != null ? formatINR(job.earnings.netPayout) : '---'}</p>

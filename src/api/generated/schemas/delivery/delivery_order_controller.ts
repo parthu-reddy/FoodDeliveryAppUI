@@ -10,9 +10,14 @@ export const endpoints = makeApi([
     requestFormat: "json",
     parameters: [
       {
-        name: "date",
+        name: "from",
         type: "Query",
-        schema: z.string().optional(),
+        schema: z.string().datetime({ offset: true }),
+      },
+      {
+        name: "to",
+        type: "Query",
+        schema: z.string().datetime({ offset: true }),
       },
       {
         name: "page",

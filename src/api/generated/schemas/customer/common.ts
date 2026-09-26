@@ -261,6 +261,31 @@ export const RefundView = z
   })
   .partial()
   .passthrough();
+export const DeadLetterReplayRequest = z
+  .object({
+    dltTopic: z.string(),
+    partition: z.number().int(),
+    offset: z.number().int(),
+  })
+  .passthrough();
+export const DeadLetterReplayResult = z
+  .object({
+    topic: z.string(),
+    key: z.string(),
+    eventType: z.string(),
+    eventId: z.string(),
+  })
+  .partial()
+  .passthrough();
+export const ApiResponseDeadLetterReplayResult = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    errorCode: z.string().optional(),
+    data: DeadLetterReplayResult.optional(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
 export const CustomerAddressDto = z
   .object({
     id: z.string().uuid(),
@@ -800,26 +825,26 @@ export const pageable = z
   .passthrough();
 export const PageableObject = z
   .object({
+    offset: z.number().int(),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
-    sort: SortObject.optional(),
-    offset: z.number().int(),
     unpaged: z.boolean(),
+    sort: SortObject.optional(),
   })
   .passthrough();
 export const PageOrder = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    pageable: PageableObject.optional(),
+    numberOfElements: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
-    sort: SortObject.optional(),
+    number: z.number().int(),
     size: z.number().int(),
     content: z.array(Order),
-    number: z.number().int(),
-    numberOfElements: z.number().int(),
+    pageable: PageableObject.optional(),
+    sort: SortObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -835,14 +860,14 @@ export const PageSupportTicket = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    pageable: PageableObject.optional(),
+    numberOfElements: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
-    sort: SortObject.optional(),
+    number: z.number().int(),
     size: z.number().int(),
     content: z.array(SupportTicket),
-    number: z.number().int(),
-    numberOfElements: z.number().int(),
+    pageable: PageableObject.optional(),
+    sort: SortObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();

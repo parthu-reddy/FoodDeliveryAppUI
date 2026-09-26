@@ -5,6 +5,7 @@ import { Reconciliation_controllerApi, PageReconciliationRun } from '../../../ap
 import { Admin_dlq_controllerApi as PaymentDlqApi, PageResponseDtoWebhookDelivery } from '../../../api/generated/schemas/payment/admin_dlq_controller';
 import { Admin_dlq_controllerApi as WalletDlqApi, PageResponseDtoOutboxEventEntity as WalletOutboxPage } from '../../../api/generated/schemas/wallet/admin_dlq_controller';
 import { Admin_ledger_rejection_controllerApi as RejectionApi, PageResponseDtoLedgerRejectionDto } from '../../../api/generated/schemas/ledger/admin_ledger_rejection_controller';
+import { formatDateTime } from '@/shared/time';
 
 export default function OperationsPage() {
   // Rejections first: a rejected ledger movement is money that was never booked, and since the
@@ -152,7 +153,7 @@ export default function OperationsPage() {
                   />
                 </div>
                 <p className="text-sm">Summary: {run.summary}</p>
-                <p className="text-sm text-slate-500 mt-2">Started: {new Date(run.startedAt ?? '').toLocaleString()}</p>
+                <p className="text-sm text-slate-500 mt-2">Started: {formatDateTime(run.startedAt)}</p>
               </Surface>
             ))
           )}

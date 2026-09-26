@@ -49,9 +49,14 @@ export const endpoints = makeApi([
     requestFormat: "json",
     parameters: [
       {
-        name: "date",
+        name: "from",
         type: "Query",
-        schema: z.string(),
+        schema: z.string().datetime({ offset: true }),
+      },
+      {
+        name: "to",
+        type: "Query",
+        schema: z.string().datetime({ offset: true }),
       },
     ],
     response: z.object({ orderTotals: z.number() }).partial().passthrough(),
@@ -63,9 +68,14 @@ export const endpoints = makeApi([
     requestFormat: "json",
     parameters: [
       {
-        name: "date",
+        name: "from",
         type: "Query",
-        schema: z.string(),
+        schema: z.string().datetime({ offset: true }),
+      },
+      {
+        name: "to",
+        type: "Query",
+        schema: z.string().datetime({ offset: true }),
       },
     ],
     response: DailyPayableDto,

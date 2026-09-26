@@ -2,6 +2,7 @@ import { identityApi } from "@/lib/zodiosClients";
 import { Button, Modal, Spinner } from '@shared/ui';
 import { AlertTriangle, Monitor, Smartphone, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { formatDateTime } from '@/shared/time';
 
 export interface Session {
   sessionId: string;
@@ -105,7 +106,7 @@ export default function SessionManagementModal({ isOpen, onClose, sessions, phon
                     {session.os} &bull; {session.browser}
                   </p>
                   <p className={`text-xs mt-0.5 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-                    Last active: {new Date(session.lastActive).toLocaleString()}
+                    Last active: {formatDateTime(session.lastActive)}
                   </p>
                 </div>
               </div>

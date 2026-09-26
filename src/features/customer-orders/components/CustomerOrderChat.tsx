@@ -2,6 +2,7 @@ import React from 'react';
 import type { Order } from '@/types';
 import { ChatWidget, type ChatWidgetHandle } from '@features/communication/components/ChatWidget';
 import { isActiveOrder } from '@features/customer-orders/model/orderStatus';
+import { parseInstant } from '@/shared/time';
 
 /**
  * The conversation about the order the customer is tracking — and the rule for when it stops
@@ -29,7 +30,7 @@ export function CustomerOrderChat({ currentTrackingOrder, chatWidgetRef }: Custo
     const isCompleted = !isActiveOrder(currentTrackingOrder);
     let showChat = !isCompleted;
     if (isCompleted && currentTrackingOrder.updatedAt) {
-      const updatedTime = new Date(currentTrackingOrder.updatedAt).getTime();
+      const updatedTime = parseInstant(currentTrackingOrder.updatedAt);
       // eslint-disable-next-line react-hooks/purity
       showChat = (Date.now() - updatedTime) < (2 * 60 * 60 * 1000);
     }

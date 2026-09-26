@@ -10,6 +10,7 @@ import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 
 import { AdminUserDetailPanel } from '@features/admin-ops/components/AdminUserDetailPanel';
+import { userLookup } from '@features/admin-ops/model/userLookup';
 import { UserDTO } from '@/api/generated/schemas/identity/admin_user_controller';
 import { OrderResponse } from '@/api/generated/schemas/customer/common';
 
@@ -61,8 +62,16 @@ export default function AdminUserManagement() {
   useEffect(() => {
     if (!debouncedSearchQuery) return;
     const fetchUsers = async () => {
+      // "User ID / Phone": a phone number used to go to /users/:id, which takes only a UUID.
+      const lookup = userLookup(debouncedSearchQuery);
+      if (!lookup) {
+        setUsers([]);
+        return;
+      }
       try {
-        const res = await identityApi.adminUser.get('/api/v1/internal/admin/users/:id', { params: { id: debouncedSearchQuery }, headers: { 'X-Calling-Service': RoleName.ADMIN } });
+        const res = lookup.kind === 'id'
+          ? await identityApi.adminUser.get('/api/v1/internal/admin/users/:id', { params: { id: lookup.id }, headers: { 'X-Calling-Service': RoleName.ADMIN } })
+          : await identityApi.adminUser.get('/api/v1/internal/admin/users/by-phone', { queries: { phone: lookup.phone } });
         if (res?.data?.id) {
           if (res.data) setUsers([res.data]);
         } else {

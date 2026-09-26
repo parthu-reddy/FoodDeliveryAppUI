@@ -3,6 +3,7 @@ import { Plus, Power, User, X } from 'lucide-react';
 import { OrderResponse } from '@/api/generated/schemas/customer/common';
 import { UserDTO } from '@/api/generated/schemas/identity/admin_user_controller';
 import { z } from 'zod';
+import { formatDateTime } from '@/shared/time';
 
 type AdminUser = z.infer<typeof UserDTO>;
 type ActiveOrder = z.infer<typeof OrderResponse>;
@@ -124,8 +125,7 @@ export function AdminUserDetailPanel(props: AdminUserDetailPanelProps) {
                                 </div>
                                 <p className="text-sm text-slate-500">{order.restaurantName}</p>
                                 { }
-                                {/* eslint-disable-next-line react-hooks/purity */}
-                                <p className="text-xs text-slate-500 mt-2">Placed: {new Date(order.createdAt || Date.now()).toLocaleString()}</p>
+                                <p className="text-xs text-slate-500 mt-2">Placed: {formatDateTime(order.createdAt)}</p>
                             </Surface>
                         ))}
                     </div>

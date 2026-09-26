@@ -272,9 +272,14 @@ export const endpoints = makeApi([
         schema: z.string().uuid(),
       },
       {
-        name: "date",
+        name: "from",
         type: "Query",
-        schema: z.string().optional(),
+        schema: z.string().datetime({ offset: true }).optional(),
+      },
+      {
+        name: "to",
+        type: "Query",
+        schema: z.string().datetime({ offset: true }).optional(),
       },
       {
         name: "page",

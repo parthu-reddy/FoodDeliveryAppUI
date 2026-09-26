@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { formatINR } from '@shared/money';
 import { RestaurantOrderEarnings } from '@/api/generated/schemas/customer/common';
 import { z } from 'zod';
+import { formatTime } from '@/shared/time';
 type RestaurantOrderEarningsType = z.infer<typeof RestaurantOrderEarnings>;
 
 interface RestaurantOrderDetailsModalProps {
@@ -65,7 +66,7 @@ export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalPr
                   Order #{order.id.substring(0, 8)}
                 </h2>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  Placed at {new Date(order.createdAt as string).toLocaleTimeString()}
+                  Placed at {formatTime(order.createdAt)}
                 </p>
               </div>
               <button

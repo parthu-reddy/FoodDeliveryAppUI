@@ -164,6 +164,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/internal/admin/users/by-phone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getUserByPhone"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/internal/admin/users/all": {
         parameters: {
             query?: never;
@@ -613,6 +629,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiResponsePageResponseDtoUserDTO"];
+                };
+            };
+        };
+    };
+    getUserByPhone: {
+        parameters: {
+            query: {
+                phone: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseUserDTO"];
                 };
             };
         };

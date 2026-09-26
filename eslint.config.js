@@ -4,6 +4,7 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 import unusedImports from "eslint-plugin-unused-imports";
+import timeDiscipline from "./eslint-rules/time-discipline.js";
 
 export default tseslint.config(
   { ignores: ["dist", "src/api/generated/**", "src/types/backend-enums.ts",
@@ -109,5 +110,14 @@ export default tseslint.config(
     rules: {
       "no-restricted-syntax": "off"
     }
+  },
+  {
+    // Every date parsed or formatted anywhere in src goes through src/shared/time: the one module that
+    // names a zone for every conversion. Tests may build fixtures directly; the module itself is exempt.
+    // RandomDocuments/TimezoneCorrectness_2026-09-25.
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/shared/time/**", "src/**/*.test.{ts,tsx}", "src/**/__tests__/**", "src/tests/**", "src/mocks/**", "src/api/generated/**"],
+    plugins: { time: timeDiscipline },
+    rules: { "time/no-ambient-date": "error" }
   }
 );

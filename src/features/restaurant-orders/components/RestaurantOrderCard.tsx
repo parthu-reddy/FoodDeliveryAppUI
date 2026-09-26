@@ -11,6 +11,7 @@ import { getFriendlyDeliveryStatusMessage } from '@features/customer-orders/mode
 import { orderStatusView } from '@features/customer-orders/model/orderStatus';
 import { acceptDeadline } from '../model/acceptDeadline';
 import { AcceptClock } from './AcceptClock';
+import { formatTime } from '@/shared/time';
 
 // Utility
 
@@ -74,7 +75,7 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
  const [refundReason, setRefundReason] = useState('');
 
  const submitCancel = () => {
- handleCardCancelSubmit(order.id, cancelReason);
+ handleCardCancelSubmit(order.id, cancelReason.trim());
  setActiveModal('none');
  setCancelReason('');
  };
@@ -111,8 +112,8 @@ export const RestaurantOrderCard: React.FC<RestaurantOrderCardProps> = ({
  <div className="min-w-0">
  <span className={`block font-mono font-bold text-ink ${ticket ? 'text-2xl' : 'text-sm'}`}>#{order.id.substring(0, 8).toUpperCase()}</span>
  <span className="text-[11px] font-medium text-ink-2">
- {order.createdAt ? new Date(order.createdAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : ''}
- {order.estimatedCompletionTime ? ` · ready by ${new Date(order.estimatedCompletionTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : ''}
+ {formatTime(order.createdAt)}
+ {order.estimatedCompletionTime ? ` · ready by ${formatTime(order.estimatedCompletionTime)}` : ''}
  </span>
  </div>
  <StatusPill label={view.label} tone={view.tone} live={view.live} />

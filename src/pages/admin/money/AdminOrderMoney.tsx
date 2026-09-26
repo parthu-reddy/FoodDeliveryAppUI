@@ -8,6 +8,7 @@ import { formatINR } from '@shared/money';
 
 import { schemas } from "@/api/generated/schemas/customer/admin_money_controller";
 import { z } from "zod";
+import { formatDateTime } from '@/shared/time';
 
 type AdminOrderMoney = z.infer<typeof schemas.AdminOrderMoney>;
 
@@ -171,7 +172,7 @@ export default function AdminOrderMoney({ orderId }: { orderId: string }) {
                                    {line.direction === 'CREDIT' ? '+' : '-'}{formatINR(line.amount ?? 0)}
                                </td>
                                <td className="p-3 text-xs text-slate-500">
-                                   {new Date(line.createdAt || '').toLocaleString()}
+                                   {formatDateTime(line.createdAt)}
                                </td>
                            </tr>
                        ))}

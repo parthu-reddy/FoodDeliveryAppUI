@@ -1,4 +1,5 @@
 import type { ReviewEntityType } from './types';
+import { formatDate } from '@/shared/time';
 
 /**
  * What a review is about, in words. `MyReviewsList` held the only copy; `RateOrderModal`
@@ -53,8 +54,5 @@ export function authorLabel(authorDisplayName: string | null | undefined): strin
 
 /** "14 Sept" — the date a review was written, or a window closes. */
 export function shortDate(iso: string | null | undefined): string {
-  if (!iso) return '';
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+  return formatDate(iso);
 }

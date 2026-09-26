@@ -8,6 +8,7 @@ import { formatINR } from '@shared/money';
 import { ChargeCategory } from '@/types/backend-enums';
 import { LedgerTransactionDto } from '@/api/generated/schemas/ledger/common';
 import { z } from 'zod';
+import { formatDate, formatTimeWithSeconds } from '@/shared/time';
 
 type AdminLedgerTransaction = z.infer<typeof LedgerTransactionDto>;
 
@@ -190,10 +191,10 @@ export default function AdminLedgerView() {
                     <td className="p-4 align-middle">
                       <div className="flex flex-col">
                         <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                          {new Date(tx.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                          {formatDate(tx.date)}
                         </span>
                         <span className="text-xs text-slate-400">
-                          {new Date(tx.date).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                          {formatTimeWithSeconds(tx.date)}
                         </span>
                       </div>
                     </td>

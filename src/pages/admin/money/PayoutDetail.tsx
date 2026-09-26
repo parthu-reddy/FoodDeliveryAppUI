@@ -12,6 +12,7 @@ import { schemas } from "@/api/generated/schemas/ledger/payout_controller";
 import { z } from "zod";
 import { getUserProfile } from "@/lib/tokenStore";
 import { ConfirmMoneyAction } from "@/shared/money/components/ConfirmMoneyAction";
+import { formatDateTime } from '@/shared/time';
 
 type PayoutDetail = z.infer<typeof schemas.PayoutDetailResponse>;
 
@@ -189,19 +190,19 @@ export default function PayoutDetail({ payoutId, onBack }: { payoutId: string; o
                      {payout.createdAt && (
                          <div>
                              <p className="text-xs text-slate-500 mb-1">Created At</p>
-                             <div className="font-medium text-sm">{new Date(payout.createdAt).toLocaleString()}</div>
+                             <div className="font-medium text-sm">{formatDateTime(payout.createdAt)}</div>
                          </div>
                      )}
                      {payout.approvedAt && (
                          <div>
                              <p className="text-xs text-slate-500 mb-1">Approved At</p>
-                             <div className="font-medium text-sm">{new Date(payout.approvedAt).toLocaleString()}</div>
+                             <div className="font-medium text-sm">{formatDateTime(payout.approvedAt)}</div>
                          </div>
                      )}
                      {payout.paidAt && (
                          <div>
                              <p className="text-xs text-slate-500 mb-1">Paid At</p>
-                             <div className="font-medium text-sm text-amber-600">{new Date(payout.paidAt).toLocaleString()}</div>
+                             <div className="font-medium text-sm text-amber-600">{formatDateTime(payout.paidAt)}</div>
                          </div>
                      )}
                  </div>

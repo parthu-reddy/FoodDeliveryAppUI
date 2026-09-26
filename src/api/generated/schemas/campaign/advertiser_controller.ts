@@ -10,6 +10,7 @@ export const AdvertiserResponse = z
     companyName: z.string(),
     externalRef: z.string().optional(),
     walletBalanceId: z.string().uuid().optional(),
+    timeZone: z.string(),
     createdAt: z.string().datetime({ offset: true }),
     updatedAt: z.string().datetime({ offset: true }),
   })
@@ -24,7 +25,11 @@ export const ApiResponseAdvertiserResponse = z
   })
   .passthrough();
 export const AdvertiserRegistrationRequest = z
-  .object({ companyName: z.string(), externalRef: z.string().optional() })
+  .object({
+    companyName: z.string(),
+    externalRef: z.string().optional(),
+    timeZone: z.string(),
+  })
   .passthrough();
 
 export const schemas = {

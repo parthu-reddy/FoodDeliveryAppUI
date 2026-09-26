@@ -1,15 +1,14 @@
+import { formatInstant } from '@/shared/time';
+
 /**
- * "24 Sept 2026, 2:05 pm" -- when an order was placed, in the viewer's locale. Empty for a
+ * "24 Sept 2026, 2:05 pm" -- when an order was placed, in the viewer's zone and locale. Empty for a
  * missing or unreadable timestamp, so a row shows nothing rather than "Invalid Date".
  *
- * `createdAt` is the backend's LocalDateTime: an ISO string with no zone, which the browser reads
- * as local time. That is how every other order timestamp in this app is read as well.
+ * `createdAt` is an Instant: ISO-8601 in UTC with its `Z`. (This comment used to say it was
+ * zone-less and read as local time; it was never zone-less. See TimezoneCorrectness_2026-09-25.)
  */
 export function placedAt(iso: string | null | undefined): string {
-  if (!iso) return '';
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleString(undefined, {
+  return formatInstant(iso, {
     day: 'numeric',
     month: 'short',
     year: 'numeric',

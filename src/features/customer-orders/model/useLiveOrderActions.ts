@@ -80,7 +80,12 @@ export function useLiveOrderActions({ order, onAddApiLog, onUpdateOrder, setInte
         { approved },
         { params: { orderId: order.id } },
       );
-      setStatus(approved ? OrderStatus.ACCEPTED : OrderStatus.CANCELLED);
+      // What the server settles on. Agreeing to wait: the restaurant re-accepts at once
+      // (PendingDelayState.handleDelayApproved). Declining: ORDER_DELAY_REJECTED settles the
+      // order as CANCELLED_BY_RESTAURANT (AwaitingDelayApprovalState.handleDelayRejected) -- the
+      // kitchen could not make the time. This set CANCELLED, so the screen disagreed with the
+      // server until the next refresh.
+      setStatus(approved ? OrderStatus.ACCEPTED : OrderStatus.CANCELLED_BY_RESTAURANT);
     } catch (e: unknown) {
       console.error('Failed to answer delay request', e);
       showError(messageOf(e, 'Could not send your answer to the restaurant. Try again.'));

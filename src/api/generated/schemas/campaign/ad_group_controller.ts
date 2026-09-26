@@ -55,14 +55,14 @@ export const PageAdGroupResponse = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
     numberOfElements: z.number().int(),
-    size: z.number().int(),
-    content: z.array(AdGroupResponse),
-    number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
+    number: z.number().int(),
+    size: z.number().int(),
+    content: z.array(AdGroupResponse),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();

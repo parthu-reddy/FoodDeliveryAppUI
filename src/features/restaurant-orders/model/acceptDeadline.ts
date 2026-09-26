@@ -1,4 +1,5 @@
 import type { Order } from '@/types';
+import { tryParseInstant } from '@/shared/time';
 
 /**
  * When an unaccepted order is auto-cancelled.
@@ -13,7 +14,7 @@ import type { Order } from '@/types';
 export const ACCEPT_WINDOW_MS = 10 * 60_000;
 
 export function acceptDeadline(order: Pick<Order, 'createdAt' | 'updatedAt'>): number | null {
-  const ms = (iso?: string) => (iso ? new Date(iso).getTime() : NaN);
+  const ms = (iso?: string) => tryParseInstant(iso) ?? NaN;
   const from = ms(order.createdAt) || ms(order.updatedAt);
   return Number.isFinite(from) && from > 0 ? from + ACCEPT_WINDOW_MS : null;
 }

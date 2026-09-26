@@ -53,7 +53,6 @@ describe('prepaid delivery completion', () => {
       </CallProvider></ToastProvider>
     );
 
-    expect(screen.queryByLabelText(/cash collected/i)).not.toBeInTheDocument();
     expect(confirmSlider()).not.toHaveAttribute('aria-disabled');
     expect(confirmSlider()).toHaveAttribute('tabindex', '0');
   });

@@ -110,35 +110,6 @@ export const endpoints = makeApi([
   },
   {
     method: "get",
-    path: "/api/v1/money/restaurant/:outletId/orders",
-    alias: "fetchOrders",
-    requestFormat: "json",
-    parameters: [
-      {
-        name: "outletId",
-        type: "Path",
-        schema: z.string().uuid(),
-      },
-      {
-        name: "from",
-        type: "Query",
-        schema: z.string().optional(),
-      },
-      {
-        name: "to",
-        type: "Query",
-        schema: z.string().optional(),
-      },
-      {
-        name: "page",
-        type: "Query",
-        schema: z.number().int().optional().default(0),
-      },
-    ],
-    response: z.array(RestaurantOrderEarnings),
-  },
-  {
-    method: "get",
     path: "/api/v1/money/restaurant/:outletId/orders/:orderId",
     alias: "fetchOrderEarnings",
     requestFormat: "json",

@@ -596,22 +596,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/money/restaurant/{outletId}/orders": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["fetchOrders"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/money/restaurant/{outletId}/orders/{orderId}": {
         parameters: {
             query?: never;
@@ -668,22 +652,6 @@ export interface paths {
             cookie?: never;
         };
         get: operations["fetchStatement_1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/money/driver/orders": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["fetchOrders_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1369,6 +1337,27 @@ export interface components {
             /** Format: date-time */
             expectedBy?: string;
         };
+        DeadLetterReplayRequest: {
+            dltTopic: string;
+            /** Format: int32 */
+            partition: number;
+            /** Format: int64 */
+            offset: number;
+        };
+        ApiResponseDeadLetterReplayResult: {
+            success: boolean;
+            message: string;
+            errorCode?: string;
+            data?: components["schemas"]["DeadLetterReplayResult"];
+            /** Format: date-time */
+            timestamp: string;
+        };
+        DeadLetterReplayResult: {
+            topic?: string;
+            key?: string;
+            eventType?: string;
+            eventId?: string;
+        };
         AddressRequest: {
             label: string;
             addressLine1: string;
@@ -1844,29 +1833,29 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
-            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            numberOfElements: number;
             first: boolean;
             last: boolean;
-            sort?: components["schemas"]["SortObject"];
-            /** Format: int32 */
-            size: number;
-            content: components["schemas"]["Order"][];
             /** Format: int32 */
             number: number;
             /** Format: int32 */
-            numberOfElements: number;
+            size: number;
+            content: components["schemas"]["Order"][];
+            pageable?: components["schemas"]["PageableObject"];
+            sort?: components["schemas"]["SortObject"];
             empty: boolean;
         };
         PageableObject: {
+            /** Format: int64 */
+            offset: number;
             paged: boolean;
             /** Format: int32 */
             pageNumber: number;
             /** Format: int32 */
             pageSize: number;
-            sort?: components["schemas"]["SortObject"];
-            /** Format: int64 */
-            offset: number;
             unpaged: boolean;
+            sort?: components["schemas"]["SortObject"];
         };
         SortObject: {
             empty: boolean;
@@ -1885,17 +1874,17 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
-            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            numberOfElements: number;
             first: boolean;
             last: boolean;
-            sort?: components["schemas"]["SortObject"];
-            /** Format: int32 */
-            size: number;
-            content: components["schemas"]["SupportTicket"][];
             /** Format: int32 */
             number: number;
             /** Format: int32 */
-            numberOfElements: number;
+            size: number;
+            content: components["schemas"]["SupportTicket"][];
+            pageable?: components["schemas"]["PageableObject"];
+            sort?: components["schemas"]["SortObject"];
             empty: boolean;
         };
         AdminOrderMoney: {
@@ -2461,18 +2450,14 @@ export interface operations {
     };
     retryDlqEvent: {
         parameters: {
-            query?: {
-                topic?: string;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: Record<string, never>;
-                };
+                "application/json": components["schemas"]["DeadLetterReplayRequest"];
             };
         };
         responses: {
@@ -2482,7 +2467,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseString"];
+                    "application/json": components["schemas"]["ApiResponseDeadLetterReplayResult"];
                 };
             };
         };
@@ -3002,32 +2987,6 @@ export interface operations {
             };
         };
     };
-    fetchOrders: {
-        parameters: {
-            query?: {
-                from?: string;
-                to?: string;
-                page?: number;
-            };
-            header?: never;
-            path: {
-                outletId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RestaurantOrderEarnings"][];
-                };
-            };
-        };
-    };
     fetchOrderEarnings: {
         parameters: {
             query?: never;
@@ -3076,8 +3035,9 @@ export interface operations {
     };
     fetchSummary_1: {
         parameters: {
-            query?: {
-                period?: string;
+            query: {
+                from: string;
+                to: string;
             };
             header?: never;
             path?: never;
@@ -3115,28 +3075,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PageResponseDtoLedgerStatementLineDto"];
-                };
-            };
-        };
-    };
-    fetchOrders_1: {
-        parameters: {
-            query?: {
-                date?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DriverOrderEarnings"][];
                 };
             };
         };
@@ -3361,7 +3299,8 @@ export interface operations {
     fetchOrderHistoryForDriver: {
         parameters: {
             query: {
-                date?: string;
+                from: string;
+                to: string;
                 pageable: components["schemas"]["Pageable"];
             };
             header?: never;
@@ -3454,7 +3393,8 @@ export interface operations {
     getDailyPaidOrderTotal: {
         parameters: {
             query: {
-                date: string;
+                from: string;
+                to: string;
             };
             header?: never;
             path?: never;
@@ -3476,7 +3416,8 @@ export interface operations {
     getDailyPayables: {
         parameters: {
             query: {
-                date: string;
+                from: string;
+                to: string;
             };
             header?: never;
             path?: never;

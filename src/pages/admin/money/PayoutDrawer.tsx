@@ -12,6 +12,7 @@ import { schemas as ledgerStatementSchemas } from "@/api/generated/schemas/ledge
 import { z } from "zod";
 import PayoutCreateDialog from "./PayoutCreateDialog";
 import { StatementTable, StatementRow } from "@/shared/money/components/StatementTable";
+import { formatDateTime } from '@/shared/time';
 
 type PendingPayoutResponse = z.infer<typeof PendingPayoutResponseSchema>;
 type LedgerStatementLine = z.infer<typeof ledgerStatementSchemas.LedgerStatementLineDto>;
@@ -142,7 +143,7 @@ export default function PayoutDrawer({
                        {payouts.map(payout => (
                            <div key={payout.id} className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
                                <div>
-                                   <div className="text-sm font-medium">{new Date(payout.createdAt || '').toLocaleString()}</div>
+                                   <div className="text-sm font-medium">{formatDateTime(payout.createdAt)}</div>
                                    <div className="text-xs text-slate-500 font-mono">{payout.id?.substring(0,8)}...</div>
                                </div>
                                <div className="text-right">

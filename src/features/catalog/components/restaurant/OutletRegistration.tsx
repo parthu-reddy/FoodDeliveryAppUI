@@ -3,7 +3,7 @@ import { useConfig } from '@/contexts/ConfigContext';
 import { useToast } from '@/contexts/ToastContext';
 import { restaurantApi } from '@/lib/zodiosClients';
 import ImageUploadField from "@features/kyc/components/ImageUploadField";
-import { Button, FormField, Input, Spinner } from '@shared/ui';
+import { Button, FormField, Input, Select, Spinner } from '@shared/ui';
 import { AlertCircle, CheckCircle, MapPin, Plus, Store } from 'lucide-react';
 import { MapPanel } from '@features/maps-tracking/components/MapPanel';
 import { maplibre, type MapInstance } from '@features/maps-tracking/model/maplibre';
@@ -13,7 +13,8 @@ import { CoordinateFields } from '@features/maps-tracking/components/CoordinateF
 import { PlaceSearchField } from '@features/maps-tracking/components/PlaceSearchField';
 import { OutletTimingsField } from '@features/catalog/components/restaurant/OutletTimingsField';
 import { DEFAULT_TIMING, outletSchema, type OutletTiming } from '@features/catalog/model/outletTimings';
-import React, { useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
+import { timeZoneOptions, viewerTimeZone } from '@/shared/time';
 
 interface OutletRegistrationProps {
  onRefresh: () => void;
@@ -29,6 +30,11 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
  const [lat, setLat] = useState("12.9716");
  const [lng, setLng] = useState("77.5946");
  const [timings, setTimings] = useState<OutletTiming[]>([{ ...DEFAULT_TIMING }]);
+ // The zone the opening hours are written in. Hours are wall-clock times at the outlet, so the
+ // server decides "open now" in this zone. It defaults to the person registering, who can change it
+ // when they are setting up an outlet somewhere else.
+ const [timeZone, setTimeZone] = useState(() => viewerTimeZone());
+ const zoneOptions = useMemo(() => timeZoneOptions().map((z) => ({ value: z, label: z.replace(/_/g, ' ') })), []);
  const [error, setError] = useState('');
  const [isSaving, setIsSaving] = useState(false);
 
@@ -128,7 +134,7 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
  closingTime: t.closingTime + ":00"
  })),
  bannerUrl: banner,
- createdAt: new Date().toISOString()
+ timeZone
  };
 
  try {
@@ -243,6 +249,10 @@ export default function OutletRegistration({ onRefresh, brandId }: OutletRegistr
         }}
       />
  </div>
+
+ <FormField label="Time zone of these hours">
+ <Select aria-label="Outlet time zone" value={timeZone} onChange={setTimeZone} options={zoneOptions} />
+ </FormField>
 
  <OutletTimingsField timings={timings} setTimings={setTimings} />
 

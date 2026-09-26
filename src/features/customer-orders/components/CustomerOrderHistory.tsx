@@ -9,6 +9,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { formatINR } from '@shared/money';
 import PostDeliverySupportModal from './PostDeliverySupportModal';
 import { Star } from 'lucide-react';
+import { formatDateTime } from '@/shared/time';
 
 interface CustomerOrderHistoryProps {
   onClose: () => void;
@@ -120,7 +121,7 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
                   <div>
                     <h4 className="font-bold text-slate-800 dark:text-white">{order.restaurantName}</h4>
                     <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono mt-0.5 block">
-                      {new Date(order.createdAt || '').toLocaleString()}
+                      {formatDateTime(order.createdAt)}
                     </span>
                   </div>
                   <div className="text-right">

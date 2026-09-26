@@ -14,7 +14,6 @@ const moneyFields = [
   'total',
   'totalAmount',
   'unsettledAmount',
-  'cashCollectedAmount',
   'refundedAmount',
   'itemTotal',
   'platformBonus',

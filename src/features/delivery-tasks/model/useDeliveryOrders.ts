@@ -8,6 +8,7 @@ import { sumRupees } from '@shared/money';
 import { isActiveOrder } from '@features/customer-orders/model/orderStatus';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { useEffect, useRef, useState } from 'react';
+import { dayWindow, isOnDate, msUntil, todayIn } from '@/shared/time';
 
 export interface UseDeliveryOrdersProps {
   deliveryExecutiveId: string;
@@ -47,7 +48,8 @@ export function useDeliveryOrders({
   // rider's coordinates to decide who is near a kitchen, so "online" without one is not a
   // state the rider should be left to discover from an empty trip list.
   const [hasLocationFix, setHasLocationFix] = useState(false);
-  const todayDateString = new Date().toISOString().split('T')[0];
+  // The rider's own calendar date. It was the UTC date, so for an Indian rider "today" didn't begin until 05:30.
+  const todayDateString = todayIn();
   const [historyDateFilter, setHistoryDateFilter] = useState(todayDateString);
   const [historyPage, setHistoryPage] = useState(1);
   
@@ -100,7 +102,7 @@ export function useDeliveryOrders({
       );
 
       if ((lastActiveCountRef.current > 0 && fetchedActiveJobs.length === 0) || hasStaleActiveJobInHistory) {
-         const histRes = await deliveryApi.deliveryOrder.get('/api/v1/delivery/orders/history', { queries: { date: todayDateString } });
+         const histRes = await deliveryApi.deliveryOrder.get('/api/v1/delivery/orders/history', { queries: dayWindow(todayDateString) });
          if (histRes) {
             const histData = getArrayFromRes(histRes);
             historyRef.current = histData.map((o: unknown) => ({ ...(o as Order), status: ((o as Order).status as string)?.toUpperCase() as OrderStatus || '' as OrderStatus }));
@@ -167,7 +169,9 @@ export function useDeliveryOrders({
     const dateToFetch = showHistory ? historyDateFilter : todayDateString;
     if (!dateToFetch) return;
 
-    deliveryApi.deliveryOrder.get('/api/v1/delivery/orders/history', { queries: { date: dateToFetch } }).then(res => {
+    // The server gets the rider's day as instants, not a date to interpret in its own zone.
+    const { from, to } = dayWindow(dateToFetch);
+    deliveryApi.deliveryOrder.get('/api/v1/delivery/orders/history', { queries: { from, to } }).then(res => {
       if (res) {
         const getArrayFromRes = (res: unknown) => Array.isArray(res) ? res : (res as {content?: unknown[]}).content || (res as {data?:{data?:unknown[]}}).data?.data || (res as {data?:unknown[]}).data || [];
         const histData = getArrayFromRes(res);
@@ -201,7 +205,7 @@ export function useDeliveryOrders({
         const job = withExpiry[0];
         const remainingSecs = job.remainingPingSeconds !== undefined
           ? job.remainingPingSeconds
-          : Math.max(0, Math.floor((new Date(job.expiresAt!).getTime() - Date.now()) / 1000));
+          : Math.max(0, Math.floor(msUntil(job.expiresAt!) / 1000));
         if (remainingSecs > 0) {
           // eslint-disable-next-line react-hooks/set-state-in-effect
           setPingJob(job);
@@ -488,7 +492,7 @@ export function useDeliveryOrders({
   [...historyRef.current, ...activeOrders.filter(o => o.deliveryExecutiveId === deliveryExecutiveId && [DeliveryStatus.DELIVERED, DeliveryStatus.FAILED, DeliveryStatus.CANCELLED].includes(o.deliveryStatus as DeliveryStatus))]
     .forEach(job => allHistoryJobsMap.set(job.id, { ...job }));
   const allHistoryJobs = Array.from(allHistoryJobsMap.values());
-  const todayHistoryJobs = allHistoryJobs.filter(job => job.createdAt?.startsWith(todayDateString));
+  const todayHistoryJobs = allHistoryJobs.filter(job => isOnDate(job.createdAt, todayDateString));
   const todayEarnings = sumRupees(...todayHistoryJobs.map(job => {
     if (job.earnings?.netPayout == null) {
       throw new Error(`Missing earnings.netPayout for job ${job.id}`);
@@ -499,8 +503,7 @@ export function useDeliveryOrders({
   
   const filteredHistoryJobs = allHistoryJobs.filter(job => {
     if (!historyDateFilter) return true;
-    if (!job.createdAt) return false;
-    return job.createdAt.startsWith(historyDateFilter);
+    return isOnDate(job.createdAt, historyDateFilter);
   });
   const historyPageSize = 100;
   const paginatedHistoryJobs = filteredHistoryJobs.slice((historyPage - 1) * historyPageSize, historyPage * historyPageSize);

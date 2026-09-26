@@ -20,8 +20,9 @@ export const CampaignResponse = z
     dailyBudget: z.number(),
     lifetimeBudget: z.number(),
     maxBid: z.number(),
-    startDate: z.string().datetime({ offset: true }),
-    endDate: z.string().datetime({ offset: true }).optional(),
+    startDate: z.string(),
+    endDate: z.string().optional(),
+    timeZone: z.string(),
     frequencyCap: z.number().int(),
     version: z.number().int(),
   })
@@ -42,8 +43,8 @@ export const CampaignRequest = z
     dailyBudget: z.number(),
     lifetimeBudget: z.number().optional(),
     maxBid: z.number(),
-    startDate: z.string().datetime({ offset: true }),
-    endDate: z.string().datetime({ offset: true }).optional(),
+    startDate: z.string(),
+    endDate: z.string().optional(),
     frequencyCap: z.number().int().optional(),
   })
   .passthrough();
@@ -106,6 +107,7 @@ export const CampaignPacingDTO = z
     dailyBudget: z.number().optional(),
     lifetimeBudget: z.number().optional(),
     advertiserId: z.string().uuid(),
+    timeZone: z.string(),
   })
   .passthrough();
 export const AdvertiserResponse = z
@@ -115,6 +117,7 @@ export const AdvertiserResponse = z
     companyName: z.string(),
     externalRef: z.string().optional(),
     walletBalanceId: z.string().uuid().optional(),
+    timeZone: z.string(),
     createdAt: z.string().datetime({ offset: true }),
     updatedAt: z.string().datetime({ offset: true }),
   })
@@ -129,7 +132,11 @@ export const ApiResponseAdvertiserResponse = z
   })
   .passthrough();
 export const AdvertiserRegistrationRequest = z
-  .object({ companyName: z.string(), externalRef: z.string().optional() })
+  .object({
+    companyName: z.string(),
+    externalRef: z.string().optional(),
+    timeZone: z.string(),
+  })
   .passthrough();
 export const SortObject = z
   .object({ empty: z.boolean(), sorted: z.boolean(), unsorted: z.boolean() })
@@ -144,26 +151,26 @@ export const pageable = z
   .passthrough();
 export const PageableObject = z
   .object({
+    offset: z.number().int(),
     sort: SortObject.optional(),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
     unpaged: z.boolean(),
-    offset: z.number().int(),
   })
   .passthrough();
 export const PageCampaignResponse = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
     numberOfElements: z.number().int(),
-    size: z.number().int(),
-    content: z.array(CampaignResponse),
-    number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
+    number: z.number().int(),
+    size: z.number().int(),
+    content: z.array(CampaignResponse),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -180,14 +187,14 @@ export const PageAdGroupResponse = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
     numberOfElements: z.number().int(),
-    size: z.number().int(),
-    content: z.array(AdGroupResponse),
-    number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
+    number: z.number().int(),
+    size: z.number().int(),
+    content: z.array(AdGroupResponse),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -277,14 +284,14 @@ export const PageCampaignPerformanceResponse = z
   .object({
     totalPages: z.number().int(),
     totalElements: z.number().int(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
     numberOfElements: z.number().int(),
-    size: z.number().int(),
-    content: z.array(CampaignPerformanceResponse),
-    number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
+    number: z.number().int(),
+    size: z.number().int(),
+    content: z.array(CampaignPerformanceResponse),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();

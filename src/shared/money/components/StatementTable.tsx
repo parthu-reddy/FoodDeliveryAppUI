@@ -1,7 +1,7 @@
 import React from 'react';
-import { format } from 'date-fns';
 import { DataTable, type Column } from '@shared/ui';
 import { Money } from './Money';
+import { formatDateTime } from '@/shared/time';
 
 export interface StatementRow {
   id: string;
@@ -18,7 +18,7 @@ const COLUMNS: Column<StatementRow>[] = [
   {
     key: 'date',
     header: 'Date',
-    cell: (row) => format(new Date(row.date), 'MMM d, yyyy h:mm a'),
+    cell: (row) => formatDateTime(row.date),
     cellClassName: 'whitespace-nowrap',
   },
   {

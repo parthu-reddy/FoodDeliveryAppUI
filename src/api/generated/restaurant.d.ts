@@ -68,22 +68,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/campaigns/{campaignId}/pause": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put: operations["pauseCampaign"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/brands/{brandId}/master-menu/{itemId}": {
         parameters: {
             query?: never;
@@ -334,22 +318,6 @@ export interface paths {
         get: operations["getCategories"];
         put?: never;
         post: operations["createCategory"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/campaigns": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["createCampaign"];
         delete?: never;
         options?: never;
         head?: never;
@@ -772,22 +740,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/campaigns/restaurant/{restaurantId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getCampaigns"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/brands/{brandId}/categories/{categoryId}/timings": {
         parameters: {
             query?: never;
@@ -878,28 +830,6 @@ export interface components {
             data?: components["schemas"]["CategoryDTO"];
             /** Format: date-time */
             timestamp: string;
-        };
-        ApiResponseCampaignDto: {
-            success: boolean;
-            message: string;
-            errorCode?: string;
-            data?: components["schemas"]["CampaignDto"];
-            /** Format: date-time */
-            timestamp: string;
-        };
-        CampaignDto: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: uuid */
-            advertiserId?: string;
-            name?: string;
-            /** Format: double */
-            budget?: number;
-            status?: string;
-            /** Format: date-time */
-            startDate?: string;
-            /** Format: date-time */
-            endDate?: string;
         };
         MasterMenuItem: {
             /** Format: uuid */
@@ -1047,14 +977,6 @@ export interface components {
             /** Format: date-time */
             timestamp: string;
         };
-        CampaignRequestDto: {
-            /** Format: uuid */
-            restaurantId?: string;
-            name?: string;
-            /** Format: double */
-            budget?: number;
-            status?: string;
-        };
         BrandOnboardRequest: {
             name: string;
             gstin: string;
@@ -1107,6 +1029,7 @@ export interface components {
             /** Format: double */
             lng: number;
             timings: components["schemas"]["TimingRequest"][];
+            timeZone: string;
             bannerUrl?: string;
             cuisine?: string;
             /** Format: double */
@@ -1151,6 +1074,7 @@ export interface components {
             deliveryFee?: number;
             tags?: string;
             timings?: components["schemas"]["OutletTimingDto"][];
+            timeZone?: string;
         };
         OutletTimingDto: {
             /** Format: uuid */
@@ -1391,14 +1315,6 @@ export interface components {
             /** Format: date-time */
             timestamp: string;
         };
-        ApiResponseListCampaignDto: {
-            success: boolean;
-            message: string;
-            errorCode?: string;
-            data?: components["schemas"]["CampaignDto"][];
-            /** Format: date-time */
-            timestamp: string;
-        };
         ApiResponseListBrand: {
             success: boolean;
             message: string;
@@ -1528,30 +1444,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiResponseCategoryDTO"];
-                };
-            };
-        };
-    };
-    pauseCampaign: {
-        parameters: {
-            query: {
-                restaurantId: string;
-            };
-            header?: never;
-            path: {
-                campaignId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseCampaignDto"];
                 };
             };
         };
@@ -1980,30 +1872,6 @@ export interface operations {
             };
         };
     };
-    createCampaign: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CampaignRequestDto"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseCampaignDto"];
-                };
-            };
-        };
-    };
     getBrands: {
         parameters: {
             query?: never;
@@ -2267,7 +2135,8 @@ export interface operations {
     getHistoricalRestaurantOrders: {
         parameters: {
             query?: {
-                date?: string;
+                from?: string;
+                to?: string;
                 page?: number;
                 size?: number;
             };
@@ -2695,28 +2564,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiResponsePageResponseDtoNearbyRestaurantDTO"];
-                };
-            };
-        };
-    };
-    getCampaigns: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                restaurantId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseListCampaignDto"];
                 };
             };
         };

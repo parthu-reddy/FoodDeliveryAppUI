@@ -5,6 +5,7 @@ import { formatINR } from '@shared/money';
 import { Button, StatusPill, Surface } from '@shared/ui';
 import { orderStatusView } from '../model/orderStatus';
 import { OrderItemList } from './OrderItemList';
+import { formatInstant } from '@/shared/time';
 
 /**
  * One order, rendered the same way for every role.
@@ -88,9 +89,7 @@ export function OrderCard({
           >
             <Clock className="w-3 h-3" aria-hidden="true" />
             {/* The kitchen's ready time, not an arrival time -- see OrderTrackerLive. */}
-            Ready {new Date(order.estimatedCompletionTime).toLocaleTimeString([], {
-              hour: '2-digit', minute: '2-digit',
-            })}
+            Ready {formatInstant(order.estimatedCompletionTime, { hour: '2-digit', minute: '2-digit' })}
           </span>
         )}
       </div>

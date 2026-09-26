@@ -8,6 +8,7 @@ import { SupportTicket } from "@/api/generated/schemas/customer/common";
 import { usePolling } from "@/hooks/usePolling";
 import { refundTicketStatus } from '@features/admin-ops/model/refundStatus';
 import { RefundTicketPanel } from './RefundTicketPanel';
+import { formatDateTime, tryParseInstant } from '@/shared/time';
 
 type Ticket = z.infer<typeof SupportTicket>;
 
@@ -74,8 +75,8 @@ export default function RefundQueue() {
     {
       key: 'createdAt',
       header: 'Created',
-      cell: (t) => new Date(t.createdAt || '').toLocaleString(),
-      sortValue: (t) => new Date(t.createdAt || 0).getTime(),
+      cell: (t) => formatDateTime(t.createdAt),
+      sortValue: (t) => tryParseInstant(t.createdAt) ?? 0,
     },
   ];
 

@@ -62,9 +62,9 @@ describe('ConfirmMoneyAction', () => {
 
   it('shows the effect of the action and blocks a second click while pending', () => {
     const onConfirm = vi.fn().mockResolvedValue(undefined);
-    render(<ConfirmMoneyAction amount={500} effectSummary="Record a cash remittance" buttonLabel="Record" onConfirm={onConfirm} isPending />);
+    render(<ConfirmMoneyAction amount={500} effectSummary="Record a payout" buttonLabel="Record" onConfirm={onConfirm} isPending />);
 
-    expect(screen.getByText('Record a cash remittance')).toBeInTheDocument();
+    expect(screen.getByText('Record a payout')).toBeInTheDocument();
     const button = screen.getByRole('button', { name: 'Processing...' });
     expect(button).toBeDisabled();
     fireEvent.click(button);

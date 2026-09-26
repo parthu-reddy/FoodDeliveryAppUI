@@ -6,6 +6,7 @@ import { formatINR } from '@shared/money';
 import { Surface } from '@shared/ui';
 import { terminalHeadline } from '@features/customer-orders/model/orderStatus';
 import type { useOrderRefunds } from '@features/customer-orders/model/useOrderRefunds';
+import { formatDate, formatDateTime } from '@/shared/time';
 
 /**
  * An order that has finished — delivered, cancelled or failed — with its bill and any refund
@@ -78,7 +79,7 @@ export function OrderTrackerSettled({
                   : refund.destination === 'NONE'
                   ? 'Nothing was charged, so there is nothing to return'
                   : 'Returned to your original payment method'}
-                {refund.expectedBy ? ` — expected by ${new Date(refund.expectedBy).toLocaleDateString()}` : ''}
+                {refund.expectedBy ? ` — expected by ${formatDate(refund.expectedBy)}` : ''}
               </p>
             </div>
           ))}
@@ -96,7 +97,7 @@ export function OrderTrackerSettled({
         {currentTrackingOrder.createdAt && (
           <div className="flex justify-between">
             <span>Date</span>
-            <span className="text-slate-700 dark:text-slate-300 font-mono">{new Date(currentTrackingOrder.createdAt).toLocaleString()}</span>
+            <span className="text-slate-700 dark:text-slate-300 font-mono">{formatDateTime(currentTrackingOrder.createdAt)}</span>
           </div>
         )}
         {currentTrackingOrder.deliveryAddress && (

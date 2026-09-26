@@ -12,12 +12,12 @@ import { ChatWidget, ChatWidgetHandle } from "@features/communication/components
 import { Button, Surface, Textarea, useConfirm } from '@shared/ui';
 import { ShieldCheck, XCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { formatDateTime } from '@/shared/time';
 
 export default function AdminSupportTickets() {
   const { showSuccess, showError } = useToast();
   const confirm = useConfirm();
   const [activeTab, setActiveTab] = useState<'OPEN' | 'IN_REVIEW' | 'RESOLVED' | 'REJECTED'>('OPEN');
-  
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
   const [resolutionNotes, setResolutionNotes] = useState('');
   const [page, setPage] = useState(0);
@@ -175,7 +175,7 @@ export default function AdminSupportTickets() {
                       {ticket.reason || 'No reason provided'}
                     </div>
                     <div className="flex items-center justify-between text-xs text-slate-400">
-                      <span>{new Date(ticket.createdAt).toLocaleString()}</span>
+                      <span>{formatDateTime(ticket.createdAt)}</span>
                       <Button variant="ghost" size="sm" className="h-6 text-rose-500">
                         View Details
                       </Button>

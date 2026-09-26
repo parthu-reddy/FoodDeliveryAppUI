@@ -260,6 +260,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/internal/ledger/accounts/{ownerType}/{ownerId}/totals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getCategoryTotal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/internal/admin/payouts/{payoutId}": {
         parameters: {
             query?: never;
@@ -536,10 +552,10 @@ export interface components {
             sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
+            number: number;
+            /** Format: int32 */
             size: number;
             content: components["schemas"]["LedgerStatementLineDto"][];
-            /** Format: int32 */
-            number: number;
             first: boolean;
             last: boolean;
             /** Format: int32 */
@@ -788,10 +804,10 @@ export interface components {
             sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
+            number: number;
+            /** Format: int32 */
             size: number;
             content: components["schemas"]["ReconciliationRun"][];
-            /** Format: int32 */
-            number: number;
             first: boolean;
             last: boolean;
             /** Format: int32 */
@@ -806,10 +822,10 @@ export interface components {
             sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
+            number: number;
+            /** Format: int32 */
             size: number;
             content: components["schemas"]["ReconciliationBreak"][];
-            /** Format: int32 */
-            number: number;
             first: boolean;
             last: boolean;
             /** Format: int32 */
@@ -1275,6 +1291,34 @@ export interface operations {
             header?: never;
             path: {
                 orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": number;
+                };
+            };
+        };
+    };
+    getCategoryTotal: {
+        parameters: {
+            query: {
+                category: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "CLAWBACK" | "PAYOUT_TRANSFER" | "STORE_CREDIT";
+                direction: "CREDIT" | "DEBIT";
+                from: string;
+                to: string;
+            };
+            header?: never;
+            path: {
+                ownerType: "GATEWAY_RECEIVABLE" | "BANK" | "PLATFORM_CLEARING" | "PLATFORM_REVENUE" | "TAX_PAYABLE" | "PAYOUT_IN_TRANSIT" | "RESTAURANT_PAYABLE" | "DRIVER_PAYABLE" | "CUSTOMER_CREDIT" | "ADVERTISER_PREPAID";
+                ownerId: string;
             };
             cookie?: never;
         };

@@ -1,8 +1,8 @@
 import { Surface } from '@shared/ui';
-import { format } from 'date-fns';
 import { CheckCircle, Eye, MousePointerClick, TrendingUp } from 'lucide-react';
 import { formatINR } from '@shared/money';
 import { DataTable, type Column } from '@shared/ui';
+import { formatLocalDate } from '@/shared/time';
 
 export interface CampaignPerformance {
   id: string;
@@ -16,7 +16,7 @@ export interface CampaignPerformance {
 }
 
 const PERFORMANCE_COLUMNS: Column<CampaignPerformance>[] = [
-  { key: 'date', header: 'Date', cell: (row) => format(new Date(row.date), 'MMM d, yyyy') },
+  { key: 'date', header: 'Date', cell: (row) => formatLocalDate(row.date) },
   { key: 'impressions', header: 'Impressions', align: 'right', cell: (row) => (row.impressions ?? 0).toLocaleString() },
   { key: 'clicks', header: 'Clicks', align: 'right', cell: (row) => (row.clicks ?? 0).toLocaleString(), cellClassName: 'font-medium' },
   { key: 'conversions', header: 'Conversions', align: 'right', cell: (row) => (row.conversions ?? 0).toLocaleString() },

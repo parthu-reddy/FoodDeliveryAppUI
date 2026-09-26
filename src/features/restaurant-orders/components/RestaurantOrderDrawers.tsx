@@ -29,9 +29,12 @@ export function RestaurantOrderDrawers(props: Props) {
 {/* Drawers */}
 {activeModal === 'cancel' && (
 <div className="mt-2 p-3 bg-rose-50 dark:bg-rose-950/20 rounded-xl border border-rose-200 dark:border-rose-900/50 space-y-2 duration-200">
-<FormField label="Reason for cancellation">
+{/* Required (REST-ACCEPT-11): this ends the customer's order, and their cancelled screen
+    shows this reason. It could be sent blank. */}
+<FormField label="Reason for cancellation" required hint="The customer sees this.">
 <Input 
 type="text" 
+required
 placeholder="e.g. Out of stock, Kitchen busy..."
 value={cancelReason}
 onChange={(e) => setCancelReason(e.target.value)}
@@ -41,7 +44,7 @@ onChange={(e) => setCancelReason(e.target.value)}
 <Button variant="secondary" size="sm" className="flex-1" onClick={() => setActiveModal('none')}>
 Back
 </Button>
-<Button variant="danger" size="sm" className="flex-1" onClick={submitCancel}>
+<Button variant="danger" size="sm" className="flex-1" onClick={submitCancel} disabled={!cancelReason?.trim()}>
 Confirm Cancel
 </Button>
 </div>

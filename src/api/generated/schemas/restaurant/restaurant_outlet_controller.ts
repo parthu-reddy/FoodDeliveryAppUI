@@ -17,6 +17,7 @@ export const OutletOnboardRequest = z
     lat: z.number(),
     lng: z.number(),
     timings: z.array(TimingRequest),
+    timeZone: z.string(),
     bannerUrl: z.string().optional(),
     cuisine: z.string().optional(),
     rating: z.number().optional(),
@@ -53,6 +54,7 @@ export const OutletDto = z
     deliveryFee: z.number(),
     tags: z.string(),
     timings: z.array(OutletTimingDto),
+    timeZone: z.string(),
   })
   .partial()
   .passthrough();

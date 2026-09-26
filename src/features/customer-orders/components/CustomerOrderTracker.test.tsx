@@ -71,11 +71,6 @@ describe('CustomerOrderTracker terminal and payment copy', () => {
     expect(screen.getByTestId('cancellation-reason')).toHaveTextContent('Kitchen closed early');
   });
 
-  test('a prepaid order is never told to bring cash', () => {
-    renderTracker(order({ status: OrderStatus.PREPARING, paymentMethod: 'CARD' }), { active: true, failed: false });
-    expect(screen.queryByTestId('cod-notice')).not.toBeInTheDocument();
-  });
-
   test('a refunded order shows where the money went', async () => {
     // A cancelled order used to show nothing about the refund at all -- store credit in particular
     // is invisible unless somebody says that is where it went.

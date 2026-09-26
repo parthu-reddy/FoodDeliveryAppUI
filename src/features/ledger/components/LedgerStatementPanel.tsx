@@ -3,6 +3,7 @@ import React from 'react';
 import { formatINR } from '@shared/money';
 import { Button, DataTable, StatusPill, Surface, type Column } from '@shared/ui';
 import { statementCsv, type LedgerStatementLine } from '../model/statementLine';
+import { formatDateTime } from '@/shared/time';
 
 /**
  * The account statement, for whoever is owed money.
@@ -19,7 +20,7 @@ const columns: Column<LedgerStatementLine>[] = [
   {
     key: 'date',
     header: 'Date',
-    cell: (line) => new Date(String(line.createdAt || '')).toLocaleString(),
+    cell: (line) => formatDateTime(line.createdAt),
     cellClassName: 'whitespace-nowrap',
   },
   {

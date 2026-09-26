@@ -8,6 +8,7 @@ import { orderStatusView, terminalHeadline } from '@features/customer-orders/mod
 import { useLiveOrderActions } from '@features/customer-orders/model/useLiveOrderActions';
 import { OrderStatusTimeline } from './OrderStatusTimeline';
 import { OrderMoneyBreakdown } from './OrderMoneyBreakdown';
+import { formatTime } from '@/shared/time';
 
 /**
  * An order that is still happening — the waiting screen. Built against `Tracking.dc.html`:
@@ -43,7 +44,7 @@ function useMinutesUntil(epochMs?: number) {
 }
 
 function clockTime(epochMs: number) {
-  return new Date(epochMs).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  return formatTime(epochMs);
 }
 
 function headlineFor(order: Order): { title: string; detail: string } {

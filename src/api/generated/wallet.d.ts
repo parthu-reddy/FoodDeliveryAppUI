@@ -274,6 +274,27 @@ export interface components {
             /** Format: date-time */
             timestamp: string;
         };
+        DeadLetterReplayRequest: {
+            dltTopic: string;
+            /** Format: int32 */
+            partition: number;
+            /** Format: int64 */
+            offset: number;
+        };
+        ApiResponseDeadLetterReplayResult: {
+            success: boolean;
+            message: string;
+            errorCode?: string;
+            data?: components["schemas"]["DeadLetterReplayResult"];
+            /** Format: date-time */
+            timestamp: string;
+        };
+        DeadLetterReplayResult: {
+            topic?: string;
+            key?: string;
+            eventType?: string;
+            eventId?: string;
+        };
         ApiResponseString: {
             success: boolean;
             message: string;
@@ -482,20 +503,14 @@ export interface operations {
     };
     retryDlqEvent: {
         parameters: {
-            query?: {
-                topic?: string;
-            };
-            header?: {
-                eventId?: string;
-            };
+            query?: never;
+            header?: never;
             path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: Record<string, never>;
-                };
+                "application/json": components["schemas"]["DeadLetterReplayRequest"];
             };
         };
         responses: {
@@ -505,7 +520,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseString"];
+                    "application/json": components["schemas"]["ApiResponseDeadLetterReplayResult"];
                 };
             };
         };
