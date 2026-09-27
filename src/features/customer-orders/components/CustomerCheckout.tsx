@@ -92,11 +92,16 @@ function CustomerCheckoutInner({
   const balance = useWalletBalance(open);
   const [tip, setTip] = useState(0);
   const charged = totals.total + tip;
+  const walletLoading = balance === null;
   const walletShort = balance !== null && balance < charged;
   const [picked, setPicked] = useState<Method | null>(null);
-  // Wallet is the default only while it can cover the bill; a later balance that cannot
-  // un-selects it rather than leaving a method the server will reject.
-  const method: Method | null = picked === 'WALLET' && walletShort ? null : picked ?? (walletShort ? null : 'WALLET');
+  // Never assume an unread wallet can cover the bill. Before the balance response arrived, Wallet
+  // was selected and Place order briefly enabled; a fast click could submit an underfunded wallet.
+  // UPI/card remain selectable while the balance loads because neither depends on that request.
+  const walletUnavailable = walletLoading || walletShort;
+  const method: Method | null = picked === 'WALLET' && walletUnavailable
+    ? null
+    : picked ?? (walletUnavailable ? null : 'WALLET');
   const hasAddress = !!address && !address.includes('Please add an address');
   const canPlace = status === 'idle' && !!method && !totals.isEstimated && hasAddress && items.length > 0;
 
@@ -187,7 +192,7 @@ function CustomerCheckoutInner({
 
             <Surface radius="lg" elevation={1} className="p-2" role="radiogroup" aria-label="Payment method">
               {METHODS.map(({ id, label, Icon }) => {
-                const disabled = id === 'WALLET' && walletShort;
+                const disabled = id === 'WALLET' && walletUnavailable;
                 const selected = method === id;
                 return (
                   <button

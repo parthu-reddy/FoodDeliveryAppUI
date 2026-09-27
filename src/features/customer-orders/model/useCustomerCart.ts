@@ -186,7 +186,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
     });
   };
 
-  const getCartTotal = (restaurantId: string, legacyPricingFallback?: unknown): { subtotal: number; deliveryFee: number; total: number; sgst: number; cgst: number; platformFee: number; driverPayout: number; restaurantPayout: number; tax: number; restaurantDeliveryShare?: number; minAmountForFreeDelivery?: number; distanceKm?: number; isEstimated?: boolean } => {
+  const getCartTotal = (restaurantId: string): { subtotal: number; deliveryFee: number; total: number; sgst: number; cgst: number; platformFee: number; driverPayout: number; restaurantPayout: number; tax: number; restaurantDeliveryShare?: number; minAmountForFreeDelivery?: number; distanceKm?: number; isEstimated?: boolean } => {
     const quote = quotes[restaurantId];
     if (quote && quote.data) {
       const qData = quote.data;
@@ -211,13 +211,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
       return { subtotal: 0, sgst: 0, cgst: 0, tax: 0, deliveryFee: 0, driverPayout: 0, restaurantPayout: 0, restaurantDeliveryShare: 0, total: 0, platformFee: 0, minAmountForFreeDelivery: undefined, distanceKm: undefined };
     }
     const subtotal = cartState.items.reduce((sum, item) => sum + ((item.item.price || 0) * item.quantity), 0);
-    let deliveryFee = 0;
-    const legacyObj = legacyPricingFallback as { totalCustomerDeliveryFee?: number } | undefined;
-    if (legacyObj && legacyObj.totalCustomerDeliveryFee !== undefined) {
-      deliveryFee = legacyObj.totalCustomerDeliveryFee || 0;
-    } else if (cartState.restaurant) {
-      deliveryFee = Number(cartState.restaurant.deliveryFee || 0);
-    }
+    const deliveryFee = Number(cartState.restaurant?.deliveryFee || 0);
     return {
       subtotal,
       sgst: 0,

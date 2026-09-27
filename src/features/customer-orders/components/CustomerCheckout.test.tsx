@@ -70,6 +70,21 @@ describe('CustomerCheckout', () => {
     expect(onPlaceOrder).toHaveBeenCalledWith('UPI', 0);
   });
 
+  it('does not assume the wallet can pay while its balance is still loading', async () => {
+    let resolveWallet!: (wallet: { balance: number }) => void;
+    walletGet.mockReturnValue(new Promise(resolve => { resolveWallet = resolve; }));
+    const { onPlaceOrder } = renderCheckout();
+
+    expect(screen.getByRole('radio', { name: /wallet/i })).toBeDisabled();
+    expect(placeButton()).toBeDisabled();
+    fireEvent.click(placeButton());
+    expect(onPlaceOrder).not.toHaveBeenCalled();
+
+    resolveWallet({ balance: 1240 });
+    await waitFor(() => expect(screen.getByRole('radio', { name: /wallet/i })).toBeEnabled());
+    expect(placeButton()).toBeEnabled();
+  });
+
   it('starts with no tip -- the customer opts in', async () => {
     walletGet.mockResolvedValue({ balance: 1240 });
     renderCheckout();
