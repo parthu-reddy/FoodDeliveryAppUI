@@ -234,8 +234,8 @@ const handleCustomerUnavailable = async () => {
   }
 };
 
-const handlePickUpFood = async (e: React.FormEvent) => {
-  e.preventDefault();
+const handlePickUpFood = async (e?: React.FormEvent): Promise<void> => {
+  e?.preventDefault();
   setPickupOtpError("");
   const validation = otpSchema.safeParse(enteredPickupOtp);
   if (!validation.success) {
@@ -275,8 +275,8 @@ const handlePickUpFood = async (e: React.FormEvent) => {
   }
 };
 
-const handleCompleteDelivery = async (e: React.FormEvent) => {
-  e.preventDefault();
+const handleCompleteDelivery = async (e?: React.FormEvent): Promise<void> => {
+  e?.preventDefault();
   setOtpError("");
   const validation = otpSchema.safeParse(enteredOtp);
   if (!validation.success) {

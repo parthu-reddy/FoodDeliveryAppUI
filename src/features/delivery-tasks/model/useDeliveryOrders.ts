@@ -10,7 +10,10 @@ import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { useEffect, useRef, useState } from 'react';
 import { requestGoOffline } from './dutyApi';
 import { applyDutyStatus, parseDutyStatusMessage, reactToLocationError } from './dutyStatus';
-import { dayWindow, isOnDate, msUntil, todayIn } from '@/shared/time';
+import { applyConfirmedProgress, recordConfirmedProgress } from './confirmedProgress';
+import { dayWindow, isOnDate, todayIn } from '@/shared/time';
+
+import { isAvailableDispatch, remainingDispatchSeconds } from './dispatchOffers';
 
 export interface UseDeliveryOrdersProps {
   deliveryExecutiveId: string;
@@ -41,7 +44,11 @@ export function useDeliveryOrders({
   const [internalOrders, setInternalOrders] = useState<Order[]>([]);
   const activeOrders = externalOrders ?? internalOrders;
 
+  // The step the rider just confirmed, per order, until a poll shows the server has caught up.
+  const confirmedProgressRef = useRef(new Map<string, DeliveryStatus>());
+
   const onUpdateOrderStatus = externalUpdateStatus ?? ((orderId: string, status: OrderStatus, deliveryStatus?: DeliveryStatus, _riderInfo?: unknown) => {
+    recordConfirmedProgress(confirmedProgressRef.current, orderId, deliveryStatus);
     setInternalOrders(prev => prev.map(o => o.id === orderId ? { ...o, status, ...(deliveryStatus ? { deliveryStatus } : {}) } : o));
   });
 
@@ -120,7 +127,8 @@ export function useDeliveryOrders({
   }, 
   onData: (data) => {
     if (!data) return;
-    const { fetchedActiveJobs, fetchedAvailableJobs } = data;
+    const { fetchedAvailableJobs } = data;
+    const fetchedActiveJobs = applyConfirmedProgress(data.fetchedActiveJobs, confirmedProgressRef.current);
     setInternalOrders(() => {
       const mergedMap = new Map();
       historyRef.current.forEach(j => mergedMap.set(j.id, j));
@@ -194,31 +202,17 @@ export function useDeliveryOrders({
   // Ping Job / Dispatch Logic
   useEffect(() => {
     if (isOnline && !activeJobId && !pingJob) {
-      const jobs = activeOrders.filter(o => !o.deliveryExecutiveId && !rejectedIds.has(o.id));
-      // The server is the authority on how long is left: /orders/available computes
-      // remainingPingSeconds from the ping deadline and now withholds the job entirely once the
-      // window has closed. A job that arrives with no expiry information is therefore not a live
-      // ping, and inventing 60 seconds for it showed the rider a countdown for an order the
-      // backend would refuse — which is what "accept does nothing" looked like.
-      const withExpiry = jobs.filter(
-        j => j.remainingPingSeconds !== undefined || j.expiresAt
-      );
-      if (withExpiry.length > 0) {
-        const job = withExpiry[0];
-        const remainingSecs = job.remainingPingSeconds !== undefined
-          ? job.remainingPingSeconds
-          : Math.max(0, Math.floor(msUntil(job.expiresAt!) / 1000));
-        if (remainingSecs > 0) {
-          // eslint-disable-next-line react-hooks/set-state-in-effect
-          setPingJob(job);
-          setPingTimer(remainingSecs);
-        }
+      const job = activeOrders.find(o => isAvailableDispatch(o, rejectedIds));
+      if (job) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setPingJob(job);
+        setPingTimer(remainingDispatchSeconds(job));
       }
     }
     if (!isOnline || activeJobId) {
       setPingJob(null);
     } else if (pingJob) {
-      const stillActive = activeOrders.find(o => o.id === pingJob.id);
+      const stillActive = activeOrders.find(o => o.id === pingJob.id && isAvailableDispatch(o, rejectedIds));
       if (!stillActive) {
         setPingJob(null);
       }
@@ -493,7 +487,7 @@ export function useDeliveryOrders({
   }, [currentJob?.id, deliveryExecutiveId]);
 
   // Derived Values
-  const availableJobs = activeOrders.filter(o => (o.status === OrderStatus.READY_FOR_PICKUP || o.status === OrderStatus.PREPARING || o.status === OrderStatus.ACCEPTED) && !o.deliveryExecutiveId);
+  const availableJobs = activeOrders.filter(o => isAvailableDispatch(o, rejectedIds));
   const allHistoryJobsMap = new Map();
   // eslint-disable-next-line react-hooks/refs
   [...historyRef.current, ...activeOrders.filter(o => o.deliveryExecutiveId === deliveryExecutiveId && [DeliveryStatus.DELIVERED, DeliveryStatus.FAILED, DeliveryStatus.CANCELLED].includes(o.deliveryStatus as DeliveryStatus))]

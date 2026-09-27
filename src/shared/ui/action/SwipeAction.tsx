@@ -1,5 +1,5 @@
 import { ChevronsRight } from 'lucide-react';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 /**
  * Slide to confirm. The rider's way of saying yes.
@@ -11,6 +11,11 @@ import React, { useRef, useState } from 'react';
  * It is a slider, not a button, and it says so: `role="slider"` with a live value, so it is
  * operable from a keyboard and announced honestly to a screen reader. Arrow keys move it and
  * End confirms — a rider using assistive technology is not asked to perform a drag.
+ *
+ * It stays locked while the confirmation is in flight and re-arms when it settles. It used to lock
+ * for good on the first confirm: a wrong OTP, a failed request, or a form the browser refused to
+ * submit left it reading "Confirming…" and ignoring every later swipe until the screen was
+ * reloaded -- which is what "the slider does nothing" was.
  */
 
 const CONFIRM_AT = 0.85;
@@ -19,7 +24,8 @@ interface SwipeActionProps {
   label: string;
   /** Shown once confirmed, while the caller's promise settles. */
   confirmingLabel?: string;
-  onConfirm: () => void;
+  /** The work the swipe confirms. The control is locked until this settles, then re-arms. */
+  onConfirm: () => Promise<unknown>;
   disabled?: boolean;
   className?: string;
 }
@@ -35,11 +41,31 @@ export function SwipeAction({
   const [progress, setProgress] = useState(0);
   const [confirmed, setConfirmed] = useState(false);
 
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
+
   const settle = (next: number) => {
     if (next >= CONFIRM_AT) {
       setProgress(1);
       setConfirmed(true);
-      onConfirm();
+      // On success the caller usually moves on and this unmounts; on anything else the rider
+      // must be able to swipe again.
+      let work: Promise<unknown>;
+      try {
+        work = onConfirm(); // synchronously, inside the gesture
+      } catch (e) {
+        work = Promise.reject(e);
+      }
+      work
+        .catch(() => undefined)
+        .finally(() => {
+          if (!mounted.current) return;
+          setConfirmed(false);
+          setProgress(0);
+        });
       return;
     }
     setProgress(0);

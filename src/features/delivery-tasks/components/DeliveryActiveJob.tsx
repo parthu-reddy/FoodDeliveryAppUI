@@ -5,7 +5,7 @@ import OrderTrackingMap from "@features/maps-tracking/components/OrderTrackingMa
 import { KeyRound, MapPin, Navigation } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useMotionPresets } from '@shared/ui';
-import React, { useRef } from 'react';
+import React from 'react';
 import { formatINR } from '@shared/money';
 
 interface DeliveryActiveJobProps {
@@ -15,9 +15,9 @@ interface DeliveryActiveJobProps {
   pickupOtpError: string;
   isUpdatingPickup: boolean;
   handleArrivedAtRestaurant: () => void;
-  handlePickUpFood: (e: React.FormEvent) => void;
+  handlePickUpFood: (e?: React.FormEvent) => Promise<void>;
   handleAbortJob: () => void;
-  handleCompleteDelivery: (e: React.FormEvent) => void;
+  handleCompleteDelivery: (e?: React.FormEvent) => Promise<void>;
   enteredOtp: string;
   setEnteredOtp: (otp: string) => void;
   otpError: string;
@@ -47,7 +47,6 @@ export function DeliveryActiveJob({
   waitTimerSeconds,
   handleCustomerUnavailable
 }: DeliveryActiveJobProps) {
-  const deliveryFormRef = useRef<HTMLFormElement>(null);
   const canConfirmDelivery = !isUpdatingDelivery;
   const presets = useMotionPresets();
   return (
@@ -98,7 +97,7 @@ export function DeliveryActiveJob({
           </div>
         ) : (
           /* OTP Verification form to complete order */
-          <form ref={deliveryFormRef} onSubmit={handleCompleteDelivery} className="space-y-4 pt-2">
+          <form onSubmit={handleCompleteDelivery} className="space-y-4 pt-2">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-400 dark:text-slate-300 tracking-wider font-mono flex items-center gap-1.5">
                 <KeyRound className="w-4 h-4 text-amber-500" /> SECURE CUSTOMER VERIFICATION OTP
@@ -141,7 +140,7 @@ export function DeliveryActiveJob({
               label={`Slide to deliver${currentJob?.deliveryFee ? ` · credit ${formatINR(currentJob.deliveryFee)}` : ''}`}
               confirmingLabel="Confirming…"
               disabled={!canConfirmDelivery}
-              onConfirm={() => deliveryFormRef.current?.requestSubmit()}
+              onConfirm={() => handleCompleteDelivery()}
             />
 
             {waitTimerSeconds > 5 && (

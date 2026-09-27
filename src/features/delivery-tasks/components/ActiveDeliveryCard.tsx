@@ -1,7 +1,7 @@
 import { DeliveryStatus, Order } from "@/types";
 import { KeyRound, PhoneCall } from 'lucide-react';
 import { useCallContext } from '@/contexts/CallContext';
-import React, { useRef } from 'react';
+import React from 'react';
 import { Button, Input, Surface, SwipeAction } from '@shared/ui';
 
 interface ActiveDeliveryCardProps {
@@ -11,7 +11,8 @@ interface ActiveDeliveryCardProps {
   pickupOtpError: string;
   isUpdatingPickup: boolean;
   handleArrivedAtRestaurant: () => void;
-  handlePickUpFood: (e: React.FormEvent) => void;
+  /** Submits the pickup OTP. Resolves when the server has answered. */
+  handlePickUpFood: (e?: React.FormEvent) => Promise<void>;
 }
 
 export default function ActiveDeliveryCard({
@@ -23,7 +24,6 @@ export default function ActiveDeliveryCard({
   handleArrivedAtRestaurant,
   handlePickUpFood
 }: ActiveDeliveryCardProps) {
-  const pickupFormRef = useRef<HTMLFormElement>(null);
   const { startCall } = useCallContext();
 
   return (
@@ -85,7 +85,7 @@ export default function ActiveDeliveryCard({
               Mark Arrived at Restaurant
             </Button>
           )}
-          <form ref={pickupFormRef} onSubmit={handlePickUpFood} className="space-y-4">
+          <form onSubmit={handlePickUpFood} className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-400 tracking-wider font-mono flex items-center gap-1.5">
                 <KeyRound className="w-4 h-4 text-amber-500" /> RESTAURANT HANDOVER OTP
@@ -110,7 +110,9 @@ export default function ActiveDeliveryCard({
               label="Slide to confirm pickup"
               confirmingLabel="Confirming pickup…"
               disabled={isUpdatingPickup}
-              onConfirm={() => pickupFormRef.current?.requestSubmit()}
+              // The handler itself, not form.requestSubmit(): a submit the browser's validation
+              // blocked ran nothing, and the slider had no way to know it should re-arm.
+              onConfirm={() => handlePickUpFood()}
             />
           </form>
         </div>
