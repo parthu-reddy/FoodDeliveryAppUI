@@ -42,6 +42,8 @@ export const ToggleStatusRequest = z
       .max(36)
       .regex(/^[0-9a-fA-F\-]{36}$/),
     available: z.boolean(),
+    lat: z.number().gte(-90).lte(90).optional(),
+    lng: z.number().gte(-180).lte(180).optional(),
   })
   .passthrough();
 export const DeliveryOnboardRequest = z

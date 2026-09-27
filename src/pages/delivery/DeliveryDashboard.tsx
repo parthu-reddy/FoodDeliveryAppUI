@@ -123,6 +123,14 @@ export default function DeliveryDashboard({
     setIsOnline,
   });
 
+  // Logging out used to leave the rider ONLINE and dispatchable until the server noticed their
+  // location had stopped (a minute or two), so trips were offered to a phone nobody was holding.
+  // A rider carrying an order stays on duty: the server refuses, and the order is still theirs.
+  const goOfflineBeforeLogout = async () => {
+    if (isOnline && !currentJob) await duty.goOffline({ quiet: true });
+    onLogout();
+  };
+
   if (profile.isLoadingProfile || !profile.isVerificationLoaded) {
     return <RiderVerifyingState verifying={!profile.isLoadingProfile} />;
   }
@@ -150,7 +158,7 @@ export default function DeliveryDashboard({
         }}
         userId={user?.id || ""}
         initialName={profile.deliveryExecutiveName}
-        onLogout={onLogout}
+        onLogout={goOfflineBeforeLogout}
       />
     );
   }
@@ -182,7 +190,7 @@ export default function DeliveryDashboard({
         <RiderSettingsView
           onBack={() => setView("home")}
           theme={theme}
-          onLogout={onLogout}
+          onLogout={goOfflineBeforeLogout}
           isProfileMandatory={profile.isProfileMandatory}
           riderPhone={riderPhone}
           onProfileUpdated={() => {

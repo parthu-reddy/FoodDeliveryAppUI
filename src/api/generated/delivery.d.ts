@@ -603,6 +603,10 @@ export interface components {
         ToggleStatusRequest: {
             driverId: string;
             available: boolean;
+            /** Format: double */
+            lat?: number;
+            /** Format: double */
+            lng?: number;
         };
         ApiResponseVoid: {
             success: boolean;
@@ -657,27 +661,27 @@ export interface components {
             totalPages: number;
             /** Format: int32 */
             numberOfElements: number;
-            /** Format: int32 */
-            number: number;
             first: boolean;
             last: boolean;
-            sort?: components["schemas"]["SortObject"];
+            /** Format: int32 */
+            number: number;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["DeliveryExecutive"][];
+            sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };
         PageableObject: {
             /** Format: int64 */
             offset: number;
+            unpaged: boolean;
             sort?: components["schemas"]["SortObject"];
             paged: boolean;
             /** Format: int32 */
             pageNumber: number;
             /** Format: int32 */
             pageSize: number;
-            unpaged: boolean;
         };
         SortObject: {
             empty: boolean;
@@ -702,14 +706,14 @@ export interface components {
             totalPages: number;
             /** Format: int32 */
             numberOfElements: number;
-            /** Format: int32 */
-            number: number;
             first: boolean;
             last: boolean;
-            sort?: components["schemas"]["SortObject"];
+            /** Format: int32 */
+            number: number;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["DriverLocationDTO"][];
+            sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };

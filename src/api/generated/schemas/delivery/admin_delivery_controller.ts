@@ -9,11 +9,11 @@ export const SortObject = z
 export const PageableObject = z
   .object({
     offset: z.number().int(),
+    unpaged: z.boolean(),
     sort: SortObject.optional(),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
-    unpaged: z.boolean(),
   })
   .passthrough();
 export const PageDeliveryExecutive = z
@@ -21,12 +21,12 @@ export const PageDeliveryExecutive = z
     totalElements: z.number().int(),
     totalPages: z.number().int(),
     numberOfElements: z.number().int(),
-    number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
-    sort: SortObject.optional(),
+    number: z.number().int(),
     size: z.number().int(),
     content: z.array(DeliveryExecutive),
+    sort: SortObject.optional(),
     pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
@@ -46,12 +46,12 @@ export const PageDriverLocationDTO = z
     totalElements: z.number().int(),
     totalPages: z.number().int(),
     numberOfElements: z.number().int(),
-    number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
-    sort: SortObject.optional(),
+    number: z.number().int(),
     size: z.number().int(),
     content: z.array(DriverLocationDTO),
+    sort: SortObject.optional(),
     pageable: PageableObject.optional(),
     empty: z.boolean(),
   })

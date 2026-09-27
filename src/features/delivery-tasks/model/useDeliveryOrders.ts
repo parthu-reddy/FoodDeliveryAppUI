@@ -8,6 +8,8 @@ import { sumRupees } from '@shared/money';
 import { isActiveOrder } from '@features/customer-orders/model/orderStatus';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { useEffect, useRef, useState } from 'react';
+import { requestGoOffline } from './dutyApi';
+import { applyDutyStatus, parseDutyStatusMessage, reactToLocationError } from './dutyStatus';
 import { dayWindow, isOnDate, msUntil, todayIn } from '@/shared/time';
 
 export interface UseDeliveryOrdersProps {
@@ -317,13 +319,12 @@ export function useDeliveryOrders({
         },
         (err) => {
           console.error("Location error:", err);
-          if (deliveryExecutiveId) {
-            (deliveryApi.deliveryExecutive.post(`/api/delivery/status`, { driverId: deliveryExecutiveId, available: false }, {}))
-              .catch(e => console.error(e));
-          }
-          setHasLocationFix(false);
-          setIsOnline(false);
-          setShowPermissionsPrompt(true);
+          void reactToLocationError(err, {
+            goOffline: () => requestGoOffline(deliveryExecutiveId).then(() => { setIsOnline(false); return true; }, () => false),
+            setHasLocationFix,
+            setShowPermissionsPrompt,
+            showToast,
+          });
         },
         { enableHighAccuracy: true }
       );
@@ -372,6 +373,12 @@ export function useDeliveryOrders({
       ws.onmessage = async (event) => {
         try {
           const data = JSON.parse(event.data);
+          // The server's word on duty status: pushed when it changes, and sent on every connect.
+          const duty = parseDutyStatusMessage(data);
+          if (duty) {
+            applyDutyStatus(duty, { wasOnline: true, setIsOnline, showToast });
+            return;
+          }
           if (data.type === "NEW_ORDER_DISPATCH" && data.orderId) {
             setRejectedIds(prev => {
               if (prev.has(data.orderId)) {
