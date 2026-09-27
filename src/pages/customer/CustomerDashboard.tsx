@@ -50,7 +50,6 @@ export default function CustomerDashboard({
   const { showError, showSuccess, showInfo } = useToast();
   const confirm = useConfirm();
   // Extracted Hooks
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { internalOrders, setInternalOrders, activeOrders: internalActiveOrders, isInitialLoad } = useCustomerOrders({
     onUpdateOrder: onUpdateOrder
   });
@@ -182,6 +181,9 @@ export default function CustomerDashboard({
     ? activeOrders.find(isActiveOrder) || null
     : null;
   const currentTrackingOrder = activeOrders.find(o => o.id === trackingOrder?.id)
+    // Completed orders leave activeOrders but remain in the poller's full list.
+    // Prefer that updated record over the snapshot captured when tracking began.
+    || internalOrders.find(o => o.id === trackingOrder?.id)
     || trackingOrder
     || restoredTrackingOrder;
 
