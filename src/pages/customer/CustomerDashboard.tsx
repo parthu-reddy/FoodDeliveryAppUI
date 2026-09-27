@@ -209,7 +209,8 @@ export default function CustomerDashboard({
     // These four override what `...cart` spreads. The hook's versions take the restaurant
     // as an extra argument; these are bound to the one on screen, and passing the raw ones
     // by accident is a real regression the linter caught while this bag was being built.
-    addToCart, removeFromCart, getCartTotal, processPaymentAndOrder,
+    addToCart, addToCartForRestaurant: originalAddToCart,
+    removeFromCart, getCartTotal, processPaymentAndOrder,
     activeOrders, addressSearchQuery, setAddressSearchQuery,
     chatWidgetRef, confirm, currentTrackingOrder: wide && railOrder ? null : currentTrackingOrder,
     globalError, setGlobalError, isAddressModalOpen, setIsAddressModalOpen,

@@ -1,4 +1,5 @@
 import { env } from './env';
+import { getToken } from './tokenStore';
 
 export type LogLevel = 'DEBUG' | 'INFO' | 'WARN' | 'ERROR';
 
@@ -29,7 +30,7 @@ class Logger {
 
     try {
       const payload = JSON.stringify({ logs: logsToSend });
-      const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
+      const token = getToken();
       window.fetch('/api/logs', {
         method: 'POST',
         headers: {

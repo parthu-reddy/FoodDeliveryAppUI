@@ -71,23 +71,13 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
         }
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setGlobalCarts(validGlobalCarts);
-      } else {
-        // Migration logic from V1 to V2
-        const oldCarts = localStorage.getItem('food_delivery_carts');
-        if (oldCarts) {
-          const parsedCarts = JSON.parse(oldCarts);
-          setGlobalCarts({
-            [locationKey]: parsedCarts
-          });
-        }
       }
     } catch (e: unknown) {
       console.error('Failed to load carts from local storage', e);
     }
     setIsInitialized(true);
    
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only run once on mount, locationKey at mount is used for V1 migration fallback
+  }, []); // Only run once on mount.
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -260,16 +250,23 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
     if (selectedRestaurantId) {
       activeRestaurantIds.add(selectedRestaurantId);
     }
-    if (activeRestaurantIds.size === 0) return;
+    if (activeRestaurantIds.size === 0) {
+      const reset = setTimeout(() => setIsQuoting(false), 0);
+      return () => clearTimeout(reset);
+    }
 
     // We only fetch quotes from the backend if we have a valid deliveryAddressId
      
     if (!deliveryAddressId) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setQuotes({});
-      return;
+      const reset = setTimeout(() => {
+        setQuotes({});
+        setIsQuoting(false);
+      }, 0);
+      return () => clearTimeout(reset);
     }
 
+    let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsQuoting(true);
     // Optimistically clear quotes if they are for a different address (or just let it fallback to estimated)
      
@@ -317,20 +314,24 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
           return { restaurantId: rId, quote: { isDeliverable: false, error: friendlyError, errorCode: errorData?.errorCode } };
         }
       })).then((results) => {
-        const newQuotes = { ...quotes };
-        results.forEach(result => {
-          if (result.quote) {
-            newQuotes[result.restaurantId] = result.quote;
-          }
+        if (cancelled) return;
+        setQuotes(previousQuotes => {
+          const nextQuotes = { ...previousQuotes };
+          results.forEach(result => {
+            if (result.quote) {
+              nextQuotes[result.restaurantId] = result.quote;
+            }
+          });
+          return nextQuotes;
         });
-        setQuotes(newQuotes);
         setIsQuoting(false);
       });
     }, 500);
 
-     
-    return () => clearTimeout(timeout);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+    };
   }, [carts, deliveryAddressId, isInitialized, selectedRestaurantId]);
 
   const handleCheckout = async (restaurantId: string) => {
@@ -559,5 +560,3 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
     quotes
   };
 }
-
-

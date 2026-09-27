@@ -16,7 +16,9 @@ import { MapPinOff } from 'lucide-react';
  */
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Props = Record<string, any>;
+type Props = Record<string, any> & {
+  addToCartForRestaurant: React.ComponentProps<typeof CustomerCartDrawer>['addToCart'];
+};
 
 export function CustomerModalStack({
   address,
@@ -35,7 +37,7 @@ export function CustomerModalStack({
   isOutletSelectorOpen,
   isPaymentModalOpen,
   onAddApiLog,
-  originalAddToCart,
+  addToCartForRestaurant,
   paymentStatus,
   processPaymentAndOrder,
   removeFromCart,
@@ -105,7 +107,7 @@ export function CustomerModalStack({
     carts={carts}
     removeFromCart={removeFromCart}
     clearCart={clearCart}
-    addToCart={originalAddToCart}
+    addToCart={addToCartForRestaurant}
     getCartTotal={getCartTotal}
     setIsPaymentModalOpen={setIsPaymentModalOpen}
     isSubmitting={paymentStatus !== 'idle'}

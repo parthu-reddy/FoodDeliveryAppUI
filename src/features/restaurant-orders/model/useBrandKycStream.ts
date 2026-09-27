@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { VerificationStatus, type Brand } from '@/types';
+import { getToken } from '@/lib/tokenStore';
 
 /**
  * Live KYC status for this restaurant's brands.
@@ -27,13 +28,14 @@ useEffect(() => {
   if (hasPendingVerifications) {
     const startSse = async () => {
       try {
+        const token = getToken();
+        if (!token) return;
         const url = `${import.meta.env.VITE_API_BASE_URL || ''}/api/v1/brands/stream`;
         await fetchEventSource(url, {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            'Accept': 'text/event-stream',
-            'X-Calling-Service': 'RestaurantApplication'
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'text/event-stream'
           },
           signal: abortController.signal,
           onmessage(msg: { data: string; event?: string }) {

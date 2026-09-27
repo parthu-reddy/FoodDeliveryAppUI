@@ -89,4 +89,47 @@ describe('useCustomerCart payment method', () => {
     expect(orderPosts).toBe(1);
     expect(lastOrderBody?.paymentMethod).toBe('UPI');
   });
+
+  test('an older empty-menu quote cannot overwrite the cart quote', async () => {
+    let emptyQuoteRequests = 0;
+    server.use(
+      http.post('*/api/v1/orders/quote', async ({ request }) => {
+        const body = await request.json() as { items?: unknown[] };
+        if (!body.items?.length) {
+          emptyQuoteRequests++;
+          await new Promise(resolve => setTimeout(resolve, 800));
+          return HttpResponse.json({
+            success: true,
+            message: 'empty quote',
+            timestamp: new Date().toISOString(),
+            data: { quoteId: 'empty-quote', total: 28 },
+          });
+        }
+        return HttpResponse.json({
+          success: true,
+          message: 'cart quote',
+          timestamp: new Date().toISOString(),
+          data: { quoteId: 'cart-quote', total: 150 },
+        });
+      }),
+    );
+
+    const rendered = renderHook(() => useCustomerCart({
+      locationKey: 'test-location',
+      selectedRestaurantId: RESTAURANT_ID,
+    }));
+    act(() => rendered.result.current.setDeliveryAddressId(ADDRESS_ID));
+    await waitFor(() => expect(emptyQuoteRequests).toBe(1), { timeout: 2000 });
+
+    act(() => rendered.result.current.addToCart(item, restaurant));
+    await waitFor(() => {
+      expect(rendered.result.current.quotes[RESTAURANT_ID]?.data?.quoteId).toBe('cart-quote');
+    }, { timeout: 2000 });
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 500));
+    });
+    expect(rendered.result.current.quotes[RESTAURANT_ID]?.data?.quoteId).toBe('cart-quote');
+    expect(rendered.result.current.getCartTotal(RESTAURANT_ID).total).toBe(150);
+  });
 });
