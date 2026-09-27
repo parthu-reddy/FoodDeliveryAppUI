@@ -8,26 +8,26 @@ export const SortObject = z
   .passthrough();
 export const PageableObject = z
   .object({
-    offset: z.number().int(),
-    unpaged: z.boolean(),
-    sort: SortObject.optional(),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
+    unpaged: z.boolean(),
+    sort: SortObject.optional(),
+    offset: z.number().int(),
   })
   .passthrough();
 export const PageDeliveryExecutive = z
   .object({
-    totalElements: z.number().int(),
     totalPages: z.number().int(),
-    numberOfElements: z.number().int(),
+    totalElements: z.number().int(),
+    pageable: PageableObject.optional(),
+    sort: SortObject.optional(),
     first: z.boolean(),
     last: z.boolean(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(DeliveryExecutive),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
+    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -43,16 +43,16 @@ export const DriverLocationDTO = z
   .passthrough();
 export const PageDriverLocationDTO = z
   .object({
-    totalElements: z.number().int(),
     totalPages: z.number().int(),
-    numberOfElements: z.number().int(),
+    totalElements: z.number().int(),
+    pageable: PageableObject.optional(),
+    sort: SortObject.optional(),
     first: z.boolean(),
     last: z.boolean(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(DriverLocationDTO),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
+    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();

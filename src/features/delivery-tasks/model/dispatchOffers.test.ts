@@ -20,7 +20,7 @@ describe('actionable dispatch offers', () => {
   it('uses the absolute deadline even when the last poll had positive seconds remaining', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-09-27T10:00:00Z'));
-    const job = offer({ expiresAt: Date.parse('2026-09-27T10:00:02Z') });
+    const job = offer({ expiresAt: new Date('2026-09-27T10:00:02Z').getTime() });
     expect(isAvailableDispatch(job, rejected)).toBe(true);
     vi.advanceTimersByTime(2000);
     expect(isAvailableDispatch(job, rejected)).toBe(false);
