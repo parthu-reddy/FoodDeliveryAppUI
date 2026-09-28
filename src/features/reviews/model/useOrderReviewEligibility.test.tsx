@@ -103,6 +103,6 @@ describe('useOrderReviewEligibility', () => {
     await waitFor(() => expect(get).toHaveBeenCalled());
     const [path, options] = get.mock.calls[0];
     expect(path).toBe('/api/v1/reviews/orders/:orderId/eligibility');
-    expect(options).toEqual({ params: { orderId: ORDER_A } });
+    expect(options).toEqual({ params: { orderId: ORDER_A }, queries: { actorRole: 'CUSTOMER' } });
   });
 });

@@ -84,7 +84,8 @@ export const authPlugin: ZodiosPlugin = {
  * Common Zodios configuration to apply to all our client instances.
  */
 export const commonZodiosConfig: ZodiosOptions = {
-  // Disable validation because the current OpenAPI generation produced `z.void()` for all responses, 
-  // which causes valid responses to fail validation and crash the app.
+  // Several generated endpoints still use `z.void()` for APIs that return JSON. Keep runtime
+  // response validation disabled until those service specs are corrected. Review types still come
+  // from its OpenAPI-generated Zod schemas.
   validate: false,
 };

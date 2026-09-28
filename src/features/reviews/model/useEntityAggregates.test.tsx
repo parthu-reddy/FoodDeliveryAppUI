@@ -108,7 +108,8 @@ describe('useEntityAggregates', () => {
 
     renderHook(() => useEntityAggregates('PRODUCT', many));
 
-    await waitFor(() => expect(get).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(get).toHaveBeenCalledTimes(2));
     expect(get.mock.calls[0][1].queries.entityIds).toHaveLength(100);
+    expect(get.mock.calls[1][1].queries.entityIds).toHaveLength(50);
   });
 });
