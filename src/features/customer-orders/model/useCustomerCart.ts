@@ -85,7 +85,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
   }, [globalCarts, isInitialized]);
 
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpenState] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'processing' | 'success'>('idle');
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [checkoutRestaurantId, setCheckoutRestaurantId] = useState<string | null>(null);
@@ -95,6 +95,34 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
 
   const cartUpdateRef = useRef<number>(0);
   const isSubmittingOrderRef = useRef<boolean>(false);
+  const paymentHistoryEntryRef = useRef(false);
+
+  // Treat checkout as the top entry in the customer's navigation stack. Browser Back then
+  // closes the sheet first and leaves the restaurant page and its cart in place.
+  const setIsPaymentModalOpen = (open: boolean) => {
+    if (open && !paymentHistoryEntryRef.current) {
+      window.history.pushState(
+        { ...(window.history.state ?? {}), customerCheckoutModal: true },
+        '',
+        window.location.href,
+      );
+      paymentHistoryEntryRef.current = true;
+    } else if (!open && paymentHistoryEntryRef.current) {
+      paymentHistoryEntryRef.current = false;
+      window.history.back();
+    }
+    setIsPaymentModalOpenState(open);
+  };
+
+  useEffect(() => {
+    const closeCheckoutOnBack = () => {
+      const shouldBeOpen = window.history.state?.customerCheckoutModal === true;
+      paymentHistoryEntryRef.current = shouldBeOpen;
+      setIsPaymentModalOpenState(shouldBeOpen);
+    };
+    window.addEventListener('popstate', closeCheckoutOnBack);
+    return () => window.removeEventListener('popstate', closeCheckoutOnBack);
+  }, []);
 
   const addToCart = (item: MenuItem, selectedRestaurant: Restaurant | null) => {
     if (!selectedRestaurant || !selectedRestaurant.id) {

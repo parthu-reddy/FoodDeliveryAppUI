@@ -4,6 +4,7 @@ import { useToast } from '@/contexts/ToastContext';
 // the same Order the settings view uses: `@/types` is a wider shape and the two
 // are not assignable in either direction
 import type { Order } from '../../schemas/order';
+import { RateOrderModal } from '@features/reviews';
 import { formatINR } from '@shared/money';
 import { getFriendlyStatusMessage } from '@features/customer-orders/model/statusMessaging';
 import { placedAt } from '@features/customer-orders/model/placedAt';
@@ -26,6 +27,7 @@ export function SettingsHistoryTab({ setTrackingOrder }: { setTrackingOrder?: (o
   const [currentPageOrders, setCurrentPageOrders] = useState(0);
   const [hasMoreOrders, setHasMoreOrders] = useState(false);
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+  const [orderIdToRate, setOrderIdToRate] = useState<string | null>(null);
 
   const fetchOrders = async (page: number, type: 'history') => {
     try {
@@ -62,8 +64,9 @@ export function SettingsHistoryTab({ setTrackingOrder }: { setTrackingOrder?: (o
   }, []);
 
   return (
-    // The motion inventory's pull to refresh for the customer's order history. It was built
-    // into CustomerOrderHistory.tsx, which no screen renders; this is the history they see.
+    <>
+    {/* The motion inventory's pull to refresh for the customer's order history. It was built
+        into CustomerOrderHistory.tsx, which no screen renders; this is the history they see. */}
     <PullToRefresh onRefresh={() => fetchOrders(0, 'history')} label="Pull down to reload your orders">
     <div className="space-y-4">
       {isLoadingOrders && paginatedOrders.length === 0 ? (
@@ -72,41 +75,48 @@ export function SettingsHistoryTab({ setTrackingOrder }: { setTrackingOrder?: (o
         <div className="text-center text-slate-500 text-sm py-8">No order history found.</div>
       ) : (
         paginatedOrders.map((order: Order) => (
-          <button type="button"
-            key={order.id}
-            onClick={() => setTrackingOrder && setTrackingOrder(order)}
-            className="cursor-pointer text-left w-full"
-          >
-           <Surface radius="xl" elevation={1} interactive className="p-4">
-            <div className="flex justify-between items-start mb-2">
-              <div>
-                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-300 font-mono block">{order.id.substring(0, 8)}</span>
-                <h5 className="font-bold text-sm text-slate-900 dark:text-[#f0ede6]">{order.restaurantName}</h5>
-                {/* When it was placed (HISTORY-03): a history row said what and how much, never when. */}
-                {placedAt(order.createdAt) && (
-                  <time dateTime={order.createdAt} className="block text-[11px] text-slate-500 dark:text-slate-300">
-                    {placedAt(order.createdAt)}
-                  </time>
-                )}
-              </div>
-              <Badge variant="primary">
-                {getFriendlyStatusMessage(order.status, order.deliveryStatus)}
-              </Badge>
-            </div>
-            <div className="text-xs text-slate-500 dark:text-slate-300 mb-3">
-              <div className="mb-1 font-semibold">{order.items?.length || 0} items • {formatINR(order.totalAmount || (order as {totalAmount?:number}).totalAmount || 0)}</div>
-              {order.items && order.items.length > 0 && (
-                <ul className="list-disc pl-4 space-y-0.5 text-slate-400">
-                  {order.items.map((it: unknown, idx: number) => {
-                    const item = it as { quantity?: number, item?: { name?: string }, name?: string };
-                    return <li key={idx}>{item.quantity || 1}x {item.item?.name || item.name || 'Item'}</li>
-                  })}
-                </ul>
-              )}
-            </div>
-            {/* Buttons removed for simplified history view */}
-           </Surface>
-          </button>
+          <div key={order.id} className="space-y-2">
+            <button
+              type="button"
+              data-testid="customer-history-order"
+              onClick={() => setTrackingOrder && setTrackingOrder(order)}
+              className="cursor-pointer text-left w-full"
+            >
+              <Surface radius="xl" elevation={1} interactive className="p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-300 font-mono block">{order.id.substring(0, 8)}</span>
+                    <h5 className="font-bold text-sm text-slate-900 dark:text-[#f0ede6]">{order.restaurantName}</h5>
+                    {/* When it was placed (HISTORY-03): a history row said what and how much, never when. */}
+                    {placedAt(order.createdAt) && (
+                      <time dateTime={order.createdAt} className="block text-[11px] text-slate-500 dark:text-slate-300">
+                        {placedAt(order.createdAt)}
+                      </time>
+                    )}
+                  </div>
+                  <Badge variant="primary">
+                    {getFriendlyStatusMessage(order.status, order.deliveryStatus)}
+                  </Badge>
+                </div>
+                <div className="text-xs text-slate-500 dark:text-slate-300 mb-3">
+                  <div className="mb-1 font-semibold">{order.items?.length || 0} items • {formatINR(order.totalAmount || (order as {totalAmount?:number}).totalAmount || 0)}</div>
+                  {order.items && order.items.length > 0 && (
+                    <ul className="list-disc pl-4 space-y-0.5 text-slate-400">
+                      {order.items.map((it: unknown, idx: number) => {
+                        const item = it as { quantity?: number, item?: { name?: string }, name?: string };
+                        return <li key={idx}>{item.quantity || 1}x {item.item?.name || item.name || 'Item'}</li>
+                      })}
+                    </ul>
+                  )}
+                </div>
+              </Surface>
+            </button>
+            {order.deliveryStatus === 'DELIVERED' && (
+              <Button variant="secondary" size="sm" onClick={() => setOrderIdToRate(order.id)}>
+                Rate this order
+              </Button>
+            )}
+          </div>
         ))
       )}
       {hasMoreOrders && !isLoadingOrders && (
@@ -120,5 +130,13 @@ export function SettingsHistoryTab({ setTrackingOrder }: { setTrackingOrder?: (o
       )}
     </div>
     </PullToRefresh>
+    {orderIdToRate && (
+      <RateOrderModal
+        isOpen
+        orderId={orderIdToRate}
+        onClose={() => setOrderIdToRate(null)}
+      />
+    )}
+    </>
   );
 }
