@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const get = vi.fn();
 vi.mock('@/lib/zodiosClients', () => ({
   customerApi: { order: { get: (...a: unknown[]) => get(...a) } },
+  reviewsApi: { review: { getReceivedReviews: vi.fn().mockResolvedValue({ data: { content: [] } }) } },
 }));
 vi.mock('@/contexts/ToastContext', () => ({ useToast: () => ({ showError: vi.fn(), showSuccess: vi.fn() }) }));
 
