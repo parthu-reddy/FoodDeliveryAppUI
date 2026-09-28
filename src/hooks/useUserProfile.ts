@@ -6,7 +6,7 @@ import { z } from 'zod';
 const UserProfileSchema = z.object({
   name: z.string().default(''),
   email: z.string().default(''),
-  phoneNumber: z.string().default(''),
+  phone: z.string().default(''),
   id: z.string().default(''),
 });
 

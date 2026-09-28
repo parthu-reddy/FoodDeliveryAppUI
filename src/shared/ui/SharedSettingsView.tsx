@@ -99,7 +99,7 @@ export default function SharedSettingsView({
           setInitialName(res.data.name || '');
           setEditEmail(res.data.email || '');
           setInitialEmail(res.data.email || '');
-          setEditPhone(res.data.phone || res.data.phoneNumber || '');
+          setEditPhone(res.data.phone || '');
           setUserId(res.data.id || '');
         }
       } catch (e: unknown) {

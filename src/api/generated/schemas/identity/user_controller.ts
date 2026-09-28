@@ -1,17 +1,29 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-import { ApiResponseString } from "./common";
+/**
+ * Typed profile response — matches IdentityService ProfileResponseDto.
+ * This replaces the old ApiResponseMapStringString (untyped Record<string, string>).
+ */
+export const ProfileResponseDto = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    email: z.string(),
+    phone: z.string(),
+  })
+  .passthrough();
 
-export const ApiResponseMapStringString = z
+export const ApiResponseProfileResponseDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
     errorCode: z.string().optional(),
-    data: z.record(z.string()).optional(),
+    data: ProfileResponseDto.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
+
 export const UpdateProfileRequest = z
   .object({
     name: z.string().min(0).max(100),
@@ -26,7 +38,8 @@ export const UpdateProfileRequest = z
   .passthrough();
 
 export const schemas = {
-  ApiResponseMapStringString,
+  ProfileResponseDto,
+  ApiResponseProfileResponseDto,
   UpdateProfileRequest,
 };
 
@@ -43,7 +56,7 @@ export const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: ApiResponseMapStringString,
+    response: ApiResponseProfileResponseDto,
   },
   {
     method: "put",
@@ -62,7 +75,7 @@ export const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: ApiResponseString,
+    response: ApiResponseProfileResponseDto,
   },
 ]);
 

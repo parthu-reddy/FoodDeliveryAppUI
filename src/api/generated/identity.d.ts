@@ -260,13 +260,17 @@ export interface components {
             serviceName: string;
             roleName: string;
         };
-        ApiResponseMapStringString: {
+        ProfileResponseDto: {
+            id: string;
+            name: string;
+            email: string;
+            phone: string;
+        };
+        ApiResponseProfileResponseDto: {
             success: boolean;
             message: string;
             errorCode?: string;
-            data?: {
-                [key: string]: string;
-            };
+            data?: components["schemas"]["ProfileResponseDto"];
             /** Format: date-time */
             timestamp: string;
         };
@@ -352,7 +356,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseMapStringString"];
+                    "application/json": components["schemas"]["ApiResponseProfileResponseDto"];
                 };
             };
         };
@@ -378,7 +382,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseString"];
+                    "application/json": components["schemas"]["ApiResponseProfileResponseDto"];
                 };
             };
         };
