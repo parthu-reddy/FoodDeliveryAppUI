@@ -1,6 +1,6 @@
 import { Surface } from '@shared/ui';
 import { customerApi } from '@/lib/zodiosClients';
-import { Order } from '@/types';
+import { DeliveryStatus, Order, RoleName } from '@/types';
 import { Button, Modal, Spinner } from '@shared/ui';
 import { CheckCircle2, Receipt, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
@@ -8,6 +8,7 @@ import { formatINR } from '@shared/money';
 import { RestaurantOrderEarnings } from '@/api/generated/schemas/customer/common';
 import { z } from 'zod';
 import { formatTime } from '@/shared/time';
+import { OrderReviewAction } from '@features/reviews';
 type RestaurantOrderEarningsType = z.infer<typeof RestaurantOrderEarnings>;
 
 interface RestaurantOrderDetailsModalProps {
@@ -152,6 +153,11 @@ export const RestaurantOrderDetailsModal: React.FC<RestaurantOrderDetailsModalPr
             )}
           </div>
           
+            {order.deliveryStatus === DeliveryStatus.DELIVERED && (
+              <div className="border-t p-4">
+                <OrderReviewAction orderId={order.id} actorRole={RoleName.RESTAURANT} />
+              </div>
+            )}
             <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
                <Button fullWidth variant="outline" onClick={onClose}>
                  Close Details

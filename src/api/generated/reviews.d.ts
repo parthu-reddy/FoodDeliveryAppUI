@@ -36,6 +36,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/reviews/received": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getReceivedReviews"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/reviews/me": {
         parameters: {
             query?: never;
@@ -127,7 +143,7 @@ export interface components {
         };
         ReviewEntryRequest: {
             /** @enum {string} */
-            entityType: "RESTAURANT" | "DRIVER" | "PRODUCT";
+            entityType: "RESTAURANT" | "DRIVER" | "PRODUCT" | "CUSTOMER";
             entityId: string;
             /** Format: int32 */
             rating: number;
@@ -141,15 +157,45 @@ export interface components {
             /** Format: date-time */
             timestamp: string;
         };
+        ReviewReceivedDto: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            entityType: "RESTAURANT" | "DRIVER" | "PRODUCT" | "CUSTOMER";
+            entityId: string;
+            /** @enum {string} */
+            authorRole: "CUSTOMER" | "RESTAURANT" | "DELIVERY";
+            /** Format: int32 */
+            rating: number;
+            comment?: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        PagedModelReviewReceivedDto: {
+            content: components["schemas"]["ReviewReceivedDto"][];
+            page?: components["schemas"]["PageMetadata"];
+        };
+        ApiResponsePagedModelReviewReceivedDto: {
+            success: boolean;
+            message: string;
+            errorCode?: string;
+            data?: components["schemas"]["PagedModelReviewReceivedDto"];
+            /** Format: date-time */
+            timestamp: string;
+        };
         ReviewDetailDto: {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            entityType: "RESTAURANT" | "DRIVER" | "PRODUCT";
+            entityType: "RESTAURANT" | "DRIVER" | "PRODUCT" | "CUSTOMER";
             entityId: string;
             /** Format: uuid */
             orderId: string;
             userId: string;
+            /** @enum {string} */
+            authorRole: "CUSTOMER" | "RESTAURANT" | "DELIVERY";
+            /** @enum {string} */
+            visibility: "PUBLIC" | "PRIVATE";
             authorDisplayName?: string;
             /** Format: int32 */
             rating: number;
@@ -183,12 +229,14 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            entityType: "RESTAURANT" | "DRIVER" | "PRODUCT";
+            entityType: "RESTAURANT" | "DRIVER" | "PRODUCT" | "CUSTOMER";
             entityId: string;
             /** Format: int32 */
             rating: number;
             comment?: string;
             authorDisplayName?: string;
+            /** @enum {string} */
+            authorRole?: "CUSTOMER" | "RESTAURANT" | "DELIVERY";
             /** Format: date-time */
             createdAt: string;
         };
@@ -205,7 +253,7 @@ export interface components {
             orderId: string;
             reviewable: boolean;
             /** @enum {string} */
-            reason?: "ORDER_NOT_FOUND" | "NOT_YOUR_ORDER" | "ORDER_NOT_DELIVERED" | "REVIEW_WINDOW_CLOSED" | "TARGET_NOT_ON_ORDER" | "ALREADY_REVIEWED" | "DUPLICATE_ENTRY";
+            reason?: "ORDER_NOT_FOUND" | "NOT_YOUR_ORDER" | "ORDER_NOT_DELIVERED" | "REVIEW_WINDOW_CLOSED" | "TARGET_NOT_ON_ORDER" | "ALREADY_REVIEWED" | "DUPLICATE_ENTRY" | "ROLE_TARGET_NOT_ALLOWED" | "SELF_REVIEW";
             reasonDetail?: string;
             /** Format: date-time */
             windowClosesAt?: string;
@@ -213,9 +261,11 @@ export interface components {
         };
         ReviewTargetDto: {
             /** @enum {string} */
-            entityType: "RESTAURANT" | "DRIVER" | "PRODUCT";
+            entityType: "RESTAURANT" | "DRIVER" | "PRODUCT" | "CUSTOMER";
             entityId: string;
             displayName: string;
+            /** @enum {string} */
+            visibility: "PUBLIC" | "PRIVATE";
             alreadyReviewed: boolean;
             /** Format: int32 */
             existingRating?: number;
@@ -237,7 +287,7 @@ export interface components {
         };
         AggregateBatchDto: {
             /** @enum {string} */
-            entityType: "RESTAURANT" | "DRIVER" | "PRODUCT";
+            entityType: "RESTAURANT" | "DRIVER" | "PRODUCT" | "CUSTOMER";
             aggregates: components["schemas"]["ReviewAggregateDto"][];
         };
         ApiResponseAggregateBatchDto: {
@@ -250,7 +300,7 @@ export interface components {
         };
         ReviewAggregateDto: {
             /** @enum {string} */
-            entityType: "RESTAURANT" | "DRIVER" | "PRODUCT";
+            entityType: "RESTAURANT" | "DRIVER" | "PRODUCT" | "CUSTOMER";
             entityId: string;
             /** Format: int64 */
             totalReviews: number;
@@ -276,7 +326,7 @@ export interface operations {
     getReviews: {
         parameters: {
             query: {
-                entityType: "RESTAURANT" | "DRIVER" | "PRODUCT";
+                entityType: "RESTAURANT" | "DRIVER" | "PRODUCT" | "CUSTOMER";
                 entityId: string;
                 page?: number;
                 size?: number;
@@ -300,7 +350,9 @@ export interface operations {
     };
     createReviews: {
         parameters: {
-            query?: never;
+            query: {
+                actorRole: "CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN";
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -324,7 +376,9 @@ export interface operations {
     };
     getEligibility: {
         parameters: {
-            query?: never;
+            query: {
+                actorRole: "CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN";
+            };
             header?: never;
             path: {
                 orderId: string;
@@ -340,6 +394,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiResponseReviewEligibilityDto"];
+                };
+            };
+        };
+    };
+    getReceivedReviews: {
+        parameters: {
+            query: {
+                actorRole: "CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN";
+                outletId?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponsePagedModelReviewReceivedDto"];
                 };
             };
         };
@@ -370,7 +449,7 @@ export interface operations {
     getAggregates: {
         parameters: {
             query: {
-                entityType: "RESTAURANT" | "DRIVER" | "PRODUCT";
+                entityType: "RESTAURANT" | "DRIVER" | "PRODUCT" | "CUSTOMER";
                 entityIds: string[];
             };
             header?: never;
@@ -393,7 +472,7 @@ export interface operations {
     getAggregate: {
         parameters: {
             query: {
-                entityType: "RESTAURANT" | "DRIVER" | "PRODUCT";
+                entityType: "RESTAURANT" | "DRIVER" | "PRODUCT" | "CUSTOMER";
                 entityId: string;
             };
             header?: never;
@@ -416,7 +495,7 @@ export interface operations {
     getReviewsForEntity: {
         parameters: {
             query: {
-                entityType: "RESTAURANT" | "DRIVER" | "PRODUCT";
+                entityType: "RESTAURANT" | "DRIVER" | "PRODUCT" | "CUSTOMER";
                 entityId: string;
                 page?: number;
                 size?: number;

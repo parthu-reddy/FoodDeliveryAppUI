@@ -58,7 +58,11 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
     effectiveMenu.map((item) => item.id as string),
     effectiveMenu.length > 0,
   );
-  const { aggregate: outletAggregate } = useEntityAggregate(
+  const {
+    aggregate: outletAggregate,
+    isLoading: isOutletRatingLoading,
+    error: outletRatingError,
+  } = useEntityAggregate(
     'RESTAURANT', outletId, Boolean(selectedRestaurant.id),
   );
 
@@ -96,6 +100,14 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
   const unavailableReason = deliveryUnavailableReason(
     deliveryPricing?.error ?? deliveryAvailabilityError
   );
+  const outletReviewCount = outletAggregate?.totalReviews ?? 0;
+  const outletRatingText = outletRatingError
+    ? 'Rating unavailable'
+    : isOutletRatingLoading
+      ? 'Loading…'
+      : outletReviewCount > 0
+        ? `${toAverage(outletAggregate?.averageRating).toFixed(1)} (${outletReviewCount.toLocaleString()})`
+        : 'New';
 
   const notices = (
     <div className="space-y-2 px-4 pt-3 empty:hidden">
@@ -136,12 +148,19 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
           // reading the source means a customer who just submitted a review sees it counted.
           <Button
             size="sm" variant="secondary" aria-expanded={showReviews}
+            aria-label={outletRatingError
+              ? 'Restaurant rating unavailable. Open restaurant reviews.'
+                : isOutletRatingLoading
+                  ? 'Loading restaurant rating. Open restaurant reviews.'
+                  : outletReviewCount > 0
+                  ? `View restaurant reviews. ${outletRatingText} from ${outletReviewCount} review${outletReviewCount === 1 ? '' : 's'}.`
+                  : 'View restaurant reviews. No ratings yet.'}
+            title={outletRatingError ?? undefined}
             onClick={() => setShowReviews((v) => !v)}
             icon={<Star className="w-3.5 h-3.5 fill-current" />}
             iconRight={<ChevronDown className={`w-3 h-3 ${showReviews ? 'rotate-180' : ''}`} />}
           >
-            {outletAggregate && outletAggregate.totalReviews > 0
-              ? toAverage(outletAggregate.averageRating).toFixed(1) : 'New'}
+            {outletRatingText}
           </Button>
         }
       >

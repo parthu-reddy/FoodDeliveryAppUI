@@ -3,9 +3,10 @@ import { useState } from 'react';
 import type React from 'react';
 import { motion } from 'motion/react';
 import type { Order } from '@/types';
-import { DeliveryStatus, OrderStatus } from '@/types/backend-enums';
+import { DeliveryStatus, OrderStatus, RoleName } from '@/types/backend-enums';
 import { Button, Surface, surfaceStyle, useMotionPresets } from '@shared/ui';
 import { formatINR } from '@shared/money';
+import { OrderReviewAction } from '@features/reviews';
 import type { ChatWidgetHandle } from '@features/communication/components/ChatWidget';
 import { OrderMoneyBreakdown } from './OrderMoneyBreakdown';
 import { TaxInvoiceSheet } from './TaxInvoiceSheet';
@@ -56,6 +57,7 @@ export function OrderDeliveredSummary({ order, onBack, chatWidgetRef }: OrderDel
         </span>
         <h2 className="text-xl font-extrabold text-ink">Enjoy your meal</h2>
         <p className="text-sm text-ink-2">Delivered from {order.restaurantName ?? 'the restaurant'}.</p>
+        {delivered && <OrderReviewAction orderId={order.id} actorRole={RoleName.CUSTOMER} />}
       </div>
 
       <Surface radius="xl" elevation={1} className="p-4 space-y-4">

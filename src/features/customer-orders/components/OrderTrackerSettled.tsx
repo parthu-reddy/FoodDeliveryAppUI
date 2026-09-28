@@ -1,12 +1,12 @@
-import { PhoneCall, Star, X } from 'lucide-react';
-import React from 'react';
+import { PhoneCall, X } from 'lucide-react';
 import type { Order } from '@/types';
-import { DeliveryStatus } from '@/types/backend-enums';
+import { DeliveryStatus, RoleName } from '@/types/backend-enums';
 import { formatINR } from '@shared/money';
 import { Surface } from '@shared/ui';
 import { terminalHeadline } from '@features/customer-orders/model/orderStatus';
 import type { useOrderRefunds } from '@features/customer-orders/model/useOrderRefunds';
 import { formatDate, formatDateTime } from '@/shared/time';
+import { OrderReviewAction } from '@features/reviews';
 
 /**
  * An order that has finished — delivered, cancelled or failed — with its bill and any refund
@@ -22,11 +22,10 @@ interface OrderTrackerSettledProps {
   getFriendlyStatusMessage: (status: string, deliveryStatus?: string) => string;
   refunds: ReturnType<typeof useOrderRefunds>;
   startCall: (userId: string, name: string) => void;
-  setOrderIdToRate: (id: string | null) => void;
 }
 
 export function OrderTrackerSettled({
-  currentTrackingOrder, isFailedOrder, getFriendlyStatusMessage, refunds, setOrderIdToRate, startCall,
+  currentTrackingOrder, isFailedOrder, getFriendlyStatusMessage, refunds, startCall,
 }: OrderTrackerSettledProps) {
   return (
   <Surface radius="xl" elevation={2} className="p-6 space-y-6" data-testid="order-tracker" data-order-id={currentTrackingOrder.id} data-status={currentTrackingOrder.status}>
@@ -50,19 +49,10 @@ export function OrderTrackerSettled({
           {currentTrackingOrder.cancellationReason}
         </p>
       )}
-      {/* The moment the food has actually arrived is when someone has an opinion worth
-          capturing. Offered once, here, and otherwise left to order history -- a prompt that
-          follows the customer around is nagging, not a feature. */}
       {currentTrackingOrder.deliveryStatus === DeliveryStatus.DELIVERED && (
-        <button
-          type="button"
-          onClick={() => setOrderIdToRate(currentTrackingOrder.id as string)}
-          data-testid="rate-order-prompt"
-          className="mt-3 w-full flex items-center justify-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2.5 text-sm font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 transition-colors cursor-pointer"
-        >
-          <Star className="w-4 h-4" />
-          How was it? Rate this order
-        </button>
+        <div className="mt-3">
+          <OrderReviewAction orderId={currentTrackingOrder.id} actorRole={RoleName.CUSTOMER} />
+        </div>
       )}
 
       {refunds.length > 0 && (

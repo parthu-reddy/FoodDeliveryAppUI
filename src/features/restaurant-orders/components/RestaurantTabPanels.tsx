@@ -7,6 +7,8 @@ import { QuickStockRail } from '@features/catalog/components/restaurant/QuickSto
 import { RestaurantOrderQueue } from '@features/restaurant-orders/components/RestaurantOrderQueue';
 import { DishRatingsPanel } from '@features/reviews';
 import { ReviewsPanel } from '@features/reviews/components/ReviewsPanel';
+import { ReceivedFeedbackPanel } from '@features/reviews';
+import { RoleName } from '@/types';
 import { EmptyState, ErrorBoundary, LoadingSkeleton } from '@shared/ui';
 import { RestaurantStatsBar } from '@features/catalog/components/RestaurantStatsBar';
 import type { RefundView } from '@/types';
@@ -163,6 +165,11 @@ export function RestaurantTabPanels({
                 title="What customers said"
                 emptyTitle="No reviews yet"
                 emptyDescription="Reviews appear here once customers rate a delivered order from this outlet."
+              />
+              <ReceivedFeedbackPanel
+                actorRole={RoleName.RESTAURANT}
+                outletId={selectedOutletId}
+                className="mt-8"
               />
               {/* Customers rate dishes and see dish ratings on the menu; without this the
                   kitchen was the only party that could not. Brand-level, because a review of

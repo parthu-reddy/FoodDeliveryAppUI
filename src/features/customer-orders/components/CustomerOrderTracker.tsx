@@ -2,8 +2,7 @@ import { Surface, surfaceStyle } from '@shared/ui';
 import { motion } from 'motion/react';
 import { useMotionPresets } from '@shared/ui';
 import { ArrowLeft } from 'lucide-react';
-import React, { useState } from 'react';
-import { RateOrderModal } from '@features/reviews';
+import React from 'react';
 import { OrderTrackerLive } from './OrderTrackerLive';
 import { OrderTrackerSettled } from './OrderTrackerSettled';
 // Use React.lazy for map
@@ -42,7 +41,6 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
 }) => {
   const { startCall } = useCallContext();
   const refunds = useOrderRefunds(currentTrackingOrder?.id, isFailedOrder(currentTrackingOrder));
-  const [orderIdToRate, setOrderIdToRate] = useState<string | null>(null);
   const presets = useMotionPresets();
   const live = isActiveOrder(currentTrackingOrder) && !isFailedOrder(currentTrackingOrder);
   const trackable = activeOrders.filter((o) => isActiveOrder(o));
@@ -107,16 +105,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
           isFailedOrder={isFailedOrder}
           getFriendlyStatusMessage={getFriendlyStatusMessage}
           refunds={refunds}
-          setOrderIdToRate={setOrderIdToRate}
           startCall={startCall}
-        />
-      )}
-
-      {orderIdToRate && (
-        <RateOrderModal
-          isOpen={!!orderIdToRate}
-          onClose={() => setOrderIdToRate(null)}
-          orderId={orderIdToRate}
         />
       )}
     </motion.div>

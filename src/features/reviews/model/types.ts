@@ -7,7 +7,9 @@
  * `ReviewAggregateDto`, `ReviewEligibilityDto` and `ReviewTargetDto` on the service side.
  */
 
-export type ReviewEntityType = 'RESTAURANT' | 'DRIVER' | 'PRODUCT';
+export type ReviewEntityType = 'RESTAURANT' | 'DRIVER' | 'PRODUCT' | 'CUSTOMER';
+export type ReviewVisibility = 'PUBLIC' | 'PRIVATE';
+export type ReviewAuthorRole = 'CUSTOMER' | 'RESTAURANT' | 'DELIVERY';
 
 /** The public projection. Deliberately carries no `userId` and no `orderId`. */
 export interface Review {
@@ -18,6 +20,7 @@ export interface Review {
   comment?: string | null;
   /** Null for driver reviews, and when the order carried no customer name. */
   authorDisplayName?: string | null;
+  authorRole?: ReviewAuthorRole;
   createdAt: string;
 }
 
@@ -25,6 +28,19 @@ export interface Review {
 export interface ReviewDetail extends Review {
   orderId: string;
   userId: string;
+  authorRole: ReviewAuthorRole;
+  visibility: ReviewVisibility;
+}
+
+/** Private feedback received by a participant; no reviewer identity or order id is returned. */
+export interface ReviewReceived {
+  id: string;
+  entityType: ReviewEntityType;
+  entityId: string;
+  authorRole: ReviewAuthorRole;
+  rating: number;
+  comment?: string | null;
+  createdAt: string;
 }
 
 export interface ReviewAggregate {
@@ -38,6 +54,7 @@ export interface ReviewTarget {
   entityType: ReviewEntityType;
   entityId: string;
   displayName: string;
+  visibility: ReviewVisibility;
   alreadyReviewed: boolean;
   existingRating?: number | null;
   existingComment?: string | null;

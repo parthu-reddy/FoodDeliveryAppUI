@@ -2,6 +2,7 @@ import { reviewsApi } from '@/lib/zodiosClients';
 import { parseApiError } from '@/lib/parseApiError';
 import { useCallback, useEffect, useState } from 'react';
 import type { ReviewEligibility } from './types';
+import { RoleName } from '@/types';
 
 interface UseOrderReviewEligibility {
   eligibility: ReviewEligibility | null;
@@ -34,12 +35,13 @@ interface Loaded {
 export function useOrderReviewEligibility(
   orderId: string | undefined,
   enabled: boolean,
+  actorRole: RoleName = RoleName.CUSTOMER,
 ): UseOrderReviewEligibility {
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
 
   const active = enabled && Boolean(orderId);
-  const key = `${orderId}:${reloadToken}`;
+  const key = `${orderId}:${actorRole}:${reloadToken}`;
 
   const refetch = useCallback(() => setReloadToken((n) => n + 1), []);
 
@@ -50,6 +52,7 @@ export function useOrderReviewEligibility(
     reviewsApi.review
       .getEligibility({
         params: { orderId: orderId as string },
+        queries: { actorRole },
       })
       .then((res) => {
         if (ignore) return;
@@ -70,7 +73,7 @@ export function useOrderReviewEligibility(
     return () => {
       ignore = true;
     };
-  }, [orderId, active, key]);
+  }, [orderId, actorRole, active, key]);
 
   if (!active) {
     return { eligibility: null, isLoading: false, error: null, refetch };

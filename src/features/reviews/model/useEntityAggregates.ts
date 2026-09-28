@@ -3,13 +3,15 @@ import { logger } from '@/lib/logger';
 import { useEffect, useMemo, useState } from 'react';
 import { toAverage, type ReviewAggregate, type ReviewEntityType } from './types';
 
-/** Mirrors ReviewQueryService.MAX_BATCH_IDS; the server rejects anything larger with 400. */
+/** Mirrors ReviewQueryService.MAX_BATCH_IDS; larger entity lists are sent in bounded chunks. */
 const MAX_BATCH_IDS = 100;
 
 export interface AggregateSummary {
   average: number;
   totalReviews: number;
 }
+
+type PublicAggregateEntityType = Exclude<ReviewEntityType, 'DRIVER' | 'CUSTOMER'>;
 
 interface UseEntityAggregates {
   /** Keyed by entity id. Ids with no reviews are present with `totalReviews: 0`. */
@@ -25,8 +27,8 @@ const NONE: Record<string, AggregateSummary> = {};
  * A menu renders dozens of dishes. Asking per dish would be dozens of round trips before the first
  * star appears, which is the whole reason `GET /api/v1/reviews/aggregates` exists.
  *
- * `DRIVER` is deliberately unsupported: the server refuses it outright, because a batch
- * driver-rating lookup is the cheapest way to enumerate the fleet's performance. The type signature
+ * Private participant aggregates (`CUSTOMER` and `DRIVER`) are deliberately unsupported: the
+ * server refuses batch lookups because they can enumerate participant ratings. The type signature
  * says so rather than letting a caller discover it as a 400.
  *
  * A failure here resolves to an empty map rather than an error state. A missing rating on a dish is
@@ -34,7 +36,7 @@ const NONE: Record<string, AggregateSummary> = {};
  * would make browsing depend on something it does not need. It is logged, not swallowed silently.
  */
 export function useEntityAggregates(
-  entityType: Exclude<ReviewEntityType, 'DRIVER'>,
+  entityType: PublicAggregateEntityType,
   entityIds: string[],
   enabled = true,
 ): UseEntityAggregates {
@@ -44,10 +46,7 @@ export function useEntityAggregates(
   // fresh array identity on every render of the calling component, so an effect keyed on it refetched
   // the whole menu's ratings on every re-render. Caught by `does not refetch when only the id order
   // changes`.
-  const idsKey = Array.from(new Set(entityIds.filter(Boolean)))
-    .sort()
-    .slice(0, MAX_BATCH_IDS)
-    .join(',');
+  const idsKey = Array.from(new Set(entityIds.filter(Boolean))).sort().join(',');
   const ids = useMemo(() => (idsKey ? idsKey.split(',') : []), [idsKey]);
   const key = `${entityType}:${idsKey}`;
   const active = enabled && ids.length > 0;
@@ -56,17 +55,25 @@ export function useEntityAggregates(
     if (!active) return;
 
     let ignore = false;
-    reviewsApi.review
-      .getAggregates({ queries: { entityType, entityIds: ids } })
-      .then((res) => {
+    const requests: Promise<unknown>[] = [];
+    for (let offset = 0; offset < ids.length; offset += MAX_BATCH_IDS) {
+      requests.push(reviewsApi.review.getAggregates({
+        queries: { entityType, entityIds: ids.slice(offset, offset + MAX_BATCH_IDS) },
+      }));
+    }
+
+    Promise.all(requests)
+      .then((responses) => {
         if (ignore) return;
-        const body = res as { data?: { aggregates?: ReviewAggregate[] } };
         const map: Record<string, AggregateSummary> = {};
-        for (const a of body?.data?.aggregates ?? []) {
-          map[a.entityId] = {
-            average: toAverage(a.averageRating),
-            totalReviews: Number(a.totalReviews) || 0,
-          };
+        for (const response of responses) {
+          const body = response as { data?: { aggregates?: ReviewAggregate[] } };
+          for (const aggregate of body?.data?.aggregates ?? []) {
+            map[aggregate.entityId] = {
+              average: toAverage(aggregate.averageRating),
+              totalReviews: Number(aggregate.totalReviews) || 0,
+            };
+          }
         }
         setLoaded({ key, aggregates: map });
       })

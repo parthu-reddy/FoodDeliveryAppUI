@@ -1,14 +1,13 @@
 import { normalizeOrder } from '../../../schemas/order';
 import { customerApi } from '@/lib/zodiosClients';
-import { DeliveryStatus, Order, OrderStatus } from '@/types';
-import { RateOrderModal } from '@features/reviews';
+import { DeliveryStatus, Order, OrderStatus, RoleName } from '@/types';
+import { OrderReviewAction } from '@features/reviews';
 import { getFriendlyStatusMessage } from '@features/customer-orders/model/statusMessaging';
 import { Button, EmptyState, Overlay, PullToRefresh, Spinner, Surface } from '@shared/ui';
 import { AlertCircle, Clock, Package, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { formatINR } from '@shared/money';
 import PostDeliverySupportModal from './PostDeliverySupportModal';
-import { Star } from 'lucide-react';
 import { formatDateTime } from '@/shared/time';
 
 interface CustomerOrderHistoryProps {
@@ -24,9 +23,6 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedOrderIdForSupport, setSelectedOrderIdForSupport] = useState<string | null>(null);
-  const [orderIdToRate, setOrderIdToRate] = useState<string | null>(null);
-  // Bumped after a submission so the rate affordance re-reads eligibility and flips to "rated".
-  const [reviewedAt, setReviewedAt] = useState<Record<string, number>>({});
 
   const handleSupportRequest = async (orderId: string, reason: string) => {
     await customerApi.customerOrder.post('/api/v1/customer/orders/:orderId/refund-request', { reason }, { params: { orderId } });
@@ -157,17 +153,11 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
                         own eligibility gate, so the button is never offered for something the
                         API will refuse. */}
                     {order.deliveryStatus === DeliveryStatus.DELIVERED && (
-                      <button
-                        key={reviewedAt[order.id as string] ?? 0}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setOrderIdToRate(order.id as string);
-                        }}
-                        className="flex items-center gap-1 text-[10px] bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold px-2 py-1 rounded-md hover:bg-amber-100 dark:hover:bg-amber-500/20 transition-colors"
-                      >
-                        <Star className="w-3 h-3" />
-                        Rate this order
-                      </button>
+                      <OrderReviewAction
+                        orderId={order.id as string}
+                        actorRole={RoleName.CUSTOMER}
+                        presentation="compact"
+                      />
                     )}
 
                     {/* Same gate as the rate button, and for the same reason.
@@ -227,14 +217,6 @@ export function CustomerOrderHistory({ onClose, onAddApiLog }: CustomerOrderHist
         />
       )}
 
-      {orderIdToRate && (
-        <RateOrderModal
-          isOpen={!!orderIdToRate}
-          onClose={() => setOrderIdToRate(null)}
-          orderId={orderIdToRate}
-          onSubmitted={() => setReviewedAt(prev => ({ ...prev, [orderIdToRate]: Date.now() }))}
-        />
-      )}
     </Overlay>
   );
 }

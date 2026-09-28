@@ -8,7 +8,7 @@ import { PagedModelReviewDetailDto } from "./common";
 
 export const ReviewEntryRequest = z
   .object({
-    entityType: z.enum(["RESTAURANT", "DRIVER", "PRODUCT"]),
+    entityType: z.enum(["RESTAURANT", "DRIVER", "PRODUCT", "CUSTOMER"]),
     entityId: z.string(),
     rating: z.number().int().gte(1).lte(5),
     comment: z.string().min(0).max(1000).optional(),
@@ -29,14 +29,41 @@ export const ApiResponseListReviewDetailDto = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
+export const ReviewReceivedDto = z
+  .object({
+    id: z.string().uuid(),
+    entityType: z.enum(["RESTAURANT", "DRIVER", "PRODUCT", "CUSTOMER"]),
+    entityId: z.string(),
+    authorRole: z.enum(["CUSTOMER", "RESTAURANT", "DELIVERY"]),
+    rating: z.number().int(),
+    comment: z.string().optional(),
+    createdAt: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
+export const PagedModelReviewReceivedDto = z
+  .object({
+    content: z.array(ReviewReceivedDto),
+    page: PageMetadata.optional(),
+  })
+  .passthrough();
+export const ApiResponsePagedModelReviewReceivedDto = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    errorCode: z.string().optional(),
+    data: PagedModelReviewReceivedDto.optional(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
 export const ReviewDto = z
   .object({
     id: z.string().uuid(),
-    entityType: z.enum(["RESTAURANT", "DRIVER", "PRODUCT"]),
+    entityType: z.enum(["RESTAURANT", "DRIVER", "PRODUCT", "CUSTOMER"]),
     entityId: z.string(),
     rating: z.number().int(),
     comment: z.string().optional(),
     authorDisplayName: z.string().optional(),
+    authorRole: z.enum(["CUSTOMER", "RESTAURANT", "DELIVERY"]).optional(),
     createdAt: z.string().datetime({ offset: true }),
   })
   .passthrough();
@@ -54,9 +81,10 @@ export const ApiResponsePagedModelReviewDto = z
   .passthrough();
 export const ReviewTargetDto = z
   .object({
-    entityType: z.enum(["RESTAURANT", "DRIVER", "PRODUCT"]),
+    entityType: z.enum(["RESTAURANT", "DRIVER", "PRODUCT", "CUSTOMER"]),
     entityId: z.string(),
     displayName: z.string(),
+    visibility: z.enum(["PUBLIC", "PRIVATE"]),
     alreadyReviewed: z.boolean(),
     existingRating: z.number().int().optional(),
     existingComment: z.string().optional(),
@@ -76,6 +104,8 @@ export const ReviewEligibilityDto = z
         "TARGET_NOT_ON_ORDER",
         "ALREADY_REVIEWED",
         "DUPLICATE_ENTRY",
+        "ROLE_TARGET_NOT_ALLOWED",
+        "SELF_REVIEW",
       ])
       .optional(),
     reasonDetail: z.string().optional(),
@@ -94,7 +124,7 @@ export const ApiResponseReviewEligibilityDto = z
   .passthrough();
 export const ReviewAggregateDto = z
   .object({
-    entityType: z.enum(["RESTAURANT", "DRIVER", "PRODUCT"]),
+    entityType: z.enum(["RESTAURANT", "DRIVER", "PRODUCT", "CUSTOMER"]),
     entityId: z.string(),
     totalReviews: z.number().int(),
     averageRating: z.number(),
@@ -102,7 +132,7 @@ export const ReviewAggregateDto = z
   .passthrough();
 export const AggregateBatchDto = z
   .object({
-    entityType: z.enum(["RESTAURANT", "DRIVER", "PRODUCT"]),
+    entityType: z.enum(["RESTAURANT", "DRIVER", "PRODUCT", "CUSTOMER"]),
     aggregates: z.array(ReviewAggregateDto),
   })
   .passthrough();
@@ -129,6 +159,9 @@ export const schemas = {
   ReviewEntryRequest,
   CreateReviewRequest,
   ApiResponseListReviewDetailDto,
+  ReviewReceivedDto,
+  PagedModelReviewReceivedDto,
+  ApiResponsePagedModelReviewReceivedDto,
   ReviewDto,
   PagedModelReviewDto,
   ApiResponsePagedModelReviewDto,
@@ -151,7 +184,7 @@ export const endpoints = makeApi([
       {
         name: "entityType",
         type: "Query",
-        schema: z.enum(["RESTAURANT", "DRIVER", "PRODUCT"]),
+        schema: z.enum(["RESTAURANT", "DRIVER", "PRODUCT", "CUSTOMER"]),
       },
       {
         name: "entityId",
@@ -182,6 +215,11 @@ export const endpoints = makeApi([
         type: "Body",
         schema: CreateReviewRequest,
       },
+      {
+        name: "actorRole",
+        type: "Query",
+        schema: z.enum(["CUSTOMER", "DELIVERY", "RESTAURANT", "ADMIN"]),
+      },
     ],
     response: ApiResponseListReviewDetailDto,
   },
@@ -196,8 +234,42 @@ export const endpoints = makeApi([
         type: "Path",
         schema: z.string().uuid(),
       },
+      {
+        name: "actorRole",
+        type: "Query",
+        schema: z.enum(["CUSTOMER", "DELIVERY", "RESTAURANT", "ADMIN"]),
+      },
     ],
     response: ApiResponseReviewEligibilityDto,
+  },
+  {
+    method: "get",
+    path: "/api/v1/reviews/received",
+    alias: "getReceivedReviews",
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "actorRole",
+        type: "Query",
+        schema: z.enum(["CUSTOMER", "DELIVERY", "RESTAURANT", "ADMIN"]),
+      },
+      {
+        name: "outletId",
+        type: "Query",
+        schema: z.string().optional(),
+      },
+      {
+        name: "page",
+        type: "Query",
+        schema: z.number().int().gte(0).optional().default(0),
+      },
+      {
+        name: "size",
+        type: "Query",
+        schema: z.number().int().gte(1).lte(50).optional().default(20),
+      },
+    ],
+    response: ApiResponsePagedModelReviewReceivedDto,
   },
   {
     method: "get",
@@ -227,7 +299,7 @@ export const endpoints = makeApi([
       {
         name: "entityType",
         type: "Query",
-        schema: z.enum(["RESTAURANT", "DRIVER", "PRODUCT"]),
+        schema: z.enum(["RESTAURANT", "DRIVER", "PRODUCT", "CUSTOMER"]),
       },
       {
         name: "entityIds",
@@ -246,7 +318,7 @@ export const endpoints = makeApi([
       {
         name: "entityType",
         type: "Query",
-        schema: z.enum(["RESTAURANT", "DRIVER", "PRODUCT"]),
+        schema: z.enum(["RESTAURANT", "DRIVER", "PRODUCT", "CUSTOMER"]),
       },
       {
         name: "entityId",

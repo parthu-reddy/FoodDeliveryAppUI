@@ -1,9 +1,9 @@
-import { Surface } from '@shared/ui';
-import { Order } from "@/types";
-import { Button, Modal } from '@shared/ui';
+import { DeliveryStatus, Order, RoleName } from "@/types";
+import { Button, Modal, Surface } from '@shared/ui';
 import { CheckCircle2, MapPin, Receipt, X } from 'lucide-react';
 import React from 'react';
 import { formatINR } from '@shared/money';
+import { OrderReviewAction } from '@features/reviews';
 
 interface DeliveryOrderDetailsModalProps {
   order: Order | null;
@@ -94,6 +94,12 @@ export const DeliveryOrderDetailsModal: React.FC<DeliveryOrderDetailsModalProps>
             </div>
 
           </div>
+
+          {order.deliveryStatus === DeliveryStatus.DELIVERED && (
+            <Surface elevation={0} className="border-t p-4">
+              <OrderReviewAction orderId={order.id} actorRole={RoleName.DELIVERY} />
+            </Surface>
+          )}
           
           <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
              <Button fullWidth size="touch" variant="primary" onClick={onClose}>

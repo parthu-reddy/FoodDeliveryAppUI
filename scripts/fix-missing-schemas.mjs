@@ -32,6 +32,7 @@ const SPECS = {
   governmentId: "../GovernmentIDValidationService/openapi.json",
   ledger: "../LedgerService/openapi.json",
   tracking: "../UserTrackingService/openapi.json",
+  reviews: "../ReviewsService/openapi.json",
 };
 
 /** Identifiers defined at top level in a generated file. */
@@ -39,6 +40,25 @@ function definedIn(src) {
   const names = new Set();
   for (const m of src.matchAll(/^(?:export )?const (\w+)\s*=/gm)) names.add(m[1]);
   for (const m of src.matchAll(/^import\s*\{([^}]*)\}/gm)) {
+    for (const part of m[1].split(",")) {
+      const n = part.trim().split(/\s+as\s+/).pop().trim();
+      if (n) names.add(n);
+    }
+  }
+  return names;
+}
+
+/** Names declared in a tag file, excluding imports that only exist if common.ts is written. */
+function declaredIn(src) {
+  const names = new Set();
+  for (const m of src.matchAll(/^(?:export )?const (\w+)\s*=/gm)) names.add(m[1]);
+  return names;
+}
+
+/** Names already imported from common.ts, so the generator does not add a duplicate import. */
+function importedFromCommon(src) {
+  const names = new Set();
+  for (const m of src.matchAll(/^import\s*\{([^}]*)\}\s*from ["']\.\/common["'];?$/gm)) {
     for (const part of m[1].split(",")) {
       const n = part.trim().split(/\s+as\s+/).pop().trim();
       if (n) names.add(n);
@@ -85,8 +105,11 @@ for (const [name, spec] of Object.entries(SPECS)) {
   const perFile = {};
   for (const f of tagFiles) {
     const src = readFileSync(join(dir, f), "utf8");
-    const missing = [...referencedIn(src)].filter(
-      (n) => available.has(n) && !definedIn(src).has(n));
+    // Reviews has schemas shared by both ReviewController and AdminReviewController. The tag
+    // generator leaves their imports in place even after its output directory (including the
+    // previous common.ts) is removed, so treat those imports as missing only for this service.
+    const present = name === "reviews" ? declaredIn(src) : definedIn(src);
+    const missing = [...referencedIn(src)].filter((n) => available.has(n) && !present.has(n));
     if (missing.length) {
       perFile[f] = missing;
       missing.forEach((n) => needed.add(n));
@@ -103,10 +126,13 @@ for (const [name, spec] of Object.entries(SPECS)) {
   for (const [f, missing] of Object.entries(perFile)) {
     const p = join(dir, f);
     let src = readFileSync(p, "utf8");
-    const imp = `import { ${[...new Set(missing)].sort().join(", ")} } from "./common";\n`;
-    const lastImport = src.lastIndexOf("\nimport ");
-    const insertAt = src.indexOf("\n", lastImport + 1) + 1;
-    src = src.slice(0, insertAt) + imp + src.slice(insertAt);
+    const unimported = [...new Set(missing)].filter((n) => !importedFromCommon(src).has(n)).sort();
+    if (unimported.length) {
+      const imp = `import { ${unimported.join(", ")} } from "./common";\n`;
+      const lastImport = src.lastIndexOf("\nimport ");
+      const insertAt = src.indexOf("\n", lastImport + 1) + 1;
+      src = src.slice(0, insertAt) + imp + src.slice(insertAt);
+    }
     writeFileSync(p, src);
     totalAdded += missing.length;
     console.log(`  ${name}/${f}: imported ${missing.join(", ")}`);

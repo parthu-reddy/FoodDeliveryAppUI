@@ -6,9 +6,10 @@ import { Check, Lock, Star } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { StarRating } from './StarRating';
 import { ReviewTargetIcon } from './ReviewTargetIcon';
-import { isAlreadyReviewed, reviewRejectionCopy, shortDate } from '../model/reviewCopy';
+import { ENTITY_LABEL, isAlreadyReviewed, reviewRejectionCopy, shortDate } from '../model/reviewCopy';
 import { useOrderReviewEligibility } from '../model/useOrderReviewEligibility';
 import type { ReviewEntry, ReviewTarget } from '../model/types';
+import { RoleName } from '@/types';
 
 const COMMENT_LIMIT = 1000;
 
@@ -16,6 +17,8 @@ interface RateOrderModalProps {
   isOpen: boolean;
   onClose: () => void;
   orderId: string;
+  /** The active, backend-verified portal role for this participant. */
+  actorRole?: RoleName;
   /** Called once a submission succeeds, so the caller can refresh its own view. */
   onSubmitted?: () => void;
 }
@@ -40,6 +43,38 @@ function targetKey(target: ReviewTarget) {
   return `${target.entityType}:${target.entityId}`;
 }
 
+function targetDisplayName(target: ReviewTarget) {
+  return target.entityType === 'DRIVER' && target.displayName === 'Delivery partner'
+    ? 'Your delivery partner'
+    : target.displayName;
+}
+
+function TargetIdentity({ target, muted = false }: { target: ReviewTarget; muted?: boolean }) {
+  return (
+    <div className="min-w-0">
+      <span className="flex flex-wrap items-center gap-1.5">
+        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+          muted
+            ? 'bg-slate-500/5 text-slate-400'
+            : 'bg-amber-500/10 text-amber-700 dark:text-amber-300'
+        }`}>
+          <ReviewTargetIcon entityType={target.entityType} className="h-3 w-3" />
+          {ENTITY_LABEL[target.entityType]}
+        </span>
+        {target.visibility === 'PRIVATE' && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-slate-500/5 px-2 py-0.5 text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+            <Lock className="h-2.5 w-2.5" aria-hidden="true" />
+            Private
+          </span>
+        )}
+      </span>
+      <p className={`mt-1 truncate text-sm font-bold ${muted ? 'text-slate-500 dark:text-slate-400' : 'text-slate-800 dark:text-slate-100'}`}>
+        {targetDisplayName(target)}
+      </p>
+    </div>
+  );
+}
+
 /**
  * The rating sheet for one order.
  *
@@ -54,8 +89,15 @@ function targetKey(target: ReviewTarget) {
  * 3. **A 409 is not an error.** If another tab submitted first, the server says `ALREADY_REVIEWED`;
  *    the sheet refetches and shows the submitted state instead of a red banner.
  */
-function RateOrderModalInner({ isOpen, onClose, orderId, onSubmitted }: RateOrderModalProps) {
-  const { eligibility, isLoading, error, refetch } = useOrderReviewEligibility(orderId, isOpen);
+function RateOrderModalInner({
+  isOpen,
+  onClose,
+  orderId,
+  actorRole = RoleName.CUSTOMER,
+  onSubmitted,
+}: RateOrderModalProps) {
+  const { eligibility, isLoading, error, refetch } =
+    useOrderReviewEligibility(orderId, isOpen, actorRole);
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -93,7 +135,10 @@ function RateOrderModalInner({ isOpen, onClose, orderId, onSubmitted }: RateOrde
     setSubmitError(null);
 
     try {
-      await reviewsApi.review.createReviews({ orderId, entries });
+      await reviewsApi.review.createReviews(
+        { orderId, entries },
+        { queries: { actorRole } },
+      );
       setStatus('success');
       onSubmitted?.();
     } catch (err: unknown) {
@@ -120,7 +165,12 @@ function RateOrderModalInner({ isOpen, onClose, orderId, onSubmitted }: RateOrde
   };
 
   return (
-    <Modal open={isOpen} onClose={handleClose} title="Rate your order" size="lg">
+    <Modal
+      open={isOpen}
+      onClose={handleClose}
+      title={actorRole === RoleName.CUSTOMER ? 'Rate your order' : 'Review this delivery'}
+      size="lg"
+    >
       {isLoading && (
         <div className="flex justify-center py-12">
           <Spinner size="lg" />
@@ -176,50 +226,72 @@ function RateOrderModalInner({ isOpen, onClose, orderId, onSubmitted }: RateOrde
 
           {submitError && <AlertBanner variant="error">{submitError}</AlertBanner>}
 
+          {pending.length > 0 && (
+            <div className="rounded-xl bg-slate-500/5 px-3 py-2.5">
+              <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                {actorRole === RoleName.CUSTOMER
+                  ? 'Rate any dishes, the restaurant, or the delivery partner. Unrated targets are skipped; comments are optional.'
+                  : actorRole === RoleName.RESTAURANT
+                    ? 'Share feedback about the customer or delivery partner. Your comments are private to the people involved.'
+                    : 'Share feedback about the customer or restaurant. Your comments are private to the people involved.'}
+              </p>
+              <p className="mt-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400" aria-live="polite">
+                {entries.length} of {pending.length} selected
+              </p>
+            </div>
+          )}
+
+          {pending.length === 0 && submitted.length === 0 && (
+            <div className="rounded-xl bg-slate-500/5 px-4 py-5 text-center">
+              <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                There&apos;s nothing to review for this order yet.
+              </p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                Please try again later.
+              </p>
+            </div>
+          )}
+
           {pending.map((target) => {
             const key = targetKey(target);
             const draft = drafts[key];
             const rating = draft?.rating ?? 0;
             const comment = draft?.comment ?? '';
+            const displayName = targetDisplayName(target);
 
             return (
               <Surface variant="glass-chrome" radius="lg" elevation={0} className="p-4" key={key}>
                 <div className="flex items-center justify-between gap-3">
-                  <div className="flex min-w-0 items-center gap-2 text-slate-700 dark:text-slate-200">
-                    <span className="text-rose-500"><ReviewTargetIcon entityType={target.entityType} className="h-4 w-4" /></span>
-                    <span className="truncate text-sm font-bold">{target.displayName}</span>
-                  </div>
+                  <TargetIdentity target={target} />
                   <StarRating
                     value={rating}
                     onChange={(value) => setDraft(target, { rating: value })}
                     size="md"
-                    label={target.displayName}
+                    label={displayName}
                   />
                 </div>
 
-                <div className="mt-3">
-                  <Textarea
-                    value={comment}
-                    maxLength={COMMENT_LIMIT}
-                    // A comment with no rating cannot be submitted, so the field stays out of the
-                    // way until there is something to attach it to.
-                    disabled={rating === 0}
-                    onChange={(e) => setDraft(target, { comment: e.target.value })}
-                    placeholder={
-                      rating === 0
-                        ? 'Pick a rating first'
-                        : `What stood out about ${target.displayName}? (optional)`
-                    }
-                    rows={2}
-                    aria-label={`Comment about ${target.displayName}`}
-                    className="disabled:cursor-not-allowed disabled:opacity-50"
-                  />
-                  {comment.length > 0 && (
-                    <p className="mt-1 text-right text-[10px] tabular-nums text-slate-400">
-                      {comment.length}/{COMMENT_LIMIT}
-                    </p>
-                  )}
-                </div>
+                {rating > 0 ? (
+                  <div className="mt-3">
+                    <Textarea
+                      value={comment}
+                      maxLength={COMMENT_LIMIT}
+                      onChange={(e) => setDraft(target, { comment: e.target.value })}
+                      placeholder={`Add a comment about ${displayName} (optional)`}
+                      rows={2}
+                      aria-label={`Comment about ${displayName}`}
+                    />
+                    {comment.length > 0 && (
+                      <p className="mt-1 text-right text-[10px] tabular-nums text-slate-400">
+                        {comment.length}/{COMMENT_LIMIT}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">
+                    Tap a star to rate. Comments are optional.
+                  </p>
+                )}
               </Surface>
             );
           })}
@@ -232,10 +304,7 @@ function RateOrderModalInner({ isOpen, onClose, orderId, onSubmitted }: RateOrde
               {submitted.map((target) => (
                 <Surface radius="lg" elevation={0} className="p-3" key={targetKey(target)}>
                   <div className="flex items-center justify-between gap-3">
-                    <div className="flex min-w-0 items-center gap-2 text-slate-500 dark:text-slate-400">
-                      <span><ReviewTargetIcon entityType={target.entityType} className="h-4 w-4" /></span>
-                      <span className="truncate text-sm font-semibold">{target.displayName}</span>
-                    </div>
+                    <TargetIdentity target={target} muted />
                     <StarRating value={target.existingRating ?? 0} size="sm" />
                   </div>
                   {target.existingComment?.trim() && (

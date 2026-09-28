@@ -4,7 +4,8 @@ import { useToast } from '@/contexts/ToastContext';
 // the same Order the settings view uses: `@/types` is a wider shape and the two
 // are not assignable in either direction
 import type { Order } from '../../schemas/order';
-import { RateOrderModal } from '@features/reviews';
+import { RoleName } from '@/types';
+import { OrderReviewAction, ReceivedFeedbackPanel } from '@features/reviews';
 import { formatINR } from '@shared/money';
 import { getFriendlyStatusMessage } from '@features/customer-orders/model/statusMessaging';
 import { placedAt } from '@features/customer-orders/model/placedAt';
@@ -27,7 +28,6 @@ export function SettingsHistoryTab({ setTrackingOrder }: { setTrackingOrder?: (o
   const [currentPageOrders, setCurrentPageOrders] = useState(0);
   const [hasMoreOrders, setHasMoreOrders] = useState(false);
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
-  const [orderIdToRate, setOrderIdToRate] = useState<string | null>(null);
 
   const fetchOrders = async (page: number, type: 'history') => {
     try {
@@ -69,6 +69,7 @@ export function SettingsHistoryTab({ setTrackingOrder }: { setTrackingOrder?: (o
         into CustomerOrderHistory.tsx, which no screen renders; this is the history they see. */}
     <PullToRefresh onRefresh={() => fetchOrders(0, 'history')} label="Pull down to reload your orders">
     <div className="space-y-4">
+      <ReceivedFeedbackPanel actorRole={RoleName.CUSTOMER} />
       {isLoadingOrders && paginatedOrders.length === 0 ? (
         <div className="text-center text-slate-500 text-sm py-8">Loading history...</div>
       ) : paginatedOrders.length === 0 ? (
@@ -112,9 +113,7 @@ export function SettingsHistoryTab({ setTrackingOrder }: { setTrackingOrder?: (o
               </Surface>
             </button>
             {order.deliveryStatus === 'DELIVERED' && (
-              <Button variant="secondary" size="sm" onClick={() => setOrderIdToRate(order.id)}>
-                Rate this order
-              </Button>
+              <OrderReviewAction orderId={order.id} actorRole={RoleName.CUSTOMER} presentation="compact" />
             )}
           </div>
         ))
@@ -130,13 +129,6 @@ export function SettingsHistoryTab({ setTrackingOrder }: { setTrackingOrder?: (o
       )}
     </div>
     </PullToRefresh>
-    {orderIdToRate && (
-      <RateOrderModal
-        isOpen
-        orderId={orderIdToRate}
-        onClose={() => setOrderIdToRate(null)}
-      />
-    )}
     </>
   );
 }

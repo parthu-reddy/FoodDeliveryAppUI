@@ -16,10 +16,9 @@ interface DriverRatingCardProps {
 /**
  * A driver's own rating, and the feedback behind it.
  *
- * Only ever their own: `ReviewAccessPolicy` refuses `EntityType.DRIVER` to anyone but that driver,
- * an administrator, or an internal service, so passing someone else's id here returns 403 rather
- * than data. The list arrives with `authorDisplayName: null` — a driver who could attach a one-star
- * rating to a name would also know that customer's address, because they delivered to it.
+ * Only ever their own: `ReviewAccessPolicy` refuses `DRIVER` feedback to anyone but that driver,
+ * an administrator, or an internal service. The list withholds reviewer identity and shows only
+ * whether feedback came from a customer or restaurant partner.
  *
  * Collapsed by default. The number is the thing a driver checks between jobs; the comments are
  * something they choose to read.
@@ -75,7 +74,7 @@ export function DriverRatingCard({ driverId, className = '' }: DriverRatingCardP
                 hasMore={hasMore}
                 onLoadMore={loadMore}
                 emptyTitle="No ratings yet"
-                emptyDescription="Customers can rate your delivery once their order arrives."
+                emptyDescription="Customers and restaurant partners can leave private feedback after delivery. Only you can read it."
               />
             </>
           )}

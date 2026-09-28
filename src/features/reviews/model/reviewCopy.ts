@@ -1,4 +1,4 @@
-import type { ReviewEntityType } from './types';
+import type { ReviewAuthorRole, ReviewEntityType } from './types';
 import { formatDate } from '@/shared/time';
 
 /**
@@ -9,6 +9,13 @@ export const ENTITY_LABEL: Record<ReviewEntityType, string> = {
   RESTAURANT: 'Restaurant',
   DRIVER: 'Delivery partner',
   PRODUCT: 'Dish',
+  CUSTOMER: 'Customer',
+};
+
+export const AUTHOR_ROLE_LABEL: Record<ReviewAuthorRole, string> = {
+  CUSTOMER: 'Customer',
+  RESTAURANT: 'Restaurant partner',
+  DELIVERY: 'Delivery partner',
 };
 
 /**
@@ -25,7 +32,9 @@ export type ReviewRejectionReason =
   | 'REVIEW_WINDOW_CLOSED'
   | 'TARGET_NOT_ON_ORDER'
   | 'ALREADY_REVIEWED'
-  | 'DUPLICATE_ENTRY';
+  | 'DUPLICATE_ENTRY'
+  | 'ROLE_TARGET_NOT_ALLOWED'
+  | 'SELF_REVIEW';
 
 const COPY: Record<ReviewRejectionReason, string> = {
   ORDER_NOT_FOUND: "We couldn't find this order.",
@@ -35,6 +44,8 @@ const COPY: Record<ReviewRejectionReason, string> = {
   TARGET_NOT_ON_ORDER: "That wasn't part of this order.",
   ALREADY_REVIEWED: "You've already reviewed this — reviews can't be changed once submitted.",
   DUPLICATE_ENTRY: 'That was rated twice in the same submission.',
+  ROLE_TARGET_NOT_ALLOWED: 'Your role cannot leave feedback about that part of the order.',
+  SELF_REVIEW: 'You can’t leave feedback about yourself.',
 };
 
 export function reviewRejectionCopy(reason: string | null | undefined): string {
@@ -48,8 +59,14 @@ export function isAlreadyReviewed(reason: string | null | undefined): boolean {
 }
 
 /** "Priya R." — or a neutral stand-in when the author is withheld or unknown. */
-export function authorLabel(authorDisplayName: string | null | undefined): string {
-  return authorDisplayName?.trim() || 'A customer';
+export function authorLabel(
+  authorDisplayName: string | null | undefined,
+  authorRole?: ReviewAuthorRole,
+): string {
+  if (authorDisplayName?.trim()) return authorDisplayName.trim();
+  if (authorRole === 'RESTAURANT') return 'A restaurant partner';
+  if (authorRole === 'DELIVERY') return 'A delivery partner';
+  return 'A customer';
 }
 
 /** "14 Sept" — the date a review was written, or a window closes. */

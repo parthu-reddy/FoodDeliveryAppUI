@@ -1,4 +1,4 @@
-import { Bike, Store, UtensilsCrossed } from 'lucide-react';
+import { Bike, Store, UserRound, UtensilsCrossed } from 'lucide-react';
 import type { ReviewEntityType } from '../model/types';
 
 /**
@@ -16,6 +16,7 @@ const ICON: Record<ReviewEntityType, typeof Store> = {
   RESTAURANT: Store,
   DRIVER: Bike,
   PRODUCT: UtensilsCrossed,
+  CUSTOMER: UserRound,
 };
 
 interface ReviewTargetIconProps {

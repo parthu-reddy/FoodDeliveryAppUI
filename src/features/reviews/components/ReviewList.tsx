@@ -18,9 +18,8 @@ interface ReviewListProps {
 /**
  * A page of reviews.
  *
- * The author is whatever the server chose to send. Driver reviews arrive with
- * `authorDisplayName: null` and render as "A customer" — that redaction is decided server-side by
- * `ReviewMapper`, and this component neither reverses it nor depends on it being applied.
+ * The author is whatever the server chose to send. Private rider feedback identifies only the
+ * participant's role; public restaurant and dish reviews may include a display name.
  */
 export function ReviewList({
   reviews,
@@ -63,7 +62,7 @@ export function ReviewList({
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="truncate text-sm font-bold text-slate-800 dark:text-white">
-                {authorLabel(review.authorDisplayName)}
+                {authorLabel(review.authorDisplayName, review.authorRole)}
               </p>
               <StarRating value={review.rating} size="sm" className="mt-1" />
             </div>

@@ -37,10 +37,12 @@ function eligibility(overrides: Partial<ReviewEligibility> = {}): ReviewEligibil
     targets: [
       {
         entityType: 'RESTAURANT', entityId: OUTLET_ID, displayName: 'Bombay Canteen',
+        visibility: 'PUBLIC',
         alreadyReviewed: false,
       },
       {
         entityType: 'DRIVER', entityId: DRIVER_ID, displayName: 'Delivery partner',
+        visibility: 'PRIVATE',
         alreadyReviewed: false,
       },
     ],
@@ -124,7 +126,8 @@ describe('RateOrderModal', () => {
     get.mockResolvedValueOnce(envelope(eligibility()))
        .mockResolvedValue(envelope(eligibility({
          targets: [{
-           entityType: 'RESTAURANT', entityId: OUTLET_ID, displayName: 'Bombay Canteen',
+         entityType: 'RESTAURANT', entityId: OUTLET_ID, displayName: 'Bombay Canteen',
+           visibility: 'PUBLIC',
            alreadyReviewed: true, existingRating: 5, existingComment: 'Great',
            existingReviewedAt: '2026-09-11T10:15:30Z',
          }],
@@ -169,6 +172,7 @@ describe('RateOrderModal', () => {
     get.mockResolvedValue(envelope(eligibility({
       targets: [{
         entityType: 'RESTAURANT', entityId: OUTLET_ID, displayName: 'Bombay Canteen',
+        visibility: 'PUBLIC',
         alreadyReviewed: true, existingRating: 4, existingComment: 'Quick and hot',
         existingReviewedAt: '2026-09-11T10:15:30Z',
       }],

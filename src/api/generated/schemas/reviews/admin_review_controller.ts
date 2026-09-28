@@ -16,7 +16,7 @@ export const endpoints = makeApi([
       {
         name: "entityType",
         type: "Query",
-        schema: z.enum(["RESTAURANT", "DRIVER", "PRODUCT"]),
+        schema: z.enum(["RESTAURANT", "DRIVER", "PRODUCT", "CUSTOMER"]),
       },
       {
         name: "entityId",
