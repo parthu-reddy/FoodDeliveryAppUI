@@ -45,7 +45,7 @@ export function AdminReviewsView() {
               params: { userId: userId.trim() },
               queries: { page: 0, size: 50 },
             });
-      const content = (res.data?.content ?? []) as ReviewDetail[];
+      const content = res.data?.content ?? [];
       setReviews(content);
     } catch (err: unknown) {
       setError(parseApiError(err, 'Could not load reviews.').message);

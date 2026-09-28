@@ -1,7 +1,7 @@
 import { reviewsApi } from '@/lib/zodiosClients';
 import { logger } from '@/lib/logger';
 import { useEffect, useMemo, useState } from 'react';
-import { toAverage, type ReviewAggregate, type ReviewEntityType } from './types';
+import { toAverage, type ReviewEntityType } from './types';
 
 /** Mirrors ReviewQueryService.MAX_BATCH_IDS; larger entity lists are sent in bounded chunks. */
 const MAX_BATCH_IDS = 100;
@@ -55,20 +55,22 @@ export function useEntityAggregates(
     if (!active) return;
 
     let ignore = false;
-    const requests: Promise<unknown>[] = [];
-    for (let offset = 0; offset < ids.length; offset += MAX_BATCH_IDS) {
-      requests.push(reviewsApi.review.getAggregates({
-        queries: { entityType, entityIds: ids.slice(offset, offset + MAX_BATCH_IDS) },
-      }));
-    }
+    const requests = Array.from(
+      { length: Math.ceil(ids.length / MAX_BATCH_IDS) },
+      (_, chunkIndex) => reviewsApi.review.getAggregates({
+        queries: {
+          entityType,
+          entityIds: ids.slice(chunkIndex * MAX_BATCH_IDS, (chunkIndex + 1) * MAX_BATCH_IDS),
+        },
+      }),
+    );
 
     Promise.all(requests)
       .then((responses) => {
         if (ignore) return;
         const map: Record<string, AggregateSummary> = {};
         for (const response of responses) {
-          const body = response as { data?: { aggregates?: ReviewAggregate[] } };
-          for (const aggregate of body?.data?.aggregates ?? []) {
+          for (const aggregate of response.data?.aggregates ?? []) {
             map[aggregate.entityId] = {
               average: toAverage(aggregate.averageRating),
               totalReviews: Number(aggregate.totalReviews) || 0,

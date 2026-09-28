@@ -1,4 +1,4 @@
-import type { ReviewAuthorRole, ReviewEntityType } from './types';
+import type { ReviewAuthorRole, ReviewEntityType, ReviewRejectionReason } from './types';
 import { formatDate } from '@/shared/time';
 
 /**
@@ -25,17 +25,6 @@ export const AUTHOR_ROLE_LABEL: Record<ReviewAuthorRole, string> = {
  * side). Showing the enum name, or a generic "something went wrong", would leave someone staring at
  * a missing button with no idea whether to wait, retry, or give up.
  */
-export type ReviewRejectionReason =
-  | 'ORDER_NOT_FOUND'
-  | 'NOT_YOUR_ORDER'
-  | 'ORDER_NOT_DELIVERED'
-  | 'REVIEW_WINDOW_CLOSED'
-  | 'TARGET_NOT_ON_ORDER'
-  | 'ALREADY_REVIEWED'
-  | 'DUPLICATE_ENTRY'
-  | 'ROLE_TARGET_NOT_ALLOWED'
-  | 'SELF_REVIEW';
-
 const COPY: Record<ReviewRejectionReason, string> = {
   ORDER_NOT_FOUND: "We couldn't find this order.",
   NOT_YOUR_ORDER: 'This order belongs to a different account.',
@@ -48,9 +37,15 @@ const COPY: Record<ReviewRejectionReason, string> = {
   SELF_REVIEW: 'You can’t leave feedback about yourself.',
 };
 
+function isReviewRejectionReason(reason: string): reason is ReviewRejectionReason {
+  return Object.prototype.hasOwnProperty.call(COPY, reason);
+}
+
 export function reviewRejectionCopy(reason: string | null | undefined): string {
-  if (!reason) return 'This order cannot be reviewed right now.';
-  return COPY[reason as ReviewRejectionReason] ?? 'This order cannot be reviewed right now.';
+  if (!reason || !isReviewRejectionReason(reason)) {
+    return 'This order cannot be reviewed right now.';
+  }
+  return COPY[reason];
 }
 
 /** True when the server is telling us the review already exists, not that something broke. */

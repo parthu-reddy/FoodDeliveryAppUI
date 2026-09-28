@@ -113,6 +113,13 @@ export enum RefundStatus {
     CANCELLED = "CANCELLED",
 }
 
+export enum ReviewEntityType {
+    RESTAURANT = "RESTAURANT",
+    DRIVER = "DRIVER",
+    PRODUCT = "PRODUCT",
+    CUSTOMER = "CUSTOMER",
+}
+
 export enum RoleName {
     CUSTOMER = "CUSTOMER",
     DELIVERY = "DELIVERY",

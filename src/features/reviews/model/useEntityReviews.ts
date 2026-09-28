@@ -64,22 +64,22 @@ export function useEntityReviews(
   const loadMore = useCallback(() => setPage((p) => p + 1), []);
 
   useEffect(() => {
-    if (!active) return;
+    if (!active || !entityType || !entityId) return;
 
     let ignore = false;
     const firstPage = page === 0;
 
     const listPromise = reviewsApi.review.getReviews({
       queries: {
-        entityType: entityType as ReviewEntityType,
-        entityId: entityId as string,
+        entityType,
+        entityId,
         page,
         size: PAGE_SIZE,
       },
     });
     const aggregatePromise = firstPage
       ? reviewsApi.review.getAggregate({
-          queries: { entityType: entityType as ReviewEntityType, entityId: entityId as string },
+          queries: { entityType, entityId },
         })
       : Promise.resolve(null);
 
@@ -87,11 +87,9 @@ export function useEntityReviews(
       .then(([listRes, aggRes]) => {
         if (ignore) return;
 
-        const content = (listRes.data?.content ?? []) as Review[];
+        const content = listRes.data?.content ?? [];
         const totalPages = listRes.data?.page?.totalPages ?? 1;
-        const aggregate = aggRes
-          ? ((aggRes.data ?? null) as ReviewAggregate | null)
-          : null;
+        const aggregate = aggRes?.data ?? null;
 
         setLoaded((prev) => {
           const sameRun = prev?.key === key;

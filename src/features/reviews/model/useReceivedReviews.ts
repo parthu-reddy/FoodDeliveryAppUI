@@ -40,7 +40,7 @@ export function useReceivedReviews(actorRole: RoleName, outletId?: string) {
       })
       .then((response) => {
         if (ignore) return;
-        const content = (response.data?.content ?? []) as ReviewReceived[];
+        const content = response.data?.content ?? [];
         const totalPages = response.data?.page?.totalPages ?? 1;
         setLoaded((previous) => {
           if (page === 0 || previous?.key !== key) {

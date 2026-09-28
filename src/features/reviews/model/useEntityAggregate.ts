@@ -38,16 +38,16 @@ export function useEntityAggregate(
   const key = `${entityType}:${entityId}`;
 
   useEffect(() => {
-    if (!active) return;
+    if (!active || !entityType || !entityId) return;
 
     let ignore = false;
     reviewsApi.review
       .getAggregate({
-        queries: { entityType: entityType as ReviewEntityType, entityId: entityId as string },
+        queries: { entityType, entityId },
       })
       .then((res) => {
         if (ignore) return;
-        const aggregate = (res.data ?? null) as ReviewAggregate | null;
+        const aggregate = res.data ?? null;
         setLoaded({ key, aggregate, error: null });
       })
       .catch((err: unknown) => {

@@ -1,91 +1,28 @@
-/**
- * Shapes the review API returns.
- *
- * Declared here rather than inferred from the generated Zod schemas because `commonZodiosConfig`
- * sets `validate: false` — the generated response validators are `z.void()` for most endpoints, so
- * the inferred types carry no information. These mirror `ReviewDto`, `ReviewDetailDto`,
- * `ReviewAggregateDto`, `ReviewEligibilityDto` and `ReviewTargetDto` on the service side.
- */
+import type { infer as ZodInfer } from 'zod';
+import type {
+  ReviewAggregateDto,
+  ReviewDetailDto,
+  ReviewDto,
+  ReviewEligibilityDto,
+  ReviewEntryRequest,
+  ReviewReceivedDto,
+  ReviewTargetDto,
+} from '@/api/generated/schemas/reviews/common';
 
-export type ReviewEntityType = 'RESTAURANT' | 'DRIVER' | 'PRODUCT' | 'CUSTOMER';
-export type ReviewVisibility = 'PUBLIC' | 'PRIVATE';
-export type ReviewAuthorRole = 'CUSTOMER' | 'RESTAURANT' | 'DELIVERY';
+/** API contracts are inferred from the OpenAPI-generated Zod schemas. */
+export type Review = ZodInfer<typeof ReviewDto>;
+export type ReviewDetail = ZodInfer<typeof ReviewDetailDto>;
+export type ReviewReceived = ZodInfer<typeof ReviewReceivedDto>;
+export type ReviewAggregate = ZodInfer<typeof ReviewAggregateDto>;
+export type ReviewTarget = ZodInfer<typeof ReviewTargetDto>;
+export type ReviewEligibility = ZodInfer<typeof ReviewEligibilityDto>;
+export type ReviewEntry = ZodInfer<typeof ReviewEntryRequest>;
+export type ReviewEntityType = Review['entityType'];
+export type ReviewVisibility = ReviewTarget['visibility'];
+export type ReviewAuthorRole = ReviewDetail['authorRole'];
+export type ReviewRejectionReason = NonNullable<ReviewEligibility['reason']>;
 
-/** The public projection. Deliberately carries no `userId` and no `orderId`. */
-export interface Review {
-  id: string;
-  entityType: ReviewEntityType;
-  entityId: string;
-  rating: number;
-  comment?: string | null;
-  /** Null for driver reviews, and when the order carried no customer name. */
-  authorDisplayName?: string | null;
-  authorRole?: ReviewAuthorRole;
-  createdAt: string;
-}
-
-/** The author's own view, and the admin one. */
-export interface ReviewDetail extends Review {
-  orderId: string;
-  userId: string;
-  authorRole: ReviewAuthorRole;
-  visibility: ReviewVisibility;
-}
-
-/** Private feedback received by a participant; no reviewer identity or order id is returned. */
-export interface ReviewReceived {
-  id: string;
-  entityType: ReviewEntityType;
-  entityId: string;
-  authorRole: ReviewAuthorRole;
-  rating: number;
-  comment?: string | null;
-  createdAt: string;
-}
-
-export interface ReviewAggregate {
-  entityType: ReviewEntityType;
-  entityId: string;
-  totalReviews: number;
-  averageRating: number | string;
-}
-
-export interface ReviewTarget {
-  entityType: ReviewEntityType;
-  entityId: string;
-  displayName: string;
-  visibility: ReviewVisibility;
-  alreadyReviewed: boolean;
-  existingRating?: number | null;
-  existingComment?: string | null;
-  existingReviewedAt?: string | null;
-}
-
-export interface ReviewEligibility {
-  orderId: string;
-  reviewable: boolean;
-  reason?: string | null;
-  reasonDetail?: string | null;
-  windowClosesAt?: string | null;
-  targets: ReviewTarget[];
-}
-
-/**
- * One entry of a submission. Only targets the customer actually rated are sent.
- *
- * A `type`, not an `interface`, on purpose: it is passed straight into the generated Zodios client,
- * whose `.passthrough()` schemas infer an index signature. TypeScript gives type aliases an implicit
- * index signature and interfaces none, so an interface here would force a cast at the call site —
- * and a cast is exactly what stops a future shape change from being caught.
- */
-export type ReviewEntry = {
-  entityType: ReviewEntityType;
-  entityId: string;
-  rating: number;
-  comment?: string;
-};
-
-/** `averageRating` arrives as a string from the BigDecimal on the service side. */
+/** `averageRating` comes from a decimal aggregate; accept both JSON number and decimal string. */
 export function toAverage(value: number | string | null | undefined): number {
   if (value === null || value === undefined) return 0;
   const n = typeof value === 'number' ? value : Number.parseFloat(value);
