@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
 import '@testing-library/jest-dom';
+import { ToastProvider } from '@/contexts/ToastContext';
+import { ConfirmProvider } from '@shared/ui';
 
 const getRuns = vi.fn();
 const listRejections = vi.fn();
@@ -35,6 +37,14 @@ vi.mock('@/lib/zodiosClients', () => ({
 
 import OperationsPage from './OperationsPage';
 
+const renderPage = () => render(
+  <ToastProvider>
+    <ConfirmProvider>
+      <OperationsPage />
+    </ConfirmProvider>
+  </ToastProvider>,
+);
+
 /**
  * The page an operator works when money is stuck. Every tab must show what is stuck and offer the
  * action that clears it.
@@ -51,7 +61,7 @@ describe('OperationsPage', () => {
   });
 
   it('opens on ledger rejections, because that is where money goes missing', async () => {
-    render(<OperationsPage />);
+    renderPage();
     expect(await screen.findByText('Rejected Ledger Movements')).toBeInTheDocument();
     await waitFor(() => expect(listRejections).toHaveBeenCalled());
   });
@@ -63,7 +73,7 @@ describe('OperationsPage', () => {
       payload: '{"transactionId":"0000"}', ageMinutes: 185,
     }]});
 
-    render(<OperationsPage />);
+    renderPage();
 
     expect(await screen.findByText(/customer-application/)).toBeInTheDocument();
     expect(screen.getByText('transactionId is not derivable from (producer, reference, leg)')).toBeInTheDocument();
@@ -75,7 +85,7 @@ describe('OperationsPage', () => {
       id: 'r-1', eventId: 'evt-1', producer: 'customer-application', reason: 'boom', payload: '{}', ageMinutes: 5,
     }]});
 
-    render(<OperationsPage />);
+    renderPage();
     fireEvent.click(await screen.findByText('Resolve'));
 
     const confirm = screen.getByText('Confirm');
@@ -89,11 +99,12 @@ describe('OperationsPage', () => {
       id: 'r-1', eventId: 'evt-1', producer: 'customer-application', reason: 'boom', payload: '{}', ageMinutes: 5,
     }]});
 
-    render(<OperationsPage />);
+    renderPage();
     fireEvent.click(await screen.findByText('Resolve'));
     fireEvent.change(screen.getByPlaceholderText('Why does this no longer need booking?'),
       { target: { value: 'replayed by the producer' } });
     fireEvent.click(screen.getByText('Confirm'));
+    fireEvent.click(await screen.findByRole('button', { name: 'Resolve movement' }));
 
     await waitFor(() => expect(resolveRejection).toHaveBeenCalledTimes(1));
     const [body, opts] = resolveRejection.mock.calls[0] as [{ note: string }, { params: { id: string } }];
@@ -102,7 +113,7 @@ describe('OperationsPage', () => {
   });
 
   it('shows reconciliation runs on its own tab', async () => {
-    render(<OperationsPage />);
+    renderPage();
     fireEvent.click(screen.getByText('Reconciliation Runs'));
     expect(await screen.findByText('Recent Reconciliation Runs')).toBeInTheDocument();
     await waitFor(() => expect(getRuns).toHaveBeenCalled());
@@ -113,7 +124,7 @@ describe('OperationsPage', () => {
       { id: 'r1', status: 'PARTIAL', summary: 'gateway check failed', startedAt: '2026-09-07T01:00:00Z' },
     ]});
 
-    render(<OperationsPage />);
+    renderPage();
     fireEvent.click(screen.getByText('Reconciliation Runs'));
 
     // Asserted on the semantic tone, not a utility class. This test previously pinned
@@ -128,7 +139,7 @@ describe('OperationsPage', () => {
       { id: 'r2', status: 'SUCCESS', summary: 'clean', startedAt: '2026-09-07T01:00:00Z' },
     ]});
 
-    render(<OperationsPage />);
+    renderPage();
     fireEvent.click(screen.getByText('Reconciliation Runs'));
 
     const status = await screen.findByText('SUCCESS');
@@ -136,7 +147,7 @@ describe('OperationsPage', () => {
   });
 
   it('says when there is nothing stuck rather than showing a blank panel', async () => {
-    render(<OperationsPage />);
+    renderPage();
     fireEvent.click(screen.getByText('Reconciliation Runs'));
     expect(await screen.findByText('No runs found.')).toBeInTheDocument();
   });
@@ -146,7 +157,7 @@ describe('OperationsPage', () => {
       { id: 'w1', eventId: 'evt_1', processingStatus: 'DEAD_LETTER', gatewayName: 'RAZORPAY', errorLog: 'signature mismatch' },
     ]});
 
-    render(<OperationsPage />);
+    renderPage();
     fireEvent.click(screen.getByText('Payment DLQ'));
 
     expect(await screen.findByText('evt_1')).toBeInTheDocument();
@@ -159,9 +170,10 @@ describe('OperationsPage', () => {
       { id: 'w1', eventId: 'evt_1', processingStatus: 'DEAD_LETTER', gatewayName: 'RAZORPAY', errorLog: 'boom' },
     ]});
 
-    render(<OperationsPage />);
+    renderPage();
     fireEvent.click(screen.getByText('Payment DLQ'));
     fireEvent.click(await screen.findByText('Retry Event'));
+    fireEvent.click(await screen.findByRole('button', { name: 'Retry webhook' }));
 
     await waitFor(() => expect(retryWebhookEvent).toHaveBeenCalledTimes(1));
     expect((retryWebhookEvent.mock.calls[0][1] as { params: { eventId: string } }).params.eventId).toBe('evt_1');
@@ -172,7 +184,7 @@ describe('OperationsPage', () => {
       { id: 'o1', aggregateType: 'WALLET', eventType: 'WALLET_DEBITED', status: 'DLQ', aggregateId: 'agg-1', errorMessage: 'ledger unreachable' },
     ]});
 
-    render(<OperationsPage />);
+    renderPage();
     fireEvent.click(screen.getByText('Wallet DLQ'));
 
     expect(await screen.findByText('WALLET - WALLET_DEBITED')).toBeInTheDocument();
@@ -184,11 +196,87 @@ describe('OperationsPage', () => {
       { id: 'o1', aggregateType: 'WALLET', eventType: 'WALLET_DEBITED', status: 'DLQ', aggregateId: 'agg-1', errorMessage: 'boom' },
     ]});
 
-    render(<OperationsPage />);
+    renderPage();
     fireEvent.click(screen.getByText('Wallet DLQ'));
     fireEvent.click(await screen.findByText('Retry Event'));
+    fireEvent.click(await screen.findByRole('button', { name: 'Retry outbox event' }));
 
     await waitFor(() => expect(retryOutboxDlqEvent).toHaveBeenCalledTimes(1));
     expect((retryOutboxDlqEvent.mock.calls[0][1] as { params: { eventId: string } }).params.eventId).toBe('o1');
+  });
+
+  it('surfaces a fetch failure to the operator', async () => {
+    listRejections.mockRejectedValue(new Error('ledger service is unavailable'));
+
+    renderPage();
+
+    expect(await screen.findByText('ledger service is unavailable')).toBeInTheDocument();
+  });
+
+  it('keeps a rejected movement open and shows the mutation failure', async () => {
+    listRejections.mockResolvedValue({ content: [{
+      id: 'r-1', eventId: 'evt-1', producer: 'customer-application', reason: 'boom', payload: '{}', ageMinutes: 5,
+    }]});
+    resolveRejection.mockRejectedValue(new Error('resolution was rejected by the ledger'));
+
+    renderPage();
+    fireEvent.click(await screen.findByRole('button', { name: 'Resolve' }));
+    fireEvent.change(screen.getByPlaceholderText('Why does this no longer need booking?'), {
+      target: { value: 'confirmed in the reconciliation record' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Resolve movement' }));
+
+    expect(await screen.findByText('resolution was rejected by the ledger')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Why does this no longer need booking?')).toHaveValue(
+      'confirmed in the reconciliation record',
+    );
+  });
+
+  it('does not retry a webhook until the operator confirms the action', async () => {
+    getFailedWebhooks.mockResolvedValue({ content: [
+      { id: 'w1', eventId: 'evt_1', processingStatus: 'DEAD_LETTER', gatewayName: 'RAZORPAY', errorLog: 'boom' },
+    ]});
+
+    renderPage();
+    fireEvent.click(screen.getByRole('tab', { name: 'Payment DLQ' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Retry Event' }));
+
+    expect(retryWebhookEvent).not.toHaveBeenCalled();
+    expect(await screen.findByRole('dialog', { name: 'Retry payment webhook?' })).toBeInTheDocument();
+  });
+
+  it('prevents a duplicate webhook retry while the request is pending', async () => {
+    getFailedWebhooks.mockResolvedValue({ content: [
+      { id: 'w1', eventId: 'evt_1', processingStatus: 'DEAD_LETTER', gatewayName: 'RAZORPAY', errorLog: 'boom' },
+    ]});
+    let finishRetry: (() => void) | undefined;
+    retryWebhookEvent.mockImplementation(() => new Promise<void>((resolve) => { finishRetry = resolve; }));
+
+    renderPage();
+    fireEvent.click(screen.getByRole('tab', { name: 'Payment DLQ' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Retry Event' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Retry webhook' }));
+
+    const retryButton = await screen.findByRole('button', { name: 'Retrying payment webhook' });
+    expect(retryButton).toBeDisabled();
+    expect(retryButton).toHaveAttribute('aria-busy', 'true');
+
+    finishRetry?.();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Retry Event' })).toBeEnabled());
+  });
+
+  it('surfaces a failed wallet retry instead of silently leaving it in the queue', async () => {
+    getOutboxDlqEvents.mockResolvedValue({ content: [
+      { id: 'o1', aggregateType: 'WALLET', eventType: 'WALLET_DEBITED', status: 'DLQ', aggregateId: 'agg-1', errorMessage: 'boom' },
+    ]});
+    retryOutboxDlqEvent.mockRejectedValue(new Error('wallet publisher is unavailable'));
+
+    renderPage();
+    fireEvent.click(screen.getByRole('tab', { name: 'Wallet DLQ' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Retry Event' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Retry outbox event' }));
+
+    expect(await screen.findByText('wallet publisher is unavailable')).toBeInTheDocument();
   });
 });

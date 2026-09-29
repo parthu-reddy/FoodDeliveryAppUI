@@ -1,5 +1,11 @@
 import { Button, Input, Modal } from '@shared/ui';
 import { ConfirmMoneyAction } from '@shared/money/components/ConfirmMoneyAction';
+import {
+  hasMeaningfulBankReference,
+  hasMeaningfulFailureReason,
+  MIN_BANK_REFERENCE_LENGTH,
+  MIN_FAILURE_REASON_LENGTH,
+} from './payoutActionValidation';
 
 interface PayoutActionDialogsProps {
   amount: number;
@@ -28,6 +34,9 @@ export function PayoutActionDialogs({
   showMarkPaidDialog, setShowMarkPaidDialog, showFailDialog, setShowFailDialog,
   actionLoading, onAction,
 }: PayoutActionDialogsProps) {
+  const hasBankReference = hasMeaningfulBankReference(bankRef);
+  const hasFailureReason = hasMeaningfulFailureReason(failReason);
+
   return (
     <>
   <Modal open={showMarkPaidDialog} onClose={() => setShowMarkPaidDialog(false)} title="Mark Payout as Paid" size="md">
@@ -37,8 +46,14 @@ export function PayoutActionDialogs({
                  placeholder="e.g. UTR-123456789" 
                  value={bankRef} 
                  onChange={(e) => setBankRef(e.target.value)} 
+                 disabled={Boolean(actionLoading)}
+                 error={bankRef.length > 0 && !hasBankReference}
+                 aria-describedby="bank-reference-help"
                  className="mb-6 w-full"
               />
+              <p id="bank-reference-help" className="-mt-4 mb-4 text-xs text-slate-500">
+                Enter at least {MIN_BANK_REFERENCE_LENGTH} non-whitespace characters.
+              </p>
               <div className="mt-4">
                   <ConfirmMoneyAction
                       amount={amount}
@@ -46,6 +61,7 @@ export function PayoutActionDialogs({
                       buttonLabel="Confirm Payment"
                       onConfirm={(idempotencyKey) => onAction('mark-paid', idempotencyKey)}
                       isPending={actionLoading === 'mark-paid'}
+                      disabled={Boolean(actionLoading) || !hasBankReference}
                   />
               </div>
               <div className="flex justify-end gap-3 mt-4">
@@ -61,8 +77,14 @@ export function PayoutActionDialogs({
                  placeholder="e.g. Invalid bank account" 
                  value={failReason} 
                  onChange={(e) => setFailReason(e.target.value)} 
+                 disabled={Boolean(actionLoading)}
+                 error={failReason.length > 0 && !hasFailureReason}
+                 aria-describedby="failure-reason-help"
                  className="mb-6 w-full"
               />
+              <p id="failure-reason-help" className="-mt-4 mb-4 text-xs text-slate-500">
+                Enter at least {MIN_FAILURE_REASON_LENGTH} non-whitespace characters.
+              </p>
               <div className="mt-4">
                   <ConfirmMoneyAction
                       amount={amount}
@@ -70,6 +92,7 @@ export function PayoutActionDialogs({
                       buttonLabel="Mark Failed"
                       onConfirm={(idempotencyKey) => onAction('fail', idempotencyKey)}
                       isPending={actionLoading === 'fail'}
+                      disabled={Boolean(actionLoading) || !hasFailureReason}
                   />
               </div>
               <div className="flex justify-end gap-3 mt-4">

@@ -22,6 +22,7 @@ vi.mock('@/lib/tokenStore', () => ({ getUserProfile: () => ({ id: ADMIN_ID }) })
 
 import PayoutQueue from './money/PayoutQueue';
 import PayoutDetail from './money/PayoutDetail';
+import PayoutCreateDialog from './money/PayoutCreateDialog';
 
 const wrap = (ui: React.ReactElement) => render(<ToastProvider>{ui}</ToastProvider>);
 
@@ -120,15 +121,43 @@ describe('Admin Payout Workflow', () => {
     expect(approve).toBeEnabled();
   });
 
+  test('blocks a conflicting draft action while an approval is in flight', async () => {
+    payoutGet.mockResolvedValue(detail({ createdBy: OTHER_ADMIN_ID }));
+    let resolveApproval: (() => void) | undefined;
+    payoutPost.mockReturnValue(new Promise<void>(resolve => { resolveApproval = resolve; }));
+
+    wrap(<PayoutDetail payoutId={PAYOUT_ID} onBack={() => {}} />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Approve' }));
+    await waitFor(() => expect(payoutPost).toHaveBeenCalledTimes(1));
+    const cancel = screen.getByRole('button', { name: 'Cancel' });
+    expect(cancel).toBeDisabled();
+    fireEvent.click(cancel);
+    expect(payoutPost).toHaveBeenCalledTimes(1);
+
+    resolveApproval?.();
+  });
+
   test('marking paid will not proceed without a bank reference', async () => {
     payoutGet.mockResolvedValue(detail({ status: 'APPROVED' }));
 
     wrap(<PayoutDetail payoutId={PAYOUT_ID} onBack={() => {}} />);
 
     fireEvent.click(await screen.findByRole('button', { name: /Mark Paid/ }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Confirm Payment' }));
 
-    await waitFor(() => expect(screen.getByText('Bank reference is required')).toBeInTheDocument());
+    expect(await screen.findByRole('button', { name: 'Confirm Payment' })).toBeDisabled();
+    expect(payoutPost).not.toHaveBeenCalled();
+  });
+
+  test('does not accept a whitespace-only bank reference', async () => {
+    payoutGet.mockResolvedValue(detail({ status: 'APPROVED' }));
+
+    wrap(<PayoutDetail payoutId={PAYOUT_ID} onBack={() => {}} />);
+
+    fireEvent.click(await screen.findByRole('button', { name: /Mark Paid/ }));
+    fireEvent.change(screen.getByPlaceholderText('e.g. UTR-123456789'), { target: { value: '   ' } });
+
+    expect(screen.getByRole('button', { name: 'Confirm Payment' })).toBeDisabled();
     expect(payoutPost).not.toHaveBeenCalled();
   });
 
@@ -138,7 +167,7 @@ describe('Admin Payout Workflow', () => {
     wrap(<PayoutDetail payoutId={PAYOUT_ID} onBack={() => {}} />);
 
     fireEvent.click(await screen.findByRole('button', { name: /Mark Paid/ }));
-    fireEvent.change(screen.getByPlaceholderText('e.g. UTR-123456789'), { target: { value: 'UTR-99' } });
+    fireEvent.change(screen.getByPlaceholderText('e.g. UTR-123456789'), { target: { value: '  UTR-99  ' } });
     fireEvent.click(screen.getByRole('button', { name: 'Confirm Payment' }));
 
     await waitFor(() => expect(payoutPost).toHaveBeenCalledTimes(1));
@@ -147,5 +176,68 @@ describe('Admin Payout Workflow', () => {
     expect(path).toBe('/api/v1/internal/admin/payouts/:payoutId/mark-paid');
     expect(opts.queries.bankReference).toBe('UTR-99');
     expect(opts.headers['Idempotency-Key']).toBeTruthy();
+  });
+
+  test('requires a meaningful failure reason and trims it before marking the payout failed', async () => {
+    payoutGet.mockResolvedValue(detail({ status: 'APPROVED' }));
+
+    wrap(<PayoutDetail payoutId={PAYOUT_ID} onBack={() => {}} />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Fail Payout' }));
+    const reason = screen.getByPlaceholderText('e.g. Invalid bank account');
+    fireEvent.change(reason, { target: { value: ' no ' } });
+    expect(screen.getByRole('button', { name: 'Mark Failed' })).toBeDisabled();
+
+    fireEvent.change(reason, { target: { value: '  beneficiary account is closed  ' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Mark Failed' }));
+
+    await waitFor(() => expect(payoutPost).toHaveBeenCalledTimes(1));
+    const [path, , opts] = payoutPost.mock.calls[0] as
+      [string, unknown, { queries: Record<string, unknown>; headers: Record<string, string> }];
+    expect(path).toBe('/api/v1/internal/admin/payouts/:payoutId/fail');
+    expect(opts.queries.reason).toBe('beneficiary account is closed');
+    expect(opts.headers['Idempotency-Key']).toBeTruthy();
+  });
+
+  test('blocks an unresolved payee even when the API supplies a fallback display name', async () => {
+    const account = {
+      payeeType: 'DRIVER',
+      payeeId: '22222222-2222-2222-2222-222222222222',
+      displayName: 'DRIVER 22222222-2222-2222-2222-222222222222',
+      nameResolved: false,
+      unsettledAmount: 340,
+      lineCount: 1,
+      beneficiaryStatus: { verified: true },
+    };
+
+    wrap(<PayoutCreateDialog account={account} onClose={() => {}} onSuccess={() => {}} />);
+
+    expect(await screen.findByText(/payee identity could not be resolved/i)).toBeInTheDocument();
+    expect(screen.queryByText(/force create payout/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Create Draft Payout' })).not.toBeInTheDocument();
+    expect(payoutPost).not.toHaveBeenCalled();
+  });
+
+  test('creates a payout for a resolved payee with verified bank details without a force override', async () => {
+    const onSuccess = vi.fn();
+    payoutPost.mockResolvedValue({ id: PAYOUT_ID, amount: 1200 });
+    const account = {
+      payeeType: 'RESTAURANT',
+      payeeId: '11111111-1111-1111-1111-111111111111',
+      displayName: 'Kanti Sweets (Kanti)',
+      nameResolved: true,
+      unsettledAmount: 1200,
+      lineCount: 2,
+      beneficiaryStatus: { verified: true },
+    };
+
+    wrap(<PayoutCreateDialog account={account} onClose={() => {}} onSuccess={onSuccess} />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Create Draft Payout' }));
+
+    await waitFor(() => expect(payoutPost).toHaveBeenCalledTimes(1));
+    const [path, body] = payoutPost.mock.calls[0] as [string, { force: boolean }];
+    expect(path).toBe('/api/v1/internal/admin/payouts');
+    expect(body.force).toBe(false);
+    expect(onSuccess).toHaveBeenCalledWith(PAYOUT_ID);
   });
 });

@@ -13,6 +13,7 @@ import { z } from "zod";
 import PayoutCreateDialog from "./PayoutCreateDialog";
 import { StatementTable, StatementRow } from "@/shared/money/components/StatementTable";
 import { formatDateTime } from '@/shared/time';
+import { payoutStatementOrderMoneyLink } from './payoutOrderMoneyLink';
 
 type PendingPayoutResponse = z.infer<typeof PendingPayoutResponseSchema>;
 type LedgerStatementLine = z.infer<typeof ledgerStatementSchemas.LedgerStatementLineDto>;
@@ -97,10 +98,16 @@ export default function PayoutDrawer({
                <Button 
                    variant="primary" 
                    onClick={() => setShowCreate(true)}
-                   disabled={!account.unsettledAmount || account.unsettledAmount <= 0}
+                   disabled={!account.unsettledAmount || account.unsettledAmount <= 0 || account.nameResolved !== true}
+                   title={account.nameResolved !== true ? 'Payout creation is unavailable until the payee identity is resolved.' : undefined}
                >
                    Create Payout for Balance
                </Button>
+               {account.nameResolved !== true && (
+                   <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">
+                       Resolve the payee identity before creating a payout.
+                   </p>
+               )}
            </Surface>
 
            <div className="mb-8">
@@ -122,7 +129,7 @@ export default function PayoutDrawer({
                        description: line.description || '',
                        category: line.category,
                        referenceId: line.referenceId,
-                       referenceLink: line.referenceId?.startsWith('ord_') ? `/admin/orders/${line.referenceId}/money` : undefined,
+                       referenceLink: payoutStatementOrderMoneyLink(line),
                        debit: line.direction === 'DEBIT' ? (line.amount || 0) : 0,
                        credit: line.direction === 'CREDIT' ? (line.amount || 0) : 0,
                      } as StatementRow))}

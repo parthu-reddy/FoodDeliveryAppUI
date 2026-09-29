@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { chatApi } from '@/lib/zodiosClients';
 import { getToken, getUserProfile } from '@/lib/tokenStore';
 import { type ChatMessage, type TypingIndicator } from '@/types';
@@ -20,6 +20,8 @@ interface UseChatSessionOptions {
   otherParticipants?: { userId: string; entityType: string; displayName: string }[];
   showError: (message: string) => void;
 }
+
+export const MAX_CHAT_MESSAGE_LENGTH = 10_000;
 
 export function useChatSession({
   orderId, isOpen, currentUserType, otherParticipants, showError,
@@ -53,7 +55,7 @@ useEffect(() => {
 }, [messages, isTyping, isOpen]);
 
 const isOpenRef = useRef(isOpen);
-useEffect(() => {
+useLayoutEffect(() => {
   isOpenRef.current = isOpen;
 }, [isOpen]);
 
@@ -194,11 +196,22 @@ useEffect(() => {
 
 const handleSend = (e?: React.FormEvent) => {
   e?.preventDefault();
-  if (!inputText.trim() || !isConnected || !user) return;
+  const content = inputText.trim();
+  if (!content || !isConnected || !user) return;
+  if (content.length > MAX_CHAT_MESSAGE_LENGTH) {
+    showError(`Messages can contain up to ${MAX_CHAT_MESSAGE_LENGTH.toLocaleString()} characters.`);
+    return;
+  }
 
-  sendMessage(inputText.trim(), 'TEXT');
+  const sent = sendMessage(content, 'TEXT');
+  if (!sent) {
+    showError('Chat is reconnecting. Your message was not sent. Please try again when connected.');
+    return;
+  }
   setInputText('');
 };
+
+const isMessageTooLong = inputText.trim().length > MAX_CHAT_MESSAGE_LENGTH;
 
 const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
   const file = e.target.files?.[0];
@@ -225,7 +238,7 @@ const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     unreadCount, setUnreadCount,
     sessionId, messages, setMessages,
     inputText, setInputText,
-    isLoading, isTyping, targetUserId,
+    isLoading, isTyping, targetUserId, isMessageTooLong,
     sessionInitError, retrySession,
     isRefundModalOpen, setIsRefundModalOpen,
     handleSend, handleImageUpload, handleRefundSubmit,

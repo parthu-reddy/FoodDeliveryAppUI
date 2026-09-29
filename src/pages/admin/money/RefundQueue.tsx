@@ -12,6 +12,10 @@ import { formatDateTime, tryParseInstant } from '@/shared/time';
 
 type Ticket = z.infer<typeof SupportTicket>;
 
+function hasVerifiedRefundAmount(amount: unknown): amount is number {
+  return typeof amount === 'number' && Number.isFinite(amount) && amount > 0;
+}
+
 export default function RefundQueue() {
   const [page, setPage] = useState(0);
   const [statusFilter, setStatusFilter] = useState("OPEN");
@@ -29,7 +33,8 @@ export default function RefundQueue() {
       });
     },
     intervalMs: 15000,
-    enabled: true
+    enabled: true,
+    refreshKey: `${statusFilter}:${page}`,
   });
 
   const tickets = ticketsResponse?.content || [];
@@ -59,7 +64,7 @@ export default function RefundQueue() {
       key: 'amount',
       header: 'Requested Amt',
       align: 'right',
-      cell: (t) => (t.refundAmount ? formatINR(t.refundAmount) : '-'),
+      cell: (t) => hasVerifiedRefundAmount(t.refundAmount) ? formatINR(t.refundAmount) : 'Quote unavailable',
       cellClassName: 'font-medium',
       sortValue: (t) => t.refundAmount ?? 0,
     },

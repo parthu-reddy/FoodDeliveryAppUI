@@ -2,7 +2,7 @@ import { reviewsApi } from '@/lib/zodiosClients';
 import { parseApiError } from '@/lib/parseApiError';
 import { AlertBanner, Button, EmptyState, Input, Select, Spinner, Surface } from '@shared/ui';
 import { Search, ShieldAlert } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { StarRating } from './StarRating';
 import { shortDate } from '../model/reviewCopy';
 import type { ReviewDetail, ReviewEntityType } from '../model/types';
@@ -29,10 +29,39 @@ export function AdminReviewsView() {
   const [reviews, setReviews] = useState<ReviewDetail[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const searchGenerationRef = useRef(0);
 
   const canSearch = mode === 'entity' ? entityId.trim().length > 0 : userId.trim().length > 0;
 
+  const invalidateResults = () => {
+    searchGenerationRef.current += 1;
+    setReviews(null);
+    setError(null);
+    setIsLoading(false);
+  };
+
+  const changeMode = (value: string) => {
+    setMode(value as Mode);
+    invalidateResults();
+  };
+
+  const changeEntityType = (value: string) => {
+    setEntityType(value as ReviewEntityType);
+    invalidateResults();
+  };
+
+  const changeEntityId = (value: string) => {
+    setEntityId(value);
+    invalidateResults();
+  };
+
+  const changeUserId = (value: string) => {
+    setUserId(value);
+    invalidateResults();
+  };
+
   const search = async () => {
+    const requestGeneration = ++searchGenerationRef.current;
     setIsLoading(true);
     setError(null);
     try {
@@ -45,13 +74,18 @@ export function AdminReviewsView() {
               params: { userId: userId.trim() },
               queries: { page: 0, size: 50 },
             });
-      const content = res.data?.content ?? [];
-      setReviews(content);
+      if (searchGenerationRef.current === requestGeneration) {
+        setReviews(res.data?.content ?? []);
+      }
     } catch (err: unknown) {
-      setError(parseApiError(err, 'Could not load reviews.').message);
-      setReviews(null);
+      if (searchGenerationRef.current === requestGeneration) {
+        setError(parseApiError(err, 'Could not load reviews.').message);
+        setReviews(null);
+      }
     } finally {
-      setIsLoading(false);
+      if (searchGenerationRef.current === requestGeneration) {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -75,7 +109,7 @@ export function AdminReviewsView() {
           <Select
             aria-label="Look up by"
             value={mode}
-            onChange={(value) => setMode(value as Mode)}
+            onChange={changeMode}
             options={[
               { value: 'entity', label: 'Entity' },
               { value: 'user', label: 'Author' },
@@ -92,7 +126,7 @@ export function AdminReviewsView() {
               <Select
                 aria-label="Entity type"
                 value={entityType}
-                onChange={(value) => setEntityType(value as ReviewEntityType)}
+                onChange={changeEntityType}
                 options={[
                   { value: 'RESTAURANT', label: 'Restaurant' },
                   { value: 'DRIVER', label: 'Driver' },
@@ -107,7 +141,7 @@ export function AdminReviewsView() {
               <Input
                 aria-label="Entity ID"
                 value={entityId}
-                onChange={(e) => setEntityId(e.target.value)}
+                onChange={(e) => changeEntityId(e.target.value)}
                 placeholder="outlet, driver or menu-item id"
               />
             </div>
@@ -118,9 +152,9 @@ export function AdminReviewsView() {
               Author user ID
             </label>
             <Input
-              aria-label="Author user ID"
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
+                aria-label="Author user ID"
+                value={userId}
+                onChange={(e) => changeUserId(e.target.value)}
               placeholder="customer id — shows everything this account has written"
             />
           </div>

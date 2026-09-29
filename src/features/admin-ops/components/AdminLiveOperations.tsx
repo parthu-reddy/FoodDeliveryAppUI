@@ -3,9 +3,11 @@ import { usePolling } from "@/hooks/usePolling";
 import { parseApiError } from '@/lib/parseApiError';
 import { customerApi, deliveryApi, restaurantApi } from "@/lib/zodiosClients";
 import { getFriendlyStatusMessage } from '@features/customer-orders/model/statusMessaging';
-import { Button, Input, Surface, surfaceStyle } from '@shared/ui';
+import { readDispatchScope, readRestaurantCoordinates } from '@features/admin-ops/model/dispatchScope';
+import { Button, Surface, surfaceStyle, useConfirm } from '@shared/ui';
 import { Navigation, Package, Truck } from 'lucide-react';
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { OrderResponse } from '@/api/generated/schemas/customer/common';
 
@@ -22,10 +24,12 @@ type AdminOrder = z.infer<typeof OrderResponse>;
 
 export default function AdminLiveOperations() {
   const { showSuccess, showError } = useToast();
+  const confirm = useConfirm();
+  const navigate = useNavigate();
   const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
-  const [refundAmount, setRefundAmount] = useState('');
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  const [assigningDriverId, setAssigningDriverId] = useState<string | null>(null);
 
   const [activeOrders, setActiveOrders] = useState<AdminOrder[]>([]);
   // Polling for active orders every 15 seconds
@@ -36,6 +40,7 @@ export default function AdminLiveOperations() {
     },
     intervalMs: 15000,
     enabled: true,
+    refreshKey: page,
     onData: (response) => {
         if (response && response.data) {
           const content = response.data.content ?? [];
@@ -49,88 +54,82 @@ export default function AdminLiveOperations() {
   
 
 
-  const [availableDrivers, setAvailableDrivers] = useState<AdminDriver[]>([]);
-  // Polling for available drivers every 15 seconds
-  const { refetch: fetchAvailableDrivers } = usePolling({
+  // Candidates must come from the selected order's dispatch facts. Falling back
+  // to a city-wide list can send an order to a rider in the wrong location.
+  const selectedOrderId = selectedOrder?.id ?? null;
+  const {
+    data: driverCandidates,
+    dataRefreshKey: driverCandidatesOrderId,
+    refetch: fetchAvailableDrivers,
+    isLoading: driversLoading,
+    error: driversError,
+  } = usePolling<AdminDriver[]>({
     fetchFn: async () => {
-        let queries: Record<string, string | number> = { cityId: 'BLR' };
-        if (selectedOrder) {
-            try {
-                const restRes = await restaurantApi.restaurantOutlet.get('/api/v1/restaurants/:id', { params: { id: selectedOrder.restaurantId } });
-                const rest = restRes.data || restRes;
-                if (rest && rest.lat !== undefined && rest.lng !== undefined) {
-                    // @ts-expect-error auto-migration type suppression
-                    queries = { ...queries, lat: rest.lat, lng: rest.lng, radiusKm: 5 };
-                }
-            } catch (e: unknown) {
-                console.error("Could not fetch restaurant location", e);
-            }
-        }
-        // @ts-expect-error auto-migration type suppression
-        const res = await deliveryApi.adminDelivery.get('/api/v1/internal/admin/delivery/drivers/available-with-location', { queries });
-        return res;
+      if (!selectedOrder) return [];
+      const dispatchScope = readDispatchScope(selectedOrder);
+      if (!dispatchScope) {
+        throw new Error('This order is missing dispatch location details. Driver assignment is unavailable.');
+      }
+
+      const restRes = await restaurantApi.restaurantOutlet.get('/api/v1/restaurants/:id', { params: { id: selectedOrder.restaurantId } });
+      const restaurantCoordinates = readRestaurantCoordinates(restRes);
+      if (!restaurantCoordinates) {
+        throw new Error('The restaurant location is unavailable. Driver assignment is unavailable.');
+      }
+
+      return deliveryApi.adminDelivery.get('/api/v1/internal/admin/delivery/drivers/available-with-location', {
+        queries: {
+          cityId: dispatchScope.cityId,
+          lat: restaurantCoordinates.lat,
+          lng: restaurantCoordinates.lng,
+          radiusKm: dispatchScope.radiusKm,
+        },
+      });
     },
     intervalMs: 15000,
-    enabled: true,
-    onData: (response) => {
-        setAvailableDrivers(response);
-    }
+    enabled: Boolean(selectedOrder),
+    refreshKey: selectedOrderId,
   });
 
+  const hasCurrentDriverCandidates = Boolean(selectedOrder)
+    && driverCandidatesOrderId === selectedOrderId;
+  const scopedAvailableDrivers = hasCurrentDriverCandidates ? driverCandidates ?? [] : [];
+  const assignmentReady = hasCurrentDriverCandidates && !driversLoading && !assigningDriverId;
+  const assignmentMapKey = selectedOrder
+    ? `${selectedOrder.id}:${assignmentReady}:${scopedAvailableDrivers.map(driver => `${driver.id}:${driver.lat ?? ''}:${driver.lng ?? ''}`).join('|')}`
+    : '';
 
-
-  // Optimistic Assign Driver
   const handleAssignDriver = async (orderId: string, driverId: string) => {
-    // Optimistic UI Update
-    setActiveOrders(prev => prev.map(o => o.id === orderId ? { ...o, deliveryExecutiveId: driverId, status: 'ACCEPTED' } : o));
-    setAvailableDrivers(prev => prev.filter(d => d.id !== driverId));
-    
+    if (assigningDriverId) return;
+    if (!hasCurrentDriverCandidates || selectedOrderId !== orderId || driversLoading) {
+      showError('Wait for location-scoped driver candidates before assigning a driver.');
+      return;
+    }
+    const driver = scopedAvailableDrivers.find((candidate) => candidate.id === driverId);
+    const ok = await confirm({
+      title: `Force-assign ${driver?.fullName || 'this driver'}?`,
+      description:
+        'This overrides automatic dispatch and immediately requests assignment for this order. '
+        + 'The order remains in the queue until the server confirms the change.',
+      confirmLabel: 'Force assign',
+      tone: 'danger',
+    });
+    if (!ok) return;
+
+    setAssigningDriverId(driverId);
     try {
       await deliveryApi.adminDelivery.post('/api/v1/internal/admin/delivery/orders/:orderId/assign', undefined, { params: { orderId }, queries: { driverId } });
-      showSuccess("Driver assigned successfully!");
+      showSuccess("Driver assignment requested. The order will update when dispatch confirms it.");
       fetchActiveOrders();
       fetchAvailableDrivers();
       setSelectedOrder(null);
     } catch (e: unknown) {
       console.error(e);
       showError(parseApiError(e, "Failed to assign driver").message);
-      // Revert optimistic update by refetching
       fetchActiveOrders();
       fetchAvailableDrivers();
-    }
-  };
-
-  const handlePartialRefund = async (orderId: string, amount: string) => {
-    try {
-      await customerApi.adminRefundCommand.post('/api/v1/internal/admin/refunds/request', { 
-        orderId, 
-        refundAmount: parseFloat(amount), 
-        refundType: "PARTIAL" 
-      });
-      showSuccess("Partial refund initiated successfully!");
-      setRefundAmount('');
-      fetchActiveOrders();
-    } catch (e: unknown) {
-      console.error(e);
-      const typedErr = e as { response?: { data?: { error?: string, message?: string } } };
-      showError(typedErr.response?.data?.error || typedErr.response?.data?.message || "Failed to initiate partial refund");
-    }
-  };
-
-  const handlePostDeliveryRefund = async (orderId: string, amount: string) => {
-    try {
-      await customerApi.adminRefundCommand.post('/api/v1/internal/admin/refunds/request', { 
-        orderId, 
-        refundAmount: parseFloat(amount), 
-        refundType: "POST_DELIVERY" 
-      });
-      showSuccess("Post-delivery refund initiated successfully!");
-      setRefundAmount('');
-      fetchActiveOrders();
-    } catch (e: unknown) {
-      console.error(e);
-      const typedErr = e as { response?: { data?: { error?: string, message?: string } } };
-      showError(typedErr.response?.data?.error || typedErr.response?.data?.message || "Failed to initiate post-delivery refund");
+    } finally {
+      setAssigningDriverId(null);
     }
   };
 
@@ -196,9 +195,10 @@ export default function AdminLiveOperations() {
                 <div className="flex-1 relative z-0">
                     <React.Suspense fallback={<div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-500">Loading map...</div>}>
                       <AdminAssignmentMap 
+                        key={assignmentMapKey}
                         order={selectedOrder} 
-                        // @ts-expect-error auto-migration type suppression
-                        availableDrivers={availableDrivers} 
+                        availableDrivers={scopedAvailableDrivers}
+                        canAssign={assignmentReady}
                         onAssign={handleAssignDriver} 
                     />
                     </React.Suspense>
@@ -213,38 +213,24 @@ export default function AdminLiveOperations() {
                     
                     <div className="flex-1 border-r border-slate-200 dark:border-slate-700 px-6">
                         <h3 className="font-bold text-lg mb-3">Refund Actions</h3>
-                        <div className="space-y-3">
-                            <Input 
-                                type="number" 
-                                placeholder="Amount (₹)" 
-                                value={refundAmount}
-                                onChange={(e) => setRefundAmount(e.target.value)}
-                            />
-                            <div className="flex gap-2">
-                                <Button 
-                                    variant="primary"
-                                    onClick={() => handlePartialRefund(selectedOrder.id, refundAmount)}
-                                    disabled={!refundAmount || parseFloat(refundAmount) <= 0}
-                                    className="flex-1 !bg-amber-500 hover:!bg-amber-600"
-                                >
-                                    Partial Refund
-                                </Button>
-                                <Button 
-                                    variant="primary"
-                                    onClick={() => handlePostDeliveryRefund(selectedOrder.id, refundAmount)}
-                                    disabled={!refundAmount || parseFloat(refundAmount) <= 0 || selectedOrder.deliveryStatus !== 'DELIVERED'}
-                                    className="flex-1"
-                                >
-                                    Post-Delivery
-                                </Button>
-                            </div>
-                        </div>
+                        <p className="text-sm text-slate-500 mb-3">
+                          Direct refunds are unavailable here until the server provides an authenticated, idempotent admin refund command.
+                        </p>
+                        <Button variant="outline" onClick={() => navigate('/admin/refunds')}>
+                          Open Refund Queue
+                        </Button>
                     </div>
 
                     <div className="w-1/3 pl-6">
-                        <h3 className="font-bold text-lg mb-3">Available Drivers ({availableDrivers.length})</h3>
+                        <h3 className="font-bold text-lg mb-3">Available Drivers ({scopedAvailableDrivers.length})</h3>
                         <div className="max-h-32 overflow-y-auto space-y-2 pr-2">
-                            {availableDrivers.map(driver => (
+                            {driversError && (
+                              <p role="alert" className="text-sm text-rose-600 dark:text-rose-400">
+                                {driversError.message}
+                              </p>
+                            )}
+                            {driversLoading && <p role="status" className="text-sm text-slate-500">Loading nearby drivers…</p>}
+                            {scopedAvailableDrivers.map(driver => (
                                 <Surface elevation={2} radius="lg" key={driver.id} className="flex items-center justify-between p-3">
                                     <div className="flex items-center gap-3">
                                         <Truck className="w-5 h-5 text-rose-500" />
@@ -252,12 +238,17 @@ export default function AdminLiveOperations() {
                                             <p className="font-bold text-sm">{driver.fullName || 'Unknown Driver'}</p>
                                         </div>
                                     </div>
-                                    <Button variant="success" onClick={() => handleAssignDriver(selectedOrder.id, driver.id)} className="">
+                                    <Button
+                                      variant="success"
+                                      onClick={() => handleAssignDriver(selectedOrder.id, driver.id)}
+                                      disabled={!assignmentReady}
+                                      loading={assigningDriverId === driver.id}
+                                    >
                                         Assign
                                     </Button>
                                 </Surface>
                             ))}
-                            {availableDrivers.length === 0 && <p className="text-sm text-slate-500">No available drivers nearby.</p>}
+                            {!driversLoading && scopedAvailableDrivers.length === 0 && <p className="text-sm text-slate-500">No available drivers nearby.</p>}
                         </div>
                     </div>
                 </Surface>

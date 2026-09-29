@@ -8,6 +8,7 @@ import AdminUserManagement from "@features/admin-ops/components/AdminUserManagem
 import AdminCategories from '@features/catalog/components/admin/AdminCategories';
 import AdminLedgerView from "@features/ledger/components/AdminLedgerView";
 import AdminPayoutsPage from "./money/AdminPayoutsPage";
+import AdminOrderMoney from "./money/AdminOrderMoney";
 import MoneyOperationsPage from "./money/OperationsPage";
 import RefundQueue from "./money/RefundQueue";
 import { Button, SidebarNav } from '@shared/ui';
@@ -15,13 +16,24 @@ import { AdminReviewsView } from '@features/reviews';
 import LaBouffeLogo from '@shared/ui/LaBouffeLogo';
 import { Activity, AlertTriangle, Database, LogOut, MapPin, MessageSquare, Moon, RotateCcw, Shield, Star, Sun, Tags, Users } from 'lucide-react';
 import React from 'react';
-import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, Navigate, useParams } from 'react-router-dom';
 import { usePolling } from '../../hooks/usePolling';
 
 const AdminFleetMap = React.lazy(() => import("@features/maps-tracking/components/AdminFleetMap"));
 
 interface AdminPortalProps {
   onLogout: () => void;
+}
+
+function AdminOrderMoneyRoute() {
+  const { orderId } = useParams<{ orderId: string }>();
+  if (!orderId) return <Navigate to="/admin/payouts" replace />;
+
+  return (
+    <div className="flex-1 w-full h-full overflow-y-auto p-6">
+      <AdminOrderMoney orderId={orderId} />
+    </div>
+  );
 }
 
 export default function AdminPortal({
@@ -36,7 +48,9 @@ export default function AdminPortal({
   const pathParts = location.pathname.split('/');
   const currentPath = pathParts[pathParts.length - 1];
   const validTabs = ['deliveries', 'users', 'categories', 'map', 'ledger', 'payouts', 'money_ops', 'interventions', 'support_tickets', 'refunds', 'reviews'];
-  const activeTab = validTabs.includes(currentPath) ? currentPath : 'map';
+  const activeTab = location.pathname.includes('/orders/')
+    ? 'payouts'
+    : validTabs.includes(currentPath) ? currentPath : 'map';
 
   // Poll for intervention count to show badge on sidebar
     const { data: interventionsCount = 0 } = usePolling({
@@ -79,11 +93,16 @@ export default function AdminPortal({
         </div>
 
         <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-          <Button variant="ghost" size="icon" onClick={toggleTheme}>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={theme === 'dark' ? 'Use light theme' : 'Use dark theme'}
+            onClick={toggleTheme}
+          >
             {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-rose-500" />}
           </Button>
           {onLogout && (
-            <Button variant="danger" size="icon" onClick={onLogout}>
+            <Button variant="danger" size="icon" aria-label="Log out" onClick={onLogout}>
               <LogOut className="w-4 h-4" />
             </Button>
           )}
@@ -118,6 +137,8 @@ export default function AdminPortal({
               <AdminPayoutsPage />
             </div>
           } />
+
+          <Route path="orders/:orderId/money" element={<AdminOrderMoneyRoute />} />
           
           <Route path="money_ops" element={
             <div className="flex-1 w-full h-full overflow-y-auto">

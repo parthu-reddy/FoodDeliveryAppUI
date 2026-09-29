@@ -44,6 +44,16 @@ const review = {
 
 const envelope = (content: unknown[]) => ({ success: true, message: 'ok', data: { content } });
 
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+  return { promise, resolve, reject };
+}
+
 describe('AdminReviewsView', () => {
   beforeEach(() => get.mockReset());
 
@@ -106,5 +116,36 @@ describe('AdminReviewsView', () => {
 
     await waitFor(() => expect(screen.getByText(/Cold and late/)).toBeInTheDocument());
     expect(screen.queryByRole('button', { name: /delete|hide|remove|edit/i })).not.toBeInTheDocument();
+  });
+
+  it('clears old results on lookup-mode changes and ignores an earlier response', async () => {
+    const earlierEntityRequest = deferred<ReturnType<typeof envelope>>();
+    const authorReview = {
+      ...review,
+      id: '22222222-2222-4222-8222-222222222222',
+      comment: 'Author-only fixture review',
+    };
+    get
+      .mockReturnValueOnce(earlierEntityRequest.promise)
+      .mockResolvedValueOnce(envelope([authorReview]));
+    render(<AdminReviewsView />);
+
+    fireEvent.change(screen.getByLabelText('Entity ID'), { target: { value: OUTLET_ID } });
+    fireEvent.click(screen.getByRole('button', { name: /search/i }));
+    await waitFor(() => expect(get).toHaveBeenCalledTimes(1));
+
+    fireEvent.click(screen.getByRole('combobox', { name: /look up by/i }));
+    fireEvent.click(screen.getByRole('option', { name: 'Author' }));
+    expect(screen.queryByText('Cold and late')).not.toBeInTheDocument();
+
+    fireEvent.change(await screen.findByLabelText('Author user ID'), { target: { value: USER_ID } });
+    fireEvent.click(screen.getByRole('button', { name: /search/i }));
+    expect(await screen.findByText('Author-only fixture review')).toBeInTheDocument();
+
+    earlierEntityRequest.resolve(envelope([review]));
+    await waitFor(() => {
+      expect(screen.getByText('Author-only fixture review')).toBeInTheDocument();
+      expect(screen.queryByText('Cold and late')).not.toBeInTheDocument();
+    });
   });
 });

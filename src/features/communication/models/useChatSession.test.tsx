@@ -7,6 +7,11 @@ const mocks = vi.hoisted(() => ({
   createSession: vi.fn(),
   loadHistory: vi.fn(),
   user: { id: 'customer-1', role: 'CUSTOMER', name: 'Customer' },
+  sendMessage: vi.fn(),
+  sendImage: vi.fn(),
+  sendTypingIndicator: vi.fn(),
+  showError: vi.fn(),
+  isConnected: false,
 }));
 
 vi.mock('@/lib/zodiosClients', () => ({
@@ -25,10 +30,10 @@ vi.mock('@/lib/tokenStore', () => ({
 
 vi.mock('@features/communication/models/useChatWebSocket', () => ({
   useChatWebSocket: () => ({
-    isConnected: false,
-    sendMessage: vi.fn(),
-    sendImage: vi.fn(),
-    sendTypingIndicator: vi.fn(),
+    isConnected: mocks.isConnected,
+    sendMessage: mocks.sendMessage,
+    sendImage: mocks.sendImage,
+    sendTypingIndicator: mocks.sendTypingIndicator,
   }),
 }));
 
@@ -37,13 +42,19 @@ vi.mock('@/contexts/CallContext', () => ({
 }));
 
 vi.mock('@/contexts/ToastContext', () => ({
-  useToast: () => ({ showError: vi.fn() }),
+  useToast: () => ({ showError: mocks.showError }),
 }));
 
 describe('useChatSession initialization', () => {
   beforeEach(() => {
     mocks.createSession.mockReset();
     mocks.loadHistory.mockReset();
+    mocks.sendMessage.mockReset();
+    mocks.sendImage.mockReset();
+    mocks.sendTypingIndicator.mockReset();
+    mocks.showError.mockReset();
+    mocks.isConnected = false;
+    mocks.sendMessage.mockReturnValue(true);
     HTMLElement.prototype.scrollIntoView = vi.fn();
   });
 
@@ -73,7 +84,7 @@ describe('useChatSession initialization', () => {
     mocks.createSession.mockRejectedValue(new Error('HTTP 409'));
 
     render(<ChatWidget orderId="abcdef123" currentUserType="CUSTOMER" />);
-    fireEvent.click(screen.getByRole('button', { name: '#abcdef' }));
+    fireEvent.click(screen.getByTestId('chat-launcher'));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Chat couldn’t connect. Your message has not been sent.',
@@ -82,5 +93,146 @@ describe('useChatSession initialization', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
     await waitFor(() => expect(mocks.createSession).toHaveBeenCalledTimes(2));
+  });
+
+  it('exposes the reconnect status after a session opens without a WebSocket connection', async () => {
+    mocks.createSession.mockResolvedValue({
+      success: true,
+      data: { sessionId: 'session-123', participants: [] },
+    });
+    mocks.loadHistory.mockResolvedValue({ success: true, data: { content: [] } });
+
+    render(<ChatWidget orderId="abcdef123" currentUserType="CUSTOMER" />);
+    fireEvent.click(screen.getByTestId('chat-launcher'));
+
+    expect(await screen.findByTestId('chat-reconnecting-status'))
+      .toHaveTextContent('Reconnecting to chat server...');
+    expect(screen.getByPlaceholderText('Type a message...')).toBeDisabled();
+  });
+
+  it('keeps a line break on Shift+Enter and sends the complete text on Enter', async () => {
+    mocks.isConnected = true;
+    mocks.createSession.mockResolvedValue({
+      success: true,
+      data: { sessionId: 'session-123', participants: [] },
+    });
+    mocks.loadHistory.mockResolvedValue({ success: true, data: { content: [] } });
+
+    render(<ChatWidget orderId="abcdef123" currentUserType="CUSTOMER" />);
+    fireEvent.click(screen.getByTestId('chat-launcher'));
+
+    const composer = await screen.findByPlaceholderText('Type a message...');
+    await waitFor(() => expect(composer).toBeEnabled());
+    fireEvent.change(composer, { target: { value: 'First line\nSecond line' } });
+    expect(composer).toHaveValue('First line\nSecond line');
+    fireEvent.keyDown(composer, { key: 'Enter', shiftKey: false });
+
+    expect(mocks.sendMessage).toHaveBeenCalledWith('First line\nSecond line', 'TEXT');
+    expect(composer).toHaveValue('');
+  });
+
+  it('keeps the composer text when the socket closes before publish', async () => {
+    mocks.isConnected = true;
+    mocks.createSession.mockResolvedValue({
+      success: true,
+      data: { sessionId: 'session-123', participants: [] },
+    });
+    mocks.loadHistory.mockResolvedValue({ success: true, data: { content: [] } });
+    mocks.sendMessage.mockReturnValue(false);
+
+    render(<ChatWidget orderId="abcdef123" currentUserType="CUSTOMER" />);
+    fireEvent.click(screen.getByTestId('chat-launcher'));
+
+    const composer = await screen.findByPlaceholderText('Type a message...');
+    fireEvent.change(composer, { target: { value: 'Keep this message' } });
+    fireEvent.keyDown(composer, { key: 'Enter', shiftKey: false });
+
+    expect(composer).toHaveValue('Keep this message');
+    expect(mocks.showError).toHaveBeenCalledWith(
+      'Chat is reconnecting. Your message was not sent. Please try again when connected.',
+    );
+  });
+
+  it('throttles typing indicators and disables both image controls at the four-image limit', async () => {
+    mocks.isConnected = true;
+    mocks.createSession.mockResolvedValue({
+      success: true,
+      data: { sessionId: 'session-123', participants: [] },
+    });
+    mocks.loadHistory.mockResolvedValue({
+      success: true,
+      data: {
+        content: Array.from({ length: 4 }, (_, index) => ({
+          id: `image-${index}`,
+          senderId: 'customer-1',
+          senderName: 'Customer',
+          senderType: 'CUSTOMER',
+          messageType: 'IMAGE',
+          content: `https://media.example.test/image-${index}.png`,
+          timestamp: '2026-09-29T10:00:00Z',
+        })),
+      },
+    });
+
+    render(<ChatWidget orderId="abcdef123" currentUserType="CUSTOMER" />);
+    fireEvent.click(screen.getByTestId('chat-launcher'));
+
+    const composer = await screen.findByPlaceholderText('Type a message...');
+    await waitFor(() => expect(composer).toBeEnabled());
+    fireEvent.change(composer, { target: { value: 'a' } });
+    fireEvent.change(composer, { target: { value: 'ab' } });
+
+    expect(mocks.sendTypingIndicator).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('button', { name: 'Take photo' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Upload image from gallery' })).toBeDisabled();
+  });
+
+  it('shows an upload error when the image endpoint does not return a usable URL', async () => {
+    mocks.isConnected = true;
+    mocks.createSession.mockResolvedValue({
+      success: true,
+      data: { sessionId: 'session-123', participants: [] },
+    });
+    mocks.loadHistory.mockResolvedValue({ success: true, data: { content: [] } });
+    mocks.sendImage.mockResolvedValue(null);
+
+    const { container } = render(<ChatWidget orderId="abcdef123" currentUserType="CUSTOMER" />);
+    fireEvent.click(screen.getByTestId('chat-launcher'));
+    await screen.findByPlaceholderText('Type a message...');
+
+    const galleryInput = container.querySelector(
+      "input[type='file']:not([capture])",
+    ) as HTMLInputElement;
+    fireEvent.change(galleryInput, {
+      target: { files: [new File(['image fixture'], 'attachment.png', { type: 'image/png' })] },
+    });
+
+    await waitFor(() => expect(mocks.sendImage).toHaveBeenCalledTimes(1));
+    expect(mocks.showError).toHaveBeenCalledWith(
+      'Could not upload that image. Check it is under 5MB and try again.',
+    );
+  });
+
+  it('blocks text above the server limit and explains why it cannot be sent', async () => {
+    mocks.isConnected = true;
+    mocks.createSession.mockResolvedValue({
+      success: true,
+      data: { sessionId: 'session-123', participants: [] },
+    });
+    mocks.loadHistory.mockResolvedValue({ success: true, data: { content: [] } });
+
+    render(<ChatWidget orderId="abcdef123" currentUserType="CUSTOMER" />);
+    fireEvent.click(screen.getByTestId('chat-launcher'));
+
+    const composer = await screen.findByPlaceholderText('Type a message...');
+    fireEvent.change(composer, { target: { value: 'x'.repeat(10_001) } });
+
+    expect(screen.getByRole('button', { name: 'Messages can contain up to 10,000 characters' }))
+      .toBeDisabled();
+    expect(screen.getByRole('alert')).toHaveTextContent('Messages can contain up to 10,000 characters.');
+
+    fireEvent.keyDown(composer, { key: 'Enter', shiftKey: false });
+    expect(mocks.sendMessage).not.toHaveBeenCalled();
+    expect(mocks.showError).toHaveBeenCalledWith('Messages can contain up to 10,000 characters.');
   });
 });

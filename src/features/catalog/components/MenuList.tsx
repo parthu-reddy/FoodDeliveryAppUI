@@ -1,5 +1,6 @@
 import React from 'react';
-import { Skeleton, Surface } from '@shared/ui';
+import { Surface } from '@shared/ui';
+import { Skeleton } from '@shared/ui/Skeleton';
 import { groupByCategory, type MenuItemView } from '../model/menuItem';
 import { MenuCategoryGroup } from './MenuCategoryGroup';
 import { MenuItemRow, type MenuItemCapabilities } from './MenuItemRow';

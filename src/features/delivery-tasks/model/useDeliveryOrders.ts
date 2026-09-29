@@ -2,18 +2,41 @@ import { usePolling } from "@/hooks/usePolling";
 import { showDeliveryAssignmentNotification } from "@/lib/notificationPermissions";
 import { registerGeolocationWatch, clearGeolocationWatch } from "@/lib/permissionCleanup";
 import { getToken } from "@/lib/tokenStore";
-import { deliveryApi } from "@/lib/zodiosClients";
+import { customerApi, deliveryApi } from "@/lib/zodiosClients";
 import { DeliveryStatus, Order, OrderStatus } from "@/types";
 import { sumRupees } from '@shared/money';
 import { isActiveOrder } from '@features/customer-orders/model/orderStatus';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { requestGoOffline } from './dutyApi';
 import { applyDutyStatus, parseDutyStatusMessage, reactToLocationError } from './dutyStatus';
 import { applyConfirmedProgress, recordConfirmedProgress } from './confirmedProgress';
 import { dayWindow, isOnDate, todayIn } from '@/shared/time';
 
 import { isAvailableDispatch, remainingDispatchSeconds } from './dispatchOffers';
+
+export type PayoutReconciliationStatus = 'refreshing' | 'unavailable';
+
+interface PayoutReconciliation {
+  order: Order;
+  status: PayoutReconciliationStatus;
+}
+
+const PAYOUT_RECONCILIATION_DELAYS_MS = [0, 2_000, 5_000, 10_000] as const;
+
+function ordersFromHistoryResponse(response: unknown): Order[] {
+  const rows = Array.isArray(response)
+    ? response
+    : (response as { content?: unknown[] }).content
+      || (response as { data?: { data?: unknown[] } }).data?.data
+      || (response as { data?: unknown[] }).data
+      || [];
+
+  return rows.map((order: unknown) => ({
+    ...(order as Order),
+    status: ((order as Order).status as string)?.toUpperCase() as OrderStatus || '' as OrderStatus,
+  }));
+}
 
 export interface UseDeliveryOrdersProps {
   deliveryExecutiveId: string;
@@ -77,6 +100,138 @@ export function useDeliveryOrders({
   const historyRef = useRef<Order[]>([]);
   const lastActiveCountRef = useRef(0);
   const notifiedAssignmentIdsRef = useRef<Set<string>>(new Set());
+  const [payoutReconciliations, setPayoutReconciliations] = useState<Record<string, PayoutReconciliation>>({});
+  const payoutReconciliationsRef = useRef<Record<string, PayoutReconciliation>>({});
+  const payoutReconciliationRunsRef = useRef(new Map<string, number>());
+  const payoutReconciliationSequenceRef = useRef(0);
+  const payoutReconciliationTimersRef = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+  const payoutReconciliationControllersRef = useRef(new Map<string, AbortController>());
+
+  const updatePayoutReconciliations = useCallback(
+    (updater: (previous: Record<string, PayoutReconciliation>) => Record<string, PayoutReconciliation>) => {
+      setPayoutReconciliations(previous => {
+        const next = updater(previous);
+        payoutReconciliationsRef.current = next;
+        return next;
+      });
+    },
+    [],
+  );
+
+  useEffect(() => {
+    updatePayoutReconciliations(() => ({}));
+    return () => {
+      payoutReconciliationRunsRef.current.clear();
+      payoutReconciliationTimersRef.current.forEach(timer => clearTimeout(timer));
+      payoutReconciliationTimersRef.current.clear();
+      payoutReconciliationControllersRef.current.forEach(controller => controller.abort());
+      payoutReconciliationControllersRef.current.clear();
+      payoutReconciliationsRef.current = {};
+    };
+  }, [deliveryExecutiveId, updatePayoutReconciliations]);
+
+  const requestPayoutReconciliation = useCallback((completedOrder: Order) => {
+    if (!deliveryExecutiveId || !completedOrder.id || !completedOrder.createdAt
+      || completedOrder.deliveryStatus !== DeliveryStatus.DELIVERED) {
+      return;
+    }
+
+    const orderId = completedOrder.id;
+    // A process can complete after a rider switch or a second attempt starts. Use one monotonic
+    // sequence for the component lifetime so an old callback can never match a newer run ID.
+    const nextRunId = ++payoutReconciliationSequenceRef.current;
+    payoutReconciliationRunsRef.current.set(orderId, nextRunId);
+    const priorTimer = payoutReconciliationTimersRef.current.get(orderId);
+    if (priorTimer) clearTimeout(priorTimer);
+    payoutReconciliationTimersRef.current.delete(orderId);
+    payoutReconciliationControllersRef.current.get(orderId)?.abort();
+    payoutReconciliationControllersRef.current.delete(orderId);
+
+    updatePayoutReconciliations(previous => ({
+      ...previous,
+      [orderId]: { order: completedOrder, status: 'refreshing' },
+    }));
+
+    const scheduleAttempt = (attempt: number) => {
+      const timer = setTimeout(async () => {
+        payoutReconciliationTimersRef.current.delete(orderId);
+        if (payoutReconciliationRunsRef.current.get(orderId) !== nextRunId) return;
+
+        const controller = new AbortController();
+        payoutReconciliationControllersRef.current.set(orderId, controller);
+        try {
+          // This exact owner-scoped payout read avoids relying on the paginated history query.
+          // It is independent of duty state, so it still reconciles after the rider goes offline.
+          const earnings = await customerApi.driverMoney.get('/api/v1/money/driver/:driverId/orders/:orderId', {
+            params: { driverId: deliveryExecutiveId, orderId },
+            signal: controller.signal,
+          });
+          if (payoutReconciliationRunsRef.current.get(orderId) !== nextRunId) return;
+
+          if (earnings?.netPayout != null
+            && earnings.customerContribution != null
+            && earnings.restaurantContribution != null) {
+            const refreshedOrder: Order = {
+              ...completedOrder,
+              earnings: {
+                netPayout: earnings.netPayout,
+                customerContribution: earnings.customerContribution,
+                restaurantContribution: earnings.restaurantContribution,
+              },
+            };
+            historyRef.current = [
+              refreshedOrder,
+              ...historyRef.current.filter(order => order.id !== orderId),
+            ];
+            setInternalOrders(previous => [
+              refreshedOrder,
+              ...previous.filter(order => order.id !== orderId),
+            ]);
+            payoutReconciliationRunsRef.current.delete(orderId);
+            updatePayoutReconciliations(previous => {
+              const { [orderId]: _completed, ...rest } = previous;
+              return rest;
+            });
+            return;
+          }
+        } catch (error) {
+          if (controller.signal.aborted) return;
+          const responseStatus = (error as { response?: { status?: number } }).response?.status;
+          // A malformed request, expired session, or access denial will not resolve by polling.
+          // Keep retrying server-side projection/network failures only, then show their true state.
+          if (responseStatus != null && responseStatus >= 400 && responseStatus < 500 && responseStatus !== 429) {
+            payoutReconciliationRunsRef.current.delete(orderId);
+            updatePayoutReconciliations(previous => {
+              const current = previous[orderId];
+              if (!current) return previous;
+              return { ...previous, [orderId]: { ...current, status: 'unavailable' } };
+            });
+            return;
+          }
+          console.warn('Completed delivery payout is not available yet.', error);
+        } finally {
+          if (payoutReconciliationControllersRef.current.get(orderId) === controller) {
+            payoutReconciliationControllersRef.current.delete(orderId);
+          }
+        }
+
+        if (payoutReconciliationRunsRef.current.get(orderId) !== nextRunId) return;
+        if (attempt === PAYOUT_RECONCILIATION_DELAYS_MS.length - 1) {
+          payoutReconciliationRunsRef.current.delete(orderId);
+          updatePayoutReconciliations(previous => {
+            const current = previous[orderId];
+            if (!current) return previous;
+            return { ...previous, [orderId]: { ...current, status: 'unavailable' } };
+          });
+          return;
+        }
+        scheduleAttempt(attempt + 1);
+      }, PAYOUT_RECONCILIATION_DELAYS_MS[attempt]);
+      payoutReconciliationTimersRef.current.set(orderId, timer);
+    };
+
+    scheduleAttempt(0);
+  }, [deliveryExecutiveId, updatePayoutReconciliations]);
 
   // Polling Orders
   const { refetch: refetchPolling } = usePolling({
@@ -183,20 +338,60 @@ export function useDeliveryOrders({
 
     // The server gets the rider's day as instants, not a date to interpret in its own zone.
     const { from, to } = dayWindow(dateToFetch);
-    deliveryApi.deliveryOrder.get('/api/v1/delivery/orders/history', { queries: { from, to } }).then(res => {
-      if (res) {
-        const getArrayFromRes = (res: unknown) => Array.isArray(res) ? res : (res as {content?: unknown[]}).content || (res as {data?:{data?:unknown[]}}).data?.data || (res as {data?:unknown[]}).data || [];
-        const histData = getArrayFromRes(res);
-        historyRef.current = histData.map((o: unknown) => ({ ...(o as Order), status: ((o as Order).status as string)?.toUpperCase() as OrderStatus || '' as OrderStatus }));
-        setInternalOrders(prev => {
-          const active = prev.filter(o => isActiveOrder(o));
-          const mergedMap = new Map();
-          historyRef.current.forEach((j: Order) => mergedMap.set(j.id, j));
-          active.forEach(j => mergedMap.set(j.id, j));
-          return Array.from(mergedMap.values());
+    const controller = new AbortController();
+    deliveryApi.deliveryOrder.get('/api/v1/delivery/orders/history', {
+      queries: { from, to },
+      signal: controller.signal,
+    }).then(res => {
+      if (controller.signal.aborted || !res) return;
+      const historyById = new Map(ordersFromHistoryResponse(res).map(order => {
+        const existing = historyRef.current.find(current => current.id === order.id);
+        // The exact payout endpoint can complete before this broader history request returns.
+        // Never replace a confirmed local payout with a lagging history row that lacks it.
+        const merged = existing?.earnings?.netPayout != null && order.earnings?.netPayout == null
+          ? { ...order, earnings: existing.earnings }
+          : order;
+        return [merged.id, merged];
+      }));
+      // Preserve only confirmed-local deliveries whose payout reconciliation is still active.
+      // A lagging history read must not make a delivery disappear from the rider's dashboard.
+      Object.values(payoutReconciliationsRef.current).forEach(({ order }) => {
+        if (isOnDate(order.createdAt, dateToFetch) && !historyById.has(order.id)) {
+          historyById.set(order.id, order);
+        }
+      });
+      const confirmedPayoutIds = Array.from(historyById.values())
+        .filter(order => order.earnings?.netPayout != null)
+        .map(order => order.id)
+        .filter(orderId => payoutReconciliationsRef.current[orderId] != null);
+      if (confirmedPayoutIds.length > 0) {
+        confirmedPayoutIds.forEach(orderId => {
+          payoutReconciliationRunsRef.current.delete(orderId);
+          const timer = payoutReconciliationTimersRef.current.get(orderId);
+          if (timer) clearTimeout(timer);
+          payoutReconciliationTimersRef.current.delete(orderId);
+          payoutReconciliationControllersRef.current.get(orderId)?.abort();
+          payoutReconciliationControllersRef.current.delete(orderId);
+        });
+        updatePayoutReconciliations(previous => {
+          const next = { ...previous };
+          confirmedPayoutIds.forEach(orderId => delete next[orderId]);
+          return next;
         });
       }
-    }).catch(console.error);
+      historyRef.current = Array.from(historyById.values());
+      setInternalOrders(prev => {
+        const active = prev.filter(o => isActiveOrder(o));
+        const mergedMap = new Map();
+        historyRef.current.forEach((job: Order) => mergedMap.set(job.id, job));
+        active.forEach(job => mergedMap.set(job.id, job));
+        return Array.from(mergedMap.values());
+      });
+    }).catch(error => {
+      if (!controller.signal.aborted) console.error(error);
+    });
+
+    return () => controller.abort();
    
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showHistory, historyDateFilter, deliveryExecutiveId]);
@@ -492,17 +687,26 @@ export function useDeliveryOrders({
   const availableJobs = activeOrders.filter(o => isAvailableDispatch(o, rejectedIds));
   const allHistoryJobsMap = new Map();
   // eslint-disable-next-line react-hooks/refs
-  [...historyRef.current, ...activeOrders.filter(o => o.deliveryExecutiveId === deliveryExecutiveId && [DeliveryStatus.DELIVERED, DeliveryStatus.FAILED, DeliveryStatus.CANCELLED].includes(o.deliveryStatus as DeliveryStatus))]
+  [...activeOrders.filter(o => o.deliveryExecutiveId === deliveryExecutiveId && [DeliveryStatus.DELIVERED, DeliveryStatus.FAILED, DeliveryStatus.CANCELLED].includes(o.deliveryStatus as DeliveryStatus)), ...historyRef.current]
     .forEach(job => allHistoryJobsMap.set(job.id, { ...job }));
   const allHistoryJobs = Array.from(allHistoryJobsMap.values());
   const todayHistoryJobs = allHistoryJobs.filter(job => isOnDate(job.createdAt, todayDateString));
-  const todayEarnings = sumRupees(...todayHistoryJobs.map(job => {
-    if (job.earnings?.netPayout == null) {
-      throw new Error(`Missing earnings.netPayout for job ${job.id}`);
-    }
-    return job.earnings.netPayout;
-  }));
-  const todayCompletedCount = todayHistoryJobs.length;
+  const todayDeliveredJobs = todayHistoryJobs.filter(job => job.deliveryStatus === DeliveryStatus.DELIVERED);
+  // Server-confirmed payout values are the only amounts included in the displayed total. A
+  // newly delivered job is reconciled separately, so a transient missing value cannot take down
+  // the whole dashboard or look like confirmed earnings.
+  const todayPaidDeliveries = todayDeliveredJobs.filter(job => job.earnings?.netPayout != null);
+  const payoutReconciliationByOrderId = Object.fromEntries(
+    Object.entries(payoutReconciliations).map(([orderId, reconciliation]) => [orderId, reconciliation.status]),
+  ) as Record<string, PayoutReconciliationStatus>;
+  const todayPayoutUpdatingCount = todayDeliveredJobs.filter(
+    job => payoutReconciliationByOrderId[job.id] === 'refreshing',
+  ).length;
+  const todayPayoutUnavailableCount = todayDeliveredJobs.filter(
+    job => payoutReconciliationByOrderId[job.id] === 'unavailable',
+  ).length;
+  const todayEarnings = sumRupees(...todayPaidDeliveries.map(job => job.earnings!.netPayout));
+  const todayCompletedCount = todayDeliveredJobs.length;
   
   const filteredHistoryJobs = allHistoryJobs.filter(job => {
     if (!historyDateFilter) return true;
@@ -531,10 +735,14 @@ export function useDeliveryOrders({
     setRejectedIds,
     availableJobs,
     todayEarnings,
+    todayPayoutUpdatingCount,
+    todayPayoutUnavailableCount,
     todayCompletedCount,
     paginatedHistoryJobs,
     totalHistoryPages,
     historyRef,
+    payoutReconciliationByOrderId,
+    requestPayoutReconciliation,
     onUpdateOrderStatus
   };
 }

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { z } from 'zod';
-import { Button, Input, StatusPill, Surface } from '@shared/ui';
+import { Button, Input, StatusPill, Surface, useConfirm } from '@shared/ui';
+import { useToast } from '@/contexts/ToastContext';
+import { parseApiError } from '@/lib/parseApiError';
 import { ledgerApi, paymentApi, walletApi } from '@/lib/zodiosClients';
 import { PageReconciliationRun } from '../../../api/generated/schemas/ledger/reconciliation_controller';
 import { PageResponseDtoWebhookDelivery } from '../../../api/generated/schemas/payment/admin_dlq_controller';
@@ -20,6 +22,9 @@ export default function OperationsPage() {
   const [paymentWebhooks, setPaymentWebhooks] = useState<z.infer<typeof PageResponseDtoWebhookDelivery> | null>(null);
   const [walletOutbox, setWalletOutbox] = useState<z.infer<typeof WalletOutboxPage> | null>(null);
   const [loading, setLoading] = useState(false);
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const { showError, showSuccess } = useToast();
+  const confirm = useConfirm();
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -39,10 +44,11 @@ export default function OperationsPage() {
       }
     } catch (e) {
       console.error(e);
+      showError(parseApiError(e, 'Failed to load money operations data').message);
     } finally {
       setLoading(false);
     }
-  }, [activeTab]);
+  }, [activeTab, showError]);
 
   useEffect(() => {
     // A fetch on mount sets its loading flag synchronously; see PayoutQueue for the same note.
@@ -56,6 +62,86 @@ export default function OperationsPage() {
     ['payment_dlq', 'Payment DLQ'],
     ['wallet_dlq', 'Wallet DLQ'],
   ] as const;
+
+  const runConfirmedAction = async (
+    actionKey: string,
+    confirmation: { title: string; description: string; confirmLabel: string },
+    action: () => Promise<unknown>,
+    successMessage: string,
+    errorMessage: string,
+  ) => {
+    if (pendingAction) return false;
+
+    const accepted = await confirm({ ...confirmation, tone: 'danger' });
+    if (!accepted) return false;
+
+    setPendingAction(actionKey);
+    try {
+      await action();
+      showSuccess(successMessage);
+      await fetchData();
+      return true;
+    } catch (e: unknown) {
+      console.error(e);
+      showError(parseApiError(e, errorMessage).message);
+      return false;
+    } finally {
+      setPendingAction(null);
+    }
+  };
+
+  const handleResolve = async (rejectionId: string | undefined) => {
+    const note = resolutionNote.trim();
+    if (!rejectionId || !note) return;
+
+    const resolved = await runConfirmedAction(
+      `resolve:${rejectionId}`,
+      {
+        title: 'Resolve rejected ledger movement?',
+        description: 'This removes the movement from the unresolved queue. Confirm only after the booking has been handled elsewhere.',
+        confirmLabel: 'Resolve movement',
+      },
+      () => ledgerApi.adminLedgerRejection.resolve({ note }, { params: { id: rejectionId } }),
+      'Rejected ledger movement resolved.',
+      'Failed to resolve rejected ledger movement',
+    );
+    if (resolved) {
+      setResolvingId(null);
+      setResolutionNote('');
+    }
+  };
+
+  const handleRetryPaymentWebhook = async (eventId: string | undefined) => {
+    if (!eventId) return;
+
+    await runConfirmedAction(
+      `payment-retry:${eventId}`,
+      {
+        title: 'Retry payment webhook?',
+        description: `The event ${eventId} will be delivered to the payment processor again. Confirm only when the original failure has been investigated.`,
+        confirmLabel: 'Retry webhook',
+      },
+      () => paymentApi.adminDlq.retryWebhookEvent(undefined, { params: { eventId } }),
+      'Payment webhook retry submitted.',
+      'Failed to retry payment webhook',
+    );
+  };
+
+  const handleRetryWalletOutbox = async (eventId: string | undefined) => {
+    if (!eventId) return;
+
+    await runConfirmedAction(
+      `wallet-retry:${eventId}`,
+      {
+        title: 'Retry wallet outbox event?',
+        description: `The event ${eventId} will be published again. Confirm only when the downstream issue has been investigated.`,
+        confirmLabel: 'Retry outbox event',
+      },
+      () => walletApi.adminDlq.retryOutboxDlqEvent(undefined, { params: { eventId } }),
+      'Wallet outbox retry submitted.',
+      'Failed to retry wallet outbox event',
+    );
+  };
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -74,6 +160,7 @@ export default function OperationsPage() {
             role="tab"
             aria-selected={activeTab === key}
             variant={activeTab === key ? 'primary' : 'ghost'}
+            disabled={pendingAction !== null}
             onClick={() => setActiveTab(key)}
           >
             {label}
@@ -112,23 +199,31 @@ export default function OperationsPage() {
                     <Button
                       variant="primary"
                       size="sm"
-                      disabled={!resolutionNote.trim()}
-                      onClick={async () => {
-                        await ledgerApi.adminLedgerRejection.resolve({ note: resolutionNote }, { params: { id: r.id ?? '' } });
-                        setResolvingId(null);
-                        setResolutionNote('');
-                        fetchData();
-                      }}
+                      disabled={!resolutionNote.trim() || pendingAction !== null}
+                      loading={pendingAction === `resolve:${r.id}`}
+                      aria-label={pendingAction === `resolve:${r.id}` ? 'Resolving rejected ledger movement' : undefined}
+                      onClick={() => void handleResolve(r.id)}
                     >
                       Confirm
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => setResolvingId(null)}>Cancel</Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={pendingAction !== null}
+                      onClick={() => {
+                        setResolvingId(null);
+                        setResolutionNote('');
+                      }}
+                    >
+                      Cancel
+                    </Button>
                   </div>
                 ) : (
                   <Button
                     variant="primary"
                     size="sm"
                     className="mt-3"
+                    disabled={pendingAction !== null || !r.id}
                     onClick={() => { setResolvingId(r.id ?? null); setResolutionNote(''); }}
                   >
                     Resolve
@@ -177,10 +272,10 @@ export default function OperationsPage() {
                   variant="primary"
                   size="sm"
                   className="mt-3"
-                  onClick={async () => {
-                    await paymentApi.adminDlq.retryWebhookEvent(undefined, { params: { eventId: hook.eventId ?? '' } });
-                    fetchData();
-                  }}
+                  disabled={pendingAction !== null || !hook.eventId}
+                  loading={pendingAction === `payment-retry:${hook.eventId}`}
+                  aria-label={pendingAction === `payment-retry:${hook.eventId}` ? 'Retrying payment webhook' : undefined}
+                  onClick={() => void handleRetryPaymentWebhook(hook.eventId)}
                 >
                   Retry Event
                 </Button>
@@ -206,10 +301,10 @@ export default function OperationsPage() {
                   variant="primary"
                   size="sm"
                   className="mt-3"
-                  onClick={async () => {
-                    await walletApi.adminDlq.retryOutboxDlqEvent(undefined, { params: { eventId: evt.id ?? '' } });
-                    fetchData();
-                  }}
+                  disabled={pendingAction !== null || !evt.id}
+                  loading={pendingAction === `wallet-retry:${evt.id}`}
+                  aria-label={pendingAction === `wallet-retry:${evt.id}` ? 'Retrying wallet outbox event' : undefined}
+                  onClick={() => void handleRetryWalletOutbox(evt.id)}
                 >
                   Retry Event
                 </Button>

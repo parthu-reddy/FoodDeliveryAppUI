@@ -33,14 +33,20 @@ export function ChatMessageList({ messages, userId, orderId, sendMessage }: Chat
   const showHeader = idx === 0 || messages[idx - 1].senderId !== msg.senderId;
 
   return (
-    <div key={msg.id || idx} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+    <div
+      key={msg.id || idx}
+      data-testid="chat-message"
+      data-message-type={msg.messageType}
+      data-message-id={msg.id || undefined}
+      className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
+    >
       {showHeader && (
         <span className="text-xs text-slate-500 mb-1 ml-1 mr-1">
           {isMe ? 'You' : `${msg.senderName} (${typeLabel})`}
         </span>
       )}
       <div
-        className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${isMe
+        className={`max-w-[80%] whitespace-pre-wrap break-words rounded-2xl px-4 py-2 text-sm ${isMe
  ? 'bg-amber-600 text-white rounded-tr-md'
  : 'bg-white border border-slate-200 text-slate-800 rounded-tl-md'
  }`}

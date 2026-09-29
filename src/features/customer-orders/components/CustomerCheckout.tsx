@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Check, ChevronRight, CreditCard, MapPin, Smartphone, Wallet } from 'lucide-react';
-import { Button, ErrorBoundary, Modal, Spinner, Surface, surfaceStyle, useMotionPresets } from '@shared/ui';
+import { Button, Modal, Spinner, Surface, surfaceStyle, useMotionPresets } from '@shared/ui';
+import { ErrorBoundary } from '@shared/ui/ErrorBoundary';
 import { AmountBreakdown, formatINR, type BreakdownLine } from '@shared/money';
 import { VegMarker } from '@features/catalog/components/VegMarker';
 import { customerApi } from '@/lib/zodiosClients';

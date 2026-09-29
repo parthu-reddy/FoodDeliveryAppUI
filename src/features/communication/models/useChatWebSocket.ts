@@ -127,7 +127,7 @@ export const useChatWebSocket = ({ sessionId, onMessageReceived, onTypingIndicat
       if (!response.ok) throw new Error('API Error');
       const data = await response.json();
       if (data.success) {
-        return data.data.imageUrl;
+        return data.data?.url ?? null;
       } else {
         console.error("Image upload failed:", data.message);
         return null;

@@ -8,7 +8,7 @@ import { z } from 'zod';
 
 const categorySchema = z.object({
   name: z.string().min(2, "Category name is required").max(100, "Category name cannot exceed 100 characters"),
-  description: z.string().max(500, "Description cannot exceed 500 characters").optional()
+  description: z.string().max(255, "Description cannot exceed 255 characters").optional()
 });
 
 interface Category {
@@ -29,7 +29,8 @@ export default function AdminCategories() {
       return (r?.data && 'data' in r.data ? r.data.data : r?.data) || (res as Category[]) || [];
     },
     intervalMs: 30000,
-    enabled: true
+    enabled: true,
+    refreshKey: editingCategory?.id ?? null,
   });
 
   const categories = (categoriesData as Category[]) || [];
@@ -83,7 +84,13 @@ export default function AdminCategories() {
                             <p className="font-bold text-slate-800 dark:text-[#f0ede6]">{cat.name}</p>
                             <p className="text-sm text-slate-500 truncate max-w-[200px]">{cat.description || 'No description'}</p>
                         </div>
-                        <Button variant="ghost" size="icon" onClick={() => handleEditClick(cat)} className="opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`Edit ${cat.name}`}
+                            onClick={() => handleEditClick(cat)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
                             <Pencil className="w-4 h-4" />
                         </Button>
                     </Surface>
@@ -104,7 +111,7 @@ export default function AdminCategories() {
                 <p className="text-slate-500">Manage application-wide restaurant and menu categories.</p>
             </div>
             {editingCategory && (
-                <Button variant="ghost" size="icon" onClick={handleCancelEdit}>
+                <Button variant="ghost" size="icon" aria-label="Cancel category edit" onClick={handleCancelEdit}>
                     <X className="w-6 h-6 text-slate-500" />
                 </Button>
             )}

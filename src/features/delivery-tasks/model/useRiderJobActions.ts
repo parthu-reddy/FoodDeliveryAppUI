@@ -27,6 +27,8 @@ interface UseRiderJobActionsOptions {
   deliveryExecutiveName: string;
   /** The history the queue keeps, so a completed job can be reconciled against it. */
   historyRef: React.MutableRefObject<Order[]>;
+  /** Refreshes the server-calculated payout after a delivery status change succeeds. */
+  requestPayoutReconciliation: (completedOrder: Order) => void;
   setActiveJobId: (id: string | null) => void;
   setPingJob: (job: Order | null) => void;
   setRejectedIds: React.Dispatch<React.SetStateAction<Set<string>>>;
@@ -53,6 +55,7 @@ export function useRiderJobActions({
   deliveryExecutiveId,
   deliveryExecutiveName,
   historyRef,
+  requestPayoutReconciliation,
   setActiveJobId,
   setPingJob,
   setRejectedIds,
@@ -306,10 +309,12 @@ const handleCompleteDelivery = async (e?: React.FormEvent): Promise<void> => {
     );
     setIsUpdatingDelivery(false);
 
+    const completedOrder = { ...currentJob, deliveryStatus: DeliveryStatus.DELIVERED };
     historyRef.current = [
-      { ...currentJob, deliveryStatus: DeliveryStatus.DELIVERED },
+      completedOrder,
       ...historyRef.current,
     ];
+    requestPayoutReconciliation(completedOrder);
 
     setActiveJobId(null);
     if (goOfflineAfter) {

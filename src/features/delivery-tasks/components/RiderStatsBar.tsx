@@ -13,6 +13,8 @@ import { DriverRatingCard } from '@features/reviews';
 
 interface RiderStatsBarProps {
   todayEarnings: number;
+  payoutUpdatingCount: number;
+  payoutUnavailableCount: number;
   todayCompletedCount: number;
   deliveryExecutiveId: string;
   historyOpen: boolean;
@@ -21,6 +23,8 @@ interface RiderStatsBarProps {
 
 export function RiderStatsBar({
   todayEarnings,
+  payoutUpdatingCount,
+  payoutUnavailableCount,
   todayCompletedCount,
   deliveryExecutiveId,
   historyOpen,
@@ -40,11 +44,21 @@ export function RiderStatsBar({
             className="text-[10px] uppercase font-mono block"
             style={{ color: 'var(--color-ink-2)' }}
           >
-            Today&rsquo;s Earnings
+            {payoutUpdatingCount + payoutUnavailableCount > 0 ? 'Paid today' : 'Today’s earnings'}
           </span>
           <span className="text-base font-black" style={{ color: 'var(--color-ink)' }}>
             {formatINR(todayEarnings)}
           </span>
+          {payoutUpdatingCount > 0 && (
+            <span className="block text-[10px] font-medium" style={{ color: 'var(--color-ink-2)' }}>
+              {payoutUpdatingCount} payout{payoutUpdatingCount === 1 ? '' : 's'} updating
+            </span>
+          )}
+          {payoutUnavailableCount > 0 && (
+            <span className="block text-[10px] font-medium" style={{ color: 'var(--color-ink-2)' }}>
+              {payoutUnavailableCount} payout{payoutUnavailableCount === 1 ? '' : 's'} unavailable
+            </span>
+          )}
         </span>
       </Surface>
 

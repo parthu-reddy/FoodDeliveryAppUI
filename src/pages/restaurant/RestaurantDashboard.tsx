@@ -6,10 +6,12 @@ import {
 import { Suspense, lazy, useEffect, useState, useMemo } from 'react';
 
 import { CallOverlay } from "@features/communication/components/CallOverlay";
-import { CompleteProfileModal, ErrorBoundary } from "@shared/ui";
+import { CompleteProfileModal } from "@shared/ui";
+import { ErrorBoundary } from '@shared/ui/ErrorBoundary';
 import { useUserProfile } from '../../hooks/useUserProfile';
 
-import { Button, LoadingSkeleton } from "@shared/ui";
+import { Button } from "@shared/ui";
+import { LoadingSkeleton } from '@shared/ui/Skeleton';
 
 const SharedSettingsView = lazy(() => import("@shared/ui/SharedSettingsView"));
 

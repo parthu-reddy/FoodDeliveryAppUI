@@ -1,5 +1,5 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import React from 'react';
 import '@testing-library/jest-dom';
 import { ToastProvider } from '@/contexts/ToastContext';
@@ -62,4 +62,43 @@ describe('Admin Refund Queue', () => {
     await waitFor(() => expect(getTickets).toHaveBeenCalled());
     expect(screen.queryByText('₹275.50')).not.toBeInTheDocument();
   });
+
+  test.each([undefined, null, 0, -1, NaN, Infinity])(
+    'blocks approval when the ticket quote is invalid: %s',
+    async (refundAmount) => {
+      getTickets.mockResolvedValue({
+        content: [{
+          id: 'dddddddd-dddd-dddd-dddd-dddddddddddd',
+          orderId: 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
+          customerId: 'ffffffff-ffff-ffff-ffff-ffffffffffff',
+          reason: 'ITEM_MISSING', status: 'OPEN', refundAmount: refundAmount as never,
+        }],
+        totalPages: 1,
+      });
+
+      wrap(<RefundQueue />);
+
+      fireEvent.click(await screen.findByText('ITEM_MISSING'));
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'Refund approval is unavailable because this ticket has no verified positive refund amount.',
+      );
+      expect(screen.getByRole('button', { name: 'Approve Refund' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: /^Approve$/ })).toBeDisabled();
+
+      fireEvent.click(screen.getByRole('button', { name: /^Reject$/ }));
+      const reject = screen.getByRole('button', { name: 'Reject Refund' });
+      expect(reject).toBeEnabled();
+      fireEvent.click(reject);
+
+      const dialog = await screen.findByRole('dialog', { name: 'Reject this refund?' });
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Reject refund' }));
+      await waitFor(() => expect(resolveTicket).toHaveBeenCalledWith(
+        { approved: false, notes: '', faultType: 'UNKNOWN', overrideAmount: undefined },
+        {
+          params: { ticketId: 'dddddddd-dddd-dddd-dddd-dddddddddddd' },
+          headers: { 'X-User-Id': ADMIN_ID },
+        },
+      ));
+    },
+  );
 });

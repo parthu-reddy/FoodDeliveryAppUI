@@ -46,8 +46,8 @@ export { useMotionPresets, prefersReducedMotion, DURATION, EASE, STAGGER_STEP, S
 export type { MotionPreset } from './motion/motionPresets';
 
 // --- map: the only builder of a maplibre marker element -------------------------------
-export { createMapCallout, createMapPin } from './map/mapMarker';
-export type { MapPinOptions, MapPinTone } from './map/mapMarker';
+export { createMapCallout, createMapPin, createMapPopupContent } from './map/mapMarker';
+export type { MapPinOptions, MapPinTone, MapPopupLine } from './map/mapMarker';
 
 // --- data ------------------------------------------------------------------------------
 export { DataTable } from './data/DataTable';

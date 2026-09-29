@@ -1,5 +1,6 @@
 import { Input, Surface, surfaceStyle } from '@shared/ui';
-import { Order } from "@/types";
+import { DeliveryStatus, Order } from "@/types";
+import type { PayoutReconciliationStatus } from '../model/useDeliveryOrders';
 import { DeliveryOrderDetailsModal } from "@features/delivery-tasks/components/DeliveryOrderDetailsModal";
 import { ArrowLeft, Check, Clock, MapPin } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -16,6 +17,7 @@ interface DeliveryHistoryPanelProps {
   historyPage: number;
   totalHistoryPages: number;
   paginatedHistoryJobs: Order[];
+  payoutReconciliationByOrderId: Record<string, PayoutReconciliationStatus>;
 }
 
 export function DeliveryHistoryPanel({
@@ -25,7 +27,8 @@ export function DeliveryHistoryPanel({
   setHistoryPage,
   historyPage,
   totalHistoryPages,
-  paginatedHistoryJobs
+  paginatedHistoryJobs,
+  payoutReconciliationByOrderId,
 }: DeliveryHistoryPanelProps) {
   const [selectedJob, setSelectedJob] = useState<Order | null>(null);
 
@@ -65,8 +68,28 @@ export function DeliveryHistoryPanel({
             <p className="text-xs text-slate-500 dark:text-slate-300">Try selecting a different date.</p>
           </Surface>
         ) : (
-          paginatedHistoryJobs.map(job => (
-            <button type="button" 
+          paginatedHistoryJobs.map(job => {
+            const payoutStatus = payoutReconciliationByOrderId[job.id];
+            const payoutLabel = job.earnings?.netPayout != null
+              ? 'Payout'
+              : payoutStatus === 'refreshing'
+                ? 'Payout updating'
+                : payoutStatus === 'unavailable'
+                  ? 'Payout unavailable'
+                  : job.deliveryStatus === DeliveryStatus.DELIVERED
+                    ? 'Payout pending'
+                    : 'Payout unavailable';
+            const payoutValue = job.earnings?.netPayout != null
+              ? `+${formatINR(job.earnings.netPayout)}`
+              : payoutStatus === 'refreshing'
+                ? 'Updating'
+                : payoutStatus === 'unavailable'
+                  ? 'Unavailable'
+                  : job.deliveryStatus === DeliveryStatus.DELIVERED
+                  ? 'Pending'
+                  : '—';
+            return (
+            <button type="button"
               key={job.id} 
               onClick={() => setSelectedJob(job)}
               className="p-5 flex flex-col gap-3 transition cursor-pointer text-left w-full"
@@ -79,8 +102,12 @@ export function DeliveryHistoryPanel({
                   <p className="text-[10px] text-slate-500 dark:text-slate-300 mt-0.5">{formatDateTime(job.createdAt)}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-black text-amber-500 text-lg">+{job.earnings?.netPayout != null ? formatINR(job.earnings.netPayout) : '---'}</p>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-300 font-mono uppercase">Payout</p>
+                  <p className={job.earnings?.netPayout != null ? 'font-black text-amber-500 text-lg' : 'text-xs font-bold text-amber-500'}>
+                    {payoutValue}
+                  </p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-300 font-mono uppercase">
+                    {payoutLabel}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center justify-between pt-3 border-t border-rose-500/20 dark:border-rose-500/30 text-xs text-slate-500 dark:text-slate-300">
@@ -88,7 +115,8 @@ export function DeliveryHistoryPanel({
                 <div className="flex items-center gap-1.5 text-amber-500 font-bold"><Check className="w-3.5 h-3.5" /> Delivered</div>
               </div>
             </button>
-          ))
+            );
+          })
         )}
         {totalHistoryPages > 1 && (
           <div className="flex justify-center items-center gap-4 pt-4 pb-2">

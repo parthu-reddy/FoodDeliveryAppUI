@@ -12,6 +12,11 @@ import { formatDateTime } from '@/shared/time';
 
 type Ticket = z.infer<typeof SupportTicket>;
 
+/** A ticket quote is the sole amount an admin may approve from this screen. */
+function hasVerifiedRefundAmount(amount: unknown): amount is number {
+  return typeof amount === 'number' && Number.isFinite(amount) && amount > 0;
+}
+
 interface RefundTicketPanelProps {
   ticket: Ticket;
   onClose: () => void;
@@ -37,8 +42,26 @@ export function RefundTicketPanel({ ticket, onClose, onResolved }: RefundTicketP
   const [notes, setNotes] = useState("");
   const [faultType, setFaultType] = useState("UNKNOWN");
   const [overrideAmount, setOverrideAmount] = useState<string>("");
+  const verifiedQuote = hasVerifiedRefundAmount(ticket.refundAmount) ? ticket.refundAmount : undefined;
+  const hasVerifiedQuote = verifiedQuote !== undefined;
 
   const handleResolve = async () => {
+    const parsedOverrideAmount = overrideAmount.trim() === ''
+      ? undefined
+      : Number(overrideAmount);
+    if (approved) {
+      if (verifiedQuote === undefined) {
+        showError('Refund approval requires a verified, positive refund amount. Reject the ticket or obtain a corrected quote.');
+        return;
+      }
+
+      if (parsedOverrideAmount !== undefined
+        && (!hasVerifiedRefundAmount(parsedOverrideAmount) || parsedOverrideAmount > verifiedQuote)) {
+        showError('The override amount must be a positive amount no greater than the verified refund quote.');
+        return;
+      }
+    }
+
     const adminId = getUserProfile()?.id;
     if (!adminId) {
       showError('Your session does not identify you; sign in again before resolving a refund.');
@@ -49,9 +72,9 @@ export function RefundTicketPanel({ ticket, onClose, onResolved }: RefundTicketP
     // refuses it. The ticket closes either way.
     // Admin.dc.html: the destructive confirm names the amount and the entry it lands on, so
     // the admin approves a figure, not "a refund". It used to name neither.
-    const amountText = overrideAmount
-      ? formatINR(roundRupees(Number(overrideAmount)))
-      : ticket.refundAmount ? formatINR(ticket.refundAmount) : 'the full refundable amount';
+    const amountText = parsedOverrideAmount !== undefined
+      ? formatINR(roundRupees(parsedOverrideAmount))
+      : verifiedQuote === undefined ? 'the requested refund amount' : formatINR(verifiedQuote);
     const orderRef = ticket.orderId ? ` on order #${String(ticket.orderId).slice(0, 8).toUpperCase()}` : '';
     const ok = await confirm({
       title: approved ? `Approve a refund of ${amountText}?` : 'Reject this refund?',
@@ -73,15 +96,15 @@ export function RefundTicketPanel({ ticket, onClose, onResolved }: RefundTicketP
           // Rupees, matching ResolveRequest.overrideAmount (a BigDecimal compared against the
           // rupee-denominated quote). Multiplying by 100 here sent ₹1.50 as 150 -- a hundredfold
           // over-refund whenever the inflated figure still fell under the quote.
-          overrideAmount: overrideAmount ? roundRupees(Number(overrideAmount)) : undefined
+          overrideAmount: parsedOverrideAmount === undefined ? undefined : roundRupees(parsedOverrideAmount)
        }, {
-          params: { ticketId: selectedTicket.id! },
+          params: { ticketId: ticket.id },
           // The real administrator, not a placeholder: this id is stamped into the ticket's
           // resolvedBy and into the refund's initiatedById -- it is the audit record of who
           // authorised the money movement.
           headers: { 'X-User-Id': adminId }
        });
-       showSuccess(`Ticket ${selectedTicket.id?.substring(0,8)} resolved successfully`);
+       showSuccess(`Ticket ${ticket.id.substring(0,8)} resolved successfully`);
        onClose();
        onResolved();
     } catch (e: unknown) {
@@ -91,8 +114,6 @@ export function RefundTicketPanel({ ticket, onClose, onResolved }: RefundTicketP
        setResolving(false);
     }
   };
-
-  const selectedTicket = ticket;
 
   return (
     <Surface
@@ -113,26 +134,26 @@ export function RefundTicketPanel({ ticket, onClose, onResolved }: RefundTicketP
                  <div>
                      <label className="text-xs text-slate-500 font-bold block mb-1">Customer Reason</label>
                      <p className="text-sm bg-slate-50 dark:bg-slate-800 p-3 rounded-lg border border-slate-100 dark:border-slate-700 leading-relaxed">
-                         {selectedTicket.reason}
+                         {ticket.reason}
                      </p>
                  </div>
-                 {selectedTicket.restaurantComments && (
+                 {ticket.restaurantComments && (
                      <div>
                          <label className="text-xs text-slate-500 font-bold block mb-1">Restaurant Comments</label>
                          <p className="text-sm text-rose-600 bg-rose-50 dark:bg-rose-900/20 p-3 rounded-lg border border-rose-100 dark:border-rose-900/50">
-                             {selectedTicket.restaurantComments}
+                             {ticket.restaurantComments}
                          </p>
                      </div>
                  )}
                  <div>
                      <label className="text-xs text-slate-500 font-bold block mb-1">Requested Amount</label>
                      <p className="text-lg font-black text-slate-900 dark:text-white">
-                         {selectedTicket.refundAmount ? formatINR(selectedTicket.refundAmount) : 'Full Refund Requested'}
+                         {verifiedQuote === undefined ? 'Quote unavailable' : formatINR(verifiedQuote)}
                      </p>
                  </div>
              </div>
 
-             {['OPEN', 'IN_REVIEW'].includes(selectedTicket.status || '') ? (
+             {['OPEN', 'IN_REVIEW'].includes(ticket.status) ? (
                  <div className="border-t border-slate-200 dark:border-slate-800 pt-6">
                      <h4 className="font-bold mb-4 flex items-center gap-2 text-rose-600 dark:text-rose-400">
                          Resolution Action
@@ -144,6 +165,7 @@ export function RefundTicketPanel({ ticket, onClose, onResolved }: RefundTicketP
                                  type="button"
                                  aria-pressed={approved}
                                  onClick={() => setApproved(true)}
+                                 disabled={!hasVerifiedQuote}
                                  className="p-2 rounded-lg text-sm font-bold transition cursor-pointer"
                                  style={{
                                      border: '2px solid',
@@ -174,6 +196,11 @@ export function RefundTicketPanel({ ticket, onClose, onResolved }: RefundTicketP
 
                          {approved && (
                              <>
+                                {!hasVerifiedQuote && (
+                                  <div role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200">
+                                    Refund approval is unavailable because this ticket has no verified positive refund amount. You can reject this ticket or obtain a corrected quote.
+                                  </div>
+                                )}
                                 <div>
                                     <label className="block text-xs font-bold text-slate-500 mb-1">Fault Attribution</label>
                                     <Select
@@ -221,7 +248,7 @@ export function RefundTicketPanel({ ticket, onClose, onResolved }: RefundTicketP
                              variant={approved ? "primary" : "danger"} 
                              className="w-full"
                              onClick={handleResolve}
-                             disabled={resolving}
+                             disabled={resolving || (approved && !hasVerifiedQuote)}
                          >
                              {resolving ? <Spinner size="sm" /> : (approved ? 'Approve Refund' : 'Reject Refund')}
                          </Button>
@@ -234,18 +261,18 @@ export function RefundTicketPanel({ ticket, onClose, onResolved }: RefundTicketP
                          <div className="space-y-2 text-sm">
                              <div className="flex justify-between">
                                  <span className="text-slate-500">Action:</span>
-                                 <span className="font-medium">{selectedTicket.status}</span>
+                                 <span className="font-medium">{ticket.status}</span>
                              </div>
-                             {selectedTicket.resolvedAt && (
+                             {ticket.resolvedAt && (
                                  <div className="flex justify-between">
                                      <span className="text-slate-500">Date:</span>
-                                     <span>{formatDateTime(selectedTicket.resolvedAt)}</span>
+                                     <span>{formatDateTime(ticket.resolvedAt)}</span>
                                  </div>
                              )}
-                             {selectedTicket.resolutionNotes && (
+                             {ticket.resolutionNotes && (
                                  <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
                                      <span className="text-slate-500 block mb-1">Notes:</span>
-                                     <p className="italic text-slate-700 dark:text-slate-300">"{selectedTicket.resolutionNotes}"</p>
+                                     <p className="italic text-slate-700 dark:text-slate-300">"{ticket.resolutionNotes}"</p>
                                  </div>
                              )}
                          </div>

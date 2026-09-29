@@ -1,4 +1,4 @@
-import { Button, Input, Surface, useConfirm } from '@shared/ui';
+import { Button, Select, Surface, useConfirm } from '@shared/ui';
 import { Plus, Power, User, X } from 'lucide-react';
 import { OrderResponse } from '@/api/generated/schemas/customer/common';
 import { UserDTO } from '@/api/generated/schemas/identity/admin_user_controller';
@@ -7,15 +7,19 @@ import { formatDateTime } from '@/shared/time';
 
 type AdminUser = z.infer<typeof UserDTO>;
 type ActiveOrder = z.infer<typeof OrderResponse>;
+type ManagedRole = AdminUser['roles'][number];
 
 interface AdminUserDetailPanelProps {
   selectedUser: AdminUser | null;
   userActiveOrders: ActiveOrder[];
-  newRole: string;
-  setNewRole: (role: string) => void;
-  handleAddRole: () => void;
-  handleRemoveRole: (role: string) => void;
-  handleToggleStatus: () => void;
+  newRole: ManagedRole | '';
+  setNewRole: (role: ManagedRole | '') => void;
+  handleAddRole: () => Promise<void>;
+  handleRemoveRole: (role: ManagedRole) => Promise<void>;
+  handleToggleStatus: () => Promise<void>;
+  roleOptions: Array<{ value: ManagedRole; label: string; disabled?: boolean }>;
+  roleOperation: { type: 'add' | 'remove'; role: ManagedRole } | null;
+  statusOperation: { userId: string; targetActive: boolean } | null;
 }
 
 /**
@@ -28,15 +32,18 @@ interface AdminUserDetailPanelProps {
 export function AdminUserDetailPanel(props: AdminUserDetailPanelProps) {
   const {
     selectedUser, userActiveOrders, newRole, setNewRole,
-    handleAddRole, handleRemoveRole, handleToggleStatus,
+    handleAddRole, handleRemoveRole, handleToggleStatus, roleOptions, roleOperation, statusOperation,
   } = props;
   const confirm = useConfirm();
+  const roleActionPending = roleOperation !== null;
+  const statusActionPending = statusOperation !== null;
 
   // The confirmation lives with the control, not with the action: this file is the one that
   // says "Suspend User", and a guard a screen away from its button is a guard nobody sees.
   // Only suspension is destructive — re-activating restores access and needs no ceremony.
   const toggleStatus = async () => {
-    if (selectedUser?.active !== false) {
+    if (!selectedUser || statusActionPending) return;
+    if (selectedUser.active !== false) {
       const ok = await confirm({
         title: `Suspend ${selectedUser?.name || 'this user'}?`,
         description:
@@ -47,7 +54,31 @@ export function AdminUserDetailPanel(props: AdminUserDetailPanelProps) {
       });
       if (!ok) return;
     }
-    handleToggleStatus();
+    await handleToggleStatus();
+  };
+
+  const addRole = async () => {
+    if (!newRole || roleActionPending) return;
+    const ok = await confirm({
+      title: `Grant ${newRole} role?`,
+      description: 'This immediately changes the user’s access in the selected service.',
+      confirmLabel: 'Grant role',
+      tone: 'primary',
+    });
+    if (!ok) return;
+    await handleAddRole();
+  };
+
+  const removeRole = async (role: ManagedRole) => {
+    if (roleActionPending) return;
+    const ok = await confirm({
+      title: `Remove ${role} role?`,
+      description: 'The user will lose access provided by this role immediately.',
+      confirmLabel: 'Remove role',
+      tone: 'danger',
+    });
+    if (!ok) return;
+    await handleRemoveRole(role);
   };
 
   return (
@@ -61,8 +92,10 @@ export function AdminUserDetailPanel(props: AdminUserDetailPanelProps) {
                 </div>
                 <Button
                     variant={selectedUser.active !== false ? 'danger' : 'outline'}
-                    onClick={toggleStatus}
+                    onClick={() => void toggleStatus()}
                     icon={<Power className="w-4 h-4" />}
+                    disabled={statusActionPending}
+                    loading={statusOperation?.userId === selectedUser.id}
                     className={selectedUser.active === false ? '!bg-amber-500/10 !text-amber-500 hover:!bg-amber-500/20' : ''}
                 >
                     {selectedUser.active !== false ? 'Suspend User' : 'Activate User'}
@@ -91,23 +124,39 @@ export function AdminUserDetailPanel(props: AdminUserDetailPanelProps) {
             <div>
                 <h3 className="font-bold text-xl mb-4">Roles</h3>
                 <div className="flex flex-wrap gap-2 mb-4">
-                    {(selectedUser.roles || []).map((role: string) => (
+                    {selectedUser.roles.map((role) => (
                         <div key={role} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 font-bold text-sm">
                             {role}
-                            <Button variant="ghost" size="icon" onClick={() => handleRemoveRole(role)} className="!text-rose-500">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                aria-label={`Remove ${role} role`}
+                                disabled={roleActionPending}
+                                loading={roleOperation?.type === 'remove' && roleOperation.role === role}
+                                onClick={() => void removeRole(role)}
+                                className="!text-rose-500"
+                            >
                                 <X className="w-4 h-4" />
                             </Button>
                         </div>
                     ))}
                 </div>
                 <div className="flex gap-2">
-                    <Input 
-                        type="text" 
+                    <Select
+                        aria-label="New role"
                         value={newRole} 
-                        onChange={(e) => setNewRole(e.target.value.toUpperCase())} 
-                        placeholder="NEW_ROLE"
+                        onChange={(role) => setNewRole(role as ManagedRole)}
+                        options={roleOptions}
+                        placeholder="Select a role"
+                        disabled={roleActionPending}
                     />
-                    <Button variant="primary" onClick={handleAddRole} icon={<Plus className="w-4 h-4" />}>
+                    <Button
+                        variant="primary"
+                        onClick={() => void addRole()}
+                        icon={<Plus className="w-4 h-4" />}
+                        disabled={!newRole || roleActionPending}
+                        loading={roleOperation?.type === 'add'}
+                    >
                         Add
                     </Button>
                 </div>

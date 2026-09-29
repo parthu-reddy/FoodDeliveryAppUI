@@ -2,10 +2,11 @@ import { useToast } from "@/contexts/ToastContext";
 import { parseApiError } from '@/lib/parseApiError';
 import { ledgerApi } from "@/lib/zodiosClients";
 import { PayoutActionDialogs } from './PayoutActionDialogs';
+import { hasMeaningfulBankReference, hasMeaningfulFailureReason } from './payoutActionValidation';
 import { PayoutLinesPanel } from './PayoutLinesPanel';
 import { Button, Spinner, Surface } from '@shared/ui';
 import { ArrowLeft, AlertTriangle, FileText, Banknote, Clock } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { formatINR } from '@shared/money';
 
 import { schemas } from "@/api/generated/schemas/ledger/payout_controller";
@@ -20,6 +21,7 @@ export default function PayoutDetail({ payoutId, onBack }: { payoutId: string; o
   const [payout, setPayout] = useState<PayoutDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const actionInFlightRef = useRef(false);
   const { showError, showSuccess } = useToast();
 
   const [bankRef, setBankRef] = useState("");
@@ -53,25 +55,31 @@ export default function PayoutDetail({ payoutId, onBack }: { payoutId: string; o
   }, [payoutId]);
 
   const handleAction = async (action: 'approve' | 'mark-paid' | 'fail' | 'cancel', idempotencyKey: string) => {
+    if (actionInFlightRef.current) return;
+
+    const bankReference = bankRef.trim();
+    const failureReason = failReason.trim();
+    if (action === 'mark-paid' && !hasMeaningfulBankReference(bankReference)) {
+      showError('Enter a bank reference with at least 3 non-whitespace characters.');
+      return;
+    }
+    if (action === 'fail' && !hasMeaningfulFailureReason(failureReason)) {
+      showError('Enter a failure reason with at least 5 non-whitespace characters.');
+      return;
+    }
+
+    actionInFlightRef.current = true;
     setActionLoading(action);
     try {
       if (action === 'approve') {
         await ledgerApi.payout.post('/api/v1/internal/admin/payouts/:payoutId/approve', undefined, { params: { payoutId }, headers: { "Idempotency-Key": idempotencyKey } });
         showSuccess('Payout approved successfully');
       } else if (action === 'mark-paid') {
-        if (!bankRef) {
-           showError("Bank reference is required");
-           return;
-        }
-        await ledgerApi.payout.post('/api/v1/internal/admin/payouts/:payoutId/mark-paid', undefined, { params: { payoutId }, queries: { bankReference: bankRef }, headers: { "Idempotency-Key": idempotencyKey } });
+        await ledgerApi.payout.post('/api/v1/internal/admin/payouts/:payoutId/mark-paid', undefined, { params: { payoutId }, queries: { bankReference }, headers: { "Idempotency-Key": idempotencyKey } });
         showSuccess('Payout marked as paid');
         setShowMarkPaidDialog(false);
       } else if (action === 'fail') {
-        if (!failReason) {
-           showError("Failure reason is required");
-           return;
-        }
-        await ledgerApi.payout.post('/api/v1/internal/admin/payouts/:payoutId/fail', undefined, { params: { payoutId }, queries: { reason: failReason }, headers: { "Idempotency-Key": idempotencyKey } });
+        await ledgerApi.payout.post('/api/v1/internal/admin/payouts/:payoutId/fail', undefined, { params: { payoutId }, queries: { reason: failureReason }, headers: { "Idempotency-Key": idempotencyKey } });
         showSuccess('Payout marked as failed');
         setShowFailDialog(false);
       } else if (action === 'cancel') {
@@ -83,6 +91,7 @@ export default function PayoutDetail({ payoutId, onBack }: { payoutId: string; o
       console.error(e);
       showError(parseApiError(e, `Failed to ${action} payout`).message);
     } finally {
+      actionInFlightRef.current = false;
       setActionLoading(null);
     }
   };
@@ -130,6 +139,7 @@ export default function PayoutDetail({ payoutId, onBack }: { payoutId: string; o
                              buttonLabel="Approve"
                              onConfirm={(idempotencyKey) => handleAction('approve', idempotencyKey)}
                              isPending={actionLoading === 'approve'}
+                             disabled={Boolean(actionLoading)}
                           />
                        )}
                     </div>
@@ -140,6 +150,7 @@ export default function PayoutDetail({ payoutId, onBack }: { payoutId: string; o
                           buttonLabel="Cancel"
                           onConfirm={(idempotencyKey) => handleAction('cancel', idempotencyKey)}
                           isPending={actionLoading === 'cancel'}
+                          disabled={Boolean(actionLoading)}
                        />
                     </div>
                 </>

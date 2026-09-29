@@ -1,10 +1,11 @@
 import { useToast } from "@/contexts/ToastContext";
 import { usePolling } from "@/hooks/usePolling";
 import { parseApiError } from '@/lib/parseApiError';
-import { customerApi, deliveryApi } from "@/lib/zodiosClients";
+import { customerApi, deliveryApi, restaurantApi } from "@/lib/zodiosClients";
+import { readDispatchScope, readRestaurantCoordinates } from '@features/admin-ops/model/dispatchScope';
 import { Button, Surface, Textarea, surfaceStyle, useConfirm } from '@shared/ui';
 import { Shield, Truck } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Order as OrderSchema } from '@/api/generated/schemas/customer/common';
 import { z } from 'zod';
 type Order = z.infer<typeof OrderSchema>;
@@ -14,11 +15,12 @@ export default function AdminManualInterventions() {
   const confirm = useConfirm();
   const [activeTab, setActiveTab] = useState<'DISPATCH'>('DISPATCH');
    
-  const [selectedIntervention, setSelectedIntervention] = useState<Order | Record<string, unknown> | null>(null);
+  const [selectedIntervention, setSelectedIntervention] = useState<Order | null>(null);
   const [cancelReason, setCancelReason] = useState('');
+  const [cancelPending, setCancelPending] = useState(false);
+  const [assigningDriverId, setAssigningDriverId] = useState<string | null>(null);
 
   const [interventionsPage, setInterventionsPage] = useState(0);
-  const [interventionsTotalPages, setInterventionsTotalPages] = useState(1);
 
   // Polling for interventions
   const { data: interventionsResponse, refetch: fetchInterventions } = usePolling({
@@ -27,42 +29,62 @@ export default function AdminManualInterventions() {
       return res;
     },
     intervalMs: 15000,
-    enabled: true
+    enabled: true,
+    refreshKey: interventionsPage,
   });
  
 
-  const [interventions, setInterventions] = useState<Order[]>([]);
-  useEffect(() => {
-     
-    if (interventionsResponse) {
-      const content = interventionsResponse.content ?? [];
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setInterventions(content as Order[]);
-      if (interventionsResponse.totalPages !== undefined) {
-        setInterventionsTotalPages(interventionsResponse.totalPages);
-      }
-    }
-  }, [interventionsResponse]);
-  // Polling for available drivers
-  const { data: driversList, refetch: fetchAvailableDrivers } = usePolling({
+  const interventions = (interventionsResponse?.content ?? []) as Order[];
+  const interventionsTotalPages = interventionsResponse?.totalPages ?? 1;
+  // A force-assignment candidate must be scoped to the selected order's
+  // dispatch city, restaurant location, and configured search radius.
+  const selectedInterventionId = selectedIntervention?.id ?? null;
+  const {
+    data: driversList,
+    dataRefreshKey: driverCandidatesOrderId,
+    refetch: fetchAvailableDrivers,
+    isLoading: driversLoading,
+    error: driversError,
+  } = usePolling<Record<string, unknown>[]>({
     fetchFn: async () => {
-      const res = await deliveryApi.adminDelivery.get('/api/v1/internal/admin/delivery/drivers/available-with-location', { queries: { cityId: 'all' } });
-      const content = res;
-      return content ?? [];
+      if (!selectedIntervention) return [];
+      const dispatchScope = readDispatchScope(selectedIntervention);
+      if (!dispatchScope) {
+        throw new Error('This order is missing dispatch location details. Driver assignment is unavailable.');
+      }
+
+      const restRes = await restaurantApi.restaurantOutlet.get('/api/v1/restaurants/:id', { params: { id: selectedIntervention.restaurantId } });
+      const restaurantCoordinates = readRestaurantCoordinates(restRes);
+      if (!restaurantCoordinates) {
+        throw new Error('The restaurant location is unavailable. Driver assignment is unavailable.');
+      }
+
+      return deliveryApi.adminDelivery.get('/api/v1/internal/admin/delivery/drivers/available-with-location', {
+        queries: {
+          cityId: dispatchScope.cityId,
+          lat: restaurantCoordinates.lat,
+          lng: restaurantCoordinates.lng,
+          radiusKm: dispatchScope.radiusKm,
+        },
+      });
     },
      
     intervalMs: 15000,
-    enabled: true
+    enabled: Boolean(selectedIntervention),
+    refreshKey: selectedInterventionId,
    
   });
 
-  const [availableDrivers, setAvailableDrivers] = useState<Record<string, unknown>[]>([]);
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (driversList) setAvailableDrivers(driversList);
-  }, [driversList]);
+  const hasCurrentDriverCandidates = Boolean(selectedIntervention)
+    && driverCandidatesOrderId === selectedInterventionId;
+  const availableDrivers = hasCurrentDriverCandidates ? driversList ?? [] : [];
 
   const handleAssignDriverToIntervention = async (orderId: string, driverId: string) => {
+    if (assigningDriverId) return;
+    if (!hasCurrentDriverCandidates || selectedInterventionId !== orderId || driversLoading) {
+      showError('Wait for location-scoped driver candidates before assigning a driver.');
+      return;
+    }
     // Force-assign overrides automatic dispatch and puts a specific rider on a specific
     // order. It cannot be taken back from this screen, and the rider is notified immediately.
     const ok = await confirm({
@@ -75,35 +97,51 @@ export default function AdminManualInterventions() {
     });
     if (!ok) return;
 
-    // Optimistic UI Update
-    setInterventions(prev => prev.filter(o => o.id !== orderId));
-
+    setAssigningDriverId(driverId);
     try {
       await customerApi.adminOrderManual.post('/api/v1/internal/admin/orders/intervention/:orderId/assign-driver', { deliveryExecutiveId: driverId }, { params: { orderId } });
-      showSuccess("Driver manually assigned and order resumed!");
+      showSuccess("Driver assignment requested. The queue will update when dispatch confirms it.");
       fetchInterventions();
       setSelectedIntervention(null);
     } catch (e) {
       console.error(e);
       showError(parseApiError(e, "Failed to manually assign driver").message);
-      fetchInterventions(); // Revert
+      fetchInterventions();
+    } finally {
+      setAssigningDriverId(null);
     }
   };
 
   const handleCancelIntervention = async (orderId: string) => {
-    // Optimistic UI Update
-    setInterventions(prev => prev.filter(o => o.id !== orderId));
+    const reason = cancelReason.trim();
+    if (reason.length < 5) {
+      showError('Enter a cancellation reason of at least 5 characters.');
+      return;
+    }
 
+    const ok = await confirm({
+      title: `Request cancellation for order #${orderId.substring(0, 8)}?`,
+      description:
+        'This requests cancellation and starts the refund workflow when the order is eligible. '
+        + 'The order remains visible until the server confirms the change.',
+      confirmLabel: 'Request cancellation',
+      tone: 'danger',
+    });
+    if (!ok) return;
+
+    setCancelPending(true);
     try {
-      await customerApi.adminOrderManual.post('/api/v1/internal/admin/orders/intervention/:orderId/cancel', { reason: cancelReason || 'Cancelled by Admin' }, { params: { orderId } });
-      showSuccess("Order cancelled successfully!");
+      await customerApi.adminOrderManual.post('/api/v1/internal/admin/orders/intervention/:orderId/cancel', { reason }, { params: { orderId } });
+      showSuccess("Cancellation requested. The queue will update when processing finishes.");
       fetchInterventions();
       setSelectedIntervention(null);
       setCancelReason('');
     } catch (e) {
       console.error(e);
       showError(parseApiError(e, "Failed to cancel order").message);
-      fetchInterventions(); // Revert
+      fetchInterventions();
+    } finally {
+      setCancelPending(false);
     }
   };
   return (
@@ -186,7 +224,7 @@ export default function AdminManualInterventions() {
 
                 <h2 className="text-3xl font-black mb-2 flex items-center gap-3">
                   <Shield className="w-8 h-8 text-rose-500" />
-                  Order #{(selectedIntervention as Order).id.substring(0, 8)} requires intervention
+                  Order #{selectedIntervention.id.substring(0, 8)} requires intervention
                 </h2>
                 <p className="text-slate-600 dark:text-slate-400 mb-8">This order failed to dispatch to any driver after multiple attempts.</p>
 
@@ -200,18 +238,25 @@ export default function AdminManualInterventions() {
                             <Truck className="w-5 h-5 text-rose-500" />
                             <p className="font-bold text-sm">{driver.fullName as string || 'Driver'}</p>
                           </div>
-                          <Button variant="success" onClick={() => handleAssignDriverToIntervention((selectedIntervention as Order).id, driver.id as string)} className="">
+                          <Button
+                            variant="success"
+                            onClick={() => handleAssignDriverToIntervention(selectedIntervention.id, driver.id as string)}
+                            disabled={!hasCurrentDriverCandidates || Boolean(assigningDriverId)}
+                            loading={assigningDriverId === driver.id}
+                          >
                             Force Assign
                           </Button>
                         </Surface>
                       ))}
-                      {availableDrivers.length === 0 && <p className="text-sm text-slate-500">No online drivers available.</p>}
+                      {driversError && <p role="alert" className="text-sm text-rose-600 dark:text-rose-400">{driversError.message}</p>}
+                      {driversLoading && <p role="status" className="text-sm text-slate-500">Loading nearby drivers…</p>}
+                      {!driversLoading && !driversError && availableDrivers.length === 0 && <p className="text-sm text-slate-500">No online drivers available nearby.</p>}
                     </div>
                   </div>
 
                   <div className="space-y-4">
                     <h3 className="font-bold text-lg border-b border-slate-200 dark:border-slate-700 pb-2 text-rose-500">Cancel Order</h3>
-                    <p className="text-sm text-slate-500">If no driver can be found, cancel the order and trigger a refund.</p>
+                    <p className="text-sm text-slate-500">If no driver can be found, request cancellation and begin the refund workflow.</p>
                     <Textarea
                       value={cancelReason}
                       onChange={(e) => setCancelReason(e.target.value)}
@@ -220,10 +265,12 @@ export default function AdminManualInterventions() {
                     />
                     <Button
                       variant="primary"
-                      onClick={() => handleCancelIntervention((selectedIntervention as Order).id)}
+                      onClick={() => handleCancelIntervention(selectedIntervention.id)}
                       className="w-full !py-3 !bg-rose-500 hover:!bg-rose-600"
+                      disabled={cancelReason.trim().length < 5}
+                      loading={cancelPending}
                     >
-                      Cancel & Refund (Normal)
+                      Request Cancellation & Refund Review
                     </Button>
                   </div>
                 </div>

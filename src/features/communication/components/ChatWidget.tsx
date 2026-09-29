@@ -5,7 +5,7 @@ import { getUserProfile } from "@/lib/tokenStore";
 import { useChatSession } from "@features/communication/models/useChatSession";
 import { ChatMessageList } from "./ChatMessageList";
 import { Camera, ImagePlus, MessageSquare, PhoneCall, Send, X } from 'lucide-react';
-import React, { useState, useImperativeHandle } from 'react';
+import React, { useState, useImperativeHandle, useRef } from 'react';
 import { RefundRequestModal } from './RefundRequestModal';
 import { Spinner } from '@shared/ui';
 
@@ -34,10 +34,12 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
   const { showError } = useToast();
   const user = getUserProfile();
   const [isOpen, setIsOpen] = useState(false);
+  const lastTypingIndicatorAt = useRef(0);
 
   const {
     unreadCount, setUnreadCount, sessionId, messages,
     inputText, setInputText, isLoading, isTyping, targetUserId,
+    isMessageTooLong,
     sessionInitError, retrySession,
     isRefundModalOpen, setIsRefundModalOpen,
     handleSend, handleImageUpload, handleRefundSubmit,
@@ -60,6 +62,16 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { startCall, callState, callEndReason, isCaller } = useCallContext();
 
+  const handleComposerChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInputText(event.target.value);
+
+    const now = Date.now();
+    if (now - lastTypingIndicatorAt.current >= 1_000) {
+      lastTypingIndicatorAt.current = now;
+      sendTypingIndicator();
+    }
+  };
+
 
 
  
@@ -68,6 +80,11 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
   if (!isOpen) {
     return (
       <button
+        data-testid="chat-launcher"
+        data-order-id={orderId}
+        aria-label={`Open chat for order ${orderId.substring(0, 6)}${unreadCount > 0
+          ? `, ${unreadCount} unread message${unreadCount === 1 ? '' : 's'}`
+          : ''}`}
         onClick={() => {
           setIsOpen(true);
           setUnreadCount(0);
@@ -77,7 +94,10 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
         <MessageSquare className="w-6 h-6" />
         <span className="font-bold text-sm">#{orderId.substring(0, 6)}</span>
         {unreadCount > 0 && (
-          <span className="absolute -top-2 -right-2 bg-rose-500 text-white text-xs font-bold px-2 py-1 rounded-full animate-bounce">
+          <span
+            data-testid="chat-unread-count"
+            className="absolute -top-2 -right-2 bg-rose-500 text-white text-xs font-bold px-2 py-1 rounded-full animate-bounce"
+          >
             {unreadCount}
           </span>
         )}
@@ -148,7 +168,11 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
 
       {/* Connection Status */}
       {(!isConnected && sessionId && !isLoading) && (
-        <div className="bg-amber-50 text-amber-800 text-xs text-center py-1 font-medium shrink-0">
+        <div
+          data-testid="chat-reconnecting-status"
+          role="status"
+          className="bg-amber-50 text-amber-800 text-xs text-center py-1 font-medium shrink-0"
+        >
           Reconnecting to chat server...
         </div>
       )}
@@ -185,7 +209,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
 
         {/* Typing indicators */}
         {Object.entries(isTyping).filter(([_, isT]) => isT).length > 0 && (
-          <div className="flex items-center text-xs text-slate-500 space-x-1">
+          <div data-testid="chat-typing-indicator" role="status" className="flex items-center text-xs text-slate-500 space-x-1">
             <div className="flex space-x-1">
               <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
               <div className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -199,10 +223,16 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
       </div>
 
       {/* Input Area */}
-      <form onSubmit={handleSend} className="p-3 bg-white border-t border-slate-200 shrink-0">
+      <form
+        data-testid="chat-composer"
+        aria-busy={isLoading}
+        onSubmit={handleSend}
+        className="p-3 bg-white border-t border-slate-200 shrink-0"
+      >
         <div className="flex items-center space-x-2 bg-slate-100 rounded-full px-4 py-2">
           {/* Hidden file inputs: one for camera capture, one for gallery */}
           <input
+            data-testid="chat-camera-file-input"
             type="file"
             accept="image/*"
             capture="environment"
@@ -211,6 +241,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
             onChange={handleImageUpload}
           />
           <input
+            data-testid="chat-gallery-file-input"
             type="file"
             accept="image/*"
             className="hidden"
@@ -219,6 +250,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
           />
           <button
             type="button"
+            aria-label="Take photo"
             onClick={() => cameraInputRef.current?.click()}
             disabled={isImageUploadDisabled}
             title={uploadedImageCount >= 4 ? "Maximum 4 images allowed per session" : "Take Photo"}
@@ -228,6 +260,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
           </button>
           <button
             type="button"
+            aria-label="Upload image from gallery"
             onClick={() => fileInputRef.current?.click()}
             disabled={isImageUploadDisabled}
             title={uploadedImageCount >= 4 ? "Maximum 4 images allowed per session" : "Upload from Gallery"}
@@ -238,10 +271,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
 
           <textarea
             value={inputText}
-            onChange={(e) => {
-              setInputText(e.target.value);
-              sendTypingIndicator();
-            }}
+            onChange={handleComposerChange}
             onInput={(e) => {
               const target = e.target as HTMLTextAreaElement;
               target.style.height = 'auto';
@@ -264,8 +294,9 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
           />
           <button
             type="submit"
-            disabled={!inputText.trim() || !isConnected}
-            className={`p-1.5 rounded-full transition-colors ${inputText.trim() && isConnected
+            disabled={!inputText.trim() || !isConnected || isMessageTooLong}
+            title={isMessageTooLong ? 'Messages can contain up to 10,000 characters' : undefined}
+            className={`p-1.5 rounded-full transition-colors ${inputText.trim() && isConnected && !isMessageTooLong
  ? 'bg-amber-600 text-white hover:bg-amber-700'
  : 'bg-slate-300 text-slate-500 cursor-not-allowed'
  }`}
@@ -273,6 +304,11 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
             <Send className="w-4 h-4" />
           </button>
         </div>
+        {isMessageTooLong && (
+          <p role="alert" className="px-3 pt-2 text-xs text-rose-600">
+            Messages can contain up to 10,000 characters.
+          </p>
+        )}
       </form>
       
       {/* Refund Request Modal */}

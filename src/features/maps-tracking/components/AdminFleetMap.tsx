@@ -1,8 +1,11 @@
-import { createMapPin, Surface } from '@shared/ui';
+import { Button, createMapPin, createMapPopupContent, Surface } from '@shared/ui';
+import { ErrorBoundary } from '@shared/ui/ErrorBoundary';
 import { customerApi, deliveryApi, restaurantApi } from "@/lib/zodiosClients";
+import { formatTime } from '@shared/time';
 import { MapPanel } from './MapPanel';
 import { maplibre, type MapInstance } from '../model/maplibre';
-import { useEffect, useState } from 'react';
+import { RefreshCw } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 import { z } from 'zod';
 import { NearbyRestaurantDTO } from '@/api/generated/schemas/restaurant/restaurant_outlet_controller';
@@ -13,7 +16,8 @@ type Restaurant = z.infer<typeof NearbyRestaurantDTO>;
 type Rider = z.infer<typeof DriverLocationDTO>;
 type CustomerAddress = z.infer<typeof CustomerAddressDto>;
 
-import { ErrorBoundary } from "@shared/ui";
+
+const FLEET_REFRESH_INTERVAL_MS = 30_000;
 
 export default function AdminFleetMap() {
  return (
@@ -30,13 +34,24 @@ function AdminFleetMapInner() {
  const [riders, setRiders] = useState<Rider[]>([]);
  const [customers, setCustomers] = useState<CustomerAddress[]>([]);
  const [toastMsg, setToastMsg] = useState<string | null>(null);
+ const [isRefreshing, setIsRefreshing] = useState(false);
+ const [refreshError, setRefreshError] = useState<string | null>(null);
+ const [lastUpdated, setLastUpdated] = useState<number | null>(null);
+ const [refreshVersion, setRefreshVersion] = useState(0);
+ const markersRef = useRef<Array<{ remove: () => void }>>([]);
+ const fittedMapRef = useRef<MapInstance | null>(null);
+ const hasFittedBoundsRef = useRef(false);
 
  useEffect(() => {
  let active = true;
+ let inFlight = false;
 
  const fetchData = async () => {
+ if (inFlight) return;
+ inFlight = true;
+ setIsRefreshing(true);
  try {
- const [resOutlets, resDrivers, resCustomers] = await Promise.all([
+ const [resOutlets, resDrivers, resCustomers] = await Promise.allSettled([
  (restaurantApi.restaurantOutlet.get('/api/v1/internal/admin/restaurants/all-with-location', {})),
  (deliveryApi.adminDelivery.get('/api/v1/internal/admin/delivery/drivers/all-with-location', { queries: { pageable: {}, cityId: 'BLR' } })),
  (customerApi.adminCustomer.get('/api/v1/internal/admin/customers/addresses', { queries: { pageable: {} } }))
@@ -44,22 +59,50 @@ function AdminFleetMapInner() {
 
  if (!active) return;
 
- // Since the Zodios schema correctly types the ApiResponse wrapper,
- // we can safely access the nested data and fallback to an empty array.
- setRestaurants(resOutlets?.data?.content ?? []);
- setRiders(resDrivers?.content ?? []);
- setCustomers(resCustomers?.data?.content ?? []);
+ let hasFailure = false;
+ let hasFreshData = false;
+ if (resOutlets.status === 'fulfilled') {
+ setRestaurants(resOutlets.value?.data?.content ?? []);
+ hasFreshData = true;
+ } else {
+ hasFailure = true;
+ }
+ if (resDrivers.status === 'fulfilled') {
+ setRiders(resDrivers.value?.content ?? []);
+ hasFreshData = true;
+ } else {
+ hasFailure = true;
+ }
+ if (resCustomers.status === 'fulfilled') {
+ setCustomers(resCustomers.value?.data?.content ?? []);
+ hasFreshData = true;
+ } else {
+ hasFailure = true;
+ }
+
+ setRefreshError(hasFailure
+ ? 'Some fleet data could not be refreshed. Showing the latest available data.'
+ : null);
+ if (hasFreshData) setLastUpdated(Date.now());
  } catch (err: unknown) {
+ if (active) {
  console.error("Failed to fetch map data", err);
+ setRefreshError('Could not refresh fleet data. Try again.');
+ }
+ } finally {
+ inFlight = false;
+ if (active) setIsRefreshing(false);
  }
  };
 
- fetchData();
+ void fetchData();
+ const refreshTimer = window.setInterval(() => { void fetchData(); }, FLEET_REFRESH_INTERVAL_MS);
 
  return () => {
  active = false;
+ window.clearInterval(refreshTimer);
  };
- }, []);
+ }, [refreshVersion]);
 
  // The markers are re-placed whenever the fleet data changes; the map itself is built once,
  // by MapPanel, and handed over through onReady.
@@ -67,10 +110,20 @@ function AdminFleetMapInner() {
  const map = mapInstance;
  if (!map) return;
 
+ if (fittedMapRef.current !== map) {
+ fittedMapRef.current = map;
+ hasFittedBoundsRef.current = false;
+ }
+
+ let active = true;
+ const clearMarkers = () => {
+ markersRef.current.forEach(marker => marker.remove());
+ markersRef.current = [];
+ };
+
  const renderMarkers = () => {
- // Clear existing markers
- const existingMarkers = document.querySelectorAll('.fleet-marker');
- existingMarkers.forEach(m => m.remove());
+ if (!active) return;
+ clearMarkers();
 
  const bounds = new maplibre.LngLatBounds();
  let hasPoints = false;
@@ -96,10 +149,14 @@ function AdminFleetMapInner() {
  }).catch(err => console.error("Failed to copy:", err));
  };
 
- new maplibre.Marker({ element: el })
+ const marker = new maplibre.Marker({ element: el })
  .setLngLat([r.lng, r.lat])
- .setPopup(new maplibre.Popup({ offset: 25 }).setHTML(`<strong>Restaurant:</strong> ${r.name}<br>Status: ${r.isActive ? 'Active' : 'Inactive'}`))
+ .setPopup(new maplibre.Popup({ offset: 25 }).setDOMContent(createMapPopupContent([
+ { label: 'Restaurant:', value: r.name || 'Unknown' },
+ { label: 'Status:', value: r.isActive ? 'Active' : 'Inactive' },
+ ])))
  .addTo(map!);
+ markersRef.current.push(marker);
  }
  });
 
@@ -129,10 +186,14 @@ function AdminFleetMapInner() {
  }).catch(err => console.error("Failed to copy:", err));
  };
 
- new maplibre.Marker({ element: el })
+ const marker = new maplibre.Marker({ element: el })
  .setLngLat([r.lng, r.lat])
- .setPopup(new maplibre.Popup({ offset: 25 }).setHTML(`<strong>Rider:</strong> ${r.fullName || 'Unknown'}<br>Status: ${r.status}`))
+ .setPopup(new maplibre.Popup({ offset: 25 }).setDOMContent(createMapPopupContent([
+ { label: 'Rider:', value: r.fullName || 'Unknown' },
+ { label: 'Status:', value: r.status },
+ ])))
  .addTo(map!);
+ markersRef.current.push(marker);
  }
  });
 
@@ -157,30 +218,52 @@ function AdminFleetMapInner() {
  }).catch(err => console.error("Failed to copy:", err));
  };
 
- new maplibre.Marker({ element: el })
+ const marker = new maplibre.Marker({ element: el })
  .setLngLat([c.longitude, c.latitude])
- .setPopup(new maplibre.Popup({ offset: 25 }).setHTML(`<strong>Customer:</strong> ${c.label || 'Home'}<br>${c.addressLine1}`))
+ .setPopup(new maplibre.Popup({ offset: 25 }).setDOMContent(createMapPopupContent([
+ { label: 'Customer:', value: c.label || 'Home' },
+ { value: c.addressLine1 || 'Address unavailable' },
+ ])))
  .addTo(map!);
+ markersRef.current.push(marker);
  }
  });
 
- if (hasPoints) {
+ if (hasPoints && !hasFittedBoundsRef.current) {
  map.fitBounds(bounds, { padding: 50, maxZoom: 14 });
+ hasFittedBoundsRef.current = true;
  }
  };
 
  if (map.loaded()) {
  renderMarkers();
  } else {
- map.on('load', renderMarkers);
+ map.once('load', renderMarkers);
  }
 
+ return () => {
+ active = false;
+ map.off('load', renderMarkers);
+ clearMarkers();
+ };
  }, [mapInstance, restaurants, riders, customers]);
 
  return (
  <Surface radius="md" elevation={1} className="w-full h-full min-h-[500px] flex flex-col overflow-hidden relative">
  <Surface radius="md" elevation={2} className="absolute top-4 left-4 z-10 px-4 py-3 pointer-events-auto">
- <h3 className="font-bold text-sm text-slate-800 dark:text-white mb-2">Fleet Map Legend</h3>
+ <div className="mb-2 flex items-center justify-between gap-3">
+ <h3 className="font-bold text-sm text-slate-800 dark:text-white">Fleet Map Legend</h3>
+ <Button
+ variant="secondary"
+ size="sm"
+ loading={isRefreshing}
+ aria-label="Refresh fleet map"
+ icon={<RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />}
+ onClick={() => setRefreshVersion(version => version + 1)}
+ >
+ Refresh
+ </Button>
+ </div>
  <div className="flex flex-col gap-2 text-xs">
  <div className="flex items-center gap-2">
  <div className="w-3 h-3 rounded-full bg-rose-600"></div>
@@ -195,6 +278,16 @@ function AdminFleetMapInner() {
  <span className="text-slate-600 dark:text-slate-300">Customers ({customers.length})</span>
  </div>
  </div>
+ {lastUpdated && (
+ <p className="mt-3 text-[10px] text-slate-500 dark:text-slate-400" role="status">
+ Updated at {formatTime(lastUpdated)}
+ </p>
+ )}
+ {refreshError && (
+ <p className="mt-2 max-w-56 text-[10px] leading-snug text-rose-700 dark:text-rose-300" role="alert">
+ {refreshError}
+ </p>
+ )}
  </Surface>
  <MapPanel
  label="Live fleet map"

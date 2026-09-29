@@ -7,16 +7,18 @@ interface Props {
   buttonLabel: string;
   onConfirm: (idempotencyKey: string) => Promise<void>;
   isPending?: boolean;
+  /** A prerequisite owned by the calling flow, such as a bank reference. */
+  disabled?: boolean;
 }
 
-export function ConfirmMoneyAction({ amount, effectSummary, buttonLabel, onConfirm, isPending }: Props) {
+export function ConfirmMoneyAction({ amount, effectSummary, buttonLabel, onConfirm, isPending, disabled = false }: Props) {
   const [typedAmount, setTypedAmount] = useState('');
   // Amounts are rupees, as the API sends them. This read paise, so the threshold was effectively
   // ₹10,00,000 and the typed confirmation almost never appeared.
   const requireTyping = amount >= 10000;
 
   const expectedText = amount.toString();
-  const canSubmit = !isPending && (!requireTyping || typedAmount === expectedText);
+  const canSubmit = !isPending && !disabled && (!requireTyping || typedAmount === expectedText);
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

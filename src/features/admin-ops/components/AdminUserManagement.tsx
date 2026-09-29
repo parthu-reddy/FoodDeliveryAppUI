@@ -6,7 +6,7 @@ import { customerApi, identityApi } from "@/lib/zodiosClients";
 import { RoleName } from "@/types";
 import { Button, EmptyState, Input, Select, Surface, surfaceStyle } from '@shared/ui';
 import { Search, User } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
 
 import { AdminUserDetailPanel } from '@features/admin-ops/components/AdminUserDetailPanel';
@@ -16,15 +16,25 @@ import { OrderResponse } from '@/api/generated/schemas/customer/common';
 
 type AdminUser = z.infer<typeof UserDTO>;
 type ActiveOrder = z.infer<typeof OrderResponse>;
+type ManagedRole = AdminUser['roles'][number];
 
-const roleSchema = z.string().min(2, "Role must be at least 2 characters").max(50, "Role cannot exceed 50 characters").regex(/^[A-Z_]+$/, "Role must contain only uppercase letters and underscores");
+const MANAGEABLE_ROLES: readonly ManagedRole[] = [
+  RoleName.ADMIN,
+  RoleName.CUSTOMER,
+  RoleName.RESTAURANT,
+  RoleName.DELIVERY,
+];
 
 export default function AdminUserManagement() {
   const { showSuccess, showError } = useToast();
   const [roleFilter, setRoleFilter] = useState<RoleName | 'ALL'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
-  const [newRole, setNewRole] = useState('');
+  const [newRole, setNewRole] = useState<ManagedRole | ''>('');
+  const [roleOperation, setRoleOperation] = useState<{ type: 'add' | 'remove'; role: ManagedRole } | null>(null);
+  const [statusOperation, setStatusOperation] = useState<{ userId: string; targetActive: boolean } | null>(null);
+  const statusOperationRef = useRef(false);
+  const activeOrdersRequestRef = useRef(0);
   const [userActiveOrders, setUserActiveOrders] = useState<ActiveOrder[]>([]);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [page, setPage] = useState(0);
@@ -33,7 +43,7 @@ export default function AdminUserManagement() {
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
   // Polling for users by role
-  const { refetch: fetchByRole } = usePolling({
+  usePolling({
     fetchFn: async () => {
       let res;
       if (roleFilter === 'ALL') {
@@ -45,6 +55,7 @@ export default function AdminUserManagement() {
     },
     intervalMs: 30000,
     enabled: !debouncedSearchQuery,
+    refreshKey: `${roleFilter}:${page}`,
     onData: (response) => {
         if (!debouncedSearchQuery) {
             const page = response;
@@ -85,88 +96,117 @@ export default function AdminUserManagement() {
     fetchUsers();
   }, [debouncedSearchQuery]);
 
-  const fetchUserActiveOrders = async (userId: string) => {
-    try {
-      const res = await customerApi.adminOrder.get('/api/v1/internal/admin/orders/user/:userId/active', { params: { userId }, queries: { page: 0, size: 20 } });
-      const data = res.data?.content ?? [];
-      setUserActiveOrders(data);
-    } catch (e: unknown) {
-      console.error(e);
-      setUserActiveOrders([]);
-    }
-  };
-
   useEffect(() => {
-    if (selectedUser) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      fetchUserActiveOrders(selectedUser.id);
-    } else {
-      setUserActiveOrders([]);
-    }
-  }, [selectedUser]);
+    const requestId = ++activeOrdersRequestRef.current;
+    const userId = selectedUser?.id;
+    // A detail panel must never briefly show the previous user's live orders while the next
+    // request is in flight.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setUserActiveOrders([]);
+    if (!userId) return;
+
+    void (async () => {
+      try {
+        const res = await customerApi.adminOrder.get('/api/v1/internal/admin/orders/user/:userId/active', {
+          params: { userId },
+          queries: { page: 0, size: 20 },
+        });
+        if (activeOrdersRequestRef.current === requestId) {
+          setUserActiveOrders(res.data?.content ?? []);
+        }
+      } catch (e: unknown) {
+        console.error(e);
+        if (activeOrdersRequestRef.current === requestId) {
+          setUserActiveOrders([]);
+        }
+      }
+    })();
+  }, [selectedUser?.id]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
   };
 
   const handleAddRole = async () => {
-    if (!selectedUser || !newRole) return;
-    const validation = roleSchema.safeParse(newRole);
-    if (!validation.success) {
-      showError(validation.error.issues[0].message);
+    const user = selectedUser;
+    const role = newRole;
+    if (!user || !role || roleOperation) return;
+    if (user.roles.includes(role)) {
+      showError(`${role} is already assigned to this user`);
       return;
     }
-    
-    const newRoleTyped = newRole as "CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN";
-    // Optimistic UI Update
-    setSelectedUser({ ...selectedUser, roles: [...(selectedUser.roles || []), newRoleTyped] });
-    setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, roles: [...(u.roles || []), newRoleTyped] } : u));
-    
+
+    setRoleOperation({ type: 'add', role });
     try {
-      await identityApi.adminUser.post('/api/v1/internal/admin/users/:id/roles', { serviceName: "CustomerApplication", roleName: newRole }, { params: { id: selectedUser.id }, headers: { 'X-Calling-Service': RoleName.ADMIN } });
+      await identityApi.adminUser.post('/api/v1/internal/admin/users/:id/roles', { serviceName: "CustomerApplication", roleName: role }, { params: { id: user.id }, headers: { 'X-Calling-Service': RoleName.ADMIN } });
+      const appendRole = (candidate: AdminUser) => candidate.roles.includes(role)
+        ? candidate
+        : { ...candidate, roles: [...candidate.roles, role] };
+      setSelectedUser((current) => current?.id === user.id ? appendRole(current) : current);
+      setUsers((current) => current.map((candidate) => candidate.id === user.id ? appendRole(candidate) : candidate));
       setNewRole('');
+      showSuccess('Role added');
     } catch (e: unknown) {
       console.error(e);
       showError(parseApiError(e, "Failed to add role").message);
-      fetchByRole(); // Revert
-      setSelectedUser((prev: AdminUser | null) => prev ? { ...prev, roles: prev.roles.filter((r) => r !== newRole) } : null);
+    } finally {
+      setRoleOperation(null);
     }
   };
 
-  const handleRemoveRole = async (role: string) => {
-    if (!selectedUser) return;
-    
-    // Optimistic UI Update
-    setSelectedUser({ ...selectedUser, roles: selectedUser.roles.filter(r => r !== role) });
-    setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, roles: u.roles.filter(r => r !== role) } : u));
+  const handleRemoveRole = async (role: ManagedRole) => {
+    const user = selectedUser;
+    if (!user || roleOperation) return;
 
+    setRoleOperation({ type: 'remove', role });
     try {
-      await identityApi.adminUser.delete('/api/v1/internal/admin/users/:id/roles/:roleName', undefined, { params: { id: selectedUser.id, roleName: role as "CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN" }, headers: { 'X-Calling-Service': RoleName.ADMIN } });
+      await identityApi.adminUser.delete('/api/v1/internal/admin/users/:id/roles/:roleName', undefined, { params: { id: user.id, roleName: role }, headers: { 'X-Calling-Service': RoleName.ADMIN } });
+      const removeRole = (candidate: AdminUser) => ({
+        ...candidate,
+        roles: candidate.roles.filter((candidateRole) => candidateRole !== role),
+      });
+      setSelectedUser((current) => current?.id === user.id ? removeRole(current) : current);
+      setUsers((current) => current.map((candidate) => candidate.id === user.id ? removeRole(candidate) : candidate));
+      showSuccess('Role removed');
     } catch (e: unknown) {
       console.error(e);
       showError(parseApiError(e, "Failed to remove role").message);
-      fetchByRole(); // Revert
-      setSelectedUser((prev: AdminUser | null) => prev ? { ...prev, roles: [...(prev.roles || []), role as "CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN"] } : null);
+    } finally {
+      setRoleOperation(null);
     }
   };
 
   const handleToggleStatus = async () => {
-    if (!selectedUser) return;
-    const newStatus = !selectedUser.active;
+    const user = selectedUser;
+    if (!user || statusOperationRef.current) return;
+    const newStatus = user.active === false;
 
-    // AdminUserDetailPanel confirms the suspension; this commits it.
-    // Optimistic UI update
-    setSelectedUser({ ...selectedUser, active: newStatus });
-    setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, active: newStatus } : u));
+    // The request guard is synchronous so a double click cannot issue a second write before
+    // React has rendered the disabled control below.
+    statusOperationRef.current = true;
+    setStatusOperation({ userId: user.id, targetActive: newStatus });
 
     try {
-      await identityApi.adminUser.put('/api/v1/internal/admin/users/:userId/status', { isActive: newStatus }, { params: { userId: selectedUser.id } });
+      const result = await identityApi.adminUser.put('/api/v1/internal/admin/users/:userId/status', { isActive: newStatus }, { params: { userId: user.id } });
+      if (result.success === false) {
+        throw new Error(result.message || 'The server did not confirm the user status update');
+      }
+
+      // The status endpoint confirms its command rather than returning a UserDTO. Reflect the
+      // change only after that confirmation, and only if this user is still selected.
+      const updateStatus = (candidate: AdminUser) => candidate.id === user.id
+        ? { ...candidate, active: newStatus }
+        : candidate;
+      setSelectedUser((current) => current?.id === user.id ? updateStatus(current) : current);
+      setUsers((current) => current.map(updateStatus));
       showSuccess(newStatus ? "User activated" : "User suspended");
     } catch (e: unknown) {
       console.error(e);
       showError(parseApiError(e, "Failed to update user status").message);
-      fetchByRole();
-      setSelectedUser({ ...selectedUser, active: !newStatus });
+    }
+    finally {
+      statusOperationRef.current = false;
+      setStatusOperation(null);
     }
   };
 
@@ -250,6 +290,13 @@ export default function AdminUserManagement() {
           handleAddRole={handleAddRole}
           handleRemoveRole={handleRemoveRole}
           handleToggleStatus={handleToggleStatus}
+          roleOptions={MANAGEABLE_ROLES.map((role) => ({
+            value: role,
+            label: role,
+            disabled: selectedUser?.roles.includes(role),
+          }))}
+          roleOperation={roleOperation}
+          statusOperation={statusOperation}
         />
     </div>
   );

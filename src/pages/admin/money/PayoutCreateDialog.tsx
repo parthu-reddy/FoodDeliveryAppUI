@@ -24,10 +24,20 @@ export default function PayoutCreateDialog({
   const [loading, setLoading] = useState(false);
   const [force, setForce] = useState(false);
   const { showError, showSuccess } = useToast();
+  // displayName can be a synthetic fallback made from the payee id. The backend supplies this
+  // explicit flag so a real name is never inferred from a non-empty string.
+  const nameResolved = account.nameResolved === true;
+  const isVerified = account.beneficiaryStatus?.verified === true;
+  const needsBankOverride = nameResolved && !isVerified;
 
   const handleCreate = async (idempotencyKey: string) => {
-    if (!account.displayName && !force) {
-        showError("Payee is not resolved. Use force to bypass.");
+    if (!nameResolved) {
+        showError('Payee identity must be resolved before a payout can be created.');
+        return;
+    }
+
+    if (!isVerified && !force) {
+        showError('Beneficiary bank details must be verified before creating a payout.');
         return;
     }
     
@@ -37,7 +47,9 @@ export default function PayoutCreateDialog({
           payeeId: account.payeeId!,
           payeeType: account.payeeType!,
           periodTo: new Date().toISOString(),
-          force
+          // A force override is only meaningful for a named payee with unverified bank details.
+          // Never let it bypass the identity-resolution gate above.
+          force: needsBankOverride && force,
       }, { headers: { "Idempotency-Key": idempotencyKey } });
       
       showSuccess(`Payout of ${formatINR(res.amount ?? 0)} created successfully.`);
@@ -50,8 +62,7 @@ export default function PayoutCreateDialog({
     }
   };
 
-  const isVerified = account.beneficiaryStatus?.verified === true;
-  const showWarning = !account.displayName || !isVerified;
+  const showWarning = !nameResolved || !isVerified;
 
   return (
       <Modal open onClose={onClose} title="Create Payout" size="md">
@@ -59,7 +70,9 @@ export default function PayoutCreateDialog({
               <div className="mb-6 space-y-4">
                   <div className="flex justify-between">
                       <span className="text-slate-500">Payee</span>
-                      <span className="font-medium text-slate-900 dark:text-white">{account.displayName || account.payeeId}</span>
+                      <span className="font-medium text-slate-900 dark:text-white">
+                        {nameResolved ? account.displayName : 'Unresolved payee'}
+                      </span>
                   </div>
                   <div className="flex justify-between">
                       <span className="text-slate-500">Amount</span>
@@ -76,23 +89,28 @@ export default function PayoutCreateDialog({
                       <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
                       <div>
                           <p className="text-sm font-bold text-amber-800 dark:text-amber-500 mb-1">Attention Required</p>
-                          {!account.displayName && <p className="text-xs text-amber-700 dark:text-amber-400">The payee name could not be resolved from external services.</p>}
+                          {!nameResolved && (
+                            <p className="text-xs text-amber-700 dark:text-amber-400">
+                              The payee identity could not be resolved. Payout creation is unavailable until it is resolved.
+                            </p>
+                          )}
                           {!isVerified && <p className="text-xs text-amber-700 dark:text-amber-400">Beneficiary bank details are not VERIFIED.</p>}
-                          
-                          <label className="flex items-center gap-2 mt-3 text-sm font-medium text-amber-900 dark:text-amber-300 cursor-pointer">
-                              <input 
-                                  type="checkbox" 
-                                  checked={force} 
-                                  onChange={(e) => setForce(e.target.checked)}
-                                  className="rounded border-amber-300 text-amber-600 focus:ring-amber-500"
-                              />
-                              Force create payout anyway
-                          </label>
+                          {needsBankOverride && (
+                            <label className="flex items-center gap-2 mt-3 text-sm font-medium text-amber-900 dark:text-amber-300 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={force}
+                                    onChange={(e) => setForce(e.target.checked)}
+                                    className="rounded border-amber-300 text-amber-600 focus:ring-amber-500"
+                                />
+                                Create payout despite unverified bank details
+                            </label>
+                          )}
                       </div>
                   </div>
               )}
 
-              {showWarning && !force ? (
+              {!nameResolved || (showWarning && !force) ? (
                   <div className="flex justify-end mt-4">
                       <Button variant="ghost" onClick={onClose}>Cancel</Button>
                   </div>

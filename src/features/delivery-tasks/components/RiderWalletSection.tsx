@@ -1,7 +1,7 @@
 import { customerApi } from '@/lib/zodiosClients';
 import { formatINR } from '@shared/money';
 import { lastDaysWindow, todayIn } from '@/shared/time';
-import { TransactionHistoryTable, WalletTransaction } from '@shared/ui';
+import { TransactionHistoryTable, type WalletTransaction } from '@shared/ui/TransactionHistoryTable';
 import React, { useCallback, useEffect, useState } from 'react';
 
 /**

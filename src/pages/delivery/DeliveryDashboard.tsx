@@ -18,7 +18,8 @@ import { useDeliveryOrders } from "@features/delivery-tasks/model/useDeliveryOrd
 import { useRiderDuty } from "@features/delivery-tasks/model/useRiderDuty";
 import { useRiderJobActions } from "@features/delivery-tasks/model/useRiderJobActions";
 import { useRiderProfile } from "@features/delivery-tasks/model/useRiderProfile";
-import { DeliveryShell, ErrorBoundary, useConfirm } from "@shared/ui";
+import { DeliveryShell, useConfirm } from "@shared/ui";
+import { ErrorBoundary } from '@shared/ui/ErrorBoundary';
 import { AnimatePresence } from "motion/react";
 import React, { useState } from "react";
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -81,8 +82,9 @@ export default function DeliveryDashboard({
   const {
     wsConnected, hasLocationFix, historyDateFilter, setHistoryDateFilter, historyPage, setHistoryPage,
     setActiveJobId, currentJob, pingJob, setPingJob, pingTimer,
-    setRejectedIds, availableJobs, todayEarnings, todayCompletedCount, paginatedHistoryJobs,
-    totalHistoryPages, historyRef, onUpdateOrderStatus,
+    setRejectedIds, availableJobs, todayEarnings, todayPayoutUpdatingCount, todayPayoutUnavailableCount,
+    todayCompletedCount, paginatedHistoryJobs, totalHistoryPages, historyRef, payoutReconciliationByOrderId,
+    requestPayoutReconciliation, onUpdateOrderStatus,
   } = useDeliveryOrders({
     deliveryExecutiveId: profile.deliveryExecutiveId,
     deliveryExecutiveName: profile.deliveryExecutiveName,
@@ -113,6 +115,7 @@ export default function DeliveryDashboard({
     deliveryExecutiveId: profile.deliveryExecutiveId,
     deliveryExecutiveName: profile.deliveryExecutiveName,
     historyRef,
+    requestPayoutReconciliation,
     setActiveJobId,
     setPingJob,
     setRejectedIds,
@@ -207,6 +210,8 @@ export default function DeliveryDashboard({
         <>
           <RiderStatsBar
             todayEarnings={todayEarnings}
+            payoutUpdatingCount={todayPayoutUpdatingCount}
+            payoutUnavailableCount={todayPayoutUnavailableCount}
             todayCompletedCount={todayCompletedCount}
             deliveryExecutiveId={profile.deliveryExecutiveId}
             historyOpen={showHistory}
@@ -230,6 +235,7 @@ export default function DeliveryDashboard({
                   historyPage={historyPage}
                   totalHistoryPages={totalHistoryPages}
                   paginatedHistoryJobs={paginatedHistoryJobs}
+                  payoutReconciliationByOrderId={payoutReconciliationByOrderId}
                 />
               </ErrorBoundary>
             ) : !isOnline ? (

@@ -1,5 +1,6 @@
 import { AnimatePresence } from 'motion/react';
 import { ScreenTransition } from '@shared/ui';
+import { ErrorBoundary } from '@shared/ui/ErrorBoundary';
 import React from 'react';
 import { DeliveryStatus } from '@/types';
 import { CustomerMenuView } from '@features/catalog/components/customer/CustomerMenuView';
@@ -10,7 +11,6 @@ import { CustomerOrderTracker } from '@features/customer-orders/components/Custo
 import { isActiveOrder, isFailedOrder } from '@features/customer-orders/model/orderStatus';
 import { getFriendlyStatusMessage } from '@features/customer-orders/model/statusMessaging';
 import { CustomerSettingsScreen } from '@features/customer-orders/components/CustomerSettingsScreen';
-import { ErrorBoundary } from '@shared/ui';
 
 /**
  * Whichever of the customer's three surfaces is showing: their account settings, the order

@@ -18,6 +18,9 @@ vi.mock('@features/admin-ops/components/AdminUserManagement', () => ({ default: 
 vi.mock('@features/catalog/components/admin/AdminCategories', () => ({ default: () => null }));
 vi.mock('@features/ledger/components/AdminLedgerView', () => ({ default: () => null }));
 vi.mock('./money/AdminPayoutsPage', () => ({ default: () => null }));
+vi.mock('./money/AdminOrderMoney', () => ({
+  default: ({ orderId }: { orderId: string }) => <h2>Order money for {orderId}</h2>,
+}));
 vi.mock('./money/OperationsPage', () => ({ default: () => null }));
 vi.mock('@features/reviews', () => ({ AdminReviewsView: () => null }));
 vi.mock('@features/maps-tracking/components/AdminFleetMap', () => ({ default: () => null }));
@@ -29,6 +32,12 @@ function openPortal(path: string) {
 }
 
 describe('Admin refund navigation', () => {
+  it('gives the compact theme and logout controls accessible names', () => {
+    openPortal('/admin/users');
+    expect(screen.getByRole('button', { name: /Use (dark|light) theme/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Log out' })).toBeInTheDocument();
+  });
+
   it('opens the real refund queue from the sidebar and keeps Support Tickets reachable', async () => {
     openPortal('/admin/support_tickets');
     const nav = within(screen.getByRole('navigation'));
@@ -44,6 +53,14 @@ describe('Admin refund navigation', () => {
     openPortal('/admin/refunds');
     expect(await screen.findByRole('heading', { name: 'Refund Exception Queue' })).toBeInTheDocument();
     expect(within(screen.getByRole('navigation')).getByRole('button', { name: 'Refund Queue' }))
+      .toHaveAttribute('aria-current', 'page');
+  });
+
+  it('keeps payout statement order links on their money breakdown route', () => {
+    openPortal('/admin/orders/ord_123/money');
+
+    expect(screen.getByRole('heading', { name: 'Order money for ord_123' })).toBeInTheDocument();
+    expect(within(screen.getByRole('navigation')).getByRole('button', { name: 'Pending Payouts' }))
       .toHaveAttribute('aria-current', 'page');
   });
 });

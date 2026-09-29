@@ -23,16 +23,18 @@ export default function AdminSupportTickets() {
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [showChat, setShowChat] = useState(false);
+  const [resolvingTicketId, setResolvingTicketId] = useState<string | null>(null);
   const chatWidgetRef = useRef<ChatWidgetHandle>(null);
 
   // Polling for tickets
-  const { data: ticketsResponse, refetch: fetchTickets } = usePolling({
+  const { data: ticketsResponse, refetch: fetchTickets, error: ticketsError, isLoading: ticketsLoading } = usePolling({
     fetchFn: async () => {
       const res = await customerApi.adminOrderManual.getOpenSupportTickets({ queries: { status: activeTab, page } });
       return res;
     },
     intervalMs: 15000,
-    enabled: true
+    enabled: true,
+    refreshKey: `${activeTab}:${page}`,
   });
 
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
@@ -77,6 +79,7 @@ export default function AdminSupportTickets() {
       });
       if (!ok) return;
     }
+    setResolvingTicketId(ticket.id);
     try {
       await customerApi.adminRefund.resolveTicket({
         approved,
@@ -93,6 +96,8 @@ export default function AdminSupportTickets() {
       fetchTickets();
     } catch (error) {
       showError(`Failed to resolve ticket: ${parseApiError(error).message}`);
+    } finally {
+      setResolvingTicketId(null);
     }
   };
 
@@ -151,7 +156,17 @@ export default function AdminSupportTickets() {
             </div>
             
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {tickets.length === 0 ? (
+              {ticketsError && (
+                <div role="alert" className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-300">
+                  <p>Tickets could not be refreshed. Existing results are still shown.</p>
+                  <Button variant="outline" size="sm" className="mt-2" onClick={fetchTickets}>Retry</Button>
+                </div>
+              )}
+              {ticketsLoading && tickets.length === 0 ? (
+                <div role="status" className="flex flex-col items-center justify-center h-48 text-slate-400">
+                  <p>Loading tickets…</p>
+                </div>
+              ) : tickets.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-48 text-slate-400">
                   <ShieldCheck className="w-12 h-12 mb-2 opacity-50" />
                   <p>No tickets found</p>
@@ -176,9 +191,7 @@ export default function AdminSupportTickets() {
                     </div>
                     <div className="flex items-center justify-between text-xs text-slate-400">
                       <span>{formatDateTime(ticket.createdAt)}</span>
-                      <Button variant="ghost" size="sm" className="h-6 text-rose-500">
-                        View Details
-                      </Button>
+                      <span className="h-6 px-2 inline-flex items-center text-rose-500 font-bold">View Details</span>
                     </div>
                   </button>
                 ))
@@ -218,7 +231,7 @@ export default function AdminSupportTickets() {
                   <p className="text-sm text-slate-500 mt-1">Order ID: {String(selectedTicket.orderId)}</p>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="ghost" size="icon" onClick={() => { setSelectedTicket(null); setShowChat(false); }}>
+                  <Button aria-label="Close ticket details" variant="ghost" size="icon" onClick={() => { setSelectedTicket(null); setShowChat(false); }}>
                     <XCircle className="w-5 h-5 text-slate-400" />
                   </Button>
                 </div>
@@ -230,10 +243,26 @@ export default function AdminSupportTickets() {
                 <div className="bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden relative" style={{ minHeight: '400px' }}>
                   {showChat && (
                     <div className="absolute inset-0">
-                      <ChatWidget orderId={String(selectedTicket.id)} order={{ id: String(selectedTicket.id) } as Order} currentUserType="ADMIN" otherParticipants={[]} onClose={() => setShowChat(false)} ref={chatWidgetRef} />
+                      <ChatWidget
+                        key={String(selectedTicket.orderId)}
+                        orderId={String(selectedTicket.orderId)}
+                        order={{ id: String(selectedTicket.orderId) } as Order}
+                        currentUserType="ADMIN"
+                        otherParticipants={[{
+                          userId: String(selectedTicket.customerId),
+                          entityType: 'CUSTOMER',
+                          displayName: 'Customer',
+                        }]}
+                        onClose={() => setShowChat(false)}
+                        ref={chatWidgetRef}
+                      />
                     </div>
                   )}
-                  <OpenChatHelper widgetRef={chatWidgetRef} show={showChat} />
+                  <OpenChatHelper
+                    widgetRef={chatWidgetRef}
+                    show={showChat}
+                    orderId={String(selectedTicket.orderId)}
+                  />
                 </div>
 
                 {/* Resolution Controls */}
@@ -247,11 +276,18 @@ export default function AdminSupportTickets() {
                       onChange={(e) => setResolutionNotes(e.target.value)}
                       className="mb-4 bg-white dark:bg-slate-800"
                     />
+                    {(!Number.isFinite(selectedTicket.refundAmount) || (selectedTicket.refundAmount ?? 0) <= 0) && (
+                      <p role="alert" className="mb-4 text-sm text-amber-700 dark:text-amber-400">
+                        This ticket has no verified refund quote and can only be rejected.
+                      </p>
+                    )}
                     <div className="flex gap-3">
                       <Button 
                         variant="primary" 
                         className="flex-1 bg-amber-500 hover:bg-amber-600 text-white border-transparent"
                         onClick={() => handleResolveTicket(selectedTicket, true)}
+                        disabled={!Number.isFinite(selectedTicket.refundAmount) || (selectedTicket.refundAmount ?? 0) <= 0}
+                        loading={resolvingTicketId === selectedTicket.id}
                       >
                         Resolve Ticket
                       </Button>
@@ -259,7 +295,8 @@ export default function AdminSupportTickets() {
                         variant="danger" 
                         className="flex-1"
                         onClick={() => handleResolveTicket(selectedTicket, false)}
-                        disabled={!resolutionNotes.trim()}
+                        disabled={!resolutionNotes.trim() || resolvingTicketId === selectedTicket.id}
+                        loading={resolvingTicketId === selectedTicket.id}
                       >
                         Reject Request
                       </Button>
@@ -287,13 +324,17 @@ export default function AdminSupportTickets() {
 
 // Helper to auto-open the chat widget when mounted in the admin view
 /** The ref only ever has openChatOnly() called on it. */
-function OpenChatHelper({ widgetRef, show }: { widgetRef: React.RefObject<{ openChatOnly?: () => void } | null>, show: boolean }) {
+function OpenChatHelper({
+  widgetRef,
+  show,
+  orderId,
+}: {
+  widgetRef: React.RefObject<{ openChatOnly?: () => void } | null>;
+  show: boolean;
+  orderId: string;
+}) {
   useEffect(() => {
-    if (show && widgetRef.current) {
-      setTimeout(() => {
-        widgetRef.current?.openChatOnly?.();
-      }, 100);
-    }
-  }, [show, widgetRef]);
+    if (show) widgetRef.current?.openChatOnly?.();
+  }, [show, orderId, widgetRef]);
   return null;
 }

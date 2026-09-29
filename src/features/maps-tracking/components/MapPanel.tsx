@@ -88,7 +88,15 @@ export function MapPanel({
 
   return (
     <div className={`relative ${className}`} style={style}>
-      <div ref={containerRef} role="region" aria-label={label} className="absolute inset-0" />
+      <div
+        ref={containerRef}
+        role="region"
+        aria-label={label}
+        className="absolute inset-0"
+        // MapLibre adds `.maplibregl-map { position: relative }` to this element. The
+        // inline position wins over that library rule, preserving the full panel bounds.
+        style={{ position: 'absolute', inset: 0 }}
+      />
       {children}
     </div>
   );

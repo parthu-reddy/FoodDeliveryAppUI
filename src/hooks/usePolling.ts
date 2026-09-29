@@ -7,6 +7,11 @@ interface UsePollingOptions<T> {
   intervalMs: number;
   /** Whether polling is enabled. Set to false to pause (e.g. no active orders) */
   enabled: boolean;
+  /**
+   * Changes to the request inputs that must trigger an immediate fetch instead
+   * of waiting for the next polling interval.
+   */
+  refreshKey?: string | number | boolean | null;
   /** Optional callback when data is received */
   onData?: (data: T) => void;
   /** Optional callback when an error occurs */
@@ -15,6 +20,8 @@ interface UsePollingOptions<T> {
 
 interface UsePollingResult<T> {
   data: T | null;
+  /** The request key that produced `data`, so callers can reject stale data after an input change. */
+  dataRefreshKey: string | number | boolean | null;
   isLoading: boolean;
   error: Error | null;
   /** Manually trigger a fetch outside the polling cycle */
@@ -36,10 +43,12 @@ export function usePolling<T>({
   fetchFn,
   intervalMs,
   enabled,
+  refreshKey = null,
   onData,
   onError,
 }: UsePollingOptions<T>): UsePollingResult<T> {
   const [data, setData] = useState<T | null>(null);
+  const [dataRefreshKey, setDataRefreshKey] = useState<string | number | boolean | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const isSubscribedRef = useRef(true);
@@ -49,23 +58,27 @@ export function usePolling<T>({
   const savedFetchFn = useRef(fetchFn);
   const savedOnData = useRef(onData);
   const savedOnError = useRef(onError);
+  const refreshKeyRef = useRef(refreshKey);
 
   // Remember the latest callback if it changes.
   useEffect(() => {
     savedFetchFn.current = fetchFn;
     savedOnData.current = onData;
     savedOnError.current = onError;
-  }, [fetchFn, onData, onError]);
+    refreshKeyRef.current = refreshKey;
+  }, [fetchFn, onData, onError, refreshKey]);
 
   const executeFetch = useCallback(async () => {
     if (!isSubscribedRef.current) return;
     const fetchId = ++fetchIdRef.current;
+    const requestRefreshKey = refreshKeyRef.current;
     setIsLoading(true);
     setError(null);
     try {
       const result = await savedFetchFn.current();
       if (!isSubscribedRef.current || fetchId !== fetchIdRef.current) return;
       setData(result);
+      setDataRefreshKey(requestRefreshKey);
       savedOnData.current?.(result);
     } catch (err: unknown) {
       if (!isSubscribedRef.current || fetchId !== fetchIdRef.current) return;
@@ -82,6 +95,10 @@ export function usePolling<T>({
   // Start/stop polling based on `enabled`
   useEffect(() => {
     isSubscribedRef.current = true;
+
+    // Invalidate a request started for a previous page, filter, or selection
+    // before issuing the replacement request below.
+    fetchIdRef.current += 1;
 
     if (!enabled) {
       if (timeoutRef.current) {
@@ -108,16 +125,17 @@ export function usePolling<T>({
 
     return () => {
       isSubscribedRef.current = false;
+      fetchIdRef.current += 1;
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
       }
     };
-  }, [enabled, intervalMs, executeFetch]);
+  }, [enabled, intervalMs, executeFetch, refreshKey]);
 
   const refetch = useCallback(() => {
     executeFetch();
   }, [executeFetch]);
 
-  return { data, isLoading, error, refetch };
+  return { data, dataRefreshKey, isLoading, error, refetch };
 }

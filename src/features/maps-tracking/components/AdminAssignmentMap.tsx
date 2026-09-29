@@ -1,13 +1,15 @@
 import { useConfig } from "@/contexts/ConfigContext";
 import { restaurantApi } from "@/lib/zodiosClients";
-import { createMapCallout, createMapPin, ErrorBoundary } from "@shared/ui";
+import { readRestaurantCoordinates } from '@features/admin-ops/model/dispatchScope';
+import { createMapCallout, createMapPin, createMapPopupContent } from "@shared/ui";
+import { ErrorBoundary } from '@shared/ui/ErrorBoundary';
 import { MapPanel } from './MapPanel';
 import { maplibre, type MapInstance } from '../model/maplibre';
 import { useState } from 'react';
 
 interface Driver {
     id: string;
-    fullName: string;
+    fullName?: string;
     lat?: number;
     lng?: number;
 }
@@ -21,6 +23,7 @@ interface Order {
 interface AdminAssignmentMapProps {
     order: Order;
     availableDrivers: Driver[];
+    canAssign: boolean;
     onAssign: (orderId: string, driverId: string) => void;
 }
 
@@ -35,10 +38,11 @@ export default function AdminAssignmentMap(props: AdminAssignmentMapProps) {
 function AdminAssignmentMapInner({ 
     order, 
     availableDrivers, 
+    canAssign,
     onAssign 
 }: AdminAssignmentMapProps) {
   useConfig();
-  const [, setMapInstance] = useState<MapInstance | null>(null);
+  const [restaurantLocationError, setRestaurantLocationError] = useState<string | null>(null);
 
 
   const attachMap = (map: MapInstance) => {
@@ -51,15 +55,22 @@ function AdminAssignmentMapInner({
       });
     };
     
-    const createDriverMarker = (driverName: string) => {
+    const createDriverMarker = (driverName: string | undefined) => {
       const el = document.createElement('div');
       el.className = 'flex flex-col items-center group relative';
-      el.appendChild(createMapCallout(`
-            <span class="text-xs font-bold whitespace-nowrap">${driverName || 'Driver'}</span>
-            <button class="assign-btn w-full py-1 px-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors" style="background: var(--color-danger-bg); color: var(--color-danger); border: 1px solid var(--color-danger-line);">
-                Assign
-            </button>
-      `));
+      const driverNameElement = document.createElement('span');
+      driverNameElement.className = 'text-xs font-bold whitespace-nowrap';
+      driverNameElement.textContent = driverName || 'Driver';
+      const assignButton = document.createElement('button');
+      assignButton.type = 'button';
+      assignButton.className = 'assign-btn w-full py-1 px-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors';
+      Object.assign(assignButton.style, {
+        background: 'var(--color-danger-bg)',
+        color: 'var(--color-danger)',
+        border: '1px solid var(--color-danger-line)',
+      });
+      assignButton.textContent = 'Assign';
+      el.appendChild(createMapCallout([driverNameElement, assignButton]));
       el.appendChild(createMapPin({
         tone: 'rider',
         className: 'cursor-pointer',
@@ -70,18 +81,22 @@ function AdminAssignmentMapInner({
 
     const placeMarkers = async () => {
       try {
-        let rLat = 12.98;
-        let rLng = 77.58;
+        let restaurantCoordinates: { lat: number; lng: number } | null = null;
         try {
             const res = await restaurantApi.restaurantOutlet.get('/api/v1/restaurants/:id', { params: { id: order.restaurantId } });
-            const geo = res;
-            if ((geo?.data)?.lat) rLat = Number((geo.data).lat);
-            if ((geo?.data)?.lng) rLng = Number((geo.data).lng);
+            restaurantCoordinates = readRestaurantCoordinates(res);
+            if (!restaurantCoordinates) throw new Error('Restaurant location is unavailable');
         } catch (err: unknown) {
-            console.warn('Could not fetch restaurant location, using defaults', err);
+            console.warn('Could not fetch restaurant location', err);
+            if (active) {
+              setRestaurantLocationError('Restaurant location is unavailable. Driver assignment is disabled until it is corrected.');
+            }
+            return;
         }
 
-        setMapInstance(map);
+        if (!active) return;
+        setRestaurantLocationError(null);
+        const { lat: rLat, lng: rLng } = restaurantCoordinates;
 
         if (map && active) {
             const bounds = new maplibre.LngLatBounds();
@@ -89,20 +104,26 @@ function AdminAssignmentMapInner({
 
             new maplibre.Marker({ element: createRestaurantMarker() })
                 .setLngLat([rLng, rLat])
-                .setPopup(new maplibre.Popup({ offset: 25 }).setHTML(`<strong>${order.restaurantName}</strong><br/>Restaurant`))
+                .setPopup(new maplibre.Popup({ offset: 25 }).setDOMContent(createMapPopupContent([
+                  { value: order.restaurantName || 'Restaurant', strong: true },
+                  { value: 'Restaurant' },
+                ])))
                 .addTo(map);
 
             availableDrivers.forEach(driver => {
                 if (driver.lat && driver.lng) {
                     bounds.extend([driver.lng, driver.lat]);
                     
-                    const markerEl = createDriverMarker(driver.fullName);
+                    const markerEl = createDriverMarker(driver.fullName ?? 'Driver');
                     
                     // Bind the assign button inside the marker element
                     const assignBtn = markerEl.querySelector('.assign-btn');
                     if (assignBtn) {
+                        (assignBtn as HTMLButtonElement).disabled = !canAssign;
+                        assignBtn.setAttribute('aria-disabled', String(!canAssign));
                         assignBtn.addEventListener('click', (e) => {
                             e.stopPropagation();
+                            if (!canAssign) return;
                             onAssign(order.id, driver.id);
                         });
                     }
@@ -134,14 +155,21 @@ function AdminAssignmentMapInner({
   };
 
   return (
-    <MapPanel
-      label={`Drivers available for order ${order.id}`}
-      center={[77.5946, 12.9716]}
-      zoom={12}
-      minZoom={10}
-      maxZoom={17}
-      onReady={attachMap}
-      className="w-full h-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800"
-    />
+    <div className="relative h-full w-full">
+      <MapPanel
+        label={`Drivers available for order ${order.id}`}
+        center={[77.5946, 12.9716]}
+        zoom={12}
+        minZoom={10}
+        maxZoom={17}
+        onReady={attachMap}
+        className="w-full h-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800"
+      />
+      {restaurantLocationError && (
+        <p role="alert" className="absolute left-4 top-4 z-10 max-w-sm rounded-lg bg-rose-50 p-3 text-sm text-rose-800 shadow dark:bg-rose-950/80 dark:text-rose-200">
+          {restaurantLocationError}
+        </p>
+      )}
+    </div>
   );
 }

@@ -7,9 +7,11 @@ import { QuickStockRail } from '@features/catalog/components/restaurant/QuickSto
 import { RestaurantOrderQueue } from '@features/restaurant-orders/components/RestaurantOrderQueue';
 import { DishRatingsPanel } from '@features/reviews';
 import { ReviewsPanel } from '@features/reviews/components/ReviewsPanel';
-import { ReceivedFeedbackPanel } from '@features/reviews';
+import { ReceivedFeedbackPanel } from '@features/reviews/components/ReceivedFeedbackPanel';
 import { RoleName } from '@/types';
-import { EmptyState, ErrorBoundary, LoadingSkeleton } from '@shared/ui';
+import { EmptyState } from '@shared/ui';
+import { ErrorBoundary } from '@shared/ui/ErrorBoundary';
+import { LoadingSkeleton } from '@shared/ui/Skeleton';
 import { RestaurantStatsBar } from '@features/catalog/components/RestaurantStatsBar';
 import type { RefundView } from '@/types';
 import CampaignManagement from '@features/campaigns-ads/components/CampaignManagement';

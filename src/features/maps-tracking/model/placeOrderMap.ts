@@ -13,22 +13,24 @@ import type { LatLng } from './mapPoints';
  */
 
 function labelledPopup(label: string, colourClass: string, at: LatLng) {
-  const popup = new maplibre.Popup({ offset: 25, closeButton: false, closeOnClick: false }).setHTML(
-    `<div class="text-xs font-semibold text-center cursor-pointer ${colourClass}">${label}<br/>`
-    + '<span class="text-slate-500 font-normal">Click for Google Maps</span></div>',
-  );
-  popup.on('open', () => {
-    const content = popup.getElement();
-    if (!content) return;
-    content.onclick = () => {
-      try {
-        window.open(`https://www.google.com/maps/dir/?api=1&destination=${at.lat},${at.lng}`, '_blank');
-      } catch (e: unknown) {
-        console.error('Could not open external map navigation', e);
-      }
-    };
+  const content = document.createElement('button');
+  content.type = 'button';
+  content.className = `border-0 bg-transparent p-0 text-xs font-semibold text-center cursor-pointer ${colourClass}`;
+  content.setAttribute('aria-label', `Open directions to ${label}`);
+  const title = document.createElement('span');
+  title.textContent = label;
+  const description = document.createElement('span');
+  description.className = 'text-slate-500 font-normal';
+  description.textContent = 'Click for Google Maps';
+  content.append(title, document.createElement('br'), description);
+  content.addEventListener('click', () => {
+    try {
+      window.open(`https://www.google.com/maps/dir/?api=1&destination=${at.lat},${at.lng}`, '_blank');
+    } catch (e: unknown) {
+      console.error('Could not open external map navigation', e);
+    }
   });
-  return popup;
+  return new maplibre.Popup({ offset: 25, closeButton: false, closeOnClick: false }).setDOMContent(content);
 }
 
 export function placePins(
