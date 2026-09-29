@@ -120,12 +120,15 @@ export function useDeliveryOrders({
 
   useEffect(() => {
     updatePayoutReconciliations(() => ({}));
+    const runsMap = payoutReconciliationRunsRef.current;
+    const timersMap = payoutReconciliationTimersRef.current;
+    const controllersMap = payoutReconciliationControllersRef.current;
     return () => {
-      payoutReconciliationRunsRef.current.clear();
-      payoutReconciliationTimersRef.current.forEach(timer => clearTimeout(timer));
-      payoutReconciliationTimersRef.current.clear();
-      payoutReconciliationControllersRef.current.forEach(controller => controller.abort());
-      payoutReconciliationControllersRef.current.clear();
+      runsMap.clear();
+      timersMap.forEach(timer => clearTimeout(timer));
+      timersMap.clear();
+      controllersMap.forEach(controller => controller.abort());
+      controllersMap.clear();
       payoutReconciliationsRef.current = {};
     };
   }, [deliveryExecutiveId, updatePayoutReconciliations]);
