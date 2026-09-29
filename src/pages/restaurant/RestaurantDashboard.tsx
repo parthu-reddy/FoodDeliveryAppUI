@@ -170,11 +170,9 @@ export default function RestaurantDashboard({
         inProfile={view === 'settings'}
         onToggleProfile={() => {
           if (view === 'settings') setView('home');
-          else setView('settings'); // same double-navigate as the tabs: it bounced Profile
-          // settings back to Live Kitchen, so Log Out was unreachable.
+          else setView('settings');
         }}
         inSettings={showSettings}
-        // `setView` and `setShowSettings` are the same navigation; one call is enough.
         onToggleSettings={() => setShowSettings(!showSettings)}
       />}
       nav={!showSettings && view !== 'settings' ? (

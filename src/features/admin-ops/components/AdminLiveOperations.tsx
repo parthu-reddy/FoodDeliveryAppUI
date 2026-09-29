@@ -53,14 +53,14 @@ export default function AdminLiveOperations() {
   // Polling for available drivers every 15 seconds
   const { refetch: fetchAvailableDrivers } = usePolling({
     fetchFn: async () => {
-        let queries: Record<string, string | number> = {};
+        let queries: Record<string, string | number> = { cityId: 'BLR' };
         if (selectedOrder) {
             try {
                 const restRes = await restaurantApi.restaurantOutlet.get('/api/v1/restaurants/:id', { params: { id: selectedOrder.restaurantId } });
                 const rest = restRes.data || restRes;
                 if (rest && rest.lat !== undefined && rest.lng !== undefined) {
                     // @ts-expect-error auto-migration type suppression
-                    queries = { lat: rest.lat, lng: rest.lng, radiusKm: 5 };
+                    queries = { ...queries, lat: rest.lat, lng: rest.lng, radiusKm: 5 };
                 }
             } catch (e: unknown) {
                 console.error("Could not fetch restaurant location", e);

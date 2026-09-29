@@ -12,7 +12,7 @@ vi.mock('@/lib/zodiosClients', () => ({
 vi.mock('@/contexts/ToastContext', () => ({ useToast: () => ({ showError, showSuccess: vi.fn() }) }));
 
 import AdminLedgerView from './AdminLedgerView';
-import { ChargeCategory } from '@/types/backend-enums';
+import { ChargeCategory, LedgerAccountType } from '@/types/backend-enums';
 
 /**
  * The admin ledger explorer.
@@ -73,13 +73,14 @@ describe('AdminLedgerView', () => {
       ...readOptions('All Directions'),
     ];
 
-    const ownerTypes = ['CUSTOMER', 'RESTAURANT', 'DRIVER', 'PLATFORM'];
+    const ownerTypes = Object.values(LedgerAccountType) as string[];
     const directions = ['DEBIT', 'CREDIT'];
     const categories = Object.values(ChargeCategory) as string[];
 
     const allowed = new Set([...ownerTypes, ...directions, ...categories]);
     expect(options.filter((o) => !allowed.has(o))).toEqual([]);
-    // and every enum value is actually offered
+    // Every backend enum value must be offered so selecting one cannot send a 400 request.
+    expect(ownerTypes.filter((type) => !options.includes(type))).toEqual([]);
     expect(categories.filter((c) => !options.includes(c))).toEqual([]);
   });
 
@@ -95,6 +96,24 @@ describe('AdminLedgerView', () => {
     await waitFor(() => expect(showError).toHaveBeenCalled());
     // Still only the initial load: the invalid filter must not reach the service.
     expect(adminLedgerGet).toHaveBeenCalledTimes(1);
+  });
+
+  it('clears filters before fetching the unfiltered ledger', async () => {
+    render(<AdminLedgerView />);
+    await waitFor(() => expect(adminLedgerGet).toHaveBeenCalledTimes(1));
+
+    fireEvent.change(await screen.findByPlaceholderText('Transaction ID'), {
+      target: { value: '00000000-0000-0000-0000-000000000000' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Apply Filters' }));
+    await waitFor(() => expect(adminLedgerGet).toHaveBeenCalledTimes(2));
+    expect(adminLedgerGet.mock.calls[1][1]?.queries).toMatchObject({
+      transactionId: '00000000-0000-0000-0000-000000000000',
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
+    await waitFor(() => expect(adminLedgerGet).toHaveBeenCalledTimes(3));
+    expect(adminLedgerGet.mock.calls[2][1]?.queries).toEqual({ page: 0, size: 20 });
   });
 
   it('reports a failed fetch instead of showing an empty ledger', async () => {

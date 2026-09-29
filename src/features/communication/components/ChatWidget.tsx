@@ -38,6 +38,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
   const {
     unreadCount, setUnreadCount, sessionId, messages,
     inputText, setInputText, isLoading, isTyping, targetUserId,
+    sessionInitError, retrySession,
     isRefundModalOpen, setIsRefundModalOpen,
     handleSend, handleImageUpload, handleRefundSubmit,
     messagesEndRef, fileInputRef, cameraInputRef,
@@ -133,6 +134,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
             )
           )}
           <button
+            aria-label="Close chat"
             onClick={() => {
               setIsOpen(false);
               if (onClose) onClose();
@@ -153,7 +155,20 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
-        {isLoading ? (
+        {sessionInitError && !sessionId ? (
+          <div role="alert" className="flex flex-col items-center justify-center h-full text-center text-slate-600">
+            <MessageSquare className="w-12 h-12 mb-3 text-slate-300" />
+            <p className="mb-3">Chat couldn’t connect. Your message has not been sent.</p>
+            <button
+              type="button"
+              onClick={retrySession}
+              disabled={isLoading}
+              className="rounded-full bg-amber-600 px-4 py-2 font-medium text-white hover:bg-amber-700 disabled:opacity-50"
+            >
+              Try again
+            </button>
+          </div>
+        ) : isLoading ? (
           <div className="flex flex-col items-center justify-center h-full text-slate-400">
             <Spinner size="md" className="mb-2" />
             <p>Loading chat...</p>

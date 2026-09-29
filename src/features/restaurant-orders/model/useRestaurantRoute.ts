@@ -13,9 +13,14 @@ export function useRestaurantRoute() {
   const location = useLocation();
 
   // Derive state from route
-  const isSettingsView = location.pathname.includes('/restaurant/settings');
-  const view = isSettingsView ? 'settings' : 'home';
-  const showSettings = isSettingsView;
+  // Profile settings and restaurant management have different jobs. The account settings
+  // screen lives at /restaurant/settings; the restaurant console (including completed-order
+  // history) lives at /restaurant/management. They used to share one path, which meant the
+  // dashboard rendered SharedSettingsView and never mounted RestaurantSettingsShell.
+  const isProfileView = location.pathname.includes('/restaurant/settings');
+  const isManagementView = location.pathname.includes('/restaurant/management');
+  const view = isProfileView ? 'settings' : 'home';
+  const showSettings = isManagementView;
 
   const chatMatch = useMatch('/restaurant/chat/:orderId');
   const chatOrderId = chatMatch?.params?.orderId;
@@ -28,7 +33,7 @@ export function useRestaurantRoute() {
 
   const setActiveTab = (tab: typeof activeTab) => navigate(`/restaurant/${tab}`);
   const setView = (v: 'home' | 'settings') => navigate(v === 'settings' ? '/restaurant/settings' : '/restaurant');
-  const setShowSettings = (show: boolean) => navigate(show ? '/restaurant/settings' : '/restaurant');
+  const setShowSettings = (show: boolean) => navigate(show ? '/restaurant/management' : '/restaurant');
 
   // Chat state
   const showChatList = location.search.includes('chat=list');

@@ -3,14 +3,21 @@ import { parseApiError } from '@/lib/parseApiError';
 import { ledgerApi } from "@/lib/zodiosClients";
 import { Badge, Button, Input, Select, Spinner, Surface } from '@shared/ui';
 import { ArrowRight, Check, ChevronLeft, ChevronRight, Copy, Filter, Search } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { formatINR } from '@shared/money';
-import { ChargeCategory } from '@/types/backend-enums';
+import { ChargeCategory, LedgerAccountType } from '@/types/backend-enums';
 import { LedgerTransactionDto } from '@/api/generated/schemas/ledger/common';
 import { z } from 'zod';
 import { formatDate, formatTimeWithSeconds } from '@/shared/time';
 
 type AdminLedgerTransaction = z.infer<typeof LedgerTransactionDto>;
+type LedgerFilters = {
+  transactionId: string;
+  ownerId: string;
+  ownerType: string;
+  category: string;
+  direction: string;
+};
 
 export default function AdminLedgerView() {
   const [entries, setEntries] = useState<AdminLedgerTransaction[]>([]);
@@ -25,27 +32,34 @@ export default function AdminLedgerView() {
   const [ownerType, setOwnerType] = useState('');
   const [category, setCategory] = useState('');
   const [direction, setDirection] = useState('');
+  const latestRequestId = useRef(0);
 
-  const fetchEntries = async () => {
+  const fetchEntries = async (
+    filters: LedgerFilters = { transactionId, ownerId, ownerType, category, direction },
+    requestedPage = page,
+  ) => {
+    const requestId = ++latestRequestId.current;
     setLoading(true);
     try {
-      const queries: Record<string, unknown> = { page, size: 20 };
-      if (transactionId) queries.transactionId = transactionId.trim();
-      if (ownerId) queries.ownerId = ownerId.trim();
-      if (ownerType) queries.ownerType = ownerType;
-      if (category) queries.category = category;
-      if (direction) queries.direction = direction;
+      const queries: Record<string, unknown> = { page: requestedPage, size: 20 };
+      if (filters.transactionId) queries.transactionId = filters.transactionId.trim();
+      if (filters.ownerId) queries.ownerId = filters.ownerId.trim();
+      if (filters.ownerType) queries.ownerType = filters.ownerType;
+      if (filters.category) queries.category = filters.category;
+      if (filters.direction) queries.direction = filters.direction;
 
       const res = await ledgerApi.adminLedger.get('/api/v1/internal/admin/ledger/transactions', { queries });
+      if (requestId !== latestRequestId.current) return;
       if (res && res.data) {
         setEntries(res.data.content ?? []);
         setTotalPages(res.data.totalPages ?? 1);
       }
     } catch (e: unknown) {
+      if (requestId !== latestRequestId.current) return;
       console.error(e);
       showError(parseApiError(e, 'Failed to fetch ledger transactions').message);
     } finally {
-      setLoading(false);
+      if (requestId === latestRequestId.current) setLoading(false);
     }
   };
 
@@ -66,8 +80,11 @@ export default function AdminLedgerView() {
       showError("Please enter an Owner ID when filtering by Owner Type");
       return;
     }
-    setPage(0);
-    fetchEntries();
+    if (page !== 0) {
+      setPage(0);
+    } else {
+      fetchEntries({ transactionId, ownerId, ownerType, category, direction }, 0);
+    }
   };
 
   const clearFilters = () => {
@@ -76,10 +93,11 @@ export default function AdminLedgerView() {
     setOwnerType('');
     setCategory('');
     setDirection('');
-    setPage(0);
-    setTimeout(() => {
-      fetchEntries();
-    }, 0);
+    if (page !== 0) {
+      setPage(0);
+    } else {
+      fetchEntries({ transactionId: '', ownerId: '', ownerType: '', category: '', direction: '' }, 0);
+    }
   };
 
   const [copiedTxnId, setCopiedTxnId] = useState<string | null>(null);
@@ -121,10 +139,10 @@ export default function AdminLedgerView() {
             onChange={(val) => setOwnerType(val)}
             placeholder="All Owner Types"
             options={[
-              { value: 'CUSTOMER', label: 'CUSTOMER' },
-              { value: 'RESTAURANT', label: 'RESTAURANT' },
-              { value: 'DRIVER', label: 'DRIVER' },
-              { value: 'PLATFORM', label: 'PLATFORM' }
+              ...Object.values(LedgerAccountType).map((type) => ({
+                value: type,
+                label: type.replace(/_/g, ' '),
+              })),
             ]}
           />
           <Select

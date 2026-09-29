@@ -31,6 +31,8 @@ export function useChatSession({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionInitError, setSessionInitError] = useState(false);
+  const [sessionRetryAttempt, setSessionRetryAttempt] = useState(0);
   const [isTyping, setIsTyping] = useState<Record<string, boolean>>({});
   const [targetUserId, setTargetUserId] = useState<string | null>(null);
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
@@ -122,11 +124,17 @@ const uploadedImageCount = messages.filter(
 ).length;
 const isImageUploadDisabled = uploadedImageCount >= 4 || !isConnected || isLoading;
 
+const retrySession = useCallback(() => {
+  setSessionInitError(false);
+  setSessionRetryAttempt((attempt) => attempt + 1);
+}, []);
+
 // Initialize session when chat is opened for the first time
 useEffect(() => {
   if (isOpen && !sessionId && orderId && token && user) {
     const initChat = async () => {
       setIsLoading(true);
+      setSessionInitError(false);
       try {
         // 1. Create or get session
           const data = await chatApi.chatSession.post(`/api/v1/chat/sessions`, {
@@ -154,13 +162,19 @@ useEffect(() => {
           }
         }
 
-        // 2. Load history
-        const histData = await chatApi.chatSession.get('/api/v1/chat/sessions/:sessionId/messages', { params: { sessionId: sid } });
-        if (histData && histData.success) {
-          setMessages((histData.data?.content as ChatMessage[]) ?? []);
+        // A history failure should not discard a valid session or block sending messages.
+        try {
+          const histData = await chatApi.chatSession.get('/api/v1/chat/sessions/:sessionId/messages', { params: { sessionId: sid } });
+          if (histData && histData.success) {
+            setMessages((histData.data?.content as ChatMessage[]) ?? []);
+          }
+        } catch {
+          console.error("Error loading chat history.");
+          showError("Chat connected, but previous messages could not be loaded.");
         }
-      } catch (error: unknown) {
-        console.error("Error initializing chat:", error);
+      } catch {
+        console.error("Error initializing chat session.");
+        setSessionInitError(true);
       } finally {
         setIsLoading(false);
       }
@@ -170,7 +184,7 @@ useEffect(() => {
   }
  
 // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [isOpen, sessionId, orderId, token, user, currentUserType]);
+}, [isOpen, sessionId, orderId, token, user, currentUserType, sessionRetryAttempt]);
 
 const handleSend = (e?: React.FormEvent) => {
   e?.preventDefault();
@@ -206,6 +220,7 @@ const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     sessionId, messages, setMessages,
     inputText, setInputText,
     isLoading, isTyping, targetUserId,
+    sessionInitError, retrySession,
     isRefundModalOpen, setIsRefundModalOpen,
     handleSend, handleImageUpload, handleRefundSubmit,
     messagesEndRef, fileInputRef, cameraInputRef,

@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { z } from 'zod';
 import { Button, Input, StatusPill, Surface } from '@shared/ui';
-import { Reconciliation_controllerApi, PageReconciliationRun } from '../../../api/generated/schemas/ledger/reconciliation_controller';
-import { Admin_dlq_controllerApi as PaymentDlqApi, PageResponseDtoWebhookDelivery } from '../../../api/generated/schemas/payment/admin_dlq_controller';
-import { Admin_dlq_controllerApi as WalletDlqApi, PageResponseDtoOutboxEventEntity as WalletOutboxPage } from '../../../api/generated/schemas/wallet/admin_dlq_controller';
-import { Admin_ledger_rejection_controllerApi as RejectionApi, PageResponseDtoLedgerRejectionDto } from '../../../api/generated/schemas/ledger/admin_ledger_rejection_controller';
+import { ledgerApi, paymentApi, walletApi } from '@/lib/zodiosClients';
+import { PageReconciliationRun } from '../../../api/generated/schemas/ledger/reconciliation_controller';
+import { PageResponseDtoWebhookDelivery } from '../../../api/generated/schemas/payment/admin_dlq_controller';
+import { PageResponseDtoOutboxEventEntity as WalletOutboxPage } from '../../../api/generated/schemas/wallet/admin_dlq_controller';
+import { PageResponseDtoLedgerRejectionDto } from '../../../api/generated/schemas/ledger/admin_ledger_rejection_controller';
 import { formatDateTime } from '@/shared/time';
 
 export default function OperationsPage() {
@@ -24,16 +25,16 @@ export default function OperationsPage() {
     setLoading(true);
     try {
       if (activeTab === 'rejections') {
-        const res = await RejectionApi.list({ queries: { resolved: false, page: 0, size: 50 } });
+        const res = await ledgerApi.adminLedgerRejection.list({ queries: { resolved: false, page: 0, size: 50 } });
         setRejections(res);
       } else if (activeTab === 'reconciliation') {
-        const res = await Reconciliation_controllerApi.getRuns({ queries: { pageable: {} } });
+        const res = await ledgerApi.reconciliation.getRuns({ queries: { pageable: {} } });
         setReconRuns(res);
       } else if (activeTab === 'payment_dlq') {
-        const res = await PaymentDlqApi.getFailedWebhooks({});
+        const res = await paymentApi.adminDlq.getFailedWebhooks({});
         setPaymentWebhooks(res);
       } else if (activeTab === 'wallet_dlq') {
-        const res = await WalletDlqApi.getOutboxDlqEvents({});
+        const res = await walletApi.adminDlq.getOutboxDlqEvents({});
         setWalletOutbox(res);
       }
     } catch (e) {
@@ -113,7 +114,7 @@ export default function OperationsPage() {
                       size="sm"
                       disabled={!resolutionNote.trim()}
                       onClick={async () => {
-                        await RejectionApi.resolve({ note: resolutionNote }, { params: { id: r.id ?? '' } });
+                        await ledgerApi.adminLedgerRejection.resolve({ note: resolutionNote }, { params: { id: r.id ?? '' } });
                         setResolvingId(null);
                         setResolutionNote('');
                         fetchData();
@@ -177,7 +178,7 @@ export default function OperationsPage() {
                   size="sm"
                   className="mt-3"
                   onClick={async () => {
-                    await PaymentDlqApi.retryWebhookEvent(undefined, { params: { eventId: hook.eventId ?? '' } });
+                    await paymentApi.adminDlq.retryWebhookEvent(undefined, { params: { eventId: hook.eventId ?? '' } });
                     fetchData();
                   }}
                 >
@@ -206,7 +207,7 @@ export default function OperationsPage() {
                   size="sm"
                   className="mt-3"
                   onClick={async () => {
-                    await WalletDlqApi.retryOutboxDlqEvent(undefined, { params: { eventId: evt.id ?? '' } });
+                    await walletApi.adminDlq.retryOutboxDlqEvent(undefined, { params: { eventId: evt.id ?? '' } });
                     fetchData();
                   }}
                 >

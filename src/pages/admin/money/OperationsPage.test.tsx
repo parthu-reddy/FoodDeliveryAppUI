@@ -11,31 +11,25 @@ const retryWebhookEvent = vi.fn();
 const getOutboxDlqEvents = vi.fn();
 const retryOutboxDlqEvent = vi.fn();
 
-// Spread the real module: the generated facades import createApiClient from these files, so
-// replacing them wholesale breaks every unrelated client at import time.
-vi.mock('../../../api/generated/schemas/ledger/admin_ledger_rejection_controller', async (importOriginal) => ({
-  ...(await importOriginal<object>()),
-  Admin_ledger_rejection_controllerApi: {
-    list: (...a: unknown[]) => listRejections(...a),
-    resolve: (...a: unknown[]) => resolveRejection(...a),
+vi.mock('@/lib/zodiosClients', () => ({
+  ledgerApi: {
+    adminLedgerRejection: {
+      list: (...a: unknown[]) => listRejections(...a),
+      resolve: (...a: unknown[]) => resolveRejection(...a),
+    },
+    reconciliation: { getRuns: (...a: unknown[]) => getRuns(...a) },
   },
-}));
-vi.mock('../../../api/generated/schemas/ledger/reconciliation_controller', async (importOriginal) => ({
-  ...(await importOriginal<object>()),
-  Reconciliation_controllerApi: { getRuns: (...a: unknown[]) => getRuns(...a) },
-}));
-vi.mock('../../../api/generated/schemas/payment/admin_dlq_controller', async (importOriginal) => ({
-  ...(await importOriginal<object>()),
-  Admin_dlq_controllerApi: {
-    getFailedWebhooks: (...a: unknown[]) => getFailedWebhooks(...a),
-    retryWebhookEvent: (...a: unknown[]) => retryWebhookEvent(...a),
+  paymentApi: {
+    adminDlq: {
+      getFailedWebhooks: (...a: unknown[]) => getFailedWebhooks(...a),
+      retryWebhookEvent: (...a: unknown[]) => retryWebhookEvent(...a),
+    },
   },
-}));
-vi.mock('../../../api/generated/schemas/wallet/admin_dlq_controller', async (importOriginal) => ({
-  ...(await importOriginal<object>()),
-  Admin_dlq_controllerApi: {
-    getOutboxDlqEvents: (...a: unknown[]) => getOutboxDlqEvents(...a),
-    retryOutboxDlqEvent: (...a: unknown[]) => retryOutboxDlqEvent(...a),
+  walletApi: {
+    adminDlq: {
+      getOutboxDlqEvents: (...a: unknown[]) => getOutboxDlqEvents(...a),
+      retryOutboxDlqEvent: (...a: unknown[]) => retryOutboxDlqEvent(...a),
+    },
   },
 }));
 
