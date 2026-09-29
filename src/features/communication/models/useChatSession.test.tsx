@@ -63,8 +63,10 @@ describe('useChatSession initialization', () => {
 
     act(() => result.current.retrySession());
 
-    await waitFor(() => expect(mocks.createSession).toHaveBeenCalledTimes(2));
-    expect(result.current.sessionInitError).toBe(true);
+    await waitFor(() => {
+      expect(mocks.createSession).toHaveBeenCalledTimes(2);
+      expect(result.current.sessionInitError).toBe(true);
+    });
   });
 
   it('shows a retry action instead of silently leaving the composer disabled', async () => {
