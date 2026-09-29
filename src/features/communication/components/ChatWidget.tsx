@@ -281,6 +281,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
           isOpen={isRefundModalOpen}
           onClose={() => setIsRefundModalOpen(false)}
           orderId={orderId}
+          isChatConnected={isConnected}
           onSubmit={handleRefundSubmit}
         />
       )}

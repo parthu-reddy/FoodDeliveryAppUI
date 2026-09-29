@@ -9,13 +9,15 @@ interface RefundRequestModalProps {
   isOpen: boolean;
   onClose: () => void;
   orderId: string;
-  onSubmit: (items: { itemId: string; quantity: number }[], reason: string) => void;
+  isChatConnected: boolean;
+  onSubmit: (items: { itemId: string; quantity: number }[], reason: string) => boolean;
 }
 
 export const RefundRequestModal: React.FC<RefundRequestModalProps> = ({
   isOpen,
   onClose,
   orderId,
+  isChatConnected,
   onSubmit,
 }) => {
   const [order, setOrder] = useState<Order | null>(null);
@@ -77,8 +79,7 @@ export const RefundRequestModal: React.FC<RefundRequestModalProps> = ({
       itemId,
       quantity,
     }));
-    onSubmit(items, reason);
-    onClose();
+    if (onSubmit(items, reason)) onClose();
   };
 
   const isFormValid = Object.keys(selectedItems).length > 0 && reason.trim().length > 0;
@@ -184,11 +185,16 @@ export const RefundRequestModal: React.FC<RefundRequestModalProps> = ({
               <Button
                 fullWidth
                 onClick={handleSubmit}
-                disabled={!isFormValid}
+                disabled={!isFormValid || !isChatConnected}
                 className="bg-rose-500 hover:bg-rose-600 text-white"
               >
                 Request Quote
               </Button>
+              {!isChatConnected && (
+                <p role="status" className="mt-2 text-center text-sm text-slate-500">
+                  Connecting to chat before sending your quote request…
+                </p>
+              )}
             </div>
           </Surface>
     </Overlay>

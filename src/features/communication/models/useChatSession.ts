@@ -107,16 +107,22 @@ const { isConnected, sendMessage, sendImage, sendTypingIndicator } = useChatWebS
   onTypingIndicator: handleTypingIndicator,
 });
 
-const handleRefundSubmit = (items: { itemId: string; quantity: number }[], reason: string) => {
-  if (isConnected && orderId) {
-    sendMessage(JSON.stringify({ 
-      orderId, 
-      refundType: "PARTIAL", 
-      reason,
-      items 
-    }), 'REFUND_QUOTE_REQUEST');
-    setIsRefundModalOpen(false);
+const handleRefundSubmit = (items: { itemId: string; quantity: number }[], reason: string): boolean => {
+  if (!isConnected || !orderId) {
+    showError('Chat is reconnecting. Your refund quote was not sent. Please try again when connected.');
+    return false;
   }
+
+  const sent = sendMessage(JSON.stringify({
+    orderId,
+    refundType: "PARTIAL",
+    reason,
+    items
+  }), 'REFUND_QUOTE_REQUEST');
+  if (!sent) {
+    showError('Chat is reconnecting. Your refund quote was not sent. Please try again when connected.');
+  }
+  return sent;
 };
 
 const uploadedImageCount = messages.filter(

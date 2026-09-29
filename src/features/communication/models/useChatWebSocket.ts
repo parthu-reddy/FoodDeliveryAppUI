@@ -94,7 +94,7 @@ export const useChatWebSocket = ({ sessionId, onMessageReceived, onTypingIndicat
     };
   }, [sessionId, token, onMessageReceived, onTypingIndicator, onReconnect]);
 
-  const sendMessage = useCallback((content: string, messageType: string = 'TEXT') => {
+  const sendMessage = useCallback((content: string, messageType: string = 'TEXT'): boolean => {
     if (clientRef.current && clientRef.current.connected && sessionId) {
       const request = {
         content,
@@ -104,8 +104,10 @@ export const useChatWebSocket = ({ sessionId, onMessageReceived, onTypingIndicat
         destination: `/app/chat.send/${sessionId}`,
         body: JSON.stringify(request)
       });
+      return true;
     } else {
       console.warn("Cannot send message, STOMP client is not connected.");
+      return false;
     }
   }, [sessionId]);
 
