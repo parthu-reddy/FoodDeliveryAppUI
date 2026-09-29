@@ -174,7 +174,9 @@ export function useDeliveryOrders({
 
   // History Fetch
   useEffect(() => {
-    if (!isOnline || !deliveryExecutiveId) return;
+    // Completed deliveries are read-only records and must remain available while the rider is off
+    // duty. Duty state gates dispatch/active-order polling, not access to the rider's own history.
+    if (!deliveryExecutiveId) return;
     
     const dateToFetch = showHistory ? historyDateFilter : todayDateString;
     if (!dateToFetch) return;
@@ -197,7 +199,7 @@ export function useDeliveryOrders({
     }).catch(console.error);
    
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showHistory, historyDateFilter, isOnline, deliveryExecutiveId]);
+  }, [showHistory, historyDateFilter, deliveryExecutiveId]);
 
   // Ping Job / Dispatch Logic
   useEffect(() => {

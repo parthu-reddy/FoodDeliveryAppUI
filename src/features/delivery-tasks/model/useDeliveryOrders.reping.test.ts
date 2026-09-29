@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
+import { deliveryApi } from '@/lib/zodiosClients';
 import { useDeliveryOrders } from './useDeliveryOrders';
 
 /**
@@ -14,12 +15,16 @@ const RIDER = '4f4a4e37-6ca5-5598-94f1-43ef1628f631';
 const ORDER = '0b8d7c1e-2f3a-4b5c-9d6e-7f8a9b0c1d2e';
 const WINDOW_MS = 60_000;
 
-const server: { pingTimeoutAt: number | null } = { pingTimeoutAt: null };
+const server: { pingTimeoutAt: number | null; historyResponse: unknown } = {
+  pingTimeoutAt: null,
+  historyResponse: null,
+};
 
 vi.mock('@/lib/zodiosClients', () => ({
   deliveryApi: {
     deliveryOrder: {
       get: vi.fn(async (path: string) => {
+        if (path.endsWith('/history')) return server.historyResponse ?? [];
         if (path.endsWith('/available')) {
           const t = server.pingTimeoutAt;
           if (t === null || t <= Date.now()) return [];
@@ -66,16 +71,16 @@ async function advance(ms: number) {
   }
 }
 
-function renderRider() {
+function renderRider({ isOnline = true, showHistory = false } = {}) {
   return renderHook(() => useDeliveryOrders({
     deliveryExecutiveId: RIDER,
     deliveryExecutiveName: 'Rider',
     cityId: 'BLR',
-    isOnline: true,
+    isOnline,
     setIsOnline: vi.fn(),
     showToast: vi.fn(),
     setShowPermissionsPrompt: vi.fn(),
-    showHistory: false,
+    showHistory,
   }));
 }
 
@@ -84,6 +89,8 @@ describe('a lapsed dispatch offer that the server makes again', () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'setInterval', 'clearTimeout', 'clearInterval', 'Date'] });
     vi.setSystemTime(new Date('2026-09-27T10:00:00Z'));
     server.pingTimeoutAt = null;
+    server.historyResponse = null;
+    vi.mocked(deliveryApi.deliveryOrder.get).mockClear();
     vi.stubGlobal('WebSocket', FakeSocket);
     Object.defineProperty(navigator, 'geolocation', {
       configurable: true, value: { watchPosition: vi.fn(() => 1), clearWatch: vi.fn() },
@@ -113,6 +120,30 @@ describe('a lapsed dispatch offer that the server makes again', () => {
 
     expect(result.current.pingJob?.id).toBe(ORDER);
     expect(result.current.pingTimer).toBeGreaterThan(50);
+  });
+
+  it('loads completed deliveries while the rider is offline', async () => {
+    const completedOrder = {
+      id: '31cce3db-c9f3-47b8-9df3-4d1a3bf09929',
+      deliveryExecutiveId: RIDER,
+      status: 'HANDED_OVER',
+      deliveryStatus: 'DELIVERED',
+      createdAt: '2026-09-27T09:00:00Z',
+      earnings: { netPayout: 75 },
+    };
+    server.historyResponse = { content: [completedOrder], totalElements: 1 };
+
+    const { result } = renderRider({ isOnline: false, showHistory: true });
+
+    await act(async () => { await Promise.resolve(); });
+
+    expect(result.current.paginatedHistoryJobs.map(order => order.id))
+      .toContain(completedOrder.id);
+    expect(deliveryApi.deliveryOrder.get).toHaveBeenCalledWith(
+      '/api/v1/delivery/orders/history',
+      expect.objectContaining({ queries: expect.objectContaining({ from: expect.any(String), to: expect.any(String) }) }),
+    );
+    expect(deliveryApi.deliveryOrder.get).not.toHaveBeenCalledWith('/api/v1/delivery/orders/active', expect.anything());
   });
 
   it('prompts again when the second offer arrives only through polling (socket push missed)', async () => {
