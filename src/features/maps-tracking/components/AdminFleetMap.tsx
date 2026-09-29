@@ -202,7 +202,7 @@ function AdminFleetMapInner() {
  zoom={11}
  navigation
  onReady={setMapInstance}
- className="w-full h-full"
+ className="w-full flex-1 min-h-[500px]"
  />
  {toastMsg && (
  <Surface radius="full" elevation={2} className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 text-white px-4 py-2 font-medium text-sm duration-300">
