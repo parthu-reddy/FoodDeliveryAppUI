@@ -5,7 +5,7 @@ import { customerApi, deliveryApi, restaurantApi } from "@/lib/zodiosClients";
 import { readDispatchScope, readRestaurantCoordinates } from '@features/admin-ops/model/dispatchScope';
 import { Button, Surface, Textarea, surfaceStyle, useConfirm } from '@shared/ui';
 import { Shield, Truck } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { OrderResponse as OrderSchema } from '@/api/generated/schemas/customer/common';
 import { z } from 'zod';
 type Order = z.infer<typeof OrderSchema>;
@@ -64,7 +64,7 @@ export default function AdminManualInterventions() {
 
   useEffect(() => {
     if (!selectedInterventionId) return;
-    const refreshed = interventions.find((order) => order.id === selectedInterventionId);
+    const refreshed = interventions.find((order: Order) => order.id === selectedInterventionId);
     if (!refreshed) {
       window.setTimeout(() => {
         setSelectedIntervention(null);
@@ -282,7 +282,7 @@ export default function AdminManualInterventions() {
         <div className="flex-1 overflow-y-auto p-3 space-y-2">
           {activeTab === 'DISPATCH' ? (
             <>
-              {interventions.map(order => (
+              {interventions.map((order: Order) => (
                 <button
                   key={order.id}
                   onClick={() => {
