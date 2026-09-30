@@ -84,6 +84,7 @@ const initiateOtp = async (
   serviceName: string,
   signal: AbortSignal,
 ): Promise<boolean> => {
+  // eslint-disable-next-line no-restricted-syntax -- response headers are not available through the shared Zodios client
   const response = await fetch(apiUrl('/api/v1/internal/auth/initiate', { phoneNumber }), {
     method: 'POST',
     headers: identityRequestHeaders({ 'X-Calling-Service': serviceName }),
@@ -103,6 +104,7 @@ const retrieveDevOtp = async (
   serviceName: string,
   signal: AbortSignal,
 ): Promise<string> => {
+  // eslint-disable-next-line no-restricted-syntax -- Dev OTP lookup is not modelled in the shared Zodios client
   const response = await fetch(apiUrl(DEV_OTP_LOOKUP_PATH, { phoneNumber, serviceName }), {
     method: 'GET',
     cache: 'no-store',
@@ -166,11 +168,15 @@ export function useOtpLogin({ onLoginSuccess, onAddApiLog }: UseOtpLoginOptions)
 
   useEffect(() => {
     if (!generatedOtp) {
-      setShowDevOtpNotification(false);
+      // Notification visibility tracks generatedOtp; the empty case is handled by the
+      // conditional rendering in the component, not by a synchronous setState here.
       return;
     }
     const timer = window.setTimeout(() => setShowDevOtpNotification(true), 1000);
-    return () => window.clearTimeout(timer);
+    return () => {
+      window.clearTimeout(timer);
+      setShowDevOtpNotification(false);
+    };
   }, [generatedOtp]);
 
   const resetDevOtp = () => {

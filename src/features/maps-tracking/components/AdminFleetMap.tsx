@@ -99,15 +99,6 @@ function AdminFleetMapInner() {
  }, [cityScopeVersion]);
 
  useEffect(() => {
- if (selectedCityId) {
- setRestaurants([]);
- setRiders([]);
- setCustomers([]);
- hasFittedBoundsRef.current = false;
- }
- }, [selectedCityId]);
-
- useEffect(() => {
  if (!selectedCityId) return;
  let active = true;
  let inFlight = false;
@@ -167,6 +158,11 @@ function AdminFleetMapInner() {
  return () => {
  active = false;
  window.clearInterval(refreshTimer);
+ // Clear stale markers when the city scope changes so the next effect starts fresh.
+ setRestaurants([]);
+ setRiders([]);
+ setCustomers([]);
+ hasFittedBoundsRef.current = false;
  };
  }, [refreshVersion, selectedCityId]);
 
