@@ -9,7 +9,6 @@ const envSchema = z.object({
   VITE_ENABLE_MOCK_PAYMENT: z.string().optional().transform(v => v === 'true'),
   VITE_APP_ENV: z.enum(['development', 'staging', 'production']).catch('development'),
   VITE_LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).catch('info'),
-  VITE_ENABLE_DEV_OTP: z.string().optional().transform(v => v === 'true'),
   MODE: z.string().default('development'),
   DEV: z.boolean().default(true),
 }).passthrough(); // Allow other Vite env vars

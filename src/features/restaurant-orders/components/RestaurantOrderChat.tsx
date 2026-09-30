@@ -21,15 +21,6 @@ export function RestaurantOrderChat({ order, onClose, onBack }: RestaurantOrderC
     <ChatWidget
       orderId={order.id}
       order={order}
-      currentUserType="RESTAURANT"
-      otherParticipants={[
-        ...(order.customerId
-          ? [{ userId: order.customerId, entityType: 'CUSTOMER' as const, displayName: 'Customer' }]
-          : []),
-        ...(order.deliveryExecutiveId
-          ? [{ userId: order.deliveryExecutiveId, entityType: 'DELIVERY' as const, displayName: 'Rider' }]
-          : []),
-      ]}
       onClose={onClose}
       onBack={onBack}
     />

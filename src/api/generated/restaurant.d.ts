@@ -1028,6 +1028,7 @@ export interface components {
             lat: number;
             /** Format: double */
             lng: number;
+            cityId?: string;
             timings: components["schemas"]["TimingRequest"][];
             timeZone: string;
             bannerUrl?: string;
@@ -1060,6 +1061,7 @@ export interface components {
             lat?: number;
             /** Format: double */
             lng?: number;
+            cityId?: string;
             bannerUrl?: string;
             isActive?: boolean;
             /** Format: int32 */
@@ -1215,6 +1217,7 @@ export interface components {
             lat?: number;
             /** Format: double */
             lng?: number;
+            cityId?: string;
             /** Format: double */
             distance?: number;
             image?: string;
@@ -2548,6 +2551,7 @@ export interface operations {
     getAllOutletsWithLocation: {
         parameters: {
             query?: {
+                cityId?: string;
                 page?: number;
                 size?: number;
             };

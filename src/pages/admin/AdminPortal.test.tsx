@@ -16,6 +16,9 @@ vi.mock('@features/admin-ops/components/AdminManualInterventions', () => ({ defa
 vi.mock('@features/admin-ops/components/AdminSupportTickets', () => ({ default: () => <h2>Support Tickets screen</h2> }));
 vi.mock('@features/admin-ops/components/AdminUserManagement', () => ({ default: () => null }));
 vi.mock('@features/catalog/components/admin/AdminCategories', () => ({ default: () => null }));
+vi.mock('@features/communication/components/CallOverlay', () => ({
+  CallOverlay: () => <div data-testid="admin-call-overlay" />,
+}));
 vi.mock('@features/ledger/components/AdminLedgerView', () => ({ default: () => null }));
 vi.mock('./money/AdminPayoutsPage', () => ({ default: () => null }));
 vi.mock('./money/AdminOrderMoney', () => ({
@@ -32,6 +35,12 @@ function openPortal(path: string) {
 }
 
 describe('Admin refund navigation', () => {
+  it('mounts call controls for an administrator-initiated support call', () => {
+    openPortal('/admin/support_tickets');
+
+    expect(screen.getByTestId('admin-call-overlay')).toBeInTheDocument();
+  });
+
   it('gives the compact theme and logout controls accessible names', () => {
     openPortal('/admin/users');
     expect(screen.getByRole('button', { name: /Use (dark|light) theme/ })).toBeInTheDocument();

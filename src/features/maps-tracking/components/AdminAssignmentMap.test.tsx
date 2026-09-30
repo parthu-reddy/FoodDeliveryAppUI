@@ -38,13 +38,11 @@ describe('AdminAssignmentMap', () => {
       <AdminAssignmentMap
         order={{ id: 'order-1', restaurantId: 'restaurant-1' }}
         availableDrivers={[]}
-        canAssign={false}
-        onAssign={vi.fn()}
       />,
     );
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Restaurant location is unavailable. Driver assignment is disabled until it is corrected.',
+      'Restaurant location is unavailable. Nearby driver markers are unavailable until it is corrected.',
     );
     expect(screen.getByRole('region', { name: 'Drivers available for order order-1' })).toBeInTheDocument();
     await waitFor(() => expect(getRestaurant).toHaveBeenCalledWith(

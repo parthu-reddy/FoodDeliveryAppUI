@@ -8,15 +8,15 @@ import AdminSupportTickets from './AdminSupportTickets';
 
 const ADMIN_ID = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 const mocks = vi.hoisted(() => ({
-  getTickets: vi.fn(), resolveTicket: vi.fn(), legacyResolve: vi.fn(), getProfile: vi.fn(), chatInstances: 0,
+  getTickets: vi.fn(), resolveTicket: vi.fn(), getProfile: vi.fn(), chatInstances: 0,
   openChatOnly: vi.fn(),
 }));
 vi.mock('@/lib/zodiosClients', () => ({ customerApi: { adminOrderManual: {
-  getOpenSupportTickets: mocks.getTickets, resolveSupportTicket: mocks.legacyResolve,
+  getOpenSupportTickets: mocks.getTickets,
 }, adminRefund: { resolveTicket: mocks.resolveTicket } } }));
 vi.mock('@/lib/tokenStore', () => ({ getUserProfile: mocks.getProfile }));
 vi.mock('@features/communication/components/ChatWidget', () => ({
-  ChatWidget: forwardRef(({ orderId, otherParticipants }: { orderId: string; otherParticipants?: { userId: string }[] }, ref) => {
+  ChatWidget: forwardRef(({ orderId }: { orderId: string }, ref) => {
     const [instanceId] = useState(() => String(++mocks.chatInstances));
     useImperativeHandle(ref, () => ({
       openAndRequestRefundQuote: () => undefined,
@@ -26,7 +26,6 @@ vi.mock('@features/communication/components/ChatWidget', () => ({
       <div
         data-testid="support-ticket-chat"
         data-order-id={orderId}
-        data-customer-id={otherParticipants?.[0]?.userId}
         data-instance-id={instanceId}
       />
     );
@@ -49,17 +48,15 @@ describe('Support Tickets approval confirmation', () => {
   beforeEach(() => {
     mocks.getTickets.mockReset().mockResolvedValue({ content: [ticket], totalPages: 1 });
     mocks.resolveTicket.mockReset().mockResolvedValue(undefined);
-    mocks.legacyResolve.mockReset();
     mocks.getProfile.mockReset().mockReturnValue({ id: ADMIN_ID });
     mocks.chatInstances = 0;
     mocks.openChatOnly.mockReset();
   });
 
-  it('opens the existing order conversation with the ticket customer', async () => {
+  it('opens the existing order conversation by order id', async () => {
     await openTicket();
 
     expect(screen.getByTestId('support-ticket-chat')).toHaveAttribute('data-order-id', ticket.orderId);
-    expect(screen.getByTestId('support-ticket-chat')).toHaveAttribute('data-customer-id', ticket.customerId);
   });
 
   it('opens the remounted chat when switching to another ticket, keeping conversations isolated', async () => {
@@ -78,7 +75,6 @@ describe('Support Tickets approval confirmation', () => {
 
     const chat = await screen.findByTestId('support-ticket-chat');
     expect(chat).toHaveAttribute('data-order-id', secondTicket.orderId);
-    expect(chat).toHaveAttribute('data-customer-id', secondTicket.customerId);
     expect(chat).not.toHaveAttribute('data-instance-id', firstInstance);
     await waitFor(() => expect(mocks.openChatOnly).toHaveBeenLastCalledWith(secondTicket.orderId));
   });
@@ -91,7 +87,6 @@ describe('Support Tickets approval confirmation', () => {
     expect(within(dialog).getByText(/₹275\.50/)).toBeInTheDocument();
     expect(within(dialog).getByText(new RegExp(ticket.orderId))).toBeInTheDocument();
     expect(mocks.resolveTicket).not.toHaveBeenCalled();
-    expect(mocks.legacyResolve).not.toHaveBeenCalled();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
     expect(mocks.resolveTicket).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Resolve Ticket' }));
@@ -126,7 +121,6 @@ describe('Support Tickets approval confirmation', () => {
       { approved: false, notes: 'Not eligible', faultType: 'UNKNOWN', overrideAmount: undefined },
       { params: { ticketId: ticket.id }, headers: { 'X-User-Id': ADMIN_ID } },
     ));
-    expect(mocks.legacyResolve).not.toHaveBeenCalled();
   });
 });
 
@@ -135,7 +129,6 @@ describe('Support Tickets refund submission failures', () => {
   beforeEach(() => {
     mocks.getTickets.mockReset().mockResolvedValue({ content: [ticket], totalPages: 1 });
     mocks.resolveTicket.mockReset();
-    mocks.legacyResolve.mockReset();
     mocks.getProfile.mockReset().mockReturnValue({ id: ADMIN_ID });
   });
 
@@ -149,7 +142,6 @@ describe('Support Tickets refund submission failures', () => {
     expect(screen.getByText('Ticket Details')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Add admin notes (required for rejection)')).toHaveValue('Keep these notes');
     expect(screen.queryByText('Ticket successfully approved')).not.toBeInTheDocument();
-    expect(mocks.legacyResolve).not.toHaveBeenCalled();
   });
 
   it('requires an administrator identity before resolving', async () => {
@@ -158,6 +150,5 @@ describe('Support Tickets refund submission failures', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Resolve Ticket' }));
     expect(await screen.findByText('Your session does not identify you; sign in again before resolving a refund.')).toBeInTheDocument();
     expect(mocks.resolveTicket).not.toHaveBeenCalled();
-    expect(mocks.legacyResolve).not.toHaveBeenCalled();
   });
 });

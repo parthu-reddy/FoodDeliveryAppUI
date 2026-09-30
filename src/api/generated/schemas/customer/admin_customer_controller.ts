@@ -1,7 +1,6 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-import { pageable } from "./common";
 import { CustomerAddressDto } from "./common";
 
 export const PageResponseDtoCustomerAddressDto = z
@@ -40,9 +39,22 @@ export const endpoints = makeApi([
     requestFormat: "json",
     parameters: [
       {
-        name: "pageable",
+        name: "cityId",
         type: "Query",
-        schema: pageable,
+        schema: z
+          .string()
+          .regex(/^[A-Z][A-Z0-9_-]{0,63}$/)
+          .optional(),
+      },
+      {
+        name: "page",
+        type: "Query",
+        schema: z.number().int().gte(0).optional().default(0),
+      },
+      {
+        name: "size",
+        type: "Query",
+        schema: z.number().int().gte(1).lte(100).optional().default(100),
       },
     ],
     response: ApiResponsePageResponseDtoCustomerAddressDto,

@@ -64,7 +64,6 @@ describe('useChatSession initialization', () => {
     const { result } = renderHook(() => useChatSession({
       orderId: 'order-123',
       isOpen: true,
-      currentUserType: 'CUSTOMER',
       showError: vi.fn(),
     }));
 
@@ -80,10 +79,48 @@ describe('useChatSession initialization', () => {
     });
   });
 
+  it('clears a prior order session and ignores its late response after the selected order changes', async () => {
+    let resolveFirstRequest: ((value: unknown) => void) | undefined;
+    mocks.createSession
+      .mockImplementationOnce(() => new Promise((resolve) => { resolveFirstRequest = resolve; }))
+      .mockResolvedValueOnce({
+        success: true,
+        data: {
+          sessionId: 'session-order-b',
+          participants: [{ userId: 'restaurant-owner-b', entityType: 'RESTAURANT', displayName: 'Restaurant B' }],
+        },
+      });
+    mocks.loadHistory.mockResolvedValue({ success: true, data: { content: [] } });
+
+    const { result, rerender } = renderHook(
+      ({ orderId }) => useChatSession({ orderId, isOpen: true, showError: vi.fn() }),
+      { initialProps: { orderId: 'order-a' } },
+    );
+
+    await waitFor(() => expect(mocks.createSession).toHaveBeenCalledTimes(1));
+    rerender({ orderId: 'order-b' });
+    await waitFor(() => expect(mocks.createSession).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(result.current.sessionId).toBe('session-order-b'));
+
+    await act(async () => {
+      resolveFirstRequest?.({
+        success: true,
+        data: { sessionId: 'session-order-a', participants: [{ userId: 'customer-a', entityType: 'CUSTOMER' }] },
+      });
+    });
+
+    expect(result.current.sessionId).toBe('session-order-b');
+    expect(result.current.participants).toEqual([
+      { userId: 'restaurant-owner-b', entityType: 'RESTAURANT', displayName: 'Restaurant B' },
+    ]);
+    expect(mocks.createSession).toHaveBeenNthCalledWith(1, '/api/v1/chat/sessions', { orderId: 'order-a' });
+    expect(mocks.createSession).toHaveBeenNthCalledWith(2, '/api/v1/chat/sessions', { orderId: 'order-b' });
+  });
+
   it('shows a retry action instead of silently leaving the composer disabled', async () => {
     mocks.createSession.mockRejectedValue(new Error('HTTP 409'));
 
-    render(<ChatWidget orderId="abcdef123" currentUserType="CUSTOMER" />);
+    render(<ChatWidget orderId="abcdef123" />);
     fireEvent.click(screen.getByTestId('chat-launcher'));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
@@ -102,7 +139,7 @@ describe('useChatSession initialization', () => {
     });
     mocks.loadHistory.mockResolvedValue({ success: true, data: { content: [] } });
 
-    render(<ChatWidget orderId="abcdef123" currentUserType="CUSTOMER" />);
+    render(<ChatWidget orderId="abcdef123" />);
     fireEvent.click(screen.getByTestId('chat-launcher'));
 
     expect(await screen.findByTestId('chat-reconnecting-status'))
@@ -118,7 +155,7 @@ describe('useChatSession initialization', () => {
     });
     mocks.loadHistory.mockResolvedValue({ success: true, data: { content: [] } });
 
-    render(<ChatWidget orderId="abcdef123" currentUserType="CUSTOMER" />);
+    render(<ChatWidget orderId="abcdef123" />);
     fireEvent.click(screen.getByTestId('chat-launcher'));
 
     const composer = await screen.findByPlaceholderText('Type a message...');
@@ -140,7 +177,7 @@ describe('useChatSession initialization', () => {
     mocks.loadHistory.mockResolvedValue({ success: true, data: { content: [] } });
     mocks.sendMessage.mockReturnValue(false);
 
-    render(<ChatWidget orderId="abcdef123" currentUserType="CUSTOMER" />);
+    render(<ChatWidget orderId="abcdef123" />);
     fireEvent.click(screen.getByTestId('chat-launcher'));
 
     const composer = await screen.findByPlaceholderText('Type a message...');
@@ -174,7 +211,7 @@ describe('useChatSession initialization', () => {
       },
     });
 
-    render(<ChatWidget orderId="abcdef123" currentUserType="CUSTOMER" />);
+    render(<ChatWidget orderId="abcdef123" />);
     fireEvent.click(screen.getByTestId('chat-launcher'));
 
     const composer = await screen.findByPlaceholderText('Type a message...');
@@ -196,7 +233,7 @@ describe('useChatSession initialization', () => {
     mocks.loadHistory.mockResolvedValue({ success: true, data: { content: [] } });
     mocks.sendImage.mockResolvedValue(null);
 
-    const { container } = render(<ChatWidget orderId="abcdef123" currentUserType="CUSTOMER" />);
+    const { container } = render(<ChatWidget orderId="abcdef123" />);
     fireEvent.click(screen.getByTestId('chat-launcher'));
     await screen.findByPlaceholderText('Type a message...');
 
@@ -221,7 +258,7 @@ describe('useChatSession initialization', () => {
     });
     mocks.loadHistory.mockResolvedValue({ success: true, data: { content: [] } });
 
-    render(<ChatWidget orderId="abcdef123" currentUserType="CUSTOMER" />);
+    render(<ChatWidget orderId="abcdef123" />);
     fireEvent.click(screen.getByTestId('chat-launcher'));
 
     const composer = await screen.findByPlaceholderText('Type a message...');

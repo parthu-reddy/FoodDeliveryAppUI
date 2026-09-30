@@ -2,8 +2,32 @@ import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
 import { RefundView } from "./common";
-import { RefundCommand } from "./common";
-import { Item } from "./common";
+
+export const RefundItemRequest = z
+  .object({
+    orderItemId: z.string().uuid(),
+    quantity: z.number().int().optional(),
+  })
+  .passthrough();
+export const AdminRefundRequest = z
+  .object({
+    orderId: z.string().uuid(),
+    items: z.array(RefundItemRequest).max(100),
+    faultType: z.enum([
+      "PLATFORM_FAULT",
+      "RESTAURANT_FAULT",
+      "RIDER_FAULT",
+      "CUSTOMER_FAULT",
+      "UNKNOWN",
+    ]),
+    reasonText: z.string().min(0).max(2000),
+  })
+  .passthrough();
+
+export const schemas = {
+  RefundItemRequest,
+  AdminRefundRequest,
+};
 
 export const endpoints = makeApi([
   {
@@ -15,7 +39,7 @@ export const endpoints = makeApi([
       {
         name: "body",
         type: "Body",
-        schema: RefundCommand,
+        schema: AdminRefundRequest,
       },
     ],
     response: RefundView,

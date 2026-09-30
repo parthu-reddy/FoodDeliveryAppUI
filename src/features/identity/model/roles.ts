@@ -48,10 +48,3 @@ export const ROLE_CHOICES: RoleChoice[] = [
     accent: 'info',
   },
 ];
-
-/** The dev-only sign-in numbers shown under the role cards. */
-export const DEV_LOGINS: { label: string; phone: string }[] = [
-  { label: 'Customer', phone: '8000000001' },
-  { label: 'Restaurant', phone: '9000000001' },
-  { label: 'Rider', phone: '7000000001' },
-];

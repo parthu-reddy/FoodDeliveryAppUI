@@ -1,10 +1,8 @@
-import { useToast } from "@/contexts/ToastContext";
 import { usePolling } from "@/hooks/usePolling";
-import { parseApiError } from '@/lib/parseApiError';
 import { customerApi, deliveryApi, restaurantApi } from "@/lib/zodiosClients";
 import { getFriendlyStatusMessage } from '@features/customer-orders/model/statusMessaging';
 import { readDispatchScope, readRestaurantCoordinates } from '@features/admin-ops/model/dispatchScope';
-import { Button, Surface, surfaceStyle, useConfirm } from '@shared/ui';
+import { Button, Surface, surfaceStyle } from '@shared/ui';
 import { Navigation, Package, Truck } from 'lucide-react';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -23,14 +21,10 @@ interface AdminDriver {
 type AdminOrder = z.infer<typeof OrderResponse>;
 
 export default function AdminLiveOperations() {
-  const { showSuccess, showError } = useToast();
-  const confirm = useConfirm();
   const navigate = useNavigate();
   const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  const [assigningDriverId, setAssigningDriverId] = useState<string | null>(null);
-
   const [activeOrders, setActiveOrders] = useState<AdminOrder[]>([]);
   // Polling for active orders every 15 seconds
   const { refetch: fetchActiveOrders } = usePolling({
@@ -54,8 +48,8 @@ export default function AdminLiveOperations() {
   
 
 
-  // Candidates must come from the selected order's dispatch facts. Falling back
-  // to a city-wide list can send an order to a rider in the wrong location.
+  // Nearby riders must come from the selected order's dispatch facts. Falling
+  // back to a city-wide list would present operators with irrelevant rider data.
   const selectedOrderId = selectedOrder?.id ?? null;
   const {
     data: driverCandidates,
@@ -94,44 +88,9 @@ export default function AdminLiveOperations() {
   const hasCurrentDriverCandidates = Boolean(selectedOrder)
     && driverCandidatesOrderId === selectedOrderId;
   const scopedAvailableDrivers = hasCurrentDriverCandidates ? driverCandidates ?? [] : [];
-  const assignmentReady = hasCurrentDriverCandidates && !driversLoading && !assigningDriverId;
   const assignmentMapKey = selectedOrder
-    ? `${selectedOrder.id}:${assignmentReady}:${scopedAvailableDrivers.map(driver => `${driver.id}:${driver.lat ?? ''}:${driver.lng ?? ''}`).join('|')}`
+    ? `${selectedOrder.id}:${scopedAvailableDrivers.map(driver => `${driver.id}:${driver.lat ?? ''}:${driver.lng ?? ''}`).join('|')}`
     : '';
-
-  const handleAssignDriver = async (orderId: string, driverId: string) => {
-    if (assigningDriverId) return;
-    if (!hasCurrentDriverCandidates || selectedOrderId !== orderId || driversLoading) {
-      showError('Wait for location-scoped driver candidates before assigning a driver.');
-      return;
-    }
-    const driver = scopedAvailableDrivers.find((candidate) => candidate.id === driverId);
-    const ok = await confirm({
-      title: `Force-assign ${driver?.fullName || 'this driver'}?`,
-      description:
-        'This overrides automatic dispatch and immediately requests assignment for this order. '
-        + 'The order remains in the queue until the server confirms the change.',
-      confirmLabel: 'Force assign',
-      tone: 'danger',
-    });
-    if (!ok) return;
-
-    setAssigningDriverId(driverId);
-    try {
-      await deliveryApi.adminDelivery.post('/api/v1/internal/admin/delivery/orders/:orderId/assign', undefined, { params: { orderId }, queries: { driverId } });
-      showSuccess("Driver assignment requested. The order will update when dispatch confirms it.");
-      fetchActiveOrders();
-      fetchAvailableDrivers();
-      setSelectedOrder(null);
-    } catch (e: unknown) {
-      console.error(e);
-      showError(parseApiError(e, "Failed to assign driver").message);
-      fetchActiveOrders();
-      fetchAvailableDrivers();
-    } finally {
-      setAssigningDriverId(null);
-    }
-  };
 
   return (
     <div className="flex-1 flex w-full h-full overflow-hidden">
@@ -198,12 +157,10 @@ export default function AdminLiveOperations() {
                         key={assignmentMapKey}
                         order={selectedOrder} 
                         availableDrivers={scopedAvailableDrivers}
-                        canAssign={assignmentReady}
-                        onAssign={handleAssignDriver} 
-                    />
+                      />
                     </React.Suspense>
                 </div>
-                {/* Assignment Panel */}
+                {/* Operations Panel */}
                 <Surface variant="glass-overlay" elevation={4} radius="xl" className="absolute bottom-6 left-6 right-6 p-6 z-10 flex gap-6">
                     <div className="flex-1 border-r border-slate-200 dark:border-slate-700 pr-6">
                         <h2 className="text-2xl font-black mb-1">Order #{selectedOrder.id.substring(0, 8)}</h2>
@@ -222,8 +179,8 @@ export default function AdminLiveOperations() {
                     </div>
 
                     <div className="w-1/3 pl-6">
-                        <h3 className="font-bold text-lg mb-3">Available Drivers ({scopedAvailableDrivers.length})</h3>
-                        <div className="max-h-32 overflow-y-auto space-y-2 pr-2">
+                        <h3 className="font-bold text-lg mb-3">Nearby Ready Drivers ({scopedAvailableDrivers.length})</h3>
+                        <div data-testid="nearby-ready-drivers" className="max-h-32 overflow-y-auto space-y-2 pr-2">
                             {driversError && (
                               <p role="alert" className="text-sm text-rose-600 dark:text-rose-400">
                                 {driversError.message}
@@ -231,25 +188,23 @@ export default function AdminLiveOperations() {
                             )}
                             {driversLoading && <p role="status" className="text-sm text-slate-500">Loading nearby drivers…</p>}
                             {scopedAvailableDrivers.map(driver => (
-                                <Surface elevation={2} radius="lg" key={driver.id} className="flex items-center justify-between p-3">
+                                <Surface data-testid="nearby-ready-driver" elevation={2} radius="lg" key={driver.id} className="flex items-center justify-between p-3">
                                     <div className="flex items-center gap-3">
                                         <Truck className="w-5 h-5 text-rose-500" />
                                         <div>
                                             <p className="font-bold text-sm">{driver.fullName || 'Unknown Driver'}</p>
                                         </div>
                                     </div>
-                                    <Button
-                                      variant="success"
-                                      onClick={() => handleAssignDriver(selectedOrder.id, driver.id)}
-                                      disabled={!assignmentReady}
-                                      loading={assigningDriverId === driver.id}
-                                    >
-                                        Assign
-                                    </Button>
                                 </Surface>
                             ))}
                             {!driversLoading && scopedAvailableDrivers.length === 0 && <p className="text-sm text-slate-500">No available drivers nearby.</p>}
                         </div>
+                        <p className="mt-3 text-sm text-slate-500">
+                          Manual assignment requires an audited intervention with an administrator reason and idempotency key.
+                        </p>
+                        <Button className="mt-3" variant="outline" onClick={() => navigate('/admin/interventions')}>
+                          Open Manual Interventions
+                        </Button>
                     </div>
                 </Surface>
             </div>
@@ -257,7 +212,7 @@ export default function AdminLiveOperations() {
             <div className="flex-1 flex flex-col items-center justify-center text-slate-400">
                 <Navigation className="w-16 h-16 mb-4 opacity-30 text-rose-500" />
                 <h2 className="text-2xl font-black mb-2 text-slate-800 dark:text-[#f0ede6]">Live Operations</h2>
-                <p>Select an active order from the left pane to monitor it or assign a driver.</p>
+                <p>Select an active order from the left pane to monitor its live dispatch state.</p>
             </div>
         )}
       </div>

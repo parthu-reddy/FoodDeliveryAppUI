@@ -15,6 +15,25 @@ export const schemas = {
 
 export const endpoints = makeApi([
   {
+    method: "post",
+    path: "/api/v1/internal/money/driver/:driverId/orders/batch",
+    alias: "fetchDriverOrderMoneyBatch",
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "body",
+        type: "Body",
+        schema: z.array(z.string()),
+      },
+      {
+        name: "driverId",
+        type: "Path",
+        schema: z.string().uuid(),
+      },
+    ],
+    response: z.array(DriverOrderEarnings),
+  },
+  {
     method: "get",
     path: "/api/v1/internal/money/restaurant/orders/:orderId/earnings",
     alias: "fetchRestaurantOrderEarningsInternal",

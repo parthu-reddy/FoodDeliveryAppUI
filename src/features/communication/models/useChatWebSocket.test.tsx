@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   activate: vi.fn(),
   deactivate: vi.fn(),
   fetch: vi.fn(),
+  clients: [] as Array<{ onConnect?: () => void; subscribe: ReturnType<typeof vi.fn> }>,
 }));
 
 vi.mock('@/lib/tokenStore', () => ({
@@ -19,6 +20,11 @@ vi.mock('@stomp/stompjs', () => ({
     deactivate = mocks.deactivate;
     publish = vi.fn();
     subscribe = vi.fn();
+    onConnect?: () => void;
+
+    constructor() {
+      mocks.clients.push(this);
+    }
   },
 }));
 
@@ -27,6 +33,7 @@ describe('useChatWebSocket image upload', () => {
     mocks.fetch.mockReset();
     mocks.activate.mockReset();
     mocks.deactivate.mockReset();
+    mocks.clients.length = 0;
     vi.stubGlobal('fetch', mocks.fetch);
   });
 
@@ -87,5 +94,23 @@ describe('useChatWebSocket image upload', () => {
     await expect(result.current.sendImage(
       new File(['image fixture'], 'attachment.png', { type: 'image/png' }),
     )).resolves.toBeNull();
+  });
+
+  it('subscribes through authenticated user destinations instead of shared chat topics', () => {
+    renderHook(() => useChatWebSocket({
+      sessionId: 'session-123',
+      onMessageReceived: vi.fn(),
+      onTypingIndicator: vi.fn(),
+    }));
+
+    const client = mocks.clients[0];
+    act(() => client.onConnect?.());
+
+    expect(client.subscribe).toHaveBeenCalledWith(
+      '/user/queue/chat/session-123', expect.any(Function),
+    );
+    expect(client.subscribe).toHaveBeenCalledWith(
+      '/user/queue/chat/session-123/typing', expect.any(Function),
+    );
   });
 });

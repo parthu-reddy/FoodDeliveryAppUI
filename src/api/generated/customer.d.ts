@@ -84,6 +84,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/internal/orders/{orderId}/review-authorizations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["authorizeTargets"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/internal/orders/{orderId}/partial-refund": {
         parameters: {
             query?: never;
@@ -100,7 +116,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/internal/money/driver/{driverId}/orders:batch": {
+    "/api/v1/internal/money/driver/{driverId}/orders/batch": {
         parameters: {
             query?: never;
             header?: never;
@@ -238,22 +254,6 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["assignDriver"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/internal/admin/orders/intervention/support-tickets/{ticketId}/resolve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["resolveSupportTicket"];
         delete?: never;
         options?: never;
         head?: never;
@@ -804,6 +804,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/internal/orders/{orderId}/chat-participants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["fetchOrderChatParticipants"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/internal/orders/unassigned": {
         parameters: {
             query?: never;
@@ -1190,6 +1206,12 @@ export interface components {
             /** Format: int64 */
             estimatedArrivalTime?: number;
             tipAmount?: number;
+            dispatchCityId?: string;
+            /** Format: double */
+            fleetSearchRadiusKm?: number;
+            manualInterventionFailureCode?: string;
+            /** Format: date-time */
+            manualInterventionFailedAt?: string;
             /** Format: int64 */
             expiresAt?: number;
         };
@@ -1234,6 +1256,33 @@ export interface components {
             distanceKm: number;
             driverPayout: number;
             restaurantDeliveryContribution: number;
+        };
+        OrderReviewAuthorizationRequest: {
+            /** Format: uuid */
+            reviewerId: string;
+            /** @enum {string} */
+            reviewerRole: "CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN";
+            targets: components["schemas"]["OrderReviewTargetAuthorizationRequest"][];
+        };
+        OrderReviewTargetAuthorizationRequest: {
+            /** @enum {string} */
+            targetType: "RESTAURANT" | "DRIVER" | "PRODUCT" | "CUSTOMER";
+            targetId: string;
+        };
+        ApiResponseListOrderReviewAuthorizationResult: {
+            success: boolean;
+            message: string;
+            errorCode?: string;
+            data?: components["schemas"]["OrderReviewAuthorizationResult"][];
+            /** Format: date-time */
+            timestamp: string;
+        };
+        OrderReviewAuthorizationResult: {
+            /** @enum {string} */
+            targetType?: "RESTAURANT" | "DRIVER" | "PRODUCT" | "CUSTOMER";
+            targetId?: string;
+            allowed?: boolean;
+            reasonCode?: string;
         };
         Item: {
             /** Format: uuid */
@@ -1317,6 +1366,20 @@ export interface components {
             faultType?: string;
             overrideAmount?: number;
         };
+        AdminRefundRequest: {
+            /** Format: uuid */
+            orderId: string;
+            items: components["schemas"]["RefundItemRequest"][];
+            /** @enum {string} */
+            faultType: "PLATFORM_FAULT" | "RESTAURANT_FAULT" | "RIDER_FAULT" | "CUSTOMER_FAULT" | "UNKNOWN";
+            reasonText: string;
+        };
+        RefundItemRequest: {
+            /** Format: uuid */
+            orderItemId: string;
+            /** Format: int32 */
+            quantity?: number;
+        };
         RefundView: {
             /** Format: uuid */
             id?: string;
@@ -1336,6 +1399,14 @@ export interface components {
             completedAt?: string;
             /** Format: date-time */
             expectedBy?: string;
+        };
+        AdminManualCancellationRequest: {
+            reason: string;
+        };
+        AdminManualAssignmentRequest: {
+            /** Format: uuid */
+            deliveryExecutiveId: string;
+            reason: string;
         };
         DeadLetterReplayRequest: {
             dltTopic: string;
@@ -1363,6 +1434,7 @@ export interface components {
             addressLine1: string;
             addressLine2?: string;
             city: string;
+            cityId?: string;
             state: string;
             zipCode: string;
             /** Format: double */
@@ -1387,6 +1459,7 @@ export interface components {
             addressLine1: string;
             addressLine2?: string;
             city: string;
+            cityId: string;
             state: string;
             zipCode: string;
             /** Format: double */
@@ -1743,6 +1816,12 @@ export interface components {
             menuItemId?: string;
             name?: string;
         };
+        OrderChatParticipantDto: {
+            /** Format: uuid */
+            id: string;
+            participantType: string;
+            displayName: string;
+        };
         Order: {
             /** Format: uuid */
             id: string;
@@ -1804,6 +1883,17 @@ export interface components {
             /** Format: int64 */
             estimatedCompletionTime?: number;
             cancellationReason?: string;
+            manualInterventionOperationId?: string;
+            /** Format: uuid */
+            manualInterventionRequestedDriverId?: string;
+            /** Format: uuid */
+            manualInterventionRequestedBy?: string;
+            manualInterventionReason?: string;
+            /** Format: date-time */
+            manualInterventionRequestedAt?: string;
+            manualInterventionFailureCode?: string;
+            /** Format: date-time */
+            manualInterventionFailedAt?: string;
             /** Format: int32 */
             requestedDelayMinutes?: number;
             delayReason?: string;
@@ -1833,29 +1923,29 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
-            /** Format: int32 */
-            numberOfElements: number;
-            first: boolean;
-            last: boolean;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             number: number;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["Order"][];
-            pageable?: components["schemas"]["PageableObject"];
-            sort?: components["schemas"]["SortObject"];
+            first: boolean;
+            last: boolean;
+            /** Format: int32 */
+            numberOfElements: number;
             empty: boolean;
         };
         PageableObject: {
-            /** Format: int64 */
-            offset: number;
+            sort?: components["schemas"]["SortObject"];
             paged: boolean;
             /** Format: int32 */
             pageNumber: number;
             /** Format: int32 */
             pageSize: number;
             unpaged: boolean;
-            sort?: components["schemas"]["SortObject"];
+            /** Format: int64 */
+            offset: number;
         };
         SortObject: {
             empty: boolean;
@@ -1874,17 +1964,17 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
-            /** Format: int32 */
-            numberOfElements: number;
-            first: boolean;
-            last: boolean;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
             number: number;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["SupportTicket"][];
-            pageable?: components["schemas"]["PageableObject"];
-            sort?: components["schemas"]["SortObject"];
+            first: boolean;
+            last: boolean;
+            /** Format: int32 */
+            numberOfElements: number;
             empty: boolean;
         };
         AdminOrderMoney: {
@@ -2152,6 +2242,32 @@ export interface operations {
             };
         };
     };
+    authorizeTargets: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrderReviewAuthorizationRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseListOrderReviewAuthorizationResult"];
+                };
+            };
+        };
+    };
     initiatePartialRefund: {
         parameters: {
             query?: never;
@@ -2233,9 +2349,7 @@ export interface operations {
     resolveTicket: {
         parameters: {
             query?: never;
-            header: {
-                "X-User-Id": string;
-            };
+            header?: never;
             path: {
                 ticketId: string;
             };
@@ -2267,7 +2381,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["RefundCommand"];
+                "application/json": components["schemas"]["AdminRefundRequest"];
             };
         };
         responses: {
@@ -2339,7 +2453,9 @@ export interface operations {
     forceCancelOrder: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
             path: {
                 orderId: string;
             };
@@ -2347,9 +2463,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: string;
-                };
+                "application/json": components["schemas"]["AdminManualCancellationRequest"];
             };
         };
         responses: {
@@ -2367,7 +2481,9 @@ export interface operations {
     cancelOrder_1: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
             path: {
                 orderId: string;
             };
@@ -2375,9 +2491,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: string;
-                };
+                "application/json": components["schemas"]["AdminManualCancellationRequest"];
             };
         };
         responses: {
@@ -2395,7 +2509,9 @@ export interface operations {
     assignDriver: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
             path: {
                 orderId: string;
             };
@@ -2403,37 +2519,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: string;
-                };
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseString"];
-                };
-            };
-        };
-    };
-    resolveSupportTicket: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                ticketId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    [key: string]: string;
-                };
+                "application/json": components["schemas"]["AdminManualAssignmentRequest"];
             };
         };
         responses: {
@@ -3276,6 +3362,28 @@ export interface operations {
             };
         };
     };
+    fetchOrderChatParticipants: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderChatParticipantDto"][];
+                };
+            };
+        };
+    };
     fetchUnassignedOrders: {
         parameters: {
             query?: never;
@@ -3625,8 +3733,10 @@ export interface operations {
     };
     getAllCustomerAddresses: {
         parameters: {
-            query: {
-                pageable: components["schemas"]["Pageable"];
+            query?: {
+                cityId?: string;
+                page?: number;
+                size?: number;
             };
             header?: never;
             path?: never;

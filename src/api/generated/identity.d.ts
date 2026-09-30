@@ -116,22 +116,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/internal/auth/admin/otp": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getOtp"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/internal/admin/users/{id}": {
         parameters: {
             query?: never;
@@ -237,6 +221,23 @@ export interface components {
             email?: string;
             phone?: string;
         };
+        ApiResponseProfileResponseDto: {
+            success: boolean;
+            message: string;
+            errorCode?: string;
+            data?: components["schemas"]["ProfileResponseDto"];
+            /** Format: date-time */
+            timestamp: string;
+        };
+        ProfileResponseDto: {
+            id?: string;
+            name?: string;
+            email?: string;
+            phone?: string;
+        };
+        StatusUpdateDTO: {
+            isActive: boolean;
+        };
         ApiResponseString: {
             success: boolean;
             message: string;
@@ -244,9 +245,6 @@ export interface components {
             data?: string;
             /** Format: date-time */
             timestamp: string;
-        };
-        StatusUpdateDTO: {
-            isActive: boolean;
         };
         ApiResponseVoid: {
             success: boolean;
@@ -259,20 +257,6 @@ export interface components {
         RoleRequestDTO: {
             serviceName: string;
             roleName: string;
-        };
-        ProfileResponseDto: {
-            id: string;
-            name: string;
-            email: string;
-            phone: string;
-        };
-        ApiResponseProfileResponseDto: {
-            success: boolean;
-            message: string;
-            errorCode?: string;
-            data?: components["schemas"]["ProfileResponseDto"];
-            /** Format: date-time */
-            timestamp: string;
         };
         ApiResponseListSessionInfo: {
             success: boolean;
@@ -493,9 +477,7 @@ export interface operations {
     addRole: {
         parameters: {
             query?: never;
-            header: {
-                "X-Calling-Service": string;
-            };
+            header?: never;
             path: {
                 id: string;
             };
@@ -564,35 +546,10 @@ export interface operations {
             };
         };
     };
-    getOtp: {
-        parameters: {
-            query: {
-                phoneNumber: string;
-                serviceName?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseString"];
-                };
-            };
-        };
-    };
     getUser: {
         parameters: {
             query?: never;
-            header: {
-                "X-Calling-Service": string;
-            };
+            header?: never;
             path: {
                 id: string;
             };
@@ -618,9 +575,7 @@ export interface operations {
                 page?: number;
                 size?: number;
             };
-            header: {
-                "X-Calling-Service": string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -710,9 +665,7 @@ export interface operations {
     removeRole: {
         parameters: {
             query?: never;
-            header: {
-                "X-Calling-Service": string;
-            };
+            header?: never;
             path: {
                 id: string;
                 roleName: "CUSTOMER" | "DELIVERY" | "RESTAURANT" | "ADMIN";

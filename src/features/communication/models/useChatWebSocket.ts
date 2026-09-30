@@ -48,7 +48,7 @@ export const useChatWebSocket = ({ sessionId, onMessageReceived, onTypingIndicat
 
       // Subscribe to messages
       subscriptionRef.current = client.subscribe(
-        `/topic/chat/${sessionId}`,
+        `/user/queue/chat/${sessionId}`,
         (message: IMessage) => {
           if (message.body) {
             const chatMsg = JSON.parse(message.body) as ChatMessage;
@@ -59,7 +59,7 @@ export const useChatWebSocket = ({ sessionId, onMessageReceived, onTypingIndicat
 
       // Subscribe to typing indicators
       typingSubscriptionRef.current = client.subscribe(
-        `/topic/chat/${sessionId}/typing`,
+        `/user/queue/chat/${sessionId}/typing`,
         (message: IMessage) => {
           if (message.body) {
             const indicator = JSON.parse(message.body) as TypingIndicator;

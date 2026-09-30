@@ -1,10 +1,10 @@
-import { AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useMotionPresets } from '@shared/ui';
 import { useState } from 'react';
 import type { UserRole } from '@/types';
 import { Button, Surface } from '@shared/ui';
-import { DEV_LOGINS, ROLE_CHOICES } from '../model/roles';
+import { ROLE_CHOICES } from '../model/roles';
 import { RoleCard } from './RoleCard';
 
 /**
@@ -17,8 +17,6 @@ import { RoleCard } from './RoleCard';
 
 const CARD_WIDTH = 250;
 const CARD_STRIDE = 266;
-const DEV_MODE = import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEV_OTP === 'true';
-
 interface RoleSelectorProps {
   onSelectRole: (role: UserRole) => void;
 }
@@ -35,32 +33,6 @@ export function RoleSelector({ onSelectRole }: RoleSelectorProps) {
       transition={{ duration: 0.3 }}
       className="pt-4 sm:pt-6 md:pt-8 w-full"
     >
-      {DEV_MODE && (
-        <Surface
-          variant="sunken"
-          radius="xl"
-          elevation={0}
-          className="max-w-6xl mx-auto mb-8 p-4 text-center"
-        >
-          <h4
-            className="font-bold mb-3 flex items-center justify-center gap-2"
-            style={{ color: 'var(--color-warning)' }}
-          >
-            <AlertCircle className="w-5 h-5" aria-hidden="true" /> Development Setup / Dummy Data
-          </h4>
-          <div className="flex flex-wrap justify-center gap-4 text-sm">
-            {DEV_LOGINS.map(({ label, phone }) => (
-              <Surface key={label} radius="md" elevation={1} className="px-4 py-2">
-                <span style={{ color: 'var(--color-ink-2)' }}>{label}: </span>
-                <strong className="font-mono ml-1" style={{ color: 'var(--color-warning)' }}>
-                  {phone}
-                </strong>
-              </Surface>
-            ))}
-          </div>
-        </Surface>
-      )}
-
       {/* Desktop: all four at once, because there is room for all four. */}
       <div className="hidden lg:grid lg:grid-cols-4 gap-6 max-w-6xl mx-auto w-full px-4">
         {ROLE_CHOICES.map((choice) => (

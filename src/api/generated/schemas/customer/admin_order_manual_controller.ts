@@ -20,9 +20,16 @@ export const PageResponseDtoSupportTicket = z
     empty: z.boolean(),
   })
   .passthrough();
+export const AdminManualAssignmentRequest = z
+  .object({
+    deliveryExecutiveId: z.string().uuid(),
+    reason: z.string().min(5).max(500),
+  })
+  .passthrough();
 
 export const schemas = {
   PageResponseDtoSupportTicket,
+  AdminManualAssignmentRequest,
 };
 
 export const endpoints = makeApi([
@@ -35,12 +42,21 @@ export const endpoints = makeApi([
       {
         name: "body",
         type: "Body",
-        schema: z.record(z.string()),
+        schema: z.object({ reason: z.string().min(5).max(500) }).passthrough(),
       },
       {
         name: "orderId",
         type: "Path",
         schema: z.string().uuid(),
+      },
+      {
+        name: "Idempotency-Key",
+        type: "Header",
+        schema: z
+          .string()
+          .min(8)
+          .max(80)
+          .regex(/[A-Za-z0-9][A-Za-z0-9._:-]{7,79}/),
       },
     ],
     response: ApiResponseString,
@@ -54,12 +70,21 @@ export const endpoints = makeApi([
       {
         name: "body",
         type: "Body",
-        schema: z.record(z.string()),
+        schema: z.object({ reason: z.string().min(5).max(500) }).passthrough(),
       },
       {
         name: "orderId",
         type: "Path",
         schema: z.string().uuid(),
+      },
+      {
+        name: "Idempotency-Key",
+        type: "Header",
+        schema: z
+          .string()
+          .min(8)
+          .max(80)
+          .regex(/[A-Za-z0-9][A-Za-z0-9._:-]{7,79}/),
       },
     ],
     response: ApiResponseString,
@@ -73,31 +98,21 @@ export const endpoints = makeApi([
       {
         name: "body",
         type: "Body",
-        schema: z.record(z.string()),
+        schema: AdminManualAssignmentRequest,
       },
       {
         name: "orderId",
         type: "Path",
         schema: z.string().uuid(),
       },
-    ],
-    response: ApiResponseString,
-  },
-  {
-    method: "post",
-    path: "/api/v1/internal/admin/orders/intervention/support-tickets/:ticketId/resolve",
-    alias: "resolveSupportTicket",
-    requestFormat: "json",
-    parameters: [
       {
-        name: "body",
-        type: "Body",
-        schema: z.record(z.string()),
-      },
-      {
-        name: "ticketId",
-        type: "Path",
-        schema: z.string().uuid(),
+        name: "Idempotency-Key",
+        type: "Header",
+        schema: z
+          .string()
+          .min(8)
+          .max(80)
+          .regex(/[A-Za-z0-9][A-Za-z0-9._:-]{7,79}/),
       },
     ],
     response: ApiResponseString,

@@ -114,6 +114,7 @@ export const CallOverlay: React.FC = () => {
  <>
  <button 
  onClick={() => declineCall()}
+ aria-label="Decline call"
  className="w-14 h-14 bg-rose-500 hover:bg-rose-600 rounded-full flex items-center justify-center transition-transform hover:scale-105 active:scale-95 text-white"
  >
  <PhoneOff className="w-6 h-6" />
@@ -127,6 +128,7 @@ export const CallOverlay: React.FC = () => {
  audioRef.current.play().catch(e => console.error("Error playing audio on accept:", e));
  }
  }}
+ aria-label="Accept call"
  className="w-14 h-14 bg-amber-500 hover:bg-amber-600 rounded-full flex items-center justify-center transition-transform hover:scale-105 active:scale-95 text-white animate-bounce"
  >
  <PhoneCall className="w-6 h-6" />
@@ -141,6 +143,7 @@ export const CallOverlay: React.FC = () => {
  const muted = toggleMute();
  setIsMuted(muted);
  }}
+ aria-label={isMuted ? 'Unmute microphone' : 'Mute microphone'}
  className={`w-14 h-14 rounded-full flex items-center justify-center transition-transform hover:scale-105 active:scale-95 ${isMuted ? 'bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400' : 'bg-slate-100 text-slate-800 dark:bg-slate-600 dark:text-white'}`}
  >
  {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
@@ -148,6 +151,7 @@ export const CallOverlay: React.FC = () => {
  
  <button 
  onClick={() => endCall()}
+ aria-label="End call"
  className="w-14 h-14 bg-rose-500 hover:bg-rose-600 rounded-full flex items-center justify-center transition-transform hover:scale-105 active:scale-95 text-white"
  >
  <PhoneOff className="w-6 h-6" />

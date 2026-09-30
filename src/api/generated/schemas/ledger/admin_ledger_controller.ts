@@ -3,6 +3,7 @@ import { z } from "zod";
 
 export const LedgerTransactionDto = z
   .object({
+    entryId: z.string().uuid(),
     transactionId: z.string().uuid(),
     category: z.enum([
       "DELIVERY_FEE",
@@ -21,8 +22,10 @@ export const LedgerTransactionDto = z
       "PAYOUT_TRANSFER",
       "STORE_CREDIT",
     ]),
-    fromAccountId: z.string().uuid(),
-    toAccountId: z.string().uuid(),
+    accountId: z.string().uuid(),
+    direction: z.enum(["CREDIT", "DEBIT"]),
+    fromAccountId: z.string().uuid().optional(),
+    toAccountId: z.string().uuid().optional(),
     amount: z.number(),
     date: z.string().datetime({ offset: true }),
   })

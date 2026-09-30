@@ -8,9 +8,6 @@ export const ParticipantDto = z
     displayName: z.string().optional(),
   })
   .passthrough();
-export const CreateSessionRequest = z
-  .object({ orderId: z.string(), participants: z.array(ParticipantDto) })
-  .passthrough();
 export const ChatSessionResponse = z
   .object({
     sessionId: z.string().uuid(),
@@ -70,7 +67,6 @@ export const ApiResponsePageResponseDtoChatMessageDto = z
 
 export const schemas = {
   ParticipantDto,
-  CreateSessionRequest,
   ChatSessionResponse,
   ApiResponseChatSessionResponse,
   ChatMessageDto,
@@ -102,7 +98,7 @@ export const endpoints = makeApi([
       {
         name: "body",
         type: "Body",
-        schema: CreateSessionRequest,
+        schema: z.object({ orderId: z.string() }).passthrough(),
       },
     ],
     response: ApiResponseChatSessionResponse,
@@ -113,11 +109,6 @@ export const endpoints = makeApi([
     alias: "addParticipant",
     requestFormat: "json",
     parameters: [
-      {
-        name: "body",
-        type: "Body",
-        schema: ParticipantDto,
-      },
       {
         name: "sessionId",
         type: "Path",

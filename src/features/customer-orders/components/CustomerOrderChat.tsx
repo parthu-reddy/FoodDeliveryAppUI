@@ -39,19 +39,6 @@ export function CustomerOrderChat({ currentTrackingOrder, chatWidgetRef }: Custo
         ref={chatWidgetRef}
         orderId={currentTrackingOrder.id}
         order={currentTrackingOrder}
-        currentUserType="CUSTOMER"
-        otherParticipants={[
-          ...(currentTrackingOrder.deliveryExecutiveId ? [{
-            userId: currentTrackingOrder.deliveryExecutiveId,
-            entityType: 'DELIVERY' as const,
-            displayName: 'Rider'
-          }] : []),
-          ...(currentTrackingOrder.restaurantId ? [{
-            userId: currentTrackingOrder.restaurantId,
-            entityType: 'RESTAURANT' as const,
-            displayName: currentTrackingOrder.restaurantName || 'Restaurant'
-          }] : [])
-        ]}
       />
     ) : null;
   })()}

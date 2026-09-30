@@ -8,26 +8,26 @@ export const SortObject = z
   .passthrough();
 export const PageableObject = z
   .object({
+    offset: z.number().int(),
+    sort: SortObject.optional(),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
     unpaged: z.boolean(),
-    sort: SortObject.optional(),
-    offset: z.number().int(),
   })
   .passthrough();
 export const PageDeliveryExecutive = z
   .object({
-    totalPages: z.number().int(),
     totalElements: z.number().int(),
-    pageable: PageableObject.optional(),
-    sort: SortObject.optional(),
+    totalPages: z.number().int(),
+    numberOfElements: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(DeliveryExecutive),
-    numberOfElements: z.number().int(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -43,16 +43,16 @@ export const DriverLocationDTO = z
   .passthrough();
 export const PageDriverLocationDTO = z
   .object({
-    totalPages: z.number().int(),
     totalElements: z.number().int(),
-    pageable: PageableObject.optional(),
-    sort: SortObject.optional(),
+    totalPages: z.number().int(),
+    numberOfElements: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(DriverLocationDTO),
-    numberOfElements: z.number().int(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -77,25 +77,6 @@ export const schemas = {
 export const endpoints = makeApi([
   {
     method: "post",
-    path: "/api/v1/internal/admin/delivery/orders/:orderId/assign",
-    alias: "forceAssignOrder",
-    requestFormat: "json",
-    parameters: [
-      {
-        name: "orderId",
-        type: "Path",
-        schema: z.string().uuid(),
-      },
-      {
-        name: "driverId",
-        type: "Query",
-        schema: z.string().uuid(),
-      },
-    ],
-    response: z.void(),
-  },
-  {
-    method: "post",
     path: "/api/v1/internal/admin/delivery/drivers/batch",
     alias: "getDriversByIds",
     requestFormat: "json",
@@ -107,6 +88,13 @@ export const endpoints = makeApi([
       },
     ],
     response: z.array(DeliveryExecutive),
+  },
+  {
+    method: "get",
+    path: "/api/v1/internal/admin/delivery/fleet-cities",
+    alias: "getFleetCities",
+    requestFormat: "json",
+    response: z.array(z.string()),
   },
   {
     method: "get",
@@ -145,7 +133,10 @@ export const endpoints = makeApi([
       {
         name: "cityId",
         type: "Query",
-        schema: z.string(),
+        schema: z
+          .string()
+          .regex(/^[A-Z][A-Z0-9_-]{0,63}$/)
+          .optional(),
       },
       {
         name: "lat",
@@ -174,12 +165,20 @@ export const endpoints = makeApi([
       {
         name: "cityId",
         type: "Query",
-        schema: z.string(),
+        schema: z
+          .string()
+          .regex(/^[A-Z][A-Z0-9_-]{0,63}$/)
+          .optional(),
       },
       {
-        name: "pageable",
+        name: "page",
         type: "Query",
-        schema: pageable,
+        schema: z.number().int().gte(0).optional().default(0),
+      },
+      {
+        name: "size",
+        type: "Query",
+        schema: z.number().int().gte(1).lte(100).optional().default(100),
       },
     ],
     response: PageDriverLocationDTO,

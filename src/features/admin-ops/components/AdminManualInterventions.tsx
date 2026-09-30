@@ -5,10 +5,27 @@ import { customerApi, deliveryApi, restaurantApi } from "@/lib/zodiosClients";
 import { readDispatchScope, readRestaurantCoordinates } from '@features/admin-ops/model/dispatchScope';
 import { Button, Surface, Textarea, surfaceStyle, useConfirm } from '@shared/ui';
 import { Shield, Truck } from 'lucide-react';
-import { useState } from 'react';
-import { Order as OrderSchema } from '@/api/generated/schemas/customer/common';
+import { useEffect, useRef, useState } from 'react';
+import { OrderResponse as OrderSchema } from '@/api/generated/schemas/customer/common';
 import { z } from 'zod';
 type Order = z.infer<typeof OrderSchema>;
+
+type PendingManualAssignment = {
+  priorFailureCode?: string;
+  priorFailureAt?: string;
+};
+
+const MANUAL_ASSIGNMENT_FAILURE_MESSAGES: Record<string, string> = {
+  DRIVER_NOT_ELIGIBLE: 'The rider is not eligible for dispatch.',
+  DRIVER_NOT_ONLINE: 'The rider is no longer online.',
+  DRIVER_OUTSIDE_DISPATCH_CITY: 'The rider is outside this order’s dispatch city.',
+  DRIVER_LOCATION_STALE: 'The rider no longer has a current location signal.',
+  DRIVER_ALREADY_ASSIGNED: 'The rider already has another active assignment.',
+  DRIVER_NOT_FOUND: 'The selected rider is no longer available.',
+  ORDER_NOT_REASSIGNABLE: 'The order has progressed and cannot be reassigned.',
+  ORDER_ALREADY_ASSIGNED: 'The selected rider already holds this order.',
+  CURRENT_ASSIGNMENT_INCONSISTENT: 'The current assignment needs dispatch support review.',
+};
 
 export default function AdminManualInterventions() {
   const { showSuccess, showError } = useToast();
@@ -16,9 +33,16 @@ export default function AdminManualInterventions() {
   const [activeTab, setActiveTab] = useState<'DISPATCH'>('DISPATCH');
    
   const [selectedIntervention, setSelectedIntervention] = useState<Order | null>(null);
+  const [assignmentReason, setAssignmentReason] = useState('');
   const [cancelReason, setCancelReason] = useState('');
   const [cancelPending, setCancelPending] = useState(false);
   const [assigningDriverId, setAssigningDriverId] = useState<string | null>(null);
+  const [pendingManualAssignments, setPendingManualAssignments] = useState<Map<string, PendingManualAssignment>>(
+    () => new Map(),
+  );
+  // Retain an operation key after a network error so an explicit retry cannot enqueue the same
+  // override twice. A successful request or changed action details creates a new operation.
+  const operationKeys = useRef(new Map<string, string>());
 
   const [interventionsPage, setInterventionsPage] = useState(0);
 
@@ -36,9 +60,39 @@ export default function AdminManualInterventions() {
 
   const interventions = (interventionsResponse?.content ?? []) as Order[];
   const interventionsTotalPages = interventionsResponse?.totalPages ?? 1;
+  const selectedInterventionId = selectedIntervention?.id ?? null;
+
+  useEffect(() => {
+    if (!selectedInterventionId) return;
+    const refreshed = interventions.find((order) => order.id === selectedInterventionId);
+    if (!refreshed) {
+      setSelectedIntervention(null);
+      setPendingManualAssignments((current) => {
+        if (!current.has(selectedInterventionId)) return current;
+        const next = new Map(current);
+        next.delete(selectedInterventionId);
+        return next;
+      });
+      return;
+    }
+    setSelectedIntervention(refreshed);
+    const pending = pendingManualAssignments.get(selectedInterventionId);
+    const isNewFailure = pending !== undefined
+      && Boolean(refreshed.manualInterventionFailureCode)
+      && (refreshed.manualInterventionFailureCode !== pending.priorFailureCode
+        || refreshed.manualInterventionFailedAt !== pending.priorFailureAt);
+    if (isNewFailure) {
+      setPendingManualAssignments((current) => {
+        if (!current.has(selectedInterventionId)) return current;
+        const next = new Map(current);
+        next.delete(selectedInterventionId);
+        return next;
+      });
+    }
+  }, [interventionsResponse, pendingManualAssignments, selectedInterventionId]);
+
   // A force-assignment candidate must be scoped to the selected order's
   // dispatch city, restaurant location, and configured search radius.
-  const selectedInterventionId = selectedIntervention?.id ?? null;
   const {
     data: driversList,
     dataRefreshKey: driverCandidatesOrderId,
@@ -79,30 +133,62 @@ export default function AdminManualInterventions() {
     && driverCandidatesOrderId === selectedInterventionId;
   const availableDrivers = hasCurrentDriverCandidates ? driversList ?? [] : [];
 
+  const idempotencyKeyFor = (action: string, orderId: string, details: string) => {
+    const operation = `${action}:${orderId}:${details}`;
+    let key = operationKeys.current.get(operation);
+    if (!key) {
+      key = crypto.randomUUID();
+      operationKeys.current.set(operation, key);
+    }
+    return { operation, key };
+  };
+
   const handleAssignDriverToIntervention = async (orderId: string, driverId: string) => {
-    if (assigningDriverId) return;
+    if (assigningDriverId || pendingManualAssignments.has(orderId)) return;
     if (!hasCurrentDriverCandidates || selectedInterventionId !== orderId || driversLoading) {
       showError('Wait for location-scoped driver candidates before assigning a driver.');
       return;
     }
-    // Force-assign overrides automatic dispatch and puts a specific rider on a specific
-    // order. It cannot be taken back from this screen, and the rider is notified immediately.
+    const reason = assignmentReason.trim();
+    if (reason.length < 5) {
+      showError('Enter an assignment reason of at least 5 characters.');
+      return;
+    }
+    // Force-assign queues an audited override for a specific rider. Dispatch validates the
+    // current order and rider readiness before the rider is notified.
     const ok = await confirm({
       title: 'Force-assign this driver?',
       description:
-        'This overrides automatic dispatch. The rider is notified straight away and the order '
-        + 'resumes on their device. It cannot be undone from here.',
+        'This queues an audited override. Dispatch verifies the current order and rider '
+        + 'readiness before notifying the rider. It cannot be undone from here.',
       confirmLabel: 'Force assign',
       tone: 'danger',
     });
     if (!ok) return;
 
     setAssigningDriverId(driverId);
+    const idempotency = idempotencyKeyFor('assign', orderId, `${driverId}:${reason}`);
     try {
-      await customerApi.adminOrderManual.post('/api/v1/internal/admin/orders/intervention/:orderId/assign-driver', { deliveryExecutiveId: driverId }, { params: { orderId } });
+      await customerApi.adminOrderManual.post(
+        '/api/v1/internal/admin/orders/intervention/:orderId/assign-driver',
+        { deliveryExecutiveId: driverId, reason },
+        { params: { orderId }, headers: { 'Idempotency-Key': idempotency.key } },
+      );
       showSuccess("Driver assignment requested. The queue will update when dispatch confirms it.");
       fetchInterventions();
-      setSelectedIntervention(null);
+      setAssignmentReason('');
+      setSelectedIntervention((current) => current?.id === orderId
+        ? { ...current, manualInterventionFailureCode: undefined, manualInterventionFailedAt: undefined }
+        : current);
+      setPendingManualAssignments((current) => {
+        const next = new Map(current);
+        next.set(orderId, {
+          priorFailureCode: selectedIntervention?.manualInterventionFailureCode,
+          priorFailureAt: selectedIntervention?.manualInterventionFailedAt,
+        });
+        return next;
+      });
+      operationKeys.current.delete(idempotency.operation);
     } catch (e) {
       console.error(e);
       showError(parseApiError(e, "Failed to manually assign driver").message);
@@ -113,6 +199,7 @@ export default function AdminManualInterventions() {
   };
 
   const handleCancelIntervention = async (orderId: string) => {
+    if (pendingManualAssignments.has(orderId)) return;
     const reason = cancelReason.trim();
     if (reason.length < 5) {
       showError('Enter a cancellation reason of at least 5 characters.');
@@ -130,12 +217,18 @@ export default function AdminManualInterventions() {
     if (!ok) return;
 
     setCancelPending(true);
+    const idempotency = idempotencyKeyFor('cancel', orderId, reason);
     try {
-      await customerApi.adminOrderManual.post('/api/v1/internal/admin/orders/intervention/:orderId/cancel', { reason }, { params: { orderId } });
+      await customerApi.adminOrderManual.post(
+        '/api/v1/internal/admin/orders/intervention/:orderId/cancel',
+        { reason },
+        { params: { orderId }, headers: { 'Idempotency-Key': idempotency.key } },
+      );
       showSuccess("Cancellation requested. The queue will update when processing finishes.");
       fetchInterventions();
       setSelectedIntervention(null);
       setCancelReason('');
+      operationKeys.current.delete(idempotency.operation);
     } catch (e) {
       console.error(e);
       showError(parseApiError(e, "Failed to cancel order").message);
@@ -144,6 +237,11 @@ export default function AdminManualInterventions() {
       setCancelPending(false);
     }
   };
+  const assignmentPending = selectedInterventionId !== null && pendingManualAssignments.has(selectedInterventionId);
+  const failureCode = selectedIntervention?.manualInterventionFailureCode;
+  const failureMessage = failureCode && !assignmentPending
+    ? MANUAL_ASSIGNMENT_FAILURE_MESSAGES[failureCode] ?? 'Dispatch rejected the prior assignment. Select another ready rider or request cancellation.'
+    : null;
   return (
     <div className="flex-1 flex w-full h-full overflow-hidden">
       {/* Live Interventions List */}
@@ -177,7 +275,11 @@ export default function AdminManualInterventions() {
               {interventions.map(order => (
                 <button
                   key={order.id}
-                  onClick={() => setSelectedIntervention(order)}
+                  onClick={() => {
+                    setSelectedIntervention(order);
+                    setAssignmentReason('');
+                    setCancelReason('');
+                  }}
                   style={surfaceStyle({ variant: 'glass-chrome', elevation: 3, radius: 'lg' })}
                   className={`w-full flex items-center gap-3 p-3 text-left transition ${selectedIntervention?.id === order.id ? '!border-rose-500 ring-1 ring-rose-500' : 'hover:border-rose-300'}`}
                 >
@@ -227,10 +329,26 @@ export default function AdminManualInterventions() {
                   Order #{selectedIntervention.id.substring(0, 8)} requires intervention
                 </h2>
                 <p className="text-slate-600 dark:text-slate-400 mb-8">This order failed to dispatch to any driver after multiple attempts.</p>
+                {assignmentPending && (
+                  <p role="status" className="mb-5 rounded-lg border border-amber-400/50 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+                    Manual assignment is being validated. The controls will reopen if dispatch rejects it.
+                  </p>
+                )}
+                {failureMessage && (
+                  <p role="alert" className="mb-5 rounded-lg border border-rose-400/50 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-900 dark:bg-rose-950/30 dark:text-rose-200">
+                    The previous manual assignment was not applied: {failureMessage}
+                  </p>
+                )}
 
                 <div className="grid grid-cols-2 gap-8 mb-8">
                   <div className="space-y-4">
                     <h3 className="font-bold text-lg border-b border-slate-200 dark:border-slate-700 pb-2">Assign Available Driver</h3>
+                    <Textarea
+                      value={assignmentReason}
+                      onChange={(e) => setAssignmentReason(e.target.value)}
+                      placeholder="Reason for this manual assignment..."
+                      className="min-h-[88px]"
+                    />
                     <div className="max-h-64 overflow-y-auto space-y-2 pr-2">
                       {availableDrivers.map(driver => (
                         <Surface elevation={2} radius="lg" key={driver.id as string} className="flex items-center justify-between p-3">
@@ -241,7 +359,7 @@ export default function AdminManualInterventions() {
                           <Button
                             variant="success"
                             onClick={() => handleAssignDriverToIntervention(selectedIntervention.id, driver.id as string)}
-                            disabled={!hasCurrentDriverCandidates || Boolean(assigningDriverId)}
+                            disabled={!hasCurrentDriverCandidates || Boolean(assigningDriverId) || assignmentPending || assignmentReason.trim().length < 5}
                             loading={assigningDriverId === driver.id}
                           >
                             Force Assign
@@ -267,7 +385,7 @@ export default function AdminManualInterventions() {
                       variant="primary"
                       onClick={() => handleCancelIntervention(selectedIntervention.id)}
                       className="w-full !py-3 !bg-rose-500 hover:!bg-rose-600"
-                      disabled={cancelReason.trim().length < 5}
+                      disabled={cancelReason.trim().length < 5 || assignmentPending}
                       loading={cancelPending}
                     >
                       Request Cancellation & Refund Review

@@ -1,7 +1,9 @@
 import type { ZodiosOptions } from "@zodios/core";
 import { createApiClient as create_customerProfile } from './customer_profile_controller';
 import { createApiClient as create_order } from './order_controller';
+import { createApiClient as create_internalOrderReview } from './internal_order_review_controller';
 import { createApiClient as create_internalOrderRefund } from './internal_order_refund_controller';
+import { createApiClient as create_internalMoney } from './internal_money_controller';
 import { createApiClient as create_adminRefund } from './admin_refund_controller';
 import { createApiClient as create_adminRefundCommand } from './admin_refund_command_controller';
 import { createApiClient as create_adminOrder } from './admin_order_controller';
@@ -16,7 +18,6 @@ import { createApiClient as create_restaurantMoney } from './restaurant_money_co
 import { createApiClient as create_driverMoney } from './driver_money_controller';
 import { createApiClient as create_customerMoney } from './customer_money_controller';
 import { createApiClient as create_internalOrder } from './internal_order_controller';
-import { createApiClient as create_internalMoney } from './internal_money_controller';
 import { createApiClient as create_adminMoney } from './admin_money_controller';
 import { createApiClient as create_adminCustomer } from './admin_customer_controller';
 
@@ -24,7 +25,9 @@ export function createCustomerFacade(baseUrl: string, options?: ZodiosOptions) {
   return {
   customerProfile: create_customerProfile(baseUrl, options),
   order: create_order(baseUrl, options),
+  internalOrderReview: create_internalOrderReview(baseUrl, options),
   internalOrderRefund: create_internalOrderRefund(baseUrl, options),
+  internalMoney: create_internalMoney(baseUrl, options),
   adminRefund: create_adminRefund(baseUrl, options),
   adminRefundCommand: create_adminRefundCommand(baseUrl, options),
   adminOrder: create_adminOrder(baseUrl, options),
@@ -39,7 +42,6 @@ export function createCustomerFacade(baseUrl: string, options?: ZodiosOptions) {
   driverMoney: create_driverMoney(baseUrl, options),
   customerMoney: create_customerMoney(baseUrl, options),
   internalOrder: create_internalOrder(baseUrl, options),
-  internalMoney: create_internalMoney(baseUrl, options),
   adminMoney: create_adminMoney(baseUrl, options),
   adminCustomer: create_adminCustomer(baseUrl, options),
   };

@@ -53,7 +53,7 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
         {/* The photographic background has been removed as per user request */}
 
         <OtpNotification
-          open={login.showNotification}
+          open={login.showDevOtpNotification}
           otp={login.generatedOtp}
           onAutofill={login.autofillOtp}
         />
@@ -74,7 +74,7 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
               (presence_audit.mjs R1-R3). */}
           <AnimatePresence initial={false}>
             {!login.selectedRole ? (
-              <RoleSelector key="panel-role" onSelectRole={login.setSelectedRole} />
+              <RoleSelector key="panel-role" onSelectRole={login.selectRole} />
             ) : (
               <AuthForm
                 key="panel-auth"
@@ -89,6 +89,8 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
                 onSendOtp={login.sendOtp}
                 onVerifyOtp={login.verifyOtp}
                 onResendOtp={login.resendOtp}
+                canAutofillOtp={login.canAutofillOtp}
+                devOtpLookupError={login.devOtpLookupError}
                 onAutofillOtp={login.autofillOtp}
               />
             )}

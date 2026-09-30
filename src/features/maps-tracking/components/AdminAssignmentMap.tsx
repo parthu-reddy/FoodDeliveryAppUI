@@ -23,8 +23,6 @@ interface Order {
 interface AdminAssignmentMapProps {
     order: Order;
     availableDrivers: Driver[];
-    canAssign: boolean;
-    onAssign: (orderId: string, driverId: string) => void;
 }
 
 export default function AdminAssignmentMap(props: AdminAssignmentMapProps) {
@@ -37,9 +35,7 @@ export default function AdminAssignmentMap(props: AdminAssignmentMapProps) {
 
 function AdminAssignmentMapInner({ 
     order, 
-    availableDrivers, 
-    canAssign,
-    onAssign 
+    availableDrivers,
 }: AdminAssignmentMapProps) {
   useConfig();
   const [restaurantLocationError, setRestaurantLocationError] = useState<string | null>(null);
@@ -61,16 +57,7 @@ function AdminAssignmentMapInner({
       const driverNameElement = document.createElement('span');
       driverNameElement.className = 'text-xs font-bold whitespace-nowrap';
       driverNameElement.textContent = driverName || 'Driver';
-      const assignButton = document.createElement('button');
-      assignButton.type = 'button';
-      assignButton.className = 'assign-btn w-full py-1 px-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors';
-      Object.assign(assignButton.style, {
-        background: 'var(--color-danger-bg)',
-        color: 'var(--color-danger)',
-        border: '1px solid var(--color-danger-line)',
-      });
-      assignButton.textContent = 'Assign';
-      el.appendChild(createMapCallout([driverNameElement, assignButton]));
+      el.appendChild(createMapCallout([driverNameElement]));
       el.appendChild(createMapPin({
         tone: 'rider',
         className: 'cursor-pointer',
@@ -89,7 +76,7 @@ function AdminAssignmentMapInner({
         } catch (err: unknown) {
             console.warn('Could not fetch restaurant location', err);
             if (active) {
-              setRestaurantLocationError('Restaurant location is unavailable. Driver assignment is disabled until it is corrected.');
+              setRestaurantLocationError('Restaurant location is unavailable. Nearby driver markers are unavailable until it is corrected.');
             }
             return;
         }
@@ -116,18 +103,6 @@ function AdminAssignmentMapInner({
                     
                     const markerEl = createDriverMarker(driver.fullName ?? 'Driver');
                     
-                    // Bind the assign button inside the marker element
-                    const assignBtn = markerEl.querySelector('.assign-btn');
-                    if (assignBtn) {
-                        (assignBtn as HTMLButtonElement).disabled = !canAssign;
-                        assignBtn.setAttribute('aria-disabled', String(!canAssign));
-                        assignBtn.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            if (!canAssign) return;
-                            onAssign(order.id, driver.id);
-                        });
-                    }
-
                     new maplibre.Marker({ element: markerEl })
                         .setLngLat([driver.lng, driver.lat])
                         .addTo(map);

@@ -102,6 +102,13 @@ export const OrderResponse = z
     delayReason: z.string().optional(),
     estimatedArrivalTime: z.number().int().optional(),
     tipAmount: z.number().optional(),
+    dispatchCityId: z.string().optional(),
+    fleetSearchRadiusKm: z.number().optional(),
+    manualInterventionFailureCode: z.string().optional(),
+    manualInterventionFailedAt: z
+      .string()
+      .datetime({ offset: true })
+      .optional(),
     expiresAt: z.number().int().optional(),
   })
   .passthrough();
@@ -153,6 +160,37 @@ export const ApiResponseQuoteResponse = z
     message: z.string(),
     errorCode: z.string().optional(),
     data: QuoteResponse.optional(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
+export const OrderReviewTargetAuthorizationRequest = z
+  .object({
+    targetType: z.enum(["RESTAURANT", "DRIVER", "PRODUCT", "CUSTOMER"]),
+    targetId: z.string(),
+  })
+  .passthrough();
+export const OrderReviewAuthorizationRequest = z
+  .object({
+    reviewerId: z.string().uuid(),
+    reviewerRole: z.enum(["CUSTOMER", "DELIVERY", "RESTAURANT", "ADMIN"]),
+    targets: z.array(OrderReviewTargetAuthorizationRequest).max(100),
+  })
+  .passthrough();
+export const OrderReviewAuthorizationResult = z
+  .object({
+    targetType: z.enum(["RESTAURANT", "DRIVER", "PRODUCT", "CUSTOMER"]),
+    targetId: z.string(),
+    allowed: z.boolean(),
+    reasonCode: z.string(),
+  })
+  .partial()
+  .passthrough();
+export const ApiResponseListOrderReviewAuthorizationResult = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    errorCode: z.string().optional(),
+    data: z.array(OrderReviewAuthorizationResult).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
@@ -240,6 +278,26 @@ export const ResolveRequest = z
     overrideAmount: z.number().optional(),
   })
   .passthrough();
+export const RefundItemRequest = z
+  .object({
+    orderItemId: z.string().uuid(),
+    quantity: z.number().int().optional(),
+  })
+  .passthrough();
+export const AdminRefundRequest = z
+  .object({
+    orderId: z.string().uuid(),
+    items: z.array(RefundItemRequest).max(100),
+    faultType: z.enum([
+      "PLATFORM_FAULT",
+      "RESTAURANT_FAULT",
+      "RIDER_FAULT",
+      "CUSTOMER_FAULT",
+      "UNKNOWN",
+    ]),
+    reasonText: z.string().min(0).max(2000),
+  })
+  .passthrough();
 export const RefundView = z
   .object({
     id: z.string().uuid(),
@@ -260,6 +318,15 @@ export const RefundView = z
     expectedBy: z.string().datetime({ offset: true }),
   })
   .partial()
+  .passthrough();
+export const AdminManualCancellationRequest = z
+  .object({ reason: z.string().min(5).max(500) })
+  .passthrough();
+export const AdminManualAssignmentRequest = z
+  .object({
+    deliveryExecutiveId: z.string().uuid(),
+    reason: z.string().min(5).max(500),
+  })
   .passthrough();
 export const DeadLetterReplayRequest = z
   .object({
@@ -294,6 +361,7 @@ export const CustomerAddressDto = z
     addressLine1: z.string(),
     addressLine2: z.string().optional(),
     city: z.string(),
+    cityId: z.string(),
     state: z.string(),
     zipCode: z.string(),
     latitude: z.number(),
@@ -316,6 +384,12 @@ export const AddressRequest = z
     addressLine1: z.string(),
     addressLine2: z.string().optional(),
     city: z.string(),
+    cityId: z
+      .string()
+      .min(0)
+      .max(64)
+      .regex(/^[A-Z][A-Z0-9_-]{0,63}$/)
+      .optional(),
     state: z.string(),
     zipCode: z.string(),
     latitude: z.number(),
@@ -720,6 +794,13 @@ export const ApiResponseOrderReviewContextDto = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
+export const OrderChatParticipantDto = z
+  .object({
+    id: z.string().uuid(),
+    participantType: z.string(),
+    displayName: z.string(),
+  })
+  .passthrough();
 export const Order = z
   .object({
     id: z.string().uuid(),
@@ -801,6 +882,19 @@ export const Order = z
     estimatedPrepTimeMinutes: z.number().int().optional(),
     estimatedCompletionTime: z.number().int().optional(),
     cancellationReason: z.string().optional(),
+    manualInterventionOperationId: z.string().optional(),
+    manualInterventionRequestedDriverId: z.string().uuid().optional(),
+    manualInterventionRequestedBy: z.string().uuid().optional(),
+    manualInterventionReason: z.string().optional(),
+    manualInterventionRequestedAt: z
+      .string()
+      .datetime({ offset: true })
+      .optional(),
+    manualInterventionFailureCode: z.string().optional(),
+    manualInterventionFailedAt: z
+      .string()
+      .datetime({ offset: true })
+      .optional(),
     requestedDelayMinutes: z.number().int().optional(),
     delayReason: z.string().optional(),
     version: z.number().int().optional(),
@@ -825,26 +919,26 @@ export const pageable = z
   .passthrough();
 export const PageableObject = z
   .object({
-    offset: z.number().int(),
+    sort: SortObject.optional(),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
     unpaged: z.boolean(),
-    sort: SortObject.optional(),
+    offset: z.number().int(),
   })
   .passthrough();
 export const PageOrder = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    numberOfElements: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(Order),
-    pageable: PageableObject.optional(),
-    sort: SortObject.optional(),
+    first: z.boolean(),
+    last: z.boolean(),
+    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -860,14 +954,14 @@ export const PageSupportTicket = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    numberOfElements: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(SupportTicket),
-    pageable: PageableObject.optional(),
-    sort: SortObject.optional(),
+    first: z.boolean(),
+    last: z.boolean(),
+    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();

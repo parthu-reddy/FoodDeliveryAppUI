@@ -247,12 +247,6 @@ export default function AdminSupportTickets() {
                         key={String(selectedTicket.orderId)}
                         orderId={String(selectedTicket.orderId)}
                         order={{ id: String(selectedTicket.orderId) } as Order}
-                        currentUserType="ADMIN"
-                        otherParticipants={[{
-                          userId: String(selectedTicket.customerId),
-                          entityType: 'CUSTOMER',
-                          displayName: 'Customer',
-                        }]}
                         onClose={() => setShowChat(false)}
                         ref={chatWidgetRef}
                       />

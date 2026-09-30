@@ -5,11 +5,10 @@ on:
     # branches: [ "main" ]
   workflow_dispatch:
     inputs:
-      dev_login:
+      deploy_dev:
         description: >-
-          Dev login: show the test phone numbers on sign-in and autofill OTPs. Keep ON for dev
-          (the E2E suite depends on it). Turn OFF for a production image, which is pushed as
-          food-delivery-app-ui-prod and does not touch the dev deployment.
+          Build a development deployment image. E2E OTP access stays outside the browser and uses
+          the dedicated runner credential; turn this off to build the production image.
         type: boolean
         default: true
 
@@ -127,9 +126,6 @@ jobs:
           cache-dependency-path: package-lock.json
           
       - name: Build and Test Application
-        env:
-          # Unset, not 'false', for production: the app checks for the string 'true'.
-          VITE_ENABLE_DEV_OTP: ${{ inputs.dev_login && 'true' || '' }}
         run: |
           npm ci
           npm run typecheck
@@ -170,7 +166,7 @@ jobs:
       # Dev only. retention.py --delete-all removes every image of the service, and a
       # production image must survive the next dev build -- hence its separate repository.
       - name: Clean up old Docker images
-        if: ${{ inputs.dev_login }}
+        if: ${{ inputs.deploy_dev }}
         run: python3 deps/Deployment/retention.py --apply --delete-all --service food-delivery-app-ui
 
       - name: Build and push Docker image
@@ -179,11 +175,11 @@ jobs:
           context: .
           file: Dockerfile
           push: true
-          tags: hyd.ocir.io/axekmbadoczl/food-delivery/food-delivery-app-ui${{ !inputs.dev_login && '-prod' || '' }}:${{ github.sha }}
+          tags: hyd.ocir.io/axekmbadoczl/food-delivery/food-delivery-app-ui${{ !inputs.deploy_dev && '-prod' || '' }}:${{ github.sha }}
           platforms: linux/arm64
 
       - name: Update deployment environment file
-        if: ${{ inputs.dev_login }}
+        if: ${{ inputs.deploy_dev }}
         working-directory: deps/Deployment
         run: |
           git config user.name "github-actions[bot]"

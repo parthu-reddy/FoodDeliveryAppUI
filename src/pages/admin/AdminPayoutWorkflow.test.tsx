@@ -178,6 +178,62 @@ describe('Admin Payout Workflow', () => {
     expect(opts.headers['Idempotency-Key']).toBeTruthy();
   });
 
+  test('reuses the payout action key and refreshes details after an ambiguous payment failure', async () => {
+    payoutGet.mockResolvedValue(detail({ status: 'APPROVED' }));
+    payoutPost
+      .mockRejectedValueOnce(new Error('connection reset after request'))
+      .mockResolvedValueOnce(undefined);
+
+    wrap(<PayoutDetail payoutId={PAYOUT_ID} onBack={() => {}} />);
+
+    fireEvent.click(await screen.findByRole('button', { name: /Mark Paid/ }));
+    fireEvent.change(screen.getByPlaceholderText('e.g. UTR-123456789'), { target: { value: 'UTR-RETRY-99' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm Payment' }));
+
+    await waitFor(() => expect(payoutPost).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(payoutGet).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Confirm Payment' })).toBeEnabled());
+
+    const firstOptions = payoutPost.mock.calls[0][2] as { headers: Record<string, string> };
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm Payment' }));
+
+    await waitFor(() => expect(payoutPost).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(payoutGet).toHaveBeenCalledTimes(3));
+    const retryOptions = payoutPost.mock.calls[1][2] as { headers: Record<string, string> };
+    expect(retryOptions.headers['Idempotency-Key']).toBe(firstOptions.headers['Idempotency-Key']);
+  });
+
+  test('releases a payout action key after the server confirms the action', async () => {
+    payoutGet.mockResolvedValue(detail({ status: 'APPROVED' }));
+    const firstKey = '11111111-1111-1111-1111-111111111111';
+    const laterKey = '22222222-2222-2222-2222-222222222222';
+    const randomUuid = vi.spyOn(globalThis.crypto, 'randomUUID')
+      .mockReturnValueOnce(firstKey)
+      .mockReturnValueOnce(laterKey);
+
+    try {
+      wrap(<PayoutDetail payoutId={PAYOUT_ID} onBack={() => {}} />);
+
+      fireEvent.click(await screen.findByRole('button', { name: /Mark Paid/ }));
+      fireEvent.change(screen.getByPlaceholderText('e.g. UTR-123456789'), { target: { value: 'UTR-CLEAR-99' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Confirm Payment' }));
+
+      await waitFor(() => expect(payoutPost).toHaveBeenCalledTimes(1));
+      await waitFor(() => expect(payoutGet).toHaveBeenCalledTimes(2));
+      expect((payoutPost.mock.calls[0][2] as { headers: Record<string, string> }).headers['Idempotency-Key'])
+        .toBe(firstKey);
+
+      fireEvent.click(screen.getByRole('button', { name: /Mark Paid/ }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Confirm Payment' }));
+
+      await waitFor(() => expect(payoutPost).toHaveBeenCalledTimes(2));
+      expect((payoutPost.mock.calls[1][2] as { headers: Record<string, string> }).headers['Idempotency-Key'])
+        .toBe(laterKey);
+    } finally {
+      randomUuid.mockRestore();
+    }
+  });
+
   test('requires a meaningful failure reason and trims it before marking the payout failed', async () => {
     payoutGet.mockResolvedValue(detail({ status: 'APPROVED' }));
 
@@ -238,6 +294,36 @@ describe('Admin Payout Workflow', () => {
     const [path, body] = payoutPost.mock.calls[0] as [string, { force: boolean }];
     expect(path).toBe('/api/v1/internal/admin/payouts');
     expect(body.force).toBe(false);
+    expect(onSuccess).toHaveBeenCalledWith(PAYOUT_ID);
+  });
+
+  test('reuses the create idempotency key after an ambiguous payout creation failure', async () => {
+    const onSuccess = vi.fn();
+    payoutPost
+      .mockRejectedValueOnce(new Error('connection reset after payout creation'))
+      .mockResolvedValueOnce({ id: PAYOUT_ID, amount: 1200 });
+    const account = {
+      payeeType: 'RESTAURANT',
+      payeeId: '11111111-1111-1111-1111-111111111111',
+      displayName: 'Kanti Sweets (Kanti)',
+      nameResolved: true,
+      unsettledAmount: 1200,
+      lineCount: 2,
+      beneficiaryStatus: { verified: true },
+    };
+
+    wrap(<PayoutCreateDialog account={account} onClose={() => {}} onSuccess={onSuccess} />);
+    const create = await screen.findByRole('button', { name: 'Create Draft Payout' });
+    fireEvent.click(create);
+
+    await waitFor(() => expect(payoutPost).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(create).toBeEnabled());
+    const firstOptions = payoutPost.mock.calls[0][2] as { headers: Record<string, string> };
+
+    fireEvent.click(create);
+    await waitFor(() => expect(payoutPost).toHaveBeenCalledTimes(2));
+    const retryOptions = payoutPost.mock.calls[1][2] as { headers: Record<string, string> };
+    expect(retryOptions.headers['Idempotency-Key']).toBe(firstOptions.headers['Idempotency-Key']);
     expect(onSuccess).toHaveBeenCalledWith(PAYOUT_ID);
   });
 });

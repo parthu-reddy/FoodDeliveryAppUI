@@ -7,15 +7,6 @@ export function RiderJobChat({ job }: { job: Order }) {
     <ChatWidget
       orderId={job.id}
       order={job}
-      currentUserType="DELIVERY"
-      otherParticipants={[
-        ...(job.customerId
-          ? [{ userId: job.customerId, entityType: "CUSTOMER" as const, displayName: job.customerName || "Customer" }]
-          : []),
-        ...(job.restaurantId
-          ? [{ userId: job.restaurantId, entityType: "RESTAURANT" as const, displayName: job.restaurantName || "Restaurant" }]
-          : []),
-      ]}
     />
   );
 }

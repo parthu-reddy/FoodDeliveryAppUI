@@ -16,6 +16,12 @@ export const OutletOnboardRequest = z
     fssaiLicenseNumber: z.string(),
     lat: z.number(),
     lng: z.number(),
+    cityId: z
+      .string()
+      .min(0)
+      .max(64)
+      .regex(/^[A-Z][A-Z0-9_-]{0,63}$/)
+      .optional(),
     timings: z.array(TimingRequest),
     timeZone: z.string(),
     bannerUrl: z.string().optional(),
@@ -44,6 +50,7 @@ export const OutletDto = z
     fssaiLicenseNumber: z.string(),
     lat: z.number(),
     lng: z.number(),
+    cityId: z.string(),
     bannerUrl: z.string(),
     isActive: z.boolean(),
     defaultPrepTimeSeconds: z.number().int(),
@@ -76,6 +83,7 @@ export const NearbyRestaurantDTO = z
     isOpen: z.boolean(),
     lat: z.number(),
     lng: z.number(),
+    cityId: z.string(),
     distance: z.number(),
     image: z.string(),
     cuisine: z.string(),
@@ -330,14 +338,22 @@ export const endpoints = makeApi([
     requestFormat: "json",
     parameters: [
       {
+        name: "cityId",
+        type: "Query",
+        schema: z
+          .string()
+          .regex(/^[A-Z][A-Z0-9_-]{0,63}$/)
+          .optional(),
+      },
+      {
         name: "page",
         type: "Query",
-        schema: z.number().int().optional().default(0),
+        schema: z.number().int().gte(0).optional().default(0),
       },
       {
         name: "size",
         type: "Query",
-        schema: z.number().int().optional().default(100),
+        schema: z.number().int().gte(1).lte(100).optional().default(100),
       },
     ],
     response: ApiResponsePageResponseDtoNearbyRestaurantDTO,

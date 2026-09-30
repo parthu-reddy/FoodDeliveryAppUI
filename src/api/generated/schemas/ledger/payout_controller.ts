@@ -37,6 +37,7 @@ export const PayoutDetailResponse = z
 export const Payout = z
   .object({
     id: z.string().uuid(),
+    lockVersion: z.number().int(),
     payeeType: z.string(),
     payeeId: z.string().uuid(),
     payeeDisplayName: z.string(),
@@ -142,6 +143,11 @@ export const endpoints = makeApi([
         type: "Query",
         schema: z.string(),
       },
+      {
+        name: "Idempotency-Key",
+        type: "Header",
+        schema: z.string(),
+      },
     ],
     response: z.void(),
   },
@@ -161,6 +167,11 @@ export const endpoints = makeApi([
         type: "Query",
         schema: z.string(),
       },
+      {
+        name: "Idempotency-Key",
+        type: "Header",
+        schema: z.string(),
+      },
     ],
     response: z.void(),
   },
@@ -175,6 +186,11 @@ export const endpoints = makeApi([
         type: "Path",
         schema: z.string().uuid(),
       },
+      {
+        name: "Idempotency-Key",
+        type: "Header",
+        schema: z.string(),
+      },
     ],
     response: z.void(),
   },
@@ -188,6 +204,11 @@ export const endpoints = makeApi([
         name: "payoutId",
         type: "Path",
         schema: z.string().uuid(),
+      },
+      {
+        name: "Idempotency-Key",
+        type: "Header",
+        schema: z.string(),
       },
     ],
     response: z.void(),

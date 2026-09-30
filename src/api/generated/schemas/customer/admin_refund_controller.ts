@@ -2,21 +2,21 @@ import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
 import { SupportTicket } from "./common";
-import { PageableObject } from "./common";
 import { SortObject } from "./common";
+import { PageableObject } from "./common";
 
 export const PageSupportTicket = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    numberOfElements: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(SupportTicket),
-    pageable: PageableObject.optional(),
-    sort: SortObject.optional(),
+    first: z.boolean(),
+    last: z.boolean(),
+    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -68,11 +68,6 @@ export const endpoints = makeApi([
       {
         name: "ticketId",
         type: "Path",
-        schema: z.string().uuid(),
-      },
-      {
-        name: "X-User-Id",
-        type: "Header",
         schema: z.string().uuid(),
       },
     ],

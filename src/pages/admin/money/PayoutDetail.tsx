@@ -16,12 +16,17 @@ import { ConfirmMoneyAction } from "@/shared/money/components/ConfirmMoneyAction
 import { formatDateTime } from '@/shared/time';
 
 type PayoutDetail = z.infer<typeof schemas.PayoutDetailResponse>;
+type PayoutAction = 'approve' | 'mark-paid' | 'fail' | 'cancel';
 
 export default function PayoutDetail({ payoutId, onBack }: { payoutId: string; onBack: () => void }) {
   const [payout, setPayout] = useState<PayoutDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const actionInFlightRef = useRef(false);
+  // ConfirmMoneyAction deliberately generates a new UUID for each form submit. Keep the first
+  // key for this payout/action until the server confirms the transition, so a timeout can safely
+  // be retried against LedgerService's durable operation record.
+  const retryKeysRef = useRef<Record<string, string>>({});
   const { showError, showSuccess } = useToast();
 
   const [bankRef, setBankRef] = useState("");
@@ -30,7 +35,7 @@ export default function PayoutDetail({ payoutId, onBack }: { payoutId: string; o
   const [showMarkPaidDialog, setShowMarkPaidDialog] = useState(false);
   const [showFailDialog, setShowFailDialog] = useState(false);
 
-  const fetchPayout = async () => {
+  const fetchPayout = async (reportFailure = true): Promise<PayoutDetail | null> => {
     setLoading(true);
     try {
       // The payout's own lines: the order entries this payout settles. Fetching the statement for
@@ -38,9 +43,13 @@ export default function PayoutDetail({ payoutId, onBack }: { payoutId: string; o
       // "see the related transactions while clearing a payout" means.
       const res = await ledgerApi.payout.get('/api/v1/internal/admin/payouts/:payoutId', { params: { payoutId } });
       setPayout(res);
+      return res;
     } catch (e: unknown) {
       console.error(e);
-      showError(parseApiError(e, 'Failed to fetch payout details').message);
+      if (reportFailure) {
+        showError(parseApiError(e, 'Failed to fetch payout details').message);
+      }
+      return null;
     } finally {
       setLoading(false);
     }
@@ -54,7 +63,7 @@ export default function PayoutDetail({ payoutId, onBack }: { payoutId: string; o
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [payoutId]);
 
-  const handleAction = async (action: 'approve' | 'mark-paid' | 'fail' | 'cancel', idempotencyKey: string) => {
+  const handleAction = async (action: PayoutAction, proposedIdempotencyKey: string) => {
     if (actionInFlightRef.current) return;
 
     const bankReference = bankRef.trim();
@@ -68,6 +77,9 @@ export default function PayoutDetail({ payoutId, onBack }: { payoutId: string; o
       return;
     }
 
+    const retryKey = `${payoutId}:${action}`;
+    const idempotencyKey = retryKeysRef.current[retryKey] ?? proposedIdempotencyKey;
+    retryKeysRef.current[retryKey] = idempotencyKey;
     actionInFlightRef.current = true;
     setActionLoading(action);
     try {
@@ -86,9 +98,14 @@ export default function PayoutDetail({ payoutId, onBack }: { payoutId: string; o
         await ledgerApi.payout.post('/api/v1/internal/admin/payouts/:payoutId/cancel', undefined, { params: { payoutId }, headers: { "Idempotency-Key": idempotencyKey } });
         showSuccess('Payout cancelled');
       }
-      fetchPayout();
+      delete retryKeysRef.current[retryKey];
+      await fetchPayout();
     } catch (e: unknown) {
       console.error(e);
+      // Do not discard retryKeysRef here. The action may have committed after the connection
+      // failed, and a later submit must use the same key so the server can return its durable
+      // replay result instead of treating it as a conflicting new transition.
+      await fetchPayout(false);
       showError(parseApiError(e, `Failed to ${action} payout`).message);
     } finally {
       actionInFlightRef.current = false;

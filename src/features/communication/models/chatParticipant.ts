@@ -17,5 +17,6 @@ export const SENDER_LABEL: Record<ChatSenderType, string> = {
   CUSTOMER: 'Customer',
   RESTAURANT: 'Restaurant',
   DELIVERY: 'Rider',
+  SUPPORT_MODERATOR: 'Support',
   SYSTEM: 'System',
 };

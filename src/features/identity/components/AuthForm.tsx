@@ -18,6 +18,8 @@ interface AuthFormProps {
   onSendOtp: (e: React.FormEvent) => void;
   onVerifyOtp: (e: React.FormEvent) => void;
   onResendOtp: () => void;
+  canAutofillOtp: boolean;
+  devOtpLookupError: string;
   onAutofillOtp: () => void;
 }
 
@@ -33,6 +35,8 @@ export function AuthForm({
   onSendOtp,
   onVerifyOtp,
   onResendOtp,
+  canAutofillOtp,
+  devOtpLookupError,
   onAutofillOtp
 }: AuthFormProps) {
   const { theme } = useTheme();
@@ -156,18 +160,28 @@ export function AuthForm({
               <button
                 type="button"
                 onClick={onResendOtp}
+                disabled={loading}
                 className="text-xs text-rose-400 font-bold hover:underline cursor-pointer bg-transparent border-0"
               >
                 Resend SMS Code
               </button>
-              <button
-                type="button"
-                onClick={onAutofillOtp}
-                className={`text-xs font-medium cursor-pointer bg-transparent border-0 ${theme === 'dark' ? 'text-slate-300 hover:text-white' : 'text-slate-500 dark:text-slate-300 hover:text-slate-800'}`}
-              >
-                Autofill Code
-              </button>
+              {canAutofillOtp && (
+                <button
+                  type="button"
+                  onClick={onAutofillOtp}
+                  disabled={loading}
+                  data-testid="dev-otp-autofill"
+                  className={`text-xs font-medium cursor-pointer bg-transparent border-0 ${theme === 'dark' ? 'text-slate-300 hover:text-white' : 'text-slate-500 dark:text-slate-300 hover:text-slate-800'}`}
+                >
+                  Autofill Code
+                </button>
+              )}
             </div>
+            {devOtpLookupError && (
+              <p role="status" className={`text-xs ${theme === 'dark' ? 'text-amber-300' : 'text-amber-700'}`}>
+                {devOtpLookupError}
+              </p>
+            )}
 
             <Button
               type="submit"

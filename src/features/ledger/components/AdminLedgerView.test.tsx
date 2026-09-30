@@ -25,7 +25,7 @@ import { ChargeCategory, LedgerAccountType } from '@/types/backend-enums';
 describe('AdminLedgerView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    adminLedgerGet.mockResolvedValue({ content: [], totalPages: 1 });
+    adminLedgerGet.mockResolvedValue({ data: { content: [], totalPages: 1 } });
   });
 
   it('reads transactions from the gateway-routed admin path', async () => {
@@ -44,6 +44,32 @@ describe('AdminLedgerView', () => {
 
     const queries = adminLedgerGet.mock.calls[0][1]?.queries as Record<string, unknown>;
     expect(queries).toMatchObject({ page: 0, size: 20 });
+  });
+
+  it('shows the backend direction and account for every displayed ledger entry', async () => {
+    adminLedgerGet.mockResolvedValue({
+      data: {
+        content: [{
+          entryId: '11111111-1111-4111-8111-111111111111',
+          transactionId: '22222222-2222-4222-8222-222222222222',
+          category: 'FOOD_COST',
+          accountId: '33333333-3333-4333-8333-333333333333',
+          direction: 'CREDIT',
+          amount: 120.5,
+          date: '2026-09-29T00:00:00Z',
+        }],
+        totalPages: 1,
+      },
+    });
+
+    render(<AdminLedgerView />);
+
+    await waitFor(() => expect(adminLedgerGet).toHaveBeenCalledTimes(1));
+    expect(await adminLedgerGet.mock.results[0]?.value).toMatchObject({
+      data: { content: [expect.objectContaining({ direction: 'CREDIT' })] },
+    });
+    expect(await screen.findByText('CREDIT')).toBeVisible();
+    expect(screen.getByText('33333333-3333-4333-8333-333333333333')).toBeVisible();
   });
 
   it('offers only the categories the backend enum defines', async () => {

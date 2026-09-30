@@ -13,18 +13,22 @@ import { useChatWebSocket } from '@features/communication/models/useChatWebSocke
  * opens — and it belongs beside the socket that feeds it rather than beside the markup.
  */
 
+export interface CanonicalChatParticipant {
+  userId: string;
+  entityType: string;
+  displayName?: string;
+}
+
 interface UseChatSessionOptions {
   orderId: string;
   isOpen: boolean;
-  currentUserType: string;
-  otherParticipants?: { userId: string; entityType: string; displayName: string }[];
   showError: (message: string) => void;
 }
 
 export const MAX_CHAT_MESSAGE_LENGTH = 10_000;
 
 export function useChatSession({
-  orderId, isOpen, currentUserType, otherParticipants, showError,
+  orderId, isOpen, showError,
 }: UseChatSessionOptions) {
   const token = getToken();
   const user = getUserProfile();
@@ -37,6 +41,7 @@ export function useChatSession({
   const [sessionRetryAttempt, setSessionRetryAttempt] = useState(0);
   const [isTyping, setIsTyping] = useState<Record<string, boolean>>({});
   const [targetUserId, setTargetUserId] = useState<string | null>(null);
+  const [participants, setParticipants] = useState<CanonicalChatParticipant[]>([]);
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
 
   // The refs the session owns: where to scroll, the per-user typing timers, and the two
@@ -45,6 +50,27 @@ export function useChatSession({
   const typingTimeoutRef = useRef<Record<string, NodeJS.Timeout>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const previousOrderIdRef = useRef(orderId);
+
+  // A widget can stay mounted while its parent selects another order. Clear every order-scoped
+  // value before initializing the new chat so a prior order's session or messages cannot remain
+  // visible or be used for a new order.
+  useEffect(() => {
+    if (previousOrderIdRef.current === orderId) return;
+    previousOrderIdRef.current = orderId;
+    Object.values(typingTimeoutRef.current).forEach(clearTimeout);
+    typingTimeoutRef.current = {};
+    setSessionId(null);
+    setMessages([]);
+    setParticipants([]);
+    setTargetUserId(null);
+    setInputText('');
+    setUnreadCount(0);
+    setIsTyping({});
+    setSessionInitError(false);
+    setSessionRetryAttempt(0);
+    setIsRefundModalOpen(false);
+  }, [orderId]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -110,6 +136,10 @@ const { isConnected, sendMessage, sendImage, sendTypingIndicator } = useChatWebS
 });
 
 const handleRefundSubmit = (items: { itemId: string; quantity: number }[], reason: string): boolean => {
+  if (user?.role !== 'CUSTOMER') {
+    showError('Only the customer who placed this order can request a refund.');
+    return false;
+  }
   if (!isConnected || !orderId) {
     showError('Chat is reconnecting. Your refund quote was not sent. Please try again when connected.');
     return false;
@@ -140,59 +170,54 @@ const retrySession = useCallback(() => {
 // Initialize session when chat is opened for the first time
 useEffect(() => {
   if (isOpen && !sessionId && orderId && token && user) {
+    let cancelled = false;
     const initChat = async () => {
       setIsLoading(true);
       setSessionInitError(false);
       try {
-        // 1. Create or get session
-          const data = await chatApi.chatSession.post(`/api/v1/chat/sessions`, {
-            id: "",
-            orderId,
-          participants: [
-            {
-              userId: user.id,
-              entityType: currentUserType,
-              displayName: (user.name || user.email || user.id) as string
-            },
-            ...(otherParticipants || [])
-          ]
-        });
+        // The order owns chat membership. The browser only requests the order's session.
+        const data = await chatApi.chatSession.post(`/api/v1/chat/sessions`, { orderId });
 
+        if (cancelled) return;
         if (!data || !data.success || !data.data) throw new Error('Failed to init chat session');
         const session = data.data;
         const sid = session.sessionId as string;
         setSessionId(sid);
 
-        if ((session).participants) {
-          const otherParticipant = (session).participants.find((p: { userId: string }) => p.userId !== user.id);
-          if (otherParticipant) {
-            setTargetUserId(otherParticipant.userId);
-          }
-        }
+        const canonicalParticipants = (session.participants ?? []) as CanonicalChatParticipant[];
+        setParticipants(canonicalParticipants);
+        const otherParticipant = canonicalParticipants.find((p) => p.userId !== user.id);
+        setTargetUserId(otherParticipant?.userId ?? null);
 
         // A history failure should not discard a valid session or block sending messages.
         try {
           const histData = await chatApi.chatSession.get('/api/v1/chat/sessions/:sessionId/messages', { params: { sessionId: sid } });
-          if (histData && histData.success) {
+          if (!cancelled && histData && histData.success) {
             setMessages((histData.data?.content as ChatMessage[]) ?? []);
           }
         } catch {
+          if (cancelled) return;
           console.error("Error loading chat history.");
           showError("Chat connected, but previous messages could not be loaded.");
         }
       } catch {
+        if (cancelled) return;
         console.error("Error initializing chat session.");
         setSessionInitError(true);
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
 
     initChat();
+    return () => {
+      cancelled = true;
+    };
   }
+  return undefined;
  
 // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [isOpen, sessionId, orderId, token, user, currentUserType, sessionRetryAttempt]);
+}, [isOpen, sessionId, orderId, token, user, sessionRetryAttempt]);
 
 const handleSend = (e?: React.FormEvent) => {
   e?.preventDefault();
@@ -239,6 +264,7 @@ const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     sessionId, messages, setMessages,
     inputText, setInputText,
     isLoading, isTyping, targetUserId, isMessageTooLong,
+    participants,
     sessionInitError, retrySession,
     isRefundModalOpen, setIsRefundModalOpen,
     handleSend, handleImageUpload, handleRefundSubmit,

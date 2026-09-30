@@ -63,7 +63,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Add a participant to an existing session */
+        /** Synchronize an existing order session with its authoritative roster */
         post: operations["addParticipant"];
         delete?: never;
         options?: never;
@@ -110,12 +110,6 @@ export interface components {
     schemas: {
         CreateSessionRequest: {
             orderId: string;
-            participants: components["schemas"]["ParticipantDto"][];
-        };
-        ParticipantDto: {
-            userId: string;
-            entityType: string;
-            displayName?: string;
         };
         ApiResponseChatSessionResponse: {
             success: boolean;
@@ -134,6 +128,11 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
             participants?: components["schemas"]["ParticipantDto"][];
+        };
+        ParticipantDto: {
+            userId: string;
+            entityType: string;
+            displayName?: string;
         };
         ApiResponseUploadResponseDto: {
             success: boolean;
@@ -315,11 +314,7 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ParticipantDto"];
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description OK */
             200: {

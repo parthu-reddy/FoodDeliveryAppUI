@@ -16,12 +16,13 @@ import { Spinner } from '@shared/ui';
 interface ChatMessageListProps {
   messages: ChatMessage[];
   userId?: string;
+  canRequestRefund: boolean;
   orderId: string;
   /** Sends a structured reply — a refund quote is answered from inside the thread. */
   sendMessage: (content: string, type: string) => void;
 }
 
-export function ChatMessageList({ messages, userId, orderId, sendMessage }: ChatMessageListProps) {
+export function ChatMessageList({ messages, userId, canRequestRefund, orderId, sendMessage }: ChatMessageListProps) {
   const user = { id: userId };
   return (
     <>
@@ -82,18 +83,20 @@ export function ChatMessageList({ messages, userId, orderId, sendMessage }: Chat
                   <div className="font-bold text-2xl">{formatINR(payload.quoteAmount)}</div>
                 </div>
                 <div className="text-xs opacity-75">Type: {payload.refundType}</div>
-                <button 
-                  onClick={() => {
-                    sendMessage(JSON.stringify({ orderId, reason: "Customer requested", refundType: payload.refundType, customerId: user?.id }), 'REFUND_REQUEST');
-                  }}
-                  className={`w-full font-semibold py-2 rounded-xl transition ${
- isMe 
- ? 'bg-white text-amber-600 hover:bg-amber-50' 
- : 'bg-amber-600 text-white hover:bg-amber-700 '
- }`}
-                >
-                  Accept & Process Refund
-                </button>
+                {canRequestRefund && (
+                  <button
+                    onClick={() => {
+                      sendMessage(JSON.stringify({ orderId, reason: "Customer requested", refundType: payload.refundType }), 'REFUND_REQUEST');
+                    }}
+                    className={`w-full font-semibold py-2 rounded-xl transition ${
+   isMe
+   ? 'bg-white text-amber-600 hover:bg-amber-50'
+   : 'bg-amber-600 text-white hover:bg-amber-700 '
+   }`}
+                  >
+                    Accept & Process Refund
+                  </button>
+                )}
               </div>
             );
           } catch {

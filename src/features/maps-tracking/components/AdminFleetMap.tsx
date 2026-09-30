@@ -19,6 +19,20 @@ type CustomerAddress = z.infer<typeof CustomerAddressDto>;
 
 const FLEET_REFRESH_INTERVAL_MS = 30_000;
 
+type CoordinateCarrier = {
+  lat?: number | null;
+  lng?: number | null;
+};
+
+function hasUsableCoordinates<T extends CoordinateCarrier>(location: T): location is T & { lat: number; lng: number } {
+  return typeof location.lat === 'number'
+    && typeof location.lng === 'number'
+    && Number.isFinite(location.lat)
+    && Number.isFinite(location.lng)
+    && location.lat !== 0
+    && location.lng !== 0;
+}
+
 export default function AdminFleetMap() {
  return (
  <ErrorBoundary>
@@ -38,11 +52,63 @@ function AdminFleetMapInner() {
  const [refreshError, setRefreshError] = useState<string | null>(null);
  const [lastUpdated, setLastUpdated] = useState<number | null>(null);
  const [refreshVersion, setRefreshVersion] = useState(0);
+ const [cityScopeVersion, setCityScopeVersion] = useState(0);
+ const [fleetCities, setFleetCities] = useState<string[]>([]);
+ const [selectedCityId, setSelectedCityId] = useState<string | null>(null);
  const markersRef = useRef<Array<{ remove: () => void }>>([]);
  const fittedMapRef = useRef<MapInstance | null>(null);
  const hasFittedBoundsRef = useRef(false);
+ const locatedRiderCount = riders.filter(hasUsableCoordinates).length;
 
  useEffect(() => {
+ let active = true;
+
+ const loadFleetCities = async () => {
+ setIsRefreshing(true);
+ try {
+ const cities = await deliveryApi.adminDelivery.get(
+ '/api/v1/internal/admin/delivery/fleet-cities',
+ {},
+ );
+ if (!active) return;
+ const canonicalCities = Array.isArray(cities)
+ ? cities.filter((city): city is string => typeof city === 'string' && city.trim().length > 0)
+ : [];
+ if (canonicalCities.length === 0) {
+ throw new Error('No fleet cities are configured');
+ }
+ setFleetCities(canonicalCities);
+ setSelectedCityId(current => current && canonicalCities.includes(current)
+ ? current
+ : canonicalCities[0]);
+ setRefreshError(null);
+ setRefreshVersion(version => version + 1);
+ } catch (err: unknown) {
+ if (active) {
+ console.error('Failed to load fleet city scope', err);
+ setFleetCities([]);
+ setSelectedCityId(null);
+ setRefreshError('Could not load fleet city scope. Try again.');
+ setIsRefreshing(false);
+ }
+ }
+ };
+
+ void loadFleetCities();
+ return () => { active = false; };
+ }, [cityScopeVersion]);
+
+ useEffect(() => {
+ if (selectedCityId) {
+ setRestaurants([]);
+ setRiders([]);
+ setCustomers([]);
+ hasFittedBoundsRef.current = false;
+ }
+ }, [selectedCityId]);
+
+ useEffect(() => {
+ if (!selectedCityId) return;
  let active = true;
  let inFlight = false;
 
@@ -52,9 +118,9 @@ function AdminFleetMapInner() {
  setIsRefreshing(true);
  try {
  const [resOutlets, resDrivers, resCustomers] = await Promise.allSettled([
- (restaurantApi.restaurantOutlet.get('/api/v1/internal/admin/restaurants/all-with-location', {})),
- (deliveryApi.adminDelivery.get('/api/v1/internal/admin/delivery/drivers/all-with-location', { queries: { pageable: {}, cityId: 'BLR' } })),
- (customerApi.adminCustomer.get('/api/v1/internal/admin/customers/addresses', { queries: { pageable: {} } }))
+ (restaurantApi.restaurantOutlet.get('/api/v1/internal/admin/restaurants/all-with-location', { queries: { cityId: selectedCityId } })),
+ (deliveryApi.adminDelivery.get('/api/v1/internal/admin/delivery/drivers/all-with-location', { queries: { cityId: selectedCityId } })),
+ (customerApi.adminCustomer.get('/api/v1/internal/admin/customers/addresses', { queries: { cityId: selectedCityId } }))
  ]);
 
  if (!active) return;
@@ -102,7 +168,7 @@ function AdminFleetMapInner() {
  active = false;
  window.clearInterval(refreshTimer);
  };
- }, [refreshVersion]);
+ }, [refreshVersion, selectedCityId]);
 
  // The markers are re-placed whenever the fleet data changes; the map itself is built once,
  // by MapPanel, and handed over through onReady.
@@ -130,7 +196,7 @@ function AdminFleetMapInner() {
 
  // Add Restaurants (Rose)
  restaurants.forEach(r => {
- if (r.lat && r.lng && r.lat !== 0 && r.lng !== 0) {
+ if (hasUsableCoordinates(r)) {
  hasPoints = true;
  bounds.extend([r.lng, r.lat]);
 
@@ -162,7 +228,7 @@ function AdminFleetMapInner() {
 
  // Add Riders (Indigo)
  riders.forEach(r => {
- if (r.lat && r.lng && r.lat !== 0 && r.lng !== 0) {
+ if (hasUsableCoordinates(r)) {
  hasPoints = true;
  bounds.extend([r.lng, r.lat]);
 
@@ -259,11 +325,23 @@ function AdminFleetMapInner() {
  loading={isRefreshing}
  aria-label="Refresh fleet map"
  icon={<RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />}
- onClick={() => setRefreshVersion(version => version + 1)}
+ onClick={() => setCityScopeVersion(version => version + 1)}
  >
  Refresh
  </Button>
  </div>
+ <label className="mb-2 flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+ Fleet city
+ <select
+ aria-label="Fleet city"
+ value={selectedCityId ?? ''}
+ disabled={fleetCities.length === 0}
+ onChange={event => setSelectedCityId(event.target.value)}
+ className="rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+ >
+ {fleetCities.map(cityId => <option key={cityId} value={cityId}>{cityId}</option>)}
+ </select>
+ </label>
  <div className="flex flex-col gap-2 text-xs">
  <div className="flex items-center gap-2">
  <div className="w-3 h-3 rounded-full bg-rose-600"></div>
@@ -273,6 +351,11 @@ function AdminFleetMapInner() {
  <div className="w-3 h-3 rounded-full bg-blue-600"></div>
  <span className="text-slate-600 dark:text-slate-300">Riders ({riders.length})</span>
  </div>
+ {locatedRiderCount === 0 && (
+ <p data-testid="fleet-riders-empty" className="text-slate-500 dark:text-slate-400">
+ No riders are currently sharing a usable location.
+ </p>
+ )}
  <div className="flex items-center gap-2">
  <div className="w-3 h-3 rounded-full bg-amber-500"></div>
  <span className="text-slate-600 dark:text-slate-300">Customers ({customers.length})</span>

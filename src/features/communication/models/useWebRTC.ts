@@ -418,6 +418,11 @@ export const useWebRTC = () => {
 
   const initializePeerConnection = async (targetUserId: string, sessionId?: string) => {
     const pc = new RTCPeerConnection(iceServersRef.current);
+
+    // Make this connection current before requesting microphone permission. Permission prompts are
+    // asynchronous; cleanup can clear the ref while they are open. The post-prompt identity check
+    // below then distinguishes a real cleanup from a newly created call.
+    peerConnectionRef.current = pc;
     
     pc.onicecandidate = (event) => {
       if (event.candidate) {
@@ -475,11 +480,13 @@ export const useWebRTC = () => {
       if (err instanceof Error && err.name !== 'Error') {
          showError(`Could not access the microphone: ${err.message}`);
       }
+      if (peerConnectionRef.current === pc) {
+        peerConnectionRef.current = null;
+      }
       pc.close();
       return null;
     }
 
-    peerConnectionRef.current = pc;
     pendingCandidatesRef.current = [];
     return pc;
   };

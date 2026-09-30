@@ -2,24 +2,15 @@ import { Surface } from '@shared/ui';
 import { useCallContext } from "@/contexts/CallContext";
 import { useToast } from "@/contexts/ToastContext";
 import { getUserProfile } from "@/lib/tokenStore";
-import { useChatSession } from "@features/communication/models/useChatSession";
+import { type CanonicalChatParticipant, useChatSession } from "@features/communication/models/useChatSession";
 import { ChatMessageList } from "./ChatMessageList";
 import { Camera, ImagePlus, MessageSquare, PhoneCall, Send, X } from 'lucide-react';
 import React, { useState, useImperativeHandle, useRef } from 'react';
 import { RefundRequestModal } from './RefundRequestModal';
 import { Spinner } from '@shared/ui';
 
-export interface ChatParticipant {
-  userId: string;
-  entityType: 'CUSTOMER' | 'RESTAURANT' | 'DELIVERY';
-  displayName: string;
-  [key: string]: unknown;
-}
-
 interface ChatWidgetProps {
   orderId: string;
-  currentUserType: 'CUSTOMER' | 'RESTAURANT' | 'DELIVERY' | 'ADMIN';
-  otherParticipants?: ChatParticipant[];
   order?: import('@/types').Order; // To pass order details
   onClose?: () => void;
   onBack?: () => void;
@@ -30,14 +21,15 @@ export interface ChatWidgetHandle {
   openChatOnly: () => void;
 }
 
-export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({ orderId, order, currentUserType, otherParticipants, onClose, onBack }, ref) => {
+export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({ orderId, order, onClose, onBack }, ref) => {
   const { showError } = useToast();
   const user = getUserProfile();
+  const canRequestRefund = user?.role === 'CUSTOMER';
   const [isOpen, setIsOpen] = useState(false);
   const lastTypingIndicatorAt = useRef(0);
 
   const {
-    unreadCount, setUnreadCount, sessionId, messages,
+    unreadCount, setUnreadCount, sessionId, messages, participants,
     inputText, setInputText, isLoading, isTyping, targetUserId,
     isMessageTooLong,
     sessionInitError, retrySession,
@@ -45,10 +37,13 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
     handleSend, handleImageUpload, handleRefundSubmit,
     messagesEndRef, fileInputRef, cameraInputRef,
     isConnected, sendMessage, sendTypingIndicator, uploadedImageCount, isImageUploadDisabled,
-  } = useChatSession({ orderId, isOpen, currentUserType, otherParticipants, showError });
+  } = useChatSession({ orderId, isOpen, showError });
+
+  const otherParticipants = participants.filter((participant) => participant.userId !== user?.id);
 
   useImperativeHandle(ref, () => ({
     openAndRequestRefundQuote: () => {
+      if (!canRequestRefund) return;
       setIsOpen(true);
       setUnreadCount(0);
       setIsRefundModalOpen(true);
@@ -118,7 +113,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
           )}
           <div>
             <h3 className="font-semibold text-lg truncate max-w-[160px] sm:max-w-[200px]">
-              {otherParticipants?.length ? otherParticipants.map(p => p.displayName).join(', ') : 'Order Chat'}
+              {otherParticipants.length ? otherParticipants.map(p => p.displayName || p.entityType).join(', ') : 'Order Chat'}
             </h3>
             <div className="flex flex-col text-amber-100 text-sm">
               <span>Order #{orderId.substring(0, 8)}</span>
@@ -131,7 +126,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
           </div>
         </div>
         <div className="flex items-center gap-1">
-          {sessionId && otherParticipants?.length ? otherParticipants.map(p => (
+          {sessionId && otherParticipants.length ? otherParticipants.map((p: CanonicalChatParticipant) => (
             <button
               key={p.userId}
               onClick={() => startCall(p.userId, sessionId)}
@@ -204,7 +199,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
             <p>Send a message to start the conversation.</p>
           </div>
         ) : (
-            <ChatMessageList messages={messages} userId={user?.id} orderId={orderId} sendMessage={sendMessage} />
+            <ChatMessageList messages={messages} userId={user?.id} canRequestRefund={canRequestRefund} orderId={orderId} sendMessage={sendMessage} />
         )}
 
         {/* Typing indicators */}
@@ -312,7 +307,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
       </form>
       
       {/* Refund Request Modal */}
-      {orderId && (
+      {orderId && canRequestRefund && (
         <RefundRequestModal
           isOpen={isRefundModalOpen}
           onClose={() => setIsRefundModalOpen(false)}

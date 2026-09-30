@@ -1,8 +1,8 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-import { SortObject } from "./common";
 import { PageableObject } from "./common";
+import { SortObject } from "./common";
 
 export const ReconciliationRun = z
   .object({
@@ -18,11 +18,11 @@ export const PageReconciliationRun = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    sort: SortObject.optional(),
     pageable: PageableObject.optional(),
-    number: z.number().int(),
+    sort: SortObject.optional(),
     size: z.number().int(),
     content: z.array(ReconciliationRun),
+    number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
     numberOfElements: z.number().int(),
@@ -56,11 +56,11 @@ export const PageReconciliationBreak = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    sort: SortObject.optional(),
     pageable: PageableObject.optional(),
-    number: z.number().int(),
+    sort: SortObject.optional(),
     size: z.number().int(),
     content: z.array(ReconciliationBreak),
+    number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
     numberOfElements: z.number().int(),

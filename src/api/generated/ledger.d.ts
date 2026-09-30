@@ -451,6 +451,8 @@ export interface components {
         Payout: {
             /** Format: uuid */
             id?: string;
+            /** Format: int32 */
+            lockVersion?: number;
             payeeType?: string;
             /** Format: uuid */
             payeeId?: string;
@@ -549,13 +551,13 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
-            sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
-            /** Format: int32 */
-            number: number;
+            sort?: components["schemas"]["SortObject"];
             /** Format: int32 */
             size: number;
             content: components["schemas"]["LedgerStatementLineDto"][];
+            /** Format: int32 */
+            number: number;
             first: boolean;
             last: boolean;
             /** Format: int32 */
@@ -563,11 +565,11 @@ export interface components {
             empty: boolean;
         };
         PageableObject: {
-            sort?: components["schemas"]["SortObject"];
             paged: boolean;
             /** Format: int32 */
             pageNumber: number;
             unpaged: boolean;
+            sort?: components["schemas"]["SortObject"];
             /** Format: int32 */
             pageSize: number;
             /** Format: int64 */
@@ -746,13 +748,25 @@ export interface components {
         };
         LedgerTransactionDto: {
             /** Format: uuid */
+            entryId: string;
+            /** Format: uuid */
             transactionId: string;
             /** @enum {string} */
             category: "DELIVERY_FEE" | "PLATFORM_FIXED_FEE" | "PLATFORM_BONUS" | "FOOD_COST" | "SGST" | "CGST" | "REFUND" | "ORDER_TOTAL" | "AD_IMPRESSION" | "AD_CLICK" | "AD_CONVERSION" | "AD_WALLET_TOPUP" | "CLAWBACK" | "PAYOUT_TRANSFER" | "STORE_CREDIT";
             /** Format: uuid */
-            fromAccountId: string;
-            /** Format: uuid */
-            toAccountId: string;
+            accountId: string;
+            /** @enum {string} */
+            direction: "CREDIT" | "DEBIT";
+            /**
+             * Format: uuid
+             * @deprecated
+             */
+            fromAccountId?: string;
+            /**
+             * Format: uuid
+             * @deprecated
+             */
+            toAccountId?: string;
             amount: number;
             /** Format: date-time */
             date: string;
@@ -801,13 +815,13 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
-            sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
-            /** Format: int32 */
-            number: number;
+            sort?: components["schemas"]["SortObject"];
             /** Format: int32 */
             size: number;
             content: components["schemas"]["ReconciliationRun"][];
+            /** Format: int32 */
+            number: number;
             first: boolean;
             last: boolean;
             /** Format: int32 */
@@ -819,13 +833,13 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
-            sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
-            /** Format: int32 */
-            number: number;
+            sort?: components["schemas"]["SortObject"];
             /** Format: int32 */
             size: number;
             content: components["schemas"]["ReconciliationBreak"][];
+            /** Format: int32 */
+            number: number;
             first: boolean;
             last: boolean;
             /** Format: int32 */
@@ -960,7 +974,9 @@ export interface operations {
             query: {
                 bankReference: string;
             };
-            header?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
             path: {
                 payoutId: string;
             };
@@ -982,7 +998,9 @@ export interface operations {
             query: {
                 reason: string;
             };
-            header?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
             path: {
                 payoutId: string;
             };
@@ -1002,7 +1020,9 @@ export interface operations {
     cancelPayout: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
             path: {
                 payoutId: string;
             };
@@ -1022,7 +1042,9 @@ export interface operations {
     approvePayout: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
             path: {
                 payoutId: string;
             };

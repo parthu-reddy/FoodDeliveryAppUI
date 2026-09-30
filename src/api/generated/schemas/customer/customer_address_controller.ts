@@ -28,6 +28,12 @@ export const AddressRequest = z
     addressLine1: z.string(),
     addressLine2: z.string().optional(),
     city: z.string(),
+    cityId: z
+      .string()
+      .min(0)
+      .max(64)
+      .regex(/^[A-Z][A-Z0-9_-]{0,63}$/)
+      .optional(),
     state: z.string(),
     zipCode: z.string(),
     latitude: z.number(),

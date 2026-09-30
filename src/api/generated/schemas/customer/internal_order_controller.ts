@@ -1,9 +1,9 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
-import { pageable } from "./common";
-import { PageableObject } from "./common";
 import { SortObject } from "./common";
+import { PageableObject } from "./common";
+import { OrderChatParticipantDto } from "./common";
 
 export const OrderReviewItemDto = z
   .object({ menuItemId: z.string().uuid(), name: z.string() })
@@ -123,6 +123,19 @@ export const Order = z
     estimatedPrepTimeMinutes: z.number().int().optional(),
     estimatedCompletionTime: z.number().int().optional(),
     cancellationReason: z.string().optional(),
+    manualInterventionOperationId: z.string().optional(),
+    manualInterventionRequestedDriverId: z.string().uuid().optional(),
+    manualInterventionRequestedBy: z.string().uuid().optional(),
+    manualInterventionReason: z.string().optional(),
+    manualInterventionRequestedAt: z
+      .string()
+      .datetime({ offset: true })
+      .optional(),
+    manualInterventionFailureCode: z.string().optional(),
+    manualInterventionFailedAt: z
+      .string()
+      .datetime({ offset: true })
+      .optional(),
     requestedDelayMinutes: z.number().int().optional(),
     delayReason: z.string().optional(),
     version: z.number().int().optional(),
@@ -138,16 +151,24 @@ export const PageOrder = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    numberOfElements: z.number().int(),
-    first: z.boolean(),
-    last: z.boolean(),
+    sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
     number: z.number().int(),
     size: z.number().int(),
     content: z.array(Order),
-    pageable: PageableObject.optional(),
-    sort: SortObject.optional(),
+    first: z.boolean(),
+    last: z.boolean(),
+    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
+  .passthrough();
+export const pageable = z
+  .object({
+    page: z.number().int().gte(0),
+    size: z.number().int().gte(1),
+    sort: SortObject,
+  })
+  .partial()
   .passthrough();
 
 export const schemas = {
@@ -156,6 +177,7 @@ export const schemas = {
   ApiResponseOrderReviewContextDto,
   Order,
   PageOrder,
+  pageable,
 };
 
 export const endpoints = makeApi([
@@ -200,6 +222,20 @@ export const endpoints = makeApi([
       },
     ],
     response: z.record(z.string()),
+  },
+  {
+    method: "get",
+    path: "/api/v1/internal/orders/:orderId/chat-participants",
+    alias: "fetchOrderChatParticipants",
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "orderId",
+        type: "Path",
+        schema: z.string().uuid(),
+      },
+    ],
+    response: z.array(OrderChatParticipantDto),
   },
   {
     method: "get",

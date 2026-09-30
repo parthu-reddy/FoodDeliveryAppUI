@@ -2,7 +2,7 @@ import { useToast } from "@/contexts/ToastContext";
 import { parseApiError } from '@/lib/parseApiError';
 import { ledgerApi } from "@/lib/zodiosClients";
 import { Badge, Button, Input, Select, Spinner, Surface } from '@shared/ui';
-import { ArrowRight, Check, ChevronLeft, ChevronRight, Copy, Filter, Search } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Copy, Filter, Search } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { formatINR } from '@shared/money';
 import { ChargeCategory, LedgerAccountType } from '@/types/backend-enums';
@@ -57,7 +57,7 @@ export default function AdminLedgerView() {
     } catch (e: unknown) {
       if (requestId !== latestRequestId.current) return;
       console.error(e);
-      showError(parseApiError(e, 'Failed to fetch ledger transactions').message);
+      showError(parseApiError(e, 'Failed to fetch ledger entries').message);
     } finally {
       if (requestId === latestRequestId.current) setLoading(false);
     }
@@ -182,8 +182,8 @@ export default function AdminLedgerView() {
               <tr className="bg-slate-100/50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
                 <th className="p-4 font-bold text-slate-500 uppercase text-xs tracking-wider">Date</th>
                 <th className="p-4 font-bold text-slate-500 uppercase text-xs tracking-wider">Transaction Details</th>
-                <th className="p-4 font-bold text-slate-500 uppercase text-xs tracking-wider">From Account</th>
-                <th className="p-4 font-bold text-slate-500 uppercase text-xs tracking-wider">To Account</th>
+                <th className="p-4 font-bold text-slate-500 uppercase text-xs tracking-wider">Direction</th>
+                <th className="p-4 font-bold text-slate-500 uppercase text-xs tracking-wider">Ledger Account</th>
                 <th className="p-4 font-bold text-slate-500 uppercase text-xs tracking-wider text-right">Amount</th>
               </tr>
             </thead>
@@ -205,7 +205,7 @@ export default function AdminLedgerView() {
                 </tr>
               ) : (
                 groupedTransactions.map(tx => (
-                  <tr key={tx.transactionId} className="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition group">
+                  <tr key={tx.entryId} className="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition group">
                     <td className="p-4 align-middle">
                       <div className="flex flex-col">
                         <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
@@ -234,27 +234,17 @@ export default function AdminLedgerView() {
                       </div>
                     </td>
                     <td className="p-4 align-middle">
-                      {tx.fromAccountId ? (
-                        <div className="flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full bg-rose-400"></span>
-                          <span className="font-mono text-xs text-slate-600 dark:text-slate-300">{tx.fromAccountId}</span>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-slate-400 italic">External / Unknown</span>
-                      )}
+                      <Badge variant="neutral">
+                        {tx.direction}
+                      </Badge>
                     </td>
                     <td className="p-4 align-middle relative">
-                      <div className="absolute -left-6 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-700 hidden md:block">
-                        <ArrowRight className="w-4 h-4" />
+                      <div className="flex items-center gap-2">
+                        <span className={tx.direction === 'DEBIT'
+                          ? 'w-2 h-2 rounded-full bg-rose-400'
+                          : 'w-2 h-2 rounded-full bg-amber-400'}></span>
+                        <span className="font-mono text-xs text-slate-600 dark:text-slate-300">{tx.accountId}</span>
                       </div>
-                      {tx.toAccountId ? (
-                        <div className="flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-                          <span className="font-mono text-xs text-slate-600 dark:text-slate-300">{tx.toAccountId}</span>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-slate-400 italic">External / Unknown</span>
-                      )}
                     </td>
                     <td className="p-4 align-middle text-right">
                       <span className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200/50 dark:border-slate-700/50">

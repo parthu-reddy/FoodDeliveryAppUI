@@ -6,6 +6,7 @@ import AdminManualInterventions from "@features/admin-ops/components/AdminManual
 import AdminSupportTickets from "@features/admin-ops/components/AdminSupportTickets";
 import AdminUserManagement from "@features/admin-ops/components/AdminUserManagement";
 import AdminCategories from '@features/catalog/components/admin/AdminCategories';
+import { CallOverlay } from '@features/communication/components/CallOverlay';
 import AdminLedgerView from "@features/ledger/components/AdminLedgerView";
 import AdminPayoutsPage from "./money/AdminPayoutsPage";
 import AdminOrderMoney from "./money/AdminOrderMoney";
@@ -65,6 +66,7 @@ export default function AdminPortal({
 
   return (
     <div className="flex w-full h-full bg-transparent overflow-hidden">
+      <CallOverlay />
       {/* Sidebar Navigation */}
       <Surface elevation={2} className="w-64 border-r flex flex-col shrink-0 z-20">
         <div className="p-6 flex items-center gap-3 border-b border-rose-500/20">

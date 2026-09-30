@@ -3,7 +3,7 @@ import { parseApiError } from '@/lib/parseApiError';
 import { ledgerApi } from "@/lib/zodiosClients";
 import { Button, Modal } from '@shared/ui';
 import { AlertTriangle } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { formatINR } from '@shared/money';
 import { ConfirmMoneyAction } from '@/shared/money/components/ConfirmMoneyAction';
 
@@ -23,6 +23,10 @@ export default function PayoutCreateDialog({
 }) {
   const [loading, setLoading] = useState(false);
   const [force, setForce] = useState(false);
+  // A transport failure can happen after LedgerService has committed the draft. Retain the first
+  // key until that create operation succeeds or this dialog unmounts, so a retry asks the service
+  // for its durable idempotent result instead of becoming a second request.
+  const createIdempotencyKeyRef = useRef<string | null>(null);
   const { showError, showSuccess } = useToast();
   // displayName can be a synthetic fallback made from the payee id. The backend supplies this
   // explicit flag so a real name is never inferred from a non-empty string.
@@ -30,7 +34,7 @@ export default function PayoutCreateDialog({
   const isVerified = account.beneficiaryStatus?.verified === true;
   const needsBankOverride = nameResolved && !isVerified;
 
-  const handleCreate = async (idempotencyKey: string) => {
+  const handleCreate = async (proposedIdempotencyKey: string) => {
     if (!nameResolved) {
         showError('Payee identity must be resolved before a payout can be created.');
         return;
@@ -41,6 +45,8 @@ export default function PayoutCreateDialog({
         return;
     }
     
+    const idempotencyKey = createIdempotencyKeyRef.current ?? proposedIdempotencyKey;
+    createIdempotencyKeyRef.current = idempotencyKey;
     setLoading(true);
     try {
       const res = await ledgerApi.payout.post('/api/v1/internal/admin/payouts', {
@@ -53,6 +59,7 @@ export default function PayoutCreateDialog({
       }, { headers: { "Idempotency-Key": idempotencyKey } });
       
       showSuccess(`Payout of ${formatINR(res.amount ?? 0)} created successfully.`);
+      createIdempotencyKeyRef.current = null;
       onSuccess(res.id!);
     } catch (e: unknown) {
       console.error(e);
