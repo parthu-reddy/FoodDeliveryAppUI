@@ -86,6 +86,7 @@ describe('useWebRTC call setup', () => {
     vi.stubGlobal('RTCPeerConnection', class extends FixturePeerConnection {
       constructor() {
         super();
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         peerConnection = this;
       }
     });

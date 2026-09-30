@@ -58,7 +58,7 @@ export default function AdminManualInterventions() {
   });
  
 
-  const interventions = (interventionsResponse?.content ?? []) as Order[];
+  const interventions = useMemo(() => (interventionsResponse?.content ?? []) as Order[], [interventionsResponse]);
   const interventionsTotalPages = interventionsResponse?.totalPages ?? 1;
   const selectedInterventionId = selectedIntervention?.id ?? null;
 
@@ -66,30 +66,40 @@ export default function AdminManualInterventions() {
     if (!selectedInterventionId) return;
     const refreshed = interventions.find((order) => order.id === selectedInterventionId);
     if (!refreshed) {
-      setSelectedIntervention(null);
-      setPendingManualAssignments((current) => {
-        if (!current.has(selectedInterventionId)) return current;
-        const next = new Map(current);
-        next.delete(selectedInterventionId);
-        return next;
-      });
+      window.setTimeout(() => {
+        setSelectedIntervention(null);
+        setPendingManualAssignments((current) => {
+          if (!current.has(selectedInterventionId)) return current;
+          const next = new Map(current);
+          next.delete(selectedInterventionId);
+          return next;
+        });
+      }, 0);
       return;
     }
-    setSelectedIntervention(refreshed);
+    
+    // We only update if there's an actual change to avoid cascading renders
+    if (selectedIntervention?.id !== refreshed.id || 
+        selectedIntervention?.manualInterventionFailureCode !== refreshed.manualInterventionFailureCode) {
+      window.setTimeout(() => setSelectedIntervention(refreshed), 0);
+    }
+    
     const pending = pendingManualAssignments.get(selectedInterventionId);
     const isNewFailure = pending !== undefined
       && Boolean(refreshed.manualInterventionFailureCode)
       && (refreshed.manualInterventionFailureCode !== pending.priorFailureCode
         || refreshed.manualInterventionFailedAt !== pending.priorFailureAt);
     if (isNewFailure) {
-      setPendingManualAssignments((current) => {
-        if (!current.has(selectedInterventionId)) return current;
-        const next = new Map(current);
-        next.delete(selectedInterventionId);
-        return next;
-      });
+      window.setTimeout(() => {
+        setPendingManualAssignments((current) => {
+          if (!current.has(selectedInterventionId)) return current;
+          const next = new Map(current);
+          next.delete(selectedInterventionId);
+          return next;
+        });
+      }, 0);
     }
-  }, [interventionsResponse, pendingManualAssignments, selectedInterventionId]);
+  }, [interventions, selectedIntervention, pendingManualAssignments, selectedInterventionId]);
 
   // A force-assignment candidate must be scoped to the selected order's
   // dispatch city, restaurant location, and configured search radius.

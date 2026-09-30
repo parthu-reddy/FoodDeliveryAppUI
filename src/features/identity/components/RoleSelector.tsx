@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { useMotionPresets } from '@shared/ui';
 import { useState } from 'react';
 import type { UserRole } from '@/types';
-import { Button, Surface } from '@shared/ui';
+import { Button } from '@shared/ui';
 import { ROLE_CHOICES } from '../model/roles';
 import { RoleCard } from './RoleCard';
 
