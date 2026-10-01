@@ -119,25 +119,39 @@ useEffect(() => {
       if (addrRes.data) {
          
         setSavedAddresses(addrRes.data);
-        if (addrRes.data.length === 0) {
+        const currentId = localStorage.getItem('deliveryAddressId');
+        const storedLabel = localStorage.getItem('deliveryAddress') || '';
+        const storedLat = localStorage.getItem('deliveryLat');
+        const storedLng = localStorage.getItem('deliveryLng');
+        // GPS is an explicit selection, rather than a missing saved-address ID.
+        // Loading the saved list must not replace it or mix its coordinates with Home.
+        const gpsSelected = !currentId && storedLabel.startsWith('Current Location')
+          && storedLat !== null && storedLng !== null
+          && Number.isFinite(Number(storedLat)) && Math.abs(Number(storedLat)) <= 90
+          && Number.isFinite(Number(storedLng)) && Math.abs(Number(storedLng)) <= 180;
+        if (gpsSelected) return;
+
+        const selected = addrRes.data.find((a: Record<string, unknown>) => a.id === currentId)
+          || addrRes.data[0];
+        if (selected) {
+          // Reconcile the entire selection from one server record, including when an
+          // existing address was edited elsewhere or the previously selected ID vanished.
+          setAddress(`${selected.label || 'Address'}: ${selected.addressLine1 || ''}${selected.addressLine2 ? ', ' + selected.addressLine2 : ''}, ${selected.city || ''}`);
+          setDeliveryAddressId(selected.id ?? '');
+          setDeliveryLat(typeof selected.latitude === 'number' && Number.isFinite(selected.latitude) ? selected.latitude : null);
+          setDeliveryLng(typeof selected.longitude === 'number' && Number.isFinite(selected.longitude) ? selected.longitude : null);
+        } else {
           setAddress('Please add an address');
           setDeliveryAddressId('');
-          localStorage.removeItem('deliveryAddress');
-          localStorage.removeItem('deliveryAddressId');
-        } else {
-          const currentId = localStorage.getItem('deliveryAddressId');
-          const exists = addrRes.data.some((a: Record<string, unknown>) => a.id === currentId);
-          if (!exists && addrRes.data.length > 0) {
-            const first = addrRes.data[0];
-            setAddress(`${first.label || 'Address'}: ${first.addressLine1 || ''}, ${first.city || ''}`);
-            setDeliveryAddressId(first.id ?? '');
-          }
+          setDeliveryLat(null);
+          setDeliveryLng(null);
+          setIsAddressSelectorOpen(true);
         }
       }
     });
   }
  
-}, [setShowProfileModal]);
+}, [setShowProfileModal, setIsAddressSelectorOpen]);
 
   return {
     deliveryLat, setDeliveryLat,
