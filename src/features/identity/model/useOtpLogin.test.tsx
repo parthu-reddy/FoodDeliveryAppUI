@@ -26,6 +26,30 @@ describe('OTP login and explicit registration', () => {
         : new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'X-Dev-OTP-Available': 'true' } })));
   });
 
+  it.each(['', '1', '1234567', '12345678', '123456789', '12345678901', 'abcdefghij'])(
+    'rejects phone %s before requesting an OTP', async (phone) => {
+      const { result } = renderHook(() => useOtpLogin({ onLoginSuccess: vi.fn() }));
+      act(() => { result.current.selectRole(RoleName.CUSTOMER); result.current.setPhone(phone); });
+      await act(async () => result.current.sendOtp(event));
+      expect(result.current.error).not.toBe('');
+      expect(result.current.otpSent).toBe(false);
+      expect(fetch).not.toHaveBeenCalled();
+      expect(post).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(['', '1', '123', '12345', '1234567', 'abcdef'])(
+    'rejects OTP %s before verification or session creation', async (otp) => {
+      const { result } = renderHook(() => useOtpLogin({ onLoginSuccess: vi.fn() }));
+      act(() => { result.current.selectRole(RoleName.CUSTOMER); result.current.setPhone('8000000001');
+        result.current.setOtpCode(otp); });
+      await act(async () => result.current.verifyOtp(event));
+      expect(result.current.error).not.toBe('');
+      expect(post).not.toHaveBeenCalled();
+      expect(setToken).not.toHaveBeenCalled();
+    },
+  );
+
   it.each([
     [RoleName.CUSTOMER, '8999123456'],
     [RoleName.DELIVERY, '7999123456'],

@@ -3,7 +3,7 @@ import { logout } from '@/lib/authStore';
 import { clearAllLocalData, decodeJwt, getToken, setToken, setUserProfile } from '@/lib/tokenStore';
 import type { LocalUserProfile } from '@/lib/tokenStore';
 import { env } from '@/lib/env';
-import { otpSchema, phoneSchema as phoneNumberSchema } from '@/lib/zod-schemas';
+import { otpSchema, phoneSchema } from '@/lib/zod-schemas';
 import { identityApi } from '@/lib/zodiosClients';
 import { getDeviceHeaders } from '@/lib/zodiosConfig';
 import { RoleName, UserRole } from '@/types';
@@ -16,6 +16,10 @@ import type { Session } from '@features/identity/components/SessionManagementMod
  * It keeps the normal initiate-and-verify flow as the source of truth. A Dev server may advertise
  * a narrowly scoped autofill capability on that initiate response; production never advertises it.
  */
+
+// This UI supplies +91 separately and accepts ten national digits. The shared API schema
+// supports wider phone formats, so enforce this form's boundary before initiating an OTP.
+const phoneNumberSchema = phoneSchema.length(10, 'Enter a valid 10-digit phone number.');
 
 const DEV_OTP_CAPABILITY_HEADER = 'X-Dev-OTP-Available';
 const DEV_OTP_LOOKUP_PATH = '/api/v1/internal/auth/admin/otp';
