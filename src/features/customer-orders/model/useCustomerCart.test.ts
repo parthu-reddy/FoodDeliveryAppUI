@@ -132,4 +132,41 @@ describe('useCustomerCart payment method', () => {
     expect(rendered.result.current.quotes[RESTAURANT_ID]?.data?.quoteId).toBe('cart-quote');
     expect(rendered.result.current.getCartTotal(RESTAURANT_ID).total).toBe(150);
   });
+
+  test('an unavailable-item response removes only rejected items and keeps checkout retryable', async () => {
+    const rejectedId = item.id;
+    server.use(http.post('*/api/v1/orders', () => {
+      orderPosts++;
+      return HttpResponse.json({ success: false, message: 'Menu item unavailable', data: [rejectedId] }, { status: 400 });
+    }));
+    const { result } = await primedCart();
+    const remainingItem = { ...item, id: '77777777-7777-7777-7777-777777777777', name: 'Idli', price: 60 };
+    act(() => result.current.addToCart(remainingItem, restaurant));
+    await waitFor(() => expect(result.current.carts[RESTAURANT_ID].items).toHaveLength(2));
+    await waitFor(() => expect(result.current.quotes[RESTAURANT_ID]?.data?.quoteId).toBe('quote-1'), { timeout: 3000 });
+    const onSuccess = () => { throw new Error('Rejected order must not reach success'); };
+    await act(async () => result.current.processPaymentAndOrder('CARD', ADDRESS_ID, onSuccess));
+
+    expect(orderPosts).toBe(1);
+    expect(result.current.carts[RESTAURANT_ID].items.map(row => row.item.id)).toEqual([remainingItem.id]);
+    expect(result.current.globalError).toBe('Removed unavailable items from cart: Dosa');
+    expect(result.current.paymentStatus).toBe('idle');
+    expect(result.current.isPaymentModalOpen).toBe(true);
+  });
+
+  test('removing the only rejected cart item does not fabricate successful payment', async () => {
+    server.use(http.post('*/api/v1/orders', () => {
+      orderPosts++;
+      return HttpResponse.json({ success: false, message: 'Menu item unavailable', data: [item.id] }, { status: 400 });
+    }));
+    const { result } = await primedCart();
+    await act(async () => result.current.processPaymentAndOrder('CARD', ADDRESS_ID, () => {
+      throw new Error('Rejected order must not reach success');
+    }));
+    expect(orderPosts).toBe(1);
+    expect(result.current.carts[RESTAURANT_ID]).toBeUndefined();
+    expect(result.current.paymentStatus).toBe('idle');
+    expect(result.current.globalError).toBe('Removed unavailable items from cart: Dosa');
+  });
+
 });

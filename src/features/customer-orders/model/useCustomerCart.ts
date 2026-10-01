@@ -496,10 +496,14 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
       // if (errorCode !== 'QUOTE_EXPIRED') {
       //   setIsPaymentModalOpen(false);
       // }
-      // @ts-expect-error auto-migration type suppression
-      if (err?.data?.data && Array.isArray(err.data.data) && err.data.data.length > 0) {
-        // @ts-expect-error auto-migration type suppression
-        const unavailableIds = err.data.data as string[];
+      // MenuItemsUnavailableException returns an ApiResponse.data array. Axios carries
+      // that response body under response.data, just like the error message above.
+      const unavailableData = (err as { response?: { data?: { data?: unknown } } })
+        .response?.data?.data;
+      const unavailableIds = Array.isArray(unavailableData)
+        ? unavailableData.filter((id): id is string => typeof id === 'string')
+        : [];
+      if (unavailableIds.length > 0) {
         const removedItemNames = activeCart.items
           .filter(i => unavailableIds.includes(i.item.id as string))
           .map(i => i.item.name)

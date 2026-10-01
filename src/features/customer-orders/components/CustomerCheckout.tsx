@@ -63,18 +63,23 @@ export default function CustomerCheckout(props: CustomerCheckoutProps) {
 }
 
 function useWalletBalance(open: boolean) {
-  const [balance, setBalance] = useState<number | null>(null);
+  const [wallet, setWallet] = useState<{ open: boolean; balance: number | null }>(
+    { open, balance: null },
+  );
+  // A balance belongs to this opening's request. Reset on the open transition before
+  // rendering payment controls, so a previous balance cannot authorize the next order.
+  if (wallet.open !== open) setWallet({ open, balance: null });
   useEffect(() => {
     if (!open) return;
     let live = true;
     // The signed-in customer's own wallet: the endpoint derives the id from the principal.
     customerApi.customerMoney
       .get('/api/v1/money/customer/wallet')
-      .then((res) => { if (live) setBalance(res.balance ?? 0); })
+      .then((res) => { if (live) setWallet({ open: true, balance: res.balance ?? 0 }); })
       .catch((err: unknown) => { console.error('Failed to fetch wallet balance', err); });
     return () => { live = false; };
   }, [open]);
-  return balance;
+  return wallet.open === open ? wallet.balance : null;
 }
 
 function CustomerCheckoutInner({

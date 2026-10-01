@@ -132,4 +132,30 @@ describe('CustomerCheckout', () => {
     expect(screen.getByText('Choose a delivery address')).toBeInTheDocument();
     expect(placeButton()).toBeDisabled();
   });
+
+  it('reopening checkout cannot pay from a stale wallet balance while refreshing', async () => {
+    let resolveWallet!: (wallet: { balance: number }) => void;
+    walletGet.mockResolvedValueOnce({ balance: 1240 })
+      .mockReturnValueOnce(new Promise(resolve => { resolveWallet = resolve; }));
+    const onPlaceOrder = vi.fn();
+    const checkout = (open: boolean) => <CustomerCheckout
+      open={open} onClose={() => {}} status="idle" totals={quoted} items={items}
+      restaurantName="Paradise Biryani" address="412, 5th Main, Indiranagar"
+      onChangeAddress={() => {}} onPlaceOrder={onPlaceOrder}
+    />;
+    const { rerender } = render(checkout(true));
+    await waitFor(() => expect(placeButton()).toBeEnabled());
+    rerender(checkout(false));
+    rerender(checkout(true));
+    await waitFor(() => expect(walletGet).toHaveBeenCalledTimes(2));
+
+    expect(screen.getByRole('radio', { name: /wallet/i })).toBeDisabled();
+    expect(placeButton()).toBeDisabled();
+    fireEvent.click(placeButton());
+    expect(onPlaceOrder).not.toHaveBeenCalled();
+    resolveWallet({ balance: 100 });
+    await screen.findByText(/not enough for this order/);
+    expect(screen.getByRole('radio', { name: /wallet/i })).toBeDisabled();
+  });
+
 });
