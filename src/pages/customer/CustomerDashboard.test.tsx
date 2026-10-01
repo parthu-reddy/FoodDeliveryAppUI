@@ -114,6 +114,42 @@ describe('open customer tracker completion', () => {
 });
 
 
+test.each([
+  { wide: false, anotherActive: false }, { wide: true, anotherActive: false },
+  { wide: false, anotherActive: true }, { wide: true, anotherActive: true },
+])('restored tracker keeps the same order through completion ($wide, otherActive=$anotherActive)', async ({ wide, anotherActive }) => {
+  viewport.wide = wide;
+  let completed = false;
+  const second = { ...placed, id: '44444444-4444-4444-4444-444444444444', restaurantName: 'Other Kitchen' };
+  const batchIds: string[][] = [];
+  server.use(
+    http.get('*/api/v1/orders/active', () => HttpResponse.json(envelope({
+      content: [...(completed ? [] : [placed]), ...(anotherActive ? [second] : [])],
+    }))),
+    http.get('*/api/v1/orders/batch', ({ request }) => {
+      batchIds.push(Array.from(new URL(request.url).searchParams.values()));
+      return HttpResponse.json(envelope([{ ...placed, status: OrderStatus.HANDED_OVER, deliveryStatus: DeliveryStatus.DELIVERED }]));
+    }),
+  );
+  render(<MemoryRouter initialEntries={['/customer']}>
+    <ThemeProvider><ToastProvider><ConfirmProvider>
+      <CustomerDashboard userName="Customer" userPhone="8000000001" onLogout={() => {}} />
+    </ConfirmProvider></ToastProvider></ThemeProvider>
+  </MemoryRouter>);
+  // Login/reload selects the first loaded active order without an explicit Track click.
+  await screen.findByText('Live tracker');
+  completed = true;
+  await act(async () => { await vi.advanceTimersByTimeAsync(31000); });
+  await waitFor(() => expect(batchIds).toContainEqual([ORDER_ID]));
+  expect(await screen.findByRole('heading', { name: 'Order delivered' })).toBeInTheDocument();
+  expect(screen.getByText('Delivered from Test Kitchen.')).toBeInTheDocument();
+  expect(screen.queryByText('Delivered from Other Kitchen.')).not.toBeInTheDocument();
+  expect(screen.queryByText('Live tracker')).not.toBeInTheDocument();
+  // Explicit dismissal still wins over automatic restoration and the retained poller list.
+  fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+  await waitFor(() => expect(screen.queryByRole('heading', { name: 'Order delivered' })).not.toBeInTheDocument());
+});
+
 test('address selection updates the owner state, cart location and quote address together', async () => {
   viewport.wide = false;addressBinding.cartAddress.mockClear();addressBinding.locationKeys.length = 0;
   server.use(http.get('*/api/v1/orders/active', () => HttpResponse.json(envelope({ content: [] }))));

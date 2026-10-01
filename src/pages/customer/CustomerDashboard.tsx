@@ -173,12 +173,12 @@ export default function CustomerDashboard({
   
   const [addressSearchQuery, setAddressSearchQuery] = useState('');
 
-  // Before the customer makes an explicit tracker choice, derive the initial selection from the
-  // asynchronously loaded active orders. This restores the delivery OTP after login/reload without
-  // an effect-driven state update. Once the customer selects or closes a tracker, preserve that
-  // choice instead of automatically reopening it.
+  // The poller's first loaded order keeps its position when it completes. Restore from that
+  // retained list so removing it from activeOrders cannot hide its receipt or select another job.
+  // No historic orders are fetched here: the initial list contains only orders active at login.
+  // Explicit tracking/dismissal still wins over this automatic login/reload selection.
   const restoredTrackingOrder = !trackingSelection.explicitlyChosen && !isInitialLoad
-    ? activeOrders.find(isActiveOrder) || null
+    ? internalOrders[0] ?? activeOrders.find(isActiveOrder) ?? null
     : null;
   const currentTrackingOrder = activeOrders.find(o => o.id === trackingOrder?.id)
     // Completed orders leave activeOrders but remain in the poller's full list.
