@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { http, HttpResponse } from 'msw';
@@ -11,21 +12,33 @@ import type { Order } from '@/types';
 import CustomerDashboard from './CustomerDashboard';
 
 const viewport = vi.hoisted(() => ({ wide: false }));
+const addressBinding = vi.hoisted(() => ({ cartAddress: vi.fn(), locationKeys: [] as string[] }));
 vi.mock('@/hooks/useMediaQuery', () => ({ useMediaQuery: () => viewport.wide }));
 // Keep the dashboard, order poller, main view and delivered summary real. Unrelated
 // catalog, checkout, maps and communication do not participate in this transition.
 vi.mock('@features/catalog/model/useRestaurants', () => ({ useRestaurants: () => ({ restaurants: [] }) }));
 vi.mock('@features/catalog/model/useCustomerStorefront', () => ({ useCustomerStorefront: () => ({}) }));
 vi.mock('@features/customer-orders/model/useCustomerAddresses', () => ({
-  useCustomerAddresses: () => ({ address: 'Home', deliveryLat: 12.98, deliveryLng: 77.64 }),
+  useCustomerAddresses: () => {
+    const [deliveryAddressId, setDeliveryAddressId] = useState('home');
+    return { address: 'Home', deliveryLat: 12.98, deliveryLng: 77.64, deliveryAddressId, setDeliveryAddressId };
+  },
 }));
 vi.mock('@features/customer-orders/model/useCustomerCart', () => ({
-  useCustomerCart: () => ({ carts: {}, setDeliveryAddressId: () => {} }),
+  useCustomerCart: ({ locationKey }: { locationKey: string }) => {
+    addressBinding.locationKeys.push(locationKey);
+    return { carts: {}, setDeliveryAddressId: addressBinding.cartAddress };
+  },
 }));
 vi.mock('@features/customer-orders/model/useAddressChangeNotice', () => ({ useAddressChangeNotice: () => {} }));
 vi.mock('@features/communication/components/CallOverlay', () => ({ CallOverlay: () => null }));
 vi.mock('@features/customer-orders/components/CustomerOrderChat', () => ({ CustomerOrderChat: () => null }));
-vi.mock('@features/customer-orders/components/CustomerModalStack', () => ({ CustomerModalStack: () => null }));
+vi.mock('@features/customer-orders/components/CustomerModalStack', () => ({
+  CustomerModalStack: ({ deliveryAddressId, setDeliveryAddressId }: {
+    deliveryAddressId: string; setDeliveryAddressId: (id: string) => void;
+  }) => <><output aria-label="Selected address identity">{deliveryAddressId}</output>
+    <button onClick={() => setDeliveryAddressId('work')}>Select existing Work</button></>,
+}));
 vi.mock('@features/catalog/components/customer/CustomerRestaurantBrowser', () => ({
   CustomerRestaurantBrowser: () => <p>Browse restaurants</p>,
 }));
@@ -98,4 +111,18 @@ describe('open customer tracker completion', () => {
     await waitFor(() => expect(screen.queryByRole('heading', { name: 'Order delivered' })).not.toBeInTheDocument());
     expect(screen.getByText('Browse restaurants')).toBeInTheDocument();
   });
+});
+
+
+test('address selection updates the owner state, cart location and quote address together', async () => {
+  viewport.wide = false;addressBinding.cartAddress.mockClear();addressBinding.locationKeys.length = 0;
+  server.use(http.get('*/api/v1/orders/active', () => HttpResponse.json(envelope({ content: [] }))));
+  render(<MemoryRouter initialEntries={['/customer']}><ThemeProvider><ToastProvider><ConfirmProvider>
+    <CustomerDashboard userName="Customer" userPhone="8000000001" onLogout={() => {}} />
+  </ConfirmProvider></ToastProvider></ThemeProvider></MemoryRouter>);
+  expect(screen.getByRole('status', { name: 'Selected address identity' })).toHaveTextContent('home');
+  fireEvent.click(screen.getByRole('button', { name: 'Select existing Work' }));
+  await waitFor(() => expect(screen.getByRole('status', { name: 'Selected address identity' })).toHaveTextContent('work'));
+  expect(addressBinding.locationKeys.at(-1)).toBe('work');
+  expect(addressBinding.cartAddress).toHaveBeenLastCalledWith('work');
 });

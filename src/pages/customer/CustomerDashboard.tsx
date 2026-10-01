@@ -208,6 +208,9 @@ export default function CustomerDashboard({
 
   const view = {
     ...addresses, ...storefront, ...cart,
+    // Selection belongs to the address hook. The cart hook's identically named setter
+    // only binds its quote requests and must not replace the saved selection setter.
+    setDeliveryAddressId: addresses.setDeliveryAddressId,
     // These four override what `...cart` spreads. The hook's versions take the restaurant
     // as an extra argument; these are bound to the one on screen, and passing the raw ones
     // by accident is a real regression the linter caught while this bag was being built.
