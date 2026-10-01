@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { deliveryApi } from '@/lib/zodiosClients';
 import { DeliveryStatus, Order, OrderStatus } from '@/types';
 import type { useConfirm } from '@shared/ui';
@@ -74,29 +74,31 @@ export function useRiderJobActions({
   const [goOfflineAfter, setGoOfflineAfter] = useState(false);
   const [waitTimerSeconds, setWaitTimerSeconds] = useState(0);
   const [isWaitTimerActive, setIsWaitTimerActive] = useState(false);
+  const acceptanceInFlight = useRef(false);
 
 const handleAcceptPing = async (job: Order) => {
-  // Optimistic UI update
-  setActiveJobId(job.id);
-  onUpdateOrderStatus(job.id, job.status, DeliveryStatus.ASSIGNED, {
-    name: deliveryExecutiveName,
-  });
+  if (acceptanceInFlight.current) return;
+  acceptanceInFlight.current = true;
   try {
     await deliveryApi.deliveryExecutive.post(
       "/api/delivery/drivers/:driverId/orders/:orderId/accept",
       undefined,
       { params: { driverId: deliveryExecutiveId, orderId: job.id } }
     );
+    // The active-job effect opens an assignment-protected stream. Publish the assignment
+    // only after the server commits acceptance; an offered job is not yet authorised.
+    onUpdateOrderStatus(job.id, job.status, DeliveryStatus.ASSIGNED, {
+      name: deliveryExecutiveName,
+    });
+    setActiveJobId(job.id);
   } catch (e: unknown) {
-    // Revert on error
-    setActiveJobId(null);
-    // Wait, can't easily revert onUpdateOrderStatus without knowing previous state, but we can rely on polling to fix it soon
-      const errObj = e as { response?: { data?: { message?: string } } };
-      showToast(
-        errObj.response?.data?.message ||
-          "Failed to accept order. Ping expired or order already accepted."
-      );
+    const errObj = e as { response?: { data?: { message?: string } } };
+    showToast(
+      errObj.response?.data?.message ||
+        "Failed to accept order. Ping expired or order already accepted."
+    );
   } finally {
+    acceptanceInFlight.current = false;
     setPingJob(null);
   }
 };
@@ -129,23 +131,24 @@ const handleRejectPing = async (jobId: string) => {
 };
 
 const handleAcceptJob = async (order: Order) => {
-  // Optimistic UI update
-  setActiveJobId(order.id);
-  onUpdateOrderStatus(order.id, order.status, DeliveryStatus.ASSIGNED, {
-    name: deliveryExecutiveName,
-  });
+  if (acceptanceInFlight.current) return;
+  acceptanceInFlight.current = true;
   try {
     await deliveryApi.deliveryExecutive.post(
       "/api/delivery/drivers/:driverId/orders/:orderId/accept",
       undefined,
       { params: { driverId: deliveryExecutiveId, orderId: order.id } }
     );
+    onUpdateOrderStatus(order.id, order.status, DeliveryStatus.ASSIGNED, {
+      name: deliveryExecutiveName,
+    });
+    setActiveJobId(order.id);
   } catch (e: unknown) {
     console.error("Failed to accept job", e);
-    // Revert on error
-    setActiveJobId(null);
     const errObj = e as { response?: { data?: { message?: string } } };
     showError(errObj.response?.data?.message || "Failed to accept job.");
+  } finally {
+    acceptanceInFlight.current = false;
   }
 };
 

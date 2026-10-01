@@ -23,22 +23,26 @@ const delivery = (): Order => ({
 
 function renderActions(requestPayoutReconciliation = vi.fn()) {
   const historyRef = { current: [] as Order[] };
+  const setActiveJobId = vi.fn();
+  const onUpdateOrderStatus = vi.fn();
+  const showToast = vi.fn();
+  const showError = vi.fn();
   const result = renderHook(() => useRiderJobActions({
     currentJob: delivery(),
     deliveryExecutiveId: RIDER,
     deliveryExecutiveName: 'Rider',
     historyRef,
     requestPayoutReconciliation,
-    setActiveJobId: vi.fn(),
+    setActiveJobId,
     setPingJob: vi.fn(),
     setRejectedIds: vi.fn(),
-    onUpdateOrderStatus: vi.fn(),
+    onUpdateOrderStatus,
     confirm: vi.fn().mockResolvedValue(true) as never,
-    showToast: vi.fn(),
-    showError: vi.fn(),
+    showToast,
+    showError,
     setIsOnline: vi.fn(),
   }));
-  return { ...result, historyRef, requestPayoutReconciliation };
+  return { ...result, historyRef, requestPayoutReconciliation, setActiveJobId, onUpdateOrderStatus, showToast, showError };
 }
 
 afterEach(() => vi.clearAllMocks());
@@ -79,5 +83,61 @@ describe('delivery payout reconciliation', () => {
 
     expect(requestPayoutReconciliation).not.toHaveBeenCalled();
     expect(historyRef.current).toEqual([]);
+  });
+});
+
+
+describe.each(['handleAcceptPing', 'handleAcceptJob'] as const)('%s assignment confirmation', (handler) => {
+  it('does not activate the job or start dependent subscriptions before the server confirms acceptance', async () => {
+    let resolveAccept!: () => void;
+    vi.mocked(deliveryApi.deliveryExecutive.post).mockImplementationOnce(
+      () => new Promise<void>(resolve => { resolveAccept = resolve; }) as never,
+    );
+    const { result, setActiveJobId, onUpdateOrderStatus } = renderActions();
+    const offered = { ...delivery(), deliveryExecutiveId: undefined, deliveryStatus: DeliveryStatus.PENDING };
+    let completion!: Promise<void>;
+    act(() => { completion = result.current[handler](offered); });
+    expect(setActiveJobId).not.toHaveBeenCalled();
+    expect(onUpdateOrderStatus).not.toHaveBeenCalled();
+    expect(deliveryApi.deliveryExecutive.post).toHaveBeenCalledWith(
+      '/api/delivery/drivers/:driverId/orders/:orderId/accept', undefined,
+      { params: { driverId: RIDER, orderId: ORDER } },
+    );
+    resolveAccept();
+    await act(async () => { await completion; });
+    expect(setActiveJobId).toHaveBeenCalledExactlyOnceWith(ORDER);
+    expect(onUpdateOrderStatus).toHaveBeenCalledExactlyOnceWith(ORDER, offered.status, DeliveryStatus.ASSIGNED, { name: 'Rider' });
+  });
+
+  it('keeps an unsuccessful acceptance unassigned and allows a subsequent attempt', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.mocked(deliveryApi.deliveryExecutive.post).mockRejectedValueOnce(
+      { response: { data: { message: 'Dispatch already accepted' } } },
+    ).mockResolvedValueOnce(undefined as never);
+    const { result, setActiveJobId, onUpdateOrderStatus, showToast, showError } = renderActions();
+    await act(async () => { await result.current[handler](delivery()); });
+    expect(setActiveJobId).not.toHaveBeenCalled();
+    expect(onUpdateOrderStatus).not.toHaveBeenCalled();
+    expect(handler === 'handleAcceptPing' ? showToast : showError).toHaveBeenCalledWith('Dispatch already accepted');
+    await act(async () => { await result.current[handler](delivery()); });
+    expect(setActiveJobId).toHaveBeenCalledExactlyOnceWith(ORDER);
+    consoleError.mockRestore();
+  });
+
+  it('ignores repeated acceptance clicks while the first request is pending', async () => {
+    let resolveAccept!: () => void;
+    const pending = new Promise<void>(resolve => { resolveAccept = resolve; });
+    vi.mocked(deliveryApi.deliveryExecutive.post).mockImplementation(() => pending as never);
+    const { result, setActiveJobId } = renderActions();
+    let first!: Promise<void>;
+    let second!: Promise<void>;
+    act(() => {
+      first = result.current[handler](delivery());
+      second = result.current[handler](delivery());
+    });
+    expect(deliveryApi.deliveryExecutive.post).toHaveBeenCalledTimes(1);
+    resolveAccept();
+    await act(async () => { await Promise.all([first, second]); });
+    expect(setActiveJobId).toHaveBeenCalledExactlyOnceWith(ORDER);
   });
 });
