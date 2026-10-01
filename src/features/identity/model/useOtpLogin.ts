@@ -330,9 +330,16 @@ export function useOtpLogin({ onLoginSuccess, onAddApiLog }: UseOtpLoginOptions)
       if (!token || typeof token !== 'string') throw new Error('No token received from server');
       await completeLogin(token, selectedRole!);
     } catch (err: unknown) {
-      const e = err as { status?: number; data?: { data?: { activeSessions?: Session[] } } };
-      if (e.status === 409 && e.data?.data?.activeSessions) {
-        setActiveSessions(e.data.data.activeSessions);
+      const e = err as {
+        status?: number;
+        data?: ApiResponse<{ activeSessions?: Session[] }>;
+        response?: { status?: number; data?: ApiResponse<{ activeSessions?: Session[] }> };
+      };
+      // The shared identity client rejects with an Axios error: status/body live on response.
+      const status = e.response?.status ?? e.status;
+      const sessions = (e.response?.data ?? e.data)?.data?.activeSessions;
+      if (status === 409 && Array.isArray(sessions) && sessions.length > 0) {
+        setActiveSessions(sessions);
         setShowSessionModal(true);
       } else {
         setError(messageOf(err, 'OTP verification failed'));

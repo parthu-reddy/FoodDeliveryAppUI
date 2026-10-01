@@ -93,4 +93,46 @@ describe('OTP login and explicit registration', () => {
     expect(setToken).not.toHaveBeenCalled();
     expect(success).not.toHaveBeenCalled();
   });
+  it.each([false, true])('shows the device collision for Axios login/signup errors (signup=%s)', async (signup) => {
+    const devices = [
+      { sessionId: 'first', deviceInfo: 'Mac', os: 'MacOS', browser: 'Chrome', lastActive: 1 },
+      { sessionId: 'second', deviceInfo: 'Windows', os: 'Windows', browser: 'Firefox', lastActive: 2 },
+    ];
+    post.mockRejectedValue({ response: { status: 409, data: {
+      success: false, message: 'Maximum concurrent sessions reached', data: { activeSessions: devices },
+    } } });
+    const success = vi.fn();
+    const { result } = renderHook(() => useOtpLogin({ onLoginSuccess: success }));
+    act(() => result.current.selectRole(RoleName.CUSTOMER));
+    if (signup) act(() => result.current.toggleRegistration());
+    act(() => { result.current.setPhone('8999123456'); result.current.setOtpCode('123456'); });
+    await act(async () => result.current.verifyOtp(event));
+    expect(post.mock.calls[0][0]).toBe(signup ? '/api/v1/internal/auth/register' : '/api/v1/internal/auth/verify');
+    expect(result.current.showSessionModal).toBe(true);
+    expect(result.current.activeSessions).toEqual(devices);
+    expect(result.current.loading).toBe(false);
+    expect(result.current.error).toBe('');
+    expect(setToken).not.toHaveBeenCalled();
+    expect(success).not.toHaveBeenCalled();
+    // Closing the collision does not authenticate or send a device-removal request.
+    act(() => result.current.setShowSessionModal(false));
+    expect(result.current.showSessionModal).toBe(false);
+    expect(post).toHaveBeenCalledTimes(1);
+    expect(setToken).not.toHaveBeenCalled();
+    // A successful explicit replacement uses the ordinary login completion path.
+    await act(async () => result.current.onSessionResolved('replacement-token'));
+    expect(setToken).toHaveBeenCalledWith('replacement-token');
+    expect(success).toHaveBeenCalledWith(RoleName.CUSTOMER, '8999123456', 'Test');
+  });
+
+  it('keeps a malformed conflict as an error without exposing an empty collision dialog', async () => {
+    post.mockRejectedValue({ response: { status: 409, data: { message: 'Invalid session response', data: {} } } });
+    const { result } = renderHook(() => useOtpLogin({ onLoginSuccess: vi.fn() }));
+    act(() => { result.current.selectRole(RoleName.CUSTOMER); result.current.setPhone('8999123456'); result.current.setOtpCode('123456'); });
+    await act(async () => result.current.verifyOtp(event));
+    expect(result.current.showSessionModal).toBe(false);
+    expect(result.current.error).toBe('Invalid session response');
+    expect(setToken).not.toHaveBeenCalled();
+  });
+
 });
