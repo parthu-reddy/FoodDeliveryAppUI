@@ -44,7 +44,7 @@ export function CustomerLiveOrderRail({ order, ...rest }: CustomerLiveOrderRailP
         <h2 className="flex-1 text-[15px] font-extrabold tracking-tight text-ink">Live order</h2>
         <span className="font-mono text-[11px] text-ink-2">#{order.id.slice(0, 8).toUpperCase()}</span>
       </div>
-      <Surface radius="lg" elevation={1} className="relative w-full h-44 overflow-hidden">
+      <Surface radius="lg" elevation={1} className="relative w-full h-44 shrink-0 overflow-hidden">
         <React.Suspense fallback={<div className="w-full h-full flex items-center justify-center text-sm text-ink-2">Loading map…</div>}>
           <OrderTrackingMap order={order} enableLiveTracking={true} />
         </React.Suspense>
