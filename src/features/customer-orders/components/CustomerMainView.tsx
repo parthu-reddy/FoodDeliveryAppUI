@@ -41,6 +41,8 @@ export function CustomerMainView({
   isAddressModalOpen,
   isDeliveryAvailable,
   isMenuLoading,
+  menuError,
+  retryMenu,
   isQuoting,
   isRestaurantsLoading,
   restaurantsError,
@@ -165,6 +167,8 @@ export function CustomerMainView({
               setIsOutletSelectorOpen={setIsOutletSelectorOpen}
                
               isMenuLoading={isMenuLoading}
+              menuError={menuError}
+              onRetryMenu={retryMenu}
               effectiveMenu={effectiveMenu}
               addToCart={addToCart}
               removeFromCart={removeFromCart}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { customerApi } from '@/lib/zodiosClients';
-import { getEffectiveMenu } from '@features/catalog/model/menuStore';
+import { loadEffectiveMenu } from '@features/catalog/model/menuStore';
 import type { MenuItem, Restaurant } from '@/types';
 
 /**
@@ -27,6 +27,9 @@ export function useCustomerStorefront({
   const [brandOutlets, setBrandOutlets] = useState<Restaurant[]>([]);
   const [effectiveMenu, setEffectiveMenu] = useState<MenuItem[]>([]);
   const [isMenuLoading, setIsMenuLoading] = useState<boolean>(false);
+  const [menuError, setMenuError] = useState<string | null>(null);
+  const [menuAttempt, setMenuAttempt] = useState(0);
+  const retryMenu = () => setMenuAttempt((attempt) => attempt + 1);
   const [isDeliveryAvailable, setIsDeliveryAvailable] = useState<boolean | null>(null);
   const [deliveryAvailabilityError, setDeliveryAvailabilityError] = useState<string | null>(null);
 
@@ -37,22 +40,29 @@ useEffect(() => {
   if (selectedRestaurant && selectedRestaurant.id) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMenuLoading(true);
-    getEffectiveMenu(selectedRestaurant.id).then(menu => {
+    setMenuError(null);
+    setEffectiveMenu([]);
+    loadEffectiveMenu(selectedRestaurant.id).then(menu => {
       if (!ignore) {
         setEffectiveMenu(menu);
         setIsMenuLoading(false);
        
       }
     }).catch(() => {
-      if (!ignore) setIsMenuLoading(false);
+      if (!ignore) {
+        setMenuError("Couldn't load menu");
+        setEffectiveMenu([]);
+        setIsMenuLoading(false);
+      }
     });
   } else {
     setEffectiveMenu([]);
+    setMenuError(null);
     setIsMenuLoading(false);
   }
   return () => { ignore = true; };
 // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [selectedRestaurant?.id]); // Only refetch menu when outlet ID changes
+}, [selectedRestaurant?.id, menuAttempt]); // Refetch on outlet selection or explicit retry
 
  
 
@@ -103,7 +113,7 @@ useEffect(() => {
 
 
   return {
-    brandOutlets, effectiveMenu, isMenuLoading,
+    brandOutlets, effectiveMenu, isMenuLoading, menuError, retryMenu,
     isDeliveryAvailable, deliveryAvailabilityError,
   };
 }

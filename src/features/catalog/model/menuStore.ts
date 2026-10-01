@@ -77,11 +77,15 @@ export async function upsertOverride(
 }
 
 // Dynamically calculates the Effective Menu for an outlet
+/** Customer browsing distinguishes a failed catalog from a successfully empty menu. */
+export async function loadEffectiveMenu(restaurantId: string): Promise<MenuItem[]> {
+  const res = await apiGet(`${API_BASE}/restaurants/${restaurantId}/catalog/items`);
+  if (!Array.isArray(res.data)) throw new Error('Invalid catalog response');
+  return res.data;
+}
+
 export async function getEffectiveMenu(restaurantId: string): Promise<MenuItem[]> {
-  try {
-    const res = await apiGet(`${API_BASE}/restaurants/${restaurantId}/catalog/items`);
-    return res.data || [];
-  } catch { return []; }
+  try { return await loadEffectiveMenu(restaurantId); } catch { return []; }
 }
 
 export async function addMenuItem(restaurantId: string, item: Partial<MenuItem>): Promise<MenuItem | null> {

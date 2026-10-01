@@ -10,7 +10,7 @@ import { ReviewsPanel } from '@features/reviews/components/ReviewsPanel';
 import { MenuList } from '@features/catalog/components/MenuList';
 import { RestaurantHeader } from '@features/catalog/components/RestaurantHeader';
 import { viewFromMenuItem } from '@features/catalog/model/menuItem';
-import { AlertBanner, Button } from '@shared/ui';
+import { AlertBanner, Button, EmptyState } from '@shared/ui';
 import { formatINR } from '@shared/money';
 import { formatKm } from '@features/catalog/model/restaurantFacts';
 
@@ -29,6 +29,8 @@ interface CustomerMenuViewProps {
   brandOutlets: unknown[];
   setIsOutletSelectorOpen: (isOpen: boolean) => void;
   isMenuLoading: boolean;
+  menuError?: string | null;
+  onRetryMenu?: () => void;
   effectiveMenu: MenuItem[];
   carts: Record<string, CartState>;
   addToCart: (item: MenuItem) => void;
@@ -41,7 +43,7 @@ interface CustomerMenuViewProps {
 export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
   selectedRestaurant, setSelectedRestaurant, deliveryPricing, getCartTotal,
   isDeliveryAvailable, deliveryAvailabilityError, brandOutlets, setIsOutletSelectorOpen,
-  isMenuLoading, effectiveMenu, carts, addToCart, removeFromCart, isQuoting,
+  isMenuLoading, menuError, onRetryMenu, effectiveMenu, carts, addToCart, removeFromCart, isQuoting,
   deliveryAddressId, setIsAddressSelectorOpen,
 }) => {
   const outletId = selectedRestaurant.id as string;
@@ -176,6 +178,14 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
       </RestaurantHeader>
 
       <div className="px-5 pb-5 space-y-4">
+        {!isMenuLoading && menuError ? (
+          <EmptyState title="Couldn't load menu" description="Check your connection and try again."
+            icon={<AlertCircle className="w-12 h-12" />}
+            action={onRetryMenu ? <Button onClick={onRetryMenu}>Try again</Button> : undefined} />
+        ) : !isMenuLoading && views.length === 0 ? (
+          <EmptyState title="Menu unavailable" description="This kitchen hasn't published any menu items yet."
+            icon={<AlertCircle className="w-12 h-12" />} />
+        ) : (
         <MenuList
           categoryNav
           views={views}
@@ -188,6 +198,7 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
           onIncrement={addById}
           onDecrement={(id) => removeFromCart(id, outletId)}
         />
+        )}
 
         {showReviews && (
           <ReviewsPanel
