@@ -13,7 +13,7 @@ import { Badge } from './Badge';
 import { Button } from './action/Button';
 import { PullToRefresh } from './feedback/PullToRefresh';
 import { Surface } from './surface/Surface';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 /**
  * The customer's past orders, inside account settings.
@@ -27,9 +27,13 @@ export function SettingsHistoryTab({ setTrackingOrder }: { setTrackingOrder?: (o
   const [paginatedOrders, setPaginatedOrders] = useState<Order[]>([]);
   const [currentPageOrders, setCurrentPageOrders] = useState(0);
   const [hasMoreOrders, setHasMoreOrders] = useState(false);
-  const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(true);
+  const [failedPage, setFailedPage] = useState<number | null>(null);
+  const requestVersion = useRef(0);
 
   const fetchOrders = async (page: number, type: 'history') => {
+    const version = ++requestVersion.current;
+    setFailedPage(null);
     try {
       if (type === 'history') setIsLoadingOrders(true);
       
@@ -42,19 +46,24 @@ export function SettingsHistoryTab({ setTrackingOrder }: { setTrackingOrder?: (o
       
       const res = rawRes as {data?: {content?: Order[], last?: boolean}} | {data?: Order[]} | undefined;
       
-      if (res?.data && 'content' in res.data) {
+      if (version !== requestVersion.current) return;
+      if (res?.data && 'content' in res.data && Array.isArray(res.data.content)) {
         if (type === 'history') {
           const typedContent = (res.data as { content?: Order[] }).content || [];
           setPaginatedOrders(prev => page === 0 ? typedContent : [...prev, ...typedContent]);
           setHasMoreOrders(!res.data.last);
           setCurrentPageOrders(page);
         }
+      } else {
+        throw new Error('Invalid order history response');
       }
     } catch (e: unknown) {
+      if (version !== requestVersion.current) return;
       console.error(e);
+      setFailedPage(page);
       showError('Failed to fetch orders');
     } finally {
-      if (type === 'history') setIsLoadingOrders(false);
+      if (version === requestVersion.current && type === 'history') setIsLoadingOrders(false);
     }
   };
 
@@ -68,11 +77,18 @@ export function SettingsHistoryTab({ setTrackingOrder }: { setTrackingOrder?: (o
     {/* The motion inventory's pull to refresh for the customer's order history. It was built
         into CustomerOrderHistory.tsx, which no screen renders; this is the history they see. */}
     <PullToRefresh onRefresh={() => fetchOrders(0, 'history')} label="Pull down to reload your orders">
-    <div className="space-y-4">
+    <div className="space-y-4" data-testid="customer-history-state"
+      data-state={isLoadingOrders ? 'loading' : failedPage !== null ? 'error' : paginatedOrders.length > 0 ? 'populated' : 'empty'}>
+      {failedPage !== null && (
+        <div role="alert" className="space-y-2 text-sm">
+          <p>Couldn't load order history. Please try again.</p>
+          <Button variant="outline" onClick={() => fetchOrders(failedPage, 'history')}>Try again</Button>
+        </div>
+      )}
       <ReceivedFeedbackPanel actorRole={RoleName.CUSTOMER} />
       {isLoadingOrders && paginatedOrders.length === 0 ? (
         <div className="text-center text-slate-500 text-sm py-8">Loading history...</div>
-      ) : paginatedOrders.length === 0 ? (
+      ) : paginatedOrders.length === 0 && failedPage === null ? (
         <div className="text-center text-slate-500 text-sm py-8">No order history found.</div>
       ) : (
         paginatedOrders.map((order: Order) => (
@@ -80,6 +96,7 @@ export function SettingsHistoryTab({ setTrackingOrder }: { setTrackingOrder?: (o
             <button
               type="button"
               data-testid="customer-history-order"
+              data-order-id={order.id}
               onClick={() => setTrackingOrder && setTrackingOrder(order)}
               className="cursor-pointer text-left w-full"
             >
@@ -118,7 +135,7 @@ export function SettingsHistoryTab({ setTrackingOrder }: { setTrackingOrder?: (o
           </div>
         ))
       )}
-      {hasMoreOrders && !isLoadingOrders && (
+      {hasMoreOrders && !isLoadingOrders && failedPage === null && (
         <Button
           onClick={() => fetchOrders(currentPageOrders + 1, 'history')}
           variant="outline"

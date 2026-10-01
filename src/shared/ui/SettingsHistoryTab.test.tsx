@@ -82,3 +82,48 @@ describe('SettingsHistoryTab', () => {
     expect(get).toHaveBeenLastCalledWith('/api/v1/orders/history', { queries: { page: 0 } });
   });
 });
+
+
+describe('history readiness and recovery', () => {
+  beforeEach(() => get.mockReset());
+
+  it('renders an empty history only after a successful empty response', async () => {
+    get.mockResolvedValue({ data: { content: [], last: true } });
+    render(<SettingsHistoryTab />);
+    await screen.findByText('No order history found.');
+    expect(screen.getByTestId('customer-history-state')).toHaveAttribute('data-state', 'empty');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('distinguishes an unavailable history from empty and retries the first page', async () => {
+    get.mockRejectedValueOnce(new Error('history unavailable'))
+      .mockResolvedValueOnce({ data: { content: [order()], last: true } });
+    render(<SettingsHistoryTab />);
+    await screen.findByRole('alert');
+    expect(screen.queryByText('No order history found.')).not.toBeInTheDocument();
+    expect(screen.getByTestId('customer-history-state')).toHaveAttribute('data-state', 'error');
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    await screen.findByText('Brand 1 Outlet 10');
+    expect(get).toHaveBeenLastCalledWith('/api/v1/orders/history', { queries: { page: 0 } });
+    expect(screen.getByTestId('customer-history-order')).toHaveAttribute('data-order-id', order().id);
+    expect(screen.getByTestId('customer-history-state')).toHaveAttribute('data-state', 'populated');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('retains loaded rows after a later page fails and retries that page', async () => {
+    const next = order({ id: '2b3c4d5e-0000-0000-0000-000000000000', restaurantName: 'Second outlet' });
+    get.mockResolvedValueOnce({ data: { content: [order()], last: false } })
+      .mockRejectedValueOnce(new Error('page unavailable'))
+      .mockResolvedValueOnce({ data: { content: [next], last: true } });
+    render(<SettingsHistoryTab />);
+    await screen.findByText('Brand 1 Outlet 10');
+    fireEvent.click(screen.getByRole('button', { name: 'Load More History' }));
+    await screen.findByRole('alert');
+    expect(screen.getByText('Brand 1 Outlet 10')).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    await screen.findByText('Second outlet');
+    expect(get).toHaveBeenLastCalledWith('/api/v1/orders/history', { queries: { page: 1 } });
+    expect(screen.getAllByTestId('customer-history-order')).toHaveLength(2);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+});
