@@ -25,6 +25,8 @@ type Props = Record<string, any>;
 
 export function CustomerMainView({
   activeOrders,
+  onReorder,
+  pendingReorderId,
   addToCart,
   address,
   addressSearchQuery,
@@ -183,6 +185,8 @@ export function CustomerMainView({
         <ErrorBoundary key="panel-feed" fallbackLabel="Restaurant Feed">
           <CustomerRestaurantBrowser
             restaurants={restaurants}
+            onReorder={onReorder}
+            pendingReorderId={pendingReorderId}
             isRestaurantsLoading={isRestaurantsLoading}
             loadFailed={!!restaurantsError}
             onRetry={retryRestaurants}

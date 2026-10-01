@@ -17,6 +17,7 @@ import { useRestaurants } from '@features/catalog/model/useRestaurants';
 import { CallOverlay } from "@features/communication/components/CallOverlay";
 import { type ChatWidgetHandle } from "@features/communication/components/ChatWidget";
 import { isActiveOrder, isFailedOrder } from '@features/customer-orders/model/orderStatus';
+import { useCustomerReorder } from '@features/customer-orders/model/useCustomerReorder';
 import { useCustomerCart } from '@features/customer-orders/model/useCustomerCart';
 import { useCustomerStorefront } from '@features/catalog/model/useCustomerStorefront';
 import { useCustomerAddresses } from '@features/customer-orders/model/useCustomerAddresses';
@@ -152,6 +153,19 @@ export default function CustomerDashboard({
     }
   }, tip);
 
+  const { reorder, pendingOrderId } = useCustomerReorder({
+    locationKey, deliveryAddressId: deliveryAddressId || null, carts,
+    confirmReplacement: () => confirm({
+      title: 'Replace this cart?',
+      description: 'Your current items from this kitchen will be replaced with the previous order, using today’s menu and prices.',
+      confirmLabel: 'Replace cart', cancelLabel: 'Keep current cart', tone: 'primary',
+    }),
+    restoreCart: cart.restoreCart,
+    selectRestaurant: setSelectedRestaurantRoute,
+    openCart: () => setIsCartOpen(true),
+    showError,
+  });
+
   const totalCartItems = Object.values(carts).reduce((sum, cart) => sum + cart.items.reduce((s, i) => s + i.quantity, 0), 0);
 
   useAddressChangeNotice(locationKey, totalCartItems, showInfo);
@@ -208,6 +222,7 @@ export default function CustomerDashboard({
 
   const view = {
     ...addresses, ...storefront, ...cart,
+    onReorder: reorder, pendingReorderId: pendingOrderId,
     // Selection belongs to the address hook. The cart hook's identically named setter
     // only binds its quote requests and must not replace the saved selection setter.
     setDeliveryAddressId: addresses.setDeliveryAddressId,

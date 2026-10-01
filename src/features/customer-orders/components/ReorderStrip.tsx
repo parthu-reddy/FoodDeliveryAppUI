@@ -24,9 +24,10 @@ import type { ReorderSuggestion } from '../model/useReorderSuggestions';
 interface ReorderStripProps {
   suggestions: ReorderSuggestion[];
   onReorder: (suggestion: ReorderSuggestion) => void;
+  pendingOrderId?: string | null;
 }
 
-export function ReorderStrip({ suggestions, onReorder }: ReorderStripProps) {
+export function ReorderStrip({ suggestions, onReorder, pendingOrderId }: ReorderStripProps) {
   const presets = useMotionPresets();
   if (suggestions.length === 0) return null;
 
@@ -54,6 +55,9 @@ export function ReorderStrip({ suggestions, onReorder }: ReorderStripProps) {
             {...presets.press}
             type="button"
             onClick={() => onReorder(s)}
+            disabled={Boolean(pendingOrderId)}
+            aria-busy={pendingOrderId === s.orderId}
+            data-testid="reorder-order" data-order-id={s.orderId}
             aria-label={`Order ${s.headline} from ${s.restaurantName} again, ${formatINR(s.total)}`}
             className="shrink-0 w-[248px] lg:w-auto p-3 text-left flex flex-col gap-2 cursor-pointer transition-transform duration-150 hover:-translate-y-0.5"
             style={surfaceStyle({ elevation: 1, radius: 'lg', variant: 'solid' })}
@@ -84,7 +88,7 @@ export function ReorderStrip({ suggestions, onReorder }: ReorderStripProps) {
                 className="font-mono text-[12px] font-bold"
                 style={{ color: 'var(--color-action-ink)' }}
               >
-                Reorder · {formatINR(s.total)}
+                {pendingOrderId === s.orderId ? "Checking current menu…" : `Reorder · previous total ${formatINR(s.total)}`}
               </span>
             </span>
           </motion.button>

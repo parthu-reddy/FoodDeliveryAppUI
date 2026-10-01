@@ -227,3 +227,20 @@ describe('useCustomerCart payment method', () => {
   });
 
 });
+
+
+describe('validated reorder cart restoration', () => {
+  beforeEach(() => localStorage.clear());
+  afterEach(() => localStorage.clear());
+  test('restores multiple lines and quantities atomically without affecting another outlet', async () => {
+    const other = { ...restaurant, id: '77777777-7777-7777-7777-777777777777' };
+    const extra = { ...item, id: '88888888-8888-8888-8888-888888888888' };
+    const { result } = renderHook(() => useCustomerCart({ locationKey: 'home' }));
+    act(() => result.current.addToCart(item, other));
+    act(() => result.current.restoreCart([{ item, quantity: 3 }, { item: extra, quantity: 2 }], restaurant));
+    expect(result.current.carts[RESTAURANT_ID].items.map(line => line.quantity)).toEqual([3, 2]);
+    expect(result.current.carts[other.id!].items).toEqual([{ item, quantity: 1 }]);
+    const persisted = JSON.parse(localStorage.getItem('food_delivery_carts_v2')!);
+    expect(persisted.home[RESTAURANT_ID].items).toHaveLength(2);
+  });
+});

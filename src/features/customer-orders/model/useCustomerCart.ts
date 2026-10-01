@@ -162,6 +162,18 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
     });
   };
 
+  /** Bulk restoration keeps quantities intact; looping addToCart would hit its click debounce. */
+  const restoreCart = (items: CartItem[], restaurant: Restaurant) => {
+    if (!restaurant.id || items.length === 0) return;
+    setGlobalCarts(previous => ({
+      ...previous,
+      [locationKey]: {
+        ...(previous[locationKey] || {}),
+        [restaurant.id as string]: { items, restaurant, lastUpdated: Date.now() },
+      },
+    }));
+  };
+
   const removeFromCart = (itemId: string, restaurantId: string) => {
     const now = Date.now();
     if (now - cartUpdateRef.current < 50) return;
@@ -588,6 +600,7 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
     setGlobalError,
     checkoutRestaurantId,
     addToCart,
+    restoreCart,
     removeFromCart,
     clearCart,
     getCartTotal,

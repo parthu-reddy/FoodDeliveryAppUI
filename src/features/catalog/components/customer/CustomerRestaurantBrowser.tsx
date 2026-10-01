@@ -6,9 +6,12 @@ import { useMotionPresets } from '@shared/ui';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import CustomerRestaurantCard from './CustomerRestaurantCard';
 import { ReorderStrip } from '@features/customer-orders/components/ReorderStrip';
+import type { ReorderSuggestion } from '@features/customer-orders/model/useReorderSuggestions';
 import { useReorderSuggestions } from '@features/customer-orders/model/useReorderSuggestions';
 
 interface CustomerRestaurantBrowserProps {
+  onReorder: (suggestion: ReorderSuggestion) => void;
+  pendingReorderId?: string | null;
   restaurants: import('@/types').Restaurant[];
   isRestaurantsLoading: boolean;
   /** The nearby request failed. Not the same as an empty area -- see the feed below. */
@@ -37,6 +40,8 @@ function cuisineChips(restaurants: import('@/types').Restaurant[], max = 8): str
 
 export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps> = ({
   restaurants,
+  onReorder,
+  pendingReorderId,
   isRestaurantsLoading,
   loadFailed = false,
   onRetry,
@@ -101,10 +106,8 @@ export const CustomerRestaurantBrowser: React.FC<CustomerRestaurantBrowserProps>
           customer still lands on discovery. */}
       <ReorderStrip
         suggestions={suggestions}
-        onReorder={(s) => {
-          const match = restaurants.find((r) => r.id === s.restaurantId);
-          if (match) setSelectedRestaurant(match);
-        }}
+        onReorder={onReorder}
+        pendingOrderId={pendingReorderId}
       />
 
       {/* The promotional banner that used to sit here is gone.
