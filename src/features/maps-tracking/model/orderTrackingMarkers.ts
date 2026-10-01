@@ -28,12 +28,16 @@ function openDirections(lat: number, lng: number) {
 
   const createRiderMarker = () => {
     // Bike icon
-    return createMapPin({
+    const el = createMapPin({
       tone: 'rider',
       size: 40,
       className: 'cursor-pointer pointer-events-auto',
       icon: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 5.5h5l-4-5h-3L8 12M5.5 17.5 8 12M18.5 17.5 15 11.5"/></svg>',
     });
+    el.setAttribute('role', 'img');
+    el.setAttribute('aria-label', 'Courier location');
+    el.dataset.testid = 'courier-location-marker';
+    return el;
   };
 
   const createRestaurantMarker = (lat: number, lng: number) => {

@@ -15,6 +15,7 @@ export interface LatLng {
 
 /** A usable coordinate, or null. (0, 0) is the "unset" value some rows carry, not a place. */
 export function knownPoint(lat: unknown, lng: unknown): LatLng | null {
+  if ((typeof lat === 'string' && lat.trim() === '') || (typeof lng === 'string' && lng.trim() === '')) return null;
   const la = typeof lat === 'string' ? Number(lat) : lat;
   const ln = typeof lng === 'string' ? Number(lng) : lng;
   if (typeof la !== 'number' || typeof ln !== 'number') return null;

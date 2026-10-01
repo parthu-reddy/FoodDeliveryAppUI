@@ -35,7 +35,7 @@ export default function CustomerActiveOrdersCarousel({
         cartLength > 0 ? 'bottom-24' : 'bottom-4'
       }`}
     >
-      <ul className="flex overflow-x-auto snap-x snap-mandatory px-5 gap-4 pb-2 pointer-events-auto list-none">
+      <ul aria-label="Active orders" data-testid="active-orders-carousel" className="flex overflow-x-auto snap-x snap-mandatory px-5 gap-4 pb-2 pointer-events-auto list-none">
         {inFlight
           .slice()
           .reverse()
@@ -44,6 +44,8 @@ export default function CustomerActiveOrdersCarousel({
             return (
               <li key={order.id} className="shrink-0 w-[85%] sm:w-[340px] snap-center">
                 <button
+                  data-testid="active-order-card"
+                  data-order-id={order.id}
                   onClick={() => setTrackingOrder(order)}
                   className="w-full text-left cursor-pointer"
                   aria-label={`Track your order from ${order.restaurantName}`}

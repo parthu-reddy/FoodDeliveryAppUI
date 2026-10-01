@@ -32,14 +32,13 @@ interface OrderTrackingMapProps {
 export default function OrderTrackingMap(props: OrderTrackingMapProps) {
   return (
     <ErrorBoundary>
-      <OrderTrackingMapInner {...props} />
+      <OrderTrackingMapInner key={`${props.order.id}:${Boolean(props.enableLiveTracking)}:${Boolean(props.viewerIsRider)}`} {...props} />
     </ErrorBoundary>
   );
 }
 
 function OrderTrackingMapInner({ order, enableLiveTracking = false, viewerIsRider = false }: OrderTrackingMapProps) {
   useConfig();
-  const [, setMapInstance] = useState<MapInstance | null>(null);
   const [liveState, setLiveState] = useState<LiveStreamState>('connecting');
   const [missingNote, setMissingNote] = useState<string | null>(null);
   const initialCentre = knownPoint(order.deliveryLat, order.deliveryLng);
@@ -61,7 +60,6 @@ function OrderTrackingMapInner({ order, enableLiveTracking = false, viewerIsRide
           console.warn('Could not fetch restaurant location', err);
         }
         if (!active) return;
-        setMapInstance(map);
         setMissingNote(missingPointsNote(restaurant, customer));
 
         const place = (rider: LatLng | null) => {
@@ -100,19 +98,21 @@ function OrderTrackingMapInner({ order, enableLiveTracking = false, viewerIsRide
 
       try {
         const token = getToken();
-        fetchEventSource(`${import.meta.env.VITE_API_BASE_URL || ''}/api/v1/orders/${order.id}/live-tracking`, {
+        void fetchEventSource(`${import.meta.env.VITE_API_BASE_URL || ''}/api/v1/orders/${order.id}/live-tracking`, {
           method: 'GET',
           headers: token ? {
             'Authorization': `Bearer ${token}`
           } : {},
           signal: ctrl.signal,
           async onopen(res) {
-            if (res.ok && res.status === 200) {
+            if (res.status === 200 && res.headers.get('content-type')?.split(';')[0].trim().toLowerCase() === 'text/event-stream') {
               retryCount = 0;
               if (active) setLiveState('live');
             } else if (res.status >= 400 && res.status < 500 && res.status !== 429) {
               if (active) setLiveState('unavailable');
               throw new FatalStreamError(`Live tracking stream refused: ${res.status}`);
+            } else {
+              throw new Error(`Live tracking stream unavailable: ${res.status}`);
             }
           },
           onmessage(event) {
@@ -120,10 +120,11 @@ function OrderTrackingMapInner({ order, enableLiveTracking = false, viewerIsRide
             retryCount = 0;
             try {
               const data = JSON.parse(event.data);
-              if (data.lat && data.lng) {
+              const point = knownPoint(data.lat, data.lng);
+              if (point) {
                 if (!riderMarker) {
                   riderMarker = new maplibre.Marker({ element: createRiderMarker() })
-                    .setLngLat([data.lng, data.lat])
+                    .setLngLat([point.lng, point.lat])
                     .addTo(map);
                 }
                 // Travel to the fix rather than teleporting to it: the stream delivers a
@@ -132,15 +133,25 @@ function OrderTrackingMapInner({ order, enableLiveTracking = false, viewerIsRide
                 if (!riderMover) {
                   const marker = riderMarker;
                   riderMover = createSmoothMover(
-                    (position) => marker.setLngLat(position),
+                    (position) => {
+                      marker.setLngLat(position);
+                      // These describe the rendered marker's position, including animation.
+                      const element = marker.getElement();
+                      element.dataset.lng = String(position[0]);
+                      element.dataset.lat = String(position[1]);
+                    },
                     { reduceMotion: prefersReducedMotion() },
                   );
                 }
-                riderMover.moveTo([data.lng, data.lat]);
+                riderMover.moveTo([point.lng, point.lat]);
               }
             } catch (e: unknown) {
               console.warn('Error parsing SSE data', e);
             }
+          },
+          onclose() {
+            // EOF is a disconnected stream, even when its HTTP handshake succeeded.
+            throw new Error('Live tracking stream closed');
           },
           onerror(err) {
             if (err instanceof FatalStreamError) throw err;
@@ -150,8 +161,13 @@ function OrderTrackingMapInner({ order, enableLiveTracking = false, viewerIsRide
             const backoffDelay = Math.min(1000 * Math.pow(2, retryCount - 1), 16000);
             return backoffDelay;
           }
+        }).catch(() => {
+          // Fatal refusal ends the fetch promise; consume it rather than producing an
+          // unhandled rejection. Retryable errors are handled by onerror above.
+          if (active) setLiveState('unavailable');
         });
       } catch (e: unknown) {
+        if (active) setLiveState('unavailable');
         console.warn('Could not connect to SSE stream', e);
       }
     }

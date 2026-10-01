@@ -36,3 +36,11 @@ describe('missingPointsNote', () => {
     expect(missingPointsNote(R, null)).toBe('Delivery location unavailable');
   });
 });
+
+
+it('treats blank coordinate strings as missing while accepting a single zero axis', () => {
+  expect(knownPoint('', '77')).toBeNull();
+  expect(knownPoint('12', '   ')).toBeNull();
+  expect(knownPoint(0, 10)).toEqual({ lat: 0, lng: 10 });
+  expect(knownPoint(10, 0)).toEqual({ lat: 10, lng: 0 });
+});
