@@ -85,6 +85,50 @@ export const endpoints = makeApi([
   },
   {
     method: "post",
+    path: "/api/v1/internal/auth/register",
+    alias: "registerWithOtp",
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "phoneNumber",
+        type: "Query",
+        schema: z.string(),
+      },
+      {
+        name: "otp",
+        type: "Query",
+        schema: z.string(),
+      },
+      {
+        name: "X-Calling-Service",
+        type: "Header",
+        schema: z.string(),
+      },
+      {
+        name: "X-Device-Info",
+        type: "Header",
+        schema: z.string().optional(),
+      },
+      {
+        name: "X-Device-OS",
+        type: "Header",
+        schema: z.string().optional(),
+      },
+      {
+        name: "X-Device-Browser",
+        type: "Header",
+        schema: z.string().optional(),
+      },
+      {
+        name: "removeSessionId",
+        type: "Query",
+        schema: z.string().optional(),
+      },
+    ],
+    response: ApiResponseString,
+  },
+  {
+    method: "post",
     path: "/api/v1/internal/auth/logout",
     alias: "logout",
     requestFormat: "json",

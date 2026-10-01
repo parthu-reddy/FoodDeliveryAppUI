@@ -14,6 +14,7 @@ export interface Session {
 
 interface SessionManagementModalProps {
   isOpen: boolean;
+  isRegistration?: boolean;
   onClose: () => void;
   sessions: Session[];
   phoneNumber: string;
@@ -23,7 +24,7 @@ interface SessionManagementModalProps {
   theme?: 'light' | 'dark';
 }
 
-export default function SessionManagementModal({ isOpen, onClose, sessions, phoneNumber, otpCode, serviceName, onSuccess, theme = 'light' }: SessionManagementModalProps) {
+export default function SessionManagementModal({ isOpen, isRegistration = false, onClose, sessions, phoneNumber, otpCode, serviceName, onSuccess, theme = 'light' }: SessionManagementModalProps) {
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [error, setError] = useState('');
 
@@ -33,7 +34,7 @@ export default function SessionManagementModal({ isOpen, onClose, sessions, phon
     setLoadingId(sessionId);
     setError('');
     try {
-      const resp = await identityApi.auth.post('/api/v1/internal/auth/verify', undefined, {
+      const resp = await identityApi.auth.post(isRegistration ? '/api/v1/internal/auth/register' : '/api/v1/internal/auth/verify', undefined, {
         queries: { phoneNumber, otp: otpCode, removeSessionId: sessionId },
         headers: { "X-Calling-Service": serviceName }
       });

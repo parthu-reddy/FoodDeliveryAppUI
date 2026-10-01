@@ -79,6 +79,8 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
               <AuthForm
                 key="panel-auth"
                 selectedRole={login.selectedRole}
+                isRegistration={login.isRegistration}
+                onToggleRegistration={login.toggleRegistration}
                 phone={login.phoneNumber}
                 setPhone={login.setPhone}
                 otpCode={login.otpCode}
@@ -104,6 +106,7 @@ export default function LoginScreen({ onLoginSuccess, onAddApiLog }: LoginScreen
 
       <SessionManagementModal
         isOpen={login.showSessionModal}
+        isRegistration={login.isRegistration}
         onClose={() => login.setShowSessionModal(false)}
         sessions={login.activeSessions}
         phoneNumber={login.phoneNumber}

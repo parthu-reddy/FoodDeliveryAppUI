@@ -52,6 +52,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/internal/auth/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["registerWithOtp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/internal/auth/logout": {
         parameters: {
             query?: never;
@@ -398,6 +414,35 @@ export interface operations {
         };
     };
     verifyOtp: {
+        parameters: {
+            query: {
+                phoneNumber: string;
+                otp: string;
+                removeSessionId?: string;
+            };
+            header: {
+                "X-Calling-Service": string;
+                "X-Device-Info"?: string;
+                "X-Device-OS"?: string;
+                "X-Device-Browser"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseString"];
+                };
+            };
+        };
+    };
+    registerWithOtp: {
         parameters: {
             query: {
                 phoneNumber: string;

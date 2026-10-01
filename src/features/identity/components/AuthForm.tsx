@@ -8,6 +8,8 @@ import React from 'react';
 
 interface AuthFormProps {
   selectedRole: UserRole;
+  isRegistration: boolean;
+  onToggleRegistration: () => void;
   phone: string;
   setPhone: (val: string) => void;
   otpCode: string;
@@ -25,6 +27,8 @@ interface AuthFormProps {
 
 export function AuthForm({
   selectedRole,
+  isRegistration,
+  onToggleRegistration,
   phone,
   setPhone,
   otpCode,
@@ -88,7 +92,7 @@ export function AuthForm({
             {getRoleLabel()}
           </span>
           <h2 className={`text-3xl font-black tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>
-            {!otpSent ? 'Login / Register' : 'OTP Verification'}
+            {!otpSent ? (isRegistration ? 'Create Account' : 'Sign In') : 'OTP Verification'}
           </h2>
           <p className={`text-sm font-medium ${theme === 'dark' ? 'text-slate-300' : 'text-slate-500 dark:text-slate-300'}`}>
             {!otpSent 
@@ -134,6 +138,12 @@ export function AuthForm({
             >
               Send One-Time OTP
             </Button>
+            {selectedRole !== RoleName.ADMIN && (
+              <button type="button" onClick={onToggleRegistration} disabled={loading}
+                className="w-full text-sm font-semibold text-rose-500 hover:underline disabled:opacity-50">
+                {isRegistration ? 'Use existing account' : 'Create account'}
+              </button>
+            )}
           </form>
         ) : (
           <form onSubmit={onVerifyOtp} className="space-y-4 relative z-10">
@@ -190,7 +200,7 @@ export function AuthForm({
               loading={loading}
               icon={<Shield className="w-5 h-5" />}
             >
-              Verify & Secure Log In
+              {isRegistration ? 'Verify & Create Account' : 'Verify & Secure Log In'}
             </Button>
           </form>
         )}

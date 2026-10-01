@@ -136,6 +136,7 @@ interface UseOtpLoginOptions {
 export function useOtpLogin({ onLoginSuccess, onAddApiLog }: UseOtpLoginOptions) {
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
   const [phoneNumber, setPhone] = useState('');
+  const [isRegistration, setIsRegistration] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const [generatedOtp, setGeneratedOtp] = useState('');
@@ -314,9 +315,10 @@ export function useOtpLogin({ onLoginSuccess, onAddApiLog }: UseOtpLoginOptions)
     if (!validation.success) return setError(validation.error.issues[0].message);
 
     setLoading(true);
-    onAddApiLog?.({ id: 'auth_verify', label: 'POST /api/v1/internal/auth/verify', method: 'POST' });
+    const path = isRegistration ? '/api/v1/internal/auth/register' : '/api/v1/internal/auth/verify';
+    onAddApiLog?.({ id: 'auth_verify', label: `POST ${path}`, method: 'POST' });
     try {
-      const resp = await identityApi.auth.post('/api/v1/internal/auth/verify', undefined, {
+      const resp = await identityApi.auth.post(path, undefined, {
         queries: { phoneNumber, otp: otpCode },
         headers: { 'X-Calling-Service': roleToServiceName(selectedRole!) },
       });
@@ -345,6 +347,7 @@ export function useOtpLogin({ onLoginSuccess, onAddApiLog }: UseOtpLoginOptions)
       setOtpCode('');
     } else {
       setSelectedRole(null);
+      setIsRegistration(false);
       setPhone('');
     }
     setError('');
@@ -354,7 +357,16 @@ export function useOtpLogin({ onLoginSuccess, onAddApiLog }: UseOtpLoginOptions)
     resetDevOtp();
     setLoading(false);
     setSelectedRole(role);
+    setIsRegistration(false);
     setOtpSent(false);
+    setOtpCode('');
+    setError('');
+  };
+
+  const toggleRegistration = () => {
+    if (!selectedRole || selectedRole === RoleName.ADMIN || loading || otpSent) return;
+    resetDevOtp();
+    setIsRegistration((current) => !current);
     setOtpCode('');
     setError('');
   };
@@ -387,7 +399,7 @@ export function useOtpLogin({ onLoginSuccess, onAddApiLog }: UseOtpLoginOptions)
   };
 
   return {
-    selectedRole, selectRole,
+    selectedRole, selectRole, isRegistration, toggleRegistration,
     phoneNumber, setPhone,
     otpSent, otpCode, setOtpCode, generatedOtp,
     canAutofillOtp: generatedOtp.length === 6,
