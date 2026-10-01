@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { server } from '@/mocks/server';
@@ -19,6 +19,7 @@ describe('useCustomerCart payment method', () => {
     orderPosts = 0;
     lastOrderBody = null;
     localStorage.clear();
+    window.history.replaceState({}, '', window.location.href);
     server.use(
       http.post('*/api/v1/orders', async ({ request }) => {
         orderPosts++;
@@ -33,11 +34,12 @@ describe('useCustomerCart payment method', () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     localStorage.clear();
   });
 
-  const primedCart = async () => {
-    const rendered = renderHook(() => useCustomerCart({ locationKey: 'test-location' }));
+  const primedCart = async (options: Partial<Parameters<typeof useCustomerCart>[0]> = {}) => {
+    const rendered = renderHook(() => useCustomerCart({ locationKey: 'test-location', ...options }));
     act(() => {
       rendered.result.current.addToCart(item, restaurant);
     });
@@ -167,6 +169,61 @@ describe('useCustomerCart payment method', () => {
     expect(result.current.carts[RESTAURANT_ID]).toBeUndefined();
     expect(result.current.paymentStatus).toBe('idle');
     expect(result.current.globalError).toBe('Removed unavailable items from cart: Dosa');
+  });
+
+
+  test('tracking starts from the current server order after fast Dev payment completion', async () => {
+    const orderId = '88888888-8888-4888-8888-888888888888';
+    const onPlaceOrder = vi.fn();
+    const setTrackingOrder = vi.fn();
+    let orderReads = 0;
+    server.use(
+      http.post('*/api/v1/orders', () => {
+        orderPosts++;
+        return HttpResponse.json({ success: true, data: { id: orderId, status: 'CREATED' } });
+      }),
+      http.get('*/api/v1/orders/:orderId', ({ params }) => {
+        expect(params.orderId).toBe(orderId);
+        orderReads++;
+        return HttpResponse.json({ success: true, data: { id: orderId, status: 'PENDING_ACCEPTANCE' } });
+      }),
+    );
+    const { result } = await primedCart({ onPlaceOrder, setTrackingOrder });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    await act(async () => result.current.processPaymentAndOrder('CARD', ADDRESS_ID, () => {}));
+    expect(result.current.paymentStatus).toBe('success');
+    expect(setTrackingOrder).not.toHaveBeenCalled();
+    await act(async () => { await vi.advanceTimersByTimeAsync(3000); });
+    await waitFor(() => expect(setTrackingOrder).toHaveBeenCalledWith({ id: orderId, status: 'PENDING_ACCEPTANCE' }));
+    expect(onPlaceOrder).toHaveBeenCalledWith({ id: orderId, status: 'PENDING_ACCEPTANCE' });
+    expect(orderPosts).toBe(1);
+    expect(orderReads).toBe(1);
+  });
+
+
+  test('a failed tracking refresh preserves successful creation without another order POST', async () => {
+    const orderId = '99999999-9999-4999-8999-999999999999';
+    const onPlaceOrder = vi.fn();
+    const setTrackingOrder = vi.fn();
+    const onSuccess = vi.fn();
+    server.use(
+      http.post('*/api/v1/orders', () => {
+        orderPosts++;
+        return HttpResponse.json({ success: true, data: { id: orderId, status: 'CREATED' } });
+      }),
+      http.get('*/api/v1/orders/:orderId', () => HttpResponse.json({ success: false }, { status: 503 })),
+    );
+    const { result } = await primedCart({ onPlaceOrder, setTrackingOrder });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    await act(async () => result.current.processPaymentAndOrder('CARD', ADDRESS_ID, onSuccess));
+    await act(async () => { await vi.advanceTimersByTimeAsync(3000); });
+    await waitFor(() => expect(onSuccess).toHaveBeenCalledTimes(1));
+    expect(setTrackingOrder).toHaveBeenCalledWith({ id: orderId, status: 'CREATED' });
+    expect(onPlaceOrder).toHaveBeenCalledTimes(1);
+    expect(orderPosts).toBe(1);
+    expect(result.current.carts[RESTAURANT_ID]).toBeUndefined();
+    expect(result.current.paymentStatus).toBe('idle');
+    await waitFor(() => expect(result.current.isPaymentModalOpen).toBe(false));
   });
 
 });

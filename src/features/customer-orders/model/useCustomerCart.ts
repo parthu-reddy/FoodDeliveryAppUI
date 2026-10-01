@@ -459,11 +459,23 @@ export function useCustomerCart({ locationKey, onAddApiLog, onPlaceOrder, setTra
 
       setPaymentStatus('success');
        
-      setTimeout(() => {
-         
+      setTimeout(async () => {
         if (res.data?.id) {
-          onPlaceOrder?.(res.data as import('@/types').Order);
-          setTrackingOrder?.(res.data as import('@/types').Order);
+          let placedOrder = res.data as import('@/types').Order;
+          // Payment can complete while the success state is showing. Start tracking from
+          // the current server order rather than holding CREATED until the first 30s poll.
+          try {
+            const current = await customerApi.order.getOrder({ params: { orderId: res.data.id }, timeout: 5000 });
+            if (current.success && current.data?.id === res.data.id) {
+              placedOrder = current.data as import('@/types').Order;
+            }
+          } catch (refreshError) {
+            // The POST already succeeded. Preserve that order and never repeat payment
+            // because a follow-up read failed; the normal order poller can reconcile it.
+            console.warn('Could not refresh the created order before tracking', refreshError);
+          }
+          onPlaceOrder?.(placedOrder);
+          setTrackingOrder?.(placedOrder);
 
           setGlobalCarts(prevGlobal => {
             const prevLocationCarts = prevGlobal[locationKey] || {};

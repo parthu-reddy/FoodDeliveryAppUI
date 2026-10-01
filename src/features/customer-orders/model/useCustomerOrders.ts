@@ -52,6 +52,7 @@ export function useCustomerOrders({ onUpdateOrder }: UseCustomerOrdersOptions = 
     .map(o => o.id)
     .sort()
     .join(',');
+  const hasCreatedOrders = internalOrders.some(o => o.status === 'CREATED');
 
   useEffect(() => {
     if (!activeOrderIdsStr) return;
@@ -59,6 +60,7 @@ export function useCustomerOrders({ onUpdateOrder }: UseCustomerOrdersOptions = 
     let isSubscribed = true;
     let timeoutId: NodeJS.Timeout;
     let retryCount = 0;
+    let createdPollCount = 0;
 
     const pollOrders = () => {
       customerApi.order.getActiveOrders({ queries: { page: 0, size: 50 } })
@@ -118,7 +120,13 @@ export function useCustomerOrders({ onUpdateOrder }: UseCustomerOrdersOptions = 
           const hasPreparingOrAccepted = updatedOrders.some((o: Order) => o.status === 'PREPARING' || o.status === 'ACCEPTED');
           
           let nextInterval = 60000;
-          if (hasOutForDelivery) {
+          // Payment completion may arrive just after order creation. Reconcile CREATED
+          // promptly, then return to normal polling even if payment stays pending.
+          const stillCreated = updatedOrders.some((o: Order) => o.status === 'CREATED');
+          if (stillCreated) createdPollCount++;
+          if (stillCreated && createdPollCount < 10) {
+            nextInterval = 2000;
+          } else if (hasOutForDelivery) {
             nextInterval = 10000; 
           } else if (hasPreparingOrAccepted) {
             nextInterval = 30000; 
@@ -136,13 +144,13 @@ export function useCustomerOrders({ onUpdateOrder }: UseCustomerOrdersOptions = 
         });
     };
 
-    timeoutId = setTimeout(pollOrders, 30000); 
+    timeoutId = setTimeout(pollOrders, hasCreatedOrders ? 0 : 30000);
 
     return () => {
       isSubscribed = false;
       clearTimeout(timeoutId);
     };
-  }, [activeOrderIdsStr]);
+  }, [activeOrderIdsStr, hasCreatedOrders]);
 
   const activeOrders = internalOrders.filter(o => isActiveOrder(o) || isFailedOrder(o));
 

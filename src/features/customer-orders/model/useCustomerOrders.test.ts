@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { server } from '@/mocks/server';
 import { OrderStatus } from '@/types/backend-enums';
@@ -95,4 +95,39 @@ describe('useCustomerOrders polling', () => {
     // It is still shown to the customer -- finished, not hidden.
     expect(result.current.activeOrders.map(o => o.id)).toContain(ORDER_ID);
   });
+
+  test('a newly created order observes payment completion promptly, then stops rapid polling', async () => {
+    let status = OrderStatus.CREATED;
+    let requests = 0;
+    server.use(http.get('*/api/v1/orders/active', () => {
+      requests++;
+      return HttpResponse.json(orderPage(status));
+    }));
+    const { result } = renderHook(() => useCustomerOrders());
+    await waitFor(() => expect(result.current.internalOrders).toHaveLength(1));
+    status = OrderStatus.PENDING_ACCEPTANCE;
+    await act(async () => { await vi.advanceTimersByTimeAsync(2500); });
+    await waitFor(() => expect(result.current.internalOrders[0].status).toBe(OrderStatus.PENDING_ACCEPTANCE));
+    const requestsAfterPayment = requests;
+    await act(async () => { await vi.advanceTimersByTimeAsync(6000); });
+    expect(requests).toBe(requestsAfterPayment);
+  });
+
+  test('an order that stays CREATED returns to normal polling after the bounded payment refresh', async () => {
+    let requests = 0;
+    server.use(http.get('*/api/v1/orders/active', () => {
+      requests++;
+      return HttpResponse.json(orderPage(OrderStatus.CREATED));
+    }));
+    const { result } = renderHook(() => useCustomerOrders());
+    await waitFor(() => expect(result.current.internalOrders).toHaveLength(1));
+    await act(async () => { await vi.advanceTimersByTimeAsync(25000); });
+    expect(requests).toBeGreaterThan(1);
+    expect(requests).toBeLessThanOrEqual(11);
+    const requestsAfterBurst = requests;
+    await act(async () => { await vi.advanceTimersByTimeAsync(10000); });
+    expect(requests).toBe(requestsAfterBurst);
+    expect(result.current.internalOrders[0].status).toBe(OrderStatus.CREATED);
+  });
+
 });
