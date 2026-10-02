@@ -108,22 +108,20 @@ export function usePolling<T>({
       return;
     }
 
-    // Initial fetch
-    executeFetch();
-
-    // Schedule repeating polls
-    const schedule = () => {
-      timeoutRef.current = setTimeout(async () => {
-        if (!isSubscribedRef.current) return;
-        await executeFetch();
-        if (isSubscribedRef.current) {
-          schedule();
-        }
-      }, intervalMs);
+    // Fetch now, then schedule each poll only after the previous request settles, so a slow
+    // backend never sees overlapping requests from one hook. `cancelled` belongs to this run:
+    // a request still in flight when the inputs change must not start a second polling chain.
+    let cancelled = false;
+    const poll = async () => {
+      await executeFetch();
+      if (!cancelled) {
+        timeoutRef.current = setTimeout(() => { void poll(); }, intervalMs);
+      }
     };
-    schedule();
+    void poll();
 
     return () => {
+      cancelled = true;
       isSubscribedRef.current = false;
       fetchIdRef.current += 1;
       if (timeoutRef.current) {

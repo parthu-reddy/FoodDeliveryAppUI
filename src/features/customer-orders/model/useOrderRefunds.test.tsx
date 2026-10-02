@@ -58,4 +58,25 @@ describe('order-scoped refund recovery', () => {
     unmount(); await act(async () => vi.advanceTimersByTimeAsync(REFUND_REFRESH_MS * 2));
     expect(get).toHaveBeenCalledTimes(2);
   });
+
+  it.each([
+    ['no refunds', [] as RefundView[]],
+    ['only settled refunds', [{ ...pending, status: 'COMPLETED' }, { ...pending, id: 'r2', status: 'FAILED' }] as RefundView[]],
+  ])('stops polling an ended order with %s', async (_, refunds) => {
+    get.mockResolvedValue(refunds);
+    const { result } = renderHook(() => useOrderRefunds('order-a', true));
+    await flush(); expect(result.current.refunds).toEqual(refunds);
+    await act(async () => vi.advanceTimersByTimeAsync(REFUND_REFRESH_MS * 4));
+    expect(get).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps polling until a pending refund settles, then stops', async () => {
+    get.mockResolvedValueOnce([pending]).mockResolvedValue([{ ...pending, status: 'COMPLETED' }]);
+    const { result } = renderHook(() => useOrderRefunds('order-a', true));
+    await flush();
+    await act(async () => vi.advanceTimersByTimeAsync(REFUND_REFRESH_MS));
+    expect(result.current.refunds[0].status).toBe('COMPLETED');
+    await act(async () => vi.advanceTimersByTimeAsync(REFUND_REFRESH_MS * 4));
+    expect(get).toHaveBeenCalledTimes(2);
+  });
 });

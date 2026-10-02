@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { usePolling } from './usePolling';
@@ -53,5 +53,50 @@ describe('usePolling', () => {
 
     await waitFor(() => expect(result.current.data).toBe('second result'));
     expect(result.current.dataRefreshKey).toBe('order-b');
+  });
+
+  it('schedules the next poll only after a slow request settles', async () => {
+    vi.useFakeTimers();
+    try {
+      let settle: ((value: string) => void) | undefined;
+      const fetchFn = vi.fn()
+        .mockImplementationOnce(() => new Promise<string>((resolve) => { settle = resolve; }))
+        .mockResolvedValue('next');
+      renderHook(() => usePolling({ fetchFn, intervalMs: 1_000, enabled: true }));
+
+      await act(async () => { await vi.advanceTimersByTimeAsync(5_000); });
+      expect(fetchFn).toHaveBeenCalledTimes(1);
+
+      await act(async () => { settle?.('first'); await vi.advanceTimersByTimeAsync(1_000); });
+      expect(fetchFn).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('keeps a single polling chain when the key changes while a poll is in flight', async () => {
+    vi.useFakeTimers();
+    try {
+      let settle: ((value: string) => void) | undefined;
+      const fetchFn = vi.fn()
+        .mockResolvedValueOnce('first')
+        .mockImplementationOnce(() => new Promise<string>((resolve) => { settle = resolve; }))
+        .mockResolvedValue('next');
+      const { rerender } = renderHook(
+        ({ refreshKey }) => usePolling({ fetchFn, intervalMs: 1_000, enabled: true, refreshKey }),
+        { initialProps: { refreshKey: 'a' } },
+      );
+      await act(async () => { await vi.advanceTimersByTimeAsync(1_000); });
+      expect(fetchFn).toHaveBeenCalledTimes(2);
+
+      rerender({ refreshKey: 'b' });
+      await act(async () => { settle?.('stale'); await vi.advanceTimersByTimeAsync(0); });
+      const settled = fetchFn.mock.calls.length;
+
+      await act(async () => { await vi.advanceTimersByTimeAsync(3_000); });
+      expect(fetchFn.mock.calls.length - settled).toBe(3);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
