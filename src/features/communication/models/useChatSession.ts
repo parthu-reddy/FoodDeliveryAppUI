@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { chatApi } from '@/lib/zodiosClients';
+import { parseInstant } from '@/shared/time';
 import { getToken, getUserProfile } from '@/lib/tokenStore';
 import { type ChatMessage, type TypingIndicator } from '@/types';
 import { useChatWebSocket } from '@features/communication/models/useChatWebSocket';
@@ -51,6 +52,8 @@ export function useChatSession({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const previousOrderIdRef = useRef(orderId);
+  const showErrorRef = useRef(showError);
+  useLayoutEffect(() => { showErrorRef.current = showError; }, [showError]);
 
   // A widget can stay mounted while its parent selects another order. Clear every order-scoped
   // value before initializing the new chat so a prior order's session or messages cannot remain
@@ -189,17 +192,6 @@ useEffect(() => {
         const otherParticipant = canonicalParticipants.find((p) => p.userId !== user.id);
         setTargetUserId(otherParticipant?.userId ?? null);
 
-        // A history failure should not discard a valid session or block sending messages.
-        try {
-          const histData = await chatApi.chatSession.get('/api/v1/chat/sessions/:sessionId/messages', { params: { sessionId: sid } });
-          if (!cancelled && histData && histData.success) {
-            setMessages((histData.data?.content as ChatMessage[]) ?? []);
-          }
-        } catch {
-          if (cancelled) return;
-          console.error("Error loading chat history.");
-          showError("Chat connected, but previous messages could not be loaded.");
-        }
       } catch {
         if (cancelled) return;
         console.error("Error initializing chat session.");
@@ -216,8 +208,33 @@ useEffect(() => {
   }
   return undefined;
  
-// eslint-disable-next-line react-hooks/exhaustive-deps
 }, [isOpen, sessionId, orderId, token, user, sessionRetryAttempt]);
+
+// Saving sessionId ends initialization. Give history its own lifetime so that cleanup
+// cannot discard its response or leave the composer in the initialization spinner.
+useEffect(() => {
+  if (!sessionId) return;
+  let cancelled = false;
+  const loadHistory = async () => {
+    try {
+      const response = await chatApi.chatSession.get('/api/v1/chat/sessions/:sessionId/messages',
+        { params: { sessionId } });
+      if (cancelled || !response?.success) return;
+      const history = (response.data?.content as ChatMessage[]) ?? [];
+      setMessages(current => {
+        const byId = new Map(history.map(message => [message.id, message]));
+        for (const message of current) byId.set(message.id, message);
+        return [...byId.values()].sort((a, b) => parseInstant(a.timestamp) - parseInstant(b.timestamp));
+      });
+    } catch {
+      if (cancelled) return;
+      console.error('Error loading chat history.');
+      showErrorRef.current('Chat connected, but previous messages could not be loaded.');
+    }
+  };
+  void loadHistory();
+  return () => { cancelled = true; };
+}, [sessionId]);
 
 const handleSend = (e?: React.FormEvent) => {
   e?.preventDefault();

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { RefundRequestModal } from './RefundRequestModal';
 
@@ -24,7 +24,7 @@ describe('Refund quote form readiness', () => {
       { target: { value: 'Missing portions' } });
     const submit = screen.getByRole('button', { name: 'Request Quote' });
     expect(submit).toBeDisabled();
-    expect(screen.getByText('Connecting to chat before sending your quote request…')).toBeVisible();
+    await waitFor(() => expect(screen.getByText('Connecting to chat before sending your quote request…')).toBeVisible());
     fireEvent.click(submit);
     expect(onSubmit).not.toHaveBeenCalled();
 
@@ -45,7 +45,7 @@ describe('Refund quote form readiness', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Request Quote' }));
     expect(onSubmit).toHaveBeenCalledOnce();
     expect(onClose).not.toHaveBeenCalled();
-    expect(screen.getByRole('dialog', { name: 'Request refund quote' })).toBeVisible();
+    await waitFor(() => expect(screen.getByRole('dialog', { name: 'Request refund quote' })).toBeVisible());
     expect(screen.getByRole('checkbox', { name: /Selected dish/ })).toBeChecked();
   });
 });

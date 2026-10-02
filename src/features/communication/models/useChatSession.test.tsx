@@ -58,6 +58,32 @@ describe('useChatSession initialization', () => {
     HTMLElement.prototype.scrollIntoView = vi.fn();
   });
 
+  it('ends initialization before deferred history completes and retains the returned messages', async () => {
+    mocks.createSession.mockResolvedValue({ success: true, data: { sessionId: 'session-123', participants: [] } });
+    let resolveHistory: ((value: unknown) => void) | undefined;
+    mocks.loadHistory.mockImplementation(() => new Promise(resolve => { resolveHistory = resolve; }));
+    const { result } = renderHook(() => useChatSession({ orderId: 'order-123', isOpen: true, showError: mocks.showError }));
+    await waitFor(() => {
+      expect(result.current.sessionId).toBe('session-123');
+      expect(result.current.isLoading).toBe(false);
+      expect(mocks.loadHistory).toHaveBeenCalledOnce();
+    });
+    const message = { id: 'saved-message', content: 'Earlier message', timestamp: '2026-09-29T10:00:00Z' };
+    await act(async () => { resolveHistory?.({ success: true, data: { content: [message] } }); });
+    expect(result.current.messages).toEqual([message]);
+  });
+
+  it('keeps the session usable and reports a history failure without restarting initialization', async () => {
+    mocks.createSession.mockResolvedValue({ success: true, data: { sessionId: 'session-123', participants: [] } });
+    mocks.loadHistory.mockRejectedValue(new Error('History unavailable'));
+    const { result } = renderHook(() => useChatSession({ orderId: 'order-123', isOpen: true, showError: mocks.showError }));
+    await waitFor(() => expect(mocks.showError).toHaveBeenCalledWith('Chat connected, but previous messages could not be loaded.'));
+    expect(result.current.sessionId).toBe('session-123');
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.sessionInitError).toBe(false);
+    expect(mocks.createSession).toHaveBeenCalledOnce();
+  });
+
   it('exposes a retry after session creation fails and retries the request', async () => {
     mocks.createSession.mockRejectedValue(new Error('HTTP 409'));
 
