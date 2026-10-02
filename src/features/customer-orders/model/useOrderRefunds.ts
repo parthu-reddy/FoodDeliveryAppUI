@@ -1,40 +1,48 @@
 import { customerApi } from '@/lib/zodiosClients';
-import { RefundView } from '@/types';
-import { useEffect, useState } from 'react';
+import type { RefundView } from '@/types';
+import { useCallback, useEffect, useState } from 'react';
 
 const NONE: RefundView[] = [];
+export const REFUND_REFRESH_MS = 15_000;
+interface Loaded { orderId: string; refunds: RefundView[]; error: string | null }
+export interface OrderRefundResult {
+  refunds: RefundView[];
+  error: string | null;
+  isLoading: boolean;
+  retry: () => void;
+}
 
-/**
- * The refunds raised against one order.
- *
- * A cancelled order used to show the customer nothing about their money: the tracker said the
- * order "will be refunded" and then never mentioned it again, while `RefundService` had already
- * recorded a status, an amount and a destination the customer could not see. Store credit in
- * particular is invisible if nobody tells you that is where the money went.
- *
- * Fetched only for orders that ended -- a live order has no refund to show. The result is stored
- * with the id it was fetched for and returned only on a match, so switching orders shows nothing
- * rather than the previous order's refund, without clearing state from inside the effect.
- */
-export function useOrderRefunds(orderId: string | undefined, enabled: boolean): RefundView[] {
-  const [loaded, setLoaded] = useState<{ orderId: string; refunds: RefundView[] } | null>(null);
+/** Reads actual refund state while the terminal order view is open. Failures are not empty refunds. */
+export function useOrderRefunds(orderId: string | undefined, enabled: boolean): OrderRefundResult {
+  const [loaded, setLoaded] = useState<Loaded | null>(null);
+  const [retryVersion, setRetryVersion] = useState(0);
+  const retry = useCallback(() => setRetryVersion(value => value + 1), []);
 
   useEffect(() => {
     if (!orderId || !enabled) return;
     let ignore = false;
-    customerApi.customerMoney
-      .get('/api/v1/money/customer/orders/:orderId/refunds', { params: { orderId } })
-      .then(res => {
-        if (!ignore) setLoaded({ orderId, refunds: res ?? NONE });
-      })
-      .catch(() => {
-        // A refund that cannot be read is not worth breaking the order view for; the rest of the
-        // page still tells the customer what happened to the order itself.
-        if (!ignore) setLoaded({ orderId, refunds: NONE });
-      });
-    return () => { ignore = true; };
-  }, [orderId, enabled]);
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const refreshRefunds = async () => {
+      try {
+        const res = await customerApi.customerMoney
+          .get('/api/v1/money/customer/orders/:orderId/refunds', { params: { orderId } });
+        if (!ignore) setLoaded({ orderId, refunds: res ?? NONE, error: null });
+      } catch {
+        if (!ignore) setLoaded(previous => ({ orderId,
+          refunds: previous?.orderId === orderId ? previous.refunds : NONE,
+          error: 'Could not refresh refund details. Please retry.',
+        }));
+      } finally {
+        // Schedule after completion so slow requests cannot accumulate. Leaving/switching the
+        // order invalidates in-flight results and cancels this view's timer.
+        if (!ignore) timer = setTimeout(() => { void refreshRefunds(); }, REFUND_REFRESH_MS);
+      }
+    };
+    void refreshRefunds();
+    return () => { ignore = true; if (timer !== undefined) clearTimeout(timer); };
+  }, [orderId, enabled, retryVersion]);
 
-  if (!orderId || !enabled || loaded?.orderId !== orderId) return NONE;
-  return loaded.refunds;
+  if (!orderId || !enabled) return { refunds: NONE, error: null, isLoading: false, retry };
+  if (loaded?.orderId !== orderId) return { refunds: NONE, error: null, isLoading: true, retry };
+  return { refunds: loaded.refunds, error: loaded.error, isLoading: false, retry };
 }

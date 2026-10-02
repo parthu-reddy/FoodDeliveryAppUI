@@ -63,7 +63,7 @@ export function OrderDeliveredSummary({ order, onBack, chatWidgetRef }: OrderDel
         {delivered && <OrderReviewAction orderId={order.id} actorRole={RoleName.CUSTOMER} />}
       </div>
 
-      <OrderRefundState refunds={refunds} />
+      <OrderRefundState {...refunds} />
       <Surface radius="xl" elevation={1} className="p-4 space-y-4">
         <div className="flex items-center justify-between">
           <span className="text-sm font-extrabold text-ink">Receipt</span>

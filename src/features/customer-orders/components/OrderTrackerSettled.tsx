@@ -56,7 +56,7 @@ export function OrderTrackerSettled({
         </div>
       )}
 
-      <OrderRefundState refunds={refunds} />
+      <OrderRefundState {...refunds} />
       
       {/* Invoice Details */}
       <div className="mt-4 flex flex-col gap-1 text-[11px] text-slate-500 dark:text-slate-400 font-medium">

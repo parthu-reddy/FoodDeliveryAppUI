@@ -1,9 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { OrderRefundState } from './OrderRefundState';
 import type { RefundView } from '@/types';
 
 describe('authoritative refund status', () => {
+  it('shows a failed read and retries without pretending it is an empty successful read', () => {
+    let retries = 0;
+    render(<OrderRefundState refunds={[]} error="Could not refresh refund details. Please retry."
+      retry={() => { retries++; }} />);
+    expect(screen.getByRole('alert')).toHaveTextContent('Could not refresh');
+    fireEvent.click(screen.getByRole('button', { name: 'Retry refund details' }));
+    expect(retries).toBe(1);
+    expect(screen.queryByText(/Returned to/)).not.toBeInTheDocument();
+  });
   it.each(['REQUESTED', 'PROCESSING', 'FAILED', 'CANCELLED'] as const)('%s never claims money returned', status => {
     render(<OrderRefundState refunds={[{ id: 'r1', amount: 120.5, status, destination: 'ORIGINAL_METHOD' }]} />);
     expect(screen.getByTestId('refund-state')).toHaveTextContent('₹120.50');
