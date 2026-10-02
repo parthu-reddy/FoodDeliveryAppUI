@@ -1923,6 +1923,8 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
+            /** Format: int32 */
+            numberOfElements: number;
             sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
@@ -1932,18 +1934,16 @@ export interface components {
             content: components["schemas"]["Order"][];
             first: boolean;
             last: boolean;
-            /** Format: int32 */
-            numberOfElements: number;
             empty: boolean;
         };
         PageableObject: {
+            unpaged: boolean;
             sort?: components["schemas"]["SortObject"];
             paged: boolean;
             /** Format: int32 */
             pageNumber: number;
             /** Format: int32 */
             pageSize: number;
-            unpaged: boolean;
             /** Format: int64 */
             offset: number;
         };
@@ -1964,6 +1964,8 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
+            /** Format: int32 */
+            numberOfElements: number;
             sort?: components["schemas"]["SortObject"];
             pageable?: components["schemas"]["PageableObject"];
             /** Format: int32 */
@@ -1973,8 +1975,6 @@ export interface components {
             content: components["schemas"]["SupportTicket"][];
             first: boolean;
             last: boolean;
-            /** Format: int32 */
-            numberOfElements: number;
             empty: boolean;
         };
         AdminOrderMoney: {
@@ -3433,6 +3433,7 @@ export interface operations {
     fetchActiveOrdersForDriver: {
         parameters: {
             query: {
+                confirmedOrderIds?: string[];
                 pageable: components["schemas"]["Pageable"];
             };
             header?: never;

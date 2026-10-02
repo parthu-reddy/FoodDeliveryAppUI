@@ -919,11 +919,11 @@ export const pageable = z
   .passthrough();
 export const PageableObject = z
   .object({
+    unpaged: z.boolean(),
     sort: SortObject.optional(),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     pageSize: z.number().int(),
-    unpaged: z.boolean(),
     offset: z.number().int(),
   })
   .passthrough();
@@ -931,6 +931,7 @@ export const PageOrder = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
+    numberOfElements: z.number().int(),
     sort: SortObject.optional(),
     pageable: PageableObject.optional(),
     number: z.number().int(),
@@ -938,7 +939,6 @@ export const PageOrder = z
     content: z.array(Order),
     first: z.boolean(),
     last: z.boolean(),
-    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -954,6 +954,7 @@ export const PageSupportTicket = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
+    numberOfElements: z.number().int(),
     sort: SortObject.optional(),
     pageable: PageableObject.optional(),
     number: z.number().int(),
@@ -961,7 +962,6 @@ export const PageSupportTicket = z
     content: z.array(SupportTicket),
     first: z.boolean(),
     last: z.boolean(),
-    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();

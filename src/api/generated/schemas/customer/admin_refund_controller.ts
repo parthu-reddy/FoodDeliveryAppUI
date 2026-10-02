@@ -9,6 +9,7 @@ export const PageSupportTicket = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
+    numberOfElements: z.number().int(),
     sort: SortObject.optional(),
     pageable: PageableObject.optional(),
     number: z.number().int(),
@@ -16,7 +17,6 @@ export const PageSupportTicket = z
     content: z.array(SupportTicket),
     first: z.boolean(),
     last: z.boolean(),
-    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();

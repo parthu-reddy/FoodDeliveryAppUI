@@ -151,6 +151,7 @@ export const PageOrder = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
+    numberOfElements: z.number().int(),
     sort: SortObject.optional(),
     pageable: PageableObject.optional(),
     number: z.number().int(),
@@ -158,7 +159,6 @@ export const PageOrder = z
     content: z.array(Order),
     first: z.boolean(),
     last: z.boolean(),
-    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -283,6 +283,11 @@ export const endpoints = makeApi([
         name: "driverId",
         type: "Path",
         schema: z.string().uuid(),
+      },
+      {
+        name: "confirmedOrderIds",
+        type: "Query",
+        schema: z.array(z.string().uuid()).optional(),
       },
       {
         name: "pageable",
