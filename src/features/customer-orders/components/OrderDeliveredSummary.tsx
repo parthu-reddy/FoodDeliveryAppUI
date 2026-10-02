@@ -9,6 +9,8 @@ import { formatINR } from '@shared/money';
 import { OrderReviewAction } from '@features/reviews';
 import type { ChatWidgetHandle } from '@features/communication/components/ChatWidget';
 import { OrderMoneyBreakdown } from './OrderMoneyBreakdown';
+import { useOrderRefunds } from '../model/useOrderRefunds';
+import { OrderRefundState } from './OrderRefundState';
 import { TaxInvoiceSheet } from './TaxInvoiceSheet';
 
 /**
@@ -32,6 +34,7 @@ interface OrderDeliveredSummaryProps {
 export function OrderDeliveredSummary({ order, onBack, chatWidgetRef }: OrderDeliveredSummaryProps) {
   const presets = useMotionPresets();
   const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const refunds = useOrderRefunds(order.id, order.deliveryStatus === DeliveryStatus.DELIVERED);
   const delivered = order.deliveryStatus === DeliveryStatus.DELIVERED;
   return (
     <motion.div key="summary" {...presets.rise} className="p-4 sm:p-5 space-y-4" data-testid="order-tracker" data-order-id={order.id} data-status={order.status}>
@@ -60,6 +63,7 @@ export function OrderDeliveredSummary({ order, onBack, chatWidgetRef }: OrderDel
         {delivered && <OrderReviewAction orderId={order.id} actorRole={RoleName.CUSTOMER} />}
       </div>
 
+      <OrderRefundState refunds={refunds} />
       <Surface radius="xl" elevation={1} className="p-4 space-y-4">
         <div className="flex items-center justify-between">
           <span className="text-sm font-extrabold text-ink">Receipt</span>

@@ -40,7 +40,7 @@ export const CustomerOrderTracker: React.FC<CustomerOrderTrackerProps> = ({
   getFriendlyStatusMessage,
 }) => {
   const { startCall } = useCallContext();
-  const refunds = useOrderRefunds(currentTrackingOrder?.id, isFailedOrder(currentTrackingOrder));
+  const refunds = useOrderRefunds(currentTrackingOrder?.id, !isActiveOrder(currentTrackingOrder) || isFailedOrder(currentTrackingOrder));
   const presets = useMotionPresets();
   const live = isActiveOrder(currentTrackingOrder) && !isFailedOrder(currentTrackingOrder);
   const trackable = activeOrders.filter((o) => isActiveOrder(o));

@@ -5,8 +5,9 @@ import { formatINR } from '@shared/money';
 import { Surface } from '@shared/ui';
 import { terminalHeadline } from '@features/customer-orders/model/orderStatus';
 import type { useOrderRefunds } from '@features/customer-orders/model/useOrderRefunds';
-import { formatDate, formatDateTime } from '@/shared/time';
+import { formatDateTime } from '@/shared/time';
 import { OrderReviewAction } from '@features/reviews';
+import { OrderRefundState } from './OrderRefundState';
 
 /**
  * An order that has finished — delivered, cancelled or failed — with its bill and any refund
@@ -55,26 +56,7 @@ export function OrderTrackerSettled({
         </div>
       )}
 
-      {refunds.length > 0 && (
-        <div className="mt-3 space-y-1 text-left" data-testid="refund-state">
-          {refunds.map(refund => (
-            <div key={refund.id} className="text-xs bg-slate-500/5 border border-slate-500/20 rounded-xl p-3 space-y-0.5">
-              <div className="flex justify-between font-semibold">
-                <span>Refund {formatINR(refund.amount ?? 0)}</span>
-                <span>{refund.status}</span>
-              </div>
-              <p className="text-slate-400 dark:text-slate-300">
-                {refund.destination === 'STORE_CREDIT'
-                  ? 'Returned as store credit in your wallet'
-                  : refund.destination === 'NONE'
-                  ? 'Nothing was charged, so there is nothing to return'
-                  : 'Returned to your original payment method'}
-                {refund.expectedBy ? ` — expected by ${formatDate(refund.expectedBy)}` : ''}
-              </p>
-            </div>
-          ))}
-        </div>
-      )}
+      <OrderRefundState refunds={refunds} />
       
       {/* Invoice Details */}
       <div className="mt-4 flex flex-col gap-1 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
@@ -151,17 +133,17 @@ export function OrderTrackerSettled({
           </div>
         )}
         <div className="flex justify-between text-lg font-black text-slate-900 dark:text-white pt-2 border-t border-rose-500/20 dark:border-slate-700">
-          <span>{isFailedOrder(currentTrackingOrder) ? 'Total Refunded' : 'Total Paid'}</span>
+          <span>Order total</span>
           <span className={isFailedOrder(currentTrackingOrder) ? 'text-rose-500' : ''}>{formatINR(currentTrackingOrder.totalAmount || 0)}</span>
         </div>
         {currentTrackingOrder.paymentMethod && (
           <div className="flex justify-end pt-1 text-right">
             <div className="flex flex-col items-end">
               <span className="text-xs px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded font-medium border border-slate-200 dark:border-slate-700 inline-block mb-1">
-                {isFailedOrder(currentTrackingOrder) ? 'Refunded to ' : 'Paid via '}{currentTrackingOrder.paymentMethod}
+                Payment method: {currentTrackingOrder.paymentMethod}
               </span>
               {isFailedOrder(currentTrackingOrder) && (
-                <span className="text-[10px] text-slate-400">Refunds may take 3-5 business days to reflect in your account.</span>
+                <span className="text-[10px] text-slate-400">Refund status and destination appear above when a refund is recorded.</span>
               )}
             </div>
           </div>

@@ -93,4 +93,15 @@ describe('CustomerOrderTracker terminal and payment copy', () => {
     });
     expect(screen.getByTestId('refund-state')).toHaveTextContent(/store credit/i);
   });
+  test('cancellation is not proof of a completed refund', async () => {
+    server.use(http.get(`*/api/v1/money/customer/orders/${ORDER_ID}/refunds`, () =>
+      HttpResponse.json([{ id: 'refund-1', orderId: ORDER_ID, amount: 120.5,
+        status: 'PROCESSING', destination: 'STORE_CREDIT' }])));
+    renderTracker(order({ status: OrderStatus.CANCELLED, paymentMethod: 'CARD' }), { active: false, failed: true });
+    expect(await screen.findByTestId('refund-state')).toHaveTextContent('Refund pending to your wallet as store credit');
+    expect(screen.queryByText('Total Refunded')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Refunded to/)).not.toBeInTheDocument();
+    expect(screen.getByText('Order total')).toBeInTheDocument();
+  });
+
 });
