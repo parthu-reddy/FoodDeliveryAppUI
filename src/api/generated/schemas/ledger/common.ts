@@ -115,10 +115,10 @@ export const SortObject = z
   .passthrough();
 export const PageableObject = z
   .object({
+    sort: SortObject.optional(),
     paged: z.boolean(),
     pageNumber: z.number().int(),
     unpaged: z.boolean(),
-    sort: SortObject.optional(),
     pageSize: z.number().int(),
     offset: z.number().int(),
   })
@@ -172,14 +172,14 @@ export const PageLedgerStatementLineDto = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    pageable: PageableObject.optional(),
     sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
+    numberOfElements: z.number().int(),
+    number: z.number().int(),
     size: z.number().int(),
     content: z.array(LedgerStatementLineDto),
-    number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
-    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -378,14 +378,14 @@ export const PageReconciliationRun = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    pageable: PageableObject.optional(),
     sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
+    numberOfElements: z.number().int(),
+    number: z.number().int(),
     size: z.number().int(),
     content: z.array(ReconciliationRun),
-    number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
-    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();
@@ -416,20 +416,21 @@ export const PageReconciliationBreak = z
   .object({
     totalElements: z.number().int(),
     totalPages: z.number().int(),
-    pageable: PageableObject.optional(),
     sort: SortObject.optional(),
+    pageable: PageableObject.optional(),
+    numberOfElements: z.number().int(),
+    number: z.number().int(),
     size: z.number().int(),
     content: z.array(ReconciliationBreak),
-    number: z.number().int(),
     first: z.boolean(),
     last: z.boolean(),
-    numberOfElements: z.number().int(),
     empty: z.boolean(),
   })
   .passthrough();
 export const LedgerEntry = z
   .object({
     id: z.string().uuid(),
+    legIndex: z.number().int().optional(),
     transactionId: z.string().uuid(),
     referenceId: z.string().uuid().optional(),
     accountId: z.string().uuid(),

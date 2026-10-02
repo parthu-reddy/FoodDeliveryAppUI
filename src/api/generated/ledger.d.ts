@@ -551,25 +551,25 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
-            pageable?: components["schemas"]["PageableObject"];
             sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            numberOfElements: number;
+            /** Format: int32 */
+            number: number;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["LedgerStatementLineDto"][];
-            /** Format: int32 */
-            number: number;
             first: boolean;
             last: boolean;
-            /** Format: int32 */
-            numberOfElements: number;
             empty: boolean;
         };
         PageableObject: {
+            sort?: components["schemas"]["SortObject"];
             paged: boolean;
             /** Format: int32 */
             pageNumber: number;
             unpaged: boolean;
-            sort?: components["schemas"]["SortObject"];
             /** Format: int32 */
             pageSize: number;
             /** Format: int64 */
@@ -815,17 +815,17 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
-            pageable?: components["schemas"]["PageableObject"];
             sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            numberOfElements: number;
+            /** Format: int32 */
+            number: number;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["ReconciliationRun"][];
-            /** Format: int32 */
-            number: number;
             first: boolean;
             last: boolean;
-            /** Format: int32 */
-            numberOfElements: number;
             empty: boolean;
         };
         PageReconciliationBreak: {
@@ -833,17 +833,17 @@ export interface components {
             totalElements: number;
             /** Format: int32 */
             totalPages: number;
-            pageable?: components["schemas"]["PageableObject"];
             sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
+            /** Format: int32 */
+            numberOfElements: number;
+            /** Format: int32 */
+            number: number;
             /** Format: int32 */
             size: number;
             content: components["schemas"]["ReconciliationBreak"][];
-            /** Format: int32 */
-            number: number;
             first: boolean;
             last: boolean;
-            /** Format: int32 */
-            numberOfElements: number;
             empty: boolean;
         };
         ReconciliationBreak: {
@@ -876,6 +876,8 @@ export interface components {
         LedgerEntry: {
             /** Format: uuid */
             id: string;
+            /** Format: int32 */
+            legIndex?: number;
             /** Format: uuid */
             transactionId: string;
             /** Format: uuid */

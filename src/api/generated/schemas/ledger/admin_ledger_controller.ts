@@ -55,6 +55,7 @@ export const ApiResponsePageResponseDtoLedgerTransactionDto = z
 export const LedgerEntry = z
   .object({
     id: z.string().uuid(),
+    legIndex: z.number().int().optional(),
     transactionId: z.string().uuid(),
     referenceId: z.string().uuid().optional(),
     accountId: z.string().uuid(),
