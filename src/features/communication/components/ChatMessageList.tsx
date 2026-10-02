@@ -72,6 +72,18 @@ export function ChatMessageList({ messages, userId, canRequestRefund, orderId, s
         ) : msg.messageType === 'REFUND_QUOTE_RESPONSE' ? (() => {
           try {
             const payload = JSON.parse(msg.content);
+            if (typeof payload.quoteAmount !== 'number' || !Number.isFinite(payload.quoteAmount) || payload.quoteAmount <= 0) {
+              throw new Error('Refund quote amount is unavailable');
+            }
+            const partial = payload.refundType === 'PARTIAL';
+            const itemsValid = Array.isArray(payload.items) && payload.items.length > 0 && payload.items.every(
+              (item: { itemId?: unknown; quantity?: unknown }) => typeof item.itemId === 'string'
+                && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item.itemId)
+                && typeof item.quantity === 'number' && Number.isInteger(item.quantity) && item.quantity > 0,
+            );
+            const replyValid = (payload.orderId == null || payload.orderId === orderId)
+              && (payload.refundType === 'FULL' || (partial && payload.orderId === orderId && itemsValid
+                && typeof payload.reason === 'string' && payload.reason.trim().length > 0));
             return (
               <div className={`flex flex-col space-y-3 p-2 min-w-[220px] ${isMe ? 'text-white' : 'text-slate-800'}`}>
                 <div className={`flex items-center space-x-2 border-b pb-2 ${isMe ? 'border-amber-400' : 'border-slate-200'}`}>
@@ -85,8 +97,16 @@ export function ChatMessageList({ messages, userId, canRequestRefund, orderId, s
                 <div className="text-xs opacity-75">Type: {payload.refundType}</div>
                 {canRequestRefund && (
                   <button
+                    disabled={!replyValid}
                     onClick={() => {
-                      sendMessage(JSON.stringify({ orderId, reason: "Customer requested", refundType: payload.refundType }), 'REFUND_REQUEST');
+                      if (!replyValid) return;
+                      sendMessage(JSON.stringify({ orderId,
+                        reason: typeof payload.reason === 'string' && payload.reason.trim() ? payload.reason : 'Customer requested',
+                        refundType: payload.refundType,
+                        ...(partial ? { items: payload.items.map((item: { itemId: string; quantity: number }) => ({
+                          itemId: item.itemId, quantity: item.quantity,
+                        })) } : {}),
+                      }), 'REFUND_REQUEST');
                     }}
                     className={`w-full font-semibold py-2 rounded-xl transition ${
    isMe
@@ -94,8 +114,11 @@ export function ChatMessageList({ messages, userId, canRequestRefund, orderId, s
    : 'bg-amber-600 text-white hover:bg-amber-700 '
    }`}
                   >
-                    Accept & Process Refund
+                    Submit Refund Request
                   </button>
+                )}
+                {canRequestRefund && !replyValid && (
+                  <span className="text-xs">Request a new quote before submitting this refund request.</span>
                 )}
               </div>
             );
@@ -111,8 +134,10 @@ export function ChatMessageList({ messages, userId, canRequestRefund, orderId, s
                   <span className="text-lg">✅</span>
                   <span>Refund Request Submitted</span>
                 </div>
-                <div className="text-sm font-medium">Amount: {formatINR(payload.amount || payload.quoteAmount || 0)}</div>
-                <div className="text-xs opacity-75 mt-1">Check your dashboard for details.</div>
+                <div className="text-sm font-medium">Requested amount: {typeof payload.amount === 'number' && Number.isFinite(payload.amount) && payload.amount > 0
+                  ? formatINR(payload.amount) : 'Unavailable'}</div>
+                <div className="text-xs opacity-75 mt-1">{payload.status === 'OPEN'
+                  ? 'Under review by support. No refund has been approved yet.' : 'Check your dashboard for details.'}</div>
               </div>
             );
           } catch { return <span>Invalid decision response</span>; }

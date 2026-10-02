@@ -12,6 +12,11 @@ import { formatDateTime } from '@/shared/time';
 
 type AdminOrderMoney = z.infer<typeof schemas.AdminOrderMoney>;
 
+const displayAmount = (amount: number | null | undefined) =>
+  typeof amount === 'number' && Number.isFinite(amount) ? formatINR(amount) : 'Unavailable';
+const displayDeduction = (amount: number | null | undefined) =>
+  typeof amount === 'number' && Number.isFinite(amount) ? `-${formatINR(amount)}` : 'Unavailable';
+
 export default function AdminOrderMoney({ orderId }: { orderId: string }) {
   const [data, setData] = useState<AdminOrderMoney | null>(null);
   const [loading, setLoading] = useState(true);
@@ -62,24 +67,24 @@ export default function AdminOrderMoney({ orderId }: { orderId: string }) {
                <div className="space-y-2 text-sm mb-4 border-b border-rose-100 dark:border-rose-900/30 pb-4">
                    <div className="flex justify-between">
                        <span className="text-slate-500">Food Cost</span>
-                       <span>{formatINR(data.foodCost ?? 0)}</span>
+                       <span>{displayAmount(data.foodCost)}</span>
                    </div>
                    <div className="flex justify-between">
                        <span className="text-slate-500">Delivery Fee</span>
-                       <span>{formatINR(data.deliveryFee ?? 0)}</span>
+                       <span>{displayAmount(data.deliveryFee)}</span>
                    </div>
                    <div className="flex justify-between">
                        <span className="text-slate-500">Platform Fee</span>
-                       <span>{formatINR(data.customerPlatformFee ?? 0)}</span>
+                       <span>{displayAmount(data.customerPlatformFee)}</span>
                    </div>
                    <div className="flex justify-between">
                        <span className="text-slate-500">Taxes (SGST/CGST)</span>
-                       <span>{formatINR((data.sgst ?? 0) + (data.cgst ?? 0))}</span>
+                       <span>{displayAmount(typeof data.sgst === 'number' && typeof data.cgst === 'number' ? data.sgst + data.cgst : undefined)}</span>
                    </div>
                </div>
                <div className="flex justify-between font-black text-lg">
                    <span>Total</span>
-                   <span>{formatINR(data.totalAmount ?? 0)}</span>
+                   <span>{displayAmount(data.totalAmount)}</span>
                </div>
            </Surface>
 
@@ -91,20 +96,24 @@ export default function AdminOrderMoney({ orderId }: { orderId: string }) {
                <div className="space-y-2 text-sm mb-4 border-b border-amber-100 dark:border-amber-900/30 pb-4">
                    <div className="flex justify-between">
                        <span className="text-slate-500">Food Cost</span>
-                       <span>{formatINR(data.foodCost ?? 0)}</span>
+                       <span>{displayAmount(data.foodCost)}</span>
                    </div>
                    <div className="flex justify-between">
                        <span className="text-slate-500">Platform Fee Deduction</span>
-                       <span className="text-rose-500">-{formatINR(data.restaurantPlatformFee ?? 0)}</span>
+                       <span className="text-rose-500">{displayDeduction(data.restaurantPlatformFee)}</span>
                    </div>
                    <div className="flex justify-between">
                        <span className="text-slate-500">Delivery Contribution</span>
-                       <span className="text-rose-500">-{formatINR(data.restaurantDeliveryContribution ?? 0)}</span>
+                       <span className="text-rose-500">{displayDeduction(data.restaurantDeliveryContribution)}</span>
+                   </div>
+                   <div className="flex justify-between">
+                       <span className="text-slate-500">Platform Bonus Deduction</span>
+                       <span className="text-rose-500">{displayDeduction(data.platformBonus)}</span>
                    </div>
                </div>
                <div className="flex justify-between font-black text-lg">
                    <span>Net Payout</span>
-                   <span className="text-amber-600">{formatINR(data.restaurantPayout ?? 0)}</span>
+                   <span className="text-amber-600">{displayAmount(data.restaurantPayout)}</span>
                </div>
            </Surface>
 
@@ -116,11 +125,11 @@ export default function AdminOrderMoney({ orderId }: { orderId: string }) {
                <div className="space-y-2 text-sm mb-4 border-b border-amber-100 dark:border-amber-900/30 pb-4">
                    <div className="flex justify-between">
                        <span className="text-slate-500">Base Payout (Gross)</span>
-                       <span>{formatINR(data.driverGrossPayout ?? 0)}</span>
+                       <span>{displayAmount(data.driverGrossPayout)}</span>
                    </div>
                    <div className="flex justify-between">
-                       <span className="text-slate-500">TDS Deduction</span>
-                       <span className="text-rose-500">-{formatINR(data.driverTaxes ?? 0)}</span>
+                       <span className="text-slate-500">Delivery Taxes (SGST/CGST)</span>
+                       <span className="text-rose-500">{displayDeduction(data.driverTaxes)}</span>
                    </div>
                    {!!data.platformBonus && (
                        <div className="flex justify-between">
@@ -131,7 +140,7 @@ export default function AdminOrderMoney({ orderId }: { orderId: string }) {
                </div>
                <div className="flex justify-between font-black text-lg">
                    <span>Net Payout</span>
-                   <span className="text-amber-600">{formatINR(data.driverNetPayout ?? 0)}</span>
+                   <span className="text-amber-600">{displayAmount(data.driverNetPayout)}</span>
                </div>
            </Surface>
        </div>
@@ -150,7 +159,7 @@ export default function AdminOrderMoney({ orderId }: { orderId: string }) {
                <table className="w-full text-left text-sm">
                    <thead>
                        <tr className="bg-white dark:bg-[#0f111a] border-b border-slate-200 dark:border-slate-800">
-                           <th className="p-3 font-semibold text-slate-500">ID</th>
+                           <th className="p-3 font-semibold text-slate-500">Transaction</th>
                            <th className="p-3 font-semibold text-slate-500">Account</th>
                            <th className="p-3 font-semibold text-slate-500">Category</th>
                            <th className="p-3 font-semibold text-slate-500 text-right">Amount</th>
@@ -158,9 +167,9 @@ export default function AdminOrderMoney({ orderId }: { orderId: string }) {
                        </tr>
                    </thead>
                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-[#0f111a]">
-                       {data.ledgerLines.map((line) => (
-                           <tr key={String(line.id)}>
-                               <td className="p-3 font-mono text-xs text-slate-400" title={String(line.id)}>{String(line.id).substring(0,8)}</td>
+                       {data.ledgerLines.map((line, index) => (
+                           <tr key={`${line.transactionId}-${line.accountId}-${line.category}-${line.direction}-${index}`}>
+                               <td className="p-3 font-mono text-xs text-slate-400" title={line.transactionId}>{line.transactionId?.substring(0,8) ?? 'Unavailable'}</td>
                                <td className="p-3">
                                    <div className="font-medium text-slate-700 dark:text-slate-300">{String(line.ownerType)}</div>
                                    <div className="text-xs text-slate-500 font-mono">{String(line.ownerId).substring(0,8)}...</div>
@@ -169,7 +178,7 @@ export default function AdminOrderMoney({ orderId }: { orderId: string }) {
                                    <span className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-xs">{line.category}</span>
                                </td>
                                <td className={`p-3 text-right font-medium ${line.direction === 'CREDIT' ? 'text-amber-500' : 'text-rose-500'}`}>
-                                   {line.direction === 'CREDIT' ? '+' : '-'}{formatINR(line.amount ?? 0)}
+                                   {typeof line.amount === 'number' && Number.isFinite(line.amount) ? `${line.direction === 'CREDIT' ? '+' : '-'}${formatINR(line.amount)}` : 'Unavailable'}
                                </td>
                                <td className="p-3 text-xs text-slate-500">
                                    {formatDateTime(line.createdAt)}

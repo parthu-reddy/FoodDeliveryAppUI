@@ -46,4 +46,31 @@ describe('Admin Order Money View', () => {
     expect(await screen.findByText('Failed to load breakdown.')).toBeInTheDocument();
     expect(screen.queryByText('₹0.00')).not.toBeInTheDocument();
   });
+  test('renders real transaction ids on both ledger legs and preserves a signed restaurant balance', async () => {
+    const transactionId='e0000000-0000-4000-8000-000000000001';
+    const line={transactionId,referenceId:'o1',ownerId:'owner1',ownerType:'RESTAURANT_PAYABLE',
+      category:'FOOD_COST',amount:10,createdAt:'2026-10-02T00:00:00Z'};
+    getOrderMoney.mockResolvedValue({totalAmount:20,foodCost:10,deliveryFee:5,customerPlatformFee:3,sgst:1,cgst:1,
+      restaurantPayout:-5,restaurantPlatformFee:3,restaurantDeliveryContribution:10,platformBonus:2,
+      driverGrossPayout:10,driverTaxes:1,driverNetPayout:9,
+      ledgerLines:[{...line,accountId:'account1',direction:'DEBIT'},{...line,accountId:'account2',direction:'CREDIT'}]});
+    wrap(<AdminOrderMoney orderId="o1" />);
+    expect(await screen.findByText('-₹5.00')).toBeInTheDocument();
+    expect(screen.getAllByText(transactionId.substring(0,8))).toHaveLength(2);
+    expect(screen.queryByText('undefined')).not.toBeInTheDocument();
+    expect(screen.getByText('Platform Bonus Deduction')).toBeInTheDocument();
+    expect(screen.getByText('Delivery Taxes (SGST/CGST)')).toBeInTheDocument();
+  });
+
+  test('shows missing individual money values as unavailable while preserving an explicit zero', async () => {
+    getOrderMoney.mockResolvedValue({totalAmount:100,foodCost:100,deliveryFee:0,sgst:1,
+      ledgerLines:[{transactionId:'e0000000-0000-4000-8000-000000000001',accountId:'account1',
+        ownerId:'owner1',ownerType:'RESTAURANT_PAYABLE',category:'FOOD_COST',direction:'CREDIT',
+        createdAt:'2026-10-02T00:00:00Z'}]});
+    wrap(<AdminOrderMoney orderId="o1" />);
+    expect((await screen.findAllByText('₹100.00')).length).toBe(3);
+    expect(screen.getAllByText('Unavailable').length).toBeGreaterThan(5);
+    expect(screen.getAllByText('₹0.00')).toHaveLength(1);
+  });
+
 });
