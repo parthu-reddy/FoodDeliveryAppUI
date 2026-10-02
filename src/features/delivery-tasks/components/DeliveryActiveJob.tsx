@@ -1,4 +1,4 @@
-import { Surface, SwipeAction } from '@shared/ui';
+import { Button, Modal, Surface, SwipeAction } from '@shared/ui';
 import { DeliveryStatus, Order } from "@/types";
 import ActiveDeliveryCard from "@features/delivery-tasks/components/ActiveDeliveryCard";
 import OrderTrackingMap from "@features/maps-tracking/components/OrderTrackingMap";
@@ -47,6 +47,9 @@ export function DeliveryActiveJob({
   waitTimerSeconds,
   handleCustomerUnavailable
 }: DeliveryActiveJobProps) {
+  // Bind disclosure to the exact active resource. Selecting another job cannot retain its dialog.
+  const [detailsOrderId, setDetailsOrderId] = React.useState<string | null>(null);
+  if (detailsOrderId !== null && detailsOrderId !== currentJob.id) setDetailsOrderId(null);
   const canConfirmDelivery = !isUpdatingDelivery;
   const presets = useMotionPresets();
   return (
@@ -62,6 +65,37 @@ export function DeliveryActiveJob({
             36-character UUID no longer overflows a 390 px screen. */}
         <span className="text-xs font-mono px-2 py-0.5 rounded truncate max-w-[9rem]" title={currentJob.id} style={{ background: 'var(--color-paper-sunken)', color: 'var(--color-ink-2)' }}>#{currentJob.id}</span>
       </div>
+
+      <Button variant="secondary" size="touch" onClick={() => setDetailsOrderId(currentJob.id)}>
+        View order details
+      </Button>
+      <Modal
+        open={detailsOrderId === currentJob.id}
+        onClose={() => setDetailsOrderId(null)}
+        title={`Order #${currentJob.id.substring(0, 8)}`}
+        size="lg"
+      >
+        <div className="space-y-4 p-4">
+          <p className="text-sm font-semibold">{currentJob.restaurantName}</p>
+          <p className="text-sm">{currentJob.customerName || 'Customer'}</p>
+          <p className="text-sm">{currentJob.deliveryAddress}</p>
+          <h5 className="font-bold">Order items</h5>
+          {currentJob.items?.length ? (
+            <ul aria-label="Order items" className="space-y-2">
+              {currentJob.items.map((item, index) => (
+                <li key={item.id || index} className="flex justify-between gap-3 text-sm">
+                  <span>{item.quantity} × {item.name}</span>
+                  <span>{formatINR(item.price * item.quantity)}</span>
+                </li>
+              ))}
+            </ul>
+          ) : <p role="status">Order items unavailable</p>}
+          <div className="flex justify-between gap-3 font-bold">
+            <span>Order total</span><span>{formatINR(currentJob.totalAmount)}</span>
+          </div>
+          <Button fullWidth size="touch" onClick={() => setDetailsOrderId(null)}>Close</Button>
+        </div>
+      </Modal>
 
       {/* Map Integration */}
       <div className="relative w-full h-64 bg-slate-200/50 dark:bg-slate-800/50 rounded-xl mb-6 overflow-hidden border border-slate-200 dark:border-slate-700/50">
