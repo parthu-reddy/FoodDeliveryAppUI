@@ -8,8 +8,7 @@ import { tryParseInstant } from '@/shared/time';
  *
  * `Main.dc.html` is titled "Home — reorder first" and puts this strip ABOVE browse, because
  * repeat ordering is the dominant path in this category. The data for it already existed and
- * was already being fetched: `getOrderHistory` is called by `CustomerOrderHistory` and by
- * `SettingsHistoryTab`. It was reachable only from Settings, three taps deep, which is the
+ * was already being fetched: `getOrderHistory` is called by `SettingsHistoryTab`. It was reachable only from Settings, three taps deep, which is the
  * gap between the design and the app rather than a missing capability.
  *
  * README.md records that reorder-first is a design judgement here and not a measured one:

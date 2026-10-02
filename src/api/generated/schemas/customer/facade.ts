@@ -10,7 +10,6 @@ import { createApiClient as create_adminOrder } from './admin_order_controller';
 import { createApiClient as create_adminOrderManual } from './admin_order_manual_controller';
 import { createApiClient as create_adminDlq } from './admin_dlq_controller';
 import { createApiClient as create_customerAddress } from './customer_address_controller';
-import { createApiClient as create_customerOrder } from './customer_order_controller';
 import { createApiClient as create_customerRestaurant } from './customer_restaurant_controller';
 import { createApiClient as create_places } from './places_controller';
 import { createApiClient as create_customerTracking } from './customer_tracking_controller';
@@ -34,7 +33,6 @@ export function createCustomerFacade(baseUrl: string, options?: ZodiosOptions) {
   adminOrderManual: create_adminOrderManual(baseUrl, options),
   adminDlq: create_adminDlq(baseUrl, options),
   customerAddress: create_customerAddress(baseUrl, options),
-  customerOrder: create_customerOrder(baseUrl, options),
   customerRestaurant: create_customerRestaurant(baseUrl, options),
   places: create_places(baseUrl, options),
   customerTracking: create_customerTracking(baseUrl, options),

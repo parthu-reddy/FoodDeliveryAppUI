@@ -77,7 +77,6 @@ export { default as CompleteProfileModal } from './CompleteProfileModal';
 export { ErrorBoundary } from './ErrorBoundary';
 export { default as NamePromptModal } from './NamePromptModal';
 export { PaymentModal } from './PaymentModal';
-export { RefundModal } from './RefundModal';
 export { default as SharedSettingsView } from './SharedSettingsView';
 export { ZodErrorBoundary } from './ZodErrorBoundary';
 export { default as ZodiosSmokeTest } from './ZodiosSmokeTest';

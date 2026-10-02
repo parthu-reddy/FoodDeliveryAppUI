@@ -68,8 +68,7 @@ describe('SettingsHistoryTab', () => {
     expect(container.textContent).not.toContain('Invalid Date');
   });
 
-  // The motion inventory's "Pull to refresh | the customer's order history". It was built into
-  // CustomerOrderHistory.tsx, which nothing renders, so the customer never had it.
+  // The motion inventory's "Pull to refresh | the customer's order history".
   it('reloads the first page when the customer pulls down', async () => {
     historyOf(order());
     await screen.findByText('Brand 1 Outlet 10');

@@ -74,8 +74,7 @@ export function SettingsHistoryTab({ setTrackingOrder }: { setTrackingOrder?: (o
 
   return (
     <>
-    {/* The motion inventory's pull to refresh for the customer's order history. It was built
-        into CustomerOrderHistory.tsx, which no screen renders; this is the history they see. */}
+    {/* The motion inventory's pull to refresh for the customer's order history. */}
     <PullToRefresh onRefresh={() => fetchOrders(0, 'history')} label="Pull down to reload your orders">
     <div className="space-y-4" data-testid="customer-history-state"
       data-state={isLoadingOrders ? 'loading' : failedPage !== null ? 'error' : paginatedOrders.length > 0 ? 'populated' : 'empty'}>

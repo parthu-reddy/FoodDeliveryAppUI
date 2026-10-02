@@ -324,22 +324,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/customer/orders/{orderId}/refund-request": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["requestPostDeliveryRefund"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/restaurants/{id}/delivery-pricing": {
         parameters: {
             query?: never;
@@ -1925,27 +1909,27 @@ export interface components {
             totalPages: number;
             /** Format: int32 */
             numberOfElements: number;
-            sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
+            first: boolean;
+            last: boolean;
             /** Format: int32 */
             number: number;
+            sort?: components["schemas"]["SortObject"];
             /** Format: int32 */
             size: number;
             content: components["schemas"]["Order"][];
-            first: boolean;
-            last: boolean;
+            pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };
         PageableObject: {
-            unpaged: boolean;
+            /** Format: int64 */
+            offset: number;
             sort?: components["schemas"]["SortObject"];
             paged: boolean;
             /** Format: int32 */
             pageNumber: number;
             /** Format: int32 */
             pageSize: number;
-            /** Format: int64 */
-            offset: number;
+            unpaged: boolean;
         };
         SortObject: {
             empty: boolean;
@@ -1966,15 +1950,15 @@ export interface components {
             totalPages: number;
             /** Format: int32 */
             numberOfElements: number;
-            sort?: components["schemas"]["SortObject"];
-            pageable?: components["schemas"]["PageableObject"];
+            first: boolean;
+            last: boolean;
             /** Format: int32 */
             number: number;
+            sort?: components["schemas"]["SortObject"];
             /** Format: int32 */
             size: number;
             content: components["schemas"]["SupportTicket"][];
-            first: boolean;
-            last: boolean;
+            pageable?: components["schemas"]["PageableObject"];
             empty: boolean;
         };
         AdminOrderMoney: {
@@ -2672,34 +2656,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiResponseCustomer"];
-                };
-            };
-        };
-    };
-    requestPostDeliveryRefund: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                orderId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    [key: string]: string;
-                };
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseString"];
                 };
             };
         };

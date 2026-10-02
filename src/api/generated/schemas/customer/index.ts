@@ -9,7 +9,6 @@ export { Admin_order_controllerApi } from "./admin_order_controller";
 export { Admin_order_manual_controllerApi } from "./admin_order_manual_controller";
 export { Admin_dlq_controllerApi } from "./admin_dlq_controller";
 export { Customer_address_controllerApi } from "./customer_address_controller";
-export { Customer_order_controllerApi } from "./customer_order_controller";
 export { Customer_restaurant_controllerApi } from "./customer_restaurant_controller";
 export { Places_controllerApi } from "./places_controller";
 export { Customer_tracking_controllerApi } from "./customer_tracking_controller";

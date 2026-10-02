@@ -152,13 +152,13 @@ export const PageOrder = z
     totalElements: z.number().int(),
     totalPages: z.number().int(),
     numberOfElements: z.number().int(),
-    sort: SortObject.optional(),
-    pageable: PageableObject.optional(),
-    number: z.number().int(),
-    size: z.number().int(),
-    content: z.array(Order),
     first: z.boolean(),
     last: z.boolean(),
+    number: z.number().int(),
+    sort: SortObject.optional(),
+    size: z.number().int(),
+    content: z.array(Order),
+    pageable: PageableObject.optional(),
     empty: z.boolean(),
   })
   .passthrough();
