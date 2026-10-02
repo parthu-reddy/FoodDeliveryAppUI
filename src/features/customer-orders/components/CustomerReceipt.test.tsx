@@ -55,7 +55,7 @@ describe('Customer Receipt & Order Details', () => {
       </CallProvider></ConfirmProvider></ToastProvider>
     );
 
-    expect(screen.getByText('Refunded to CARD')).toBeInTheDocument();
-    expect(screen.getByText('Refunds may take 3-5 business days to reflect in your account.')).toBeInTheDocument();
+    expect(screen.getByText('Payment method: CARD')).toBeInTheDocument();
+    expect(screen.getByText('Refund status and destination appear above when a refund is recorded.')).toBeInTheDocument();
   });
 });
