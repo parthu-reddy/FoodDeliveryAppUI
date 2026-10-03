@@ -4,7 +4,7 @@ import { z } from "zod";
 export const Brand = z
   .object({
     id: z.string().uuid(),
-    ownerId: z.string().uuid(),
+    organisationId: z.string().uuid(),
     name: z.string(),
     gstin: z.string().optional(),
     pan: z.string().optional(),
@@ -50,17 +50,51 @@ export const ApiResponseBrand = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
-export const ApiResponseListBrand = z
+export const BrandSummaryDto = z
+  .object({
+    id: z.string().uuid(),
+    organisationId: z.string().uuid(),
+    name: z.string(),
+    logoUrl: z.string().optional(),
+    kycStatus: z
+      .enum([
+        "PENDING",
+        "APPROVED",
+        "VERIFIED",
+        "REJECTED",
+        "MANUAL_REVIEW",
+        "FAILED",
+      ])
+      .optional(),
+    pennyDropStatus: z
+      .enum([
+        "PENDING",
+        "APPROVED",
+        "VERIFIED",
+        "REJECTED",
+        "MANUAL_REVIEW",
+        "FAILED",
+      ])
+      .optional(),
+    isGstinVerified: z.boolean().optional(),
+    isBankVerified: z.boolean().optional(),
+    createdAt: z.string().datetime({ offset: true }).optional(),
+    updatedAt: z.string().datetime({ offset: true }).optional(),
+    version: z.number().int().optional(),
+  })
+  .passthrough();
+export const ApiResponseListBrandSummaryDto = z
   .object({
     success: z.boolean(),
     message: z.string(),
     errorCode: z.string().optional(),
-    data: z.array(Brand).optional(),
+    data: z.array(BrandSummaryDto).optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
 export const BrandOnboardRequest = z
   .object({
+    organisationId: z.string().uuid(),
     name: z.string(),
     gstin: z.string(),
     pan: z.string(),
@@ -74,7 +108,8 @@ export const BrandOnboardRequest = z
 export const schemas = {
   Brand,
   ApiResponseBrand,
-  ApiResponseListBrand,
+  BrandSummaryDto,
+  ApiResponseListBrandSummaryDto,
   BrandOnboardRequest,
 };
 
@@ -84,7 +119,7 @@ export const endpoints = makeApi([
     path: "/api/v1/brands",
     alias: "getBrands",
     requestFormat: "json",
-    response: ApiResponseListBrand,
+    response: ApiResponseListBrandSummaryDto,
   },
   {
     method: "post",

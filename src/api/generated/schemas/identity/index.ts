@@ -1,3 +1,9 @@
 export { User_controllerApi } from "./user_controller";
 export { Admin_user_controllerApi } from "./admin_user_controller";
+export { Organisation_controllerApi } from "./organisation_controller";
+export { Organisation_invitation_controllerApi } from "./organisation_invitation_controller";
 export { Auth_controllerApi } from "./auth_controller";
+export { Admin_organisation_controllerApi } from "./admin_organisation_controller";
+export { Internal_user_organisations_controllerApi } from "./internal_user_organisations_controller";
+export { Internal_organisation_controllerApi } from "./internal_organisation_controller";
+export { Admin_audit_controllerApi } from "./admin_audit_controller";

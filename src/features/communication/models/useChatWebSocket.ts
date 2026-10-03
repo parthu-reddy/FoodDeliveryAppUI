@@ -1,4 +1,4 @@
-import { getToken } from "@/lib/tokenStore";
+import { getToken, getUserProfile } from "@/lib/tokenStore";
 import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -98,6 +98,7 @@ export const useChatWebSocket = ({ sessionId, onMessageReceived, onTypingIndicat
     if (clientRef.current && clientRef.current.connected && sessionId) {
       const request = {
         content,
+        senderEntityType: getUserProfile()?.role,
         messageType
       };
       clientRef.current.publish({
@@ -115,6 +116,8 @@ export const useChatWebSocket = ({ sessionId, onMessageReceived, onTypingIndicat
     if (!sessionId || !token) return null;
     const formData = new FormData();
     formData.append('file', file);
+    const senderEntityType = getUserProfile()?.role;
+    if (senderEntityType) formData.append('senderEntityType', senderEntityType);
     try {
       const response = await window.fetch(`/api/v1/chat/sessions/${sessionId}/upload-image`, {
         method: 'POST',

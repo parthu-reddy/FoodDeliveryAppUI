@@ -3,9 +3,11 @@ import { z } from "zod";
 
 export const ParticipantDto = z
   .object({
-    userId: z.string(),
+    userId: z.string().optional(),
+    entityId: z.string(),
     entityType: z.string(),
     displayName: z.string().optional(),
+    contactUserIds: z.array(z.string()).optional(),
   })
   .passthrough();
 export const ChatSessionResponse = z
@@ -33,6 +35,7 @@ export const ChatMessageDto = z
     id: z.string().uuid(),
     sessionId: z.string().uuid(),
     senderId: z.string(),
+    senderEntityId: z.string(),
     senderName: z.string(),
     senderType: z.string(),
     messageType: z.string(),

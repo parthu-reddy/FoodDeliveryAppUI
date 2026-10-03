@@ -11,6 +11,8 @@ export default defineConfig({
     },
   },
   test: {
+    // Keep complete runs within a stable worker budget on developer machines and CI.
+    maxWorkers: 4,
     // Every UI test runs in a hostile zone: -02:30/-03:30 with DST, west of Greenwich (so a UTC-midnight
     // date shows as the previous day) and nobody's laptop zone. Code that silently reads the ambient
     // zone fails here instead of in some viewer's browser. src/shared/time/time.test.ts checks it applied.

@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { usePolling } from "@/hooks/usePolling";
 import { LedgerStatementPanel } from '@features/ledger/components/LedgerStatementPanel';
 import { formatDate } from '@/shared/time';
+import { isAxiosError } from 'axios';
 
 interface RestaurantEarningsTabProps {
   /** The outlet whose earnings to show: earnings are per outlet, so this follows the outlet selector. */
@@ -19,7 +20,7 @@ export default function RestaurantEarningsTab({ outletId }: RestaurantEarningsTa
   const { showError } = useToast();
   const [page, setPage] = useState(0);
 
-  const { data: summary, isLoading: loadingSummary } = usePolling({
+  const { data: summaryData, dataRefreshKey: summaryKey, error: summaryError, isLoading: loadingSummary, refetch: refreshSummary } = usePolling({
     fetchFn: async () => {
       return await customerApi.restaurantMoney.fetchSummary({
           params: { outletId }
@@ -27,12 +28,14 @@ export default function RestaurantEarningsTab({ outletId }: RestaurantEarningsTa
     },
     intervalMs: 30000,
     enabled: !!outletId,
+    refreshKey: outletId,
     // Both polls ignored onError, so a failed fetch left the outlet reading an empty earnings
     // screen with no indication anything had gone wrong.
-    onError: (e) => showError(parseApiError(e, 'Failed to load earnings summary').message)
+    onError: (e) => { if (!isAxiosError(e) || e.response?.status !== 403) showError(parseApiError(e, 'Failed to load earnings summary').message); }
   });
 
-  const { data: statementPage, isLoading: loadingStatement } = usePolling({
+  const statementRequestKey = `${outletId}:${page}`;
+  const { data: statementData, dataRefreshKey: statementKey, error: statementError, isLoading: loadingStatement, refetch: refreshStatement } = usePolling({
     fetchFn: async () => {
       return await customerApi.restaurantMoney.fetchStatement({
           params: { outletId },
@@ -41,11 +44,16 @@ export default function RestaurantEarningsTab({ outletId }: RestaurantEarningsTa
     },
     intervalMs: 15000,
     enabled: !!outletId,
-    onError: (e) => showError(parseApiError(e, 'Failed to load the earnings statement').message)
+    refreshKey: statementRequestKey,
+    onError: (e) => { if (!isAxiosError(e) || e.response?.status !== 403) showError(parseApiError(e, 'Failed to load the earnings statement').message); }
   });
 
+  const permissionDenied = [summaryError, statementError].some(error => isAxiosError(error) && error.response?.status === 403);
+  const summary = summaryKey === outletId && !permissionDenied ? summaryData : null;
+  const statementPage = statementKey === statementRequestKey && !permissionDenied ? statementData : null;
 
-  if (loadingSummary && !summary) {
+
+  if (loadingSummary && !summary && !permissionDenied) {
     return <div className="flex h-64 items-center justify-center"><Spinner /></div>;
   }
 
@@ -67,7 +75,7 @@ export default function RestaurantEarningsTab({ outletId }: RestaurantEarningsTa
             <div>
               <p className="text-sm text-slate-500 font-medium mb-1">{card.label}</p>
               {/* null is "the ledger could not say", not zero: the server leaves it absent rather than invent one. */}
-              <h3 className="text-2xl font-bold">{card.value === null ? <span aria-label="Not available">—</span> : formatINR(card.value)}</h3>
+              <h3 className="text-2xl font-bold">{permissionDenied ? <span className="text-base">Not permitted</span> : card.value === null ? <span aria-label="Not available">—</span> : formatINR(card.value)}</h3>
               {card.caption && <p className="text-xs text-slate-400 mt-1">{card.caption}</p>}
             </div>
             <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-full">
@@ -94,14 +102,19 @@ export default function RestaurantEarningsTab({ outletId }: RestaurantEarningsTa
           </Surface>
       )}
 
-      <LedgerStatementPanel
+      {permissionDenied ? (
+        <Surface radius="md" elevation={1} className="p-5 space-y-3">
+          <p role="status" className="text-sm text-slate-600 dark:text-slate-300">Earnings are not permitted for your organisation role. Ask an owner or admin for access.</p>
+          <button type="button" className="text-sm font-semibold text-amber-600" onClick={() => { refreshSummary(); refreshStatement(); }}>Check access again</button>
+        </Surface>
+      ) : <LedgerStatementPanel
         lines={content}
         loading={loadingStatement}
         page={page}
         totalPages={totalPages}
         onPage={setPage}
         csvName="statement"
-      />
+      />}
     </div>
   );
 }

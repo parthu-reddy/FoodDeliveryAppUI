@@ -13,6 +13,7 @@ export interface PendingUpload {
   status: 'recording' | 'pending' | 'uploading';
   mimeType: string;
   token: string; // To authenticate background upload
+  senderEntityType?: string;
   timestamp: number;
 }
 

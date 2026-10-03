@@ -4,6 +4,7 @@ import { parseInstant } from '@/shared/time';
 import { getToken, getUserProfile } from '@/lib/tokenStore';
 import { type ChatMessage, type TypingIndicator } from '@/types';
 import { useChatWebSocket } from '@features/communication/models/useChatWebSocket';
+import { canRequestChatRefund } from '@features/communication/models/chatParticipants';
 
 /**
  * One order's conversation: the session, the socket, the message list, typing indicators,
@@ -15,7 +16,9 @@ import { useChatWebSocket } from '@features/communication/models/useChatWebSocke
  */
 
 export interface CanonicalChatParticipant {
-  userId: string;
+  userId?: string | null;
+  entityId: string;
+  contactUserIds?: string[];
   entityType: string;
   displayName?: string;
 }
@@ -152,7 +155,7 @@ const { isConnected, sendMessage, sendImage, sendTypingIndicator } = useChatWebS
 });
 
 const handleRefundSubmit = (items: { itemId: string; quantity: number }[], reason: string): boolean => {
-  if (user?.role !== 'CUSTOMER') {
+  if (!canRequestChatRefund(user?.role)) {
     showError('Only the customer who placed this order can request a refund.');
     return false;
   }
@@ -202,7 +205,7 @@ useEffect(() => {
 
         const canonicalParticipants = (session.participants ?? []) as CanonicalChatParticipant[];
         setParticipants(canonicalParticipants);
-        const otherParticipant = canonicalParticipants.find((p) => p.userId !== user.id);
+        const otherParticipant = canonicalParticipants.find((p) => p.userId && p.userId !== user.id);
         setTargetUserId(otherParticipant?.userId ?? null);
 
       } catch {

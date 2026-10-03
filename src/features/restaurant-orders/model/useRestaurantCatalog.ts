@@ -138,8 +138,8 @@ const toggleStock = async (dishId: string, currentStatus: boolean) => {
   }));
 
   try {
-    await restaurantApi.catalog.post('/api/v1/outlets/:outletId/menu-overrides/:masterMenuItemId', {
-            isAvailable: newStockStatus
+    await restaurantApi.catalog.put('/api/v1/outlets/:outletId/menu-items/:masterMenuItemId/stock', {
+            inStock: newStockStatus
           }, { params: { outletId: selectedOutletId, masterMenuItemId: dishId } });
   } catch (e: unknown) {
     console.error('Failed to update stock', e);

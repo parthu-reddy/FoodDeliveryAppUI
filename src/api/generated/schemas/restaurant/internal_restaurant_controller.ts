@@ -10,9 +10,18 @@ export const ApiResponseBoolean = z
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
+export const OutletOrganisationDto = z
+  .object({
+    outletId: z.string().uuid(),
+    brandId: z.string().uuid(),
+    organisationId: z.string().uuid(),
+  })
+  .partial()
+  .passthrough();
 
 export const schemas = {
   ApiResponseBoolean,
+  OutletOrganisationDto,
 };
 
 export const endpoints = makeApi([
@@ -32,6 +41,40 @@ export const endpoints = makeApi([
   },
   {
     method: "get",
+    path: "/api/v1/internal/restaurants/users/:userId/outlets",
+    alias: "getUserOutlets",
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "userId",
+        type: "Path",
+        schema: z.string().uuid(),
+      },
+      {
+        name: "permission",
+        type: "Query",
+        schema: z.enum([
+          "ORG_VIEW",
+          "ORG_MANAGE",
+          "MEMBERS_MANAGE",
+          "BUSINESS_APPLY",
+          "OUTLET_MANAGE",
+          "MENU_MANAGE",
+          "STOCK_TOGGLE",
+          "ORDERS_OPERATE",
+          "EARNINGS_VIEW",
+          "PAYOUTS_MANAGE",
+          "ADS_VIEW",
+          "ADS_MANAGE",
+          "WALLET_VIEW",
+          "WALLET_TOPUP",
+        ]),
+      },
+    ],
+    response: z.array(z.string().uuid()),
+  },
+  {
+    method: "get",
     path: "/api/v1/internal/restaurants/products/:productId/exists",
     alias: "productExists",
     requestFormat: "json",
@@ -43,20 +86,6 @@ export const endpoints = makeApi([
       },
     ],
     response: ApiResponseBoolean,
-  },
-  {
-    method: "get",
-    path: "/api/v1/internal/restaurants/owner/:ownerId/outlets",
-    alias: "getOwnerOutlets",
-    requestFormat: "json",
-    parameters: [
-      {
-        name: "ownerId",
-        type: "Path",
-        schema: z.string().uuid(),
-      },
-    ],
-    response: z.array(z.string()),
   },
   {
     method: "get",
@@ -74,17 +103,17 @@ export const endpoints = makeApi([
   },
   {
     method: "get",
-    path: "/api/v1/internal/restaurants/outlets/:outletId/owner",
-    alias: "getOutletOwner",
+    path: "/api/v1/internal/restaurants/outlets/:outletId/organisation",
+    alias: "getOutletOrganisation",
     requestFormat: "json",
     parameters: [
       {
         name: "outletId",
         type: "Path",
-        schema: z.string(),
+        schema: z.string().uuid(),
       },
     ],
-    response: z.object({}).partial().passthrough(),
+    response: OutletOrganisationDto,
   },
   {
     method: "get",

@@ -36,6 +36,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/organisations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list"];
+        put?: never;
+        post: operations["create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organisations/{organisationId}/ownership-transfer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["transfer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organisations/{organisationId}/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["invitations"];
+        put?: never;
+        post: operations["invite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organisation-invitations/{invitationId}/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["decline"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organisation-invitations/{invitationId}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["accept"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/internal/auth/verify": {
         parameters: {
             query?: never;
@@ -110,6 +190,150 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["addRole"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/internal/admin/organisations/{organisationId}/suspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["suspend"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/internal/admin/organisations/{organisationId}/reinstate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reinstate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organisations/{organisationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["rename"];
+        trace?: never;
+    };
+    "/api/v1/organisations/{organisationId}/members/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["remove"];
+        options?: never;
+        head?: never;
+        patch: operations["role"];
+        trace?: never;
+    };
+    "/api/v1/organisations/{organisationId}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["members"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organisation-invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["mine"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/internal/users/{userId}/organisations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["memberships"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/internal/organisations/{organisationId}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["members_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/internal/organisations/{organisationId}/members/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["membership"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -196,6 +420,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/internal/admin/organisations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/internal/admin/organisations/{organisationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/internal/admin/organisations/{organisationId}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["members_2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/internal/admin/audit-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organisations/{organisationId}/invitations/{invitationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["revoke"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/internal/auth/sessions/{sessionId}": {
         parameters: {
             query?: never;
@@ -262,6 +566,46 @@ export interface components {
             /** Format: date-time */
             timestamp: string;
         };
+        Name: {
+            displayName: string;
+        };
+        OrganisationView: {
+            /** Format: uuid */
+            id?: string;
+            displayName?: string;
+            /** @enum {string} */
+            status?: "ACTIVE" | "SUSPENDED" | "CLOSED";
+            /** @enum {string} */
+            myRole?: "OWNER" | "ADMIN" | "MANAGER" | "STAFF";
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        Transfer: {
+            /** Format: uuid */
+            userId: string;
+        };
+        Invite: {
+            phoneNumber: string;
+            /** @enum {string} */
+            role: "OWNER" | "ADMIN" | "MANAGER" | "STAFF";
+        };
+        InvitationView: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            organisationId?: string;
+            phoneNumber?: string;
+            /** @enum {string} */
+            role?: "OWNER" | "ADMIN" | "MANAGER" | "STAFF";
+            /** @enum {string} */
+            status?: "PENDING" | "ACCEPTED" | "DECLINED" | "REVOKED" | "EXPIRED";
+            /** Format: date-time */
+            expiresAt?: string;
+            /** Format: date-time */
+            createdAt?: string;
+        };
         ApiResponseVoid: {
             success: boolean;
             message: string;
@@ -273,6 +617,95 @@ export interface components {
         RoleRequestDTO: {
             serviceName: string;
             roleName: string;
+        };
+        Reason: {
+            reason: string;
+        };
+        ChangeRole: {
+            /** @enum {string} */
+            role: "OWNER" | "ADMIN" | "MANAGER" | "STAFF";
+        };
+        MemberView: {
+            /** Format: uuid */
+            userId?: string;
+            name?: string;
+            phoneNumber?: string;
+            /** @enum {string} */
+            role?: "OWNER" | "ADMIN" | "MANAGER" | "STAFF";
+            /** @enum {string} */
+            status?: "ACTIVE" | "REMOVED";
+            /** Format: date-time */
+            createdAt?: string;
+        };
+        PageableObject: {
+            /** Format: int64 */
+            offset: number;
+            sort?: components["schemas"]["SortObject"];
+            paged: boolean;
+            /** Format: int32 */
+            pageNumber: number;
+            /** Format: int32 */
+            pageSize: number;
+            unpaged: boolean;
+        };
+        SliceOrganisationView: {
+            /** Format: int32 */
+            numberOfElements?: number;
+            /** Format: int32 */
+            number?: number;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            size?: number;
+            content?: components["schemas"]["OrganisationView"][];
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
+            empty?: boolean;
+        };
+        SortObject: {
+            empty: boolean;
+            sorted: boolean;
+            unsorted: boolean;
+        };
+        SliceMemberView: {
+            /** Format: int32 */
+            numberOfElements?: number;
+            /** Format: int32 */
+            number?: number;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            size?: number;
+            content?: components["schemas"]["MemberView"][];
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
+            empty?: boolean;
+        };
+        SliceInvitationView: {
+            /** Format: int32 */
+            numberOfElements?: number;
+            /** Format: int32 */
+            number?: number;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            size?: number;
+            content?: components["schemas"]["InvitationView"][];
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
+            empty?: boolean;
+        };
+        MembershipDto: {
+            /** Format: uuid */
+            organisationId: string;
+            /** @enum {string} */
+            organisationStatus: "ACTIVE" | "SUSPENDED" | "CLOSED";
+            /** Format: uuid */
+            userId: string;
+            /** @enum {string} */
+            role: "OWNER" | "ADMIN" | "MANAGER" | "STAFF";
+            /** @enum {string} */
+            status: "ACTIVE" | "REMOVED";
         };
         ApiResponseListSessionInfo: {
             success: boolean;
@@ -329,6 +762,45 @@ export interface components {
             /** Format: int32 */
             numberOfElements: number;
             empty: boolean;
+        };
+        AdminOrganisationView: {
+            organisation?: components["schemas"]["OrganisationView"];
+            members?: components["schemas"]["SliceMemberView"];
+        };
+        AuditEvent: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: date-time */
+            occurredAt?: string;
+            /** Format: uuid */
+            actorUserId?: string;
+            actorKind?: string;
+            /** @enum {string} */
+            action?: "ORGANISATION_CREATED" | "ORGANISATION_RENAMED" | "ORGANISATION_SUSPENDED" | "ORGANISATION_REINSTATED" | "ORGANISATION_CLOSED" | "MEMBER_INVITED" | "INVITATION_ACCEPTED" | "INVITATION_DECLINED" | "INVITATION_REVOKED" | "INVITATION_EXPIRED" | "MEMBER_ROLE_CHANGED" | "MEMBER_REMOVED" | "OWNERSHIP_TRANSFERRED" | "APPLICATION_SUBMITTED" | "APPLICATION_APPROVED" | "APPLICATION_REJECTED" | "APPLICATION_SUSPENDED" | "APPLICATION_REINSTATED" | "KYC_DOCUMENT_VIEWED" | "ADMIN_STEP_UP" | "TOPUP_REQUESTED" | "TOPUP_SETTLED" | "TOPUP_FAILED" | "CREATIVE_APPROVED" | "CREATIVE_REJECTED" | "CAMPAIGN_ACTIVATED" | "CAMPAIGN_PAUSED";
+            subjectType?: string;
+            /** Format: uuid */
+            subjectId?: string;
+            /** Format: uuid */
+            organisationId?: string;
+            reason?: string;
+            traceId?: string;
+            details?: {
+                [key: string]: Record<string, never>;
+            };
+        };
+        SliceAuditEvent: {
+            /** Format: int32 */
+            numberOfElements?: number;
+            /** Format: int32 */
+            number?: number;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            size?: number;
+            content?: components["schemas"]["AuditEvent"][];
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
+            empty?: boolean;
         };
     };
     responses: never;
@@ -409,6 +881,174 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiResponseString"];
+                };
+            };
+        };
+    };
+    list: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SliceOrganisationView"];
+                };
+            };
+        };
+    };
+    create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Name"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganisationView"];
+                };
+            };
+        };
+    };
+    transfer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organisationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Transfer"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganisationView"];
+                };
+            };
+        };
+    };
+    invitations: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                organisationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SliceInvitationView"];
+                };
+            };
+        };
+    };
+    invite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organisationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Invite"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitationView"];
+                };
+            };
+        };
+    };
+    decline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invitationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitationView"];
+                };
+            };
+        };
+    };
+    accept: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invitationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitationView"];
                 };
             };
         };
@@ -541,6 +1181,271 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiResponseString"];
+                };
+            };
+        };
+    };
+    suspend: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organisationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Reason"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganisationView"];
+                };
+            };
+        };
+    };
+    reinstate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organisationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Reason"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganisationView"];
+                };
+            };
+        };
+    };
+    get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organisationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganisationView"];
+                };
+            };
+        };
+    };
+    rename: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organisationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Name"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganisationView"];
+                };
+            };
+        };
+    };
+    remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organisationId: string;
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    role: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organisationId: string;
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangeRole"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberView"];
+                };
+            };
+        };
+    };
+    members: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                organisationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SliceMemberView"];
+                };
+            };
+        };
+    };
+    mine: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SliceInvitationView"];
+                };
+            };
+        };
+    };
+    memberships: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MembershipDto"][];
+                };
+            };
+        };
+    };
+    members_1: {
+        parameters: {
+            query: {
+                permission: "ORG_VIEW" | "ORG_MANAGE" | "MEMBERS_MANAGE" | "BUSINESS_APPLY" | "OUTLET_MANAGE" | "MENU_MANAGE" | "STOCK_TOGGLE" | "ORDERS_OPERATE" | "EARNINGS_VIEW" | "PAYOUTS_MANAGE" | "ADS_VIEW" | "ADS_MANAGE" | "WALLET_VIEW" | "WALLET_TOPUP";
+            };
+            header?: never;
+            path: {
+                organisationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
+                };
+            };
+        };
+    };
+    membership: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organisationId: string;
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MembershipDto"];
                 };
             };
         };
@@ -679,6 +1584,125 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ApiResponsePageResponseDtoUserDTO"];
                 };
+            };
+        };
+    };
+    list_1: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SliceOrganisationView"];
+                };
+            };
+        };
+    };
+    get_1: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                organisationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminOrganisationView"];
+                };
+            };
+        };
+    };
+    members_2: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                organisationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SliceMemberView"];
+                };
+            };
+        };
+    };
+    history: {
+        parameters: {
+            query: {
+                subjectType: string;
+                subjectId: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SliceAuditEvent"];
+                };
+            };
+        };
+    };
+    revoke: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organisationId: string;
+                invitationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

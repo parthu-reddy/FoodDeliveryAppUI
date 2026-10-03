@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('@/lib/tokenStore', () => ({
   getToken: () => 'chat-test-token',
+  getUserProfile: () => ({ id: 'staff-user', role: 'RESTAURANT' }),
 }));
 
 vi.mock('@stomp/stompjs', () => ({
@@ -67,6 +68,7 @@ describe('useChatWebSocket image upload', () => {
     });
 
     expect(uploadUrl).toBe('https://media.example.test/chat/attachment.png');
+    expect((mocks.fetch.mock.calls[0][1].body as FormData).get('senderEntityType')).toBe('RESTAURANT');
     expect(mocks.fetch).toHaveBeenCalledWith(
       '/api/v1/chat/sessions/session-123/upload-image',
       expect.objectContaining({

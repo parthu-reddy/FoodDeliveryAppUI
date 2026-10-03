@@ -9,7 +9,7 @@ import { components as restaurantComponents } from '../api/generated/restaurant'
 import { components as customerComponents } from '../api/generated/customer';
 import { components as deliveryComponents } from '../api/generated/delivery';
 
-export type Brand = restaurantComponents['schemas']['Brand'];
+export type Brand = restaurantComponents['schemas']['BrandSummaryDto'];
 export type Outlet = restaurantComponents['schemas']['OutletDto'];
 export type MasterMenuItem = restaurantComponents['schemas']['MasterMenuItem'];
 export type MenuItem = restaurantComponents['schemas']['MenuItemDTO'] & {
@@ -17,7 +17,7 @@ export type MenuItem = restaurantComponents['schemas']['MenuItemDTO'] & {
     image?: string;
     isVeg?: boolean;
 };
-export type OutletOverride = restaurantComponents['schemas']['MasterMenuItem']; // Fallback
+export type OutletOverride = restaurantComponents['schemas']['OverrideItemDto'];
 export type NearbyRestaurant = restaurantComponents['schemas']['NearbyRestaurantDTO'];
 /**
  * How an order is paid for.

@@ -52,6 +52,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/outlets/{outletId}/menu-items/{masterMenuItemId}/stock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["toggleStock"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/categories/{categoryId}": {
         parameters: {
             query?: never;
@@ -612,14 +628,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/internal/restaurants/products/{productId}/exists": {
+    "/api/v1/internal/restaurants/users/{userId}/outlets": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["productExists"];
+        get: operations["getUserOutlets"];
         put?: never;
         post?: never;
         delete?: never;
@@ -628,14 +644,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/internal/restaurants/owner/{ownerId}/outlets": {
+    "/api/v1/internal/restaurants/products/{productId}/exists": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["getOwnerOutlets"];
+        get: operations["productExists"];
         put?: never;
         post?: never;
         delete?: never;
@@ -660,14 +676,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/internal/restaurants/outlets/{outletId}/owner": {
+    "/api/v1/internal/restaurants/outlets/{outletId}/organisation": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["getOutletOwner"];
+        get: operations["getOutletOrganisation"];
         put?: never;
         post?: never;
         delete?: never;
@@ -800,6 +816,31 @@ export interface components {
             /** Format: int32 */
             defaultPrepTimeSeconds: number;
         };
+        StockToggleRequest: {
+            inStock: boolean;
+        };
+        ApiResponseOverrideItemDto: {
+            success: boolean;
+            message: string;
+            errorCode?: string;
+            data?: components["schemas"]["OverrideItemDto"];
+            /** Format: date-time */
+            timestamp: string;
+        };
+        OverrideItemDto: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            outletId?: string;
+            /** Format: uuid */
+            masterMenuItemId?: string;
+            overriddenPrice?: number;
+            isAvailable?: boolean;
+            /** Format: int32 */
+            overriddenPrepTimeMinutes?: number;
+            /** Format: int32 */
+            version?: number;
+        };
         CategoryDTO: {
             /** Format: uuid */
             id?: string;
@@ -912,28 +953,6 @@ export interface components {
             /** Format: int32 */
             version?: number;
         };
-        ApiResponseOverrideItemDto: {
-            success: boolean;
-            message: string;
-            errorCode?: string;
-            data?: components["schemas"]["OverrideItemDto"];
-            /** Format: date-time */
-            timestamp: string;
-        };
-        OverrideItemDto: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: uuid */
-            outletId?: string;
-            /** Format: uuid */
-            masterMenuItemId?: string;
-            overriddenPrice?: number;
-            isAvailable?: boolean;
-            /** Format: int32 */
-            overriddenPrepTimeMinutes?: number;
-            /** Format: int32 */
-            version?: number;
-        };
         SetOutletCategoryTimingRequest: {
             /** Format: uuid */
             categoryId: string;
@@ -978,6 +997,8 @@ export interface components {
             timestamp: string;
         };
         BrandOnboardRequest: {
+            /** Format: uuid */
+            organisationId: string;
             name: string;
             gstin: string;
             pan: string;
@@ -998,7 +1019,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** Format: uuid */
-            ownerId: string;
+            organisationId: string;
             name: string;
             gstin?: string;
             pan?: string;
@@ -1286,6 +1307,14 @@ export interface components {
             /** Format: date-time */
             timestamp: string;
         };
+        OutletOrganisationDto: {
+            /** Format: uuid */
+            outletId?: string;
+            /** Format: uuid */
+            brandId?: string;
+            /** Format: uuid */
+            organisationId?: string;
+        };
         ApiResponsePageResponseDtoNearbyRestaurantDTO: {
             success: boolean;
             message: string;
@@ -1318,13 +1347,33 @@ export interface components {
             /** Format: date-time */
             timestamp: string;
         };
-        ApiResponseListBrand: {
+        ApiResponseListBrandSummaryDto: {
             success: boolean;
             message: string;
             errorCode?: string;
-            data?: components["schemas"]["Brand"][];
+            data?: components["schemas"]["BrandSummaryDto"][];
             /** Format: date-time */
             timestamp: string;
+        };
+        BrandSummaryDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            organisationId: string;
+            name: string;
+            logoUrl?: string;
+            /** @enum {string} */
+            kycStatus?: "PENDING" | "APPROVED" | "VERIFIED" | "REJECTED" | "MANUAL_REVIEW" | "FAILED";
+            /** @enum {string} */
+            pennyDropStatus?: "PENDING" | "APPROVED" | "VERIFIED" | "REJECTED" | "MANUAL_REVIEW" | "FAILED";
+            isGstinVerified?: boolean;
+            isBankVerified?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: int32 */
+            version?: number;
         };
         ApiResponseListMasterMenuItemDto: {
             success: boolean;
@@ -1421,6 +1470,33 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
+    toggleStock: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                outletId: string;
+                masterMenuItemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StockToggleRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseOverrideItemDto"];
                 };
             };
         };
@@ -1890,7 +1966,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiResponseListBrand"];
+                    "application/json": components["schemas"]["ApiResponseListBrandSummaryDto"];
                 };
             };
         };
@@ -2231,6 +2307,7 @@ export interface operations {
     getPresignedUploadUrl: {
         parameters: {
             query: {
+                brandId: string;
                 docType: string;
                 contentType: string;
             };
@@ -2388,6 +2465,30 @@ export interface operations {
             };
         };
     };
+    getUserOutlets: {
+        parameters: {
+            query: {
+                permission: "ORG_VIEW" | "ORG_MANAGE" | "MEMBERS_MANAGE" | "BUSINESS_APPLY" | "OUTLET_MANAGE" | "MENU_MANAGE" | "STOCK_TOGGLE" | "ORDERS_OPERATE" | "EARNINGS_VIEW" | "PAYOUTS_MANAGE" | "ADS_VIEW" | "ADS_MANAGE" | "WALLET_VIEW" | "WALLET_TOPUP";
+            };
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
+                };
+            };
+        };
+    };
     productExists: {
         parameters: {
             query?: never;
@@ -2406,28 +2507,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiResponseBoolean"];
-                };
-            };
-        };
-    };
-    getOwnerOutlets: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                ownerId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": string[];
                 };
             };
         };
@@ -2456,7 +2535,7 @@ export interface operations {
             };
         };
     };
-    getOutletOwner: {
+    getOutletOrganisation: {
         parameters: {
             query?: never;
             header?: never;
@@ -2473,7 +2552,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": Record<string, never>;
+                    "application/json": components["schemas"]["OutletOrganisationDto"];
                 };
             };
         };

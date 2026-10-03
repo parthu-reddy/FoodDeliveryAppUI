@@ -54,7 +54,7 @@ describe('AdminFleetMap refresh lifecycle', () => {
 
     await waitFor(() => expect(getRestaurants).toHaveBeenCalledTimes(1));
     expect(screen.getByRole('button', { name: 'Refresh fleet map' })).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'Fleet city' })).toHaveValue('BLR');
+    expect(screen.getByRole('combobox', { name: 'Fleet city' })).toHaveTextContent('BLR');
     expect(screen.getByTestId('fleet-riders-empty')).toHaveTextContent(
       'No riders are currently sharing a usable location.',
     );
@@ -89,8 +89,9 @@ describe('AdminFleetMap refresh lifecycle', () => {
     render(<AdminFleetMap />);
 
     const citySelector = await screen.findByRole('combobox', { name: 'Fleet city' });
-    await waitFor(() => expect(citySelector).toHaveValue('BLR'));
-    fireEvent.change(citySelector, { target: { value: 'HYD' } });
+    await waitFor(() => expect(citySelector).toHaveTextContent('BLR'));
+    fireEvent.click(citySelector);
+    fireEvent.click(screen.getByRole('option', { name: 'HYD' }));
 
     await waitFor(() => expect(getRestaurants).toHaveBeenLastCalledWith(
       '/api/v1/internal/admin/restaurants/all-with-location',

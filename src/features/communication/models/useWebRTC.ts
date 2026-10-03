@@ -331,6 +331,7 @@ export const useWebRTC = () => {
       
       const formData = new FormData();
       formData.append('file', file);
+      if (user?.role) formData.append('senderEntityType', user.role);
       
       // Save as pending first
       if (token) {
@@ -339,6 +340,7 @@ export const useWebRTC = () => {
           status: 'pending',
           mimeType,
           token,
+          senderEntityType: user?.role,
           timestamp: Date.now()
         });
       }
@@ -377,6 +379,7 @@ export const useWebRTC = () => {
             
             const formData = new FormData();
             formData.append('file', file);
+            if (upload.senderEntityType) formData.append('senderEntityType', upload.senderEntityType);
             
             // Attempt to get a fresh token in case the stored one expired
             const freshToken = getToken();

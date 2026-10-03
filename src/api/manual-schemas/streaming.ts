@@ -22,6 +22,7 @@ export const chatMessageSchema = z.object({
   id: z.string().optional(),
   sessionId: z.string(),
   senderId: z.string(),
+  senderEntityId: z.string().optional(),
   senderName: z.string(),
   senderType: z.enum(['CUSTOMER', 'RESTAURANT', 'DELIVERY', 'SUPPORT_MODERATOR', 'SYSTEM']),
   messageType: z.enum(['TEXT', 'IMAGE', 'AUDIO', 'SYSTEM', 'REFUND_QUOTE_REQUEST', 'REFUND_QUOTE_RESPONSE', 'REFUND_REQUEST', 'REFUND_DECISION', 'REFUND_ERROR']),

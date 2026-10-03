@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { AxiosError, type AxiosResponse } from 'axios';
 import { customerApi } from '@/lib/zodiosClients';
 import RestaurantEarningsTab from './RestaurantEarningsTab';
 import { ThemeProvider } from '@/contexts/ThemeContext';
@@ -29,6 +30,46 @@ vi.mock('@/lib/zodiosClients', () => ({
 }));
 
 describe('RestaurantEarningsTab', () => {
+  it('keeps previously loaded financial data hidden throughout a denied-access retry', async () => {
+    vi.useFakeTimers();
+    try {
+      const denied = new AxiosError('Forbidden', 'ERR_BAD_REQUEST', undefined, undefined,
+        { status: 403 } as AxiosResponse);
+      const summary = { netEarnings: 1250, pendingBalance: 25, clawbacks: 0 };
+      type Statement = Awaited<ReturnType<typeof customerApi.restaurantMoney.fetchStatement>>;
+      const statement: Statement = { content: [], totalPages: 1, totalElements: 0,
+        last: true, size: 20, number: 0, first: true, numberOfElements: 0, empty: true };
+      let restoreSummary: ((value: typeof summary) => void) | undefined;
+      let restoreStatement: ((value: Statement) => void) | undefined;
+      vi.mocked(customerApi.restaurantMoney.fetchSummary)
+        .mockResolvedValueOnce(summary as never).mockRejectedValueOnce(denied)
+        .mockImplementationOnce(() => new Promise(resolve => { restoreSummary = resolve as typeof restoreSummary; }));
+      vi.mocked(customerApi.restaurantMoney.fetchStatement)
+        .mockResolvedValueOnce(statement)
+        .mockRejectedValueOnce(denied)
+        .mockRejectedValueOnce(denied)
+        .mockImplementationOnce(() => new Promise<Statement>(resolve => { restoreStatement = resolve; }));
+
+      render(<ThemeProvider><ToastProvider><RestaurantEarningsTab outletId="123" /></ToastProvider></ThemeProvider>);
+      await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+      expect(screen.getByText('₹1,250.00')).toBeInTheDocument();
+
+      await act(async () => { await vi.advanceTimersByTimeAsync(30_000); });
+      expect(screen.getAllByText('Not permitted')).toHaveLength(3);
+      expect(screen.queryByText('₹1,250.00')).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Check access again' }));
+      expect(screen.getAllByText('Not permitted')).toHaveLength(3);
+      expect(screen.queryByText('Account Statement')).not.toBeInTheDocument();
+      expect(screen.queryByText('₹1,250.00')).not.toBeInTheDocument();
+
+      await act(async () => { restoreSummary?.(summary); restoreStatement?.(statement); });
+      expect(screen.getByText('₹1,250.00')).toBeInTheDocument();
+      expect(screen.queryByText('Not permitted')).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('renders loading state initially or renders stats correctly', async () => {
     render(
       <ThemeProvider>

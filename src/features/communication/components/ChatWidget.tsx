@@ -3,6 +3,7 @@ import { useCallContext } from "@/contexts/CallContext";
 import { useToast } from "@/contexts/ToastContext";
 import { getUserProfile } from "@/lib/tokenStore";
 import { type CanonicalChatParticipant, useChatSession } from "@features/communication/models/useChatSession";
+import { canRequestChatRefund, otherChatParticipants } from '@features/communication/models/chatParticipants';
 import { ChatMessageList } from "./ChatMessageList";
 import { Camera, ImagePlus, MessageSquare, PhoneCall, Send, X } from 'lucide-react';
 import React, { useState, useImperativeHandle, useRef } from 'react';
@@ -24,7 +25,7 @@ export interface ChatWidgetHandle {
 export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({ orderId, order, onClose, onBack }, ref) => {
   const { showError } = useToast();
   const user = getUserProfile();
-  const canRequestRefund = user?.role === 'CUSTOMER';
+  const canRequestRefund = canRequestChatRefund(user?.role);
   const [isOpen, setIsOpen] = useState(false);
   const lastTypingIndicatorAt = useRef(0);
 
@@ -40,7 +41,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
     hasOlderMessages, isLoadingOlderMessages, loadOlderMessages,
   } = useChatSession({ orderId, isOpen, showError });
 
-  const otherParticipants = participants.filter((participant) => participant.userId !== user?.id);
+  const otherParticipants = otherChatParticipants(participants, user?.id, user?.role);
 
   useImperativeHandle(ref, () => ({
     openAndRequestRefundQuote: () => {
@@ -129,9 +130,13 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
         <div className="flex items-center gap-1">
           {sessionId && otherParticipants.length ? otherParticipants.map((p: CanonicalChatParticipant) => (
             <button
-              key={p.userId}
-              onClick={() => startCall(p.userId, sessionId)}
-              className="text-white hover:bg-amber-700 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 bg-amber-600/80"
+              key={`${p.entityType}:${p.entityId}`}
+              onClick={() => {
+                const contact = p.userId ?? p.contactUserIds?.find(id => id !== user?.id);
+                if (contact) startCall(contact, sessionId);
+              }}
+              disabled={!p.userId && !p.contactUserIds?.some(id => id !== user?.id)}
+              className="text-white hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 bg-amber-600/80"
               title={`Call ${p.displayName}`}
             >
               <PhoneCall className="w-4 h-4" />

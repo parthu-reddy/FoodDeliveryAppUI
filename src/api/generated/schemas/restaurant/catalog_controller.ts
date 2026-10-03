@@ -3,6 +3,27 @@ import { z } from "zod";
 
 import { MasterMenuItem } from "./common";
 
+export const OverrideItemDto = z
+  .object({
+    id: z.string().uuid(),
+    outletId: z.string().uuid(),
+    masterMenuItemId: z.string().uuid(),
+    overriddenPrice: z.number(),
+    isAvailable: z.boolean(),
+    overriddenPrepTimeMinutes: z.number().int(),
+    version: z.number().int(),
+  })
+  .partial()
+  .passthrough();
+export const ApiResponseOverrideItemDto = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    errorCode: z.string().optional(),
+    data: OverrideItemDto.optional(),
+    timestamp: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
 export const MasterMenuItemDto = z
   .object({
     id: z.string().uuid(),
@@ -25,27 +46,6 @@ export const ApiResponseMasterMenuItemDto = z
     message: z.string(),
     errorCode: z.string().optional(),
     data: MasterMenuItemDto.optional(),
-    timestamp: z.string().datetime({ offset: true }),
-  })
-  .passthrough();
-export const OverrideItemDto = z
-  .object({
-    id: z.string().uuid(),
-    outletId: z.string().uuid(),
-    masterMenuItemId: z.string().uuid(),
-    overriddenPrice: z.number(),
-    isAvailable: z.boolean(),
-    overriddenPrepTimeMinutes: z.number().int(),
-    version: z.number().int(),
-  })
-  .partial()
-  .passthrough();
-export const ApiResponseOverrideItemDto = z
-  .object({
-    success: z.boolean(),
-    message: z.string(),
-    errorCode: z.string().optional(),
-    data: OverrideItemDto.optional(),
     timestamp: z.string().datetime({ offset: true }),
   })
   .passthrough();
@@ -104,10 +104,10 @@ export const OutletMenuOverride = z
   .passthrough();
 
 export const schemas = {
-  MasterMenuItemDto,
-  ApiResponseMasterMenuItemDto,
   OverrideItemDto,
   ApiResponseOverrideItemDto,
+  MasterMenuItemDto,
+  ApiResponseMasterMenuItemDto,
   MenuItemDTO,
   ApiResponseListMenuItemDTO,
   ApiResponseListOverrideItemDto,
@@ -116,6 +116,30 @@ export const schemas = {
 };
 
 export const endpoints = makeApi([
+  {
+    method: "put",
+    path: "/api/v1/outlets/:outletId/menu-items/:masterMenuItemId/stock",
+    alias: "toggleStock",
+    requestFormat: "json",
+    parameters: [
+      {
+        name: "body",
+        type: "Body",
+        schema: z.object({ inStock: z.boolean() }).passthrough(),
+      },
+      {
+        name: "outletId",
+        type: "Path",
+        schema: z.string().uuid(),
+      },
+      {
+        name: "masterMenuItemId",
+        type: "Path",
+        schema: z.string().uuid(),
+      },
+    ],
+    response: ApiResponseOverrideItemDto,
+  },
   {
     method: "put",
     path: "/api/v1/brands/:brandId/master-menu/:itemId",

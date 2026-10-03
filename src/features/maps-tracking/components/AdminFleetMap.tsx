@@ -1,4 +1,4 @@
-import { Button, createMapPin, createMapPopupContent, Surface } from '@shared/ui';
+import { Button, createMapPin, createMapPopupContent, Select, Surface } from '@shared/ui';
 import { ErrorBoundary } from '@shared/ui/ErrorBoundary';
 import { customerApi, deliveryApi, restaurantApi } from "@/lib/zodiosClients";
 import { formatTime } from '@shared/time';
@@ -326,18 +326,18 @@ function AdminFleetMapInner() {
  Refresh
  </Button>
  </div>
- <label className="mb-2 flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
- Fleet city
- <select
+ <div className="mb-2 flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+ <span>Fleet city</span>
+ <Select
  aria-label="Fleet city"
  value={selectedCityId ?? ''}
  disabled={fleetCities.length === 0}
- onChange={event => setSelectedCityId(event.target.value)}
- className="rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
- >
- {fleetCities.map(cityId => <option key={cityId} value={cityId}>{cityId}</option>)}
- </select>
- </label>
+ onChange={setSelectedCityId}
+ options={fleetCities.map(cityId => ({ value: cityId, label: cityId }))}
+ selectSize="sm"
+ placeholder="Select city"
+ />
+ </div>
  <div className="flex flex-col gap-2 text-xs">
  <div className="flex items-center gap-2">
  <div className="w-3 h-3 rounded-full bg-rose-600"></div>

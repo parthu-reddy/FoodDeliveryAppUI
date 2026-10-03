@@ -99,6 +99,11 @@ export const endpoints = makeApi([
     requestFormat: "json",
     parameters: [
       {
+        name: "brandId",
+        type: "Query",
+        schema: z.string().uuid(),
+      },
+      {
         name: "docType",
         type: "Query",
         schema: z.string(),

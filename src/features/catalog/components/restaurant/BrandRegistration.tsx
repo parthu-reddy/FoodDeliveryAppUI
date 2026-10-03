@@ -1,24 +1,16 @@
-import { Input, Surface, surfaceStyle } from '@shared/ui';
+import { Input, Select, Surface, surfaceStyle } from '@shared/ui';
 import { restaurantApi } from '@/lib/zodiosClients';
+import { useBrandOrganisationSelection } from '../../model/useBrandOrganisationSelection';
 import ImageUploadField from "@features/kyc/components/ImageUploadField";
 import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle, CreditCard, Plus, Sparkles, Store } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useMotionPresets } from '@shared/ui';
 import React, { useState } from 'react';
-import { z } from 'zod';
+import { brandSchema } from '../../model/brandRegistrationSchema';
 import { Spinner } from '@shared/ui';
 
-const brandSchema = z.object({
- name: z.string().min(1, 'Brand name is required.').max(100, 'Brand name cannot exceed 100 characters.'),
- gstin: z.string().length(15, 'GSTIN must be exactly 15 characters.'),
- pan: z.string().length(10, 'PAN must be exactly 10 characters.'),
- cin: z.string().length(21, 'CIN must be exactly 21 characters.'),
- bankAccount: z.string().min(1, 'Bank Account is required.').max(30, 'Bank Account number too long.'),
- ifsc: z.string().length(11, 'IFSC must be exactly 11 characters.'),
- logoUrl: z.string().url('Invalid Logo URL.').max(1000, 'Logo URL cannot exceed 1000 characters.').optional().or(z.literal(''))
-});
-
 export default function BrandRegistration({ onRefresh }: { onRefresh: () => void }) {
+ const formId = React.useId();
  const presets = useMotionPresets();
  const [isOpen, setIsOpen] = useState(false);
  const [step, setStep] = useState(1);
@@ -33,6 +25,8 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
 
  const [error, setError] = useState('');
  const [isSaving, setIsSaving] = useState(false);
+ const { organisationId, setOrganisationId, isLoadingOrganisations, isOrganisationSelectionReady, choices,
+   prepareOrganisationSelection, ensureOrganisation } = useBrandOrganisationSelection(isOpen, setError);
 
  const resetForm = () => {
  setStep(1);
@@ -79,8 +73,7 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
  bankAccountNumber: bankAccount,
  ifscCode: ifsc,
  logoUrl,
- owner: 'Logged In User',
- createdAt: new Date().toISOString()
+ organisationId
  };
 
  const validation = brandSchema.safeParse({
@@ -100,7 +93,8 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
 
  try {
  setIsSaving(true);
- await restaurantApi.restaurantOnboarding.post(`/api/v1/brands`, newBrand, {});
+ const targetId = await ensureOrganisation(name);
+ await restaurantApi.restaurantOnboarding.post(`/api/v1/brands`, { ...newBrand, organisationId: targetId }, {});
  setIsOpen(false);
  resetForm();
  onRefresh();
@@ -115,7 +109,7 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
  if (!isOpen) {
  return (
  <button
- onClick={() => setIsOpen(true)}
+ onClick={() => { prepareOrganisationSelection(); setError(''); setIsOpen(true); }}
  className="w-full p-4 flex items-center justify-center gap-2 text-slate-500 dark:text-slate-300 hover:text-rose-500 transition cursor-pointer"
  style={{
  ...surfaceStyle({ variant: 'sunken', radius: 'lg', elevation: 0 }),
@@ -149,6 +143,14 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
  )}
 
  <div className="relative">
+ {isLoadingOrganisations && <p role="status" className="mb-3 text-sm text-slate-500">Loading your organisations…</p>}
+ {choices.length > 0 && (
+   <div className="mb-4 space-y-1">
+     <label htmlFor="brand-organisation" className="text-xs font-bold text-slate-500">Organisation</label>
+     <Select id="brand-organisation" value={organisationId} onChange={setOrganisationId}
+       disabled={isSaving} options={choices.map(org => ({ value: org.id, label: org.displayName }))} />
+   </div>
+ )}
  <AnimatePresence mode="wait">
  {step === 1 && (
  <motion.div
@@ -161,8 +163,9 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
  <span className="font-bold text-xs uppercase tracking-wider">Business Details</span>
  </div>
  <div className="space-y-1">
- <label className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">Brand Name</label>
+ <label htmlFor={`${formId}-name`} className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">Brand Name</label>
  <Input
+ id={`${formId}-name`}
  type="text" required value={name} onChange={e => setName(e.target.value)}
  className="font-bold focus:ring-2 focus:ring-rose-500/50"
  placeholder="e.g. KFC"
@@ -170,22 +173,25 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
  </div>
  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
  <div className="space-y-1">
- <label className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">GSTIN (15 char)</label>
+ <label htmlFor={`${formId}-gstin`} className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">GSTIN (15 char)</label>
  <Input
+ id={`${formId}-gstin`}
  type="text" required minLength={15} maxLength={15} value={gstin} onChange={e => setGstin(e.target.value.toUpperCase())}
  className="font-bold uppercase focus:ring-2 focus:ring-rose-500/50"
  />
  </div>
  <div className="space-y-1">
- <label className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">PAN (10 char)</label>
+ <label htmlFor={`${formId}-pan`} className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">PAN (10 char)</label>
  <Input
+ id={`${formId}-pan`}
  type="text" required minLength={10} maxLength={10} value={pan} onChange={e => setPan(e.target.value.toUpperCase())}
  className="font-bold uppercase focus:ring-2 focus:ring-rose-500/50"
  />
  </div>
  <div className="space-y-1 col-span-2 sm:col-span-1">
- <label className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">CIN (21 char)</label>
+ <label htmlFor={`${formId}-cin`} className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">CIN (21 char)</label>
  <Input
+ id={`${formId}-cin`}
  type="text" required minLength={21} maxLength={21} value={cin} onChange={e => setCin(e.target.value.toUpperCase())}
  className="font-bold uppercase focus:ring-2 focus:ring-rose-500/50"
  />
@@ -237,15 +243,17 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
 
  <div className="grid grid-cols-2 gap-3">
  <div className="space-y-1">
- <label className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">Bank Account #</label>
+ <label htmlFor={`${formId}-bank`} className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">Bank Account #</label>
  <Input
+ id={`${formId}-bank`}
  type="text" required value={bankAccount} onChange={e => setBankAccount(e.target.value)}
  className="font-bold focus:ring-2 focus:ring-rose-500/50"
  />
  </div>
  <div className="space-y-1">
- <label className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">IFSC Code (11 char)</label>
+ <label htmlFor={`${formId}-ifsc`} className="text-[10px] font-bold text-slate-400 dark:text-slate-300 uppercase">IFSC Code (11 char)</label>
  <Input
+ id={`${formId}-ifsc`}
  type="text" required minLength={11} maxLength={11} value={ifsc} onChange={e => setIfsc(e.target.value.toUpperCase())}
  className="font-bold uppercase focus:ring-2 focus:ring-rose-500/50"
  />
@@ -262,7 +270,7 @@ export default function BrandRegistration({ onRefresh }: { onRefresh: () => void
  <button
  type="button"
  onClick={handleRegister}
- disabled={isSaving}
+ disabled={isSaving || isLoadingOrganisations || !isOrganisationSelectionReady}
  className="flex-1 py-2.5 bg-gradient-to-r from-rose-500 to-rose-500 text-white text-sm font-black rounded-xl transition flex items-center justify-center gap-2 disabled:opacity-50 hover:scale-[1.02]"
  >
  {isSaving ? (

@@ -20,17 +20,13 @@ async function apiDelete(url: string) { const res = await window.fetch(url, { me
 const API_BASE = '/api/v1';
 
 export async function getBrands(): Promise<Brand[]> {
-  try {
-    const res = await apiGet(`${API_BASE}/brands`);
-    return res.data || [];
-  } catch { return []; }
+  const res = await apiGet(`${API_BASE}/brands`);
+  return res.data || [];
 }
 
 export async function getOutlets(): Promise<Outlet[]> {
-  try {
-    const res = await apiGet(`${API_BASE}/outlets`);
-    return res.data || [];
-  } catch { return []; }
+  const res = await apiGet(`${API_BASE}/outlets`);
+  return res.data || [];
 }
 
 export async function getOutletsByBrand(brandId: string): Promise<Outlet[]> {
@@ -70,10 +66,15 @@ export async function upsertOverride(
   price?: number,
   active?: boolean
 ): Promise<OutletOverride | null> {
-  try {
-    const res = await apiPost(`${API_BASE}/outlets/${outletId}/menu-overrides/${masterMenuItemId}`, { price, active });
-    return res.data || null;
-  } catch { return null; }
+  if (price === undefined && active !== undefined) return toggleStock(outletId, masterMenuItemId, active);
+  const res = await apiPost(`${API_BASE}/outlets/${outletId}/menu-overrides/${masterMenuItemId}`,
+    { overriddenPrice: price, isAvailable: active });
+  return res.data || null;
+}
+
+export async function toggleStock(outletId: string, masterMenuItemId: string, inStock: boolean): Promise<OutletOverride | null> {
+  const res = await apiPut(`${API_BASE}/outlets/${outletId}/menu-items/${masterMenuItemId}/stock`, { inStock });
+  return res.data || null;
 }
 
 // Dynamically calculates the Effective Menu for an outlet

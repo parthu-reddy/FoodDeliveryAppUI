@@ -73,10 +73,12 @@ export function usePolling<T>({
     const fetchId = ++fetchIdRef.current;
     const requestRefreshKey = refreshKeyRef.current;
     setIsLoading(true);
-    setError(null);
     try {
       const result = await savedFetchFn.current();
       if (!isSubscribedRef.current || fetchId !== fetchIdRef.current) return;
+      // A retry has not restored access. Keep a previous denial until the server
+      // succeeds, so retained data cannot reappear while that retry is pending.
+      setError(null);
       setData(result);
       setDataRefreshKey(requestRefreshKey);
       savedOnData.current?.(result);

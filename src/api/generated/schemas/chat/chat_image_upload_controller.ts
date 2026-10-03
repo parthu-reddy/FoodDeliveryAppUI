@@ -21,6 +21,11 @@ export const endpoints = makeApi([
         type: "Path",
         schema: z.string().uuid(),
       },
+      {
+        name: "senderEntityType",
+        type: "Query",
+        schema: z.string().optional(),
+      },
     ],
     response: ApiResponseUploadResponseDto,
   },

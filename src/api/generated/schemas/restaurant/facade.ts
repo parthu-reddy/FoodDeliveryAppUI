@@ -1,7 +1,7 @@
 import type { ZodiosOptions } from "@zodios/core";
 import { createApiClient as create_restaurantOutlet } from './restaurant_outlet_controller';
-import { createApiClient as create_category } from './category_controller';
 import { createApiClient as create_catalog } from './catalog_controller';
+import { createApiClient as create_category } from './category_controller';
 import { createApiClient as create_fulfillment } from './fulfillment_controller';
 import { createApiClient as create_restaurantKyc } from './restaurant_kyc_controller';
 import { createApiClient as create_internalRestaurant } from './internal_restaurant_controller';
@@ -15,8 +15,8 @@ import { createApiClient as create_restaurantSse } from './restaurant_sse_contro
 export function createRestaurantFacade(baseUrl: string, options?: ZodiosOptions) {
   return {
   restaurantOutlet: create_restaurantOutlet(baseUrl, options),
-  category: create_category(baseUrl, options),
   catalog: create_catalog(baseUrl, options),
+  category: create_category(baseUrl, options),
   fulfillment: create_fulfillment(baseUrl, options),
   restaurantKyc: create_restaurantKyc(baseUrl, options),
   internalRestaurant: create_internalRestaurant(baseUrl, options),

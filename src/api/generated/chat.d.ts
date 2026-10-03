@@ -130,9 +130,11 @@ export interface components {
             participants?: components["schemas"]["ParticipantDto"][];
         };
         ParticipantDto: {
-            userId: string;
+            userId?: string;
+            entityId: string;
             entityType: string;
             displayName?: string;
+            contactUserIds?: string[];
         };
         ApiResponseUploadResponseDto: {
             success: boolean;
@@ -168,6 +170,7 @@ export interface components {
             /** Format: uuid */
             sessionId?: string;
             senderId?: string;
+            senderEntityId?: string;
             senderName?: string;
             senderType?: string;
             messageType?: string;
@@ -249,7 +252,9 @@ export interface operations {
     };
     uploadImage: {
         parameters: {
-            query?: never;
+            query?: {
+                senderEntityType?: string;
+            };
             header?: never;
             path: {
                 sessionId: string;
@@ -278,7 +283,9 @@ export interface operations {
     };
     uploadAudio: {
         parameters: {
-            query?: never;
+            query?: {
+                senderEntityType?: string;
+            };
             header?: never;
             path: {
                 sessionId: string;

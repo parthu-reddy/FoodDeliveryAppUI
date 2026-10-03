@@ -1,6 +1,6 @@
 export { Restaurant_outlet_controllerApi } from "./restaurant_outlet_controller";
-export { Category_controllerApi } from "./category_controller";
 export { Catalog_controllerApi } from "./catalog_controller";
+export { Category_controllerApi } from "./category_controller";
 export { Fulfillment_controllerApi } from "./fulfillment_controller";
 export { Restaurant_kyc_controllerApi } from "./restaurant_kyc_controller";
 export { Internal_restaurant_controllerApi } from "./internal_restaurant_controller";

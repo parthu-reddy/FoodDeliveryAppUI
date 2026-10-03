@@ -138,14 +138,13 @@ export const RestaurantSettingsShell: React.FC<RestaurantSettingsShellProps> = (
  <span className="text-[10px] font-mono text-slate-400 dark:text-slate-300">ID: {b.id}</span>
  </div>
  <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-300">
- <span>GSTIN: {b.gstin}</span>
  <div className="flex gap-2">
  <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] uppercase tracking-wider ${
  b.kycStatus === 'VERIFIED' ? 'bg-amber-500/10 text-amber-500' :
  b.kycStatus === VerificationStatus.PENDING ? 'bg-amber-500/10 text-amber-500 animate-pulse' :
  'bg-rose-500/10 text-rose-500'
  }`}>
- GSTIN: {b.kycStatus || VerificationStatus.PENDING}
+ KYC: {b.kycStatus || VerificationStatus.PENDING}
  </span>
  <span className={`px-2 py-0.5 rounded-full font-bold text-[9px] uppercase tracking-wider ${
  b.pennyDropStatus === 'VERIFIED' ? 'bg-amber-500/10 text-amber-500' :
