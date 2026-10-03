@@ -1,4 +1,5 @@
 import { DeliveryStatus, OrderStatus } from '@/types/backend-enums';
+import { parseInstant } from '@/shared/time';
 
 /**
  * Where an order sits in its life, from the UI's point of view.
@@ -81,6 +82,24 @@ export const isActiveOrder = (order: OrderLike): boolean => {
   }
   if (!order.status) return false;
   return classifyOrderStatus(order.status) === 'IN_FLIGHT';
+};
+
+/** How long a finished order keeps its chat, so the customer can still raise a problem. */
+export const CHAT_AFTER_FINISH_MS = 2 * 60 * 60 * 1000;
+
+/**
+ * Whether the order's chat is offered: always while the order is happening, then for two hours
+ * after its last update. The chat widget and every entry point into it ("Something wrong with
+ * this order?") ask this one function. The entry point used to be shown without the widget, and
+ * after the two hours it clicked into nothing.
+ */
+export const isOrderChatOffered = (
+  order: Pick<import('@/types').Order, 'status' | 'deliveryStatus' | 'updatedAt'>,
+  now: number,
+): boolean => {
+  if (isActiveOrder(order)) return true;
+  if (!order.updatedAt) return false;
+  return now - parseInstant(order.updatedAt) < CHAT_AFTER_FINISH_MS;
 };
 
 /** The order ended badly: cancelled by anyone, or the delivery failed. */

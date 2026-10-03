@@ -12,6 +12,7 @@ import { OrderMoneyBreakdown } from './OrderMoneyBreakdown';
 import { useOrderRefunds } from '../model/useOrderRefunds';
 import { OrderRefundState } from './OrderRefundState';
 import { TaxInvoiceSheet } from './TaxInvoiceSheet';
+import { isOrderChatOffered } from '../model/orderStatus';
 
 /**
  * The screen after the door: what arrived, what it cost, and a way to say something was wrong.
@@ -92,7 +93,9 @@ export function OrderDeliveredSummary({ order, onBack, chatWidgetRef }: OrderDel
           </Button>
         )}
 
-        {order.status !== OrderStatus.CANCELLED && (
+        {/* Shown only while the chat it opens is offered; after that it would click into nothing. */}
+        {/* eslint-disable-next-line react-hooks/purity */}
+        {order.status !== OrderStatus.CANCELLED && isOrderChatOffered(order, Date.now()) && (
           <Button variant="outline" fullWidth onClick={() => chatWidgetRef.current?.openAndRequestRefundQuote()}>
             Something wrong with this order?
           </Button>

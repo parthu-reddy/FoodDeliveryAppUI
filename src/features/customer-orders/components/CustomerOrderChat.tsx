@@ -1,18 +1,17 @@
 import React from 'react';
 import type { Order } from '@/types';
 import { ChatWidget, type ChatWidgetHandle } from '@features/communication/components/ChatWidget';
-import { isActiveOrder } from '@features/customer-orders/model/orderStatus';
-import { parseInstant } from '@/shared/time';
+import { isOrderChatOffered } from '@features/customer-orders/model/orderStatus';
 
 /**
  * The conversation about the order the customer is tracking — and the rule for when it stops
  * being offered.
  *
- * That rule is why this is its own component: a delivered order keeps its chat for two hours
- * so a customer can raise a problem, and the version inline in the dashboard decided
- * "finished" from a hand-listed array that omitted CANCELLED_BY_PLATFORM and DELIVERY_FAILED
- * — so a platform cancellation offered chat forever. It now asks `isActiveOrder`, which is
- * the one definition.
+ * A delivered order keeps its chat for two hours so a customer can raise a problem. The rule is
+ * `isOrderChatOffered`, shared with the delivered summary's "Something wrong with this order?"
+ * button so the button is never shown without a chat to open. (An earlier inline version decided
+ * "finished" from a hand-listed array that omitted CANCELLED_BY_PLATFORM and DELIVERY_FAILED, so a
+ * platform cancellation offered chat forever.)
  */
 
 interface CustomerOrderChatProps {
@@ -23,25 +22,15 @@ interface CustomerOrderChatProps {
 export function CustomerOrderChat({ currentTrackingOrder, chatWidgetRef }: CustomerOrderChatProps) {
   return (
     <>
-  {currentTrackingOrder && (() => {
-    // One definition of "finished", not a second hand-listed array: this one omitted
-    // CANCELLED_BY_PLATFORM and DELIVERY_FAILED, so a platform cancellation kept offering chat
-    // forever instead of for two hours.
-    const isCompleted = !isActiveOrder(currentTrackingOrder);
-    let showChat = !isCompleted;
-    if (isCompleted && currentTrackingOrder.updatedAt) {
-      const updatedTime = parseInstant(currentTrackingOrder.updatedAt);
-      // eslint-disable-next-line react-hooks/purity
-      showChat = (Date.now() - updatedTime) < (2 * 60 * 60 * 1000);
-    }
-    return showChat ? (
+  {currentTrackingOrder
+    // eslint-disable-next-line react-hooks/purity
+    && isOrderChatOffered(currentTrackingOrder, Date.now()) && (
       <ChatWidget
         ref={chatWidgetRef}
         orderId={currentTrackingOrder.id}
         order={currentTrackingOrder}
       />
-    ) : null;
-  })()}
+  )}
     </>
   );
 }

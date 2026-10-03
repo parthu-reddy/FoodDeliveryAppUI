@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { DeliveryStatus, OrderStatus } from '@/types/backend-enums';
 import { Order } from '@/types';
+import { parseInstant } from '@/shared/time';
 import {
   classifyDeliveryStatus,
   classifyOrderStatus,
@@ -8,6 +9,8 @@ import {
   ORDER_STAGES,
   isActiveOrder,
   isFailedOrder,
+  isOrderChatOffered,
+  CHAT_AFTER_FINISH_MS,
   terminalHeadline,
 } from './orderStatus';
 
@@ -108,5 +111,32 @@ describe('completedStages -- what the customer timeline shows', () => {
         expect(completedStages(s, d)).toBeLessThanOrEqual(ORDER_STAGES.length);
       }
     }
+  });
+});
+
+describe('isOrderChatOffered -- the chat and every entry point into it', () => {
+  const now = parseInstant('2026-10-03T00:00:00Z');
+  const at = (msAgo: number) => new Date(now - msAgo).toISOString();
+  const withUpdate = (o: Order, updatedAt?: string) => ({ ...o, updatedAt } as Order);
+
+  test('an order still happening always offers chat', () => {
+    expect(isOrderChatOffered(withUpdate(order(OrderStatus.PREPARING), at(10 * CHAT_AFTER_FINISH_MS)), now)).toBe(true);
+  });
+
+  test('a delivered order offers chat for two hours after its last update, then stops', () => {
+    const delivered = order(OrderStatus.HANDED_OVER, DeliveryStatus.DELIVERED);
+    expect(isOrderChatOffered(withUpdate(delivered, at(CHAT_AFTER_FINISH_MS - 60_000)), now)).toBe(true);
+    expect(isOrderChatOffered(withUpdate(delivered, at(CHAT_AFTER_FINISH_MS)), now)).toBe(false);
+    expect(isOrderChatOffered(withUpdate(delivered, at(5 * 60 * 60 * 1000)), now)).toBe(false);
+  });
+
+  test('a finished order with no update time offers none', () => {
+    expect(isOrderChatOffered(withUpdate(order(OrderStatus.HANDED_OVER, DeliveryStatus.DELIVERED)), now)).toBe(false);
+  });
+
+  test('a failed order follows the same window', () => {
+    const failed = order(OrderStatus.CANCELLED_BY_PLATFORM);
+    expect(isOrderChatOffered(withUpdate(failed, at(30 * 60 * 1000)), now)).toBe(true);
+    expect(isOrderChatOffered(withUpdate(failed, at(3 * 60 * 60 * 1000)), now)).toBe(false);
   });
 });

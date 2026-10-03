@@ -29,6 +29,18 @@ describe('OrderDeliveredSummary', () => {
     renderSummary({ status: OrderStatus.CANCELLED });
     expect(screen.queryByRole('button', { name: /Tax invoice/ })).not.toBeInTheDocument();
   });
+  it('offers "Something wrong with this order?" while the order chat is offered', () => {
+    renderSummary({ status: OrderStatus.HANDED_OVER, deliveryStatus: DeliveryStatus.DELIVERED,
+      updatedAt: new Date(Date.now() - 30 * 60 * 1000).toISOString() });
+    expect(screen.getByRole('button', { name: 'Something wrong with this order?' })).toBeInTheDocument();
+  });
+
+  it('hides it once the chat it opens is gone, instead of a button that does nothing', () => {
+    renderSummary({ status: OrderStatus.HANDED_OVER, deliveryStatus: DeliveryStatus.DELIVERED,
+      updatedAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString() });
+    expect(screen.queryByRole('button', { name: 'Something wrong with this order?' })).not.toBeInTheDocument();
+  });
+
   it('shows a delivered order refund independently of its delivery status', async () => {
     vi.mocked(customerApi.customerMoney.get).mockResolvedValue([{ id: 'refund-1', orderId: base.id,
       amount: 90, status: 'PROCESSING', destination: 'ORIGINAL_METHOD' }]);
