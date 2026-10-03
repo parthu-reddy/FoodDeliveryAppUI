@@ -73,4 +73,62 @@ describe('Admin Order Money View', () => {
     expect(screen.getAllByText('₹0.00')).toHaveLength(1);
   });
 
+
+  describe('per outcome', () => {
+    const line = (ownerType: string, category: string, direction: 'CREDIT' | 'DEBIT', amount: number, n: number) => ({
+      transactionId: `e0000000-0000-4000-8000-00000000000${n}`, referenceId: 'o1', accountId: `a${n}`, ownerId: `owner-${ownerType}`,
+      ownerType, category, direction, amount, createdAt: '2026-10-03T00:00:00Z' });
+    const base = { orderId: 'o1', totalAmount: 53.53, foodCost: 28.37, deliveryFee: 18.74, customerPlatformFee: 5, sgst: 0.71, cgst: 0.71,
+      restaurantPayout: 19.11, restaurantPlatformFee: 5, restaurantDeliveryContribution: 4.26, platformBonus: 0,
+      driverGrossPayout: 23, driverTaxes: 4.14, driverNetPayout: 18.86, paymentMethod: 'CARD', gatewayName: 'RAZORPAY' };
+
+    test('shows the payment status and each refund with its outcome', async () => {
+      getOrderMoney.mockResolvedValue({ ...base, paymentStatus: 'PARTIALLY_REFUNDED', ledgerLines: [], refunds: [
+        { id: 'r0000001-0000-4000-8000-000000000001', amount: 12, status: 'COMPLETED', destination: 'ORIGINAL_METHOD',
+          faultType: 'RESTAURANT_FAULT', completedAt: '2026-10-03T01:00:00Z' },
+        { id: 'r0000002-0000-4000-8000-000000000002', amount: 1.13, status: 'FAILED', destination: 'ORIGINAL_METHOD',
+          faultType: 'RESTAURANT_FAULT', failureReason: 'Gateway rejected refund initiation' },
+      ] });
+      wrap(<AdminOrderMoney orderId="o1" />);
+
+      expect(await screen.findByText('PARTIALLY_REFUNDED')).toBeInTheDocument();
+      const rows = screen.getAllByTestId('order-refund');
+      expect(rows.map(r => r.getAttribute('data-status'))).toEqual(['COMPLETED', 'FAILED']);
+      expect(screen.getByText('₹12.00')).toBeInTheDocument();
+      expect(screen.getByText('₹1.13')).toBeInTheDocument();
+      expect(screen.getByText('Gateway rejected refund initiation')).toBeInTheDocument();
+      expect(screen.getByText('CARD')).toBeInTheDocument();
+    });
+
+    test('says when an order has no refunds', async () => {
+      getOrderMoney.mockResolvedValue({ ...base, paymentStatus: 'SUCCESS', refunds: [], ledgerLines: [] });
+      wrap(<AdminOrderMoney orderId="o1" />);
+      expect(await screen.findByText('No refunds.')).toBeInTheDocument();
+      expect(screen.getByText('SUCCESS')).toBeInTheDocument();
+    });
+
+    test('shows what was booked for each payee beside the quoted payout', async () => {
+      // Delivered, then a restaurant-fault refund clawed back 4.28 of the restaurant's 19.11.
+      getOrderMoney.mockResolvedValue({ ...base, paymentStatus: 'PARTIALLY_REFUNDED', refunds: [], ledgerLines: [
+        line('RESTAURANT_PAYABLE', 'FOOD_COST', 'CREDIT', 28.37, 1), line('RESTAURANT_PAYABLE', 'PLATFORM_FIXED_FEE', 'DEBIT', 5, 2),
+        line('RESTAURANT_PAYABLE', 'DELIVERY_FEE', 'DEBIT', 4.26, 3), line('RESTAURANT_PAYABLE', 'CLAWBACK', 'DEBIT', 4.28, 4),
+        line('DRIVER_PAYABLE', 'DELIVERY_FEE', 'CREDIT', 18.74, 5), line('DRIVER_PAYABLE', 'DELIVERY_FEE', 'CREDIT', 4.26, 6),
+        line('DRIVER_PAYABLE', 'SGST', 'DEBIT', 2.07, 7), line('DRIVER_PAYABLE', 'CGST', 'DEBIT', 2.07, 8),
+      ] });
+      wrap(<AdminOrderMoney orderId="o1" />);
+      expect(await screen.findByTestId('restaurant-posted')).toHaveTextContent('₹14.83');
+      expect(screen.getByTestId('rider-posted')).toHaveTextContent('₹18.86');
+    });
+
+    test('says nothing was booked for the payees of a cancelled order', async () => {
+      // A cancelled order books only its capture and refund; no payee earned anything.
+      getOrderMoney.mockResolvedValue({ ...base, paymentStatus: 'REFUNDED', refunds: [], ledgerLines: [
+        line('GATEWAY_RECEIVABLE', 'ORDER_TOTAL', 'DEBIT', 53.53, 1), line('PLATFORM_CLEARING', 'ORDER_TOTAL', 'CREDIT', 53.53, 2),
+      ] });
+      wrap(<AdminOrderMoney orderId="o1" />);
+      expect(await screen.findByTestId('restaurant-posted')).toHaveTextContent('Not posted');
+      expect(screen.getByTestId('rider-posted')).toHaveTextContent('Not posted');
+    });
+  });
 });
+

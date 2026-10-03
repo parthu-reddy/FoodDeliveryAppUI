@@ -1,8 +1,8 @@
 import { useToast } from "@/contexts/ToastContext";
 import { parseApiError } from '@/lib/parseApiError';
 import { customerApi } from "@/lib/zodiosClients";
-import { Spinner, Surface } from '@shared/ui';
-import { IndianRupee, Store, Bike, Activity } from 'lucide-react';
+import { Spinner, StatusPill, Surface, type StatusTone } from '@shared/ui';
+import { IndianRupee, Store, Bike, Activity, CreditCard } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { formatINR } from '@shared/money';
 
@@ -16,6 +16,27 @@ const displayAmount = (amount: number | null | undefined) =>
   typeof amount === 'number' && Number.isFinite(amount) ? formatINR(amount) : 'Unavailable';
 const displayDeduction = (amount: number | null | undefined) =>
   typeof amount === 'number' && Number.isFinite(amount) ? `-${formatINR(amount)}` : 'Unavailable';
+
+/**
+ * What the ledger actually holds for one payee on this order: credits minus debits. The payout cards
+ * show the order's quoted split, which a cancelled or refunded order never (fully) earns; this is the
+ * money that was booked. Null when nothing was posted, undefined when a line has no amount.
+ */
+const postedNet = (lines: AdminOrderMoney['ledgerLines'], ownerType: string): number | null | undefined => {
+  const mine = (lines ?? []).filter(line => line.ownerType === ownerType);
+  if (mine.length === 0) return null;
+  if (mine.some(line => typeof line.amount !== 'number' || !Number.isFinite(line.amount))) return undefined;
+  return mine.reduce((sum, line) => sum + (line.direction === 'CREDIT' ? 1 : -1) * (line.amount as number), 0);
+};
+const displayPosted = (net: number | null | undefined) => (net === null ? 'Not posted' : displayAmount(net));
+
+const PAYMENT_TONE: Record<string, StatusTone> = {
+  SUCCESS: 'success', PARTIALLY_REFUNDED: 'warning', REFUNDED: 'info', REFUND_PENDING: 'warning',
+  REFUND_FAILED: 'danger', FAILED: 'danger', INITIATED: 'neutral',
+};
+const REFUND_TONE: Record<string, StatusTone> = {
+  COMPLETED: 'success', PROCESSING: 'warning', REQUESTED: 'warning', FAILED: 'danger', CANCELLED: 'neutral',
+};
 
 export default function AdminOrderMoney({ orderId }: { orderId: string }) {
   const [data, setData] = useState<AdminOrderMoney | null>(null);
@@ -115,6 +136,10 @@ export default function AdminOrderMoney({ orderId }: { orderId: string }) {
                    <span>Net Payout</span>
                    <span className="text-amber-600">{displayAmount(data.restaurantPayout)}</span>
                </div>
+               <div className="flex justify-between text-sm mt-2" data-testid="restaurant-posted">
+                   <span className="text-slate-500">Posted to ledger</span>
+                   <span>{displayPosted(postedNet(data.ledgerLines, 'RESTAURANT_PAYABLE'))}</span>
+               </div>
            </Surface>
 
            {/* Rider Summary */}
@@ -142,8 +167,60 @@ export default function AdminOrderMoney({ orderId }: { orderId: string }) {
                    <span>Net Payout</span>
                    <span className="text-amber-600">{displayAmount(data.driverNetPayout)}</span>
                </div>
+               <div className="flex justify-between text-sm mt-2" data-testid="rider-posted">
+                   <span className="text-slate-500">Posted to ledger</span>
+                   <span>{displayPosted(postedNet(data.ledgerLines, 'DRIVER_PAYABLE'))}</span>
+               </div>
            </Surface>
        </div>
+
+       {/* What happened to the customer's money after it was taken. */}
+       <Surface elevation={2} radius="xl" className="p-6 mt-8" data-testid="order-payment">
+           <h3 className="font-bold flex items-center gap-2 mb-4 text-slate-700 dark:text-slate-300">
+               <CreditCard className="w-4 h-4" /> Payment and Refunds
+           </h3>
+           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm mb-4">
+               <span><span className="text-slate-500">Method </span>{data.paymentMethod ?? 'Unavailable'}</span>
+               <span><span className="text-slate-500">Gateway </span>{data.gatewayName ?? 'Unavailable'}</span>
+               <span className="flex items-center gap-2"><span className="text-slate-500">Payment</span>
+                   {data.paymentStatus
+                       ? <StatusPill tone={PAYMENT_TONE[data.paymentStatus] ?? 'neutral'} label={data.paymentStatus} />
+                       : 'Unavailable'}
+               </span>
+           </div>
+           {data.refunds && data.refunds.length > 0 ? (
+               <table className="w-full text-left text-sm" aria-label="Refunds">
+                   <thead>
+                       <tr className="border-b border-slate-200 dark:border-slate-800">
+                           <th className="p-2 font-semibold text-slate-500">Refund</th>
+                           <th className="p-2 font-semibold text-slate-500 text-right">Amount</th>
+                           <th className="p-2 font-semibold text-slate-500">Status</th>
+                           <th className="p-2 font-semibold text-slate-500">Destination</th>
+                           <th className="p-2 font-semibold text-slate-500">Fault</th>
+                           <th className="p-2 font-semibold text-slate-500">Completed / reason</th>
+                       </tr>
+                   </thead>
+                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                       {data.refunds.map((refund, index) => (
+                           <tr key={refund.id ?? index} data-testid="order-refund" data-refund-id={refund.id} data-status={refund.status}>
+                               <td className="p-2 font-mono text-xs" title={refund.id}>{refund.id?.substring(0, 8) ?? 'Unavailable'}</td>
+                               <td className="p-2 text-right font-medium">{displayAmount(refund.amount)}</td>
+                               <td className="p-2">
+                                   {refund.status ? <StatusPill tone={REFUND_TONE[refund.status] ?? 'neutral'} label={refund.status} /> : 'Unavailable'}
+                               </td>
+                               <td className="p-2">{refund.destination ?? 'Unavailable'}</td>
+                               <td className="p-2">{refund.faultType ?? 'Unavailable'}</td>
+                               <td className="p-2 text-xs">
+                                   {refund.completedAt ? formatDateTime(refund.completedAt) : (refund.failureReason ?? 'Not completed')}
+                               </td>
+                           </tr>
+                       ))}
+                   </tbody>
+               </table>
+           ) : (
+               <p className="text-sm text-slate-500">No refunds.</p>
+           )}
+       </Surface>
 
        {/* Ledger Lines */}
        <Surface elevation={2} radius="xl" className="overflow-hidden mt-8">
