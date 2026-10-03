@@ -28,6 +28,16 @@ interface UseChatSessionOptions {
 
 export const MAX_CHAT_MESSAGE_LENGTH = 10_000;
 
+/** The history page size the UI asks for; the server allows up to 100. */
+const HISTORY_PAGE_SIZE = 50;
+
+/** One list in time order: history merged with what is already shown, each message once (by id). */
+function mergeHistory(current: ChatMessage[], history: ChatMessage[]): ChatMessage[] {
+  const byId = new Map(history.map(message => [message.id, message]));
+  for (const message of current) byId.set(message.id, message);
+  return [...byId.values()].sort((a, b) => parseInstant(a.timestamp) - parseInstant(b.timestamp));
+}
+
 export function useChatSession({
   orderId, isOpen, showError,
 }: UseChatSessionOptions) {
@@ -36,6 +46,9 @@ export function useChatSession({
   const [unreadCount, setUnreadCount] = useState(0);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  // Pages of history older than the newest window: the next page to ask for, whether the server
+  // says there is one, and whether a request for it is in flight.
+  const [olderHistory, setOlderHistory] = useState({ nextPage: 1, hasMore: false, loading: false });
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [sessionInitError, setSessionInitError] = useState(false);
@@ -218,14 +231,10 @@ useEffect(() => {
   const loadHistory = async () => {
     try {
       const response = await chatApi.chatSession.get('/api/v1/chat/sessions/:sessionId/messages',
-        { params: { sessionId } });
+        { params: { sessionId }, queries: { page: 0, size: HISTORY_PAGE_SIZE } });
       if (cancelled || !response?.success) return;
-      const history = (response.data?.content as ChatMessage[]) ?? [];
-      setMessages(current => {
-        const byId = new Map(history.map(message => [message.id, message]));
-        for (const message of current) byId.set(message.id, message);
-        return [...byId.values()].sort((a, b) => parseInstant(a.timestamp) - parseInstant(b.timestamp));
-      });
+      setMessages(current => mergeHistory(current, (response.data?.content as ChatMessage[]) ?? []));
+      setOlderHistory({ nextPage: 1, hasMore: response.data?.last === false, loading: false });
     } catch {
       if (cancelled) return;
       console.error('Error loading chat history.');
@@ -235,6 +244,26 @@ useEffect(() => {
   void loadHistory();
   return () => { cancelled = true; };
 }, [sessionId]);
+
+/**
+ * The next page back. Page 0 is the newest window; a message that arrives meanwhile only pushes
+ * older ones further back, so a page can repeat a message (dropped by id) but never skip one.
+ */
+const loadOlderMessages = async () => {
+  if (!sessionId || !olderHistory.hasMore || olderHistory.loading) return;
+  const page = olderHistory.nextPage;
+  setOlderHistory(state => ({ ...state, loading: true }));
+  try {
+    const response = await chatApi.chatSession.get('/api/v1/chat/sessions/:sessionId/messages',
+      { params: { sessionId }, queries: { page, size: HISTORY_PAGE_SIZE } });
+    if (!response?.success) throw new Error('History page refused');
+    setMessages(current => mergeHistory(current, (response.data?.content as ChatMessage[]) ?? []));
+    setOlderHistory({ nextPage: page + 1, hasMore: response.data?.last === false, loading: false });
+  } catch {
+    setOlderHistory(state => ({ ...state, loading: false }));
+    showErrorRef.current('Earlier messages could not be loaded. Please try again.');
+  }
+};
 
 const handleSend = (e?: React.FormEvent) => {
   e?.preventDefault();
@@ -287,5 +316,6 @@ const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     handleSend, handleImageUpload, handleRefundSubmit,
     messagesEndRef, fileInputRef, cameraInputRef,
     isConnected, sendMessage, sendTypingIndicator, uploadedImageCount, isImageUploadDisabled,
+    hasOlderMessages: olderHistory.hasMore, isLoadingOlderMessages: olderHistory.loading, loadOlderMessages,
   };
 }

@@ -37,6 +37,7 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
     handleSend, handleImageUpload, handleRefundSubmit,
     messagesEndRef, fileInputRef, cameraInputRef,
     isConnected, sendMessage, sendTypingIndicator, uploadedImageCount, isImageUploadDisabled,
+    hasOlderMessages, isLoadingOlderMessages, loadOlderMessages,
   } = useChatSession({ orderId, isOpen, showError });
 
   const otherParticipants = participants.filter((participant) => participant.userId !== user?.id);
@@ -199,7 +200,8 @@ export const ChatWidget = React.forwardRef<ChatWidgetHandle, ChatWidgetProps>(({
             <p>Send a message to start the conversation.</p>
           </div>
         ) : (
-            <ChatMessageList messages={messages} userId={user?.id} canRequestRefund={canRequestRefund} orderId={orderId} sendMessage={sendMessage} />
+            <ChatMessageList messages={messages} userId={user?.id} canRequestRefund={canRequestRefund} orderId={orderId} sendMessage={sendMessage}
+              hasOlderMessages={hasOlderMessages} isLoadingOlderMessages={isLoadingOlderMessages} onLoadOlderMessages={() => { void loadOlderMessages(); }} />
         )}
 
         {/* Typing indicators */}

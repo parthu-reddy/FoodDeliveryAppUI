@@ -117,3 +117,25 @@ describe('ChatMessageList refund actions', () => {
   });
 
 });
+
+describe('ChatMessageList older history', () => {
+  const props = { messages: [quoteMessage], userId: 'customer-1', canRequestRefund: true, orderId: 'order-1', sendMessage: vi.fn() };
+
+  it('offers earlier messages when there are some, and asks for them once per click', () => {
+    const onLoadOlderMessages = vi.fn();
+    render(<ChatMessageList {...props} hasOlderMessages onLoadOlderMessages={onLoadOlderMessages} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Load earlier messages' }));
+    expect(onLoadOlderMessages).toHaveBeenCalledOnce();
+  });
+
+  it('shows the request in flight and blocks a second one', () => {
+    render(<ChatMessageList {...props} hasOlderMessages isLoadingOlderMessages onLoadOlderMessages={vi.fn()} />);
+    expect(screen.getByRole('button', { name: 'Loading earlier messages…' })).toBeDisabled();
+  });
+
+  it('offers nothing when the whole history is shown', () => {
+    render(<ChatMessageList {...props} hasOlderMessages={false} onLoadOlderMessages={vi.fn()} />);
+    expect(screen.queryByRole('button', { name: /earlier messages/ })).not.toBeInTheDocument();
+  });
+});
+

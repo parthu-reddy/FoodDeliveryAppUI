@@ -3,24 +3,27 @@ import { z } from 'zod';
 import { Button, Input, StatusPill, Surface, useConfirm } from '@shared/ui';
 import { useToast } from '@/contexts/ToastContext';
 import { parseApiError } from '@/lib/parseApiError';
-import { ledgerApi, paymentApi, walletApi } from '@/lib/zodiosClients';
+import { customerApi, ledgerApi, paymentApi, walletApi } from '@/lib/zodiosClients';
 import { PageReconciliationRun } from '../../../api/generated/schemas/ledger/reconciliation_controller';
 import { PageResponseDtoWebhookDelivery } from '../../../api/generated/schemas/payment/admin_dlq_controller';
 import { PageResponseDtoOutboxEventEntity as WalletOutboxPage } from '../../../api/generated/schemas/wallet/admin_dlq_controller';
 import { PageResponseDtoLedgerRejectionDto } from '../../../api/generated/schemas/ledger/admin_ledger_rejection_controller';
+import { PageResponseDtoFailedRefundDto } from '../../../api/generated/schemas/customer/admin_dlq_controller';
+import { formatINR } from '@shared/money';
 import { formatDateTime } from '@/shared/time';
 
 export default function OperationsPage() {
   // Rejections first: a rejected ledger movement is money that was never booked, and since the
   // DLT path was changed to record one instead of publishing to a topic nobody consumed, this is
   // the only place a lost ledger event appears.
-  const [activeTab, setActiveTab] = useState<'rejections' | 'reconciliation' | 'payment_dlq' | 'wallet_dlq'>('rejections');
+  const [activeTab, setActiveTab] = useState<'rejections' | 'failed_refunds' | 'reconciliation' | 'payment_dlq' | 'wallet_dlq'>('rejections');
   const [rejections, setRejections] = useState<z.infer<typeof PageResponseDtoLedgerRejectionDto> | null>(null);
   const [resolvingId, setResolvingId] = useState<string | null>(null);
   const [resolutionNote, setResolutionNote] = useState('');
   const [reconRuns, setReconRuns] = useState<z.infer<typeof PageReconciliationRun> | null>(null);
   const [paymentWebhooks, setPaymentWebhooks] = useState<z.infer<typeof PageResponseDtoWebhookDelivery> | null>(null);
   const [walletOutbox, setWalletOutbox] = useState<z.infer<typeof WalletOutboxPage> | null>(null);
+  const [failedRefunds, setFailedRefunds] = useState<z.infer<typeof PageResponseDtoFailedRefundDto> | null>(null);
   const [loading, setLoading] = useState(false);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const { showError, showSuccess } = useToast();
@@ -32,6 +35,9 @@ export default function OperationsPage() {
       if (activeTab === 'rejections') {
         const res = await ledgerApi.adminLedgerRejection.list({ queries: { resolved: false, page: 0, size: 50 } });
         setRejections(res);
+      } else if (activeTab === 'failed_refunds') {
+        const res = await customerApi.adminDlq.getFailedRefunds({ queries: { page: 0, size: 50 } });
+        setFailedRefunds(res);
       } else if (activeTab === 'reconciliation') {
         const res = await ledgerApi.reconciliation.getRuns({ queries: { pageable: {} } });
         setReconRuns(res);
@@ -58,6 +64,7 @@ export default function OperationsPage() {
 
   const TABS = [
     ['rejections', 'Ledger Rejections'],
+    ['failed_refunds', 'Failed Refunds'],
     ['reconciliation', 'Reconciliation Runs'],
     ['payment_dlq', 'Payment DLQ'],
     ['wallet_dlq', 'Wallet DLQ'],
@@ -109,6 +116,22 @@ export default function OperationsPage() {
       setResolvingId(null);
       setResolutionNote('');
     }
+  };
+
+  /** The same refund, same id and destination, queued again. Queued is not money returned. */
+  const handleRetryRefund = async (refundId: string | undefined, amount: number | undefined) => {
+    if (!refundId) return;
+    await runConfirmedAction(
+      `refund-retry:${refundId}`,
+      {
+        title: amount === undefined ? 'Retry this refund?' : `Retry refund of ${formatINR(amount)}?`,
+        description: 'The same refund is sent again to where it was going. This queues it; the money has not moved until the refund shows as completed.',
+        confirmLabel: 'Retry refund',
+      },
+      () => customerApi.adminDlq.retryRefund(undefined, { params: { refundId } }),
+      'Refund retry queued; completion is pending.',
+      'Failed to retry refund',
+    );
   };
 
   const handleRetryPaymentWebhook = async (eventId: string | undefined) => {
@@ -250,6 +273,36 @@ export default function OperationsPage() {
                 </div>
                 <p className="text-sm">Summary: {run.summary}</p>
                 <p className="text-sm text-slate-500 mt-2">Started: {formatDateTime(run.startedAt)}</p>
+              </Surface>
+            ))
+          )}
+        </div>
+      )}
+
+      {!loading && activeTab === 'failed_refunds' && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold">Failed Refunds</h2>
+          {failedRefunds?.content?.length === 0 ? <p>No failed refunds.</p> : (
+            failedRefunds?.content?.map((refund) => (
+              <Surface key={refund.refundId} radius="lg" elevation={1} className="p-4" data-testid="failed-refund" data-refund-id={refund.refundId}>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-semibold">{formatINR(refund.amount)}</span>
+                  <StatusPill tone="danger" label={String(refund.status)} />
+                </div>
+                <p className="text-sm font-mono">Refund {refund.refundId}</p>
+                <p className="text-sm font-mono">Order {refund.orderId}</p>
+                <p className="text-sm text-rose-600 mt-1">{refund.errorMessage}</p>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="mt-3"
+                  disabled={pendingAction !== null || !refund.refundId}
+                  loading={pendingAction === `refund-retry:${refund.refundId}`}
+                  aria-label={pendingAction === `refund-retry:${refund.refundId}` ? 'Retrying refund' : undefined}
+                  onClick={() => void handleRetryRefund(refund.refundId, refund.amount)}
+                >
+                  Retry Refund
+                </Button>
               </Surface>
             ))
           )}

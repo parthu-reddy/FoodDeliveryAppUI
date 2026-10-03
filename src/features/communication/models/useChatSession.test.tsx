@@ -73,6 +73,62 @@ describe('useChatSession initialization', () => {
     expect(result.current.messages).toEqual([message]);
   });
 
+  describe('history older than the newest window', () => {
+    const at = (n: number) => ({ id: `m${n}`, content: `message ${n}`, timestamp: new Date(Date.UTC(2026, 9, 3, 0, 0, n)).toISOString() });
+    const range = (from: number, to: number) => Array.from({ length: to - from + 1 }, (_, i) => at(from + i));
+    const open = async () => {
+      mocks.createSession.mockResolvedValue({ success: true, data: { sessionId: 'session-123', participants: [] } });
+      const hook = renderHook(() => useChatSession({ orderId: 'order-123', isOpen: true, showError: mocks.showError }));
+      await waitFor(() => expect(hook.result.current.messages).toHaveLength(50));
+      return hook;
+    };
+
+    it('offers older messages only when the server says the newest page is not the last', async () => {
+      mocks.loadHistory.mockResolvedValueOnce({ success: true, data: { content: range(51, 100), last: false } });
+      const { result } = await open();
+      expect(result.current.hasOlderMessages).toBe(true);
+      expect(mocks.loadHistory).toHaveBeenCalledWith('/api/v1/chat/sessions/:sessionId/messages',
+        { params: { sessionId: 'session-123' }, queries: { page: 0, size: 50 } });
+    });
+
+    it('does not offer them when the newest page is the whole history', async () => {
+      mocks.loadHistory.mockResolvedValueOnce({ success: true, data: { content: range(1, 50), last: true } });
+      const { result } = await open();
+      expect(result.current.hasOlderMessages).toBe(false);
+    });
+
+    it('loads the next page back, merges it in time order once, and stops at the last page', async () => {
+      mocks.loadHistory
+        .mockResolvedValueOnce({ success: true, data: { content: range(51, 100), last: false } })
+        // A message that arrived meanwhile pushes m51 onto the older page too; it must appear once.
+        .mockResolvedValueOnce({ success: true, data: { content: range(1, 51), last: true } });
+      const { result } = await open();
+
+      await act(async () => { await result.current.loadOlderMessages(); });
+
+      expect(mocks.loadHistory).toHaveBeenLastCalledWith('/api/v1/chat/sessions/:sessionId/messages',
+        { params: { sessionId: 'session-123' }, queries: { page: 1, size: 50 } });
+      expect(result.current.messages.map(m => m.id)).toEqual(range(1, 100).map(m => m.id));
+      expect(result.current.hasOlderMessages).toBe(false);
+      await act(async () => { await result.current.loadOlderMessages(); });
+      expect(mocks.loadHistory).toHaveBeenCalledTimes(2);
+    });
+
+    it('keeps what is shown and reports a failed older page so it can be retried', async () => {
+      mocks.loadHistory
+        .mockResolvedValueOnce({ success: true, data: { content: range(51, 100), last: false } })
+        .mockRejectedValueOnce(new Error('HTTP 503'));
+      const { result } = await open();
+
+      await act(async () => { await result.current.loadOlderMessages(); });
+
+      expect(mocks.showError).toHaveBeenCalledWith('Earlier messages could not be loaded. Please try again.');
+      expect(result.current.messages).toHaveLength(50);
+      expect(result.current.hasOlderMessages).toBe(true);
+      expect(result.current.isLoadingOlderMessages).toBe(false);
+    });
+  });
+
   it('keeps the session usable and reports a history failure without restarting initialization', async () => {
     mocks.createSession.mockResolvedValue({ success: true, data: { sessionId: 'session-123', participants: [] } });
     mocks.loadHistory.mockRejectedValue(new Error('History unavailable'));

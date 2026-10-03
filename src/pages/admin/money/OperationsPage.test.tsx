@@ -12,8 +12,16 @@ const getFailedWebhooks = vi.fn();
 const retryWebhookEvent = vi.fn();
 const getOutboxDlqEvents = vi.fn();
 const retryOutboxDlqEvent = vi.fn();
+const getFailedRefunds = vi.fn();
+const retryRefund = vi.fn();
 
 vi.mock('@/lib/zodiosClients', () => ({
+  customerApi: {
+    adminDlq: {
+      getFailedRefunds: (...a: unknown[]) => getFailedRefunds(...a),
+      retryRefund: (...a: unknown[]) => retryRefund(...a),
+    },
+  },
   ledgerApi: {
     adminLedgerRejection: {
       list: (...a: unknown[]) => listRejections(...a),
@@ -58,6 +66,8 @@ describe('OperationsPage', () => {
     getOutboxDlqEvents.mockReset().mockResolvedValue({ content: [] });
     retryWebhookEvent.mockReset().mockResolvedValue(undefined);
     retryOutboxDlqEvent.mockReset().mockResolvedValue(undefined);
+    getFailedRefunds.mockReset().mockResolvedValue({ content: [] });
+    retryRefund.mockReset().mockResolvedValue({ success: true });
   });
 
   it('opens on ledger rejections, because that is where money goes missing', async () => {
@@ -278,5 +288,53 @@ describe('OperationsPage', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Retry outbox event' }));
 
     expect(await screen.findByText('wallet publisher is unavailable')).toBeInTheDocument();
+  });
+
+  describe('failed refunds', () => {
+    const failed = { refundId: 'r-1', orderId: 'o-1', amount: 1.13, status: 'FAILED', errorMessage: 'Gateway rejected refund initiation', createdAt: '2026-10-03T02:00:00Z' };
+
+    it('lists a failed refund with its amount, order and reason', async () => {
+      getFailedRefunds.mockResolvedValue({ content: [failed] });
+      renderPage();
+      fireEvent.click(screen.getByRole('tab', { name: 'Failed Refunds' }));
+
+      expect(await screen.findByText('Refund r-1')).toBeInTheDocument();
+      expect(screen.getByText('Order o-1')).toBeInTheDocument();
+      expect(screen.getByText('Gateway rejected refund initiation')).toBeInTheDocument();
+      expect(getFailedRefunds).toHaveBeenCalledWith({ queries: { page: 0, size: 50 } });
+    });
+
+    it('retries the exact refund only after the operator confirms, then refreshes', async () => {
+      getFailedRefunds.mockResolvedValue({ content: [failed] });
+      renderPage();
+      fireEvent.click(screen.getByRole('tab', { name: 'Failed Refunds' }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Retry Refund' }));
+
+      expect(retryRefund).not.toHaveBeenCalled();
+      expect(await screen.findByRole('dialog', { name: 'Retry refund of ₹1.13?' })).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Retry refund' }));
+
+      await waitFor(() => expect(retryRefund).toHaveBeenCalledTimes(1));
+      expect((retryRefund.mock.calls[0][1] as { params: { refundId: string } }).params.refundId).toBe('r-1');
+      await waitFor(() => expect(getFailedRefunds).toHaveBeenCalledTimes(2));
+    });
+
+    it('says when no refund has failed', async () => {
+      renderPage();
+      fireEvent.click(screen.getByRole('tab', { name: 'Failed Refunds' }));
+      expect(await screen.findByText('No failed refunds.')).toBeInTheDocument();
+    });
+
+    it('surfaces a refused retry instead of looking queued', async () => {
+      getFailedRefunds.mockResolvedValue({ content: [failed] });
+      retryRefund.mockRejectedValue(new Error('REFUND_EXCEEDS_REMAINING'));
+      renderPage();
+      fireEvent.click(screen.getByRole('tab', { name: 'Failed Refunds' }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Retry Refund' }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Retry refund' }));
+
+      expect(await screen.findByText(/REFUND_EXCEEDS_REMAINING|Failed to retry refund/)).toBeInTheDocument();
+      expect(screen.queryByText('Refund retry queued; completion is pending.')).not.toBeInTheDocument();
+    });
   });
 });

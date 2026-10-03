@@ -20,12 +20,29 @@ interface ChatMessageListProps {
   orderId: string;
   /** Sends a structured reply — a refund quote is answered from inside the thread. */
   sendMessage: (content: string, type: string) => void;
+  /** The server has messages older than the ones shown. */
+  hasOlderMessages?: boolean;
+  isLoadingOlderMessages?: boolean;
+  onLoadOlderMessages?: () => void;
 }
 
-export function ChatMessageList({ messages, userId, canRequestRefund, orderId, sendMessage }: ChatMessageListProps) {
+export function ChatMessageList({ messages, userId, canRequestRefund, orderId, sendMessage,
+  hasOlderMessages = false, isLoadingOlderMessages = false, onLoadOlderMessages }: ChatMessageListProps) {
   const user = { id: userId };
   return (
     <>
+      {hasOlderMessages && onLoadOlderMessages && (
+        <div className="flex justify-center py-1">
+          <button
+            type="button"
+            onClick={onLoadOlderMessages}
+            disabled={isLoadingOlderMessages}
+            className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+          >
+            {isLoadingOlderMessages ? 'Loading earlier messages…' : 'Load earlier messages'}
+          </button>
+        </div>
+      )}
       {messages.map((msg, idx) => {
   const isMe = msg.senderId === user?.id;
 
