@@ -32,7 +32,6 @@ import { isActiveOrder } from '@features/customer-orders/model/orderStatus';
 import { sumRupees } from '@shared/money';
 
 interface RestaurantDashboardProps {
-  restaurantId: string;
   activeOrders?: Order[];
   onUpdateOrderStatus?: (orderId: string, status: OrderStatus, payload?: { reason?: string }) => void;
   onLogout: () => void;
@@ -40,7 +39,6 @@ interface RestaurantDashboardProps {
 }
 
 export default function RestaurantDashboard({
-  restaurantId,
   activeOrders: externalOrders,
   onUpdateOrderStatus: externalUpdateStatus,
   onLogout,
@@ -221,7 +219,6 @@ export default function RestaurantDashboard({
           activeTab={activeTab}
           showSettings={showSettings}
           setShowSettings={setShowSettings}
-          restaurantId={restaurantId}
           selectedOutletId={selectedOutletId}
           menuList={menuList}
           brands={brands}

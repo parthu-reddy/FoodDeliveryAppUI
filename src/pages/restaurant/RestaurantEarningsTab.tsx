@@ -11,21 +11,22 @@ import { LedgerStatementPanel } from '@features/ledger/components/LedgerStatemen
 import { formatDate } from '@/shared/time';
 
 interface RestaurantEarningsTabProps {
-  restaurantId: string;
+  /** The outlet whose earnings to show: earnings are per outlet, so this follows the outlet selector. */
+  outletId: string;
 }
 
-export default function RestaurantEarningsTab({ restaurantId }: RestaurantEarningsTabProps) {
+export default function RestaurantEarningsTab({ outletId }: RestaurantEarningsTabProps) {
   const { showError } = useToast();
   const [page, setPage] = useState(0);
 
   const { data: summary, isLoading: loadingSummary } = usePolling({
     fetchFn: async () => {
       return await customerApi.restaurantMoney.fetchSummary({
-          params: { outletId: restaurantId }
+          params: { outletId }
       });
     },
     intervalMs: 30000,
-    enabled: !!restaurantId,
+    enabled: !!outletId,
     // Both polls ignored onError, so a failed fetch left the outlet reading an empty earnings
     // screen with no indication anything had gone wrong.
     onError: (e) => showError(parseApiError(e, 'Failed to load earnings summary').message)
@@ -34,12 +35,12 @@ export default function RestaurantEarningsTab({ restaurantId }: RestaurantEarnin
   const { data: statementPage, isLoading: loadingStatement } = usePolling({
     fetchFn: async () => {
       return await customerApi.restaurantMoney.fetchStatement({
-          params: { outletId: restaurantId },
+          params: { outletId },
           queries: { page, size: 20 }
       });
     },
     intervalMs: 15000,
-    enabled: !!restaurantId,
+    enabled: !!outletId,
     onError: (e) => showError(parseApiError(e, 'Failed to load the earnings statement').message)
   });
 

@@ -1,9 +1,9 @@
-import { render, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const getAdvertiser = vi.fn();
+const post = vi.fn();
 vi.mock('@/lib/zodiosClients', () => ({
-  campaignApi: { advertiser: { get: (...a: unknown[]) => getAdvertiser(...a) }, campaign: { post: vi.fn() } },
+  campaignApi: { campaign: { post: (...a: unknown[]) => post(...a) } },
 }));
 vi.mock('@/contexts/ToastContext', () => ({ useToast: () => ({ showError: vi.fn(), showSuccess: vi.fn() }) }));
 
@@ -17,8 +17,8 @@ function dates() {
   return [inputs[0].value, inputs[1].value];
 }
 
-function renderModal() {
-  return render(<CreateCampaignModal advertiserId="a1" open onClose={vi.fn()} onCreated={vi.fn()} />);
+function renderModal(advertiserTimeZone = 'Asia/Kolkata') {
+  return render(<CreateCampaignModal advertiserId="a1" advertiserTimeZone={advertiserTimeZone} open onClose={vi.fn()} onCreated={vi.fn()} />);
 }
 
 describe('CreateCampaignModal default dates', () => {
@@ -28,19 +28,40 @@ describe('CreateCampaignModal default dates', () => {
   });
   afterEach(() => {
     vi.useRealTimers();
-    getAdvertiser.mockReset();
   });
 
-  it("start on the advertiser's today, which east of the creator is already tomorrow", async () => {
-    getAdvertiser.mockResolvedValue({ data: { timeZone: 'Asia/Kolkata' } });
-    renderModal();
-    await waitFor(() => expect(dates()).toEqual(['2026-09-26', '2026-10-26']));
+  it("start on the advertiser's today, which east of the creator is already tomorrow", () => {
+    renderModal('Asia/Kolkata');
+    expect(dates()).toEqual(['2026-09-26', '2026-10-26']);
   });
 
-  it("fall back to the creator's today when the profile can't be read", async () => {
-    getAdvertiser.mockRejectedValue(new Error('offline'));
-    renderModal();
-    await waitFor(() => expect(getAdvertiser).toHaveBeenCalled());
+  it("start on the advertiser's today west of it too", () => {
+    renderModal('America/St_Johns');
     expect(dates()).toEqual(['2026-09-25', '2026-10-25']);
+  });
+});
+
+describe('CreateCampaignModal request', () => {
+  afterEach(() => post.mockReset());
+
+  it('sends budgets and the bid in rupees, as typed', async () => {
+    post.mockResolvedValue({});
+    renderModal();
+    fireEvent.change(screen.getByLabelText(/Campaign Name/), { target: { value: 'Lunch boost' } });
+    fireEvent.change(screen.getByLabelText(/Daily Budget/), { target: { value: '50' } });
+    fireEvent.change(screen.getByLabelText(/Total Budget/), { target: { value: '500' } });
+    fireEvent.change(screen.getByLabelText(/Bid per Impression/), { target: { value: '1.5' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Launch Campaign' }));
+
+    await waitFor(() => expect(post).toHaveBeenCalledTimes(1));
+    const [path, body, config] = post.mock.calls[0];
+    expect(path).toBe('/api/v1/advertisers/:advertiserId/campaigns');
+    expect(body).toMatchObject({ advertiserId: 'a1', name: 'Lunch boost', dailyBudget: 50, lifetimeBudget: 500, maxBid: 1.5 });
+    expect(config).toEqual({ params: { advertiserId: 'a1' } });
+  });
+
+  it('asks for no targeting radius: a campaign has none to send', () => {
+    renderModal();
+    expect(screen.queryByLabelText(/Targeting Radius/)).not.toBeInTheDocument();
   });
 });

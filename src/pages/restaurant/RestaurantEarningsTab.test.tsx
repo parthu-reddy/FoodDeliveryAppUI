@@ -33,7 +33,7 @@ describe('RestaurantEarningsTab', () => {
     render(
       <ThemeProvider>
         <ToastProvider>
-          <RestaurantEarningsTab restaurantId="123" />
+          <RestaurantEarningsTab outletId="123" />
         </ToastProvider>
       </ThemeProvider>
     );
@@ -59,7 +59,7 @@ describe('RestaurantEarningsTab', () => {
     render(
       <ThemeProvider>
         <ToastProvider>
-          <RestaurantEarningsTab restaurantId="123" />
+          <RestaurantEarningsTab outletId="123" />
         </ToastProvider>
       </ThemeProvider>
     );

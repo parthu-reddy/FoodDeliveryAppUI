@@ -94,7 +94,6 @@ function AppRoutes() {
                 <CallProvider>
                   <ZodErrorBoundary contextName="Restaurant Dashboard">
                     <RestaurantDashboard 
-                      restaurantId=""
                       onLogout={handleLogout}
                     />
                   </ZodErrorBoundary>

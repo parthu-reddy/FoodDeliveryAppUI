@@ -25,12 +25,19 @@ vi.mock('@features/catalog/components/restaurant/RestaurantMenuTogglesView', () 
   RestaurantMenuTogglesView: () => <div>MENU PANEL</div>,
 }));
 
+vi.mock('@/pages/restaurant/RestaurantEarningsTab', () => ({
+  default: ({ outletId }: { outletId: string }) => <div>EARNINGS FOR [{outletId}]</div>,
+}));
+vi.mock('@features/campaigns-ads/components/RestaurantCampaigns', () => ({
+  RestaurantCampaigns: ({ brandName, outletTimeZone }: { brandName?: string; outletTimeZone?: string }) =>
+    <div>CAMPAIGNS FOR [{brandName}] IN [{outletTimeZone}]</div>,
+}));
+
 function props(activeTab: RestaurantTabPanelsProps['activeTab']): RestaurantTabPanelsProps {
   return {
     activeTab,
     showSettings: false,
     setShowSettings: () => {},
-    restaurantId: 'r1',
     selectedOutletId: 'o1',
     menuList: [],
     brands: [],
@@ -81,5 +88,30 @@ describe('RestaurantTabPanels', () => {
     // orders panel stayed and the menu panel never entered the DOM at all.
     expect(await screen.findByText('MENU PANEL')).toBeInTheDocument();
     expect(screen.queryByText('ORDERS PANEL')).not.toBeInTheDocument();
+  });
+
+  it('shows earnings for the selected outlet', () => {
+    // The tab was keyed on a dashboard restaurantId that was always "", so it never loaded anything.
+    render(
+      <MemoryRouter>
+        <RestaurantTabPanels {...props('earnings')} selectedOutletId="outlet-3" />
+      </MemoryRouter>
+    );
+    expect(screen.getByText('EARNINGS FOR [outlet-3]')).toBeInTheDocument();
+  });
+
+  it("offers campaigns under the selected outlet's brand and time zone", () => {
+    const outlets = [
+      { id: 'outlet-1', brandId: 'brand-a', timeZone: 'Asia/Kolkata' },
+      { id: 'outlet-2', brandId: 'brand-b', timeZone: 'Asia/Dubai' },
+    ];
+    const brands = [{ id: 'brand-a', name: 'Alpha Kitchen' }, { id: 'brand-b', name: 'Beta Biryani' }];
+    render(
+      <MemoryRouter>
+        <RestaurantTabPanels {...props('campaigns')} selectedOutletId="outlet-2"
+          outlets={outlets as RestaurantTabPanelsProps['outlets']} brands={brands as RestaurantTabPanelsProps['brands']} />
+      </MemoryRouter>
+    );
+    expect(screen.getByText('CAMPAIGNS FOR [Beta Biryani] IN [Asia/Dubai]')).toBeInTheDocument();
   });
 });

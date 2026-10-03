@@ -13,7 +13,13 @@ import { DollarSign, Plus, TrendingUp, Wallet } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { formatINR, roundRupees } from '@shared/money';
 
-export default function CampaignManagement({ advertiserId }: { advertiserId: string }) {
+interface CampaignManagementProps {
+  advertiserId: string;
+  /** The advertiser's IANA zone: campaign dates are days on its calendar. */
+  advertiserTimeZone: string;
+}
+
+export default function CampaignManagement({ advertiserId, advertiserTimeZone }: CampaignManagementProps) {
   const { showError, showSuccess } = useToast();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(false);
@@ -47,6 +53,8 @@ export default function CampaignManagement({ advertiserId }: { advertiserId: str
        
       // eslint-disable-next-line react-hooks/immutability
       loadPerformanceData();
+      // The balance card read 0 until a top-up in this session refreshed it: nothing loaded it on open.
+      loadWalletData();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [advertiserId]);
@@ -246,6 +254,7 @@ export default function CampaignManagement({ advertiserId }: { advertiserId: str
 
       <CreateCampaignModal
         advertiserId={advertiserId}
+        advertiserTimeZone={advertiserTimeZone}
         open={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onCreated={loadCampaigns}
@@ -282,7 +291,8 @@ export default function CampaignManagement({ advertiserId }: { advertiserId: str
         status={paymentStatus}
         onProcessPayment={processTopupPayment}
         availableMethods={['CARD', 'UPI']}
-        amount={Math.round(parseFloat(topupAmount || '0') * 100)}
+        // Rupees: PaymentModal formats it with formatINR. `* 100` showed a ₹100 top-up as ₹10,000.
+        amount={roundRupees(topupAmount)}
         leftPanelContent={paymentLeftContent}
         title="Wallet Top Up"
         successTitle="Top Up Successful!"

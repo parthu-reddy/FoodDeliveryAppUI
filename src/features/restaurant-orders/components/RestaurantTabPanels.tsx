@@ -14,7 +14,7 @@ import { ErrorBoundary } from '@shared/ui/ErrorBoundary';
 import { LoadingSkeleton } from '@shared/ui/Skeleton';
 import { RestaurantStatsBar } from '@features/catalog/components/RestaurantStatsBar';
 import type { RefundView } from '@/types';
-import CampaignManagement from '@features/campaigns-ads/components/CampaignManagement';
+import { RestaurantCampaigns } from '@features/campaigns-ads/components/RestaurantCampaigns';
 import RestaurantEarningsTab from '@/pages/restaurant/RestaurantEarningsTab';
 import { RestaurantSettingsShell } from '@/pages/restaurant/RestaurantSettingsShell';
 
@@ -30,7 +30,6 @@ export interface RestaurantTabPanelsProps {
   activeTab: 'orders' | 'menu' | 'campaigns' | 'earnings' | 'reviews';
   showSettings: boolean;
   setShowSettings: (open: boolean) => void;
-  restaurantId: string;
   selectedOutletId: string;
   menuList: MenuItem[];
   brands: Brand[];
@@ -54,7 +53,7 @@ export interface RestaurantTabPanelsProps {
 }
 
 export function RestaurantTabPanels({
-  activeTab, showSettings, setShowSettings, restaurantId, selectedOutletId,
+  activeTab, showSettings, setShowSettings, selectedOutletId,
   menuList, brands, outlets, stockStatus, toggleStock, activeOrders,
   refundRequests, internalOrders, pendingOrders, activePreparing, completedOrders,
   cardDelayStatus, totalRevenue, loadData, setSelectedChatOrder,
@@ -63,6 +62,7 @@ export function RestaurantTabPanels({
 }: RestaurantTabPanelsProps) {
   const presets = useMotionPresets();
   const currentOutlet = outlets.find((o) => o.id === selectedOutletId);
+  const currentBrand = brands.find((b) => b.id === currentOutlet?.brandId);
   return (
   // No AnimatePresence here.
   //
@@ -131,7 +131,10 @@ export function RestaurantTabPanels({
       >
         <ErrorBoundary fallbackLabel="Campaigns">
           <Suspense fallback={<LoadingSkeleton />}>
-            <CampaignManagement advertiserId={restaurantId} />
+            {/* One advertiser per signed-in owner, looked up (or started) from the selected outlet's
+                brand and time zone. This was CampaignManagement keyed on a restaurantId that is
+                always "", so the tab never loaded a campaign, a balance or a report. */}
+            <RestaurantCampaigns brandName={currentBrand?.name} outletTimeZone={currentOutlet?.timeZone} />
           </Suspense>
         </ErrorBoundary>
       </motion.div>
@@ -144,7 +147,9 @@ export function RestaurantTabPanels({
       >
         <ErrorBoundary fallbackLabel="Earnings Tab">
           <Suspense fallback={<LoadingSkeleton />}>
-            <RestaurantEarningsTab restaurantId={restaurantId} />
+            {/* Earnings are per outlet, so this follows the outlet selector. It was keyed on a
+                dashboard restaurantId that was always "" and never loaded its figures. */}
+            <RestaurantEarningsTab outletId={selectedOutletId} />
           </Suspense>
         </ErrorBoundary>
       </motion.div>
@@ -196,7 +201,6 @@ export function RestaurantTabPanels({
             brands={brands}
             outlets={outlets}
             selectedOutletId={selectedOutletId}
-            restaurantId={restaurantId}
             loadData={loadData}
             activeOrders={activeOrders}
             setSelectedChatOrder={setSelectedChatOrder}

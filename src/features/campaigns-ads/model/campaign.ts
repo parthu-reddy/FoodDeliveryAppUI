@@ -4,7 +4,7 @@ export interface Campaign {
   name: string;
   status: string;
   dailyBudget: number;
-  totalBudget?: number;
+  lifetimeBudget?: number;
   startDate: string;
   endDate?: string;
 }

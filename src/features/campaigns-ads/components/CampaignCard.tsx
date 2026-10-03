@@ -32,7 +32,7 @@ export function CampaignCard({ campaign, onPause }: { campaign: Campaign; onPaus
           </div>
           <div className="bg-slate-100 dark:bg-slate-800 p-2 rounded-lg">
             <div className="text-[10px] text-slate-400">Total Budget</div>
-            <div className="font-bold text-slate-800 dark:text-[#f0ede6]">{formatINR(campaign.totalBudget)}</div>
+            <div className="font-bold text-slate-800 dark:text-[#f0ede6]">{formatINR(campaign.lifetimeBudget)}</div>
           </div>
         </div>
 

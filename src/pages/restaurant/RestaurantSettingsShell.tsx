@@ -25,7 +25,6 @@ interface RestaurantSettingsShellProps {
  brands: Brand[];
  outlets: Outlet[];
  selectedOutletId: string;
- restaurantId: string;
  loadData: () => void;
  activeOrders: Order[];
  setSelectedChatOrder: (order: Order) => void;
@@ -36,7 +35,6 @@ export const RestaurantSettingsShell: React.FC<RestaurantSettingsShellProps> = (
  brands,
  outlets,
  selectedOutletId,
- restaurantId,
  loadData,
  activeOrders,
  setSelectedChatOrder,
@@ -215,7 +213,7 @@ export const RestaurantSettingsShell: React.FC<RestaurantSettingsShellProps> = (
  {settingsTab === "menu-editor" && (
  <div className="space-y-6">
  <OutletMenuEditor
- restaurantId={selectedOutletId || restaurantId}
+ restaurantId={selectedOutletId}
  brandId={brands.length > 0 ? brands[0].id : ''}
  onRefresh={loadData}
  />
