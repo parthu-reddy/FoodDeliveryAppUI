@@ -14,16 +14,17 @@ interface StockToggleRowProps {
   dish: MenuItem;
   available: boolean;
   onToggle: () => void;
+  pending?: boolean;
   /** The quick rail: no photo, no card, a single dense line. */
   compact?: boolean;
 }
 
-export function StockToggleRow({ dish, available, onToggle, compact = false }: StockToggleRowProps) {
+export function StockToggleRow({ dish, available, onToggle, pending = false, compact = false }: StockToggleRowProps) {
   const toggle = (
-    <Switch checked={available} onChange={onToggle} label={`${dish.name} available`} className="p-1">
+    <Switch checked={available} onChange={onToggle} disabled={pending} label={`${dish.name} available`} className="p-1">
       {!compact && (
         <span className="font-bold text-xs font-mono" style={{ color: available ? 'var(--color-success)' : 'var(--color-ink-3)' }}>
-          {available ? 'ACTIVE' : 'PAUSED'}
+          {pending ? 'SAVING' : available ? 'IN STOCK' : 'OUT OF STOCK'}
         </span>
       )}
     </Switch>

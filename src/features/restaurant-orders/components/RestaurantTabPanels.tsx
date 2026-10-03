@@ -35,6 +35,7 @@ export interface RestaurantTabPanelsProps {
   brands: Brand[];
   outlets: Outlet[];
   stockStatus: Record<string, boolean>;
+  pendingStock?: Record<string, boolean>;
   toggleStock: (dishId: string, currentStatus: boolean) => void;
   activeOrders: Order[];
   refundRequests: RefundView[];
@@ -54,7 +55,7 @@ export interface RestaurantTabPanelsProps {
 
 export function RestaurantTabPanels({
   activeTab, showSettings, setShowSettings, selectedOutletId,
-  menuList, brands, outlets, stockStatus, toggleStock, activeOrders,
+  menuList, brands, outlets, stockStatus, pendingStock = {}, toggleStock, activeOrders,
   refundRequests, internalOrders, pendingOrders, activePreparing, completedOrders,
   cardDelayStatus, totalRevenue, loadData, setSelectedChatOrder,
   handleStatusTransition, handleCardCancelSubmit, handleCardPartialRefundSubmit,
@@ -104,7 +105,7 @@ export function RestaurantTabPanels({
           />
         </ErrorBoundary>
         </div>
-        <QuickStockRail menuList={menuList} stockStatus={stockStatus} toggleStock={toggleStock} selectedOutletId={selectedOutletId} outlet={currentOutlet} onPrepSaved={loadData} />
+        <QuickStockRail menuList={menuList} stockStatus={stockStatus} pendingStock={pendingStock} toggleStock={toggleStock} selectedOutletId={selectedOutletId} outlet={currentOutlet} onPrepSaved={loadData} />
         </div>
       </motion.div>
     )}
@@ -117,6 +118,7 @@ export function RestaurantTabPanels({
         <RestaurantMenuTogglesView
           menuList={menuList}
           stockStatus={stockStatus}
+          pendingStock={pendingStock}
           toggleStock={toggleStock}
           selectedOutletId={selectedOutletId}
           outlet={currentOutlet}

@@ -13,13 +13,14 @@ import { PrepTimeStepper } from './PrepTimeStepper';
 interface QuickStockRailProps {
   menuList: MenuItem[];
   stockStatus: Record<string, boolean>;
+  pendingStock?: Record<string, boolean>;
   toggleStock: (dishId: string, currentStatus: boolean) => void;
   selectedOutletId: string;
   outlet?: Outlet;
   onPrepSaved?: () => void;
 }
 
-export function QuickStockRail({ menuList, stockStatus, toggleStock, selectedOutletId, outlet, onPrepSaved }: QuickStockRailProps) {
+export function QuickStockRail({ menuList, stockStatus, pendingStock = {}, toggleStock, selectedOutletId, outlet, onPrepSaved }: QuickStockRailProps) {
   if (menuList.length === 0) return null;
   return (
     <aside aria-label="Today's menu" className="hidden 2xl:block w-[322px] shrink-0 self-start sticky top-0 px-4 py-3 rounded-2xl border border-paper-line">
@@ -29,7 +30,7 @@ export function QuickStockRail({ menuList, stockStatus, toggleStock, selectedOut
         {menuList.map((dish) => {
           const available = isDishAvailable(stockStatus, selectedOutletId, dish);
           return (
-            <StockToggleRow key={dish.id} compact dish={dish} available={available} onToggle={() => toggleStock(dish.id as string, available)} />
+            <StockToggleRow key={dish.id} compact dish={dish} available={available} pending={pendingStock[`${selectedOutletId}_${dish.id}`]} onToggle={() => toggleStock(dish.id as string, available)} />
           );
         })}
       </div>

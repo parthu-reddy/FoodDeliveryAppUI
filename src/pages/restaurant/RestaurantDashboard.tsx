@@ -73,7 +73,7 @@ export default function RestaurantDashboard({
 
   const {
     menuList, brands, outlets, setBrands,
-    stockStatus, hasOutlets, isCurrentOutletAcceptingOrders, myRestaurantName,
+    stockStatus, pendingStock, hasOutlets, isCurrentOutletAcceptingOrders, myRestaurantName,
     loadData, toggleOutletStatus, toggleStock,
   } = useRestaurantCatalog({ selectedOutletId, setSelectedOutletId, setApiPrepSeconds, showError });
 
@@ -224,6 +224,7 @@ export default function RestaurantDashboard({
           brands={brands}
           outlets={outlets}
           stockStatus={stockStatus}
+          pendingStock={pendingStock}
           toggleStock={toggleStock}
           activeOrders={activeOrders}
           refundRequests={refundRequests}

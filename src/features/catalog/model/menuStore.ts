@@ -45,10 +45,14 @@ export async function getMasterMenuItems(brandId: string): Promise<MasterMenuIte
 }
 
 export async function getOutletOverrides(outletId: string): Promise<OutletOverride[]> {
-  try {
-    const res = await apiGet(`${API_BASE}/outlets/${outletId}/menu-overrides`);
-    return res.data || [];
-  } catch { return []; }
+  try { return await loadOutletOverrides(outletId); } catch { return []; }
+}
+
+/** Stock controls must distinguish an empty override list from a failed read. */
+export async function loadOutletOverrides(outletId: string): Promise<OutletOverride[]> {
+  const res = await apiGet(`${API_BASE}/outlets/${outletId}/menu-overrides`);
+  if (!Array.isArray(res.data)) throw new Error('Invalid stock response');
+  return res.data;
 }
 
 // Add Master Menu Item

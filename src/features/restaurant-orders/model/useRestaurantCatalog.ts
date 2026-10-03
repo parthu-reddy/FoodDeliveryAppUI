@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { restaurantApi } from '@/lib/zodiosClients';
 import type { Brand, MenuItem, Outlet } from '@/types';
 import {
   getBrands,
   getEffectiveMenu,
   getMasterMenuItems,
-  getOutletOverrides,
+  loadOutletOverrides,
   getOutlets,
 } from '@features/catalog/model/menuStore';
 
@@ -39,6 +39,8 @@ export function useRestaurantCatalog({
   const [, setMasterItems] = useState<unknown[]>([]);
   const [, setOverrides] = useState<unknown[]>([]);
   const [stockStatus, setStockStatus] = useState<Record<string, boolean>>({});
+  const [pendingStock, setPendingStock] = useState<Record<string, boolean>>({});
+  const stockRequests = useRef(new Set<string>());
   const [isAcceptingOrders, setIsAcceptingOrders] = useState<Record<string, boolean>>({});
 
   const hasOutlets = outlets.length > 0;
@@ -91,10 +93,16 @@ const loadData = async () => {
     if (selectedOutletId) {
       const [fetchedEffective, fetchedOverrides] = await Promise.all([
         getEffectiveMenu(selectedOutletId),
-        getOutletOverrides(selectedOutletId)
+        loadOutletOverrides(selectedOutletId)
       ]);
       setMenuList(fetchedEffective);
       setOverrides(fetchedOverrides);
+      // Customer availability includes category opening hours. The kitchen switch represents
+      // persisted stock, so a closed category must not appear sold out.
+      const overridesByItem = new Map(fetchedOverrides.map(o => [o.masterMenuItemId, o.isAvailable]));
+      setStockStatus(prev => ({ ...prev, ...Object.fromEntries(fetchedEffective
+        .filter(dish => !stockRequests.current.has(`${selectedOutletId}_${dish.id}`))
+        .map(dish => [`${selectedOutletId}_${dish.id}`, overridesByItem.get(dish.id) !== false])) }));
 
       const fetchedOutlet = fetchedOutlets.find((o: unknown) => (o as {id: string}).id === selectedOutletId) as Outlet | undefined;
       if (fetchedOutlet) {
@@ -109,7 +117,7 @@ const loadData = async () => {
       }
     }
   } catch {
-    // best effort: failure here must not break the dashboard render
+    showError('Could not load restaurant data. Please try again.');
   }
 };
 
@@ -130,6 +138,9 @@ const toggleOutletStatus = async () => {
 
 const toggleStock = async (dishId: string, currentStatus: boolean) => {
   const key = `${selectedOutletId}_${dishId}`;
+  if (!selectedOutletId || stockRequests.current.has(key)) return;
+  stockRequests.current.add(key);
+  setPendingStock(prev => ({ ...prev, [key]: true }));
   const newStockStatus = !currentStatus;
   
   setStockStatus(prev => ({
@@ -148,6 +159,9 @@ const toggleStock = async (dishId: string, currentStatus: boolean) => {
       [key]: currentStatus
     }));
     showError('Failed to update stock status.');
+  } finally {
+    stockRequests.current.delete(key);
+    setPendingStock(prev => ({ ...prev, [key]: false }));
   }
 };
   useEffect(() => {
@@ -168,7 +182,7 @@ const toggleStock = async (dishId: string, currentStatus: boolean) => {
 
   return {
     menuList, brands, outlets, setBrands,
-    stockStatus, hasOutlets, isCurrentOutletAcceptingOrders,
+    stockStatus, pendingStock, hasOutlets, isCurrentOutletAcceptingOrders,
     myRestaurantName,
     loadData, toggleOutletStatus, toggleStock,
   };

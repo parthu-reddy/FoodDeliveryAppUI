@@ -9,6 +9,7 @@ import React from 'react';
 interface RestaurantMenuTogglesViewProps {
   menuList: MenuItem[];
   stockStatus: Record<string, boolean>;
+  pendingStock?: Record<string, boolean>;
   toggleStock: (dishId: string, currentStatus: boolean) => void;
   selectedOutletId: string;
   outlet?: Outlet;
@@ -18,6 +19,7 @@ interface RestaurantMenuTogglesViewProps {
 export const RestaurantMenuTogglesView: React.FC<RestaurantMenuTogglesViewProps> = ({
   menuList,
   stockStatus,
+  pendingStock = {},
   toggleStock,
   selectedOutletId,
   outlet,
@@ -57,7 +59,7 @@ export const RestaurantMenuTogglesView: React.FC<RestaurantMenuTogglesViewProps>
               {(dishes as MenuItem[]).map(dish => {
                 const available = isDishAvailable(stockStatus, selectedOutletId, dish);
                 return (
-                  <StockToggleRow key={dish.id} dish={dish} available={available} onToggle={() => toggleStock(dish.id as string, available)} />
+                  <StockToggleRow key={dish.id} dish={dish} available={available} pending={pendingStock[`${selectedOutletId}_${dish.id}`]} onToggle={() => toggleStock(dish.id as string, available)} />
                 );
               })}
             </div>
